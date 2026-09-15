@@ -7,6 +7,7 @@
  * append-only version history, and copy-forward rollback.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   KelButton,
   KelCard,
@@ -46,8 +47,19 @@ function text(value: unknown): string {
   return JSON.stringify(value);
 }
 
+const viewFromPath = (path: string): View => {
+  if (path.startsWith('/team/roster')) return 'roster';
+  if (path.startsWith('/team/studio')) return 'studio';
+  return 'office';
+};
+
 export default function KelTeamPage() {
-  const [view, setView] = useState<View>('office');
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [view, setView] = useState<View>(viewFromPath(pathname));
+  useEffect(() => {
+    setView(viewFromPath(pathname));
+  }, [pathname]);
   const [assignments, setAssignments] = useState<KelAssignment[] | null>(null);
   const [roles, setRoles] = useState<KelRole[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
@@ -144,7 +156,10 @@ export default function KelTeamPage() {
               { id: 'studio', label: 'Studio' },
             ]}
             active={view}
-            onSelect={(id) => setView(id as View)}
+            onSelect={(id) => {
+              setView(id as View);
+              navigate('/team/' + id);
+            }}
           />
         </div>
 

@@ -1,0 +1,660 @@
+{
+  "schema": 1,
+  "tag": "v14",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v14\\candidate",
+  "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\fixture-team",
+  "startedAt": "2026-09-15T16:28:03.185Z",
+  "entries": [
+    {
+      "view": "01-boot-chat",
+      "file": "v14-01-01-boot-chat.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 55691,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "02-work-drawer",
+      "file": "v14-02-02-work-drawer.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 78621,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "02b-work-tab-default",
+      "file": "v14-03-02b-work-tab-default.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 78674,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "03-continue",
+      "file": "v14-04-03-continue.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 69483,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "04-knowledge",
+      "file": "v14-05-04-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 111620,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "05-map",
+      "file": "v14-06-05-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 67508,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "06-recipes",
+      "file": "v14-07-06-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 88074,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "07-recipe-preview",
+      "file": "v14-08-07-recipe-preview.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 91889,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "file": "v14-09-07b-map-after-refresh.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 57743,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "08-after-drawer-close",
+      "file": "v14-10-08-after-drawer-close.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 57743,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "09-settings-open",
+      "file": "v14-11-09-settings-open.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65157,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System defau"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "v14-12-09-settings-appearance.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65157,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System defau"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "v14-13-09-settings-system.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/system",
+      "title": "Kel",
+      "bytes": 93134,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes on launch or graphics "
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "v14-14-09-settings-pet.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/pet",
+      "title": "Kel",
+      "bytes": 44453,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay in the main chat win"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "v14-15-09-settings-webui.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/webui",
+      "title": "Kel",
+      "bytes": 57895,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or remote browser can acces"
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "v14-16-09-settings-archived.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/archived",
+      "title": "Kel",
+      "bytes": 28996,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Archived conversations No archived items"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "v14-17-09-settings-about.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/about",
+      "title": "Kel",
+      "bytes": 42221,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "v14-18-09-settings-model.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 54775,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "v14-19-09-settings-agent.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 54775,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "v14-20-09-settings-skills.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 54772,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "v14-21-09-settings-tools.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 54772,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "12-work",
+      "file": "v14-22-12-work.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/work",
+      "title": "Kel",
+      "bytes": 78660,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 2 jobs in this project · 2 waiting on you Reload Jobs Job State Current step Budget Updated Do the work Queued Draft the thing Waiting on"
+    },
+    {
+      "view": "12-team-office",
+      "file": "v14-23-12-team-office.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/office",
+      "title": "Kel",
+      "bytes": 58942,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office real assignments only Specialist State Step Provider Budget Updated QA Engin"
+    },
+    {
+      "view": "12-team-roster",
+      "file": "v14-24-12-team-roster.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 72727,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution Strategist v1 · 0 assignments Open in Studio Produ"
+    },
+    {
+      "view": "12-team-studio",
+      "file": "v14-25-12-team-studio.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/studio",
+      "title": "Kel",
+      "bytes": 49997,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Choose a role to configure. Studio shows the structured instructions, tool policy, "
+    },
+    {
+      "view": "13-work-at-1280x720",
+      "file": "v14-26-13-work-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/work",
+      "title": "Kel",
+      "bytes": 64620,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 2 jobs in this project · 2 waiting on you Reload Jobs Job State Current step Budget Updated Do the work Queued Draft the thing Waiting on"
+    },
+    {
+      "view": "13-team-office-at-1280x720",
+      "file": "v14-27-13-team-office-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/team/office",
+      "title": "Kel",
+      "bytes": 57366,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office real assignments only Specialist State Step Provider Budget Updated QA Engin"
+    },
+    {
+      "view": "13-team-roster-at-1280x720",
+      "file": "v14-28-13-team-roster-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 57996,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution Strategist v1 · 0 assignments Open in Studio Produ"
+    },
+    {
+      "view": "13-team-studio-at-1280x720",
+      "file": "v14-29-13-team-studio-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/team/studio",
+      "title": "Kel",
+      "bytes": 47882,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Choose a role to configure. Studio shows the structured instructions, tool policy, "
+    },
+    {
+      "view": "13-work-at-1920x1080",
+      "file": "v14-30-13-work-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/work",
+      "title": "Kel",
+      "bytes": 82012,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 2 jobs in this project · 2 waiting on you Reload Jobs Job State Current step Budget Updated Do the work Queued Draft the thing Waiting on"
+    },
+    {
+      "view": "13-team-office-at-1920x1080",
+      "file": "v14-31-13-team-office-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/team/office",
+      "title": "Kel",
+      "bytes": 62105,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office real assignments only Specialist State Step Provider Budget Updated QA Engin"
+    },
+    {
+      "view": "13-team-roster-at-1920x1080",
+      "file": "v14-32-13-team-roster-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 87213,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution Strategist v1 · 0 assignments Open in Studio Produ"
+    },
+    {
+      "view": "13-team-studio-at-1920x1080",
+      "file": "v14-33-13-team-studio-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/team/studio",
+      "title": "Kel",
+      "bytes": 52714,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Choose a role to configure. Studio shows the structured instructions, tool policy, "
+    },
+    {
+      "view": "13-work-at-2560x1440",
+      "file": "v14-34-13-work-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/work",
+      "title": "Kel",
+      "bytes": 89288,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 2 jobs in this project · 2 waiting on you Reload Jobs Job State Current step Budget Updated Do the work Queued Draft the thing Waiting on"
+    },
+    {
+      "view": "13-team-office-at-2560x1440",
+      "file": "v14-35-13-team-office-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/team/office",
+      "title": "Kel",
+      "bytes": 67989,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office real assignments only Specialist State Step Provider Budget Updated QA Engin"
+    },
+    {
+      "view": "13-team-roster-at-2560x1440",
+      "file": "v14-36-13-team-roster-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 104369,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution Strategist v1 · 0 assignments Open in Studio Produ"
+    },
+    {
+      "view": "13-team-studio-at-2560x1440",
+      "file": "v14-37-13-team-studio-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/team/studio",
+      "title": "Kel",
+      "bytes": 59298,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Choose a role to configure. Studio shows the structured instructions, tool policy, "
+    },
+    {
+      "view": "13-work-at-1024x768",
+      "file": "v14-38-13-work-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/work",
+      "title": "Kel",
+      "bytes": 60898,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 2 jobs in this project · 2 waiting on you Reload Jobs Job State Current step Budget Updated Do the work Queued Draft the thing Waiting on"
+    },
+    {
+      "view": "13-team-office-at-1024x768",
+      "file": "v14-39-13-team-office-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/team/office",
+      "title": "Kel",
+      "bytes": 55864,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office real assignments only Specialist State Step Provider Budget Updated QA Engin"
+    },
+    {
+      "view": "13-team-roster-at-1024x768",
+      "file": "v14-40-13-team-roster-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 62071,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution Strategist v1 · 0 assignments Open in Studio Produ"
+    },
+    {
+      "view": "13-team-studio-at-1024x768",
+      "file": "v14-41-13-team-studio-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/team/studio",
+      "title": "Kel",
+      "bytes": 47218,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Choose a role to configure. Studio shows the structured instructions, tool policy, "
+    },
+    {
+      "view": "10-boot-chat-at-1280x720",
+      "file": "v14-42-10-boot-chat-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 51791,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "11-work-drawer-at-1280x720",
+      "file": "v14-43-11-work-drawer-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 82273,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "10-boot-chat-at-1920x1080",
+      "file": "v14-44-10-boot-chat-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 99460,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "11-work-drawer-at-1920x1080",
+      "file": "v14-45-11-work-drawer-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 99885,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "10-boot-chat-at-2560x1440",
+      "file": "v14-46-10-boot-chat-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 108783,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "11-work-drawer-at-2560x1440",
+      "file": "v14-47-11-work-drawer-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 108999,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "10-boot-chat-at-1024x768",
+      "file": "v14-48-10-boot-chat-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 78635,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    },
+    {
+      "view": "11-work-drawer-at-1024x768",
+      "file": "v14-49-11-work-drawer-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 78635,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the nex"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": false,
+    "engineKilled": true,
+    "appExitCode": 0
+  },
+  "launchMode": "packaged",
+  "launchedAt": "2026-09-15T16:28:03.640Z",
+  "engine": {
+    "pid": 40436,
+    "version": "0.5.0"
+  },
+  "finishedAt": "2026-09-15T16:30:08.624Z",
+  "closeOutcome": "close-timeout"
+}

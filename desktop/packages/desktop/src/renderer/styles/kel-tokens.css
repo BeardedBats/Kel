@@ -316,7 +316,7 @@
 }
 .kel-table th {
   text-align: left;
-  color: var(--kel-text-3);
+  color: var(--kel-text-2);
   font-weight: 500;
   font-size: var(--kel-type-meta);
   letter-spacing: 0;

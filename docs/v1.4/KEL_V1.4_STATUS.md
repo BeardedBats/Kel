@@ -11,7 +11,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 | G1 — visual audit, design directions, design system | **COMPLETE** | 2 directions rendered + audited; “Desk” selected via the Best Solution Gate; design system, interaction patterns, accessibility standard, acceptance matrix landed; reviewer relay CONTINUE |
 | G2 — architecture / safety / implementation design | **COMPLETE** | 6 documents (architecture + 5 Best Solution Gate decisions, Team model, autonomy policy, provider spec, UX spec, security model); reviewer relay CONTINUE |
 | G3 — solution quality + Team foundation | **COMPLETE** | engine: `kel/solution.py` (migration 005) + `kel/team.py` (migration 006) + `/api/brief` + `/api/team`; 29 new tests; suite 296 + 10; UI lands at G4, lease enforcement at G6 |
-| G4 — Team Office / Roster / Studio + Work Center | **IN PROGRESS** | desktop deps + renderer build green; `/api/brief` + `/api/team` allowlisted; team/solution fixtures seed an isolated root; `kel-tokens.css` + primitives + Office/Roster/Studio + Work Center implemented and routed at `/work` and `/team/*` (build green, `030cb61`); Sider nav + five-width captures next |
+| G4 — Team Office / Roster / Studio + Work Center | **COMPLETE** | implemented + routed + rendered from a packaged candidate: 49 captures, 0 errors, 0 blank, 20 route views across five widths; `/team/*` deep links fixed; table-header contrast fixed (4.35 → ≥6:1); asar dedup parity + engine PYZ OK. Notes: donor sidebar label contrast and engine shutdown → G7/G10 |
 | G5 — verification / continuation / memory / recipes UX | NOT STARTED | |
 | G6 — providers / credentials / autonomy | NOT STARTED | |
 | G7 — desktop productization | NOT STARTED | |
@@ -37,11 +37,9 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 
 ## Exact next actions (resume here)
 
-1. Continue **Gate 4**: build the Team Office / Roster / Studio and unified Work Center surfaces on the
-   “Desk” design system over `/api/team` + `/api/brief`; add `kel-tokens.css` + Kel component wrappers;
-   capture rendered states (empty · one · many · populated) at five widths with
-   `packaging/capture-screens.cjs` and check focus/keyboard with `packaging/a11y-probe.cjs`; update the
-   acceptance matrix rows.
+1. Start **Gate 5**: verification / continuation / memory / recipes UX over the existing engine endpoints
+   (evidence classes, worker-reported vs Kel-verified, continuation chooser + wrong-project block,
+   memory/knowledge + conflict resolver, recipes preview/dry-run), rendered and captured per surface.
 2. Performance baseline (startup spans) when G8 diagnostics tooling exists; noted as G0 remainder.
 3. Harness v3 candidates (pet-window capture, dialog states, provider-unavailable state, dense/long
    content) plus the a11y-probe breadth expansion at G4/G5/G7.
@@ -62,6 +60,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 12:05–12:35 — Session 5 (Gate 3): engine implementation — `kel/guardrails.py` (14 locked rules with test ids), `kel/solution.py` (briefs/options/comparisons/search/opportunities/ideas/reviews/approve gate), `kel/team.py` (role templates + append-only versions + scoped overrides + assignment snapshots + activity contract + staffing + seeded 9 roles), service endpoints `/api/brief` + `/api/team`, migrations 005/006 additive; 29 new tests; full suite **296 passed + 10 subtests** (one transient Windows temp-cleanup flake, green on re-run). Gate 3 engine scope complete; UI at G4, lease enforcement at G6. Reviewer relay: **CONTINUE**. **Gate 3 CLOSED.**
 - 12:36–12:55 — Session 6 (Gate 4 start): `bun install --frozen-lockfile` (1591 packages, 16s, exit 0) + `bun x electron-vite build` → `desktop/out/{main,preload,renderer}` (36.7s, exit 0; note `bun run build` is the donor’s multi-arch mac builder and needs `bunx` on PATH — the direct electron-vite build is the Windows dev path); `/api/brief` + `/api/team` added to the KelService route allowlist; fixture generator extended (9 seeded roles, 2 assignments with activity + artifact, an approved solution brief) and verified into `data/fixture-team`.
 - 13:00–13:10 — Session 6 (Gate 4 UI): `kel-tokens.css` (tokens, chip/button/table/meter/empty classes, focus-visible, compact density, reduced-motion, prefers-contrast), `components/kel/kelApi.ts` (typed bridge over `/api/team`, `/api/brief`, `/api/state`), `components/kel/KelPrimitives.tsx` (status chip, card, section, button, tabs, meter, empty, error, loading, table, time), `pages/kel/team/index.tsx` (Office/Roster/Studio) and `pages/kel/work/index.tsx` (Work Center), routed at `/work`, `/team`, `/team/office|roster|studio`; renderer build green (25.7s, exit 0) → committed `030cb61`.
+- 12:56–13:45 — Session 6 (Gate 4 close): built a real **candidate package** (`scripts/build-runtime.ps1` → `dist/runtime/KelEngine`; engine PYZ verify: 30 kel modules matched, RESULT OK); asar repacked from the `desktop/out` overlay (`asar-dedup-pack.js`: 9,552 files, 1,103 dedup groups, 10,220,315 B saved — +4 files vs frozen, dedup parity held); installed into `dev-tools/runs/v14/candidate` using the frozen Electron frame + AionCore (frozen release re-verified 3/3 hashes after copying); harness/probe extended with dev-mode + `--views`/`--routes` (`124dfb2`); packaged capture run **49 shots, 0 renderer errors, 0 blank, app exit 0**, 20 route views at five widths; fixed the `/team/{roster,studio}` deep-link tab bug and the table-header contrast bug, then re-verified (route contrast failures 9/7/1/1 → **1/1/1/1**, the remainder being the donor sidebar label at 2.92:1); recorded the engine-shutdown note (`engineStopped:false`, bounded kill fired; `closeOutcome: close-timeout`). **Gate 4 CLOSED** pending relay.
 
 ## Blockers
 
