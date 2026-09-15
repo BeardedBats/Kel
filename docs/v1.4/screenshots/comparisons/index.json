@@ -1,0 +1,235 @@
+{
+  "schema": 1,
+  "pairs": [
+    {
+      "view": "01-boot-chat",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-02-01-boot-chat.png",
+      "final_file": "screenshots\\g8\\g8-01-01-boot-chat.png",
+      "comparison": "01-boot-chat.png",
+      "baseline_bytes": 53585,
+      "final_bytes": 63485,
+      "byte_delta": 9900
+    },
+    {
+      "view": "02-work-drawer",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-03-02-work-drawer.png",
+      "final_file": "screenshots\\g8\\g8-02-02-work-drawer.png",
+      "comparison": "02-work-drawer.png",
+      "baseline_bytes": 76796,
+      "final_bytes": 90279,
+      "byte_delta": 13483
+    },
+    {
+      "view": "02b-work-tab-default",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-04-02b-work-tab-default.png",
+      "final_file": "screenshots\\g8\\g8-03-02b-work-tab-default.png",
+      "comparison": "02b-work-tab-default.png",
+      "baseline_bytes": 76807,
+      "final_bytes": 90279,
+      "byte_delta": 13472
+    },
+    {
+      "view": "03-continue",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-05-03-continue.png",
+      "final_file": "screenshots\\g8\\g8-04-03-continue.png",
+      "comparison": "03-continue.png",
+      "baseline_bytes": 67906,
+      "final_bytes": 77728,
+      "byte_delta": 9822
+    },
+    {
+      "view": "04-knowledge",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-06-04-knowledge.png",
+      "final_file": "screenshots\\g8\\g8-05-04-knowledge.png",
+      "comparison": "04-knowledge.png",
+      "baseline_bytes": 109795,
+      "final_bytes": 119642,
+      "byte_delta": 9847
+    },
+    {
+      "view": "05-map",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-07-05-map.png",
+      "final_file": "screenshots\\g8\\g8-06-05-map.png",
+      "comparison": "05-map.png",
+      "baseline_bytes": 65692,
+      "final_bytes": 75582,
+      "byte_delta": 9890
+    },
+    {
+      "view": "06-recipes",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-08-06-recipes.png",
+      "final_file": "screenshots\\g8\\g8-07-06-recipes.png",
+      "comparison": "06-recipes.png",
+      "baseline_bytes": 86111,
+      "final_bytes": 95247,
+      "byte_delta": 9136
+    },
+    {
+      "view": "07-recipe-preview",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-09-07-recipe-preview.png",
+      "final_file": "screenshots\\g8\\g8-08-07-recipe-preview.png",
+      "comparison": "07-recipe-preview.png",
+      "baseline_bytes": 90066,
+      "final_bytes": 99392,
+      "byte_delta": 9326
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-10-07b-map-after-refresh.png",
+      "final_file": "screenshots\\g8\\g8-09-07b-map-after-refresh.png",
+      "comparison": "07b-map-after-refresh.png",
+      "baseline_bytes": 55588,
+      "final_bytes": 65474,
+      "byte_delta": 9886
+    },
+    {
+      "view": "08-after-drawer-close",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-11-08-after-drawer-close.png",
+      "final_file": "screenshots\\g8\\g8-10-08-after-drawer-close.png",
+      "comparison": "08-after-drawer-close.png",
+      "baseline_bytes": 55588,
+      "final_bytes": 65474,
+      "byte_delta": 9886
+    },
+    {
+      "view": "09-settings-open",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-12-09-settings-open.png",
+      "final_file": "screenshots\\g8\\g8-11-09-settings-open.png",
+      "comparison": "09-settings-open.png",
+      "baseline_bytes": 65157,
+      "final_bytes": 65231,
+      "byte_delta": 74
+    },
+    {
+      "view": "09-settings-appearance",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-13-09-settings-appearance.png",
+      "final_file": "screenshots\\g8\\g8-12-09-settings-appearance.png",
+      "comparison": "09-settings-appearance.png",
+      "baseline_bytes": 65157,
+      "final_bytes": 65231,
+      "byte_delta": 74
+    },
+    {
+      "view": "09-settings-system",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-14-09-settings-system.png",
+      "final_file": "screenshots\\g8\\g8-13-09-settings-system.png",
+      "comparison": "09-settings-system.png",
+      "baseline_bytes": 92847,
+      "final_bytes": 93768,
+      "byte_delta": 921
+    },
+    {
+      "view": "09-settings-pet",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-15-09-settings-pet.png",
+      "final_file": "screenshots\\g8\\g8-14-09-settings-pet.png",
+      "comparison": "09-settings-pet.png",
+      "baseline_bytes": 44453,
+      "final_bytes": 44657,
+      "byte_delta": 204
+    },
+    {
+      "view": "09-settings-webui",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-16-09-settings-webui.png",
+      "final_file": "screenshots\\g8\\g8-15-09-settings-webui.png",
+      "comparison": "09-settings-webui.png",
+      "baseline_bytes": 57895,
+      "final_bytes": 57966,
+      "byte_delta": 71
+    },
+    {
+      "view": "09-settings-archived",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-17-09-settings-archived.png",
+      "final_file": "screenshots\\g8\\g8-16-09-settings-archived.png",
+      "comparison": "09-settings-archived.png",
+      "baseline_bytes": 28996,
+      "final_bytes": 29066,
+      "byte_delta": 70
+    },
+    {
+      "view": "09-settings-about",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-18-09-settings-about.png",
+      "final_file": "screenshots\\g8\\g8-17-09-settings-about.png",
+      "comparison": "09-settings-about.png",
+      "baseline_bytes": 42221,
+      "final_bytes": 42257,
+      "byte_delta": 36
+    },
+    {
+      "view": "09-settings-model",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-19-09-settings-model.png",
+      "final_file": "screenshots\\g8\\g8-18-09-settings-model.png",
+      "comparison": "09-settings-model.png",
+      "baseline_bytes": 52660,
+      "final_bytes": 73444,
+      "byte_delta": 20784
+    },
+    {
+      "view": "09-settings-agent",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-20-09-settings-agent.png",
+      "final_file": "screenshots\\g8\\g8-19-09-settings-agent.png",
+      "comparison": "09-settings-agent.png",
+      "baseline_bytes": 52660,
+      "final_bytes": 80773,
+      "byte_delta": 28113
+    },
+    {
+      "view": "09-settings-skills",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-21-09-settings-skills.png",
+      "final_file": "screenshots\\g8\\g8-20-09-settings-skills.png",
+      "comparison": "09-settings-skills.png",
+      "baseline_bytes": 52660,
+      "final_bytes": 80773,
+      "byte_delta": 28113
+    },
+    {
+      "view": "09-settings-tools",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-22-09-settings-tools.png",
+      "final_file": "screenshots\\g8\\g8-21-09-settings-tools.png",
+      "comparison": "09-settings-tools.png",
+      "baseline_bytes": 52660,
+      "final_bytes": 96330,
+      "byte_delta": 43670
+    },
+    {
+      "view": "10-boot-chat-at-1280x720",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-23-10-boot-chat-at-1280x720.png",
+      "final_file": "screenshots\\g8\\g8-24-10-boot-chat-at-1280x720.png",
+      "comparison": "10-boot-chat-at-1280x720.png",
+      "baseline_bytes": 51804,
+      "final_bytes": 59776,
+      "byte_delta": 7972
+    },
+    {
+      "view": "11-work-drawer-at-1280x720",
+      "final": "g8",
+      "baseline": "screenshots\\baseline\\v13-fixture-24-11-work-drawer-at-1280x720.png",
+      "final_file": "screenshots\\g8\\g8-25-11-work-drawer-at-1280x720.png",
+      "comparison": "11-work-drawer-at-1280x720.png",
+      "baseline_bytes": 81378,
+      "final_bytes": 90311,
+      "byte_delta": 8933
+    }
+  ]
+}
