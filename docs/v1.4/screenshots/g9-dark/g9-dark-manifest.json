@@ -3,7 +3,7 @@
   "tag": "g9-dark",
   "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v14\\candidate",
   "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\fixture-team",
-  "startedAt": "2026-09-15T18:56:44.894Z",
+  "startedAt": "2026-09-15T19:10:21.666Z",
   "entries": [
     {
       "view": "01-boot-chat",
@@ -14,7 +14,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 63685,
+      "bytes": 63357,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -27,7 +27,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 89812,
+      "bytes": 89634,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -40,7 +40,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 89885,
+      "bytes": 89660,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -53,7 +53,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 77226,
+      "bytes": 77322,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -66,7 +66,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 119345,
+      "bytes": 119472,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -79,7 +79,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 74766,
+      "bytes": 74886,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -92,7 +92,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 94703,
+      "bytes": 94850,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -105,7 +105,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 99124,
+      "bytes": 99236,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -118,7 +118,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 66075,
+      "bytes": 65932,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -131,7 +131,7 @@
       ],
       "hash": "#/guid",
       "title": "Kel",
-      "bytes": 66075,
+      "bytes": 65932,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Ex"
     },
@@ -144,7 +144,7 @@
       ],
       "hash": "#/settings/appearance",
       "title": "Kel",
-      "bytes": 66360,
+      "bytes": 66995,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
     },
@@ -157,7 +157,7 @@
       ],
       "hash": "#/settings/appearance",
       "title": "Kel",
-      "bytes": 66360,
+      "bytes": 66995,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
     },
@@ -170,7 +170,7 @@
       ],
       "hash": "#/settings/system",
       "title": "Kel",
-      "bytes": 93493,
+      "bytes": 93757,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes o"
     },
@@ -183,7 +183,7 @@
       ],
       "hash": "#/settings/pet",
       "title": "Kel",
-      "bytes": 44814,
+      "bytes": 45010,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay"
     },
@@ -196,7 +196,7 @@
       ],
       "hash": "#/settings/webui",
       "title": "Kel",
-      "bytes": 58009,
+      "bytes": 58183,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or rem"
     },
@@ -209,7 +209,7 @@
       ],
       "hash": "#/settings/archived",
       "title": "Kel",
-      "bytes": 28913,
+      "bytes": 29083,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Archived conversations No archived items"
     },
@@ -222,7 +222,7 @@
       ],
       "hash": "#/settings/about",
       "title": "Kel",
-      "bytes": 42422,
+      "bytes": 42610,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
     },
@@ -235,7 +235,7 @@
       ],
       "hash": "#/providers",
       "title": "Kel",
-      "bytes": 74050,
+      "bytes": 74255,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Providers 4 providers · 0 usable right now Reload Claude (Claude Cod"
     },
@@ -248,7 +248,7 @@
       ],
       "hash": "#/team/roster",
       "title": "Kel",
-      "bytes": 81515,
+      "bytes": 81763,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 "
     },
@@ -261,7 +261,7 @@
       ],
       "hash": "#/team/roster",
       "title": "Kel",
-      "bytes": 81515,
+      "bytes": 81763,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 "
     },
@@ -274,7 +274,7 @@
       ],
       "hash": "#/autonomy",
       "title": "Kel",
-      "bytes": 97044,
+      "bytes": 97338,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Autonomy 1 active lease · 1 boundary request waiting on you Reload E"
     },
@@ -287,72 +287,46 @@
       ],
       "hash": "#/work",
       "title": "Kel",
-      "bytes": 90286,
+      "bytes": 90534,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Work 3 jobs in this project · 2 waiting on you Reload Jobs Job State"
     },
     {
-      "view": "12-team-office",
-      "file": "g9-dark-23-12-team-office.png",
-      "inner": [
-        1456,
-        908
-      ],
-      "hash": "#/team/office",
-      "title": "Kel",
-      "bytes": 66993,
-      "blankSuspect": false,
-      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Office re"
-    },
-    {
-      "view": "12-projects-knowledge",
-      "file": "g9-dark-24-12-projects-knowledge.png",
-      "inner": [
-        1456,
-        908
-      ],
-      "hash": "#/projects/knowledge",
-      "title": "Kel",
-      "bytes": 83615,
-      "blankSuspect": false,
-      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Kn"
-    },
-    {
       "view": "12-providers",
-      "file": "g9-dark-25-12-providers.png",
+      "file": "g9-dark-23-12-providers.png",
       "inner": [
         1456,
         908
       ],
       "hash": "#/providers",
       "title": "Kel",
-      "bytes": 74050,
+      "bytes": 74255,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Providers 4 providers · 0 usable right now Reload Claude (Claude Cod"
     },
     {
       "view": "12-autonomy",
-      "file": "g9-dark-26-12-autonomy.png",
+      "file": "g9-dark-24-12-autonomy.png",
       "inner": [
         1456,
         908
       ],
       "hash": "#/autonomy",
       "title": "Kel",
-      "bytes": 97044,
+      "bytes": 97338,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Autonomy 1 active lease · 1 boundary request waiting on you Reload E"
     },
     {
       "view": "12-diagnostics",
-      "file": "g9-dark-27-12-diagnostics.png",
+      "file": "g9-dark-25-12-diagnostics.png",
       "inner": [
         1456,
         908
       ],
       "hash": "#/diagnostics",
       "title": "Kel",
-      "bytes": 73965,
+      "bytes": 74160,
       "blankSuspect": false,
       "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Diagnostics Engine 0.5.0 · 3 jobs · 1 runs · database integrity ok R"
     }
@@ -364,11 +338,16 @@
     "appExitCode": 0
   },
   "launchMode": "packaged",
-  "launchedAt": "2026-09-15T18:56:45.347Z",
+  "launchedAt": "2026-09-15T19:10:22.128Z",
   "engine": {
-    "pid": 45464,
+    "pid": 37920,
     "version": "0.5.0"
   },
-  "finishedAt": "2026-09-15T18:57:49.477Z",
+  "themeSwitch": {
+    "dataTheme": "dark",
+    "arcoTheme": "dark",
+    "injectedTokens": false
+  },
+  "finishedAt": "2026-09-15T19:11:28.300Z",
   "closeOutcome": "close-timeout"
 }

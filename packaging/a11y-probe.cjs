@@ -28,13 +28,24 @@ const outDir = path.resolve(process.argv[4] || '');
 // measure contrast in dark mode as well as light.
 const themeIndex = process.argv.indexOf('--theme');
 const theme = themeIndex >= 0 ? process.argv[themeIndex + 1] : 'light';
+let themeSwitched = false;
 const applyTheme = async (target) => {
   if (theme !== 'dark') return;
+  // Switch through the app's own Appearance setting once (the donor injects `style#theme-tokens` and
+  // Arco's variables; attributes alone leave components on light fallbacks), then re-assert the
+  // attributes before each audit so a re-render cannot drift back.
+  if (!themeSwitched) {
+    themeSwitched = true;
+    await target.evaluate(() => { location.hash = '/settings/appearance'; }).catch(() => undefined);
+    await target.waitForTimeout(2200);
+    await target.getByText('Dark', { exact: true }).first().click({ timeout: 15000 }).catch(() => undefined);
+    await target.waitForTimeout(1800);
+    await target.evaluate(() => { location.hash = '/guid'; }).catch(() => undefined);
+    await target.waitForTimeout(1800);
+    return;
+  }
   await target
     .evaluate(() => {
-      // The donor switches themes with a PAIR: the root attribute drives the CSS-file tokens, while
-      // body[arco-theme] drives Arco's own component styles. Setting only the root left Arco components
-      // on their light rules (measured: body.arco-theme stayed "light").
       document.documentElement.setAttribute('data-color-scheme', 'default');
       document.documentElement.setAttribute('data-theme', 'dark');
       document.body.setAttribute('arco-theme', 'dark');

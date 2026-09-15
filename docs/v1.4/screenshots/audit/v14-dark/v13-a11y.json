@@ -1,67 +1,16 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T19:05:28.476Z",
+  "startedAt": "2026-09-15T19:12:08.209Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 42980,
+    "pid": 25404,
     "version": "0.5.0"
   },
   "bootScreen": {
     "textSamples": 22,
-    "contrastFailures": [
-      {
-        "element": "span.text-14px.text-t-tertiary.sider-section-title",
-        "text": "Project conversations",
-        "size": 14,
-        "weight": "400",
-        "fg": "rgb(92,100,112)",
-        "bg": "rgb(38,38,38)",
-        "ratio": 2.53,
-        "need": 4.5
-      },
-      {
-        "element": "span",
-        "text": "Work & context",
-        "size": 14,
-        "weight": "400",
-        "fg": "rgb(90,98,112)",
-        "bg": "rgb(38,38,38)",
-        "ratio": 2.46,
-        "need": 4.5
-      },
-      {
-        "element": "span",
-        "text": "Work in a project",
-        "size": 14,
-        "weight": "500",
-        "fg": "rgb(90,98,112)",
-        "bg": "rgb(38,38,38)",
-        "ratio": 2.46,
-        "need": 4.5
-      },
-      {
-        "element": "span",
-        "text": "Explain this project in plain words.",
-        "size": 12.5,
-        "weight": "400",
-        "fg": "rgb(90,98,112)",
-        "bg": "rgb(26,26,26)",
-        "ratio": 2.83,
-        "need": 4.5
-      },
-      {
-        "element": "span",
-        "text": "Review this project and suggest the next useful change.",
-        "size": 12.5,
-        "weight": "400",
-        "fg": "rgb(90,98,112)",
-        "bg": "rgb(26,26,26)",
-        "ratio": 2.83,
-        "need": 4.5
-      }
-    ],
-    "contrastFailureCount": 5,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
     "smallestText": 12,
     "largestText": 21,
     "fontSizeHistogram": {
@@ -78,23 +27,19 @@
         "count": 14
       },
       {
-        "value": "rgb(90,98,112)",
-        "count": 4
+        "value": "rgb(169,182,198)",
+        "count": 5
       },
       {
         "value": "rgb(230,237,243)",
         "count": 1
       },
       {
-        "value": "rgb(92,100,112)",
+        "value": "rgb(144,152,161)",
         "count": 1
       },
       {
         "value": "rgb(206,211,218)",
-        "count": 1
-      },
-      {
-        "value": "rgb(169,182,198)",
         "count": 1
       }
     ],
@@ -115,6 +60,97 @@
     "emojiCharacters": 0
   },
   "focusOrderBoot": [
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Kel",
+      "outline": "solid 2px rgb(48, 161, 123)",
+      "rect": [
+        824,
+        324,
+        70,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "TEXTAREA",
+      "name": null,
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        488,
+        395,
+        742,
+        44
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        488,
+        451,
+        32,
+        32
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        1198,
+        451,
+        32,
+        32
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Work in a project",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        489,
+        502,
+        145,
+        22
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Explain this project in plain words.",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        495,
+        582,
+        768,
+        32
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Review this project and suggest the next",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        495,
+        623,
+        768,
+        32
+      ],
+      "isSkipLink": false
+    },
     {
       "tag": "A",
       "name": null,
@@ -148,6 +184,19 @@
       "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         52,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Back",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        88,
         3,
         36,
         36
@@ -197,115 +246,11 @@
       "tag": "DIV",
       "name": null,
       "text": "New Chat",
-      "outline": "solid 2px rgb(53, 166, 128)",
+      "outline": "solid 2px rgb(50, 165, 126)",
       "rect": [
         8,
         91,
         208,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Work",
-      "text": "Work",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        127,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Team",
-      "text": "Team",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        163,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Projects",
-      "text": "Projects",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        199,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Providers",
-      "text": "Providers",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        235,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Autonomy",
-      "text": "Autonomy",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        271,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "BUTTON",
-      "name": "Diagnostics",
-      "text": "Diagnostics",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        307,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "DIV",
-      "name": null,
-      "text": "New conversation",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        425,
-        244,
-        34
-      ],
-      "isSkipLink": false
-    },
-    {
-      "tag": "DIV",
-      "name": null,
-      "text": "Baseline fixture chat",
-      "outline": "solid 2px rgb(47, 163, 124)",
-      "rect": [
-        8,
-        461,
-        244,
         34
       ],
       "isSkipLink": false
@@ -665,7 +610,7 @@
       "emojiCharacters": 0
     },
     "diagnostics": {
-      "textSamples": 112,
+      "textSamples": 118,
       "contrastFailures": [
         {
           "element": "button.kel-btn.kel-btn--primary",
@@ -693,14 +638,14 @@
       "largestText": 24,
       "fontSizeHistogram": {
         "12": 13,
-        "14": 88,
+        "14": 94,
         "16": 6,
         "24": 5
       },
       "paletteText": [
         {
           "value": "rgb(169,182,198)",
-          "count": 63
+          "count": 69
         },
         {
           "value": "rgb(255,255,255)",
@@ -722,7 +667,7 @@
       "paletteBg": [
         {
           "value": "rgb(22,27,34)",
-          "count": 65
+          "count": 71
         },
         {
           "value": "rgb(42,42,43)",
