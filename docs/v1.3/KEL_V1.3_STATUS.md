@@ -12,7 +12,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G1 — donor audit + design docs | **COMPLETE — awaiting user approval** | six deliverables below |
 | G2 — memory foundation | **COMPLETE** | `kel/memory.py` + 16 tests; migration 001 with backup/receipt; see §Gate 2 (as-built) |
 | G3 — project map + context composer | **COMPLETE** | `kel/projectmap.py` + `kel/composer.py` + 17 tests; migration 002; see §Gate 3 (as-built) |
-| G4 — continuation | not started | blocked on approval |
+| G4 — continuation | **IN PROGRESS — core landed** | migration 003 + `kel/continuation.py` + store helpers + 17 tests; service wiring + live probes next |
 | G5 — recipes | not started | blocked on approval |
 | G6 — user experience | not started | blocked on approval |
 | G7 — adversarial acceptance + freeze | not started | blocked on approval |
@@ -324,5 +324,32 @@ cheap inputs changed); `schema_migrations` is created by the migration-002 path 
 migration has not run; `records()` no longer shadows the builtin `type()`.
 
 Next: Gate 4 (first-class continuation).
+
+## Gate 4 (core as-built) — first-class continuation  [2026-09-15]
+
+Landed on `v1.3-dev` (this commit; the gate is not yet declared complete):
+
+- `runtime/kel/continuation.py`: migration 003 (`job_links`); project-scoped candidate
+  resolution from durable state only (continuable states, CLOSED failed/uncertain with
+  retryable milestones, explicit-only CANCELLED); deterministic ranking (text match,
+  conversation link, state priority, accepted count, recency); single-vs-choice-vs-none rule
+  (single also when the top candidate is linked to this conversation and strictly beats every
+  other); idempotent `attach()`; `plan_resume()` (preserve / reopen / revalidate-with-reasons,
+  source-digest revalidation, legacy coding fallback via `check_evidence`, native-session
+  shape validation — never guessed); `execute_resume()` routes PAUSED to resume,
+  WAITING_RESOURCE to retry_route, CLOSED to reopen, then attaches; `explain()` summary.
+- `runtime/kel/core.py`: two additive helpers — `Store.reopen()` (refuses VERIFIED jobs,
+  requires a retryable milestone, refuses with active runs) and `Store.invalidate_milestone()`
+  (explicit reason, revision-guarded, refuses with active runs).
+- `runtime/tests/test_v13_continuation.py` (17 tests): isolation, eligibility, single/choice/
+  text-ranking/none, VERIFIED refusal, attach idempotency + restart survival, all resume
+  routes, revalidation vs preservation, legacy evidence-check fallback (mocked), session
+  validation, approval-state attach-only, idempotent double-resume. Full suite: **231 passed
+  + 10 subtests**.
+- Still open for Gate 4 completion (next session): service/ACP wiring (submit-flow
+  classification, Work-context continuation fields), live app-restart and new-conversation
+  probes, and the Gate 4 completion checkpoint.
+
+Next: finish Gate 4 wiring + live probes.
 
 
