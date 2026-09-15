@@ -154,9 +154,25 @@ def main():
                   'Compared fairly; risks and evidence-to-switch recorded.')
     briefs.approve(brief, actor='user')
 
+    # --- accepted + verified milestone so the receipt viewer has real evidence ----------------
+    verified_job = seed_job(store, 'main')
+    run = store.claim(verified_job, 'm1')
+    store.enqueue_result(
+        'fixture-artifact', run['id'], run['epoch'],
+        {'outcome': 'SUCCESS',
+         'text': ('# Baseline fixture artifact\n\n'
+                  'This artifact was produced by the fixture worker so the receipt viewer has '
+                  'real, check-passing evidence to display.\n')})
+    store.consume()
+    verify_outcome = store.verify(verified_job, 'm1')
+    verified_verdict = store.assess(verified_job)
+    store.publish(verified_job)
+
     print(json.dumps({'schema': 1, 'data': str(data),
                       'conversations': [c1, c2],
-                      'jobs': {'paused': job_paused, 'approval': job_approval},
+                      'jobs': {'paused': job_paused, 'approval': job_approval,
+                               'verified': verified_job},
+                      'verified': {'verify': verify_outcome, 'verdict': verified_verdict},
                       'team': {'assignment': impl['assignment_id'],
                                'qa': qa['assignment_id'], 'roles': len(team.roster())},
                       'brief': brief, 'brief_state': 'APPROVED'},

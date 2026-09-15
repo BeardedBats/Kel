@@ -31,6 +31,12 @@ rendered from the packaged candidate (34 shots at five widths, 0 renderer errors
 memory action round-trip, an accepted-milestone fixture to exercise the artifact viewer, and recipe
 preview/dry-run.
 
+**Gate 5 (UI), third increment (2026-09-15).** `seed_ui_fixture.py` now drives one milestone through the
+engine's real path (claim → fixture worker result → `verify` → `assess` → `publish`) into the `main`
+conversation, so the Work Center shows **Kel verified: VERIFIED** with an accepted milestone and an
+auto-loaded **Receipt** artifact. Rendered evidence: tag `g5d` (0 renderer errors, 0 blank, app exit 0).
+Remaining in Gate 5: memory action round-trip and recipe preview/dry-run, then the gate relay.
+
 **Gate 4 (UI) implementation status (2026-09-15).** `renderer/styles/kel-tokens.css`,
 `components/kel/{kelApi.ts,KelPrimitives.tsx}`, `pages/kel/team/index.tsx` (Office / Roster / Studio)
 and `pages/kel/work/index.tsx` (Work Center) are implemented, routed at `/work`, `/team`,
