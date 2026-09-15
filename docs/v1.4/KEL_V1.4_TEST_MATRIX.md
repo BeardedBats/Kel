@@ -60,3 +60,14 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G1-FOCUS | every tab stop shows a focus ring; first stop = skip link | V | **PASS** (0 failures, both directions) |
 | G1-A11Y-BASE | packaged V1.3 a11y probe (contrast/focus/type/tab order) | P/V | **PASS** (findings: `KEL_V1.4_UI_AUDIT.md` §5) |
 | G1-DOCS | design system + interaction patterns + accessibility standard + visual acceptance matrix | docs | **PASS** (4 documents) |
+
+## 6. Gate 2 additions
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G2-ARCH | architecture + 5 Best Solution Gate decisions grounded in source | docs | **PASS** (`KEL_V1.4_ARCHITECTURE.md`) |
+| G2-TEAM | Team model incl. activity contract + no-fake-specialist enforcement | docs | **PASS** (`KEL_V1.4_TEAM_MODEL.md`) |
+| G2-AUTONOMY | lease + guardrail enforcement mapped to AUTO-* tests | docs | **PASS** (`KEL_V1.4_AUTONOMY_POLICY.md`) |
+| G2-PROVIDERS | state model + DeepSeek first-class + credential custody | docs | **PASS** (`KEL_V1.4_PROVIDER_SPEC.md`) |
+| G2-UX | IA + surface specs + old-surface migration + screenshot strategy | docs | **PASS** (`KEL_V1.4_UX_SPEC.md`) |
+| G2-SECURITY | threat model + sanitizer + retention + supply chain | docs | **PASS** (`KEL_V1.4_SECURITY_MODEL.md`) |
