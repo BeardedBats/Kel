@@ -78,6 +78,14 @@ class Service:
             db.execute("UPDATE submissions SET state='DISPATCHED',job_id=(SELECT job_id FROM job_intakes WHERE job_intakes.id=submissions.id) WHERE id IN (SELECT id FROM job_intakes)")
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
+        from .continuation import Continuation
+        from .memory import Memory
+        from .projectmap import ProjectMap
+        from .recipes import RecipeLibrary
+        Memory(self.store)
+        ProjectMap(self.store)
+        Continuation(self.store)
+        RecipeLibrary(self.store).install_builtins()
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -107,6 +115,12 @@ class Service:
         if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
         attachments=data.get('attachments',[])
         if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
+        job_id=data.get('job_id')
+        if job_id is not None:
+            job_id=str(job_id).lower()
+            hexish=job_id.replace('-','')
+            if len(hexish)!=32 or any(ch not in '0123456789abcdef' for ch in hexish):
+                raise PolicyError('Invalid job id')
         kind=data.get('kind')
         greenfield_flag=False
         if kind is None:
@@ -116,6 +130,26 @@ class Service:
             result=classify(text)
             kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
         packet=self.context.handoff(cid,text,attachments)
+        try:
+            from .memory import Memory
+            from .projectmap import ProjectMap
+            from .composer import Composer
+            with contextlib.closing(self.store.connect()) as db:
+                project_row=db.execute('SELECT project_id FROM conversations WHERE id=?',
+                                       (cid,)).fetchone()
+            if project_row:
+                packet['context_packet']=Composer(
+                    self.store,Memory(self.store),ProjectMap(self.store)).build(
+                    project_row['project_id'],text,conversation_id=cid,purpose='submit')
+        except Exception:
+            pass  # enrichment is additive; the handoff packet remains the fallback
+        if job_id:packet['continuation']={'job_id':job_id}
+        recipe_run=data.get('recipe')
+        if recipe_run is not None:
+            if not isinstance(recipe_run,dict) or not isinstance(recipe_run.get('recipe_id'),str):
+                raise PolicyError('Invalid recipe invocation')
+            packet['recipe_invocation']={'recipe_id':recipe_run['recipe_id'],
+                                         'inputs':recipe_run.get('inputs') or {}}
         with self.store.transaction() as db:
             old=db.execute('SELECT * FROM submissions WHERE id=?',(sid,)).fetchone()
             if old:
@@ -133,10 +167,16 @@ class Service:
         try:
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
+            explicit_job=(packet.get('continuation') or {}).get('job_id')
+            continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             if kind=='status' or lower in ('status','what are you working on?','what is running?'):
                 jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
                 answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
                 self.store.add_message(answer,'assistant',cid);jid=None
+            elif kind=='recipe' or packet.get('recipe_invocation'):
+                jid=self._recipe_run(sid,cid,text,packet)
+            elif kind=='continue' or explicit_job or continue_verb:
+                jid=self._continuation(cid,text,packet)
             elif coding_verb and not greenfield_flag and not packet['project']['root']:
                 # Coding intent with no selected project and no explicit
                 # greenfield request: ask instead of guessing or silently
@@ -208,6 +248,7 @@ class Service:
                 contract['submission_id']=sid
                 # Create and link the job atomically with intake to prevent duplicate effects on restart.
                 jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+                self._link_origin(jid,cid,sid)
                 with self.store.transaction() as db:
                     # create() records the source request; remove only its duplicate intake message.
                     dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
@@ -215,6 +256,221 @@ class Service:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='DISPATCHED',job_id=? WHERE id=?",(jid,sid))
         except Exception as exc:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+
+    def _recipe_run(self,sid,cid,text,packet):
+        """Run a validated recipe through the existing engine (no second runtime)."""
+        from .recipes import RecipeLibrary, compile_recipe
+        library=RecipeLibrary(self.store)
+        invocation=packet.get('recipe_invocation') or {}
+        project_id=(packet.get('project') or {}).get('id') or 'default'
+        try:
+            info=library.get(invocation.get('recipe_id',''),project_id=project_id)
+        except PolicyError as exc:
+            self.store.add_message('I could not find that recipe. '+str(exc),'assistant',cid)
+            return None
+        recipe=info['recipe']
+        if recipe['recipe_id']=='continue-work':
+            return self._continuation(cid,text,packet)
+        root=tests=None
+        needs_code=recipe['kind']=='coding' or any(
+            step.get('kind_override')=='coding' for step in recipe['steps'])
+        if needs_code:
+            root=(packet.get('project') or {}).get('root')
+            with contextlib.closing(self.store.connect()) as db:
+                row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(project_id,)).fetchone()
+            tests=json.loads(row['command']) if row else None
+        try:
+            contract=compile_recipe(recipe,invocation.get('inputs') or {},project_id,root=root,tests=tests)
+        except PolicyError as exc:
+            self.store.add_message(str(exc),'assistant',cid)
+            return None
+        contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+        contract['submission_id']=sid
+        jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+        self._link_origin(jid,cid,sid)
+        with self.store.transaction() as db:
+            dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
+            if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
+        return jid
+
+    def _project_of(self,cid):
+        with contextlib.closing(self.store.connect()) as db:
+            row=db.execute('SELECT project_id FROM conversations WHERE id=?',(cid,)).fetchone()
+        if not row:raise PolicyError('Conversation missing')
+        return row['project_id']
+
+    def _work(self,cid):
+        """Compact project work context for the shell's Work panel."""
+        from .memory import Memory
+        from .projectmap import ProjectMap
+        from .recipes import RecipeLibrary
+        project_id=self._project_of(cid)
+        memory=Memory(self.store)
+        data={'schema':1,'project_id':project_id,
+              'memory':{'records':[{'id':r['id'],'type':r['type'],'topic':r['topic'],
+                                    'summary':r['summary'],'value':r['value'],'trust':r['trust'],
+                                    'status':r['status'],'user_confirmed':r['user_confirmed'],
+                                    'source_type':r['source_type'],'source_ref':r['source_ref'],
+                                    'confidence':r['confidence'],'updated':r['updated']}
+                                   for r in memory.records(project_id,limit=100)],
+                        'conflicts':memory.conflicts(project_id)},
+              'map':None,
+              'recipes':{'entries':RecipeLibrary(self.store).entries(project_id=project_id)}}
+        latest=ProjectMap(self.store).get(project_id)
+        if latest:
+            data['map']={'version':latest['version'],'fingerprint':latest['fingerprint'],
+                         'updated':latest['updated'],'note':latest['note'],
+                         'sections':[{'name':name,'trust':section.get('trust','verified'),
+                                      'stale':bool(section.get('stale')),
+                                      'updated':section.get('updated'),
+                                      'digest':section.get('digest'),
+                                      'sources':section.get('sources',[])}
+                                     for name,section in latest['sections'].items()]}
+        return data
+
+    def _owned_memory(self,project_id,memory_id):
+        with contextlib.closing(self.store.connect()) as db:
+            row=db.execute('SELECT project_id FROM memories WHERE id=?',(memory_id,)).fetchone()
+        if not row or row['project_id']!=project_id:
+            raise PolicyError('Memory belongs to another project')
+
+    def _memory_action(self,data):
+        from .memory import Memory
+        cid=data.get('conversation','main')
+        project_id=self._project_of(cid)
+        memory=Memory(self.store)
+        action=data.get('action')
+        memory_id=data.get('id')
+        if action=='confirm':
+            self._owned_memory(project_id,memory_id)
+            memory.confirm(memory_id)
+            return {'ok':True}
+        if action=='correct':
+            self._owned_memory(project_id,memory_id)
+            summary=data.get('summary')
+            value=data.get('value')
+            if value is None and isinstance(summary,str) and summary.strip():
+                value={'statement':summary}
+            return {'id':memory.correct(memory_id,value=value,summary=summary)}
+        if action=='retract':
+            self._owned_memory(project_id,memory_id)
+            memory.retract(memory_id,reason=data.get('reason',''))
+            return {'ok':True}
+        if action=='forget':
+            self._owned_memory(project_id,memory_id)
+            memory.forget(memory_id)
+            return {'ok':True}
+        if action=='resolve_conflict':
+            with contextlib.closing(self.store.connect()) as db:
+                row=db.execute('SELECT project_id FROM memory_conflicts WHERE id=?',(memory_id,)).fetchone()
+            if not row or row['project_id']!=project_id:
+                raise PolicyError('Conflict belongs to another project')
+            return {'resolution':memory.resolve_conflict(memory_id,data.get('choice'))}
+        raise PolicyError('Unknown memory action')
+
+    def _map_action(self,data):
+        from .projectmap import ProjectMap
+        cid=data.get('conversation','main')
+        project_id=self._project_of(cid)
+        maps=ProjectMap(self.store)
+        action=data.get('action')
+        if action=='refresh':
+            latest=maps.refresh(project_id,force=bool(data.get('force')),reason='work-context')
+            return {'version':latest['version'],'fingerprint':latest['fingerprint'],
+                    'note':latest['note']}
+        if action=='stale':
+            return {'sections':maps.stale_sections(project_id,data.get('changed') or [])}
+        raise PolicyError('Unknown map action')
+
+    def _recipes_action(self,data):
+        from .recipes import RecipeLibrary, compile_recipe
+        cid=data.get('conversation','main')
+        project_id=self._project_of(cid)
+        library=RecipeLibrary(self.store)
+        action=data.get('action')
+        if action=='list':
+            return {'entries':library.entries(project_id=project_id)}
+        if action=='get':
+            info=library.get(data.get('recipe_id',''),project_id=project_id)
+            return {'recipe':info['recipe'],'scope':info['scope'],'version':info['version'],
+                    'digest':info['digest']}
+        if action=='preview':
+            info=library.get(data.get('recipe_id',''),project_id=project_id)
+            recipe=info['recipe']
+            if recipe['recipe_id']=='continue-work':
+                compiled=compile_recipe(recipe,data.get('inputs') or {},project_id)
+                return {'continuation':True,'stages':compiled['stages'],'request':compiled['request']}
+            root=tests=None
+            needs_code=recipe['kind']=='coding' or any(
+                step.get('kind_override')=='coding' for step in recipe['steps'])
+            if needs_code:
+                with contextlib.closing(self.store.connect()) as db:
+                    project=db.execute('SELECT root FROM projects WHERE id=?',(project_id,)).fetchone()
+                    row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(project_id,)).fetchone()
+                root=project['root'] if project else None
+                tests=json.loads(row['command']) if row else None
+            try:
+                contract=compile_recipe(recipe,data.get('inputs') or {},project_id,root=root,tests=tests)
+            except PolicyError as exc:
+                return {'needs_project':True,'message':str(exc)}
+            return {'request':contract['request'],'kind':contract['kind'],
+                    'milestones':[{'id':m['id'],'objective':m['objective'],
+                                   'depends_on':m['depends_on'],'checks':m['checks']}
+                                  for m in contract['milestones']],
+                    'permissions':recipe['permissions'],
+                    'terminal_states':recipe['terminal_states'],
+                    'budget':contract['budget'],'recipe':contract['recipe']}
+        if action=='run':
+            info=library.get(data.get('recipe_id',''),project_id=project_id)
+            sid=self.submit({'text':'Run recipe '+info['recipe']['name'],'conversation':cid,
+                             'kind':'recipe',
+                             'recipe':{'recipe_id':data.get('recipe_id'),
+                                       'inputs':data.get('inputs') or {}}})
+            return {'submission':sid}
+        raise PolicyError('Unknown recipe action')
+
+    def _link_origin(self,job_id,conversation_id,sid):
+        from .continuation import Continuation
+        try:
+            Continuation(self.store).attach(job_id,conversation_id,kind='origin',reason='submission '+str(sid)[:8])
+        except Exception:
+            pass  # linking is auxiliary metadata; never fail an accepted submission over it
+
+    def _continuation(self,cid,text,packet):
+        """Natural-language continuation: durable state decides, never transcript text."""
+        from .continuation import Continuation
+        cont=Continuation(self.store)
+        project_id=(packet.get('project') or {}).get('id')
+        explicit=(packet.get('continuation') or {}).get('job_id')
+        if explicit:
+            try:
+                job=self.store.get(explicit)
+            except (KeyError, PolicyError):
+                self.store.add_message('I could not find that job id.','assistant',cid)
+                return None
+            candidates={c['job_id'] for c in cont.candidates(project_id)}
+            if explicit in candidates:
+                out=cont.execute_resume(explicit,cid,reason='user: '+text[:120])
+                self.store.add_message(cont.explain(explicit)+' Current state: '+out['state'].lower()+'.','assistant',cid)
+            elif job.get('verdict')=='VERIFIED':
+                self.store.add_message('That work is already verified and closed. Ask for a new change if you want more done.','assistant',cid)
+            else:
+                self.store.add_message('That job belongs to another project or is not continuable. Continue Work only resumes unfinished jobs inside the current project.','assistant',cid)
+            return None
+        result=cont.resolve(project_id,cid,text)
+        if result['kind']=='single':
+            top=result['candidate']
+            out=cont.execute_resume(top['job_id'],cid,reason='user: '+text[:120])
+            self.store.add_message(cont.explain(top['job_id'])+' Current state: '+out['state'].lower()+'.','assistant',cid)
+        elif result['kind']=='choice':
+            lines=['I found several unfinished jobs in this project. Which one should I continue?']
+            for choice in result['candidates']:
+                lines.append('- %s — %s, %d/%d milestones accepted (job %s)'%(choice['title'] or 'Untitled work',choice['state'].lower().replace('_',' '),choice['accepted'],choice['total'],choice['job_id']))
+            lines.append('Reply with "continue <job id>", or use the Continue Work controls in Work context.')
+            self.store.add_message('\n'.join(lines),'assistant',cid)
+        else:
+            self.store.add_message('There is no unfinished work in this project to continue. New requests start fresh work.','assistant',cid)
+        return None
 
     def state(self,cid='main'):
         with contextlib.closing(self.store.connect()) as db:
@@ -242,9 +498,17 @@ class Service:
                 else:
                     a['action_summary']='take the requested '+str(kind)+' action'
             files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
+        project_id=next((c['project_id'] for c in conversations if c['id']==cid),None)
+        continuation=[]
+        if project_id:
+            from .continuation import Continuation
+            try:
+                continuation=Continuation(self.store).candidates(project_id)
+            except Exception:
+                continuation=[]  # the Work surface must render even if continuation state is unavailable
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
-                'submissions':submissions,'approvals':approvals,'attachments':files,'error':self.error,
+                'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'draining':self.draining}
 
     def action(self,path,data):
@@ -262,6 +526,9 @@ class Service:
 
     def _action(self,path,data):
         if path=='/api/send':return {'id':self.submit(data)}
+        if path=='/api/memory':return self._memory_action(data)
+        if path=='/api/map':return self._map_action(data)
+        if path=='/api/recipes':return self._recipes_action(data)
         if path=='/api/retry':
             with self.store.transaction() as db:
                 row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(data['id'],)).fetchone()
@@ -316,6 +583,7 @@ def serve(root,port=0):
                 try:
                     query=parse_qs(parsed.query)
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/artifact':
                         job=service.store.get(query['job'][0]);mid=query['milestone'][0];m=job['milestones'][mid]
                         if m['state']!='ACCEPTED':raise PolicyError('Artifact has not passed its checks')

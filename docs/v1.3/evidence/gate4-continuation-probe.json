@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "passed": 8,
+  "failed": 0,
+  "probes": [
+    {
+      "probe": "resume-single-over-http",
+      "ok": true,
+      "job1_state": "CLOSED",
+      "candidates": [
+        "a6b9e2da-72cd-4cb8-80b8-2737129599fd"
+      ]
+    },
+    {
+      "probe": "restart-survives",
+      "ok": true,
+      "job1_state": "CLOSED"
+    },
+    {
+      "probe": "restart-re-resume-idempotent",
+      "ok": true
+    },
+    {
+      "probe": "new-conversation-continues",
+      "ok": true,
+      "links": [
+        {
+          "conversation_id": "27451e83-9df9-4c53-8d43-d12b20092048",
+          "kind": "continuation"
+        },
+        {
+          "conversation_id": "34970e7b-824a-416d-a2e0-75047a32820d",
+          "kind": "continuation"
+        }
+      ]
+    },
+    {
+      "probe": "wrong-project-refused",
+      "ok": true
+    },
+    {
+      "probe": "ambiguous-choice-listed",
+      "ok": true
+    },
+    {
+      "probe": "explicit-choice-resumes",
+      "ok": true
+    },
+    {
+      "probe": "approval-survives-restart",
+      "ok": true,
+      "approvals": 1,
+      "job_state": "AWAITING_USER"
+    }
+  ]
+}
