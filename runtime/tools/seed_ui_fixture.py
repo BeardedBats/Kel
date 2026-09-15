@@ -202,8 +202,28 @@ def main():
                               'evidence so nothing has to be re-run')
             store._save(db, job, 'fixture.seed')
 
+    # --- populated provider + process observations --------------------------------------------------
+    # The G8 capture gap: the Providers and Diagnostics surfaces rendered their honest empty states
+    # because no provider had credentials and no worker was recorded. Populate both from real APIs.
+    from kel.providers import Providers
+
+    providers = Providers(store)
+    providers.set_credential_metadata('deepseek', ['api_key'], 'kel:provider:deepseek:api_key')
+    providers.set_credential_metadata('internal', ['api_key'], 'kel:provider:internal:api_key')
+    providers.observe('deepseek', {'ok': True, 'latency_ms': 812.4})
+    providers.observe('internal', {'ok': False, 'error': 'upstream 503'})
+    with store.transaction() as db:
+        db.execute('CREATE TABLE IF NOT EXISTS native_processes('
+                   'run_id TEXT PRIMARY KEY,pid INTEGER,identity TEXT,stdout_path TEXT,deadline REAL)')
+        # One stale worker whose deadline has passed (the orphan path) and one that merely finished.
+        db.execute('INSERT OR REPLACE INTO native_processes VALUES(?,?,?,?,?)',
+                   ('run-orphan', 999001, 'kel-orphan-demo', 'logs/orphan.log', time.time() - 60))
+        db.execute('INSERT OR REPLACE INTO native_processes VALUES(?,?,?,?,?)',
+                   ('run-finished', 999002, 'kel-finished-demo', 'logs/finished.log', time.time() + 3600))
+
     print(json.dumps({'schema': 1, 'data': str(data),
                       'conversations': [c1, c2],
+                      'populated': {'providers': 2, 'processes': 2},
                       'jobs': {'paused': job_paused, 'approval': job_approval,
                                'verified': verified_job},
                       'verified': {'verify': verify_outcome, 'verdict': verified_verdict},
