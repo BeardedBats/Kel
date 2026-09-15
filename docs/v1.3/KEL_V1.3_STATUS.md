@@ -11,7 +11,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G0 — baseline and source provenance | **COMPLETE** | evidence in §Gate 0 |
 | G1 — donor audit + design docs | **COMPLETE — awaiting user approval** | six deliverables below |
 | G2 — memory foundation | **COMPLETE** | `kel/memory.py` + 16 tests; migration 001 with backup/receipt; see §Gate 2 (as-built) |
-| G3 — project map + context composer | not started | blocked on approval |
+| G3 — project map + context composer | **COMPLETE** | `kel/projectmap.py` + `kel/composer.py` + 17 tests; migration 002; see §Gate 3 (as-built) |
 | G4 — continuation | not started | blocked on approval |
 | G5 — recipes | not started | blocked on approval |
 | G6 — user experience | not started | blocked on approval |
@@ -286,5 +286,43 @@ As-built notes (evidence-backed adjustments; specification updates recorded here
   sanitizer remains scheduled for Gate 3 (`kel/composer.py`) with attribution at copy time.
 
 Next: Gate 3 (project map + context composer).
+
+## Gate 3 (as-built) — project map + context composer  [2026-09-15]
+
+Implemented on `v1.3-dev`:
+
+- `runtime/kel/projectmap.py`: migration 002 (`project_maps`, `context_packets`); deterministic
+  inspection (identity/repo state, execution commands with lockfile-based runner detection,
+  architecture entry points/packages/dependencies, conventions, state from jobs/memories);
+  git-tree + key-file fingerprints; versioned snapshots with probe-first incremental refresh
+  (unchanged sections are copied forward without re-inspection); `stale_sections(changed_paths)`;
+  optional bounded synthesis hook whose output is labeled `inferred`.
+- `runtime/kel/composer.py`: the single context path. Provenance-labeled sources (request,
+  memories with authority labels, job state + evidence digests, map sections, bounded
+  recent-turns window, explicit attachments), authority-aware memory selection with deterministic
+  tie-breaks, open-conflict surfacing with per-record annotations, deterministic deduplication,
+  explicit character budget with recorded omissions (request/decisions never dropped),
+  digest-stable `packet_id`, persisted structure for every packet and full text only for
+  job-linked packets. Contains the **first copied donor code**: hermes fence/sanitizer
+  (NousResearch/hermes-agent, MIT, revision `40f2702b22a3`, `agent/memory_manager.py:167-177`,
+  adapted in `kel/composer.py`; mirrored test `test_fence_sanitizer_mirrors_donor_behaviour`;
+  attribution recorded in THIRD_PARTY_NOTICES at release time).
+- Tests: `runtime/tests/test_v13_projectmap.py` (7, MAP-01..07) and
+  `runtime/tests/test_v13_composer.py` (10, CTX-01..09 + fence mirror). Targeted: 17 passed;
+  full suite: **214 passed + 10 subtests** (was 197+10).
+- `runtime/tools/measure_context.py`: C4 measurement harness (legacy handoff vs composer
+  packets, source mix, omissions).
+
+Representative measurements (this pass, three fixtures): legacy handoff 1299-1327 chars;
+composer packets 1737-1765 chars (~434-441 estimated tokens). The composer adds labeled
+provenance, map sections, and per-source reasons rather than minimizing characters; source mix
+and omissions are recorded per packet. Savings claims remain withheld until Gate 7 runs the
+comparison on live task packets.
+
+As-built fixes during this gate: probe-first refresh (inspection runs only when a section's
+cheap inputs changed); `schema_migrations` is created by the migration-002 path when memory's
+migration has not run; `records()` no longer shadows the builtin `type()`.
+
+Next: Gate 4 (first-class continuation).
 
 

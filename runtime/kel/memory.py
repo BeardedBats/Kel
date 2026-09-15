@@ -565,7 +565,7 @@ class Memory:
 
     def records(self, project_id, *, status=None, type=None, limit=200):
         """Inspection listing (newest first); used by the Work-context surface."""
-        if type(limit) is not int or not 1 <= limit <= 1000:
+        if not isinstance(limit, int) or not 1 <= limit <= 1000:
             raise PolicyError('Limit must be 1 to 1000')
         with contextlib.closing(self.store.connect()) as db:
             sql = 'SELECT * FROM memories WHERE project_id=?'
