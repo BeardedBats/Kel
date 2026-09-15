@@ -74,7 +74,7 @@ class Service:
             Diagnostics(self.store,ENGINE_VERSION).record_startup(
                 'engine-start',round((time.time()-started)*1000,2))
         except Exception:
-            pass
+            pass  # a missing span costs one observation, never a boot
         self.requests=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-conversation')
         from .apply_changes import recover_prepared
         self.requests.submit(recover_prepared,self.store)
