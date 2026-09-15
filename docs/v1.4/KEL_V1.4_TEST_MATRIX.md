@@ -191,6 +191,10 @@ page that only surfaced under a real click.
 Remaining in Gate 7: onboarding for first run, search + command palette, tray/notification/pet tokenization,
 and the shell-level keyboard pass (skip link, nav-first order, 30/30 focus rings).
 
+| G7-FOCUS | visible focus ring on every tab stop | P/V | **PASS** — **0/30 → 30/30** stops carry `solid 2px rgb(14, 124, 90)` (the Kel accent); probe resets focus before the pass so the sequence starts like a fresh load |
+| G7-SKIP-LINK | the shell's first tab stop is the skip link | I/V | **NOTE (open)** — the skip link is rendered as the first element of the shell (`Layout.tsx`) with a `#kel-shell-content` target, but it does not appear in the 30-stop sequence, so it is **not yet measurably reachable**; needs the layout branch/CSS checked (the drawer also takes the first stop while it is open) |
+| G7-SEMANTICS | donor drawer controls use semantic elements | I | **NOTE (open)** — the work-drawer tabs are `DIV`s with `tabindex` (reachable and now ringed, but not buttons); converting them is a donor-surface refactor for the G9 pass |
+
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
 Manager), and the Providers + Autonomy surfaces with rendered evidence (cards with the eight states,
 test connection, readiness panel, lease viewer with revoke, Approval Inbox, locked-guardrail block).
