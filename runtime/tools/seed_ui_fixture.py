@@ -168,6 +168,22 @@ def main():
     verified_verdict = store.assess(verified_job)
     store.publish(verified_job)
 
+    # --- autonomy fixtures: one active lease + one pending boundary request -------------------
+    from kel.autonomy import Autonomy
+
+    autonomy = Autonomy(store)
+    lease = autonomy.issue(verified_job, project_id='default', profile='broad',
+                           review_ref='brief:' + brief,
+                           roots=[str(root)], repositories=[str(root)],
+                           domains=['docs.python.org'], tools=['read', 'write', 'run_tests'],
+                           seconds=86400)
+    boundary = autonomy.request_expansion(lease['lease_id'], 'domain', 'github.com',
+                                          what='a pull request for the verified change',
+                                          why='ship the evidence the checks accepted',
+                                          benefit='finish the task end to end',
+                                          fallback='stop and report the manual step',
+                                          risk='outbound network access to github.com')
+
     print(json.dumps({'schema': 1, 'data': str(data),
                       'conversations': [c1, c2],
                       'jobs': {'paused': job_paused, 'approval': job_approval,
@@ -175,7 +191,9 @@ def main():
                       'verified': {'verify': verify_outcome, 'verdict': verified_verdict},
                       'team': {'assignment': impl['assignment_id'],
                                'qa': qa['assignment_id'], 'roles': len(team.roster())},
-                      'brief': brief, 'brief_state': 'APPROVED'},
+                      'brief': brief, 'brief_state': 'APPROVED',
+                      'autonomy': {'lease': lease['lease_id'],
+                                   'request': boundary['request_id']}},
                      indent=2))
     return 0
 

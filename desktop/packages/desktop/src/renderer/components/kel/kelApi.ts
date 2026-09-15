@@ -163,6 +163,129 @@ export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknow
     conversation: 'main',
   });
 
+export interface KelProviderStatus {
+  provider: string;
+  label: string;
+  class: 'native-cli' | 'api';
+  auth_mode: string;
+  base_url?: string | null;
+  capabilities: string[];
+  status: string;
+  note: string;
+  installed: boolean;
+  authenticated: boolean;
+  failures: number;
+  circuit_until: number | null;
+  quota: number | null;
+  quota_unit?: string | null;
+  quota_reset?: number | null;
+  quota_source?: string | null;
+  planType?: string | null;
+  models: Array<{ id: string; capabilities: string[] }>;
+}
+
+export interface KelCredentialMetadata {
+  provider: string;
+  fields: string[];
+  credential_ref: string;
+  created?: number;
+  updated?: number;
+}
+
+export interface KelLease {
+  lease_id: string;
+  job_id: string;
+  project_id: string;
+  profile: string;
+  review_ref: string;
+  issued_at: number;
+  expires_at: number;
+  state: string;
+  reason?: string | null;
+  expired: boolean;
+  scope: Array<{ kind: string; value: string; uses_remaining: number }>;
+}
+
+export interface KelBoundaryRequest {
+  request_id: string;
+  lease_id: string;
+  scope: string;
+  target: string;
+  what?: string;
+  why?: string;
+  benefit?: string;
+  fallback?: string;
+  risk?: string;
+  status: string;
+  grant_kind?: string | null;
+  created: number;
+}
+
+export const kelProviders = {
+  list: () => call<{ providers: KelProviderStatus[] }>('/api/providers', { action: 'list' }),
+  readiness: (capability = 'text', prefer = '') =>
+    call<{
+      chosen: { provider: string; model: string; label: string; status: string; auth_mode: string } | null;
+      chain: string[];
+      reasons: string[];
+      reason: string;
+    }>('/api/providers', { action: 'readiness', capability, prefer }),
+  credentials: (provider?: string) =>
+    call<{ credentials: KelCredentialMetadata[] }>('/api/providers', {
+      action: 'credentials',
+      provider,
+    }),
+  setCredential: (provider: string, fields: string[], credentialRef: string) =>
+    call<Record<string, unknown>>('/api/providers', {
+      action: 'set_credential',
+      provider,
+      fields,
+      credential_ref: credentialRef,
+    }),
+  deleteCredential: (provider: string) =>
+    call<Record<string, unknown>>('/api/providers', { action: 'delete_credential', provider }),
+  usage: (provider?: string) =>
+    call<{ usage: Array<{ provider: string; at: number; data: Record<string, unknown> }> }>(
+      '/api/providers',
+      { action: 'usage', provider }
+    ),
+};
+
+export const kelAutonomy = {
+  leases: (jobId?: string) =>
+    call<{ leases: KelLease[] }>('/api/autonomy', { action: 'leases', job_id: jobId }),
+  requests: (leaseId?: string) =>
+    call<{ requests: KelBoundaryRequest[] }>('/api/autonomy', { action: 'requests', lease_id: leaseId }),
+  guardrails: () =>
+    call<{ rules: Array<{ rule: string; text: string; test: string }>; digest: string }>(
+      '/api/autonomy',
+      { action: 'guardrails' }
+    ),
+  check: (leaseId: string, kind: string, target = '', tool = '') =>
+    call<{ allowed: boolean; rule: string; reason: string }>('/api/autonomy', {
+      action: 'check',
+      lease_id: leaseId,
+      kind,
+      target,
+      tool,
+    }),
+  revoke: (leaseId: string, reason = '') =>
+    call<Record<string, unknown>>('/api/autonomy', { action: 'revoke', lease_id: leaseId, reason }),
+  emergencyStop: () =>
+    call<{ stopped: string[]; count: number }>('/api/autonomy', {
+      action: 'emergency_stop',
+      actor: 'user',
+    }),
+  resolveRequest: (requestId: string, allow: boolean, grantKind: 'once' | 'project' = 'once') =>
+    call<Record<string, unknown>>('/api/autonomy', {
+      action: 'resolve',
+      request_id: requestId,
+      allow,
+      grant_kind: grantKind,
+      actor: 'user',
+    }),
+};
+
 export const kelTeam = {
   office: (projectId = 'default') =>
     call<{ assignments: KelAssignment[] }>('/api/team', { action: 'office', project_id: projectId }),
