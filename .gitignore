@@ -53,3 +53,9 @@ credentials.json
 # --- intermediate archives ---
 *.rar
 *.zip
+
+# --- licensed UI fonts (local only; see desktop/public/fonts/README.md) ---
+desktop/public/fonts/**/*.otf
+desktop/public/fonts/**/*.ttf
+desktop/public/fonts/**/*.woff
+desktop/public/fonts/**/*.woff2
