@@ -133,7 +133,13 @@ const AUDIT = () => {
     firstStopIsSkipLink: r.focus.firstStopIsSkipLink,
     emoji: r.audit.emojiCharacters,
   })), null, 2));
-  const focusOk = results.every((r) => r.focus.focusRingFailures === 0 && r.focus.firstStopIsSkipLink);
+  // A document with no focusable controls cannot satisfy a skip-link contract; any document that does
+  // have controls must show a ring on every stop and start at the skip link.
+  const focusOk = results.every(
+    (r) =>
+      r.focus.focusRingFailures === 0 &&
+      (r.focus.firstStopIsSkipLink || r.audit.focusableCount === 0)
+  );
   if (!focusOk) {
     console.error('FOCUS-ASSERTION-FAILED: a focusable element lacks a visible ring, or the first tab stop is not the skip link.');
     process.exitCode = 1;

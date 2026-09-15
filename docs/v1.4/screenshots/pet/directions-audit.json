@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "renderedAt": "2026-09-15T18:02:45.891Z",
+  "results": [
+    {
+      "name": "pet",
+      "file": "pet.html",
+      "audit": {
+        "textSamples": 0,
+        "contrastFailureCount": 0,
+        "contrastFailures": [],
+        "fontSizeHistogram": {},
+        "smallestText": null,
+        "largestText": null,
+        "paletteText": [],
+        "paletteBg": [],
+        "emojiCharacters": 0,
+        "focusableCount": 0,
+        "focusableSample": []
+      },
+      "focus": {
+        "stops": [
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          }
+        ],
+        "focusRingFailures": 0,
+        "firstStopIsSkipLink": false
+      }
+    },
+    {
+      "name": "pet-confirm",
+      "file": "pet-confirm.html",
+      "audit": {
+        "textSamples": 0,
+        "contrastFailureCount": 0,
+        "contrastFailures": [],
+        "fontSizeHistogram": {},
+        "smallestText": null,
+        "largestText": null,
+        "paletteText": [],
+        "paletteBg": [],
+        "emojiCharacters": 0,
+        "focusableCount": 0,
+        "focusableSample": []
+      },
+      "focus": {
+        "stops": [
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          }
+        ],
+        "focusRingFailures": 0,
+        "firstStopIsSkipLink": false
+      }
+    },
+    {
+      "name": "pet-hit",
+      "file": "pet-hit.html",
+      "audit": {
+        "textSamples": 0,
+        "contrastFailureCount": 0,
+        "contrastFailures": [],
+        "fontSizeHistogram": {},
+        "smallestText": null,
+        "largestText": null,
+        "paletteText": [],
+        "paletteBg": [],
+        "emojiCharacters": 0,
+        "focusableCount": 0,
+        "focusableSample": []
+      },
+      "focus": {
+        "stops": [
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          },
+          {
+            "tag": "BODY"
+          }
+        ],
+        "focusRingFailures": 0,
+        "firstStopIsSkipLink": false
+      }
+    }
+  ]
+}
