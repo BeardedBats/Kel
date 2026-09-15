@@ -78,6 +78,7 @@ import 'uno.css';
 import './styles/arco-override.css';
 import './styles/themes/index.css';
 import './styles/markdown.css';
+import { loadKelFonts } from './utils/theme/kelFonts';
 
 // Config service — kick off initialization before i18n / theme modules load,
 // so their startup paths (which await configService.whenReady()) observe the
@@ -86,6 +87,9 @@ import { configService } from '@/common/config/configService';
 configService.initialize().catch((err) => {
   console.error('Failed to initialize config:', err);
 });
+
+// Kel: register local UI fonts (Söhne headers / SF Pro Text body) when present.
+loadKelFonts();
 
 // i18n
 import './services/i18n';
