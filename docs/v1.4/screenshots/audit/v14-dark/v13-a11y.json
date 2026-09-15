@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T18:58:29.328Z",
+  "startedAt": "2026-09-15T19:05:28.476Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 42412,
+    "pid": 42980,
     "version": "0.5.0"
   },
   "bootScreen": {
@@ -25,9 +25,9 @@
         "text": "Work & context",
         "size": 14,
         "weight": "400",
-        "fg": "rgb(78,89,105)",
+        "fg": "rgb(90,98,112)",
         "bg": "rgb(38,38,38)",
-        "ratio": 2.13,
+        "ratio": 2.46,
         "need": 4.5
       },
       {
@@ -79,7 +79,7 @@
       },
       {
         "value": "rgb(90,98,112)",
-        "count": 3
+        "count": 4
       },
       {
         "value": "rgb(230,237,243)",
@@ -87,10 +87,6 @@
       },
       {
         "value": "rgb(92,100,112)",
-        "count": 1
-      },
-      {
-        "value": "rgb(78,89,105)",
         "count": 1
       },
       {
@@ -201,7 +197,7 @@
       "tag": "DIV",
       "name": null,
       "text": "New Chat",
-      "outline": "solid 2px rgb(57, 167, 130)",
+      "outline": "solid 2px rgb(53, 166, 128)",
       "rect": [
         8,
         91,
@@ -317,19 +313,8 @@
   ],
   "workDrawer": {
     "textSamples": 41,
-    "contrastFailures": [
-      {
-        "element": "span",
-        "text": "Work & context",
-        "size": 14,
-        "weight": "400",
-        "fg": "rgb(78,89,105)",
-        "bg": "rgb(38,38,38)",
-        "ratio": 2.13,
-        "need": 4.5
-      }
-    ],
-    "contrastFailureCount": 1,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
     "smallestText": 12,
     "largestText": 21,
     "fontSizeHistogram": {
@@ -347,7 +332,7 @@
       },
       {
         "value": "rgb(169,182,198)",
-        "count": 4
+        "count": 5
       },
       {
         "value": "rgb(230,237,243)",
@@ -355,10 +340,6 @@
       },
       {
         "value": "rgb(144,152,161)",
-        "count": 1
-      },
-      {
-        "value": "rgb(78,89,105)",
         "count": 1
       },
       {
@@ -389,19 +370,8 @@
   "routes": {
     "work": {
       "textSamples": 81,
-      "contrastFailures": [
-        {
-          "element": "span",
-          "text": "Work & context",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(78,89,105)",
-          "bg": "rgb(38,38,38)",
-          "ratio": 2.13,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 1,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
@@ -417,7 +387,7 @@
         },
         {
           "value": "rgb(169,182,198)",
-          "count": 22
+          "count": 23
         },
         {
           "value": "rgb(125,139,158)",
@@ -429,10 +399,6 @@
         },
         {
           "value": "rgb(144,152,161)",
-          "count": 1
-        },
-        {
-          "value": "rgb(78,89,105)",
           "count": 1
         },
         {
@@ -476,16 +442,6 @@
       "textSamples": 83,
       "contrastFailures": [
         {
-          "element": "span",
-          "text": "Work & context",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(78,89,105)",
-          "bg": "rgb(38,38,38)",
-          "ratio": 2.13,
-          "need": 4.5
-        },
-        {
           "element": "button.kel-btn.kel-btn--primary",
           "text": "text",
           "size": 14,
@@ -526,7 +482,7 @@
           "need": 4.5
         }
       ],
-      "contrastFailureCount": 5,
+      "contrastFailureCount": 4,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
@@ -542,7 +498,7 @@
         },
         {
           "value": "rgb(169,182,198)",
-          "count": 15
+          "count": 16
         },
         {
           "value": "rgb(230,237,243)",
@@ -558,10 +514,6 @@
         },
         {
           "value": "rgb(144,152,161)",
-          "count": 1
-        },
-        {
-          "value": "rgb(78,89,105)",
           "count": 1
         },
         {
@@ -613,16 +565,6 @@
       "textSamples": 111,
       "contrastFailures": [
         {
-          "element": "span",
-          "text": "Work & context",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(78,89,105)",
-          "bg": "rgb(38,38,38)",
-          "ratio": 2.13,
-          "need": 4.5
-        },
-        {
           "element": "button.kel-btn.kel-btn--primary",
           "text": "Allow once",
           "size": 14,
@@ -643,7 +585,7 @@
           "need": 4.5
         }
       ],
-      "contrastFailureCount": 3,
+      "contrastFailureCount": 2,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
@@ -655,7 +597,7 @@
       "paletteText": [
         {
           "value": "rgb(169,182,198)",
-          "count": 55
+          "count": 56
         },
         {
           "value": "rgb(255,255,255)",
@@ -675,10 +617,6 @@
         },
         {
           "value": "rgb(144,152,161)",
-          "count": 1
-        },
-        {
-          "value": "rgb(78,89,105)",
           "count": 1
         },
         {
@@ -727,18 +665,8 @@
       "emojiCharacters": 0
     },
     "diagnostics": {
-      "textSamples": 106,
+      "textSamples": 112,
       "contrastFailures": [
-        {
-          "element": "span",
-          "text": "Work & context",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(78,89,105)",
-          "bg": "rgb(38,38,38)",
-          "ratio": 2.13,
-          "need": 4.5
-        },
         {
           "element": "button.kel-btn.kel-btn--primary",
           "text": "Observe now",
@@ -760,19 +688,19 @@
           "need": 4.5
         }
       ],
-      "contrastFailureCount": 3,
+      "contrastFailureCount": 2,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
         "12": 13,
-        "14": 82,
+        "14": 88,
         "16": 6,
         "24": 5
       },
       "paletteText": [
         {
           "value": "rgb(169,182,198)",
-          "count": 56
+          "count": 63
         },
         {
           "value": "rgb(255,255,255)",
@@ -789,16 +717,12 @@
         {
           "value": "rgb(144,152,161)",
           "count": 1
-        },
-        {
-          "value": "rgb(78,89,105)",
-          "count": 1
         }
       ],
       "paletteBg": [
         {
           "value": "rgb(22,27,34)",
-          "count": 59
+          "count": 65
         },
         {
           "value": "rgb(42,42,43)",

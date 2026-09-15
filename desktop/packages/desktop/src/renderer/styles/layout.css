@@ -3,6 +3,10 @@
 /* Sticky section labels in the sider (team / cron / projects / timeline). */
 .sider-section-label {
   background-color: var(--bg-2);
+  /* Kel V1.4: the label set no colour and inherited a literal, which measured 2.53:1 on the dark
+     sider. --bg-6 is the per-theme muted tone — `!important` because the donor's atomic text classes
+     are themselves important, so a normal declaration never wins. */
+  color: var(--bg-6) !important;
 }
 
 /* Sidebar row action buttons (more / plus) — use opaque tokens so text
