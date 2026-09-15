@@ -115,3 +115,20 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G5-DRYRUN | recipe preview/dry-run over `/api/recipes` action `preview` | I/V | **PASS** — compiled payload renders with inputs and permission preview; engine state unchanged by design |
 | G5-INTERACTIONS | real clicks driven against the packaged candidate with engine before/after reads (`packaging/verify-actions.cjs`) | I/V | **PASS** — `ok: true`, 3/3 steps clicked and rendered; `knowledge-confirm` **changed engine state**, `recipe-preview` and `work-resume` unchanged for recorded reasons; clean close |
 | G5-MAP-VOCAB | project map action vocabulary | I | **PASS after fix** — `build` → `refresh` (engine implements `refresh`/`stale`) |
+
+## 11. Gate 6 additions (in progress)
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G6-REGISTRY | provider definitions: class (native-cli · api), auth mode, base URL, per-model capabilities | U | **PASS** — `claude-code`, `codex`, `internal` (Anthropic API), `deepseek` (`https://api.deepseek.com/v1`) |
+| G6-CAPABILITY | capability matrix lookups (`text`, `vision`, `tools`, `edit`, `shell`) | U | **PASS** — `models(provider, capability)`; e.g. `deepseek` → `deepseek-chat`/`deepseek-reasoner`, `internal` → `claude-sonnet-4-6` (vision) |
+| G6-STATES | state model: not installed · installed-not-authenticated · healthy · degraded · quota · **quota not reported** · unavailable | U | **PASS** — CLI detection via PATH/auth file, API via credential metadata, `circuit_until` → degraded, quota present/0/absent distinguished |
+| G6-READINESS | readiness preflight with recorded reasons + fallback chain | U | **PASS** — honours the preferred provider, records “Fell back to …” with the unusable reasons, and refuses cleanly when nothing is usable |
+| G6-CREDENTIALS | engine stores credential **metadata only** (provider · fields · `credential_ref` · timestamps) | U | **PASS** — setting a credential requires a non-empty reference; no value column exists; delete removes metadata only |
+| G6-USAGE | append-only provider observations (`provider_usage`) | U | **PASS** — ordered reads with limits; credential set/delete are observed |
+| G6-API | `/api/providers` service envelope | I | **PASS** — actions `list`, `status`, `readiness`, `credentials`, `set_credential`, `delete_credential`, `usage` |
+| G6-MIGRATION | migration 007 (`provider_credentials`, `provider_usage`) additive + idempotent | I | **PASS** — recorded in `schema_migrations`; suite **316 passed + 10 subtests** (20 new PROV-* tests) |
+
+Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
+Manager), the autonomy engine (capability leases, boundary-expansion requests, guardrail enforcement),
+the AUTO-* test set, and the Providers + Autonomy surfaces with rendered evidence.
