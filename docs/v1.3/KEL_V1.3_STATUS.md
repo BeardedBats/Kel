@@ -14,7 +14,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G3 — project map + context composer | **COMPLETE** | `kel/projectmap.py` + `kel/composer.py` + 17 tests; migration 002; see §Gate 3 (as-built) |
 | G4 — continuation | **COMPLETE** | migration 003 + `kel/continuation.py` + service wiring + 26 tests + 8/8 live probes (evidence: docs/v1.3/evidence/gate4-continuation-probe.json); see §Gate 4 below |
 | G5 — recipes | **COMPLETE** | migration 004 + `kel/recipes.py` (842 lines) + 5 builtins + 14 tests; suite 254+10; see §Gate 5 |
-| G6 — user experience | not started | blocked on approval |
+| G6 — user experience | **COMPLETE** | Work-context tabs + work API + packaged asar parity + Playwright UI evidence; see §Gate 6 |
 | G7 — adversarial acceptance + freeze | not started | blocked on approval |
 
 ## Gate 0 evidence (all CONFIRMED)
@@ -411,5 +411,50 @@ jobs; `propose_from_job` and the service continuation handler normalize it to a 
 error.
 
 Next: Gate 6 (Work-context user experience).
+
+## Gate 6 (complete) — Work-context user experience  [2026-09-15]
+
+Engine surface:
+
+- `runtime/kel/service.py`: `GET /api/work` (project memory records + conflicts, per-section
+  map freshness, recipe entries) and POST actions `/api/memory` (confirm/correct/retract/
+  forget/resolve_conflict with strict project scoping), `/api/map` (refresh/stale), and
+  `/api/recipes` (list/get/preview/run) plus `kind='recipe'` submissions routed through the
+  existing intake (`_recipe_run`: compile → engine.submit → origin link; missing inputs,
+  undeclared permissions, and rootless projects are answered honestly in chat; continue-work
+  routes to the continuation flow and creates no job).
+- `runtime/tests/test_v13_work_context.py` (11 tests). Full suite: **265 passed + 10 subtests**.
+
+Shell surface (`desktop/`):
+
+- `KelService.ts` IPC route allowlist extended (`work`, `memory`, `map`, `recipes`, `send`).
+- `KelWorkPanel.tsx`: new compact tabs — Continue work (candidates with per-job Continue),
+  Project knowledge (records with trust/source labels, confirm/edit/retract/forget, conflict
+  resolution), Project map (refresh + freshness/sources), Recipes (list, preview, run) — on
+  top of the existing Active work and Saved context/settings surfaces. `en-US` labels added
+  (other locales fall back).
+- Build + packaging (proven pipeline): electron-vite build from the repo source using the
+  donor worktree's node_modules (bun unavailable on this host; node-run electron-vite), overlay
+  into a fresh extraction of the frozen `app.asar`, repack with `packaging/asar-dedup-pack.js`.
+  Archive parity vs V1.2: **9,539 files (exact), 1,103 dedup groups (exact), 10,220,315 B
+  dedup savings (exact), +6,921 B of content**.
+
+Packaged acceptance evidence (Playwright driving the real Kel.exe; tool committed as
+`packaging/verify-packaged-ui.cjs`):
+
+- Kel.exe + bundled V1.3 KelEngine boot; `/api/state` answers with the new `continuation`
+  field; the shell-spawned engine drains on normal close (no orphan processes).
+- UI: drawer opens; all tabs render (Work, Continue work, Project knowledge, Project map,
+  Recipes, Saved context, Saved history); empty states render; Recipes list + preview render;
+  the approval badge renders **"1"**; clicking Allow in the packaged drawer resolved a real
+  approval end-to-end (store status APPROVED). Renderer console/page errors: **zero** across
+  three runs.
+- Map refresh on a rootless project: engine refuses with a clear 400 ("Project has no root to
+  inspect"); the drawer error is transient under the 1.5 s state poll (pre-existing refresh
+  loop behavior, not V1.3-introduced).
+- Not deep-verified in this gate (V1.2 source unchanged there): settings interactions and full
+  chat/coding round-trips through the packaged UI — covered by Gate 7 packaged items.
+
+Next: Gate 7 (adversarial acceptance on the packaged application).
 
 
