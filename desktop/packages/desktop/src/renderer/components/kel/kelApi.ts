@@ -296,6 +296,65 @@ export const kelAutonomy = {
     }),
 };
 
+export interface KelDiagnosticsSnapshot {
+  engine_version: string;
+  counts: { jobs: number; runs: number };
+  database: {
+    integrity: string;
+    size_bytes: number;
+    wal_bytes: number;
+    page_size: number;
+    page_count: number;
+    freelist_pages: number;
+    fragmentation_percent: number;
+    problems: string[];
+  };
+  jobs: Record<string, number>;
+  runs: { by_state: Record<string, number>; expired_unfenced: number };
+  providers: Record<string, Record<string, unknown>>;
+  processes: Array<{
+    run_id: string;
+    pid: number;
+    identity: string;
+    deadline: number;
+    alive: boolean;
+    past_deadline: boolean;
+  }>;
+}
+
+export const kelDiagnostics = {
+  snapshot: () => call<KelDiagnosticsSnapshot>('/api/diagnostics', { action: 'snapshot' }),
+  observe: () =>
+    call<{ subject: string; state: string; snapshot: KelDiagnosticsSnapshot }>('/api/diagnostics', {
+      action: 'observe',
+    }),
+  performance: () =>
+    call<{
+      startup_spans: Array<{ at: number; phase: string; duration_ms: number; engine_version: string }>;
+      slowest_phase_ms: Record<string, number>;
+      measurements: Array<{ at: number; name: string; value: number; unit: string; basis: string }>;
+      basis: string;
+    }>('/api/diagnostics', { action: 'performance' }),
+  retention: () =>
+    call<{ retention_days: Record<string, number> }>('/api/diagnostics', { action: 'retention' }),
+  purge: () =>
+    call<{ removed: Record<string, number>; retention_days: Record<string, number> }>(
+      '/api/diagnostics',
+      { action: 'purge' }
+    ),
+  compact: () =>
+    call<{ before_bytes: number; after_bytes: number; integrity: string; backup: string }>(
+      '/api/diagnostics',
+      { action: 'compact' }
+    ),
+  export: () => call<Record<string, unknown>>('/api/diagnostics', { action: 'export' }),
+  report: (note: string) =>
+    call<{ path: string; bytes: number; redacted: boolean; excluded: string[] }>('/api/diagnostics', {
+      action: 'report',
+      note,
+    }),
+};
+
 export const kelTeam = {
   office: (projectId = 'default') =>
     call<{ assignments: KelAssignment[] }>('/api/team', { action: 'office', project_id: projectId }),

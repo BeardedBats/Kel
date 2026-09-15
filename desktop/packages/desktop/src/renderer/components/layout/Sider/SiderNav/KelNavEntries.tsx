@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { Tooltip } from '@arco-design/web-react';
-import { Folder, ListView, Lock, Peoples, Setting } from '@icon-park/react';
+import { Folder, ListView, Lock, Peoples, Setting, Stethoscope } from '@icon-park/react';
 import classNames from 'classnames';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
@@ -16,6 +16,7 @@ const ENTRIES = [
   { id: 'projects', path: '/projects', label: 'Projects', Icon: Folder },
   { id: 'providers', path: '/providers', label: 'Providers', Icon: Setting },
   { id: 'autonomy', path: '/autonomy', label: 'Autonomy', Icon: Lock },
+  { id: 'diagnostics', path: '/diagnostics', label: 'Diagnostics', Icon: Stethoscope },
 ] as const;
 
 const KelNavEntries: React.FC<{
