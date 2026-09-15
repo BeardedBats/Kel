@@ -21,7 +21,7 @@ from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
 
-ENGINE_VERSION='0.5.0'
+ENGINE_VERSION='1.4.1'
 
 # Verbs that mean "change code in an existing project". These are the only
 # requests that need a project root; greenfield ("create an app") is classified
@@ -518,7 +518,7 @@ class Service:
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
-                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'draining':self.draining}
+                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining}
 
     def action(self,path,data):
         with self.lifecycle_lock:
@@ -560,6 +560,8 @@ class Service:
             from .apply_changes import apply_checked
             return apply_checked(self.store,data['job'])
         if path=='/api/approval':
+            if 'actor' in data:
+                raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
             with contextlib.closing(self.store.connect()) as db:
                 row=db.execute('SELECT x.action,a.job_id FROM approval_actions x JOIN approvals a ON a.id=x.approval_id WHERE x.approval_id=?',(data['id'],)).fetchone()
             if not row:raise PolicyError('Permission request missing')
@@ -580,7 +582,14 @@ class Service:
             return Providers(self.store).apply(data)
         if path=='/api/autonomy':
             from .autonomy import Autonomy
-            return Autonomy(self.store).apply(data)
+            if 'actor' in data:
+                raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
+            payload=dict(data);payload['actor']='user'
+            result=Autonomy(self.store).apply(payload)
+            if data.get('action')=='emergency_stop':
+                for job_id in result.get('paused_jobs',[]):
+                    self.engine.control(job_id,'pause')
+            return result
         if path=='/api/diagnostics':
             from .diagnostics import Diagnostics
             return Diagnostics(self.store,ENGINE_VERSION).apply(data)

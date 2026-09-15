@@ -5,6 +5,7 @@ import os
 import time
 from pathlib import Path
 from .core import PolicyError, digest, encode
+from .guardrails import protected_reason
 from .coding import file_manifest, check_evidence, git
 from .instance_lock import InstanceLock
 
@@ -19,6 +20,8 @@ def apply_checked(store,job_id):
     job=store.get(job_id)
     if job['contract'].get('kind')!='coding':raise PolicyError('This job has no repository change')
     root=Path(job['contract']['root']).resolve(strict=True)
+    reason=protected_reason(root)
+    if reason:raise PolicyError('Refusing to apply changes into a protected location: '+reason)
     metadata=Path(git(root,'rev-parse','--absolute-git-dir').decode().strip()).resolve(strict=True)
     if not metadata.is_relative_to(root):raise PolicyError('Linked Git metadata cannot own an application lock')
     lockroot=metadata/'kel-application';lockroot.mkdir(exist_ok=True)

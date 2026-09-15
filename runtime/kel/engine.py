@@ -6,6 +6,7 @@ from pathlib import Path
 import threading
 import time
 from .core import PolicyError, Conflict, uid, validate_contract
+from . import guardrails
 from .router import Candidate, select
 from .instance_lock import InstanceLock
 
@@ -32,6 +33,7 @@ class Engine:
         self.failures = {}
         self.lock = threading.Lock()
         self.closed = False
+        self.tampered = None
         self.reviewer = reviewer
         self.review_pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='kel-review')
         self.reviews={}
@@ -162,6 +164,12 @@ class Engine:
     def tick(self):
         with self.lock:
             self.store.controller_lease(self.owner)
+            try:
+                guardrails.assert_intact()
+                self.tampered = None
+            except PolicyError as exc:
+                # Fail closed for new work; recorded results still settle and publish.
+                self.tampered = str(exc)
             for run_id, (future, cancel, run) in list(self.active.items()):
                 if future.done():
                     future.result()  # Do not hide worker-to-engine persistence failures.
@@ -197,6 +205,8 @@ class Engine:
                     job = self.store.get(job['id'])
                 if job['state'] == 'CLOSED':
                     self.store.publish(job['id'])
+                    continue
+                if self.tampered:
                     continue
                 for mid, m in job['milestones'].items():
                     if len(self.active) >= 2 or self.closed:

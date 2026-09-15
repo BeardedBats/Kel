@@ -1,5 +1,9 @@
 # KEL V1.4 — FEATURE LEDGER (200 items)
 
+> **Post-release note (added in V1.4.1):** rows 137–153 describe the autonomy/lease policy system;
+> its execution-path enforcement was overstated and is deferred (see `docs/v1.4.1/`). Row statuses
+> are otherwise the V1.4 release-time record.
+
 Status: v0.1 (Gate 0) · Initial triage complete for all 200 items; evidence columns fill as gates run.
 
 **How to read this file**

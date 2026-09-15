@@ -4,8 +4,9 @@ Status: v1 (2026-09-15) · Gate 2 design document. Companions: `KEL_V1.4_AUTONOM
 `KEL_V1.4_PROVIDER_SPEC.md`.
 
 Posture: local-first, single-user Windows desktop. Two hard problems: **secrets** and **untrusted
-content** (repository text, web pages, worker output). Everything below is enforced in code and
-covered by a test id.
+content** (repository text, web pages, worker output). Statements below are marked with what is
+enforced today; the authoritative V1.4.1 boundary model (what can and cannot be enforced, and what
+is deferred) is `docs/v1.4.1/02_RUNTIME_TRUST_BOUNDARY.md`.
 
 ## 1. Threat model → mitigation → test
 
@@ -16,11 +17,11 @@ covered by a test id.
 | Renderer exposure of keys | keys never cross IPC into the renderer; only state booleans/`credential_ref` metadata | SEC-RENDERER |
 | Env leakage to grandchildren | per-run env injection to the specific child; descendants scrubbed (`ANTHROPIC_API_KEY`/`OPENAI_API_KEY` removal already implemented) | SEC-ENVSCRUB |
 | Prompt injection (repo/web/worker text) | text is data, never authorization; guardrails locked above all instructions; evidence classes + provenance labelling; fence sanitizer on model output | SEC-INJECT |
-| Tool abuse by a worker | per-role tool policy checked at claim **and** at effect time; denied tools fail closed | SEC-TOOLPOLICY |
+| Tool abuse by a worker | role tool policy exists as data; each adapter's own tool configuration bounds a worker (internal allowlist, native text slice tools disabled, coding host full access — see §6). Enforcing role policy against workers is **not yet implemented** (V1.5). | test_v14_team (policy data) |
 | Path escape (symlink/junction/traversal) | resolve + containment checks on every write (pattern proven in `context.attach`: `resolve()` + `is_relative_to`) | SEC-PATH |
-| Lease escalation | leases immutable after issue; grants only via boundary-expansion approval; every action checked | SEC-LEASE |
-| Approval bypass | approvals are rows with digests; resolving requires the exact action; no code path executes a gated action without an APPROVED row | SEC-APPROVAL |
-| Frozen-release tampering | frozen paths read-only by policy; release hashes re-verified at G10 | SEC-FROZEN |
+| Lease escalation | leases immutable after issue; grants only via boundary-expansion approval. `Autonomy.check` implements every-action checking but is **not yet called on the execution path**; V1.4.1 enforcement is tamper detection + protected-path denial (see docs/v1.4.1/02). | AUTO-* (checker level) |
+| Approval bypass | approvals are digest-bound rows resolved only through the user's authenticated session; `/api/apply` is a user-initiated action gated on VERIFIED evidence and backups rather than an approval row. No unauthenticated path executes a gated effect. | test_core, test_apply_changes |
+| Frozen-release tampering | release hashes re-verified at G10; engine-owned project writes refuse frozen/system paths (V1.4.1, `guardrails.protected_reason`). Worker processes' own writes are not intercepted (see §6). | AUTO-FROZEN, test_v141_boundaries |
 | Unrelated personal data | task-scoped search only; refusals recorded | SEC-PRIVATE |
 | Supply chain (deps/donors) | pinned revisions, licence checks, attribution, AGPL excluded, integrity records in the asar pipeline | SEC-SUPPLY |
 | Update integrity | updater unchanged from the donor; diagnostics file is local; no unsigned remote installs | SEC-UPDATE |
@@ -36,9 +37,10 @@ treat lower levels as authority; guardrail decisions are recorded with rule ids.
 - **Custody:** the shell main process stores values in the OS-backed store (Windows DPAPI /
   Credential Manager), namespaced `kel:provider:<providerId>:<field>`. The engine stores metadata
   only: `provider`, `fields[]`, `credential_ref`, `updated_at`.
-- **Use:** at run time the engine receives the value as an environment variable for that single child
-  process; grandchildren are scrubbed; values are never written to disk by the engine, never logged,
-  never included in prompts or receipts.
+- **Use (status V1.4.1): not implemented.** Stored values are not yet injected into provider runtimes;
+  live provider calls currently rely on each provider CLI's own sign-in or ambient environment keys.
+  Injection is deferred to V1.5 (`docs/v1.4.1/06_V1_5_DEFERRED_WORK.md`). Values remain never written
+  to disk by the engine, never logged, never included in prompts or receipts.
 - **Lifecycle:** test · store · replace · delete for Kel-owned entries; deleting a provider removes its
   namespaced entries; rotation guidance shown in Providers settings.
 - **Prohibited:** reading unrelated entries, exporting, printing, copying, or including values in
@@ -66,10 +68,14 @@ included and excluded.
 
 ## 6. Process and OS safety
 
-Single-owner enforcement (`instance_lock` + controller lease); worker processes contained via
-`windows_job`; task-owned processes are terminated on completion and checked by the orphan detector
-(zero-orphan requirement at G10). No registry writes, no active-screen control, no OS-critical
-changes, no covert persistence — enforced by the locked guardrail module and verified by tests.
+Single-owner enforcement (`instance_lock` + controller lease); worker processes contained **for
+lifetime** via `windows_job` (terminating descendants on transport loss — not a permission sandbox).
+The native coding host runs with user-level privileges and `danger-full-access` (`host_runtime.py`)
+inside an isolated snapshot; OS-level sandboxing is deferred to V2+. No registry writes, no
+active-screen control, no OS-critical changes, no covert persistence are **stated as locked policy
+and checked by the policy checker; they are not yet enforced against native worker actions.**
+V1.4.1 adds two real runtime increments: tamper detection refuses new work, and engine-owned writes
+refuse frozen/system paths.
 
 ## 7. Supply chain and release integrity
 
@@ -89,3 +95,6 @@ auto-posted unless the task explicitly authorizes it.
 SEC-NOLEAK · SEC-NOENUM · SEC-RENDERER · SEC-ENVSCRUB · SEC-INJECT · SEC-TOOLPOLICY · SEC-PATH ·
 SEC-LEASE · SEC-APPROVAL · SEC-FROZEN · SEC-PRIVATE · SEC-SUPPLY · SEC-UPDATE · SEC-RETENTION ·
 SEC-SANITIZER · SEC-BACKUP-RESTORE.
+
+Status note (V1.4.1): the SEC-*/AUTO-* tests exercise checker rules, custody, and sanitizers
+directly; they are not execution-path enforcement proofs. See `docs/v1.4.1/02_RUNTIME_TRUST_BOUNDARY.md`.

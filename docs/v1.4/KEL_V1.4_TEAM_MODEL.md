@@ -3,6 +3,12 @@
 Status: v1 (2026-09-15) · Gate 2 design document. Companions: `KEL_V1.4_ARCHITECTURE.md` (§2 tables),
 `KEL_V1.4_SECURITY_MODEL.md`, `KEL_V1.4_AUTONOMY_POLICY.md`.
 
+> **Implementation status (V1.4.1):** role versioning, overrides, assignment snapshots, and the
+> activity stream are implemented and tested. Tool-policy and guardrail *enforcement* statements in
+> this document (§2 `BLOCKED`, §4, §6 `blocked`) describe the intended model: the checker exists but
+> is not yet called on the execution path, and there is no `guardrail_decisions` table. See
+> `docs/v1.4.1/02_RUNTIME_TRUST_BOUNDARY.md` and `06_V1_5_DEFERRED_WORK.md`.
+
 Kel remains the single accountable voice. The Team is an optional, inspectable organization behind it.
 
 ## 1. Entities and relations
@@ -54,16 +60,20 @@ State is computed from the engine; no UI or role can set it directly. Every tran
 
 ## 4. Policies per role
 
-- **Tool policy:** allow/deny lists (`read`, `write`, `run_tests`, `install`, `browser`, `git`,
-  `external_api`, `shell`) resolved at claim time and re-checked at effect time (`prepare_effect`).
-  Denied tools fail closed with a recorded `guardrail_decision`.
+- **Tool policy (status V1.4.1):** allow/deny lists (`read`, `write`, `run_tests`, `install`,
+  `browser`, `git`, `external_api`, `shell`) are stored per role version and snapshotted into the
+  assignment, but they are **not yet enforced against a worker**; worker tool access is bounded by
+  each adapter's own configuration (internal allowlist; native text slice with tools disabled; coding
+  host full access — see the trust boundary doc). Enforcement is V1.5 work.
 - **Model preference:** ordered list of (provider, model) with a fallback chain; empty = provider
   default. Availability/quota comes from the providers table (see Provider spec).
 - **Budget:** attempt units (existing `budget`/`spent`), wall-clock cap, and — where measurable —
   token/time accounting. Exhaustion stops the assignment and reports the wait reason; it never
   silently continues.
-- **Recursion ban:** an assignment can never create another assignment or Spawn work (enforced by
-  tool policy + a hard engine check, covered by a test). Delegation is Kel's decision only.
+- **Recursion ban:** an assignment can never create another assignment or spawn work. Enforcement is
+  structural today: workers get no spawn-style tools (unknown tool calls are denied — `test_core.py`
+  covers `spawn_agent`), native CLIs run with multi-agent/computer-use features disabled, and the
+  engine caps concurrent runs. There is no separate engine check beyond this.
 
 ## 5. Staffing plan and “why this specialist”
 

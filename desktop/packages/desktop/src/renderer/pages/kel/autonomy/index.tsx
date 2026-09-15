@@ -112,6 +112,11 @@ export default function KelAutonomyPage() {
           </KelButton>
         </div>
 
+        <p className="kel-meta">
+          Emergency stop revokes every active lease and pauses all active or queued work; workers stop at
+          their next cancellation check. It does not undo completed effects.
+        </p>
+
         {error && (
           <KelErrorState
             title="Autonomy state could not be loaded"
@@ -127,7 +132,7 @@ export default function KelAutonomyPage() {
             {leases.length === 0 ? (
               <KelEmpty
                 title="No lease has been issued in this project."
-                why="A lease is created only after a reviewed plan is approved, and it limits every action to the scope you granted."
+                why="A lease is created only after a reviewed plan is approved and records the scope you granted. Enforcing that scope on the worker execution path is not yet implemented (deferred — see docs/v1.4.1)."
               />
             ) : (
               <KelTable
@@ -225,8 +230,9 @@ export default function KelAutonomyPage() {
 
         <KelCard title="Ask the engine about a scope">
           <p className="kel-sub">
-            The same check Kel performs before every action. It fails closed: anything outside the leased
-            scope, locked, frozen, or missing a snapshot reference is refused.
+            The policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the
+            leased scope, locked, frozen, or missing a snapshot reference is refused. This checker is not
+            yet called on the worker execution path — enforcement there is deferred (see docs/v1.4.1).
           </p>
           <div className="kel-row">
             <KelTabs
@@ -272,11 +278,13 @@ export default function KelAutonomyPage() {
         {rules.length > 0 && (
           <KelSection title={`Locked guardrails · digest ${digest.slice(0, 12)}`}>
             <p className="kel-sub">
-              These rules are locked. No role, project, repository, or web content can edit or weaken them,
-              and the engine refuses to run if they change.
+              These rules are locked against roles, projects, repositories, and web content, and the engine
+              detects runtime modification of the rule set and refuses new work. Blocking worker actions
+              against these rules (execution-path enforcement) is not yet implemented — deferred (see
+              docs/v1.4.1).
             </p>
             <KelTable
-              head={['Rule', 'What it means', 'Enforced by']}
+              head={['Rule', 'What it means', 'Covered by test']}
               rows={rules.map((rule) => [
                 <span className="kel-strong" key={`${rule.rule}-id`}>
                   {rule.rule}

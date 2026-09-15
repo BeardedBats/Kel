@@ -1,5 +1,9 @@
 # Kel V1.4 Release Manifest
 
+> **Post-release note (added in V1.4.1):** the independent post-release audit (docs/v1.4-postrelease/)
+> found overstated execution-path enforcement claims; the corrected boundary and patch record are in
+> `docs/v1.4.1/`. The V1.4 frozen folder is untouched; this record is otherwise preserved.
+
 Status: **VERIFIED** · Frozen: 2026-09-15 · Branch `v1.4-dev` · Tag `v1.4.0`
 
 Scope: the solution-quality, Team, verification/continuation UX, provider/credential/autonomy,
