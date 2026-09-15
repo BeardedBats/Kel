@@ -104,3 +104,17 @@ on every surface; (2) the engine did not exit on app close within 15–20 s (`en
 bounded kill fired, `closeOutcome: close-timeout`); (3) boot/drawer surfaces keep their inherited
 6 contrast failures; (4) dark mode not yet rendered; (5) before/after comparison images are still
 to be generated for the Work Center (the only surface with a V1.3 counterpart).
+
+## 9. Gate 5 surface verdicts (2026-09-15)
+
+Evidence: `docs/v1.4/screenshots/g5/` (tag `g5`, packaged candidate: 44 shots, 0 renderer errors,
+0 blank, app exit 0) and `docs/v1.4/screenshots/audit/v14/v13-a11y.json` (route sampling).
+
+| Surface | Baseline (V1.3) | Final (V1.4) | Verdict |
+|---|---|---|---|
+| Projects — Knowledge | donor “Saved context” drawer tab (`baseline/…02b`) | `g5/g5-12-projects-knowledge.png` + `…13-*.png` | **accepted-with-notes** — 3 fixture records with trust scores (6/10, 3/10), statuses, sources, and Confirm · Retract · Forget; action round-trip still to verify |
+| Projects — Map | donor map tab (`baseline/…05-map`, `…07b`) | `g5/g5-12-projects-map.png` + `…13-*.png` | **accepted-with-notes** — honest empty state plus Build action (the fixture project has no map) |
+| Projects — Recipes | donor recipes tab (`baseline/…06-recipes`) | `g5/g5-12-projects-recipes.png` + `…13-*.png` | **accepted-with-notes** — 5 built-in recipes listed; preview/dry-run still to build |
+
+Notes: contrast failures 0/0/0 on the three new routes; smallest text 12px; 0 emoji; the
+before/after comparison images for these surfaces are still to be generated at G9.

@@ -1,24 +1,15 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T16:30:48.534Z",
+  "startedAt": "2026-09-15T16:39:11.144Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 38736,
+    "pid": 43688,
     "version": "0.5.0"
   },
   "bootScreen": {
     "textSamples": 17,
     "contrastFailures": [
-      {
-        "text": "Projects",
-        "size": 14,
-        "weight": "400",
-        "fg": "rgb(134,144,156)",
-        "bg": "rgb(242,243,245)",
-        "ratio": 2.92,
-        "need": 4.5
-      },
       {
         "text": "Work in a project",
         "size": 14,
@@ -38,7 +29,7 @@
         "need": 4.5
       }
     ],
-    "contrastFailureCount": 3,
+    "contrastFailureCount": 2,
     "smallestText": 12,
     "largestText": 21,
     "fontSizeHistogram": {
@@ -52,15 +43,15 @@
     "paletteText": [
       {
         "value": "rgb(0,0,0)",
-        "count": 10
-      },
-      {
-        "value": "rgb(134,144,156)",
-        "count": 3
+        "count": 11
       },
       {
         "value": "rgb(69,77,95)",
         "count": 3
+      },
+      {
+        "value": "rgb(134,144,156)",
+        "count": 2
       },
       {
         "value": "rgb(78,89,105)",
@@ -87,15 +78,6 @@
     "textSamples": 34,
     "contrastFailures": [
       {
-        "text": "Projects",
-        "size": 14,
-        "weight": "400",
-        "fg": "rgb(134,144,156)",
-        "bg": "rgb(242,243,245)",
-        "ratio": 2.92,
-        "need": 4.5
-      },
-      {
         "text": "Work in a project",
         "size": 14,
         "weight": "500",
@@ -114,7 +96,7 @@
         "need": 4.5
       }
     ],
-    "contrastFailureCount": 3,
+    "contrastFailureCount": 2,
     "smallestText": 12,
     "largestText": 21,
     "fontSizeHistogram": {
@@ -132,11 +114,7 @@
       },
       {
         "value": "rgb(0,0,0)",
-        "count": 10
-      },
-      {
-        "value": "rgb(134,144,156)",
-        "count": 3
+        "count": 11
       },
       {
         "value": "rgb(69,77,95)",
@@ -145,6 +123,10 @@
       {
         "value": "rgb(29,33,41)",
         "count": 3
+      },
+      {
+        "value": "rgb(134,144,156)",
+        "count": 2
       }
     ],
     "paletteBg": [
@@ -164,245 +146,178 @@
     "emojiCharacters": 0
   },
   "routes": {
-    "work": {
-      "textSamples": 57,
-      "contrastFailures": [
-        {
-          "text": "Projects",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(134,144,156)",
-          "bg": "rgb(242,243,245)",
-          "ratio": 2.92,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 1,
+    "projects-knowledge": {
+      "textSamples": 59,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
-        "12": 18,
-        "14": 34,
+        "12": 16,
+        "14": 39,
         "16": 3,
-        "24": 2
+        "24": 1
       },
       "paletteText": [
         {
-          "value": "rgb(78,89,105)",
-          "count": 15
-        },
-        {
           "value": "rgb(90,98,112)",
-          "count": 15
+          "count": 16
         },
         {
-          "value": "rgb(107,114,128)",
-          "count": 10
+          "value": "rgb(78,89,105)",
+          "count": 14
         },
         {
           "value": "rgb(0,0,0)",
+          "count": 10
+        },
+        {
+          "value": "rgb(107,114,128)",
           "count": 9
         },
         {
           "value": "rgb(20,22,26)",
-          "count": 4
+          "count": 3
+        },
+        {
+          "value": "rgb(14,124,90)",
+          "count": 3
         },
         {
           "value": "rgb(29,33,41)",
-          "count": 2
+          "count": 3
         },
         {
-          "value": "rgb(134,144,156)",
-          "count": 1
-        },
-        {
-          "value": "rgb(122,74,0)",
+          "value": "rgb(255,255,255)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
           "value": "rgb(255,255,255)",
-          "count": 31
+          "count": 34
         },
         {
           "value": "rgb(242,243,245)",
           "count": 23
         },
         {
-          "value": "rgb(229,230,235)",
-          "count": 1
-        },
-        {
           "value": "rgb(250,250,251)",
           "count": 1
         },
         {
-          "value": "rgb(254,243,199)",
+          "value": "rgb(14,124,90)",
           "count": 1
         }
       ],
       "emojiCharacters": 0
     },
-    "team-office": {
-      "textSamples": 48,
-      "contrastFailures": [
+    "projects-map": {
+      "textSamples": 37,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 14,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "14": 31,
+        "16": 5,
+        "24": 1
+      },
+      "paletteText": [
         {
-          "text": "Projects",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(134,144,156)",
-          "bg": "rgb(242,243,245)",
-          "ratio": 2.92,
-          "need": 4.5
+          "value": "rgb(78,89,105)",
+          "count": 13
+        },
+        {
+          "value": "rgb(0,0,0)",
+          "count": 10
+        },
+        {
+          "value": "rgb(20,22,26)",
+          "count": 5
+        },
+        {
+          "value": "rgb(90,98,112)",
+          "count": 4
+        },
+        {
+          "value": "rgb(29,33,41)",
+          "count": 3
+        },
+        {
+          "value": "rgb(255,255,255)",
+          "count": 2
         }
       ],
-      "contrastFailureCount": 1,
+      "paletteBg": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 18
+        },
+        {
+          "value": "rgb(242,243,245)",
+          "count": 16
+        },
+        {
+          "value": "rgb(14,124,90)",
+          "count": 2
+        },
+        {
+          "value": "rgb(250,250,251)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-recipes": {
+      "textSamples": 43,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 16,
       "fontSizeHistogram": {
-        "12": 12,
-        "14": 33,
+        "12": 5,
+        "14": 35,
         "16": 3
       },
       "paletteText": [
         {
           "value": "rgb(78,89,105)",
-          "count": 15
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 9
+          "count": 14
         },
         {
           "value": "rgb(90,98,112)",
-          "count": 9
+          "count": 12
         },
         {
-          "value": "rgb(107,114,128)",
-          "count": 6
+          "value": "rgb(0,0,0)",
+          "count": 10
         },
         {
           "value": "rgb(29,33,41)",
           "count": 3
         },
         {
-          "value": "rgb(14,124,90)",
-          "count": 2
-        },
-        {
-          "value": "rgb(134,144,156)",
-          "count": 1
-        },
-        {
           "value": "rgb(20,22,26)",
-          "count": 1
+          "count": 2
         },
         {
           "value": "rgb(255,255,255)",
           "count": 1
         },
         {
-          "value": "rgb(122,74,0)",
+          "value": "rgb(107,114,128)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
           "value": "rgb(255,255,255)",
-          "count": 23
-        },
-        {
-          "value": "rgb(242,243,245)",
           "count": 21
         },
         {
-          "value": "rgb(229,230,235)",
-          "count": 1
-        },
-        {
-          "value": "rgb(250,250,251)",
-          "count": 1
-        },
-        {
-          "value": "rgb(14,124,90)",
-          "count": 1
-        },
-        {
-          "value": "rgb(254,243,199)",
-          "count": 1
-        }
-      ],
-      "emojiCharacters": 0
-    },
-    "team-roster": {
-      "textSamples": 51,
-      "contrastFailures": [
-        {
-          "text": "Projects",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(134,144,156)",
-          "bg": "rgb(242,243,245)",
-          "ratio": 2.92,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 1,
-      "smallestText": 12,
-      "largestText": 24,
-      "fontSizeHistogram": {
-        "12": 3,
-        "14": 31,
-        "16": 12,
-        "24": 5
-      },
-      "paletteText": [
-        {
-          "value": "rgb(20,22,26)",
-          "count": 16
-        },
-        {
-          "value": "rgb(78,89,105)",
-          "count": 15
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 9
-        },
-        {
-          "value": "rgb(90,98,112)",
-          "count": 3
-        },
-        {
-          "value": "rgb(107,114,128)",
-          "count": 3
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(134,144,156)",
-          "count": 1
-        },
-        {
-          "value": "rgb(255,255,255)",
-          "count": 1
-        }
-      ],
-      "paletteBg": [
-        {
-          "value": "rgb(255,255,255)",
-          "count": 33
-        },
-        {
           "value": "rgb(242,243,245)",
-          "count": 15
-        },
-        {
-          "value": "rgb(229,230,235)",
-          "count": 1
+          "count": 20
         },
         {
           "value": "rgb(250,250,251)",
@@ -410,80 +325,6 @@
         },
         {
           "value": "rgb(14,124,90)",
-          "count": 1
-        }
-      ],
-      "emojiCharacters": 0
-    },
-    "team-studio": {
-      "textSamples": 36,
-      "contrastFailures": [
-        {
-          "text": "Projects",
-          "size": 14,
-          "weight": "400",
-          "fg": "rgb(134,144,156)",
-          "bg": "rgb(242,243,245)",
-          "ratio": 2.92,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 1,
-      "smallestText": 14,
-      "largestText": 16,
-      "fontSizeHistogram": {
-        "14": 31,
-        "16": 5
-      },
-      "paletteText": [
-        {
-          "value": "rgb(78,89,105)",
-          "count": 15
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 9
-        },
-        {
-          "value": "rgb(90,98,112)",
-          "count": 4
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(20,22,26)",
-          "count": 2
-        },
-        {
-          "value": "rgb(255,255,255)",
-          "count": 2
-        },
-        {
-          "value": "rgb(134,144,156)",
-          "count": 1
-        }
-      ],
-      "paletteBg": [
-        {
-          "value": "rgb(255,255,255)",
-          "count": 17
-        },
-        {
-          "value": "rgb(242,243,245)",
-          "count": 15
-        },
-        {
-          "value": "rgb(14,124,90)",
-          "count": 2
-        },
-        {
-          "value": "rgb(229,230,235)",
-          "count": 1
-        },
-        {
-          "value": "rgb(250,250,251)",
           "count": 1
         }
       ],

@@ -72,6 +72,62 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
   return (await api.request(route, body)) as T;
 }
 
+export interface KelMemoryRecord {
+  id: string;
+  type: string;
+  topic: string;
+  summary: string;
+  trust: number;
+  status: string;
+  user_confirmed: number;
+  source_type: string;
+  source_ref: string;
+  confidence: number;
+  updated: number;
+  value?: Record<string, unknown>;
+}
+
+export interface KelMapSection {
+  name: string;
+  trust: string;
+  stale: boolean;
+  updated: number;
+  digest: string;
+  sources: string[];
+}
+
+export interface KelRecipeEntry {
+  id?: string;
+  name?: string;
+  title?: string;
+  steps?: unknown[];
+  inputs?: unknown[];
+  source?: string;
+}
+
+export interface KelWork {
+  project_id: string;
+  memory: { records: KelMemoryRecord[]; conflicts: Array<Record<string, unknown>> };
+  map: { version: number; fingerprint: string; updated: number; note?: string; sections: KelMapSection[] } | null;
+  recipes: { entries: KelRecipeEntry[] };
+}
+
+export const kelWork = (conversation = 'main') =>
+  call<KelWork>(`/api/work?conversation=${encodeURIComponent(conversation)}`);
+
+export const kelMemoryAction = (
+  action: 'confirm' | 'retract' | 'forget' | 'correct',
+  id: string,
+  extra: Record<string, unknown> = {},
+  conversation = 'main'
+) => call<Record<string, unknown>>('/api/memory', { action, id, conversation, ...extra });
+
+export const kelMapAction = (action: string, conversation = 'main', extra: Record<string, unknown> = {}) =>
+  call<Record<string, unknown>>('/api/map', { action, conversation, ...extra });
+
+export const kelRecipes = (conversation = 'main') =>
+  call<Record<string, unknown>>('/api/recipes', { action: 'list', conversation });
+
 export const kelTeam = {
   office: (projectId = 'default') =>
     call<{ assignments: KelAssignment[] }>('/api/team', { action: 'office', project_id: projectId }),

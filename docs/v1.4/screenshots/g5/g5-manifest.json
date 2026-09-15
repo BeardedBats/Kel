@@ -1,0 +1,595 @@
+{
+  "schema": 1,
+  "tag": "g5",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v14\\candidate",
+  "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\fixture-team",
+  "startedAt": "2026-09-15T16:36:32.195Z",
+  "entries": [
+    {
+      "view": "01-boot-chat",
+      "file": "g5-01-01-boot-chat.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 57081,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "02-work-drawer",
+      "file": "g5-02-02-work-drawer.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 80085,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "02b-work-tab-default",
+      "file": "g5-03-02b-work-tab-default.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 80147,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "03-continue",
+      "file": "g5-04-03-continue.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 71074,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "04-knowledge",
+      "file": "g5-05-04-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 112864,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "05-map",
+      "file": "g5-06-05-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 69046,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "06-recipes",
+      "file": "g5-07-06-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 89622,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "07-recipe-preview",
+      "file": "g5-08-07-recipe-preview.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 93297,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "file": "g5-09-07b-map-after-refresh.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 59099,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "08-after-drawer-close",
+      "file": "g5-10-08-after-drawer-close.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 59099,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "09-settings-open",
+      "file": "g5-11-09-settings-open.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65157,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System defau"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "g5-12-09-settings-appearance.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65157,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System defau"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "g5-13-09-settings-system.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/system",
+      "title": "Kel",
+      "bytes": 93134,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes on launch or graphics "
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "g5-14-09-settings-pet.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/pet",
+      "title": "Kel",
+      "bytes": 44453,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay in the main chat win"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "g5-15-09-settings-webui.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/webui",
+      "title": "Kel",
+      "bytes": 57895,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or remote browser can acces"
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "g5-16-09-settings-archived.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/archived",
+      "title": "Kel",
+      "bytes": 28996,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Archived conversations No archived items"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "g5-17-09-settings-about.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/about",
+      "title": "Kel",
+      "bytes": 42221,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "g5-18-09-settings-model.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 56138,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "g5-19-09-settings-agent.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 56132,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "g5-20-09-settings-skills.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 56132,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "g5-21-09-settings-tools.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 56132,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "12-projects-knowledge",
+      "file": "g5-22-12-projects-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/projects/knowledge",
+      "title": "Kel",
+      "bytes": 77259,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Knowledge Topic Type Trust Status Source Upda"
+    },
+    {
+      "view": "12-projects-map",
+      "file": "g5-23-12-projects-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/projects/map",
+      "title": "Kel",
+      "bytes": 56946,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Project map Refresh map No map built yet. Kel"
+    },
+    {
+      "view": "12-projects-recipes",
+      "file": "g5-24-12-projects-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/projects/recipes",
+      "title": "Kel",
+      "bytes": 55514,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Recipes Recipe Steps Inputs Source Audit and "
+    },
+    {
+      "view": "13-projects-knowledge-at-1280x720",
+      "file": "g5-25-13-projects-knowledge-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/projects/knowledge",
+      "title": "Kel",
+      "bytes": 70871,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Knowledge Topic Type Trust Status Source Upda"
+    },
+    {
+      "view": "13-projects-map-at-1280x720",
+      "file": "g5-26-13-projects-map-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/projects/map",
+      "title": "Kel",
+      "bytes": 54355,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Project map Refresh map No map built yet. Kel"
+    },
+    {
+      "view": "13-projects-recipes-at-1280x720",
+      "file": "g5-27-13-projects-recipes-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/projects/recipes",
+      "title": "Kel",
+      "bytes": 52723,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Recipes Recipe Steps Inputs Source Audit and "
+    },
+    {
+      "view": "13-projects-knowledge-at-1920x1080",
+      "file": "g5-28-13-projects-knowledge-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/projects/knowledge",
+      "title": "Kel",
+      "bytes": 80412,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Knowledge Topic Type Trust Status Source Upda"
+    },
+    {
+      "view": "13-projects-map-at-1920x1080",
+      "file": "g5-29-13-projects-map-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/projects/map",
+      "title": "Kel",
+      "bytes": 59948,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Project map Refresh map No map built yet. Kel"
+    },
+    {
+      "view": "13-projects-recipes-at-1920x1080",
+      "file": "g5-30-13-projects-recipes-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/projects/recipes",
+      "title": "Kel",
+      "bytes": 58214,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Recipes Recipe Steps Inputs Source Audit and "
+    },
+    {
+      "view": "13-projects-knowledge-at-2560x1440",
+      "file": "g5-31-13-projects-knowledge-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/projects/knowledge",
+      "title": "Kel",
+      "bytes": 86794,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Knowledge Topic Type Trust Status Source Upda"
+    },
+    {
+      "view": "13-projects-map-at-2560x1440",
+      "file": "g5-32-13-projects-map-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/projects/map",
+      "title": "Kel",
+      "bytes": 66501,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Project map Refresh map No map built yet. Kel"
+    },
+    {
+      "view": "13-projects-recipes-at-2560x1440",
+      "file": "g5-33-13-projects-recipes-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/projects/recipes",
+      "title": "Kel",
+      "bytes": 64668,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Recipes Recipe Steps Inputs Source Audit and "
+    },
+    {
+      "view": "13-projects-knowledge-at-1024x768",
+      "file": "g5-34-13-projects-knowledge-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/projects/knowledge",
+      "title": "Kel",
+      "bytes": 70187,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Knowledge Topic Type Trust Status Source Upda"
+    },
+    {
+      "view": "13-projects-map-at-1024x768",
+      "file": "g5-35-13-projects-map-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/projects/map",
+      "title": "Kel",
+      "bytes": 53376,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Project map Refresh map No map built yet. Kel"
+    },
+    {
+      "view": "13-projects-recipes-at-1024x768",
+      "file": "g5-36-13-projects-recipes-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/projects/recipes",
+      "title": "Kel",
+      "bytes": 52448,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Projects default · 3 knowledge records · map — · 5 recipes Reload Knowledge Map Recipes Recipes Recipe Steps Inputs Source Audit and "
+    },
+    {
+      "view": "10-boot-chat-at-1280x720",
+      "file": "g5-37-10-boot-chat-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 53101,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "11-work-drawer-at-1280x720",
+      "file": "g5-38-11-work-drawer-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 83778,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "10-boot-chat-at-1920x1080",
+      "file": "g5-39-10-boot-chat-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 100929,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "11-work-drawer-at-1920x1080",
+      "file": "g5-40-11-work-drawer-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 101463,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "10-boot-chat-at-2560x1440",
+      "file": "g5-41-10-boot-chat-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 110279,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "11-work-drawer-at-2560x1440",
+      "file": "g5-42-11-work-drawer-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 110279,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "10-boot-chat-at-1024x768",
+      "file": "g5-43-10-boot-chat-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 80010,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    },
+    {
+      "view": "11-work-drawer-at-1024x768",
+      "file": "g5-44-11-work-drawer-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 79979,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat Work Team Projects Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and sugges"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": false,
+    "engineKilled": true,
+    "appExitCode": 0
+  },
+  "launchMode": "packaged",
+  "launchedAt": "2026-09-15T16:36:32.697Z",
+  "engine": {
+    "pid": 9764,
+    "version": "0.5.0"
+  },
+  "finishedAt": "2026-09-15T16:38:31.273Z",
+  "closeOutcome": "close-timeout"
+}
