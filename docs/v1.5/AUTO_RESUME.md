@@ -4,9 +4,10 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Position (end of turn 2026-09-15)
 
-- Working tree on `main` @ `6b01e04` + the V1.5 authorization increment (see `git status`;
-  commit may follow this turn's review checkpoint).
-- G1 implemented; G2 increment 1 landed; full suite **398 passed + 10 subtests** (82.9 s).
+- `main` now carries commit **`b1f9aa5`** (`feat(v1.5): central authorization boundary in the
+  execution path`), directly on top of the V1.4.1 release record `6b01e04`.
+- G1 implemented (review checkpoint: CONTINUE); G2 increment 1 landed; full suite **399 passed +
+  10 subtests** (81.9 s; 375 + 10 before the change).
 - Frozen releases remain untouched and verify 3/3.
 
 ## What landed (files)
@@ -20,27 +21,26 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 | `runtime/kel/coding.py` | worker effect-point check (`repo`, tools) before any dispatch |
 | `runtime/kel/apply_changes.py` | `write` authorization before touching the user's project; `actor` param |
 | `runtime/kel/service.py` | uniform payload-`actor` rejection; `/api/apply` as `user`; grant wakes the blocked job |
-| `runtime/tests/test_v15_authorize.py` | **new** — 23 adversarial tests |
+| `runtime/tests/test_v15_authorize.py` | **new** — 24 adversarial tests |
 | `docs/v1.5/*` | status board, authorization model, ledger classification, skeletons |
 
 ## Next steps, in order
 
-1. Record the review-relay checkpoint result for this increment in `00_STATUS.md`.
-2. Commit the increment (suggested: `feat(v1.5): central authorization boundary in the execution
-   path` — body = files above + suite counts).
-3. G2 remainder: decide and either gate or truthfully scope V14-151/152; add engine-level drills for
+1. (done this turn) review checkpoint CONTINUE recorded in `00_STATUS.md`; increment committed as
+   `b1f9aa5`.
+2. G2 remainder: decide and either gate or truthfully scope V14-151/152; add engine-level drills for
    revoke-mid-run → BLOCKED → blocked job, and emergency-stop → resume → reissued lease through the
    service; wire `decisions` into `/api/diagnostics` (WS22).
-4. G3 remainder: role attachment (where assignments come from) + native-adapter tool-class
+3. G3 remainder: role attachment (where assignments come from) + native-adapter tool-class
    enforcement; document the decision.
-5. G4: credentials injection (desktop main-process `kelCredentials.getCredential` → per-run child
+4. G4: credentials injection (desktop main-process `kelCredentials.getCredential` → per-run child
    env only; fake secure-store adapter for engine tests; leak-detection tests) and the provider
    runtime audit (WS8) — the largest remaining engineering chunk.
-6. G5–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
+5. G5–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
-7. Desktop (Electron) work is required for G7/G8/G10: Autonomy copy correction, decisions surface,
+6. Desktop (Electron) work is required for G7/G8/G10: Autonomy copy correction, decisions surface,
    Work Center rows, provider settings, performance surfaces.
-8. Release: bump `ENGINE_VERSION` to `1.5.0` at G13; packaging hygiene (WS23); freeze via
+7. Release: bump `ENGINE_VERSION` to `1.5.0` at G13; packaging hygiene (WS23); freeze via
    `scripts/freeze-release.ps1`; verify + smoke; tag; release record.
 
 ## Commands and guardrails

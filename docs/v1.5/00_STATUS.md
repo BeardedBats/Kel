@@ -1,7 +1,8 @@
 # 00 — Status (Kel V1.5)
 
 Baseline: `main` @ `6b01e04` (V1.4.1 release record; tags `v1.4.0` and `v1.4.1` present). The
-working tree carries the V1.5 increment below; it is not yet committed or released.
+first V1.5 increment is committed as **`b1f9aa5`** (`feat(v1.5): central authorization boundary in
+the execution path`); it is not yet released or tagged.
 
 Verified at program start (2026-09-15):
 
@@ -35,7 +36,7 @@ Verified at program start (2026-09-15):
 Gate closure rule applies: implementation + tests + runtime evidence + review `CONTINUE`; documents
 alone never close a gate.
 
-## Current increment (this working tree)
+## Current increment (this working tree, committed as b1f9aa5)
 
 - central authorization boundary in the execution path + migration 010 `guardrail_decisions`;
 - execution leases issued at job creation (bound to the compiled contract digest), enforced at the
