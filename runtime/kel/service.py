@@ -534,6 +534,10 @@ class Service:
             return self._action(path,data)
 
     def _action(self,path,data):
+        # V1.5: one identity rule for every engine action family. Actor identity is bound by the
+        # authenticated session, never by the request payload.
+        if 'actor' in data:
+            raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
         if path=='/api/send':return {'id':self.submit(data)}
         if path=='/api/memory':return self._memory_action(data)
         if path=='/api/map':return self._map_action(data)
@@ -558,7 +562,7 @@ class Service:
             self.engine.control(data['job'],data['action']);return {'ok':True}
         if path=='/api/apply':
             from .apply_changes import apply_checked
-            return apply_checked(self.store,data['job'])
+            return apply_checked(self.store,data['job'],actor='user')
         if path=='/api/approval':
             if 'actor' in data:
                 raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
@@ -582,13 +586,15 @@ class Service:
             return Providers(self.store).apply(data)
         if path=='/api/autonomy':
             from .autonomy import Autonomy
-            if 'actor' in data:
-                raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
             payload=dict(data);payload['actor']='user'
             result=Autonomy(self.store).apply(payload)
             if data.get('action')=='emergency_stop':
                 for job_id in result.get('paused_jobs',[]):
                     self.engine.control(job_id,'pause')
+            if data.get('action')=='resolve' and result.get('status')=='GRANTED':
+                # A granted boundary request wakes exactly the job that was waiting on it.
+                from .authorize import resume_after_grant
+                resume_after_grant(self.store,result['request_id'])
             return result
         if path=='/api/diagnostics':
             from .diagnostics import Diagnostics

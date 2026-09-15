@@ -192,6 +192,20 @@ class Store:
             self._save(db, job, "job.created")
             db.execute("INSERT INTO messages(conversation_id,role,text,job_id,at) VALUES(?,?,?,?,?)",
                        (conversation, 'user', contract['request'], job_id, time.time()))
+        # V1.5: effect-capable jobs carry a Kel-issued execution lease bound to the compiled
+        # contract. The engine claim gate and every effect point require it (kel.authorize);
+        # ineligible roots (frozen/system) stay unleased and therefore fail closed.
+        root = contract.get('root')
+        if contract.get('kind') == 'coding' and root:
+            try:
+                from .autonomy import Autonomy
+                Autonomy(self).issue(job_id, project_id=contract.get('project_id', 'default'),
+                                     profile='kel-job',
+                                     review_ref='kel-contract:' + digest(contract),
+                                     roots=[str(root)], repositories=[str(root)],
+                                     tools=('git', 'run_tests'))
+            except PolicyError:
+                pass
         return job_id
 
     def get(self, job_id):
@@ -607,6 +621,12 @@ class Store:
             job.update(contract=contract, contract_version=job['contract_version']+1, milestones=milestones,
                        state='READY', verdict='UNCERTAIN', assessment=None)
             db.execute("INSERT INTO contracts VALUES(?,?,?,?)", (job_id, job['contract_version'], digest(contract), encode(contract)))
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='capability_leases'").fetchone():
+                # The reviewed contract changed: retire the old execution lease; the claim gate
+                # re-issues one for the new contract before any worker can start.
+                db.execute("UPDATE capability_leases SET state='REVOKED', revoked_at=?, "
+                           "reason='contract revised' WHERE job_id=? AND state='ACTIVE'",
+                           (time.time(), job_id))
             self._save(db, job, 'contract.revised')
 
     def reopen(self, job_id, reason='continuation'):

@@ -216,6 +216,25 @@ class Engine:
                     spec = next(s for s in job['contract']['milestones'] if s['id'] == mid)
                     if any(job['milestones'][d]['state'] != 'ACCEPTED' for d in spec.get('depends_on', [])):
                         continue
+                    if job['contract'].get('kind') == 'coding':
+                        # V1.5: authorization is part of the execution path. A coding job cannot
+                        # claim a worker without a valid execution lease for its project root.
+                        from .authorize import authorize, block_job, ensure_job_lease, role_for
+                        lease_id, failure = ensure_job_lease(self.store, job)
+                        if failure is None:
+                            decision = authorize(self.store, {
+                                'actor': 'kel', 'job': job['id'], 'milestone': mid,
+                                'role': role_for(self.store, job['id'], mid),
+                                'action_kind': 'repo',
+                                'target': str(job['contract'].get('root') or ''),
+                                'lease_id': lease_id, 'consume': False,
+                                'metadata': {'what': 'start a coding worker for this project',
+                                             'why': 'the reviewed plan requires repository work'}})
+                            if decision['outcome'] != 'ALLOW':
+                                failure = decision
+                        if failure is not None:
+                            block_job(self.store, job['id'], mid, failure)
+                            continue
                     health=self.store.provider_states()
                     candidates = [Candidate(name=n, capabilities=getattr(a,'capabilities',{'text'}),privacy='local' if n == 'fixture' else 'cloud',
                                   circuit_until=health.get(n,{}).get('circuit_until',0),quota=health.get(n,{}).get('quota'),

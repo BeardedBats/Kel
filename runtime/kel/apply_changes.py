@@ -15,13 +15,23 @@ def init(store):
         db.execute('CREATE TABLE IF NOT EXISTS change_applications(job_id TEXT PRIMARY KEY,root TEXT,plan TEXT,state TEXT)')
 
 
-def apply_checked(store,job_id):
+def apply_checked(store,job_id,actor='kel'):
     init(store)
     job=store.get(job_id)
     if job['contract'].get('kind')!='coding':raise PolicyError('This job has no repository change')
     root=Path(job['contract']['root']).resolve(strict=True)
     reason=protected_reason(root)
     if reason:raise PolicyError('Refusing to apply changes into a protected location: '+reason)
+    # V1.5: the real effect point. Writing into the user's project requires an authorized write
+    # intent (valid execution lease); revoked or missing permission refuses before any write.
+    if actor not in ('user','kel'):raise PolicyError('Unknown actor for change application')
+    from .authorize import authorize
+    decision=authorize(store,{'actor':actor,'job':job_id,'action_kind':'write','target':str(root),
+        'metadata':{'what':'the project source files','why':'apply the verified change set',
+                    'fallback':'leave the project unchanged and report'}})
+    if decision['outcome']!='ALLOW':
+        raise PolicyError('Application is not authorized: '+
+                          (decision.get('reason') or decision.get('rule') or 'permission required'))
     metadata=Path(git(root,'rev-parse','--absolute-git-dir').decode().strip()).resolve(strict=True)
     if not metadata.is_relative_to(root):raise PolicyError('Linked Git metadata cannot own an application lock')
     lockroot=metadata/'kel-application';lockroot.mkdir(exist_ok=True)
