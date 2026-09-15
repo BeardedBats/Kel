@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T19:12:08.209Z",
+  "startedAt": "2026-09-15T19:21:15.610Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 25404,
+    "pid": 10620,
     "version": "0.5.0"
   },
   "bootScreen": {
@@ -246,7 +246,7 @@
       "tag": "DIV",
       "name": null,
       "text": "New Chat",
-      "outline": "solid 2px rgb(50, 165, 126)",
+      "outline": "solid 2px rgb(53, 166, 128)",
       "rect": [
         8,
         91,
@@ -385,49 +385,8 @@
     },
     "providers": {
       "textSamples": 83,
-      "contrastFailures": [
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "text",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        },
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "auto",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        },
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "Check readiness",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        },
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "Store credential",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 4,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
@@ -439,7 +398,7 @@
       "paletteText": [
         {
           "value": "rgb(255,255,255)",
-          "count": 36
+          "count": 32
         },
         {
           "value": "rgb(169,182,198)",
@@ -456,6 +415,10 @@
         {
           "value": "rgb(125,139,158)",
           "count": 8
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 4
         },
         {
           "value": "rgb(144,152,161)",
@@ -508,29 +471,8 @@
     },
     "autonomy": {
       "textSamples": 111,
-      "contrastFailures": [
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "Allow once",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        },
-        {
-          "element": "button.kel-tab.kel-tab--on",
-          "text": "write",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 2,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
@@ -546,7 +488,7 @@
         },
         {
           "value": "rgb(255,255,255)",
-          "count": 33
+          "count": 31
         },
         {
           "value": "rgb(230,237,243)",
@@ -558,6 +500,10 @@
         },
         {
           "value": "rgb(47,163,124)",
+          "count": 2
+        },
+        {
+          "value": "rgb(16,20,24)",
           "count": 2
         },
         {
@@ -610,46 +556,25 @@
       "emojiCharacters": 0
     },
     "diagnostics": {
-      "textSamples": 118,
-      "contrastFailures": [
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "Observe now",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        },
-        {
-          "element": "button.kel-btn.kel-btn--primary",
-          "text": "Write local draft",
-          "size": 14,
-          "weight": "600",
-          "fg": "rgb(255,255,255)",
-          "bg": "rgb(47,163,124)",
-          "ratio": 3.16,
-          "need": 4.5
-        }
-      ],
-      "contrastFailureCount": 2,
+      "textSamples": 128,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
         "12": 13,
-        "14": 94,
+        "14": 104,
         "16": 6,
         "24": 5
       },
       "paletteText": [
         {
           "value": "rgb(169,182,198)",
-          "count": 69
+          "count": 79
         },
         {
           "value": "rgb(255,255,255)",
-          "count": 34
+          "count": 32
         },
         {
           "value": "rgb(230,237,243)",
@@ -660,6 +585,10 @@
           "count": 3
         },
         {
+          "value": "rgb(16,20,24)",
+          "count": 2
+        },
+        {
           "value": "rgb(144,152,161)",
           "count": 1
         }
@@ -667,7 +596,7 @@
       "paletteBg": [
         {
           "value": "rgb(22,27,34)",
-          "count": 71
+          "count": 81
         },
         {
           "value": "rgb(42,42,43)",
@@ -687,6 +616,397 @@
         },
         {
           "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-office": {
+      "textSamples": 54,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "12": 12,
+        "14": 39,
+        "16": 3
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 10
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 6
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 2
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 1
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(242,200,121)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 11
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 6
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        },
+        {
+          "value": "rgb(42,33,19)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-roster": {
+      "textSamples": 57,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "12": 3,
+        "14": 37,
+        "16": 12,
+        "24": 5
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 16
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 4
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 3
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(22,27,34)",
+          "count": 21
+        },
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-studio": {
+      "textSamples": 42,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 14,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "14": 37,
+        "16": 5
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 5
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 2
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 2
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 5
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 2
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-knowledge": {
+      "textSamples": 65,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "12": 16,
+        "14": 45,
+        "16": 3,
+        "24": 1
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 31
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 17
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 9
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 3
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 3
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(22,27,34)",
+          "count": 23
+        },
+        {
+          "value": "rgb(42,42,43)",
+          "count": 18
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 7
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-map": {
+      "textSamples": 42,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 14,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "14": 36,
+        "16": 5,
+        "24": 1
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 30
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 5
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 5
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 17
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 8
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-recipes": {
+      "textSamples": 51,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "12": 6,
+        "14": 42,
+        "16": 3
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 31
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 14
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 2
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 18
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 11
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 5
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
           "count": 1
         }
       ],
