@@ -33,3 +33,18 @@ These were working-tree changes at fork time; they are now plain files in this r
 The full packaged release also needs the AionCore binary
 (`resources/bundled-aioncore/win32-x64/aioncore.exe`, not stored in git) and the built Kel
 Runtime. See the root README ("Building the desktop shell" and "Packaging app.asar").
+
+## Local fonts (licensed; not committed)
+
+The shell loads two local font families at runtime:
+
+- **Sohne** — header/display font (weights 400/500/600/700) from `public/fonts/sohne/`.
+- **SF Pro Text** — body font (weights 400/500/600/700) from `public/fonts/sf-pro-text/`.
+
+The files are deliberately git-ignored (`desktop/public/fonts/**/*.otf`): Söhne is © Klim
+Type Foundry and SF Pro is © Apple Inc., licensed for local use only — never commit them.
+Copy the font files into those folders (see `public/fonts/README.md`) before building; without
+them the app still builds and runs with the system fallback stack. Registration happens in
+`packages/desktop/src/renderer/utils/theme/kelFonts.ts`; the display token
+(`--kel-font-display`) and the `h1–h6` rule live in
+`packages/desktop/src/renderer/styles/arco-override.css`.
