@@ -81,3 +81,13 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G3-TEAM | role versioning · rollback · project/task override precedence · locked-section isolation · assignment snapshot immutability · tool policy fails closed · no recursive delegation · activity contract (no hidden reasoning) · staffing reasons · seed idempotency | U/I | **PASS** (17 tests, `tests/test_v14_team.py`) |
 | G3-MIGRATION | migrations 005/006 additive, recorded in `schema_migrations`, idempotent | I | **PASS** |
 | G3-API | `/api/brief` + `/api/team` wired in `service._action` | I | **PASS** (service envelope test) |
+
+## 8. Gate 4 additions (in progress)
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G4-BUILD | desktop dependencies + renderer build on this machine | I | **PASS** (`bun install --frozen-lockfile` 1591 pkgs; `bun x electron-vite build` exit 0 → `desktop/out/{main,preload,renderer}`) |
+| G4-ALLOWLIST | `/api/brief` + `/api/team` reachable from the renderer | I | **PASS** (`KelService.ts` route allowlist) |
+| G4-FIXTURES | team/solution fixtures seed an isolated data root | I | **PASS** (`data/fixture-team`: 9 roles, 2 assignments, activity + artifact, APPROVED brief) |
+| G4-UI | Office / Roster / Studio + Work Center surfaces rendered and verified | V | pending (in progress) |
+| G4-CAPTURE | five-width captures of the new surfaces + comparisons | V | pending |
