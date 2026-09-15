@@ -78,7 +78,13 @@ class Service:
             db.execute("UPDATE submissions SET state='DISPATCHED',job_id=(SELECT job_id FROM job_intakes WHERE job_intakes.id=submissions.id) WHERE id IN (SELECT id FROM job_intakes)")
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
+        from .continuation import Continuation
+        from .memory import Memory
+        from .projectmap import ProjectMap
         from .recipes import RecipeLibrary
+        Memory(self.store)
+        ProjectMap(self.store)
+        Continuation(self.store)
         RecipeLibrary(self.store).install_builtins()
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
@@ -124,6 +130,19 @@ class Service:
             result=classify(text)
             kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
         packet=self.context.handoff(cid,text,attachments)
+        try:
+            from .memory import Memory
+            from .projectmap import ProjectMap
+            from .composer import Composer
+            with contextlib.closing(self.store.connect()) as db:
+                project_row=db.execute('SELECT project_id FROM conversations WHERE id=?',
+                                       (cid,)).fetchone()
+            if project_row:
+                packet['context_packet']=Composer(
+                    self.store,Memory(self.store),ProjectMap(self.store)).build(
+                    project_row['project_id'],text,conversation_id=cid,purpose='submit')
+        except Exception:
+            pass  # enrichment is additive; the handoff packet remains the fallback
         if job_id:packet['continuation']={'job_id':job_id}
         recipe_run=data.get('recipe')
         if recipe_run is not None:

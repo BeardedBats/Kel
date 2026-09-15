@@ -15,7 +15,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G4 — continuation | **COMPLETE** | migration 003 + `kel/continuation.py` + service wiring + 26 tests + 8/8 live probes (evidence: docs/v1.3/evidence/gate4-continuation-probe.json); see §Gate 4 below |
 | G5 — recipes | **COMPLETE** | migration 004 + `kel/recipes.py` (842 lines) + 5 builtins + 14 tests; suite 254+10; see §Gate 5 |
 | G6 — user experience | **COMPLETE** | Work-context tabs + work API + packaged asar parity + Playwright UI evidence; see §Gate 6 |
-| G7 — adversarial acceptance + freeze | not started | blocked on approval |
+| G7 — adversarial acceptance + freeze | **ACCEPTANCE COMPLETE — freeze/release rail in progress** | all 64 items PASS — see KEL_V1.3_VERIFICATION_REPORT.md |
 
 ## Gate 0 evidence (all CONFIRMED)
 
@@ -456,5 +456,25 @@ Packaged acceptance evidence (Playwright driving the real Kel.exe; tool committe
   chat/coding round-trips through the packaged UI — covered by Gate 7 packaged items.
 
 Next: Gate 7 (adversarial acceptance on the packaged application).
+
+## Gate 7 (acceptance) — adversarial acceptance on the packaged application  [2026-09-15]
+
+- Full suite: **267 passed + 10 subtests** (baseline retention intact; +86 additive V1.3 tests).
+- All 64 acceptance items PASS with exact evidence per item:
+  `docs/v1.3/KEL_V1.3_VERIFICATION_REPORT.md` (MEM/MAP/CTX/CONT/REC/TRUST/PKG mapping).
+- Packaged acceptance (`packaging/verify-packaged-acceptance.cjs`, real Kel.exe under
+  Playwright): boot, tabs, **continuation through the packaged UI** (paused job resumed via the
+  Continue button + "Continuing…" message), **project memory survives restart**, zero renderer
+  errors in both runs, graceful shutdown with **zero orphan processes**, relaunch — all green.
+- V1.2 → V1.3 data upgrade (`packaging/verify-v12-upgrade.py`, frozen V1.2 engine → packaged
+  V1.3 engine): migrations `[1,2,3,4]` applied in order, one-time backup + integrity receipt,
+  legacy conversations/messages/approvals intact, all four V1.3 tables created.
+- As-built fix found by this run: Service startup now initializes all four migration modules
+  (001–004) in order instead of lazily gapping the series.
+- Frozen V1.2 hashes re-verified unchanged (`E048632E…`, `B56816B6…`, `11D9DBC0…`).
+- Remaining release rail: build `Kel Releases/Kel-V1.3-Frozen` + manifest/hash files, final
+  launch/shutdown/relaunch from the frozen copy, THIRD_PARTY_NOTICES/README finalization,
+  final reviewer checkpoint, PR → merge → annotated `v1.3.0` tag → release notes, clean-clone
+  verification, final report.
 
 

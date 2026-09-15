@@ -245,6 +245,10 @@ class Composer:
             db.execute('INSERT OR REPLACE INTO context_packets VALUES(?,?,?,?,?,?,?)',
                        (packet['packet_id'], packet['project_id'], packet.get('job_id'),
                         packet['conversation_id'], packet['purpose'], data, packet['created']))
+            db.execute('DELETE FROM context_packets WHERE project_id=? AND packet_id NOT IN'
+                       ' (SELECT packet_id FROM context_packets WHERE project_id=?'
+                       ' ORDER BY created DESC LIMIT 200)',
+                       (packet['project_id'], packet['project_id']))
 
     def packet(self, packet_id):
         """Inspect a stored packet (full text only for job-linked packets)."""

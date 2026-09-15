@@ -194,6 +194,52 @@ class WorkContextTests(unittest.TestCase):
             self.service.submit({'text': 'x', 'conversation': self.cid, 'kind': 'recipe',
                                  'recipe': {'recipe_id': 5}})
 
+    def test_submit_packet_carries_context_sources(self):
+        from kel.memory import Memory
+        memory = Memory(self.service.store)
+        mid = memory.record('default', 'decision', 'garden.plan',
+                            dict(statement='Plant tomatoes in spring.'),
+                            'Plant tomatoes in the garden in spring.',
+                            source_type='user_instruction', actor='user', user_confirmed=1)
+        sid = self.service.submit({'text': 'write a plan for the garden',
+                                   'conversation': self.cid})
+        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        with contextlib.closing(self.service.store.connect()) as db:
+            row = db.execute('SELECT packet FROM submission_packets WHERE id=?',
+                             (sid,)).fetchone()
+        packet = json.loads(row['packet'])
+        context = packet.get('context_packet')
+        self.assertTrue(context and context.get('sources'))
+        refs = [s['ref'] for s in context['sources'] if s['kind'] == 'memories']
+        self.assertIn(mid, refs)
+        jobs = [j for j in self.service.store.list_jobs() if j['conversation'] == self.cid]
+        self.assertTrue(jobs)
+        worker_refs = [s['ref'] for s in
+                       jobs[0]['contract']['context']['context_packet']['sources']
+                       if s['kind'] == 'memories']
+        self.assertIn(mid, worker_refs)
+
+    def test_context_packet_is_project_scoped(self):
+        from kel.memory import Memory
+        memory = Memory(self.service.store)
+        other = self.context.project('Other', project_id='other2')
+        their_id = memory.record('other2', 'decision', 'garden.plan',
+                                 dict(statement='Other project secret plan.'),
+                                 'Other project plan.', source_type='user_instruction',
+                                 actor='user', user_confirmed=1)
+        sid = self.service.submit({'text': 'write a plan for the garden',
+                                   'conversation': self.cid})
+        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        with contextlib.closing(self.service.store.connect()) as db:
+            row = db.execute('SELECT packet FROM submission_packets WHERE id=?',
+                             (sid,)).fetchone()
+        raw = row['packet']
+        self.assertNotIn('Other project secret plan.', raw)
+        packet = json.loads(raw)
+        refs = [s['ref'] for s in packet['context_packet']['sources']
+                if s['kind'] == 'memories']
+        self.assertNotIn(their_id, refs)
+
     def test_recipes_get_and_unknown_actions(self):
         info = self.service._recipes_action({'action': 'get', 'conversation': self.cid,
                                              'recipe_id': 'fix-bug'})
