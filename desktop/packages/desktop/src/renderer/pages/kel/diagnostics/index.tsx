@@ -238,7 +238,11 @@ const Diagnostics: React.FC = () => {
                       {row.run_id.slice(0, 12)}
                     </span>,
                     String(row.pid),
-                    row.alive ? 'yes' : 'no — orphan candidate',
+                    row.alive
+                      ? 'yes'
+                      : row.past_deadline
+                        ? 'no — orphan candidate'
+                        : 'no — not running',
                     row.past_deadline ? 'past deadline' : formatWhen(row.deadline),
                     <span className='kel-meta' key={`${row.run_id}-i`}>
                       {row.identity}

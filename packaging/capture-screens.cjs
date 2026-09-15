@@ -310,6 +310,39 @@ async function main() {
     }
   }
 
+  // --- pet windows (--pets): enable the desktop pet through its own settings switch, then capture
+  //     every window whose URL is a pet document. Zero pets are recorded explicitly, so the gap is
+  //     visible in the manifest instead of being silently absent.
+  if (hasFlag('pets')) {
+    manifest.pets = [];
+    await page.evaluate(() => { location.hash = '/settings/pet'; }).catch(() => {});
+    await page.waitForTimeout(2200);
+    const toggle = page.locator('.arco-switch').first();
+    if (await toggle.count()) {
+      await toggle.click({ timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(2600);
+    }
+    const mainUrl = page.url();
+    for (const win of app.windows()) {
+      const url = win.url();
+      // Identify pet windows by exclusion (never the main window) plus a pet-ish URL or title, rather
+      // than by an exact filename — the pet documents load with their own URL shape.
+      if (url === mainUrl) continue;
+      const title = await win.title().catch(() => '');
+      if (!/pet/i.test(url) && !/pet/i.test(title)) continue;
+      const label = (url.split('/').pop() || 'pet').replace(/[^a-z0-9.]/gi, '-');
+      const file = path.join(outDir, `${tag}-pet-${label}.png`);
+      await win.screenshot({ path: file }).catch(() => {});
+      const size = await win
+        .evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
+        .catch(() => null);
+      manifest.pets.push({ url, file: path.basename(file), size });
+    }
+    manifest.petWindowCount = manifest.pets.length;
+    await page.evaluate(() => { location.hash = '/guid'; }).catch(() => {});
+    await page.waitForTimeout(1500);
+  }
+
   // --- resize passes: core views at the remaining widths ------------------
   for (const [w, h] of widths.slice(1)) {
     await setSize(w, h);
