@@ -270,7 +270,9 @@ const Providers: React.FC = () => {
           <p className="kel-sub">
             The value is encrypted by the desktop main process with Windows DPAPI (Electron
             <span className="kel-code"> safeStorage </span>) and never reaches the engine, which keeps
-            only the field names and a reference. No IPC returns the value to this window.
+            only the field names and a reference. No IPC returns the value to this window. Stored values
+            are not yet injected into provider runs: live calls use each provider CLI's own sign-in or
+            ambient environment keys, and injection is deferred (see docs/v1.4.1).
           </p>
           <div className="kel-row">
             <select

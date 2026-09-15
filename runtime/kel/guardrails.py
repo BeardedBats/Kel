@@ -1,9 +1,18 @@
-"""Locked safety guardrails (V1.4).
+"""Locked safety guardrails (V1.4; status corrected in V1.4.1).
 
-Immutable by design: no role, override, project file, repository text, web content, or worker output
-may add, weaken, or disable a rule. Only a direct user instruction can change these definitions.
-Every rule carries the id of the test that proves it is enforced.
+These definitions are locked against roles, overrides, project files, repository text, web content,
+and worker output. What the engine actually enforces at runtime today (V1.4.1):
+
+- runtime modification of this rule set is detected (`assert_intact`) and stops new worker runs;
+- engine-owned project writes refuse frozen-release and system paths (`protected_reason`).
+
+Not yet implemented (deferred to V1.5 — docs/v1.4.1/06_V1_5_DEFERRED_WORK.md): refusing worker
+actions against these rules on the execution path. Each rule carries the id of the AUTO-* test that
+exercises its checker rule.
 """
+import hashlib
+import json
+
 from .core import PolicyError
 
 RULES = (
@@ -25,6 +34,48 @@ RULES = (
 
 LOCKED_KEYS = ('locked', 'guardrails', 'guardrail_decisions')
 RULE_IDS = tuple(rule for rule, _text, _test in RULES)
+
+# Import-time digest for runtime tamper detection (compare against the live RULES at check time).
+DIGEST = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdigest()
+
+# Locations the engine refuses to write into from its own execution paths (V1.4.1).
+FROZEN_MARKERS = ('kel releases', 'kel-v1-frozen', 'kel-v1.1-frozen', 'kel-v1.2-frozen',
+                  'kel-v1.3-frozen', 'kel-v1.4-frozen', 'frozen')
+SYSTEM_PREFIXES = ('c:\\windows', 'c:\\program files', 'c:\\program files (x86)', 'c:\\programdata')
+
+
+def _norm(path):
+    return str(path or '').replace('/', '\\').lower()
+
+
+def frozen_path(target):
+    return any(marker in _norm(target) for marker in FROZEN_MARKERS)
+
+
+def system_path(target):
+    return any(_norm(target).startswith(prefix) for prefix in SYSTEM_PREFIXES)
+
+
+def protected_reason(target):
+    """Why a location is off-limits for engine-owned writes, or None."""
+    if frozen_path(target):
+        return 'Frozen releases are read-only'
+    if system_path(target):
+        return 'System locations are outside every Kel project'
+    return None
+
+
+def assert_intact():
+    """Detect runtime modification of the locked rule set; refuse new work when detected.
+
+    This catches in-memory or monkey-patched changes to RULES during the engine's lifetime. It does
+    not detect a pre-built modified module (that is release-integrity territory), and it is not an
+    execution-path gate against worker actions (deferred to V1.5, docs/v1.4.1/06).
+    """
+    digest_now = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdigest()
+    if digest_now != DIGEST:
+        raise PolicyError('Locked guardrails were modified; refusing new work')
+    return True
 
 
 def locked_block():
