@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { recoverHistory, type HistoryMessage } from './reconcileHistory';
+import { credentialStatus, removeCredential, setCredential } from './kelCredentials';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
 const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
@@ -336,5 +337,28 @@ export async function initializeKel(port: number): Promise<void> {
     )
       throw new Error('Unknown Kel action');
     return kelRequest(route, body);
+  });
+  // OS-backed credential custody (V1.4 Gate 6): values are encrypted with safeStorage (DPAPI on
+  // Windows) in the main process; the engine only ever receives metadata, and no IPC returns a value.
+  ipcMain.handle('kel:credential-status', () => credentialStatus());
+  ipcMain.handle(
+    'kel:credential-set',
+    async (event, provider: string, field: string, value: string) => {
+      const stored = setCredential(provider, field, value);
+      await kelRequest('/api/providers', {
+        action: 'set_credential',
+        provider,
+        fields: stored.fields,
+        credential_ref: `kel:provider:${provider}:${field}`,
+      }).catch(() => undefined);
+      return { provider: stored.provider, fields: stored.fields };
+    }
+  );
+  ipcMain.handle('kel:credential-delete', async (event, provider: string) => {
+    const removed = removeCredential(provider);
+    await kelRequest('/api/providers', { action: 'delete_credential', provider }).catch(
+      () => undefined
+    );
+    return removed;
   });
 }

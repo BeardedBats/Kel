@@ -50,6 +50,17 @@ const Providers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [secure, setSecure] = useState<{ available: boolean; providers: Record<string, string[]> } | null>(
+    null
+  );
+  const [storeDraft, setStoreDraft] = useState({ provider: 'deepseek', field: 'api_key', value: '' });
+
+  useEffect(() => {
+    void (async () => {
+      const status = await window.kelAPI?.credentials?.status().catch(() => null);
+      if (status) setSecure(status);
+    })();
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -254,6 +265,83 @@ const Providers: React.FC = () => {
             </>
           )}
         </KelCard>
+
+        <KelSection title="Store a provider credential (OS-backed)">
+          <p className="kel-sub">
+            The value is encrypted by the desktop main process with Windows DPAPI (Electron
+            <span className="kel-code"> safeStorage </span>) and never reaches the engine, which keeps
+            only the field names and a reference. No IPC returns the value to this window.
+          </p>
+          <div className="kel-row">
+            <select
+              className="kel-input"
+              aria-label="Provider"
+              value={storeDraft.provider}
+              onChange={(event) => setStoreDraft({ ...storeDraft, provider: event.target.value })}
+            >
+              {(providers ?? []).map((item) => (
+                <option key={item.provider} value={item.provider}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <input
+              className="kel-input"
+              aria-label="Field name"
+              value={storeDraft.field}
+              onChange={(event) => setStoreDraft({ ...storeDraft, field: event.target.value })}
+            />
+            <input
+              className="kel-input"
+              type="password"
+              aria-label="Credential value"
+              placeholder="paste the key — the engine never stores it"
+              value={storeDraft.value}
+              onChange={(event) => setStoreDraft({ ...storeDraft, value: event.target.value })}
+            />
+            <KelButton
+              variant="primary"
+              disabled={busy || !storeDraft.value || !secure?.available}
+              onClick={() => {
+                void (async () => {
+                  setBusy(true);
+                  setNote(null);
+                  try {
+                    await window.kelAPI?.credentials?.set(
+                      storeDraft.provider,
+                      storeDraft.field || 'api_key',
+                      storeDraft.value
+                    );
+                    setStoreDraft((draft) => ({ ...draft, value: '' }));
+                    const status = await window.kelAPI?.credentials?.status();
+                    if (status) setSecure(status);
+                    setNote(`Stored ${storeDraft.field || 'api_key'} for ${storeDraft.provider}.`);
+                    await load();
+                  } catch (err) {
+                    setNote(
+                      `Could not store the credential: ${
+                        err instanceof Error ? err.message : String(err)
+                      }`
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }}
+            >
+              Store credential
+            </KelButton>
+          </div>
+          <p className="kel-meta">
+            {secure?.available
+              ? `OS-backed storage available · stored: ${
+                  Object.entries(secure.providers)
+                    .map(([provider, fields]) => `${provider} (${fields.join(', ')})`)
+                    .join(' · ') || 'nothing yet'
+                }`
+              : 'OS-backed storage is unavailable on this system — Kel keeps metadata only.'}
+          </p>
+        </KelSection>
 
         <KelSection title="Credential metadata (values are never stored here)">
           {credentialRows.length === 0 ? (

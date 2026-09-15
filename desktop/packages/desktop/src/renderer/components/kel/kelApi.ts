@@ -88,6 +88,16 @@ declare global {
       history: (id: string) => Promise<unknown>;
       conversation: (id: string) => Promise<unknown>;
       historySearch: (query: string) => Promise<unknown>;
+      /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
+      credentials?: {
+        status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
+        set: (
+          provider: string,
+          field: string,
+          value: string
+        ) => Promise<{ provider: string; fields: string[] }>;
+        remove: (provider: string) => Promise<{ provider: string; removed: number }>;
+      };
     };
   }
 }
