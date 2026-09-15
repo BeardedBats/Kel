@@ -15,6 +15,7 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
+import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
 import { ProjectPanelMobileOverlay } from '@renderer/components/layout/ProjectPanelMobileOverlay';
@@ -378,6 +379,8 @@ const Layout: React.FC<{
           <a className='kel-skip' href='#kel-shell-content'>
             Skip to main content
           </a>
+          {/* Kel V1.4: Ctrl+K anywhere (or `/` to search) opens the command palette. */}
+          <KelCommandPalette />
           <Titlebar workspaceAvailable={workspaceAvailable} />
           {/* 移动端左侧边栏蒙板 / Mobile left sider backdrop */}
           {isMobile && !collapsed && (
