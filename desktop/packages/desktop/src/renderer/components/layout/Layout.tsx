@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
+import { kelState } from '@renderer/components/kel/kelApi';
+import { configService } from '@/common/config/configService';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
 import { ProjectPanelMobileOverlay } from '@renderer/components/layout/ProjectPanelMobileOverlay';
@@ -133,6 +135,42 @@ const Layout: React.FC<{
   useDesktopTurnNotification();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Kel V1.4 first-run: a genuinely fresh install (no completion flag and no conversations) is offered
+  // onboarding once. An install that already holds conversations is never interrupted, so migrated
+  // users skip the flow entirely.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      // Read the flag on its own: an unknown/unreadable key must mean "not completed yet", never
+      // "skip the offer" (a throwing getter previously swallowed the whole check).
+      let completed = false;
+      try {
+        completed = Boolean(configService.get('kel.onboardingCompleted_v1'));
+      } catch {
+        completed = false;
+      }
+      if (completed) return;
+      // The engine can still be starting on a cold launch, so give the state read a few attempts.
+      for (let attempt = 0; attempt < 4 && !cancelled; attempt += 1) {
+        try {
+          const state = await kelState();
+          if (cancelled) return;
+          const conversations = (state as { conversations?: unknown[] }).conversations ?? [];
+          if (!conversations.length) {
+            navigate('/onboarding', { replace: true });
+            return;
+          }
+          return;
+        } catch {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
   const workspaceAvailable =
     location.pathname.startsWith('/conversation/') || (TEAM_MODE_ENABLED && location.pathname.startsWith('/team/'));
   const toggleSider = useCallback(() => {

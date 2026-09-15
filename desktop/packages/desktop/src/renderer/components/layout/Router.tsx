@@ -30,6 +30,7 @@ const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
 const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
 const KelProviders = React.lazy(() => import('@renderer/pages/kel/providers'));
 const KelAutonomy = React.lazy(() => import('@renderer/pages/kel/autonomy'));
+const KelOnboarding = React.lazy(() => import('@renderer/pages/kel/onboarding'));
 
 const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => (
   <Suspense fallback={<AppLoader />}>
@@ -159,6 +160,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />
           <Route path='/providers' element={withRouteFallback(KelProviders)} />
           <Route path='/autonomy' element={withRouteFallback(KelAutonomy)} />
+          <Route path='/onboarding' element={withRouteFallback(KelOnboarding)} />
         </Route>
         <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
       </Routes>

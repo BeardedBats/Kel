@@ -1,0 +1,348 @@
+{
+  "schema": 1,
+  "tag": "g7onb",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v14\\candidate",
+  "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\fixture-team",
+  "startedAt": "2026-09-15T18:06:48.042Z",
+  "entries": [
+    {
+      "view": "01-boot-chat",
+      "file": "g7onb-01-01-boot-chat.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 60188,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "02-work-drawer",
+      "file": "g7onb-02-02-work-drawer.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 87406,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "02b-work-tab-default",
+      "file": "g7onb-03-02b-work-tab-default.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 87468,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "03-continue",
+      "file": "g7onb-04-03-continue.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 74415,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "04-knowledge",
+      "file": "g7onb-05-04-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 116271,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "05-map",
+      "file": "g7onb-06-05-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 72275,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "06-recipes",
+      "file": "g7onb-07-06-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 92569,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "07-recipe-preview",
+      "file": "g7onb-08-07-recipe-preview.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 96373,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "file": "g7onb-09-07b-map-after-refresh.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 62240,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "08-after-drawer-close",
+      "file": "g7onb-10-08-after-drawer-close.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 62240,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "09-settings-open",
+      "file": "g7onb-11-09-settings-open.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65231,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "g7onb-12-09-settings-appearance.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65231,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "g7onb-13-09-settings-system.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/system",
+      "title": "Kel",
+      "bytes": 93768,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes o"
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "g7onb-14-09-settings-pet.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/pet",
+      "title": "Kel",
+      "bytes": 44657,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "g7onb-15-09-settings-webui.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/webui",
+      "title": "Kel",
+      "bytes": 57966,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or rem"
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "g7onb-16-09-settings-archived.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/archived",
+      "title": "Kel",
+      "bytes": 29066,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Archived conversations No archived items"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "g7onb-17-09-settings-about.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/about",
+      "title": "Kel",
+      "bytes": 42257,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "g7onb-18-09-settings-model.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/providers",
+      "title": "Kel",
+      "bytes": 70259,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Providers 4 providers · 0 usable right now Reload Claude (Claude Code) quota not reported Nat"
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "g7onb-19-09-settings-agent.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 77396,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution S"
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "g7onb-20-09-settings-skills.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 77396,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strategy Solution S"
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "g7onb-21-09-settings-tools.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/autonomy",
+      "title": "Kel",
+      "bytes": 93142,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Autonomy 1 active lease · 1 boundary request waiting on you Reload Emergency stop Capability "
+    },
+    {
+      "view": "12-onboarding",
+      "file": "g7onb-22-12-onboarding.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 62954,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Set up Kel Step 1 of 5 · Welcome Skip setup Kel runs on this machine Kel is a local work engi"
+    },
+    {
+      "view": "13-onboarding-at-1280x720",
+      "file": "g7onb-23-13-onboarding-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 60954,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Set up Kel Step 1 of 5 · Welcome Skip setup Kel runs on this machine Kel is a local work engi"
+    },
+    {
+      "view": "10-boot-chat-at-1280x720",
+      "file": "g7onb-24-10-boot-chat-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 56499,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    },
+    {
+      "view": "11-work-drawer-at-1280x720",
+      "file": "g7onb-25-11-work-drawer-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 87198,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Projects fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in pla"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": false,
+    "engineKilled": true,
+    "appExitCode": 0
+  },
+  "launchMode": "packaged",
+  "launchedAt": "2026-09-15T18:06:48.493Z",
+  "engine": {
+    "pid": 42764,
+    "version": "0.5.0"
+  },
+  "finishedAt": "2026-09-15T18:07:49.470Z",
+  "closeOutcome": "close-timeout"
+}

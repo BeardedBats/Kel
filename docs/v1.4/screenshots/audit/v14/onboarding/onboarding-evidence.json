@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "checks": {
+    "freshFirstLaunch": {
+      "hash": "#/guid",
+      "onboardingRendered": false,
+      "clicked": false,
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nNo chat history\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+      "errors": [],
+      "timeline": [
+        "",
+        "#/guid"
+      ],
+      "closeOutcome": "closed",
+      "engineKilled": false
+    },
+    "freshSecondLaunch": {
+      "hash": "#/guid",
+      "onboardingRendered": false,
+      "clicked": false,
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nNo chat history\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+      "errors": [],
+      "timeline": [
+        "",
+        "#/guid"
+      ],
+      "closeOutcome": "closed",
+      "engineKilled": false
+    },
+    "migratedLaunch": {
+      "hash": "#/guid",
+      "onboardingRendered": false,
+      "clicked": false,
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+      "errors": [],
+      "timeline": [
+        "",
+        "#/guid"
+      ],
+      "closeOutcome": "closed",
+      "engineKilled": true
+    }
+  },
+  "errors": []
+}
