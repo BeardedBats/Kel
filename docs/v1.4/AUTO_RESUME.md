@@ -16,18 +16,18 @@ Updated: 2026-09-15 ~18:30 ET · Session: #6 (Gate 7 in progress; no blocker)
      trigger verified end-to-end** (`verify-onboarding.cjs` exit 0: fresh → onboarding → finish →
      `/work`; second launch skipped).
 - **Open Gate 7 items** (precise):
-  1. **Tray/notification remainder** and **Sider consolidation** — the Kel entries already render in the
-     spec order (`Work · Team · Projects · Providers · Autonomy`); the open detail is a duplicated
-     “Projects” token (Kel nav entry + a donor conversation-group heading rendered by a child component
-     outside `components/layout/Sider`), plus Recipes/Search reachability from the primary nav.
-  2. **Pet live capture** (optional): needs `app.windows()` handling in the harness.
-  3. **Recorded deviation — migrated profiles see onboarding once**: the gate is flag-only because the
+  1. **Pet live capture** (optional): needs `app.windows()` handling in the harness.
+  2. **Recorded deviation — migrated profiles see onboarding once**: the gate is flag-only because the
      donor keeps a default conversation on a brand-new profile, so a conversation count cannot detect a
      fresh install. A stricter rule needs a renderer-readable “previous install” signal (e.g. the
      migration's local config file) exposed to the renderer; the flow is dismissible in one click
      (“Skip setup”), so the impact is small and bounded.
-  4. **G9 carry-overs**: donor drawer `DIV`-tabs, unused lazy imports in `Router.tsx`, donor CSS
+  3. **G9 carry-overs**: donor drawer `DIV`-tabs, unused lazy imports in `Router.tsx`, donor CSS
      gradient/cream findings from the design review.
+- **Resolved in Gate 7**: Sider duplicate label (donor `conversation.projectsSection`
+  `Projects` → `Project conversations`; rendered text now holds exactly one “Projects” token) and the
+  notification restraint question (verified in code: turn-finish only, main process decides, suppressed
+  while focused, setting respected, click navigates back).
 - **PROVEN UI VERIFICATION LOOP**: build (`bun x electron-vite build --config
   packages/desktop/electron.vite.config.ts`) → overlay `desktop/out` into
   `dev-tools/runs/v14/shell-stage/out` → `asar-dedup-pack.js` → copy the asar into
