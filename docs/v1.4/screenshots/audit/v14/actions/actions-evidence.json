@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "launchMode": "packaged",
+  "steps": [
+    {
+      "name": "knowledge-confirm",
+      "hash": "/projects/knowledge",
+      "click": "Confirm",
+      "before": [
+        {
+          "topic": "Drawer density",
+          "status": "active",
+          "user_confirmed": 0,
+          "trust": 6
+        },
+        {
+          "topic": "Test suite",
+          "status": "active",
+          "user_confirmed": 0,
+          "trust": 3
+        },
+        {
+          "topic": "Visual baseline",
+          "status": "active",
+          "user_confirmed": 1,
+          "trust": 2
+        }
+      ],
+      "textBefore": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nProjects\n\ndefault · 3 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\nKnowledge\nTopic\tType\tTrust\tStatus\tSource\tUpdated\tActions\nDrawer density\tobservation\t6/10\tactive\tmodel_inference: fixture:seed\t5m ago\t\nConfirm\nRetract\nForget\n\nTest suite\tfact\t3/10\tactive\trepo_inspection: README.md\t5m ago\t\nConfirm\nRetract\nForget\n\nVisual baseline\tdecision\t2/10 · confirmed\tactive\tuser_instruction: docs/v1.4/KEL_V1.4_BASELINE.\t5m",
+      "clicked": true,
+      "textAfter": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nProjects\n\ndefault · 3 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\n\nConfirm recorded.\n\nKnowledge\nTopic\tType\tTrust\tStatus\tSource\tUpdated\tActions\nDrawer density\tobservation\t2/10 · confirmed\tactive\tmodel_inference: fixture:seed\t0s ago\t\nConfirm\nRetract\nForget\n\nTest suite\tfact\t3/10\tactive\trepo_inspection: README.md\t5m ago\t\nConfirm\nRetract\nForget\n\nVisual baseline\tdecision\t2/10 · confirmed\tactive\tuser_instruction: docs/v1.4/KEL_V1.4_BASELINE.\t5m ago\t\nConfirm\nRetract\nForget\nConflicts\n\nNo conflicting knowledge for this project.",
+      "sawExpectedText": true,
+      "after": [
+        {
+          "topic": "Drawer density",
+          "status": "active",
+          "user_confirmed": 1,
+          "trust": 2
+        },
+        {
+          "topic": "Test suite",
+          "status": "active",
+          "user_confirmed": 0,
+          "trust": 3
+        },
+        {
+          "topic": "Visual baseline",
+          "status": "active",
+          "user_confirmed": 1,
+          "trust": 2
+        }
+      ],
+      "changed": true
+    },
+    {
+      "name": "recipe-preview",
+      "hash": "/projects/recipes",
+      "click": "Preview (dry run)",
+      "before": {
+        "keys": [
+          "entries"
+        ]
+      },
+      "textBefore": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nProjects\n\ndefault · 3 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\n\nConfirm recorded.\n\nRecipes\nRecipe\tSteps\tInputs\tSource\tDry run\nAudit and Repair\t—\t—\tbuiltin\tPreview (dry run)\nContinue Work\t—\t—\tbuiltin\tPreview (dry run)\nFix Bug\t—\t—\tbuiltin\tPreview (dry run)\nResearch Then Implement\t—\t—\tbuiltin\tPreview (dry run)\nShip Release\t—\t—\tbuiltin\tPreview (dry run)",
+      "clicked": true,
+      "textAfter": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nProjects\n\ndefault · 3 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\n\nPreview recorded.\n\nRecipes\nRecipe\tSteps\tInputs\tSource\tDry run\nAudit and Repair\t—\t—\tbuiltin\tPreview (dry run)\nContinue Work\t—\t—\tbuiltin\tPreview (dry run)\nFix Bug\t—\t—\tbuiltin\tPreview (dry run)\nResearch Then Implement\t—\t—\tbuiltin\tPreview (dry run)\nShip Release\t—\t—\tbuiltin\tPreview (dry run)\nDry run — audit-and-repair\n\nCompiled without running anything: this is what the recipe would do, including the inputs it needs and the permissions it would ask for.\n\n{\n  \"message\": \"Coding recipes need the project root and its test command\",\n  \"needs_project\": true\n}",
+      "sawExpectedText": true,
+      "after": {
+        "keys": [
+          "entries"
+        ]
+      },
+      "changed": false
+    },
+    {
+      "name": "work-resume",
+      "hash": "/work",
+      "click": "Resume",
+      "before": [
+        {
+          "state": "CLOSED",
+          "verdict": "VERIFIED"
+        },
+        {
+          "state": "AWAITING_USER",
+          "verdict": "UNCERTAIN"
+        },
+        {
+          "state": "PAUSED",
+          "verdict": "UNCERTAIN"
+        }
+      ],
+      "textBefore": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nWork\n\n3 jobs in this project · 2 waiting on you\n\nReload\nJobs\nJob\tState\tCurrent step\tBudget\tUpdated\nDo the work\t\nQueued\tDraft the thing\t\n2 of 8 steps used\n\t0s ago\nDo the work\t\nQueued\tDraft the thing\nWaiting on you — an approval is pending.\t\n0 of 8 steps used\n\t0s ago\nDo the work\t\nQueued\tDraft the thing\nPaused — resume when you are ready.\t\n0 of 8 steps used\n\t0s ago\nVerification — Do the work\nQueued\nPause\nResume\nCancel\n\nWorker report",
+      "clicked": true,
+      "textAfter": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nWork\n\n3 jobs in this project · 2 waiting on you\n\nReload\nJobs\nJob\tState\tCurrent step\tBudget\tUpdated\nDo the work\t\nQueued\tDraft the thing\t\n2 of 8 steps used\n\t0s ago\nDo the work\t\nQueued\tDraft the thing\nWaiting on you — an approval is pending.\t\n0 of 8 steps used\n\t0s ago\nDo the work\t\nQueued\tDraft the thing\nPaused — resume when you are ready.\t\n0 of 8 steps used\n\t0s ago\nVerification — Do the work\nQueued\nPause\nResume\nCancel\n\nWorker reported: 1 of 1 milestones accepted · Kel verified: VERIFIED\n\nMilestone\tWorker state\tAttempts\tChecks\tEvidence\nDraft the thing\tACCEPTED\t1\t1 checks · out.md\tView artifact\n\nResume failed: Error invoking remote method 'kel:request': Error: Only a paused job can resume\n\nReceipt — m1\n# Baseline fixture artifac",
+      "sawExpectedText": true,
+      "after": [
+        {
+          "state": "CLOSED",
+          "verdict": "VERIFIED"
+        },
+        {
+          "state": "AWAITING_USER",
+          "verdict": "UNCERTAIN"
+        },
+        {
+          "state": "PAUSED",
+          "verdict": "UNCERTAIN"
+        }
+      ],
+      "changed": false
+    }
+  ],
+  "errors": [],
+  "engineVersion": null,
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

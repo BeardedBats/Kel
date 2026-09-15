@@ -154,6 +154,15 @@ export const kelMapAction = (action: string, conversation = 'main', extra: Recor
 export const kelRecipes = (conversation = 'main') =>
   call<Record<string, unknown>>('/api/recipes', { action: 'list', conversation });
 
+/** Compile a recipe without running it — the engine's preview/dry-run path. */
+export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknown> = {}) =>
+  call<Record<string, unknown>>('/api/recipes', {
+    action: 'preview',
+    recipe_id: recipeId,
+    inputs,
+    conversation: 'main',
+  });
+
 export const kelTeam = {
   office: (projectId = 'default') =>
     call<{ assignments: KelAssignment[] }>('/api/team', { action: 'office', project_id: projectId }),
