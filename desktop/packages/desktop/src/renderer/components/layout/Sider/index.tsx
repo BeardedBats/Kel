@@ -10,6 +10,7 @@ import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { blurActiveElement } from '@renderer/utils/ui/focus';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { SiderToolbar, SiderSearchEntry } from './SiderNav';
+import KelNavEntries from './SiderNav/KelNavEntries';
 import SiderFooter from './SiderFooter';
 import siderStyles from './Sider.module.css';
 
@@ -175,9 +176,8 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
                 onSessionClick={onSessionClick}
               />
             )}
-            {/* Assistant nav entry - fixed above Scheduled */}
-
-            {/* Scheduled tasks nav entry - fixed above scroll */}
+            {/* Kel navigation (Work, Team) — V1.4 information architecture */}
+            <KelNavEntries collapsed={collapsed} isMobile={isMobile} siderTooltipProps={siderTooltipProps} />
 
             {/* Divider between fixed top nav and scrollable content area */}
             <div

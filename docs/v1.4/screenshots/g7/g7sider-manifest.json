@@ -1,0 +1,296 @@
+{
+  "schema": 1,
+  "tag": "g7sider",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v14\\candidate",
+  "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\fixture-team",
+  "startedAt": "2026-09-15T18:25:35.074Z",
+  "entries": [
+    {
+      "view": "01-boot-chat",
+      "file": "g7sider-01-01-boot-chat.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 61359,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "02-work-drawer",
+      "file": "g7sider-02-02-work-drawer.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 88401,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "02b-work-tab-default",
+      "file": "g7sider-03-02b-work-tab-default.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 88468,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "03-continue",
+      "file": "g7sider-04-03-continue.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 75413,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "04-knowledge",
+      "file": "g7sider-05-04-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 117275,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "05-map",
+      "file": "g7sider-06-05-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 73278,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "06-recipes",
+      "file": "g7sider-07-06-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 93520,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "07-recipe-preview",
+      "file": "g7sider-08-07-recipe-preview.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 97396,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "file": "g7sider-09-07b-map-after-refresh.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 63422,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "08-after-drawer-close",
+      "file": "g7sider-10-08-after-drawer-close.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 63422,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this p"
+    },
+    {
+      "view": "09-settings-open",
+      "file": "g7sider-11-09-settings-open.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65231,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "g7sider-12-09-settings-appearance.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 65231,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "g7sider-13-09-settings-system.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/system",
+      "title": "Kel",
+      "bytes": 93768,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes o"
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "g7sider-14-09-settings-pet.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/pet",
+      "title": "Kel",
+      "bytes": 44657,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "g7sider-15-09-settings-webui.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/webui",
+      "title": "Kel",
+      "bytes": 57966,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or rem"
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "g7sider-16-09-settings-archived.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/archived",
+      "title": "Kel",
+      "bytes": 29066,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Archived conversations No archived items"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "g7sider-17-09-settings-about.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/about",
+      "title": "Kel",
+      "bytes": 42257,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel Application Appearance Archived Archived conversations Work & context 1 Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "g7sider-18-09-settings-model.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/providers",
+      "title": "Kel",
+      "bytes": 71453,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Providers 4 providers · 0 usable right now Reload Claude (Claude Code) quota not"
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "g7sider-19-09-settings-agent.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 78582,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strate"
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "g7sider-20-09-settings-skills.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/team/roster",
+      "title": "Kel",
+      "bytes": 78582,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Team 2 assignments · 2 waiting on you Office Roster Studio Roster 9 roles Strate"
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "g7sider-21-09-settings-tools.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/autonomy",
+      "title": "Kel",
+      "bytes": 94301,
+      "blankSuspect": false,
+      "textSample": "Skip to main content K Kel New Chat Work Team Projects Providers Autonomy Project conversations fixture-project New conversation Baseline fixture chat Approval fixture chat Work & context 1 Settings Skip to main content Autonomy 1 active lease · 1 boundary request waiting on you Reload Emergency sto"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": false,
+    "engineKilled": true,
+    "appExitCode": 0
+  },
+  "launchMode": "packaged",
+  "launchedAt": "2026-09-15T18:25:35.501Z",
+  "engine": {
+    "pid": 45316,
+    "version": "0.5.0"
+  },
+  "finishedAt": "2026-09-15T18:26:28.313Z",
+  "closeOutcome": "close-timeout"
+}

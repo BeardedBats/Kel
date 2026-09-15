@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "checks": {
+    "closedInitially": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/guid"
+    },
+    "afterCtrlK": {
+      "open": true,
+      "options": [
+        "Go toWorkjob center",
+        "Go toTeam · Officelive assignments",
+        "Go toTeam · Rosterrole templates",
+        "Go toTeam · Studiorole editor",
+        "Go toProjects · Knowledgememory",
+        "Go toProjects · Mapproject map",
+        "Go toProjects · Recipeslibrary",
+        "Go toProvidersmodels and credentials",
+        "Go toAutonomyleases and guardrails",
+        "JobsDo the workCLOSED · VERIFIED",
+        "JobsDo the workAWAITING_USER · UNCERTAIN",
+        "JobsDo the workPAUSED · UNCERTAIN",
+        "KnowledgeDrawer densityobservation · trust 6/10",
+        "KnowledgeTest suitefact · trust 3/10",
+        "KnowledgeVisual baselinedecision · trust 2/10",
+        "RecipesAudit and Repairdry run from Projects · Recipes",
+        "RecipesContinue Workdry run from Projects · Recipes",
+        "RecipesFix Bugdry run from Projects · Recipes",
+        "RecipesResearch Then Implementdry run from Projects · Recipe",
+        "RecipesShip Releasedry run from Projects · Recipes",
+        "RolesDocumentation SpecialistDelivery · v1",
+        "RolesRelease EngineerDelivery · v1",
+        "RolesImplementation EngineerEngineering · v1",
+        "RolesResearch SpecialistProduct · v1"
+      ],
+      "activeOption": "Go toWorkjob center",
+      "hash": "#/guid"
+    },
+    "filtered": {
+      "open": true,
+      "options": [
+        "Go toProvidersmodels and credentials"
+      ],
+      "activeOption": "Go toProvidersmodels and credentials",
+      "hash": "#/guid"
+    },
+    "afterEnter": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/providers"
+    },
+    "afterSlash": {
+      "open": true,
+      "options": [
+        "JobsDo the workCLOSED · VERIFIED",
+        "JobsDo the workAWAITING_USER · UNCERTAIN",
+        "JobsDo the workPAUSED · UNCERTAIN",
+        "KnowledgeDrawer densityobservation · trust 6/10",
+        "KnowledgeTest suitefact · trust 3/10",
+        "KnowledgeVisual baselinedecision · trust 2/10",
+        "RecipesAudit and Repairdry run from Projects · Recipes",
+        "RecipesContinue Workdry run from Projects · Recipes",
+        "RecipesFix Bugdry run from Projects · Recipes",
+        "RecipesResearch Then Implementdry run from Projects · Recipe",
+        "RecipesShip Releasedry run from Projects · Recipes",
+        "RolesDocumentation SpecialistDelivery · v1",
+        "RolesRelease EngineerDelivery · v1",
+        "RolesImplementation EngineerEngineering · v1",
+        "RolesResearch SpecialistProduct · v1",
+        "RolesUI/UX ExpertProduct · v1",
+        "RolesSolution StrategistStrategy · v1",
+        "RolesIndependent ReviewerVerification · v1",
+        "RolesQA EngineerVerification · v1",
+        "RolesSecurity ReviewerVerification · v1"
+      ],
+      "activeOption": "JobsDo the workCLOSED · VERIFIED",
+      "hash": "#/providers"
+    },
+    "afterEscape": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/providers"
+    }
+  },
+  "errors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

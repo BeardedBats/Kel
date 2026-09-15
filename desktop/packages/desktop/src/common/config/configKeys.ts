@@ -47,6 +47,9 @@ export type ConfigKeyMap = {
   // `migrateProviders` / `migrateAssistantsToBackend` (ELECTRON-1KT).
   'migration.providersMigrated_v1': boolean | undefined;
   'migration.assistantsMigrated_v1': boolean | undefined;
+  /** Kel V1.4: set once the first-run onboarding flow has been completed. Fresh installs only —
+   *  installs that already hold conversations never see the flow (migrated users skip it). */
+  'kel.onboardingCompleted_v1': boolean | undefined;
 };
 
 export type ConfigKey = keyof ConfigKeyMap;

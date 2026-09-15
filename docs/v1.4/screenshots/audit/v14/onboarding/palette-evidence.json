@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "checks": {
+    "closedInitially": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/guid"
+    },
+    "afterCtrlK": {
+      "open": true,
+      "options": [
+        "Go toWorkjob center",
+        "Go toTeam · Officelive assignments",
+        "Go toTeam · Rosterrole templates",
+        "Go toTeam · Studiorole editor",
+        "Go toProjects · Knowledgememory",
+        "Go toProjects · Mapproject map",
+        "Go toProjects · Recipeslibrary",
+        "Go toProvidersmodels and credentials",
+        "Go toAutonomyleases and guardrails",
+        "RecipesAudit and Repairdry run from Projects · Recipes",
+        "RecipesContinue Workdry run from Projects · Recipes",
+        "RecipesFix Bugdry run from Projects · Recipes",
+        "RecipesResearch Then Implementdry run from Projects · Recipe",
+        "RecipesShip Releasedry run from Projects · Recipes"
+      ],
+      "activeOption": "Go toWorkjob center",
+      "hash": "#/guid"
+    },
+    "filtered": {
+      "open": true,
+      "options": [
+        "Go toProvidersmodels and credentials"
+      ],
+      "activeOption": "Go toProvidersmodels and credentials",
+      "hash": "#/guid"
+    },
+    "afterEnter": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/providers"
+    },
+    "afterSlash": {
+      "open": true,
+      "options": [
+        "RecipesAudit and Repairdry run from Projects · Recipes",
+        "RecipesContinue Workdry run from Projects · Recipes",
+        "RecipesFix Bugdry run from Projects · Recipes",
+        "RecipesResearch Then Implementdry run from Projects · Recipe",
+        "RecipesShip Releasedry run from Projects · Recipes"
+      ],
+      "activeOption": "RecipesAudit and Repairdry run from Projects · Recipes",
+      "hash": "#/providers"
+    },
+    "afterEscape": {
+      "open": false,
+      "options": [],
+      "activeOption": null,
+      "hash": "#/providers"
+    }
+  },
+  "errors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

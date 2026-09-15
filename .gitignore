@@ -38,6 +38,9 @@ data/
 *.log
 logs/
 screenshots/
+# V1.4 visual evidence is intentionally committed (overrides screenshots/ above).
+!docs/v1.4/screenshots/
+!docs/v1.4/screenshots/**
 *.tmp
 *.bak
 *.orig

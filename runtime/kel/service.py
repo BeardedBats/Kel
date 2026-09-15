@@ -30,6 +30,7 @@ CODING_VERBS=('fix','build','implement','change','add','remove','update','refact
 
 class Service:
     def __init__(self,root):
+        started=time.time()
         self.lifecycle_lock=threading.RLock();self.draining=False
         self.store=Store(root);self.context=Context(self.store)
         CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
@@ -66,6 +67,14 @@ class Service:
         if self.model:adapters['internal']=DurableAdapter(self.store,'internal',{'text','image'},options={'model':self.model.model})
         if self.model:adapters['research']=DurableAdapter(self.store,'research',{'text','web_research'},options={'model':self.model.model})
         self.engine=Engine(self.store,adapters,reviewer=self.commander)
+        # Kel V1.4 diagnostics: record the real startup cost of store + adapters + engine so the
+        # diagnostics surface can show a measured timeline instead of a claimed one.
+        try:
+            from .diagnostics import Diagnostics
+            Diagnostics(self.store,ENGINE_VERSION).record_startup(
+                'engine-start',round((time.time()-started)*1000,2))
+        except Exception:
+            pass  # a missing span costs one observation, never a boot
         self.requests=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-conversation')
         from .apply_changes import recover_prepared
         self.requests.submit(recover_prepared,self.store)
@@ -559,6 +568,22 @@ class Service:
                 job=self.store.get(row['job_id']);self.context.grant(job['contract'].get('project_id','default'),action)
             return {'status':status}
         if path=='/api/revoke':self.context.revoke(data['project']);return {'ok':True}
+        if path=='/api/brief':
+            from .solution import SolutionBriefs
+            payload=dict(data);payload.setdefault('project_id',self._project_of(data.get('conversation','main')))
+            return SolutionBriefs(self.store).apply(payload)
+        if path=='/api/team':
+            from .team import Team
+            return Team(self.store).apply(data)
+        if path=='/api/providers':
+            from .providers import Providers
+            return Providers(self.store).apply(data)
+        if path=='/api/autonomy':
+            from .autonomy import Autonomy
+            return Autonomy(self.store).apply(data)
+        if path=='/api/diagnostics':
+            from .diagnostics import Diagnostics
+            return Diagnostics(self.store,ENGINE_VERSION).apply(data)
         raise PolicyError('Unknown action')
 
 

@@ -14,7 +14,8 @@
 }
 
 .assistantPromptHint {
-  color: var(--color-text-3);
+  /* Kel V1.4: was var(--color-text-3) = #86909c (3.1:1). Use the AA-safe muted token. */
+  color: var(--kel-text-2, #5c6470);
   font-size: 13px;
   line-height: 20px;
 }
@@ -140,6 +141,9 @@
   padding-inline-start: 14px;
   padding-inline-end: 6px;
   background: transparent;
+  /* Kel V1.4: the footnote inherited a literal that measured 2.46:1 on dark; `!important` because the
+     donor's atomic text classes are important too. */
+  color: var(--bg-6) !important;
 }
 
 .workspaceEmptyBtn {
@@ -148,7 +152,8 @@
   gap: 5px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--color-text-3);
+  /* Kel V1.4: was var(--color-text-3) = #86909c (2.92:1 on #f2f3f5). Use the AA-safe muted token. */
+  color: var(--kel-text-2, #5c6470);
   background: transparent;
   border: none;
   padding: 4px 6px;
