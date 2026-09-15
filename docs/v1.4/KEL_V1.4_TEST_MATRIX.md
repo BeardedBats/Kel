@@ -159,6 +159,26 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G6-ENGINE-PACKAGING | the candidate's engine must be rebuilt after engine changes | I | **FINDING + FIXED** — the first capture returned “Unknown action” for both pages because the candidate still carried the pre-`providers.py` engine; after `scripts/build-runtime.ps1` + `verify_engine_pyz.py` (`RESULT: OK`) and replacing `resources/kel-engine`, both pages read real data. Packaging step recorded in AUTO_RESUME |
 | G6-CAPTURE | captures + route probe for the new surfaces | V | **PASS** — tags `g6`/`g6b` (27 shots each incl. five-width core views), 0 renderer errors, 0 blank, app exit 0; route contrast failures **0/0** on `/providers` and `/autonomy`; 12px floor; 0 emoji |
 
+## 14. Gate 6 credential custody
+
+Evidence: `docs/v1.4/screenshots/audit/v14/credentials/credentials-evidence.json` +
+`credentials-{before,after}-store.png`, produced by `packaging/verify-credentials.cjs` (exit 0).
+
+| Check | Result | Verdict |
+|---|---|---|
+| OS-backed storage available (`safeStorage` / DPAPI) | `storageAvailable: true` | **PASS** |
+| Store through the Providers UI (real click, real value) | `rendererStatus {deepseek: ['api_key']}` | **PASS** |
+| No value getter on the bridge | `valueGetterAbsent: true` | **PASS** |
+| Engine holds metadata only | `credential_ref: kel:provider:deepseek:api_key`, `fields: ['api_key']` | **PASS** |
+| On-disk store is ciphertext, not plaintext | `storedKeys ['deepseek:api_key']`, `fileHasPlaintext: false`, `fileBlobLooksEncrypted: true` | **PASS** |
+| Value never rendered | `plaintextNotRendered: true` | **PASS** |
+| Delete removes both copies | `deleted {removed: 1}`, `fileAfterDeleteHasProvider: false` | **PASS** |
+
+In-gate findings: the candidate engine must be rebuilt after any engine change (recorded as a
+packaging rule), and two self-inflicted defects were caught by the evidence loop — a mistyped harness
+config path that packed a stale bundle, and an undefined helper (`act is not defined`) in the Providers
+page that only surfaced under a real click.
+
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
 Manager), and the Providers + Autonomy surfaces with rendered evidence (cards with the eight states,
 test connection, readiness panel, lease viewer with revoke, Approval Inbox, locked-guardrail block).
