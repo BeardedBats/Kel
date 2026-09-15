@@ -141,6 +141,9 @@
   padding-inline-start: 14px;
   padding-inline-end: 6px;
   background: transparent;
+  /* Kel V1.4: the footnote inherited a literal that measured 2.46:1 on dark; `!important` because the
+     donor's atomic text classes are important too. */
+  color: var(--bg-6) !important;
 }
 
 .workspaceEmptyBtn {
