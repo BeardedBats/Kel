@@ -609,6 +609,54 @@ class Store:
             db.execute("INSERT INTO contracts VALUES(?,?,?,?)", (job_id, job['contract_version'], digest(contract), encode(contract)))
             self._save(db, job, 'contract.revised')
 
+    def reopen(self, job_id, reason='continuation'):
+        """Reopen a settled failed/uncertain job for continued work (V1.3)."""
+        with self.transaction() as db:
+            job = self._get(db, job_id)
+            if job.get('verdict') == 'VERIFIED':
+                raise PolicyError('This job is already verified; make a new request instead')
+            if job['state'] not in ('CLOSED', 'PAUSED', 'WAITING_RESOURCE', 'READY'):
+                raise PolicyError('Only a settled or paused job can be reopened')
+            if db.execute(
+                    "SELECT count(*) FROM runs WHERE job_id=? AND state IN"
+                    " ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')",
+                    (job_id,)).fetchone()[0]:
+                raise PolicyError('Job has active runs')
+            work = [m for m in job['milestones'].values()
+                    if m['state'] != 'ACCEPTED' and m['attempts'] < 4]
+            if not work:
+                raise PolicyError('No retryable milestones to resume')
+            for m in job['milestones'].values():
+                if m['state'] == 'EXHAUSTED' and m['attempts'] < 4:
+                    m['state'] = 'READY'
+            job.update(state='READY', verdict='UNCERTAIN', assessment=None)
+            self._save(db, job, 'job.reopened', {'reason': str(reason)[:200]})
+            return job_id
+
+    def invalidate_milestone(self, job_id, milestone_id, reason, expected_revision=None):
+        """Invalidate an accepted milestone with an explicit reason (V1.3)."""
+        with self.transaction() as db:
+            job = self._get(db, job_id)
+            if expected_revision is not None and job['revision'] != expected_revision:
+                raise Conflict('Newer job changes exist')
+            if db.execute(
+                    "SELECT count(*) FROM runs WHERE job_id=? AND state IN"
+                    " ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')",
+                    (job_id,)).fetchone()[0]:
+                raise PolicyError('Job has active runs')
+            if milestone_id not in job['milestones']:
+                raise PolicyError('Unknown milestone')
+            m = job['milestones'][milestone_id]
+            if m['state'] != 'ACCEPTED':
+                raise PolicyError('Only an accepted milestone can be invalidated')
+            m.update(state='INVALIDATED', error=str(reason)[:500])
+            if job['state'] in ('CLOSED', 'PAUSED'):
+                job.update(state='READY')
+            job.update(verdict='UNCERTAIN', assessment=None)
+            self._save(db, job, 'milestone.invalidated',
+                       {'milestone_id': milestone_id, 'reason': str(reason)[:200]})
+            return job_id
+
     def rebuild(self):
         with self.transaction() as db:
             snapshots = {}

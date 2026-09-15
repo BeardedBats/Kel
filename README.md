@@ -6,12 +6,13 @@ or its own bounded internal worker), and then verifies the result against eviden
 reports success. Kel keeps active work alive when the window closes and can resume unfinished
 work across conversations and restarts.
 
-- **Current stable version: V1.2** - this repository contains the verified V1.2 source baseline
-  (tag `v1.2.0`). Released binaries are built from it and distributed separately; they are not
-  stored in git.
-- **V1.3 development status: design phase complete; implementation not started.** The approved
-  Gate 1 design documents live under `docs/v1.3/` on the `v1.3-dev` branch. Nothing described in
-  those documents is implemented yet.
+- **Current stable version: V1.2** - the verified V1.2 source baseline (tag `v1.2.0`).
+  Released binaries are built from it and distributed separately; they are not stored in git.
+- **V1.3 (Context & Continuity): implemented and in release** - structured project memory,
+  durable project map + provenance-labeled context composer, first-class continuation,
+  reusable workflow recipes, and the Work-context UI. Source on `v1.3-dev`; design, status,
+  and verification evidence under `docs/v1.3/` (suite: 267 passed + 10 subtests; packaged
+  acceptance and V1.2-data upgrade verified).
 - Platform: Windows 10/11 (V1.x line).
 
 ## Terminology
@@ -29,7 +30,7 @@ work across conversations and restarts.
     scripts/     build-runtime / build-desktop / verify-release / freeze-release (PowerShell)
     docs/v1/     V1-V1.2 status, drift, skeleton, verification documents
     docs/v1.2/   V1.2 release manifest + SHA-256 sums (reference)
-    docs/v1.3/   V1.3 Gate 1 design documents (on the v1.3-dev branch)
+    docs/v1.3/   V1.3 design, status, and verification documents
     third_party/ Donor license texts and provenance records
 
 ## Supported development environment
