@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T19:06:28.106Z",
+  "startedAt": "2026-09-15T19:22:32.077Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 45404,
+    "pid": 12320,
     "version": "0.5.0"
   },
   "bootScreen": {
@@ -23,38 +23,38 @@
     },
     "paletteText": [
       {
-        "value": "rgb(0,0,0)",
+        "value": "rgb(255,255,255)",
         "count": 14
       },
       {
-        "value": "rgb(90,98,112)",
+        "value": "rgb(169,182,198)",
         "count": 5
       },
       {
-        "value": "rgb(20,22,26)",
+        "value": "rgb(230,237,243)",
         "count": 1
       },
       {
-        "value": "rgb(92,100,112)",
+        "value": "rgb(144,152,161)",
         "count": 1
       },
       {
-        "value": "rgb(69,77,95)",
+        "value": "rgb(206,211,218)",
         "count": 1
       }
     ],
     "paletteBg": [
       {
-        "value": "rgb(242,243,245)",
-        "count": 16
+        "value": "rgb(38,38,38)",
+        "count": 17
       },
       {
-        "value": "rgb(249,250,251)",
+        "value": "rgb(26,26,26)",
         "count": 4
       },
       {
-        "value": "rgb(255,255,255)",
-        "count": 2
+        "value": "rgb(22,27,34)",
+        "count": 1
       }
     ],
     "emojiCharacters": 0
@@ -64,7 +64,7 @@
       "tag": "A",
       "name": null,
       "text": "Skip to main content",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         10,
@@ -77,7 +77,7 @@
       "tag": "BUTTON",
       "name": "Collapse",
       "text": "",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         16,
         3,
@@ -90,7 +90,7 @@
       "tag": "BUTTON",
       "name": "Search messages",
       "text": "",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         52,
         3,
@@ -103,7 +103,7 @@
       "tag": "BUTTON",
       "name": "Minimize",
       "text": "",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         1328,
         0,
@@ -116,7 +116,7 @@
       "tag": "BUTTON",
       "name": "Maximize",
       "text": "",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         1368,
         0,
@@ -129,7 +129,7 @@
       "tag": "BUTTON",
       "name": "Close",
       "text": "",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         1408,
         0,
@@ -142,7 +142,7 @@
       "tag": "DIV",
       "name": null,
       "text": "New Chat",
-      "outline": "solid 2px rgb(14, 120, 87)",
+      "outline": "solid 2px rgb(53, 166, 128)",
       "rect": [
         8,
         91,
@@ -155,7 +155,7 @@
       "tag": "BUTTON",
       "name": "Work",
       "text": "Work",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         127,
@@ -168,7 +168,7 @@
       "tag": "BUTTON",
       "name": "Team",
       "text": "Team",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         163,
@@ -181,7 +181,7 @@
       "tag": "BUTTON",
       "name": "Projects",
       "text": "Projects",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         199,
@@ -194,7 +194,7 @@
       "tag": "BUTTON",
       "name": "Providers",
       "text": "Providers",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         235,
@@ -207,7 +207,7 @@
       "tag": "BUTTON",
       "name": "Autonomy",
       "text": "Autonomy",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         271,
@@ -220,7 +220,7 @@
       "tag": "BUTTON",
       "name": "Diagnostics",
       "text": "Diagnostics",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         307,
@@ -233,7 +233,7 @@
       "tag": "DIV",
       "name": null,
       "text": "New conversation",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         425,
@@ -246,7 +246,7 @@
       "tag": "DIV",
       "name": null,
       "text": "Baseline fixture chat",
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "rect": [
         8,
         461,
@@ -272,46 +272,42 @@
     },
     "paletteText": [
       {
-        "value": "rgb(78,89,105)",
-        "count": 16
+        "value": "rgb(255,255,255)",
+        "count": 33
       },
       {
-        "value": "rgb(0,0,0)",
-        "count": 14
-      },
-      {
-        "value": "rgb(90,98,112)",
+        "value": "rgb(169,182,198)",
         "count": 5
       },
       {
-        "value": "rgb(29,33,41)",
-        "count": 3
-      },
-      {
-        "value": "rgb(20,22,26)",
+        "value": "rgb(230,237,243)",
         "count": 1
       },
       {
-        "value": "rgb(92,100,112)",
+        "value": "rgb(144,152,161)",
         "count": 1
       },
       {
-        "value": "rgb(69,77,95)",
+        "value": "rgb(206,211,218)",
         "count": 1
       }
     ],
     "paletteBg": [
       {
-        "value": "rgb(242,243,245)",
-        "count": 22
+        "value": "rgb(42,42,43)",
+        "count": 19
       },
       {
-        "value": "rgb(255,255,255)",
-        "count": 15
+        "value": "rgb(38,38,38)",
+        "count": 17
       },
       {
-        "value": "rgb(249,250,251)",
+        "value": "rgb(26,26,26)",
         "count": 4
+      },
+      {
+        "value": "rgb(22,27,34)",
+        "count": 1
       }
     ],
     "emojiCharacters": 0
@@ -331,61 +327,57 @@
       },
       "paletteText": [
         {
-          "value": "rgb(90,98,112)",
+          "value": "rgb(255,255,255)",
+          "count": 28
+        },
+        {
+          "value": "rgb(169,182,198)",
           "count": 23
         },
         {
-          "value": "rgb(107,114,128)",
+          "value": "rgb(125,139,158)",
           "count": 14
         },
         {
-          "value": "rgb(20,22,26)",
+          "value": "rgb(230,237,243)",
           "count": 13
         },
         {
-          "value": "rgb(0,0,0)",
-          "count": 13
-        },
-        {
-          "value": "rgb(78,89,105)",
-          "count": 13
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 2
-        },
-        {
-          "value": "rgb(92,100,112)",
+          "value": "rgb(144,152,161)",
           "count": 1
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(47,163,124)",
           "count": 1
         },
         {
-          "value": "rgb(122,74,0)",
+          "value": "rgb(242,200,121)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
-          "value": "rgb(255,255,255)",
-          "count": 47
+          "value": "rgb(22,27,34)",
+          "count": 35
         },
         {
-          "value": "rgb(242,243,245)",
-          "count": 30
+          "value": "rgb(38,38,38)",
+          "count": 15
         },
         {
-          "value": "rgb(250,250,251)",
+          "value": "rgb(42,42,43)",
+          "count": 15
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 13
+        },
+        {
+          "value": "rgb(16,20,24)",
           "count": 2
         },
         {
-          "value": "rgb(229,230,235)",
-          "count": 1
-        },
-        {
-          "value": "rgb(254,243,199)",
+          "value": "rgb(42,33,19)",
           "count": 1
         }
       ],
@@ -405,73 +397,73 @@
       },
       "paletteText": [
         {
-          "value": "rgb(90,98,112)",
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(169,182,198)",
           "count": 16
         },
         {
-          "value": "rgb(78,89,105)",
-          "count": 16
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 13
-        },
-        {
-          "value": "rgb(20,22,26)",
+          "value": "rgb(230,237,243)",
           "count": 11
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(47,163,124)",
           "count": 9
         },
         {
-          "value": "rgb(107,114,128)",
+          "value": "rgb(125,139,158)",
           "count": 8
         },
         {
-          "value": "rgb(255,255,255)",
+          "value": "rgb(16,20,24)",
           "count": 4
         },
         {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(92,100,112)",
+          "value": "rgb(144,152,161)",
           "count": 1
         },
         {
-          "value": "rgb(90,66,0)",
+          "value": "rgb(232,208,138)",
+          "count": 1
+        },
+        {
+          "value": "rgb(242,200,121)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
-          "value": "rgb(255,255,255)",
-          "count": 52
+          "value": "rgb(22,27,34)",
+          "count": 39
         },
         {
-          "value": "rgb(242,243,245)",
-          "count": 22
+          "value": "rgb(42,42,43)",
+          "count": 19
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(47,163,124)",
           "count": 4
         },
         {
-          "value": "rgb(250,250,251)",
+          "value": "rgb(16,20,24)",
           "count": 2
         },
         {
-          "value": "rgb(229,230,235)",
+          "value": "rgb(28,35,44)",
+          "count": 2
+        },
+        {
+          "value": "rgb(42,36,22)",
           "count": 1
         },
         {
-          "value": "rgb(255,247,224)",
-          "count": 1
-        },
-        {
-          "value": "rgb(254,243,199)",
+          "value": "rgb(42,33,19)",
           "count": 1
         }
       ],
@@ -491,143 +483,530 @@
       },
       "paletteText": [
         {
-          "value": "rgb(90,98,112)",
+          "value": "rgb(169,182,198)",
           "count": 56
         },
         {
-          "value": "rgb(78,89,105)",
-          "count": 15
+          "value": "rgb(255,255,255)",
+          "count": 31
         },
         {
-          "value": "rgb(0,0,0)",
-          "count": 13
-        },
-        {
-          "value": "rgb(20,22,26)",
+          "value": "rgb(230,237,243)",
           "count": 10
         },
         {
-          "value": "rgb(107,114,128)",
+          "value": "rgb(125,139,158)",
           "count": 7
         },
         {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(47,163,124)",
           "count": 2
         },
         {
-          "value": "rgb(255,255,255)",
+          "value": "rgb(16,20,24)",
           "count": 2
         },
         {
-          "value": "rgb(92,100,112)",
+          "value": "rgb(144,152,161)",
           "count": 1
         },
         {
-          "value": "rgb(20,83,45)",
+          "value": "rgb(127,214,174)",
+          "count": 1
+        },
+        {
+          "value": "rgb(242,200,121)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
-          "value": "rgb(255,255,255)",
-          "count": 68
+          "value": "rgb(22,27,34)",
+          "count": 55
         },
         {
-          "value": "rgb(242,243,245)",
-          "count": 28
+          "value": "rgb(42,42,43)",
+          "count": 18
         },
         {
-          "value": "rgb(250,250,251)",
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(16,20,24)",
           "count": 10
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(28,35,44)",
+          "count": 9
+        },
+        {
+          "value": "rgb(47,163,124)",
           "count": 2
         },
         {
-          "value": "rgb(229,230,235)",
+          "value": "rgb(22,40,31)",
           "count": 1
         },
         {
-          "value": "rgb(231,246,236)",
-          "count": 1
-        },
-        {
-          "value": "rgb(254,243,199)",
+          "value": "rgb(42,33,19)",
           "count": 1
         }
       ],
       "emojiCharacters": 0
     },
     "diagnostics": {
-      "textSamples": 114,
+      "textSamples": 130,
       "contrastFailures": [],
       "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
         "12": 13,
-        "14": 90,
+        "14": 106,
         "16": 6,
         "24": 5
       },
       "paletteText": [
         {
-          "value": "rgb(90,98,112)",
-          "count": 65
-        },
-        {
-          "value": "rgb(78,89,105)",
-          "count": 16
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 13
-        },
-        {
-          "value": "rgb(20,22,26)",
-          "count": 11
-        },
-        {
-          "value": "rgb(107,114,128)",
-          "count": 3
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 3
+          "value": "rgb(169,182,198)",
+          "count": 81
         },
         {
           "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 11
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 3
+        },
+        {
+          "value": "rgb(16,20,24)",
           "count": 2
         },
         {
-          "value": "rgb(92,100,112)",
+          "value": "rgb(144,152,161)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
-          "value": "rgb(255,255,255)",
-          "count": 80
+          "value": "rgb(22,27,34)",
+          "count": 83
         },
         {
-          "value": "rgb(242,243,245)",
-          "count": 30
+          "value": "rgb(42,42,43)",
+          "count": 19
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 10
+        },
+        {
+          "value": "rgb(47,163,124)",
           "count": 2
         },
         {
-          "value": "rgb(229,230,235)",
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-office": {
+      "textSamples": 54,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "12": 12,
+        "14": 39,
+        "16": 3
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 10
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 6
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 2
+        },
+        {
+          "value": "rgb(230,237,243)",
           "count": 1
         },
         {
-          "value": "rgb(250,250,251)",
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(242,200,121)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 11
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 6
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        },
+        {
+          "value": "rgb(42,33,19)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-roster": {
+      "textSamples": 57,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "12": 3,
+        "14": 37,
+        "16": 12,
+        "24": 5
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 16
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 4
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 3
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(22,27,34)",
+          "count": 21
+        },
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "team-studio": {
+      "textSamples": 42,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 14,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "14": 37,
+        "16": 5
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 32
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 5
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 2
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 2
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 19
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 5
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 2
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-knowledge": {
+      "textSamples": 65,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "12": 16,
+        "14": 45,
+        "16": 3,
+        "24": 1
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 31
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 17
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 9
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 3
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 3
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(22,27,34)",
+          "count": 23
+        },
+        {
+          "value": "rgb(42,42,43)",
+          "count": 18
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 7
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-map": {
+      "textSamples": 42,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 14,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "14": 36,
+        "16": 5,
+        "24": 1
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 30
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 5
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 5
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 17
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 8
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    },
+    "projects-recipes": {
+      "textSamples": 51,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 16,
+      "fontSizeHistogram": {
+        "12": 6,
+        "14": 42,
+        "16": 3
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 31
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 14
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 2
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(42,42,43)",
+          "count": 18
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(22,27,34)",
+          "count": 11
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 5
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
           "count": 1
         }
       ],
@@ -645,7 +1024,7 @@
         35,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -658,7 +1037,7 @@
         94,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -671,7 +1050,7 @@
         89,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -684,7 +1063,7 @@
         95,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -697,7 +1076,7 @@
         122,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -710,7 +1089,7 @@
         79,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -723,7 +1102,7 @@
         52,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -736,7 +1115,7 @@
         568,
         589
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -749,8 +1128,8 @@
         78,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -762,8 +1141,8 @@
         72,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -775,8 +1154,8 @@
         85,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -788,8 +1167,8 @@
         77,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -801,8 +1180,8 @@
         72,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -814,8 +1193,8 @@
         85,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -827,8 +1206,8 @@
         77,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -840,8 +1219,8 @@
         67,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -853,8 +1232,8 @@
         66,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "DIV",
@@ -866,7 +1245,7 @@
         568,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -879,7 +1258,7 @@
         35,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -892,7 +1271,7 @@
         94,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -905,7 +1284,7 @@
         89,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -918,7 +1297,7 @@
         95,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -931,7 +1310,7 @@
         122,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -944,7 +1323,7 @@
         79,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -957,7 +1336,7 @@
         52,
         40
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -970,7 +1349,7 @@
         568,
         589
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
+      "outline": "solid 2px rgb(47, 163, 124)",
       "boxShadow": "none"
     },
     {
@@ -983,8 +1362,8 @@
         78,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -996,8 +1375,8 @@
         72,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -1009,8 +1388,8 @@
         85,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     },
     {
       "tag": "BUTTON",
@@ -1022,8 +1401,8 @@
         77,
         32
       ],
-      "outline": "solid 2px rgb(14, 124, 90)",
-      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px"
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     }
   ],
   "focusIndicatorMissing": 0,

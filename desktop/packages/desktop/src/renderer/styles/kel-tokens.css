@@ -21,6 +21,9 @@
   --kel-accent: #0e7c5a;
   --kel-accent-hover: #0b6849;
   --kel-accent-soft: #e8f5ef;
+  /* Text colour that sits ON the accent. Light accent is dark enough for white; the dark accent is
+     lighter, so white measured only 3.16:1 there — this token keeps primary buttons AA in both themes. */
+  --kel-accent-ink: #ffffff;
 
   /* semantic status (fill / border / text) */
   --kel-run-bg: #e8f5ef;
@@ -94,6 +97,7 @@
   --kel-accent: #2fa37c;
   --kel-accent-hover: #37b98c;
   --kel-accent-soft: #16281f;
+  --kel-accent-ink: #101418;
   --kel-run-bg: #16281f;
   /* Kel V1.4: the donor's muted-text tokens are corrected per theme too — the light value measures
      2.13:1 on these dark surfaces, and these are the labels a user scans most (sider sections, hints,
@@ -269,7 +273,7 @@
 }
 .kel-btn--primary {
   background: var(--kel-accent);
-  color: var(--kel-text-inverse);
+  color: var(--kel-accent-ink);
 }
 .kel-btn--primary:hover {
   background: var(--kel-accent-hover);
@@ -408,6 +412,8 @@
 }
 .kel-tab[aria-selected='true'] {
   background: var(--kel-accent);
+  /* Kel V1.4: the selected tab fills with the accent, so its text must use the accent ink — in dark
+     mode the inherited near-white measured 3.16:1 on the lighter accent. */
+  color: var(--kel-accent-ink);
   border-color: var(--kel-accent);
-  color: var(--kel-text-inverse);
 }
