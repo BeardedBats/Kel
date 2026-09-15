@@ -1,24 +1,35 @@
 # KEL V1.4 — AUTO-RESUME
 
-Updated: 2026-09-15 ~11:26 ET · Session: #2 boundary (relay continuation)
+Updated: 2026-09-15 ~11:55 ET · Session: #3 boundary (Gate 1 closed, relay continuation)
 
-- **Current gate**: Gate 0 — **CLOSED** (reviewer relay: CONTINUE, 2026-09-15). Next: **Gate 1**.
-- **Current phase**: G0→G1 boundary (no work in flight; all processes stopped).
-- **Last successful action**: Gate 0 close-out committed `6ba5b1f` and pushed; relay CONTINUE received.
-- **Last command**: `git push origin v1.4-dev` (→ `6ba5b1f`).
-- **Branch / commit / remote**: `v1.4-dev` @ `6ba5b1f` (+ this AUTO_RESUME/status docs commit) · pushed to `origin`.
-- **Files changed this boundary**: `packaging/capture-screens.cjs` (new), `runtime/tools/seed_ui_fixture.py` (new), `.gitignore`, `docs/v1.4/KEL_V1.4_{BASELINE,STATUS,SCREEN_INVENTORY,UI_AUDIT,TEST_MATRIX}.md`, `docs/v1.4/screenshots/baseline/**` (67 files, 4.0 MB).
-- **Tests passed**: engine suite `267 passed + 10 subtests` (exit 0); capture runs: 2 × 30 views across five widths, 0 renderer errors, 0 blank captures; shutdown evidence recorded (empty: graceful close; fixture: bounded kill fallback after close-timeout); zero orphan processes verified after all runs.
+- **Current gate**: Gate 1 — **CLOSED** (reviewer relay: CONTINUE, 2026-09-15). Next: **Gate 2**.
+- **Current phase**: G1→G2 boundary (no work in flight; all test processes stopped).
+- **Last successful action**: Gate 1 document set + direction artifacts written; independent design
+  review resolved; relay CONTINUE; committing now.
+- **Branch / commit / remote**: `v1.4-dev` @ this commit (after `87a9713`) · pushed to `origin`.
+- **Files changed this boundary**: `KEL_V1.4_VISUAL_DIRECTIONS.md`, `KEL_V1.4_DESIGN_SYSTEM.md`,
+  `KEL_V1.4_INTERACTION_PATTERNS.md`, `KEL_V1.4_ACCESSIBILITY_STANDARD.md`,
+  `KEL_V1.4_VISUAL_ACCEPTANCE_MATRIX.md`, `KEL_V1.4_UI_AUDIT.md` (v0.3), `KEL_V1.4_TEST_MATRIX.md`,
+  `KEL_V1.4_STATUS.md`, `docs/v1.4/directions/*.html`, `docs/v1.4/screenshots/directions/**`,
+  `docs/v1.4/screenshots/audit/**`, `packaging/a11y-probe.cjs`, `packaging/render-directions.cjs`,
+  this file.
+- **Tests/checks passed**: engine suite unchanged (267 + 10, session 1); direction renderer with the
+  focus assertion enabled → both directions 0 contrast failures, 12px minimum text, 14 focusables,
+  0 focus-ring failures, first stop = skip link; packaged-app a11y probe → clean shutdown, 0 renderer
+  errors, findings recorded (6 contrast failures, 0/30 focus rings, 12px minimum text).
 - **Tests failing**: none.
-- **Active reviewer state**: Gate 0 close-out = **CONTINUE**.
+- **Active reviewer state**: Gate 1 = **CONTINUE** (independent design review: PASS/PASS/PASS-after-fixes/CONCERN with all risks resolved).
 - **Current blocker**: none. **HARD STOP: no.**
-- **Running processes / ownership**: none — no Kel.exe / KelEngine.exe / Electron processes remain (re-checked post-run).
-- **Frozen-hash state**: 3/3 verified and unchanged; `Kel Releases/` untouched (captures ran on a copy at `dev-tools/runs/v13/pkg`).
-- **Dogfood isolation**: intact — no live instance touched; no user data reads/writes; windows offscreen; no focus taken.
-- **Exact next action**: Start **Gate 1** —
-  1. Expand the visual audit from captures (state-matrix + keyboard pass; inputs: `docs/v1.4/screenshots/baseline/**` + manifests + texts).
-  2. Author `docs/v1.4/KEL_V1.4_VISUAL_DIRECTIONS.md` with 2+ materially different directions.
-  3. Best Solution Gate comparison + reviewer relay.
-  4. `KEL_V1.4_DESIGN_SYSTEM.md`, `KEL_V1.4_INTERACTION_PATTERNS.md`, `KEL_V1.4_ACCESSIBILITY_STANDARD.md`, `KEL_V1.4_VISUAL_ACCEPTANCE_MATRIX.md`.
-  5. Update ledger/test matrix; commit + push `v1.4-dev`.
-- **Continuation safety**: ordinary continuation is safe (tree clean except untracked `Agents.md`, intentionally left alone).
+- **Running processes / ownership**: none (probe + renderer exited; engines stopped; no orphans).
+- **Frozen-hash state**: 3/3 verified, unchanged; `Kel Releases/` untouched.
+- **Dogfood isolation**: intact — no live instance touched; no user data reads/writes; offscreen windows.
+- **Exact next action**: Start **Gate 2** —
+  1. `KEL_V1.4_ARCHITECTURE.md`, `KEL_V1.4_TEAM_MODEL.md`, `KEL_V1.4_AUTONOMY_POLICY.md`,
+     `KEL_V1.4_PROVIDER_SPEC.md`, `KEL_V1.4_UX_SPEC.md`, `KEL_V1.4_SECURITY_MODEL.md`
+     (design Team/Office/Roster/Studio data models, Solution Briefs, capability leases, locked
+     guardrails, providers/credentials, activity contracts, notifications, diagnostics, migrations,
+     information architecture, component + token architecture, packaging strategy).
+  2. Best Solution Gate on the architecture options; reviewer relay.
+  3. Ledger + test-matrix updates; commit + push.
+- **Continuation safety**: ordinary continuation is safe (tree clean apart from untracked `Agents.md`,
+  intentionally left alone).
