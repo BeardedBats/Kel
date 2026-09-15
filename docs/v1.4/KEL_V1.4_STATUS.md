@@ -7,7 +7,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 
 | Gate | State | Note |
 |---|---|---|
-| G0 — baseline, branch, isolation, ledger, visual capture | **CLOSING** | verification + branch + ledger + tooling + harness + baseline captures + provenance done; remaining: perf baseline + reviewer checkpoint |
+| G0 — baseline, branch, isolation, ledger, visual capture | **COMPLETE** | reviewer relay CONTINUE (2026-09-15); remainders tracked: perf baseline (G8), state-matrix expansion (G1), harness v3 fixes |
 | G1 — visual audit, design directions, design system | NOT STARTED | needs harness + bun/Playwright setup first |
 | G2 — architecture / safety / implementation design | NOT STARTED | |
 | G3 — solution quality + Team foundation | NOT STARTED | |
@@ -33,13 +33,12 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - [x] Baseline captures: 30×2 views at five widths, zero errors, clean shutdown (`docs/v1.4/screenshots/baseline/`)
 - [x] V1.3 source ↔ frozen provenance resolved (BASELINE §8)
 - [ ] Performance baseline measurements (startup spans; with G8 tooling)
-- [ ] Gate 0 reviewer checkpoint
+- [x] Gate 0 reviewer checkpoint — **CONTINUE** (2026-09-15)
 
 ## Exact next actions (resume here)
 
-1. Gate 0 reviewer checkpoint (relay) → on CONTINUE, start **Gate 1**: two materially different
-   design directions + Best Solution Gate comparison + Kel design system + interaction patterns +
-   accessibility standard.
+1. Start **Gate 1**: two materially different design directions + Best Solution Gate comparison +
+   Kel design system + interaction patterns + accessibility standard (audit expansion alongside).
 2. Performance baseline (startup spans) when G8 diagnostics tooling exists; noted as G0 remainder.
 3. Harness v3 candidates: pet-window capture, dialog states, provider-unavailable state, dense/long content.
 
@@ -53,7 +52,8 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 11:00–11:15 — Session 2: portable Bun 1.4.2 + Playwright 1.63.0 under `dev-tools/`; harness v1 first run (12 clean captures; shutdown bug found → fixed).
 - 11:15 — Harness v2 (bounded shutdown + watchdog + full text dumps + real settings routes + resize re-nav); baseline captures `v13-empty` + `v13-fixture` (30 each, five widths, zero console errors, clean shutdown).
 - 11:20 — Provenance + Gate 0 docs updated; Gate 0 reviewer checkpoint requested.
+- 11:24 — Gate 0 close-out committed as `6ba5b1f` (75 files: harness, fixture generator, 2×30 captures, docs); reviewer relay: **CONTINUE**. **Gate 0 CLOSED.**
 
 ## Blockers
 
-None. Missing tools (bun, Playwright) are scheduled setup items, not blockers.
+None.
