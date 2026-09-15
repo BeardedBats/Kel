@@ -147,6 +147,22 @@ async function main() {
   // UI ready gate: the Kel work-context trigger renders once the chat shell is live.
   await page.locator('text=Work & context').first().waitFor({ timeout: 60000 }).catch(() => {});
   await page.waitForTimeout(2500);
+  // Dark mode is switched through the app's OWN Appearance setting. The donor applies a theme by
+  // injecting `style#theme-tokens` plus Arco's variables; switching attributes alone leaves Arco
+  // components on their light fallbacks (measured: three labels kept light colours).
+  if (theme === 'dark') {
+    await page.evaluate(() => { location.hash = '/settings/appearance'; }).catch(() => {});
+    await page.waitForTimeout(2200);
+    await page.getByText('Dark', { exact: true }).first().click({ timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(1800);
+    manifest.themeSwitch = await page.evaluate(() => ({
+      dataTheme: document.documentElement.getAttribute('data-theme'),
+      arcoTheme: document.body.getAttribute('arco-theme'),
+      injectedTokens: Boolean(document.getElementById('theme-tokens')),
+    }));
+    await page.evaluate(() => { location.hash = '/guid'; }).catch(() => {});
+    await page.waitForTimeout(1800);
+  }
 
   const windowHandle = await app.browserWindow(page);
   const setSize = async (w, h) => {
