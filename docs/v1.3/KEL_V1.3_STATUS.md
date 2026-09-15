@@ -12,7 +12,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G1 — donor audit + design docs | **COMPLETE — awaiting user approval** | six deliverables below |
 | G2 — memory foundation | **COMPLETE** | `kel/memory.py` + 16 tests; migration 001 with backup/receipt; see §Gate 2 (as-built) |
 | G3 — project map + context composer | **COMPLETE** | `kel/projectmap.py` + `kel/composer.py` + 17 tests; migration 002; see §Gate 3 (as-built) |
-| G4 — continuation | **IN PROGRESS — core landed** | migration 003 + `kel/continuation.py` + store helpers + 17 tests; service wiring + live probes next |
+| G4 — continuation | **COMPLETE** | migration 003 + `kel/continuation.py` + service wiring + 26 tests + 8/8 live probes (evidence: docs/v1.3/evidence/gate4-continuation-probe.json); see §Gate 4 below |
 | G5 — recipes | not started | blocked on approval |
 | G6 — user experience | not started | blocked on approval |
 | G7 — adversarial acceptance + freeze | not started | blocked on approval |
@@ -351,5 +351,28 @@ Landed on `v1.3-dev` (this commit; the gate is not yet declared complete):
   probes, and the Gate 4 completion checkpoint.
 
 Next: finish Gate 4 wiring + live probes.
+
+## Gate 4 (complete) — first-class continuation  [2026-09-15]
+
+Completion evidence (beyond the core landing above):
+
+- `runtime/kel/service.py` wiring: `submit` accepts an optional explicit `job_id`
+  (dashed-UUID validated) carried in the handoff packet; `_plan` routes continuation intent
+  (explicit id, kind `continue`, or continue-verb text) through `_continuation()`: a single
+  candidate resumes automatically, multiple candidates produce a deterministic list with job
+  ids, none explains honestly; explicit ids from other projects are refused with a clear
+  message; VERIFIED jobs are refused explicitly; every new job gets an idempotent `origin`
+  job link. `state()` exposes project-scoped `continuation` candidates for the Work surface.
+- `runtime/tests/test_v13_continuation_service.py` (9 tests): single-resume via chat,
+  ambiguity listing (jobs left untouched), explicit-id resume of a CLOSED job, wrong-project
+  refusal, none-message, state candidates, VERIFIED refusal, AWAITING_USER + pending approval
+  preserved, origin-link helper. Full suite: **240 passed + 10 subtests**.
+- Live probes (real `kel.service` subprocesses over loopback HTTP; evidence:
+  `docs/v1.3/evidence/gate4-continuation-probe.json`): **8/8** — resume-single-over-http,
+  restart-survives, restart-re-resume-idempotent, new-conversation-continues,
+  wrong-project-refused, ambiguous-choice-listed, explicit-choice-resumes,
+  approval-survives-restart. No orphan processes after the run.
+
+Next: Gate 5 (reusable workflow recipes).
 
 

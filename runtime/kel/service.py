@@ -107,6 +107,12 @@ class Service:
         if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
         attachments=data.get('attachments',[])
         if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
+        job_id=data.get('job_id')
+        if job_id is not None:
+            job_id=str(job_id).lower()
+            hexish=job_id.replace('-','')
+            if len(hexish)!=32 or any(ch not in '0123456789abcdef' for ch in hexish):
+                raise PolicyError('Invalid job id')
         kind=data.get('kind')
         greenfield_flag=False
         if kind is None:
@@ -116,6 +122,7 @@ class Service:
             result=classify(text)
             kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
         packet=self.context.handoff(cid,text,attachments)
+        if job_id:packet['continuation']={'job_id':job_id}
         with self.store.transaction() as db:
             old=db.execute('SELECT * FROM submissions WHERE id=?',(sid,)).fetchone()
             if old:
@@ -133,10 +140,14 @@ class Service:
         try:
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
+            explicit_job=(packet.get('continuation') or {}).get('job_id')
+            continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             if kind=='status' or lower in ('status','what are you working on?','what is running?'):
                 jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
                 answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
                 self.store.add_message(answer,'assistant',cid);jid=None
+            elif kind=='continue' or explicit_job or continue_verb:
+                jid=self._continuation(cid,text,packet)
             elif coding_verb and not greenfield_flag and not packet['project']['root']:
                 # Coding intent with no selected project and no explicit
                 # greenfield request: ask instead of guessing or silently
@@ -208,6 +219,7 @@ class Service:
                 contract['submission_id']=sid
                 # Create and link the job atomically with intake to prevent duplicate effects on restart.
                 jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+                self._link_origin(jid,cid,sid)
                 with self.store.transaction() as db:
                     # create() records the source request; remove only its duplicate intake message.
                     dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
@@ -215,6 +227,49 @@ class Service:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='DISPATCHED',job_id=? WHERE id=?",(jid,sid))
         except Exception as exc:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+
+    def _link_origin(self,job_id,conversation_id,sid):
+        from .continuation import Continuation
+        try:
+            Continuation(self.store).attach(job_id,conversation_id,kind='origin',reason='submission '+str(sid)[:8])
+        except Exception:
+            pass  # linking is auxiliary metadata; never fail an accepted submission over it
+
+    def _continuation(self,cid,text,packet):
+        """Natural-language continuation: durable state decides, never transcript text."""
+        from .continuation import Continuation
+        cont=Continuation(self.store)
+        project_id=(packet.get('project') or {}).get('id')
+        explicit=(packet.get('continuation') or {}).get('job_id')
+        if explicit:
+            try:
+                job=self.store.get(explicit)
+            except PolicyError:
+                self.store.add_message('I could not find that job id.','assistant',cid)
+                return None
+            candidates={c['job_id'] for c in cont.candidates(project_id)}
+            if explicit in candidates:
+                out=cont.execute_resume(explicit,cid,reason='user: '+text[:120])
+                self.store.add_message(cont.explain(explicit)+' Current state: '+out['state'].lower()+'.','assistant',cid)
+            elif job.get('verdict')=='VERIFIED':
+                self.store.add_message('That work is already verified and closed. Ask for a new change if you want more done.','assistant',cid)
+            else:
+                self.store.add_message('That job belongs to another project or is not continuable. Continue Work only resumes unfinished jobs inside the current project.','assistant',cid)
+            return None
+        result=cont.resolve(project_id,cid,text)
+        if result['kind']=='single':
+            top=result['candidate']
+            out=cont.execute_resume(top['job_id'],cid,reason='user: '+text[:120])
+            self.store.add_message(cont.explain(top['job_id'])+' Current state: '+out['state'].lower()+'.','assistant',cid)
+        elif result['kind']=='choice':
+            lines=['I found several unfinished jobs in this project. Which one should I continue?']
+            for choice in result['candidates']:
+                lines.append('- %s — %s, %d/%d milestones accepted (job %s)'%(choice['title'] or 'Untitled work',choice['state'].lower().replace('_',' '),choice['accepted'],choice['total'],choice['job_id']))
+            lines.append('Reply with "continue <job id>", or use the Continue Work controls in Work context.')
+            self.store.add_message('\n'.join(lines),'assistant',cid)
+        else:
+            self.store.add_message('There is no unfinished work in this project to continue. New requests start fresh work.','assistant',cid)
+        return None
 
     def state(self,cid='main'):
         with contextlib.closing(self.store.connect()) as db:
@@ -242,9 +297,17 @@ class Service:
                 else:
                     a['action_summary']='take the requested '+str(kind)+' action'
             files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
+        project_id=next((c['project_id'] for c in conversations if c['id']==cid),None)
+        continuation=[]
+        if project_id:
+            from .continuation import Continuation
+            try:
+                continuation=Continuation(self.store).candidates(project_id)
+            except Exception:
+                continuation=[]  # the Work surface must render even if continuation state is unavailable
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
-                'submissions':submissions,'approvals':approvals,'attachments':files,'error':self.error,
+                'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'draining':self.draining}
 
     def action(self,path,data):
