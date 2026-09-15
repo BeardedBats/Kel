@@ -1,51 +1,53 @@
 # KEL V1.4 — AUTO-RESUME
 
-Updated: 2026-09-15 ~18:50 ET · Session: #6 boundary (Gate 7 CLOSED via relay)
+Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
 
-- **Current gate**: Gate 7 — **CLOSED** (reviewer relay: CONTINUE). Next: **Gate 8**
-  (diagnostics · maintenance · performance). Gates 0–7 are CLOSED, each with a relay CONTINUE.
-- **Current phase**: G7→G8 boundary (no work in flight; no processes running; tree clean apart from the
+- **Current gate**: Gate 8 — **CLOSED** (reviewer relay: CONTINUE). Next: **Gate 9**
+  (full-app visual redesign / polish). Gates 0–8 are CLOSED, each with a relay CONTINUE.
+- **Current phase**: G8→G9 boundary (no work in flight; no processes running; tree clean apart from the
   intentionally untracked `Agents.md`).
-- **Branch / commit / remote**: `v1.4-dev` @ `03f35fd` (+ this docs commit) · pushed to `origin`.
-- **Gate 7 outcome (measured)**: contrast failures **6 → 0**; focus rings **0/30 → 30/30**; skip link
-  proven as the first tab stop on a fresh load; dead settings routes now land on `/providers`,
-  `/autonomy`, `/team/roster`; **command palette** (`Ctrl+K`, `/`) with 24 engine-derived results,
-  keyboard-only verified; **first-run onboarding** verified by a three-launch behavioural test; pet
-  surface tokenized + audited for the first time; Sider duplicate label fixed; notification restraint
-  verified in code. Engine suite **346 passed + 10 subtests**.
-- **Gate 7 open items (carried)**: donor work-drawer tabs are `DIV`s with `tabindex` (G9); migrated
-  V1.3 profiles see onboarding once and dismiss it (documented deviation of the flag-only rule); pet
-  windows are audited as documents (live capture needs `app.windows()` in the harness); unused lazy
-  imports remain in `Router.tsx` (G9 lint pass); engine shutdown still needs the bounded kill (G10).
-- **PROVEN UI VERIFICATION LOOP** (unchanged): build (`bun x electron-vite build --config
+- **Branch / commit / remote**: `v1.4-dev` @ `7c8253e` (+ this docs commit) · pushed to `origin`.
+- **Gate 8 outcome**: `kel/diagnostics.py` (migration 009) — startup spans, performance measurements and
+  health/process observations from real sources (integrity check, main/WAL sizes, page accounting, runs
+  past their fence, provider states, worker pids with a Windows-safe liveness check); `/api/diagnostics`
+  (snapshot · observe · performance · retention · set_retention · purge · compact · export · report);
+  **12 DIAG-*** tests, suite **358 passed + 10 subtests**; the service records a **measured**
+  `engine-start` span (420.24 ms in the captured run). Safety enforced and tested: allowlist-only export
+  with a receipt (a planted `sk-live-…` marker in a job request and a worker identity never appears),
+  note redaction in the local issue report, retention refuses `jobs`, purge touches observations only,
+  compaction backs up then vacuums and closes its handles. UI `/diagnostics` rendered from the packaged
+  candidate (tag `g8`: 25 shots, 0 renderer errors, 0 blank, route contrast 0, engine rebuilt +
+  PYZ `RESULT: OK`).
+- **Defects caught by the evidence loop in Gate 8** (all fixed in-gate): a wrong columnar assumption
+  about `jobs` (its state lives in the JSON payload), a lazily-created `native_processes` table that
+  crashed snapshots on other store states, a leaked SQLite handle in `compact()` that kept the database
+  locked on Windows, and an un-sanitized user note in the shareable report.
+- **PROVEN UI VERIFICATION LOOP** (unchanged): renderer build (`bun x electron-vite build --config
   packages/desktop/electron.vite.config.ts`) → overlay `desktop/out` into
   `dev-tools/runs/v14/shell-stage/out` → `asar-dedup-pack.js` → copy the asar into
-  `dev-tools/runs/v14/candidate/resources/app.asar` → engine changes: `scripts/build-runtime.ps1` +
-  `verify_engine_pyz.py` (`RESULT: OK`) + replace `resources/kel-engine` → `seed_ui_fixture.py` →
-  capture (`capture-screens.cjs --views`) → probe (`a11y-probe.cjs --routes`) → interactions
+  `dev-tools/runs/v14/candidate/resources/app.asar` → **engine changes**: `scripts/build-runtime.ps1` +
+  `verify_engine_pyz.py` (`RESULT: OK`) + replace `resources/kel-engine` → `seed_ui_fixture.py` → capture
+  (`capture-screens.cjs --views`) → probe (`a11y-probe.cjs --routes`) → interactions
   (`verify-actions.cjs`, `verify-credentials.cjs`, `verify-palette.cjs`, `verify-onboarding.cjs`,
   `probe-skip-link.cjs`) → confirm 0 leftover `Kel`/`electron` processes.
   Env: `PLAYWRIGHT_MODULE=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/node_modules/playwright`,
-  `PLAYWRIGHT_BROWSERS_PATH=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/browsers`. Fixture root
-  `dev-tools/runs/v13/data/fixture-team`; fresh-install root `dev-tools/runs/v14/data/fresh`.
-- **Exact next action (Gate 8 — diagnostics, maintenance, performance)**:
-  1. **Engine telemetry surface**: startup spans (already recorded by `telemetry.py` — surface them),
-     health observations, provider latency/quota observations (`provider_usage` from G6), process
-     ownership, and the orphan detector (a bounded kill path already exists in the harnesses).
-  2. **Diagnostics tables**: extend the engine with the G2-planned `health_observations`,
-     `process_observations`, `provider_observations`, `performance_measurements`, `retention_settings`
-     (migration 009, additive) + `/api/diagnostics` with a **sanitized export allowlist** (never raw
-     prompts, unrelated conversations, keys, or environment dumps).
-  3. **Diagnostics UI** (`/diagnostics`): health overview, startup timeline, provider latency/quota,
-     process ownership + orphan action, database health/compaction with safety copy, export button with
-     a progress + receipt, and a local issue-report draft.
-  4. **Performance baseline** (G0 remainder): startup spans captured and compared against the V1.3
-     baseline note; document what is and is not measured.
-  5. Rendered evidence per surface (captures + probe + interactions), acceptance rows, commit/push,
-     **Gate 8 relay**.
-- **Known notes (carried)**: provider live calls rely on donor code; dark mode, dense states and
-  before/after comparison images pending (G9).
-- **Tests**: engine **346 passed + 10 subtests**; renderer build green; all packaged harnesses green.
+  `PLAYWRIGHT_BROWSERS_PATH=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/browsers`.
+  Fixture root `dev-tools/runs/v13/data/fixture-team`; fresh-install root `dev-tools/runs/v14/data/fresh`.
+- **Exact next action (Gate 9 — full visual redesign / polish)**:
+  1. **Before/after comparisons** for every surface that has a V1.3 counterpart, generated scripted into
+     `docs/v1.4/screenshots/comparisons/` (baseline vs final, same state, same width).
+  2. **Dark mode**: render the key surfaces with the dark token set and audit contrast (the light set is
+     already at 0 failures).
+  3. **Dense states**: render Work Center with >10 jobs, long lists, and long content.
+  4. **Donor-surface repairs carried forward**: work-drawer tabs as semantic buttons, unused lazy imports
+     in `Router.tsx`, donor CSS gradient/cream findings from the design review, live pet-window capture
+     (`app.windows()` support in the harness).
+  5. **Provider/process populated states** (G8 capture gaps): a fixture with an authenticated provider
+     (metadata only) and a recorded worker process, so those sections render with data.
+  6. Rendered evidence per surface, acceptance-matrix verdicts, commit/push, **Gate 9 relay**.
+- **Known notes (carried)**: engine shutdown still needs the bounded kill (G10); a V1.3-migrated profile
+  sees onboarding once (documented deviation); provider live calls rely on donor code.
+- **Tests**: engine **358 passed + 10 subtests**; renderer build green; all packaged harnesses green.
   **Tests failing**: none. **Blocker**: none. **HARD STOP: no.**
 - **Frozen-hash state**: 3/3 verified; `Kel Releases/` untouched. **Dogfood isolation**: intact.
 - **Continuation safety**: safe (clean tree; no running processes).
