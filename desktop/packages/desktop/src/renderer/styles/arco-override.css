@@ -43,6 +43,9 @@
    集中的字体 token。--font-mono 会被继承（自定义属性可穿透 Shadow DOM 边界），
    因此 Shadow DOM 内渲染的 Markdown 也能引用它。 */
 :root {
+  /* Kel V1.4: the Arco tertiary-text token measured 2.92:1 on --bg-2 (#f2f3f5) in the V1.3
+     baseline audit. Darken it to an AA-safe muted tone for every surface that uses it. */
+  --color-bg-6: #5c6470;
   /* Code-region font. applyFontFamilies sets --code-font-family only when the
      user picks a code font (empty otherwise), so --font-mono resolves to the
      chosen font or falls back to the built-in stack. Every existing
@@ -183,8 +186,8 @@ html body .arco-popconfirm-arrow.arco-trigger-arrow {
 
 .arco-btn {
   &.arco-btn-outline {
-    border-color: #86909c;
-    color: #86909c;
+    border-color: var(--kel-border-strong, #d1d5db);
+    color: var(--kel-text-2, #5c6470);
   }
 }
 

@@ -124,7 +124,8 @@ const PAGE_AUDIT = () => {
     palette.text[rgb(fg)] = (palette.text[rgb(fg)] || 0) + 1;
     palette.bg[rgb(bg)] = (palette.bg[rgb(bg)] || 0) + 1;
     const large = size >= 24 || (size >= 18.66 && parseInt(cs.fontWeight, 10) >= 700);
-    samples.push({ text, size, weight: cs.fontWeight, fg: rgb(fg), bg: rgb(bg), ratio: ratio(fg, bg), need: large ? 3 : 4.5 });
+    const classes = typeof el.className === 'string' && el.className ? '.' + el.className.split(/\s+/).slice(0, 3).join('.') : '';
+    samples.push({ element: el.tagName.toLowerCase() + classes, text, size, weight: cs.fontWeight, fg: rgb(fg), bg: rgb(bg), ratio: ratio(fg, bg), need: large ? 3 : 4.5 });
   }
   const emoji = (document.body.innerText.match(/\p{Extended_Pictographic}/gu) || []).length;
   const failures = samples.filter((s) => s.ratio < s.need);
