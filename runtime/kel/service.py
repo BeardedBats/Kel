@@ -566,6 +566,9 @@ class Service:
         if path=='/api/team':
             from .team import Team
             return Team(self.store).apply(data)
+        if path=='/api/providers':
+            from .providers import Providers
+            return Providers(self.store).apply(data)
         raise PolicyError('Unknown action')
 
 
