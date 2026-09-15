@@ -329,6 +329,20 @@
   font-weight: 600;
   border-bottom: 2px solid var(--kel-accent);
 }
+.kel-input {
+  font: inherit;
+  font-size: var(--kel-type-label);
+  color: var(--kel-text-1);
+  background: var(--kel-surface-1);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-control);
+  padding: 6px 10px;
+  min-height: 32px;
+}
+.kel-input:focus-visible {
+  outline: 2px solid var(--kel-accent);
+  outline-offset: 2px;
+}
 @media (prefers-contrast: more) {
   .kel-scope {
     --kel-border: var(--kel-border-strong);
