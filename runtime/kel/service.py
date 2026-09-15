@@ -78,6 +78,8 @@ class Service:
             db.execute("UPDATE submissions SET state='DISPATCHED',job_id=(SELECT job_id FROM job_intakes WHERE job_intakes.id=submissions.id) WHERE id IN (SELECT id FROM job_intakes)")
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
+        from .recipes import RecipeLibrary
+        RecipeLibrary(self.store).install_builtins()
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -244,7 +246,7 @@ class Service:
         if explicit:
             try:
                 job=self.store.get(explicit)
-            except PolicyError:
+            except (KeyError, PolicyError):
                 self.store.add_message('I could not find that job id.','assistant',cid)
                 return None
             candidates={c['job_id'] for c in cont.candidates(project_id)}

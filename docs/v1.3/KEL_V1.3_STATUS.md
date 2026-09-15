@@ -13,7 +13,7 @@ Gate 1 and the repository consolidation were approved 2026-09-15; implementation
 | G2 — memory foundation | **COMPLETE** | `kel/memory.py` + 16 tests; migration 001 with backup/receipt; see §Gate 2 (as-built) |
 | G3 — project map + context composer | **COMPLETE** | `kel/projectmap.py` + `kel/composer.py` + 17 tests; migration 002; see §Gate 3 (as-built) |
 | G4 — continuation | **COMPLETE** | migration 003 + `kel/continuation.py` + service wiring + 26 tests + 8/8 live probes (evidence: docs/v1.3/evidence/gate4-continuation-probe.json); see §Gate 4 below |
-| G5 — recipes | not started | blocked on approval |
+| G5 — recipes | **COMPLETE** | migration 004 + `kel/recipes.py` (842 lines) + 5 builtins + 14 tests; suite 254+10; see §Gate 5 |
 | G6 — user experience | not started | blocked on approval |
 | G7 — adversarial acceptance + freeze | not started | blocked on approval |
 
@@ -374,5 +374,42 @@ Completion evidence (beyond the core landing above):
   approval-survives-restart. No orphan processes after the run.
 
 Next: Gate 5 (reusable workflow recipes).
+
+## Gate 5 (complete) — reusable workflow recipes  [2026-09-15]
+
+Implemented:
+
+- `runtime/kel/recipes.py` (842 lines): migration 004 (`recipes` table per RECIPE_SPEC §7);
+  strict stdlib validator (unknown fields rejected at every level, typed inputs, step/check/
+  retry/policy rules, dependency acyclicity, placeholder discipline, terminal states must
+  include UNCERTAIN); append-only storage with immutability per `(id, version, scope,
+  project)`; project recipes shadow builtins with both inspectable; `propose_from_job`
+  drafts (preview only — saving always requires `confirm=True` plus, for `from_job` sources,
+  an existing job); `compile_recipe` maps steps to the existing CompletionContract
+  (provenance `{id, version, digest}` pinned, budget carried, coding recipes require
+  root + the declared test command). `continue-work` compiles to a continuation descriptor
+  (stages list) and creates no job.
+- Five approved builtins seeded idempotently (content changes require a version bump —
+  guarded): Fix Bug (coding), Audit and Repair (mixed), Ship Release (mixed),
+  Research Then Implement (mixed), Continue Work (document/special). `Service.__init__`
+  installs them idempotently at startup.
+- Tests: `runtime/tests/test_v13_recipes.py` (14): builtin install/validate, unknown-field
+  rejection (5 levels), structural rules (18 cases), kind minima + `commands:run` heuristic,
+  compile-to-contract (rendering, defaults, explicit failures), confirmation-required saves,
+  shadowing + immutability + version listing, propose-from-job (confirm + ghost job),
+  builtin tamper guard, frozen accepted steps (claim refused after acceptance), bounded
+  repair (attempts 2 then VERIFIED) and bounded failure (attempts 4, FAILED), verdict
+  remaining Kel-controlled (`terminal_states` never enters the contract), interrupted-recipe
+  resume with accepted milestone preserved and remaining step reopened, continue-work
+  creating no job. Full suite: **254 passed + 10 subtests**.
+
+As-built notes: validation enforces only `project:read` as a kind minimum; `project:write`
+and `tests:run` are enforced at compile time (per RECIPE_SPEC §4.4 wording "otherwise compile
+refuses"). The `commands:run` heuristic flags steps whose ids are `package`/`smoke` or whose
+objectives mention a declared package/smoke command. `Store.get` raises `KeyError` for missing
+jobs; `propose_from_job` and the service continuation handler normalize it to a user-facing
+error.
+
+Next: Gate 6 (Work-context user experience).
 
 
