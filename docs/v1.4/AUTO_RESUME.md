@@ -48,6 +48,14 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
      (2.13:1) and the workspace footnote “Work in a project” (2.46:1) — all three keep **hardcoded donor
      colours** (`rgb(92,100,112)` / `rgb(78,89,105)`) that no token reaches, so they need direct
      component-level fixes. Light remains at 0 failures.
+     **Corrected attribution (commit `df6b5c4`)**: three same-precedence CSS fixes are in place
+     (`.sider-section-label`, `.workspaceFootnote`, the chat's Work-context trigger) and light stays at
+     0/0/0/0 with dark routes improved (work 0, providers 4, autonomy 2, diagnostics 2) — but those three
+     labels still measure light colours because **Arco resolves its text colours from React-injected
+     variables, not from attributes**: the token probe reads `--color-text-2`/`--color-text-3` from the
+     root as empty strings, so Arco's compiled fallbacks win. Next step: **drive the app's own Appearance
+     setting** (or set Arco's variables on `body`) before capturing — a harness/app-setting task, and the
+     blocker for a fully dark-component capture.
   3. **Dense states**: render Work Center with >10 jobs, long lists, and long content.
   4. **Donor-surface repairs carried forward**: work-drawer tabs as semantic buttons, unused lazy imports
      in `Router.tsx`, donor CSS gradient/cream findings from the design review, live pet-window capture
