@@ -192,6 +192,30 @@ async function main() {
 
   out.bootScreen = await page.evaluate(PAGE_AUDIT);
 
+  // Fresh-load focus order: collected before any interaction so the sequence reflects what a keyboard
+  // user meets on arrival (the shell's first stop is the skip link). The post-interaction order is
+  // collected later as `focusOrder`.
+  out.focusOrderBoot = [];
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(110);
+    out.focusOrderBoot.push(await page.evaluate(() => {
+      const el = document.activeElement;
+      if (!el || el === document.body) return { tag: 'BODY' };
+      const cs = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return {
+        tag: el.tagName,
+        name: el.getAttribute('aria-label') || el.getAttribute('title'),
+        text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40),
+        outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`,
+        rect: [Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)],
+        isSkipLink: el.classList.contains('kel-skip'),
+      };
+    }));
+  }
+  await page.evaluate(() => { const a = document.activeElement; if (a && a.blur) a.blur(); });
+
   // Open the work drawer for the second pass.
   const trigger = page.locator('text=Work & context').first();
   if (await trigger.count()) { await trigger.click({ timeout: 8000 }).catch(() => {}); await page.waitForTimeout(1500); }

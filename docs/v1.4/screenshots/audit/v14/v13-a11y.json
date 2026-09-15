@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T17:49:10.168Z",
+  "startedAt": "2026-09-15T17:53:27.659Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 20184,
+    "pid": 42916,
     "version": "0.5.0"
   },
   "bootScreen": {
@@ -59,6 +59,203 @@
     ],
     "emojiCharacters": 0
   },
+  "focusOrderBoot": [
+    {
+      "tag": "A",
+      "name": null,
+      "text": "Skip to main content",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        10,
+        162,
+        39
+      ],
+      "isSkipLink": true
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Collapse",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        16,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Search messages",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        52,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Minimize",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1328,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Maximize",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1368,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Close",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1408,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "New Chat",
+      "outline": "solid 2px rgb(14, 120, 87)",
+      "rect": [
+        8,
+        91,
+        208,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Work",
+      "text": "Work",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        127,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Team",
+      "text": "Team",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        163,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Projects",
+      "text": "Projects",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        199,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Providers",
+      "text": "Providers",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        235,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Autonomy",
+      "text": "Autonomy",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        271,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "New conversation",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        389,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Baseline fixture chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        425,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Approval fixture chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        461,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    }
+  ],
   "workDrawer": {
     "textSamples": 39,
     "contrastFailures": [],

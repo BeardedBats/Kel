@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "hash": "/work",
+  "checks": {
+    "link": {
+      "tag": "A",
+      "text": "Skip to main content",
+      "href": "#kel-shell-content",
+      "display": "block",
+      "visibility": "visible",
+      "position": "fixed",
+      "left": "8px",
+      "top": "10px",
+      "opacity": "1",
+      "pointerEvents": "auto",
+      "tabIndex": 0,
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      },
+      "offsetParent": false,
+      "hiddenAncestor": null
+    },
+    "linkCount": 2,
+    "firstFocusable": {
+      "tag": "A",
+      "isSkipLink": true,
+      "text": "Skip to main content"
+    },
+    "targetExists": true,
+    "firstTabStop": {
+      "tag": "A",
+      "isSkipLink": true,
+      "text": "Skip to main content"
+    }
+  },
+  "errors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}
