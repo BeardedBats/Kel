@@ -95,3 +95,14 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G4-DEEPLINK | `/team/roster` + `/team/studio` deep links open their own tab | V | **PASS after fix** — distinct rendered content per route (previously all three rendered Office) |
 | G4-A11Y-ROUTES | contrast/focus on the new routes | V | **PASS with one note** — table-header contrast fixed (4.35 → ≥6:1); the only remaining failure per route is the donor sidebar label “Projects” (2.92:1) → G7 |
 | G4-SHUTDOWN | engine stops when the app closes | I | **NOTE (not a pass)** — `engineStopped: false`, `engineKilled: true` (bounded fallback), `closeOutcome: close-timeout` → G7/G10 item |
+
+## 9. Gate 5 additions (in progress)
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G5-PROJECTS | Projects workspace (Knowledge · Map · Recipes) implemented, routed at `/projects`, `/projects/knowledge|map|recipes`, Sider entry added | I/V | **PASS** — rendered from the packaged candidate |
+| G5-MEMORY | knowledge records (type · trust · status · source · updated) with Confirm · Retract · Forget wired to `/api/memory` | I/V | **PASS (render)** — 3 fixture records at 6/10 and 3/10 trust with actions; live action round-trip still to verify |
+| G5-MAP | map sections (trust · freshness · digest · sources) plus Refresh/Build over `/api/map` | V | **PASS (empty state)** — the fixture project has no map; the build action renders and reads honestly |
+| G5-RECIPES | recipe library over `/api/work` | V | **PASS** — 5 built-in recipes listed (Audit and Repair, Continue Work, Fix Bug, Research The Implement, Ship Release) |
+| G5-CAPTURE | five-width captures of the Projects surfaces | V | **PASS** — 44 shots, 0 renderer errors, 0 blank, app exit 0 (`docs/v1.4/screenshots/g5/`) |
+| G5-A11Y | route a11y probe on the new routes | V | **PASS** — contrast failures 0/0/0; 12px floor; 0 emoji |

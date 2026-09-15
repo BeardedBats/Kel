@@ -27,6 +27,7 @@ const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTa
 const TeamIndex = React.lazy(() => import('@renderer/pages/team'));
 const KelWorkCenter = React.lazy(() => import('@renderer/pages/kel/work'));
 const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
+const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
 
 const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => (
   <Suspense fallback={<AppLoader />}>
@@ -150,6 +151,10 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/team/office' element={withRouteFallback(KelTeam)} />
           <Route path='/team/roster' element={withRouteFallback(KelTeam)} />
           <Route path='/team/studio' element={withRouteFallback(KelTeam)} />
+          <Route path='/projects' element={<Navigate to='/projects/knowledge' replace />} />
+          <Route path='/projects/knowledge' element={withRouteFallback(KelProjects)} />
+          <Route path='/projects/map' element={withRouteFallback(KelProjects)} />
+          <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />
         </Route>
         <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
       </Routes>

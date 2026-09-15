@@ -17,6 +17,13 @@ Status: v0.1 (Gate 0) · Initial triage complete for all 200 items; evidence col
 `EXTEND` (real foundation exists; V1.4 extends it) · `NEW` (not present; build in V1.4) ·
 `IMPLEMENTED` / `VERIFIED` (post-implementation states) · `DEFERRED` / `BLOCKED` (require written rationale).
 
+**Gate 5 (UI) implementation status (2026-09-15).** `pages/kel/projects/index.tsx` (Knowledge · Map ·
+Recipes) plus `kelWork`/`kelMemoryAction`/`kelMapAction`/`kelRecipes` helpers and the Sider “Projects”
+entry are implemented, routed at `/projects`, `/projects/knowledge|map|recipes`, and rendered from the
+packaged candidate (44 shots at five widths, 0 renderer errors, 0 blank; route contrast 0/0/0). The UI
+portions of the memory/knowledge, map, and recipes items are **IMPLEMENTED**; verification/evidence UX,
+continuation UX, memory action round-trips, and recipe preview/dry-run remain open in Gate 5.
+
 **Gate 4 (UI) implementation status (2026-09-15).** `renderer/styles/kel-tokens.css`,
 `components/kel/{kelApi.ts,KelPrimitives.tsx}`, `pages/kel/team/index.tsx` (Office / Roster / Studio)
 and `pages/kel/work/index.tsx` (Work Center) are implemented, routed at `/work`, `/team`,
