@@ -95,6 +95,12 @@
   --kel-accent-hover: #37b98c;
   --kel-accent-soft: #16281f;
   --kel-run-bg: #16281f;
+  /* Kel V1.4: the donor's muted-text tokens are corrected per theme too — the light value measures
+     2.13:1 on these dark surfaces, and these are the labels a user scans most (sider sections, hints,
+     outline buttons). */
+  --bg-5: #8b95a3;
+  --bg-6: #9aa4b2;
+  --color-bg-6: #9aa4b2;
   --kel-run-fg: #7fd6ae;
   --kel-wait-bg: #2a2113;
   --kel-wait-fg: #f2c879;
@@ -137,7 +143,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kel-scope * {
+  /* Kel V1.4: global, not scoped to Kel surfaces — donor transitions (toasts, workspace tree) must
+     degrade too, and the V1.3 shell had no reduced-motion fallback at all. */
+  * {
     transition: none !important;
     animation: none !important;
   }
