@@ -67,8 +67,12 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
      post-interaction focus recorder does not capture roles). No user-facing gap and nothing to refactor.
   4. **Donor-surface repairs carried forward**: unused lazy imports in `Router.tsx`, live pet-window capture
      (`app.windows()` support in the harness), and the remaining design-review items.
-  5. **Provider/process populated states** (G8 capture gaps): a fixture with an authenticated provider
-     (metadata only) and a recorded worker process, so those sections render with data.
+  5. ~~Provider/process populated states~~ **DONE** (commit `79ec4f1`): the fixture now stores credential
+     metadata for two providers, records two observations, and inserts two `native_processes` rows (one with
+     a passed deadline). The Providers page renders the DeepSeek card with **2 metadata rows**, and
+     Diagnostics renders the process table including the orphan path. **Follow-up (one line)**: label a dead
+     pid with a passed deadline as an orphan candidate and a dead pid with a future deadline as just
+     “not running” — the current copy calls both “orphan candidate”.
   6. Rendered evidence per surface, acceptance-matrix verdicts, commit/push, **Gate 9 relay**.
 - **Known notes (carried)**: engine shutdown still needs the bounded kill (G10); a V1.3-migrated profile
   sees onboarding once (documented deviation); provider live calls rely on donor code.
