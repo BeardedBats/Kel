@@ -211,6 +211,12 @@ async function main() {
   }
 
   // Keyboard order evidence (app-scoped Tab presses inside the test window only).
+  // Reset focus first so the sequence starts like a fresh load — otherwise it continues from wherever
+  // the previous interaction left it and the shell's first stop (the skip link) looks absent.
+  await page.evaluate(() => {
+    const active = document.activeElement;
+    if (active && typeof active.blur === 'function') active.blur();
+  });
   const stops = [];
   for (let i = 0; i < 30; i++) {
     await page.keyboard.press('Tab');
