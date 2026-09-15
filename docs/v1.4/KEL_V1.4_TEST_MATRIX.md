@@ -51,3 +51,12 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G0-CAPTURES | baseline captures (2 states × 30 views, 5 widths, 0 errors) | P/V | **PASS** (`docs/v1.4/screenshots/baseline/`) |
 | G0-FIXTURE | fixture generator for populated states (jobs/approval/memory) | I | **PASS** (`runtime/tools/seed_ui_fixture.py`) |
 | G0-PERF | startup/performance baseline | L | pending (G8 tooling) |
+
+## 5. Gate 1 additions
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G1-DIRECTIONS | two materially different directions rendered + audited (contrast, type, emoji, focusables) | V | **PASS** (`packaging/render-directions.cjs`, `screenshots/directions/`) |
+| G1-FOCUS | every tab stop shows a focus ring; first stop = skip link | V | **PASS** (0 failures, both directions) |
+| G1-A11Y-BASE | packaged V1.3 a11y probe (contrast/focus/type/tab order) | P/V | **PASS** (findings: `KEL_V1.4_UI_AUDIT.md` §5) |
+| G1-DOCS | design system + interaction patterns + accessibility standard + visual acceptance matrix | docs | **PASS** (4 documents) |

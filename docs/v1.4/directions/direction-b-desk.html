@@ -1,0 +1,263 @@
+<!doctype html>
+<!-- KEL V1.4 — DESIGN DIRECTION B: "DESK" (calm workspace, light neutral + emerald)
+     Tokens (this direction):
+       surface-0 #FAFAFB · surface-1 #FFFFFF · border #E5E7EB · divider #EEF0F3
+       text-1 #14161A · text-2 #5A6270 · text-3 #6B7280 · accent #0E7C5A · accent-ink #0A5C43
+       warn #B45309 on #FEF3C7 · danger #B42318 · ok #15803D
+       type: 16px/1.55 body · 24px/1.3 h1 · 13px meta · mono for commands
+       space: 6px base (6/12/18/24/32/48) · radius 10px · motion: 160ms ease-out, reduced-motion aware
+     Craft rules held: no gradients, no emoji icons, cards only for discrete objects,
+     AA contrast, one accent, generous rhythm. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kel — Direction B: Desk</title>
+<style>
+  :root{
+    --s0:#FAFAFB; --s1:#FFFFFF; --bd:#E5E7EB; --dv:#EEF0F3;
+    --t1:#14161A; --t2:#5A6270; --t3:#6B7280;
+    --accent:#0E7C5A; --accent-ink:#0A5C43; --warn:#B45309; --warn-bg:#FEF3C7;
+    --danger:#B42318; --ok:#15803D;
+    --mono:"Cascadia Code",Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--s0);color:var(--t1);
+    font:16px/1.55 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+  .win{display:grid;grid-template-rows:48px 1fr;height:100vh;min-height:900px}
+  .top{display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--s1);border-bottom:1px solid var(--bd)}
+  .brand{font-weight:650;letter-spacing:.1px;font-size:16px}
+  .chip{font-size:13px;color:var(--t2);border:1px solid var(--bd);border-radius:999px;padding:3px 10px;background:var(--s0)}
+  .chip.quiet-good{color:var(--ok);border-color:#CDE8D6;background:#F2FBF5}
+  .grow{flex:1}
+  .cmd{font-size:13px;color:var(--t3);border:1px solid var(--bd);border-radius:8px;padding:4px 10px;background:var(--s0)}
+  .wctl{display:flex;gap:10px;color:var(--t3);font-size:12px}
+  .body{display:grid;grid-template-columns:216px 1fr;min-height:0;position:relative}
+  .rail{background:var(--s1);border-right:1px solid var(--bd);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+  .sect{font-size:12px;color:var(--t3);letter-spacing:.5px;margin:14px 10px 6px;font-weight:600}
+  .nav{display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:8px;color:var(--t2);font-size:14px}
+  .nav svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7}
+  .nav.active{background:#EFF6F3;color:var(--accent-ink);font-weight:600}
+  .nav .badge{margin-left:auto;font-size:12px;font-weight:650;color:#7A4A00;background:var(--warn-bg);border-radius:999px;padding:2px 8px}
+  .main{min-width:0;overflow:auto;padding:36px 40px 56px}
+  .wrap{max-width:1040px}
+  h1{font-size:24px;line-height:1.3;font-weight:650;letter-spacing:-.1px}
+  .sub{color:var(--t2);margin-top:6px;font-size:16px}
+  .filters{display:flex;gap:8px;margin:22px 0 18px}
+  .pill{font-size:13px;color:var(--t2);border:1px solid var(--bd);background:var(--s1);border-radius:999px;padding:6px 14px}
+  .pill.on{color:#fff;background:var(--accent);border-color:var(--accent);font-weight:600}
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:22px 24px;margin-bottom:16px;
+    box-shadow:0 1px 2px rgba(20,22,26,.04)}
+  .card.wait{border-color:#F0D9A8;box-shadow:0 1px 2px rgba(20,22,26,.05)}
+  .crow{display:flex;align-items:center;gap:12px}
+  .card h2{font-size:17px;font-weight:650;letter-spacing:-.1px}
+  .state{font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap}
+  .state.run{color:#0A5C43;background:#E8F5EF}
+  .state.wait{color:#7A4A00;background:var(--warn-bg)}
+  .state.ok{color:#14532D;background:#E7F6EC}
+  .step{margin-top:14px;color:var(--t2);font-size:14px}
+  .dots{display:inline-flex;gap:6px;vertical-align:middle;margin-right:10px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#D6DAE0}
+  .dot.done{background:var(--accent)}
+  .dot.now{background:var(--accent);box-shadow:0 0 0 4px #E3F1EB}
+  .ms{margin-top:16px;border-top:1px solid var(--dv);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+  .mrow{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--t2)}
+  .mrow .mark{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .mrow .mark.done{background:var(--accent);color:#fff}
+  .mrow .mark.cur{background:#E8F5EF;color:var(--accent-ink);border:1px solid var(--accent)}
+  .mrow .mark.todo{background:var(--dv);color:var(--t3)}
+  .tag{font-size:12px;font-weight:650;color:var(--t2);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;margin-left:8px}
+  .cfoot{display:flex;align-items:center;gap:14px;margin-top:18px;border-top:1px solid var(--dv);padding-top:14px}
+  .meta{font-size:13px;color:var(--t3)}
+  .btn{font-size:14px;font-weight:600;border-radius:8px;padding:8px 16px;border:1px solid transparent;cursor:default}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.secondary{background:var(--s1);color:var(--t1);border-color:var(--bd)}
+  .btn.quiet{background:transparent;color:var(--accent-ink)}
+  .btn.danger{background:var(--s1);color:var(--danger);border-color:#EBC7C3}
+  .btn[disabled]{opacity:.55}
+  .sheet{position:absolute;top:0;right:0;bottom:0;width:420px;background:var(--s1);border-left:1px solid var(--bd);
+    box-shadow:-12px 0 32px rgba(20,22,26,.08);padding:28px}
+  .sheet h3{font-size:18px;font-weight:650}
+  .sheet .lead{color:var(--t2);font-size:14px;margin-top:8px}
+  .code{margin-top:16px;background:#0F1418;color:#DCE6EE;border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:1.5}
+  .after{margin-top:14px;font-size:13px;color:var(--t3);background:var(--s0);border:1px solid var(--dv);border-radius:8px;padding:12px 14px}
+  .sheet .actions{display:flex;gap:10px;margin-top:18px}
+  .why{margin-top:22px;border-top:1px solid var(--dv);padding-top:16px;font-size:14px;color:var(--t2)}
+  .why strong{color:var(--t1)}
+  .strip{margin-top:44px}
+  .strip h4{font-size:13px;font-weight:650;color:var(--t3);letter-spacing:.4px;margin-bottom:14px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .empty{border:1px dashed #D6DAE0;border-radius:10px;padding:28px;background:var(--s1);color:var(--t2);font-size:14px}
+  .empty strong{display:block;color:var(--t1);font-size:16px;margin-bottom:4px}
+  .feed{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:6px 4px;min-width:320px}
+  .frow{display:flex;gap:10px;padding:8px 12px;font-size:13px;color:var(--t2)}
+  .frow b{color:var(--t1);font-weight:600}
+  .meter{height:6px;border-radius:999px;background:var(--dv);overflow:hidden;width:180px}
+  .meter i{display:block;height:100%;width:38%;background:var(--accent)}
+  .field{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;min-width:240px;color:var(--t3);font-size:14px}
+  .helper{font-size:12px;color:var(--t3);margin-top:6px}
+</style>
+<style>:where(button.btn){font:inherit;cursor:pointer;text-align:inherit}.navgap{height:1px;background:#E5E7EB;margin:12px 8px}.skip{position:absolute;left:-9999px;top:8px;background:#fff;color:#14161A;border:1px solid #E5E7EB;border-radius:8px;padding:8px 12px;font-size:14px;z-index:50}.skip:focus{left:8px}:focus-visible{outline:2px solid #0E7C5A;outline-offset:2px}</style></head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="win">
+  <header class="top">
+    <span class="brand">Kel</span>
+    <span class="chip">Project · fixture-project</span>
+    <span class="chip quiet-good">Local · private</span>
+    <span class="grow"></span>
+    <span class="cmd">Search or run a command    Ctrl K</span>
+    <span class="wctl">—  ▢  ✕</span>
+  </header>
+
+  <div class="body">
+    <nav class="rail">
+      <div class="navgap"></div>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 1 1-3.1-6.3L21 4v5h-5"/></svg>Chat</a>
+      <a class="nav active"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Work</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5S14 16 14.6 19M15 19c.3-2 1.6-3.2 3.4-3.2 1 0 1.8.3 2.4.9"/></svg>Team<span class="badge">3</span></a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M4 10h16"/></svg>Projects</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h6"/></svg>Recipes</a>
+      <div class="navgap"></div>
+      <a class="nav"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.3-4.3"/></svg>Search</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19 12l1.5-1-1-3-1.8.3-1.4-1.4L16.6 5l-3-1L12.6 5.5 12 5.5 11.4 5.5 10.4 4l-3 1 .3 1.9-1.4 1.4L4.5 8l-1 3L5 12l-.5.6L3 14l1 3 1.9-.3 1.4 1.4L7 20l3 1 1-1.5.6.5.6-.5 1 1.5 3-1-.3-1.9 1.4-1.4 1.9.3 1-3z"/></svg>Settings</a>
+    </nav>
+
+    <main class="main" id="main">
+      <div class="wrap">
+        <h1>Work</h1>
+        <p class="sub">3 jobs in this project · <strong>1 waiting on you</strong></p>
+
+        <div class="filters">
+          <span class="pill on">All</span><span class="pill">Running</span><span class="pill">Waiting</span><span class="pill">Verified</span>
+        </div>
+
+        <section class="card">
+          <div class="crow">
+            <h2>Capture the packaged baseline</h2>
+            <span class="grow"></span>
+            <span class="state run">Running</span>
+          </div>
+          <div class="step"><span class="dots"><i class="dot done"></i><i class="dot now"></i><i class="dot"></i></span>
+            Step 2 of 3 · Draft the thing — QA Engineer is writing the result</div>
+          <div class="ms">
+            <div class="mrow"><span class="mark done">✓</span>Collect the five widths<span class="tag">frozen</span></div>
+            <div class="mrow"><span class="mark cur">2</span>Draft the thing — in progress</div>
+            <div class="mrow"><span class="mark todo">3</span>Verify against evidence</div>
+          </div>
+          <div class="cfoot">
+            <span class="meta">Updated 2m ago · scope fixture-project · budget 3 of 8 steps</span>
+            <span class="grow"></span>
+            <button class="btn secondary">Pause</button>
+            <button class="btn quiet">Details</button>
+          </div>
+        </section>
+
+        <section class="card wait">
+          <div class="crow">
+            <h2>Prepare the release-notes draft</h2>
+            <span class="grow"></span>
+            <span class="state wait">Waiting on you · permission</span>
+          </div>
+          <div class="step"><span class="dots"><i class="dot done"></i><i class="dot now"></i><i class="dot"></i></span>
+            Kel paused before running a command · nothing has executed yet</div>
+          <div class="ms">
+            <div class="mrow"><span class="mark done">✓</span>Outline the notes<span class="tag">frozen</span></div>
+            <div class="mrow"><span class="mark cur">!</span>Run <span style="font-family:var(--mono);font-size:13px">echo fixture</span> — needs your consent</div>
+            <div class="mrow"><span class="mark todo">3</span>Publish the draft</div>
+          </div>
+          <div class="cfoot">
+            <span class="meta">Waiting 4m · scope fixture-project · approval expires in 56m</span>
+            <span class="grow"></span>
+            <button class="btn primary">Review approval</button>
+            <button class="btn quiet">Details</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="crow">
+            <h2>Explain this project in plain words</h2>
+            <span class="grow"></span>
+            <span class="state ok">Verified</span>
+          </div>
+          <div class="step"><span class="dots"><i class="dot done"></i><i class="dot done"></i><i class="dot done"></i></span>
+            All steps accepted · evidence recorded</div>
+          <div class="ms">
+            <div class="mrow"><span class="mark done">✓</span>Inspect the tree<span class="tag">frozen</span></div>
+            <div class="mrow"><span class="mark done">✓</span>Write the summary<span class="tag">frozen</span></div>
+            <div class="mrow"><span class="mark done">✓</span>Verify against evidence<span class="tag">frozen</span></div>
+          </div>
+          <div class="cfoot">
+            <span class="meta">Verified 12m ago · 3 of 3 checks passed · review by a separate reviewer</span>
+            <span class="grow"></span>
+            <button class="btn secondary">Open receipt</button>
+            <button class="btn quiet">Details</button>
+          </div>
+        </section>
+
+        <section class="strip">
+          <h3>Companion sheet — the same scenario, detail view</h3>
+          <div class="empty" style="border-style:solid">
+            <strong>Right-side sheet (opened from “Review approval”)</strong>
+            The Desk direction keeps the list calm and moves decisions into a single, focused sheet with plain-language context.
+          </div>
+        </section>
+
+        <section class="strip">
+          <h4>Components — chips, actions, fields, states</h4>
+          <div class="row">
+            <span class="state wait">Waiting on you</span>
+            <span class="state run">Running</span>
+            <span class="state ok">Verified</span>
+            <span class="state" style="color:#5A4200;background:#FFF7E0;border:1px dashed #B07700">Uncertain — needs evidence</span>
+            <span class="tag">frozen</span>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn primary">Allow once</button>
+            <button class="btn secondary">Deny</button>
+            <button class="btn danger">Cancel job</button>
+            <button class="btn quiet">Open receipt</button>
+            <button class="btn secondary" style="opacity:.55">Pause</button>
+          </div>
+          <div class="row" style="margin-top:16px">
+            <div><div class="field">Project folder</div><div class="helper">Kel may read and write inside this folder only.</div></div>
+            <div style="min-width:220px"><div class="meta" style="margin-bottom:6px">Job budget</div><div class="meter"><i></i></div><div class="helper">3 of 8 steps used</div></div>
+          </div>
+          <div class="row" style="margin-top:16px;align-items:flex-start">
+            <div class="empty" style="flex:1">
+              <strong>No unfinished work in this project.</strong>
+              When a job is paused or waiting, it appears here with the exact reason and one clear action.
+            </div>
+            <div class="feed">
+              <div class="frow"><b>Kel</b> verified “Explain this project in plain words”</div>
+              <div class="frow"><b>QA Engineer</b> recorded evidence for step 2</div>
+              <div class="frow"><b>You</b> allowed a command for “Prepare the release-notes draft”</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="sheet">
+      <h3>Permission needed</h3>
+      <p class="lead">Kel wants to run one command for “Prepare the release-notes draft”. Nothing has run yet.</p>
+      <div class="code">$ echo fixture</div>
+      <div class="after">If you allow, Kel runs this once, records a receipt, and continues the job.
+        Nothing else is unlocked, and the permission ends with this step.</div>
+      <div class="actions">
+        <button class="btn primary">Allow once</button>
+        <button class="btn secondary">Deny</button>
+      </div>
+      <div class="why">
+        <strong>Why you’re seeing this.</strong> This step is gated behind your explicit consent,
+        so Kel paused the job instead of running it automatically. The job stays paused until you decide.
+      </div>
+      <div class="why" style="border-top:none;padding-top:8px">
+        <strong>Evidence so far.</strong> Outline the notes (accepted, frozen) ·
+        1 milestone complete · no failures · reviewer: independent
+      </div>
+    </aside>
+  </div>
+</div>
+</body>
+</html>

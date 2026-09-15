@@ -1,6 +1,6 @@
 # KEL V1.4 — STATUS
 
-Date: 2026-09-15 · Branch: `v1.4-dev` (based on `b6974cf`, pushed) · Sessions: #1 (verification) → #2 (tooling, harness, baseline captures)
+Date: 2026-09-15 · Branch: `v1.4-dev` (based on `b6974cf`, pushed) · Sessions: #1 (verification) → #2 (tooling, harness, captures) → #3 (Gate 1: audit, directions, design system)
 Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger + this file are the resume anchors.
 
 ## Gate board
@@ -8,7 +8,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 | Gate | State | Note |
 |---|---|---|
 | G0 — baseline, branch, isolation, ledger, visual capture | **COMPLETE** | reviewer relay CONTINUE (2026-09-15); remainders tracked: perf baseline (G8), state-matrix expansion (G1), harness v3 fixes |
-| G1 — visual audit, design directions, design system | NOT STARTED | needs harness + bun/Playwright setup first |
+| G1 — visual audit, design directions, design system | **COMPLETE** | 2 directions rendered + audited; “Desk” selected via the Best Solution Gate; design system, interaction patterns, accessibility standard, acceptance matrix landed; reviewer relay CONTINUE |
 | G2 — architecture / safety / implementation design | NOT STARTED | |
 | G3 — solution quality + Team foundation | NOT STARTED | |
 | G4 — Team Office / Roster / Studio + Work Center | NOT STARTED | |
@@ -37,10 +37,12 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 
 ## Exact next actions (resume here)
 
-1. Start **Gate 1**: two materially different design directions + Best Solution Gate comparison +
-   Kel design system + interaction patterns + accessibility standard (audit expansion alongside).
+1. Start **Gate 2**: architecture + safety design (Team model, Solution Brief system, capability lease,
+   guardrail enforcement, provider/credential spec, activity contracts, notification + diagnostics
+   models, migration plan, information architecture, component/token architecture, packaging strategy).
 2. Performance baseline (startup spans) when G8 diagnostics tooling exists; noted as G0 remainder.
-3. Harness v3 candidates: pet-window capture, dialog states, provider-unavailable state, dense/long content.
+3. Harness v3 candidates (pet-window capture, dialog states, provider-unavailable state, dense/long
+   content) plus the a11y-probe breadth expansion at G4/G5/G7.
 
 ## Session log (evidence trail)
 
@@ -53,6 +55,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 11:15 — Harness v2 (bounded shutdown + watchdog + full text dumps + real settings routes + resize re-nav); baseline captures `v13-empty` + `v13-fixture` (30 each, five widths, zero console errors, clean shutdown).
 - 11:20 — Provenance + Gate 0 docs updated; Gate 0 reviewer checkpoint requested.
 - 11:24 — Gate 0 close-out committed as `6ba5b1f` (75 files: harness, fixture generator, 2×30 captures, docs); reviewer relay: **CONTINUE**. **Gate 0 CLOSED.**
+- 11:37–11:52 — Session 3 (Gate 1): a11y/keyboard probe of the packaged V1.3 app (6 contrast failures, 0/30 focus rings, 12px minimum text, clean shutdown); chromium installed under `dev-tools` for mockup rendering; two directions built, rendered, and audited (0 contrast failures, 12px floor, 14 focusables); independent design review delegated → 3 risks, all fixed (Uncertain chip restyled, focus assertion added to the renderer, audit-breadth scope note); five Gate 1 documents written; reviewer relay: **CONTINUE**. **Gate 1 CLOSED.**
 
 ## Blockers
 
