@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
-import { kelState } from '@renderer/components/kel/kelApi';
 import { configService } from '@/common/config/configService';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
@@ -142,30 +141,24 @@ const Layout: React.FC<{
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      // Read the flag on its own: an unknown/unreadable key must mean "not completed yet", never
-      // "skip the offer" (a throwing getter previously swallowed the whole check).
+      // Flag-only rule, and the flag is read from the same store the onboarding flow writes to
+      // (`configService`), never from the migration's local config file.
+      //
+      // Why not "no conversations ⇒ fresh": the donor keeps a default conversation even on a brand-new
+      // profile, so a conversation count can never distinguish a fresh install (measured: a new data root
+      // still renders the guid shell with one conversation row). Consequence, recorded rather than
+      // hidden: an install migrated from V1.3 sees the flow once and dismisses it with "Skip setup",
+      // which is one click; a stricter migrated-install rule needs a renderer-readable "previous install"
+      // signal and is carried as an open item.
+      await configService.initialize().catch(() => undefined);
+      if (cancelled) return;
       let completed = false;
       try {
         completed = Boolean(configService.get('kel.onboardingCompleted_v1'));
       } catch {
         completed = false;
       }
-      if (completed) return;
-      // The engine can still be starting on a cold launch, so give the state read a few attempts.
-      for (let attempt = 0; attempt < 4 && !cancelled; attempt += 1) {
-        try {
-          const state = await kelState();
-          if (cancelled) return;
-          const conversations = (state as { conversations?: unknown[] }).conversations ?? [];
-          if (!conversations.length) {
-            navigate('/onboarding', { replace: true });
-            return;
-          }
-          return;
-        } catch {
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-        }
-      }
+      if (!completed) navigate('/onboarding', { replace: true });
     })();
     return () => {
       cancelled = true;

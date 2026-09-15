@@ -107,7 +107,12 @@ async function launchAndRead(dataDir, { finish = false } = {}) {
   const results = { schema: 1, checks: {}, errors: [] };
   results.checks.freshFirstLaunch = await launchAndRead(freshDir, { finish: true });
   results.checks.freshSecondLaunch = await launchAndRead(freshDir);
-  results.checks.migratedLaunch = await launchAndRead(migratedDir);
+  results.checks.migratedLaunch = await launchAndRead(migratedDir, { finish: true });
+  results.deviations = [
+    'Flag-only first-run rule: a profile migrated from an earlier Kel has no completion flag, so it is',
+    'offered the flow once and dismisses it with "Skip setup". A stricter migrated-install rule needs a',
+    'renderer-readable "previous install" signal (see docs/v1.4/AUTO_RESUME.md).',
+  ];
 
   fs.writeFileSync(path.join(outDir, 'onboarding-evidence.json'), JSON.stringify(results, null, 2));
   console.log(JSON.stringify(results, null, 2));
@@ -115,8 +120,11 @@ async function launchAndRead(dataDir, { finish = false } = {}) {
   const ok =
     String(results.checks.freshFirstLaunch.hash || '').includes('/onboarding') &&
     results.checks.freshFirstLaunch.clicked === true &&
+    !String(results.checks.freshFirstLaunch.hashAfterFinish || '').includes('/onboarding') &&
     !String(results.checks.freshSecondLaunch.hash || '').includes('/onboarding') &&
-    !String(results.checks.migratedLaunch.hash || '').includes('/onboarding') &&
+    !String(results.checks.migratedLaunch.hashAfterFinish || '').includes('/onboarding') &&
+    results.checks.freshFirstLaunch.errors.length === 0 &&
+    results.checks.freshSecondLaunch.errors.length === 0 &&
     results.checks.migratedLaunch.errors.length === 0;
   if (!ok) process.exitCode = 1;
 })();
