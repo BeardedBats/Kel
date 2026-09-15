@@ -1,60 +1,52 @@
 # KEL V1.4 — AUTO-RESUME
 
-Updated: 2026-09-15 ~17:45 ET · Session: #6 boundary (Gate 6 CLOSED via relay)
+Updated: 2026-09-15 ~18:05 ET · Session: #6 (Gate 7 in progress; no blocker)
 
-- **Current gate**: Gate 6 — **CLOSED** (reviewer relay: CONTINUE). Next: **Gate 7**
-  (desktop productization).
-- **Current phase**: G6→G7 boundary (no work in flight; no processes running; tree clean apart from the
-  intentionally untracked `Agents.md`).
-- **Branch / commit / remote**: `v1.4-dev` @ `a7c3820` (+ this docs commit) · pushed to `origin`.
-- **Gates closed**: G0 (verification/baseline), G1 (audit + directions + design system), G2 (architecture
-  + safety design), G3 (solution-quality + Team engine), G4 (Team Office/Roster/Studio + Work Center),
-  G5 (verification/continuation/memory/recipes UX), **G6 (providers/credentials/autonomy)** — each with a
-  reviewer-relay CONTINUE and committed evidence.
-- **Gate 6 deliverables**: `runtime/kel/providers.py` (migration 007), `runtime/kel/autonomy.py`
-  (migration 008), `/api/providers` + `/api/autonomy`, 50 new tests (**suite 346 passed + 10 subtests**),
-  `kelCredentials.ts` (safeStorage/DPAPI) + `kel:credential` IPC with **no value getter**,
-  `/providers` + `/autonomy` surfaces, and two verification harnesses:
-  `packaging/verify-actions.cjs` (real clicks + engine before/after) and
-  `packaging/verify-credentials.cjs` (ciphertext-only on disk, metadata-only in the engine, clean delete).
-  Evidence: `docs/v1.4/screenshots/g6/` (tags `g6`/`g6b`),
-  `docs/v1.4/screenshots/audit/v14/{v13-a11y.json,actions/,credentials/}`.
-- **PROVEN UI VERIFICATION LOOP** (unchanged; engine changes need the extra step):
-  1. `cd desktop && bun x electron-vite build --config packages/desktop/electron.vite.config.ts`
-     (config file name uses **dots**: `electron.vite.config.ts`)
-  2. `rm -rf dev-tools/runs/v14/shell-stage/out && cp -r desktop/out dev-tools/runs/v14/shell-stage/out`
-  3. `ASAR_MODULE=C:/Users/Nick/Desktop/Kel/dev-tools/asar/node_modules/@electron/asar node packaging/asar-dedup-pack.js dev-tools/runs/v14/shell-stage dev-tools/runs/v14/app.asar`
-  4. `cp dev-tools/runs/v14/app.asar dev-tools/runs/v14/candidate/resources/app.asar`
-  5. **engine changes only**: `powershell -ExecutionPolicy Bypass -File scripts/build-runtime.ps1` →
-     `python packaging/verify_engine_pyz.py dist/runtime/KelEngine/KelEngine.exe` (expect `RESULT: OK`) →
-     `rm -rf dev-tools/runs/v14/candidate/resources/kel-engine && cp -r dist/runtime/KelEngine dev-tools/runs/v14/candidate/resources/kel-engine`
-  6. fixture: `cd runtime && python tools/seed_ui_fixture.py --data C:/Users/Nick/Desktop/Kel/dev-tools/runs/v13/data/fixture-team --project-root C:/Users/Nick/Desktop/Kel/dev-tools/runs/v13/fixture-project`
-  7. capture: `node packaging/capture-screens.cjs dev-tools/runs/v14/candidate <dataDir> <outDir> --tag <tag> --widths 1440x900,1280x720 --views "id:/hash,…"`
-  8. probe: `node packaging/a11y-probe.cjs dev-tools/runs/v14/candidate <dataDir> docs/v1.4/screenshots/audit/v14 --routes "id:/hash,…"`
-  9. interactions: `node packaging/verify-actions.cjs …` and `node packaging/verify-credentials.cjs …`
-  10. confirm `(Get-Process | ? { $_.ProcessName -match 'Kel|electron' }).Count` is 0.
+- **Current gate**: Gate 7 — **IN PROGRESS** (desktop productization). Gates 0–6 are CLOSED (relay
+  CONTINUE each).
+- **Done in Gate 7 so far** (commits `deeec99`, `bcdaf72`):
+  1. **Dead navigation repaired**: every donor settings route that used to dump the user on `#/guid`
+     now lands on a real Kel surface — `/settings/model` → `/providers`, `/settings/tools` →
+     `/autonomy`, `/settings/skills` (+`agent`, `agent/:id/repair`, `assistants`,
+     `skills/import-history`, `skills/detail/:name`, `capabilities`, `skills-hub`) → `/team/roster`.
+     Verified by capture hashes and byte-identical renders to the direct surfaces.
+  2. **Contrast repaired at the source**: audit failures **6 → 0** (boot 0 · drawer 0 · routes 0/0/0),
+     smallest text 12px, 0 emoji. Sources fixed: `--bg-6` (#86909c → #5c6470 in the light theme),
+     `.arco-btn-outline`, `guid/index.module.css` `.assistantPromptHint` and `.workspaceEmptyBtn`.
+  3. **Focus rings: 0/30 → 30/30** tab stops carrying `solid 2px rgb(14,124,90)` (Kel accent) via a
+     `:where(…) :focus-visible` rule; **Kel tokens now load globally** (`main.tsx` imports
+     `kel-tokens.css`), so donor and Kel surfaces share one token source.
+  4. **Probe improvements**: records the failing element + classes, and resets focus before the tab
+     pass so the sequence starts like a fresh load.
+- **Open items in Gate 7** (precise, from the same evidence):
+  1. **Skip link not measurably reachable**: rendered as the shell's first element in `Layout.tsx` with a
+     `#kel-shell-content` target, but it does not appear in the 30-stop sequence. Check (a) whether the
+     desktop layout branch actually renders it, (b) `.kel-skip` offscreen CSS vs. `display/visibility`,
+     and (c) the app's focus restoration (the open work drawer takes the first stop).
+  2. **Donor drawer tab semantics**: the work-drawer tabs are `DIV`s with `tabindex` (ringed and
+     reachable now, but not buttons) — convert during the G9 polish pass.
+  3. Remaining Gate 7 scope: **first-run onboarding**, **search + command palette** (`Ctrl+K`, `/`),
+     **tray / notifications / pet tokenization** (one OS notification per job state change), and the
+     Sider consolidation pass.
+  4. `Router.tsx` now has a few lazy imports that are no longer referenced (`ModeSettings`,
+     `ToolsSettings`, etc.) — harmless for esbuild, clean up during the G9 lint pass.
+- **PROVEN UI VERIFICATION LOOP**: build (`bun x electron-vite build --config
+  packages/desktop/electron.vite.config.ts`) → overlay `desktop/out` into
+  `dev-tools/runs/v14/shell-stage/out` → `asar-dedup-pack.js` → copy the asar into
+  `dev-tools/runs/v14/candidate/resources/app.asar` → engine changes: `scripts/build-runtime.ps1` +
+  `verify_engine_pyz.py` (expect `RESULT: OK`) + replace `resources/kel-engine` →
+  `seed_ui_fixture.py` → capture (`capture-screens.cjs … --views "id:/hash,…"`) → probe
+  (`a11y-probe.cjs … --routes …`) → interactions (`verify-actions.cjs`, `verify-credentials.cjs`) →
+  confirm 0 leftover `Kel`/`electron` processes.
   Env: `PLAYWRIGHT_MODULE=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/node_modules/playwright`,
-  `PLAYWRIGHT_BROWSERS_PATH=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/browsers`.
-- **Exact next action** (Gate 7 — desktop productization):
-  1. **Navigation/Sider consolidation**: Kel entries (Work · Team · Projects · Providers · Autonomy) plus
-     the donor surfaces that remain; remove dead entries; ensure the chat-first default.
-  2. **Settings reorganization** per the UX spec §1 (14 sections), replacing the donor routes
-     `agent/skills/tools/model` that currently redirect to `#/guid` — the keyboard/a11y defect recorded in
-     `KEL_V1.4_UI_AUDIT.md` §6.
-  3. **First-run onboarding** for new installs (migrated users skip it) and a **search + command palette**
-     (`Ctrl+K`, `/` focuses search).
-  4. **Tray / notifications / pet tokenization** to the design system; one OS notification per job state
-     change.
-  5. **Keyboard/focus pass** across the app: skip link, nav-first order, 30/30 focus rings, no tabbable
-     static text; repair the donor sidebar label contrast (2.92:1).
-  6. Rendered evidence per surface (captures + probe + interactions), acceptance rows, commit/push,
-     **Gate 7 relay**.
-- **Known notes (carried)**: engine shutdown still needs the bounded kill (G7/G10 item); dark mode,
-  dense states and before/after comparison images pending (G9); dev-mode harness launch exists but the
-  shell's engine gate blocks dev boot — use the packaged candidate; provider live calls (connection test,
-  API quota refresh) still rely on donor code.
+  `PLAYWRIGHT_BROWSERS_PATH=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/browsers`. Fixture root
+  `dev-tools/runs/v13/data/fixture-team`.
+- **Known notes (carried)**: engine shutdown still needs the bounded kill (G7/G10); dark mode, dense
+  states and before/after comparison images pending (G9); donor CSS still contains gradient/cream
+  patterns flagged by the design review (G9 sweep); provider live calls rely on donor code.
+- **Branch / commit / remote**: `v1.4-dev` @ `bcdaf72` (+ this docs commit) · pushed to `origin`.
 - **Tests**: engine **346 passed + 10 subtests**; renderer build green; packaged captures/probes/
   interactions green. **Tests failing**: none.
 - **Blocker**: none. **HARD STOP: no.**
 - **Frozen-hash state**: 3/3 verified; `Kel Releases/` untouched. **Dogfood isolation**: intact.
-- **Continuation safety**: safe (clean tree; no running processes).
+- **Continuation safety**: safe (clean tree apart from untracked `Agents.md`; no running processes).
