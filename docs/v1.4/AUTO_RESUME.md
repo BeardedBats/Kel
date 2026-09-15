@@ -17,9 +17,13 @@ Updated: 2026-09-15 ~19:58 ET · Session: #6 boundary (Gate 9 CLOSED via relay)
   first time (`pet.html` 280×280, `pet-hit.html` 168×168) · drawer-tab semantics closed as a DOM-verified
   false positive · `Kel V1.4` also tokenized the pet surface (muted tone, 12px floor, reduced-motion).
 - **Exact next action (Gate 10 — adversarial acceptance and release)**:
-  1. **V1.3-data upgrade path**: copy a V1.3 database, run the engine against it, and prove migrations 005–009
-     apply additively with a backup + receipt and no data loss (the recorded migration rule).
-  2. **Full suites**: engine `pytest tests/` (expect **358 + 10**) and every packaged harness
+  1. ~~V1.3-data upgrade path~~ **DONE** (commit `dfa53c8`): `tests/test_v14_upgrade.py` models a genuine V1.3
+     store (Store + Context + Memory + ProjectMap + Continuation + RecipeLibrary ⇒ migrations 1–4 and no V1.4
+     tables), then opens it with the V1.4 modules and asserts: all **22** V1.4 tables appear, migrations
+     **5–9** recorded with names, every pre-existing job/memory row unchanged, a pre-migration backup exists,
+     reopening is idempotent, and V1.4 features (roles, briefs, leases, diagnostics) run on the upgraded data.
+     Suite now **363 passed + 10 subtests**.
+  2. **Full suites**: engine `pytest tests/` — **DONE** (363 + 10) — and every packaged harness
      (`capture-screens`, `a11y-probe`, `verify-actions`, `verify-credentials`, `verify-palette`,
      `verify-onboarding`, `probe-skip-link`, `probe-tokens`, `probe-drawer-tabs`, `make-comparisons`).
   3. **Adversarial review pass** against the brief's §12 quality bar and the acceptance matrix, then fix
