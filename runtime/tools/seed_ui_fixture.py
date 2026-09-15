@@ -45,6 +45,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--data', required=True)
     ap.add_argument('--project-root', default=None)
+    ap.add_argument('--dense', action='store_true',
+                    help='also seed twelve varied jobs so the dense state and compact density can be captured')
     args = ap.parse_args()
     data = Path(args.data).resolve()
     if 'dev-tools' not in str(data).lower():
@@ -184,6 +186,22 @@ def main():
                                           fallback='stop and report the manual step',
                                           risk='outbound network access to github.com')
 
+    if args.dense:
+        # Dense state for the compact-density check: twelve varied jobs plus one long request that forces
+        # the table to wrap rather than truncating silently.
+        states = ('CLOSED', 'AWAITING_USER', 'PAUSED', 'BLOCKED', 'RUNNING')
+        for index in range(12):
+            seed_job(store, 'main',
+                     state=states[index % len(states)],
+                     verdict='UNCERTAIN' if index % 2 else 'VERIFIED')
+        wide_job = seed_job(store, 'main')
+        with store.transaction() as db:
+            job = store._get(db, wide_job)
+            job['request'] = ('Do the work for a long-running migration that must survive a restart, '
+                              'keeping every accepted milestone frozen and every receipt linked to its '
+                              'evidence so nothing has to be re-run')
+            store._save(db, job, 'fixture.seed')
+
     print(json.dumps({'schema': 1, 'data': str(data),
                       'conversations': [c1, c2],
                       'jobs': {'paused': job_paused, 'approval': job_approval,
@@ -193,7 +211,8 @@ def main():
                                'qa': qa['assignment_id'], 'roles': len(team.roster())},
                       'brief': brief, 'brief_state': 'APPROVED',
                       'autonomy': {'lease': lease['lease_id'],
-                                   'request': boundary['request_id']}},
+                                   'request': boundary['request_id']},
+                      'dense': bool(args.dense)},
                      indent=2))
     return 0
 

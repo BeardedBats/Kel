@@ -147,6 +147,13 @@ async function main() {
   // UI ready gate: the Kel work-context trigger renders once the chat shell is live.
   await page.locator('text=Work & context').first().waitFor({ timeout: 60000 }).catch(() => {});
   await page.waitForTimeout(2500);
+  // A freshly seeded capture root has no onboarding flag, so the shell offers first-run setup. Dismiss
+  // it through the product's own affordance ("Skip setup") so captures show the app itself.
+  const skipSetup = page.getByRole('button', { name: /Skip setup|Skip for now/i }).first();
+  if (await skipSetup.count()) {
+    await skipSetup.click({ timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+  }
   // Dark mode is switched through the app's OWN Appearance setting. The donor applies a theme by
   // injecting `style#theme-tokens` plus Arco's variables; switching attributes alone leaves Arco
   // components on their light fallbacks (measured: three labels kept light colours).

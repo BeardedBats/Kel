@@ -14,7 +14,12 @@ const { _electron: electron } = playwright;
 
 const appDir = path.resolve(process.argv[2] || '.');
 const dataDir = path.resolve(process.argv[3] || '');
-const hash = process.argv[4] || '/guid';
+const rawHash = process.argv[4] || '/guid';
+// Git-Bash rewrites a bare "/work" argument into a Windows path; recover the route.
+const hash =
+  rawHash.includes('\\') || rawHash.includes(':')
+    ? '/' + rawHash.split(/[\\/]/).filter(Boolean).pop()
+    : rawHash;
 
 const PROBE = () => {
   const cs = getComputedStyle(document.documentElement);
@@ -37,6 +42,9 @@ const PROBE = () => {
   tokens['html.data-theme'] = document.documentElement.getAttribute('data-theme');
   tokens['body.arco-theme'] = document.body.getAttribute('arco-theme');
   const probes = [];
+  const scope = document.querySelector('.kel-scope');
+  const density = scope instanceof HTMLElement ? scope.getAttribute('data-density') : null;
+  const rows = document.querySelectorAll('.kel-table tbody tr').length;
   for (const label of ['Work & context', 'Project conversations', 'Work in a project']) {
     const el = Array.from(document.querySelectorAll('span, div, button')).find(
       (node) => (node.textContent || '').trim() === label
@@ -45,7 +53,7 @@ const PROBE = () => {
     const style = getComputedStyle(el);
     probes.push({ label, tag: el.tagName, class: String(el.className).slice(0, 60), color: style.color, font: style.fontSize });
   }
-  return { tokens, probes };
+  return { tokens, probes, density, rows };
 };
 
 (async () => {

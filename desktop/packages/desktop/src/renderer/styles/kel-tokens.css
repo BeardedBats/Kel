@@ -81,6 +81,16 @@
   --kel-card-pad: var(--kel-space-2);
   --kel-gap: var(--kel-space-2);
 }
+/* Compact mode has to be visible in the data surfaces, not just in tokens: tighter row and card
+   padding on the table-first views (Work Center, diagnostics) when more than ten rows render. */
+[data-density='compact'] .kel-table th,
+[data-density='compact'] .kel-table td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+[data-density='compact'] .kel-card {
+  padding: var(--kel-card-pad);
+}
 
 /* Dark token set — a swap, never a component branch. */
 [data-theme='dark'],
