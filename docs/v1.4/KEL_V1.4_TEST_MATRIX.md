@@ -89,5 +89,9 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G4-BUILD | desktop dependencies + renderer build on this machine | I | **PASS** (`bun install --frozen-lockfile` 1591 pkgs; `bun x electron-vite build` exit 0 → `desktop/out/{main,preload,renderer}`) |
 | G4-ALLOWLIST | `/api/brief` + `/api/team` reachable from the renderer | I | **PASS** (`KelService.ts` route allowlist) |
 | G4-FIXTURES | team/solution fixtures seed an isolated data root | I | **PASS** (`data/fixture-team`: 9 roles, 2 assignments, activity + artifact, APPROVED brief) |
-| G4-UI | Office / Roster / Studio + Work Center surfaces implemented, routed, and compiling into the renderer bundle | I/V | **PASS (code)** — `030cb61`; rendered capture verification pending |
-| G4-CAPTURE | five-width captures of the new surfaces + comparisons | V | pending |
+| G4-UI | Office / Roster / Studio + Work Center surfaces implemented, routed, compiled, and rendered in a packaged candidate | I/V | **PASS** — `030cb61`/`995485c`; rendered from the candidate package |
+| G4-PACKAGE | candidate package assembly (asar dedup parity + engine identity) | I | **PASS** — new asar 9,552 files / 1,103 dedup groups / 10,220,315 B saved (frozen baseline 9,548 / 1,103 / 10,220,315; +4 files = the new Kel UI chunks); `verify_engine_pyz.py` → 30 kel modules matched, RESULT: OK |
+| G4-CAPTURE | five-width captures of the new surfaces (packaged candidate) | V | **PASS** — 49 shots, 0 renderer errors, 0 blank, app exit 0 (`docs/v1.4/screenshots/g4/`, 20 route views) |
+| G4-DEEPLINK | `/team/roster` + `/team/studio` deep links open their own tab | V | **PASS after fix** — distinct rendered content per route (previously all three rendered Office) |
+| G4-A11Y-ROUTES | contrast/focus on the new routes | V | **PASS with one note** — table-header contrast fixed (4.35 → ≥6:1); the only remaining failure per route is the donor sidebar label “Projects” (2.92:1) → G7 |
+| G4-SHUTDOWN | engine stops when the app closes | I | **NOTE (not a pass)** — `engineStopped: false`, `engineKilled: true` (bounded fallback), `closeOutcome: close-timeout` → G7/G10 item |

@@ -84,3 +84,23 @@ dark mode · final evidence · verdict · gate. Verdict values: `pending` → `a
 - Automated a11y/keyboard probe of V1.3 completed (findings in `KEL_V1.4_UI_AUDIT.md` §5 and the
   accessibility standard §7).
 - Implementation verdicts: **pending** (surfaces above land at their gates).
+
+## 8. Gate 4 surface verdicts (2026-09-15)
+
+Evidence: `docs/v1.4/screenshots/g4/` (tag `v14`, packaged candidate: 49 shots, 0 renderer errors,
+0 blank, app exit 0, 20 route views) and `docs/v1.4/screenshots/audit/v14/v13-a11y.json`
+(route sampling).
+
+| Surface | Baseline (V1.3) | Final (V1.4) | Verdict |
+|---|---|---|---|
+| Work Center (`/work`) | work drawer only (`baseline/…02-work-drawer`) | `g4/v14-12-work.png` + `…13-work-at-*.png` (five widths) | **accepted-with-notes** — verdict line, jobs table, and team-assignment table render real engine data (“2 jobs in this project · 2 waiting on you”); dense (>10 jobs) state still to render |
+| Team — Office | none (donor team page hidden) | `g4/v14-12-team-office.png` + `…13-*.png` | **accepted-with-notes** — assignment table (specialist · role version · state · provider · budget · updated) with engine-derived states |
+| Team — Roster | none | `g4/v14-12-team-roster.png` + `…13-*.png` | **accepted-with-notes** — distinct rendered content per deep link after the tab fix |
+| Team — Studio | none | `g4/v14-12-team-studio.png` + `…13-*.png` | **accepted-with-notes** — role editor, locked guardrail block, and history/rollback surfaces render |
+| Team navigation | none | `g4/v14-12-*.png` (sidebar “Work” / “Team”) | **accepted** |
+
+Cross-surface notes carried into G7/G9: (1) the donor sidebar label “Projects” fails contrast (2.92:1)
+on every surface; (2) the engine did not exit on app close within 15–20 s (`engineStopped:false`,
+bounded kill fired, `closeOutcome: close-timeout`); (3) boot/drawer surfaces keep their inherited
+6 contrast failures; (4) dark mode not yet rendered; (5) before/after comparison images are still
+to be generated for the Work Center (the only surface with a V1.3 counterpart).

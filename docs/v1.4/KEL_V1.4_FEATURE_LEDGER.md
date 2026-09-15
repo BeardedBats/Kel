@@ -17,6 +17,16 @@ Status: v0.1 (Gate 0) · Initial triage complete for all 200 items; evidence col
 `EXTEND` (real foundation exists; V1.4 extends it) · `NEW` (not present; build in V1.4) ·
 `IMPLEMENTED` / `VERIFIED` (post-implementation states) · `DEFERRED` / `BLOCKED` (require written rationale).
 
+**Gate 4 (UI) implementation status (2026-09-15).** `renderer/styles/kel-tokens.css`,
+`components/kel/{kelApi.ts,KelPrimitives.tsx}`, `pages/kel/team/index.tsx` (Office / Roster / Studio)
+and `pages/kel/work/index.tsx` (Work Center) are implemented, routed at `/work`, `/team`,
+`/team/office|roster|studio`, reachable from the Sider (`SiderNav/KelNavEntries.tsx`), and verified by
+a packaged-candidate capture run (49 shots at five widths, 0 renderer errors, 0 blank captures;
+route contrast failures 1/1/1/1, the remainder being the donor sidebar label; `/team/*` deep-link tab
+fix and table-header contrast fix verified by re-render). The UI portions of **V14-019…040** are
+**IMPLEMENTED**, not yet **VERIFIED** at G9 polish level (dark mode, dense states, edit round-trips,
+before/after comparison images).
+
 **Gate 3 (engine) implementation status (2026-09-15).** `runtime/kel/solution.py` (migration 005)
 and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 (`tests/test_v14_solution.py`, `tests/test_v14_team.py`; full suite now 296 passed + 10 subtests):
