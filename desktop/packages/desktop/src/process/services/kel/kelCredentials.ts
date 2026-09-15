@@ -80,7 +80,7 @@ export function removeCredential(provider: string): { provider: string; removed:
   return { provider, removed };
 }
 
-/** Main-process only: used when a run needs the value injected into its environment. */
+/** Main-process only, reserved for the V1.5 injection path; no caller in V1.4.1 (docs/v1.4.1/06_V1_5_DEFERRED_WORK.md). */
 export function getCredential(provider: string, field: string): string | null {
   const blob = read()[`${provider}:${field}`];
   if (!blob || !credentialsAvailable()) return null;
