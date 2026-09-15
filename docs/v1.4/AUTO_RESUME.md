@@ -38,8 +38,16 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
      **23 sheets** in `docs/v1.4/screenshots/comparisons/` (boot, work drawer + tabs, all eleven settings
      pages, 1280 repeats) with `index.json` recording per-pair byte deltas; only true pairs are listed,
      and V1.4-only surfaces are covered by their own gate captures instead of a fake baseline.
-  2. **Dark mode**: render the key surfaces with the dark token set and audit contrast (the light set is
-     already at 0 failures).
+  2. ~~Dark mode~~ **DONE** (commit `ad80168`) — the harness now applies the donor's full theme **pair**
+     (`html[data-theme]` + `body[arco-theme]`; the root alone left Arco components on light rules), and the
+     muted-text layer is corrected **per theme** (light `#5c6470`, dark `#9aa4b2`) with
+     `packaging/probe-tokens.cjs` reporting the resolved values instead of assuming them. Also repaired
+     from the G9 design review: the reduced-motion fallback is now global (donor transitions were
+     uncovered) and six gradient/cream toast fills became flat semantic fills. **Open (3 labels)**: the
+     dark audit still fails on `sider-section-label` (2.53:1), the Arco text button “Work & context”
+     (2.13:1) and the workspace footnote “Work in a project” (2.46:1) — all three keep **hardcoded donor
+     colours** (`rgb(92,100,112)` / `rgb(78,89,105)`) that no token reaches, so they need direct
+     component-level fixes. Light remains at 0 failures.
   3. **Dense states**: render Work Center with >10 jobs, long lists, and long content.
   4. **Donor-surface repairs carried forward**: work-drawer tabs as semantic buttons, unused lazy imports
      in `Router.tsx`, donor CSS gradient/cream findings from the design review, live pet-window capture
