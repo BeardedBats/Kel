@@ -235,6 +235,8 @@ async function main() {
       const rect = el.getBoundingClientRect();
       return {
         tag: el.tagName,
+        // Recorded so a role-carrying element cannot be mistaken for an unlabelled div.
+        role: el.getAttribute('role'),
         name: el.getAttribute('aria-label') || el.getAttribute('title'),
         text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40),
         outline: `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor}`,
@@ -282,6 +284,9 @@ async function main() {
       const r = el.getBoundingClientRect();
       return {
         tag: el.tagName,
+        // Recorded so a role-carrying element (an ARIA tab, for example) cannot be mistaken for an
+        // unlabelled div: omitting this once produced a false “tabbable divs” finding.
+        role: el.getAttribute('role'),
         name: el.getAttribute('aria-label') || el.getAttribute('title'),
         text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 50),
         rect: [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)],
