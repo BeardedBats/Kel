@@ -105,9 +105,61 @@ def main():
                 'Work drawer rows look dense at 1280 width (fixture inference).',
                 confidence=0.6, source_ref='fixture:seed')
 
+    # --- Gate 3/4 fixtures: team roles, assignments, activity, solution brief --------------
+    from kel.solution import SolutionBriefs
+    from kel.team import Team
+
+    team = Team(store)
+    team.seed_defaults()
+    impl = team.create_assignment(job_paused, 'm1', 'implementation-engineer',
+                                  project_id='default', provider='fixture',
+                                  model='fixture-model')
+    team.attach_run(impl['assignment_id'], 'run-fixture-1', provider='fixture',
+                    model='fixture-model')
+    team.record_activity(impl['assignment_id'], 'step.started', {'step': 1})
+    team.record_activity(impl['assignment_id'], 'decision.made',
+                         {'summary': 'Chose the smallest coherent change (fixture).'})
+    team.add_artifact(impl['assignment_id'], 'fixture-digest-1', 'report.md', 'artifact')
+    team.set_state(impl['assignment_id'], 'WAITING')
+    qa = team.create_assignment(job_approval, 'm1', 'qa-engineer', project_id='default')
+
+    briefs = SolutionBriefs(store)
+    brief = briefs.open_brief('default',
+                              'Choose the V1.4 direction and capture the V1.3 baseline.',
+                              conversation_id='main')
+    briefs.update(brief,
+                  request='Redesign the shell; the frozen V1.3 package stays the visual baseline.',
+                  assumptions=['Probe captures need an isolated data root.'],
+                  verified_constraints=['Frozen V1.3 hashes verified 3/3.'],
+                  criteria=['clarity', 'accessibility', 'migration cost'])
+    briefs.add_option(brief, 'desk', 'Desk', 'Light neutral, cards plus focused sheets.',
+                      'implement', tradeoffs=['lower density'], cost='medium', complexity=3,
+                      reversible=True)
+    briefs.add_option(brief, 'console', 'Console', 'Dark, table-first, permanent inspector.',
+                      'implement', tradeoffs=['migration cost'], cost='high', complexity=4,
+                      reversible=True)
+    briefs.compare(brief, 'clarity', 'desk', 4, 'verdict-first summary')
+    briefs.compare(brief, 'clarity', 'console', 3, 'state scanning first')
+    briefs.search(brief, [{'what': 'Donor theme tokens', 'where': 'desktop/uno.config.ts',
+                           'ref': 'uno.config.ts', 'verdict': 'adapt'}])
+    briefs.opportunity(brief, 'Figma source', 'Higher visual fidelity',
+                       'Closer to brand intent', 'Use rendered captures only',
+                       classification='ASK_ONCE', access_needed='read-only Figma file')
+    briefs.idea(brief, 'Ship a dark console first', 'BETTER_LATER',
+                'Revisit after the light base ships.')
+    briefs.recommend(brief, 'desk', 'Best fit for the readability bar and the approval sheet.',
+                     'Rendered density tests failing in the Work Center',
+                     'Revert that surface to the V1.3 donor styling.')
+    briefs.review(brief, 'independent-reviewer', 'OPTIMAL_ENOUGH',
+                  'Compared fairly; risks and evidence-to-switch recorded.')
+    briefs.approve(brief, actor='user')
+
     print(json.dumps({'schema': 1, 'data': str(data),
                       'conversations': [c1, c2],
-                      'jobs': {'paused': job_paused, 'approval': job_approval}},
+                      'jobs': {'paused': job_paused, 'approval': job_approval},
+                      'team': {'assignment': impl['assignment_id'],
+                               'qa': qa['assignment_id'], 'roles': len(team.roster())},
+                      'brief': brief, 'brief_state': 'APPROVED'},
                      indent=2))
     return 0
 
