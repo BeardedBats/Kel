@@ -2,15 +2,16 @@
   "schema": 1,
   "checks": {
     "freshFirstLaunch": {
-      "hash": "#/guid",
-      "onboardingRendered": false,
-      "clicked": false,
-      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nNo chat history\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+      "hash": "#/onboarding",
+      "onboardingRendered": true,
+      "clicked": true,
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is a local work engine. Your projects, its knowledge about them, and every receipt stay in your folders and in Kel's own data directory.\n\nNothing leaves this machine except the model provid",
       "errors": [],
       "timeline": [
         "",
-        "#/guid"
+        "#/onboarding"
       ],
+      "hashAfterFinish": "#/work",
       "closeOutcome": "closed",
       "engineKilled": false
     },
@@ -28,18 +29,24 @@
       "engineKilled": false
     },
     "migratedLaunch": {
-      "hash": "#/guid",
-      "onboardingRendered": false,
-      "clicked": false,
-      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+      "hash": "#/onboarding",
+      "onboardingRendered": true,
+      "clicked": true,
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nProjects\nfixture-project\nNew conversation\nBaseline fixture chat\nApproval fixture chat\nWork & context\n1\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is a local work engine. Your projects, its knowledge about them, and every receipt stay in your folders and in Kel's ",
       "errors": [],
       "timeline": [
         "",
-        "#/guid"
+        "#/onboarding"
       ],
+      "hashAfterFinish": "#/work",
       "closeOutcome": "closed",
       "engineKilled": true
     }
   },
-  "errors": []
+  "errors": [],
+  "deviations": [
+    "Flag-only first-run rule: a profile migrated from an earlier Kel has no completion flag, so it is",
+    "offered the flow once and dismisses it with \"Skip setup\". A stricter migrated-install rule needs a",
+    "renderer-readable \"previous install\" signal (see docs/v1.4/AUTO_RESUME.md)."
+  ]
 }
