@@ -76,6 +76,9 @@ import { useTranslation } from 'react-i18next';
 // Styles
 import 'uno.css';
 import './styles/arco-override.css';
+// Kel V1.4 design tokens (.kel-* + the shell focus ring and skip link) are global: donor and Kel
+// surfaces must share one token source, not two.
+import './styles/kel-tokens.css';
 import './styles/themes/index.css';
 import './styles/markdown.css';
 import { loadKelFonts } from './utils/theme/kelFonts';

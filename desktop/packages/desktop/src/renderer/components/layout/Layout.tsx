@@ -374,6 +374,10 @@ const Layout: React.FC<{
     <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed }}>
       <NavigationHistoryProvider>
         <div className='app-shell flex flex-col size-full min-h-0'>
+          {/* Kel V1.4: the shell's first tab stop — jumps past the sider to the routed content. */}
+          <a className='kel-skip' href='#kel-shell-content'>
+            Skip to main content
+          </a>
           <Titlebar workspaceAvailable={workspaceAvailable} />
           {/* 移动端左侧边栏蒙板 / Mobile left sider backdrop */}
           {isMobile && !collapsed && (
@@ -477,6 +481,8 @@ const Layout: React.FC<{
                 per-conversation subtree → persists across same-project switches. */}
             <div ref={mainRowRef} className='flex flex-1 min-h-0 overflow-hidden'>
               <ArcoLayout.Content
+                id='kel-shell-content'
+                tabIndex={-1}
                 className={'bg-1 layout-content flex flex-col min-h-0 flex-1'}
                 onClick={() => {
                   if (isMobile && !collapsed) setCollapsed(true);

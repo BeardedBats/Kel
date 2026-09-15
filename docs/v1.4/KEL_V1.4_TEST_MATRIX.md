@@ -179,6 +179,18 @@ packaging rule), and two self-inflicted defects were caught by the evidence loop
 config path that packed a stale bundle, and an undefined helper (`act is not defined`) in the Providers
 page that only surfaced under a real click.
 
+## 15. Gate 7 additions (in progress)
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G7-REDIRECTS | donor settings routes (`model`, `tools`, `skills`, `agent`, `capabilities`, `skills-hub`) no longer dump the user on `#/guid` | I/V | **PASS** — captures at `/settings/model` → `#/providers`, `/settings/tools` → `#/autonomy`, `/settings/skills` → `#/team/roster`; byte-identical to the direct surfaces (70314 / 93211 / 77456) |
+| G7-CONTRAST | muted-text contrast across boot, the work drawer, and every sampled route | V | **PASS** — failures **6 → 0** (boot 0, drawer 0, `work`/`providers`/`autonomy` 0/0/0); smallest text 12px; 0 emoji |
+| G7-CONTRAST-SOURCE | the repairs are at the token/source level, not per-instance patches | I | **PASS** — `--bg-6` (#86909c → #5c6470), `.arco-btn-outline`, `.assistantPromptHint`, `.workspaceEmptyBtn`; each measured 2.92–3.1:1 before |
+| G7-PROBE-EVIDENCE | the probe names the failing element + classes for future passes | I | **PASS** — `element` field added (`span._assistantPromptHint_…`), which is how the last two defects were located |
+
+Remaining in Gate 7: onboarding for first run, search + command palette, tray/notification/pet tokenization,
+and the shell-level keyboard pass (skip link, nav-first order, 30/30 focus rings).
+
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
 Manager), and the Providers + Autonomy surfaces with rendered evidence (cards with the eight states,
 test connection, readiness panel, lease viewer with revoke, Approval Inbox, locked-guardrail block).

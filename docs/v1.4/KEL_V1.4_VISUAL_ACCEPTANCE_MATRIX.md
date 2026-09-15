@@ -147,3 +147,16 @@ routes).
 |---|---|---|---|
 | Providers (`/providers`) | donor provider settings (`baseline/…09-settings-model`) | `g6/g6b-22-12-providers.png` + `…13-providers-at-1280x720.png` | **accepted-with-notes** — real provider states (healthy · quota not reported · installed not authenticated), models with capabilities, readiness preflight, credential-metadata section; notes: credential **value** storage (OS-backed) still to land, so only metadata is shown |
 | Autonomy (`/autonomy`) | none | `g6/g6b-23-12-autonomy.png` + `…13-autonomy-at-1280x720.png` | **accepted-with-notes** — lease with full scope list + revoke, boundary request with the recorded why/benefit/fallback/risk and the three decisions, locked guardrail block, and a scope probe that fails closed; notes: running a live allow/deny through the probe is verified at the API level (`AUTO-*` tests) rather than by click in this pass |
+
+## 12. Gate 7 verdicts (2026-09-15)
+
+Evidence: `docs/v1.4/screenshots/g7/` (tag `g7`, 33 shots: 0 renderer errors, 0 blank, app exit 0),
+`docs/v1.4/screenshots/audit/v14/v13-a11y.json` (boot 0 · drawer 0 · routes 0/0/0 contrast failures),
+and the V1.3 baseline for comparison (`screenshots/baseline/`).
+
+| Surface / check | Baseline (V1.3) | Final (V1.4) | Verdict |
+|---|---|---|---|
+| Muted text (boot, drawer, all routes) | 6 contrast failures (2.0–3.1:1) | **0 failures** | **accepted** |
+| Legacy settings routes (`model`/`tools`/`skills`) | redirected to `#/guid` (audited keyboard/IA defect) | land on `/providers`, `/autonomy`, `/team/roster` | **accepted** |
+| Smallest text / emoji icons | 12px / 0 | 12px / 0 | **accepted** |
+| Focus rings on tab stops | 0 of 30 | still to re-verify in the keyboard pass | **pending (G7 remainder)** |
