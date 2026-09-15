@@ -1,0 +1,55 @@
+# --- binaries and build outputs (never commit; see README) ---
+*.exe
+*.dll
+*.node
+*.asar
+*.pdb
+dist/
+build/
+out/
+shell-stage/
+release/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+
+# --- Node / desktop ---
+node_modules/
+desktop/.aionui/
+desktop/.claude/
+desktop/.gemini/
+
+# --- runtime state and databases ---
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+desktop-session.json
+data/
+
+# --- logs, screenshots, temp ---
+*.log
+logs/
+screenshots/
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# --- secrets / local environment ---
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+
+# --- intermediate archives ---
+*.rar
+*.zip

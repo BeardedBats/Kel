@@ -1,0 +1,45 @@
+{
+  "extends": "./packages/desktop/electron-builder.yml",
+  "appId": "com.kel.desktop",
+  "productName": "Kel",
+  "executableName": "Kel",
+  "protocols": [
+    {
+      "name": "Kel",
+      "schemes": [
+        "kel"
+      ]
+    }
+  ],
+  "directories": {
+    "output": "../dist/package-final",
+    "app": "../shell-stage",
+    "buildResources": "resources"
+  },
+  "electronDist": "node_modules/electron/dist",
+  "electronVersion": "44.3.0",
+  "win": {
+    "target": [
+      "dir"
+    ],
+    "signAndEditExecutable": false
+  },
+  "extraResources": [
+    {
+      "from": "public",
+      "to": "."
+    },
+    {
+      "from": "resources/bundled-aioncore",
+      "to": "bundled-aioncore"
+    },
+    {
+      "from": "../dist/runtime/KelEngine",
+      "to": "kel-engine"
+    },
+    {
+      "from": "LICENSE",
+      "to": "AionUI-LICENSE.txt"
+    }
+  ]
+}

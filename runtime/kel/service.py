@@ -1,0 +1,357 @@
+"""Authenticated loopback service for the local Kel desktop shell."""
+import argparse
+import base64
+from concurrent.futures import ThreadPoolExecutor
+import contextlib
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+import json
+import os
+from pathlib import Path
+import secrets
+import threading
+import time
+from urllib.parse import urlparse,parse_qs
+from .core import Store,PolicyError,Conflict,encode
+from .context import Context
+from .engine import Engine,compile_document
+from .commander import Commander
+from .internal import InternalAdapter
+from .native import NativeAdapter
+from .coding import CodingAdapter,compile_coding
+from .runner import DurableAdapter
+from .research import needs_research
+
+ENGINE_VERSION='0.5.0'
+
+# Verbs that mean "change code in an existing project". These are the only
+# requests that need a project root; greenfield ("create an app") is classified
+# separately and never prompts.
+CODING_VERBS=('fix','build','implement','change','add','remove','update','refactor','test')
+
+class Service:
+    def __init__(self,root):
+        self.lifecycle_lock=threading.RLock();self.draining=False
+        self.store=Store(root);self.context=Context(self.store)
+        CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
+        self.model=InternalAdapter() if os.environ.get('ANTHROPIC_API_KEY') else None
+        # The independent reviewer must not depend on a separate API key when real
+        # native agents are installed; reuse an available CLI so manual_review
+        # criteria can actually be judged.
+        review_model=None;review_alternates=[]
+        if self.model:
+            review_model=InternalAdapter(model=self.model.model,timeout=90)
+            if os.environ.get('KEL_REVIEWER')!='none':
+                # Installed CLIs are eligible alternatives so a job executed by
+                # one model family can be reviewed by a genuinely different one.
+                for provider in ('claude','codex'):
+                    adapter=NativeAdapter(provider,self.store.root/'workspaces'/provider,self.store.root/'logs')
+                    if adapter.probe().get('installed'):review_alternates.append(adapter)
+        elif os.environ.get('KEL_REVIEWER')!='none':
+            # Native fallback (default when no internal key): reuse an installed
+            # CLI so manual_review criteria can actually be judged. Tests and
+            # headless setups opt out with KEL_REVIEWER=none. The first installed
+            # provider stays the default; the rest are diversity alternatives.
+            for provider in ('claude','codex'):
+                adapter=NativeAdapter(provider,self.store.root/'workspaces'/provider,self.store.root/'logs')
+                if adapter.probe().get('installed'):
+                    if review_model is None:review_model=adapter
+                    else:review_alternates.append(adapter)
+        self.commander=Commander(review_model,review_alternates) if review_model else None
+        adapters={}
+        for provider in ('codex','claude'):
+            if NativeAdapter(provider,self.store.root/'workspaces'/provider,self.store.root/'logs').probe().get('installed'):
+                adapters[provider]=DurableAdapter(self.store,provider)
+        if 'codex' in adapters:adapters['codex-code']=DurableAdapter(self.store,'codex-code',{'repository_edit','native_session','approval_stream'})
+        if 'claude' in adapters:adapters['claude-code']=DurableAdapter(self.store,'claude-code',{'repository_edit','native_session'})
+        if self.model:adapters['internal']=DurableAdapter(self.store,'internal',{'text','image'},options={'model':self.model.model})
+        if self.model:adapters['research']=DurableAdapter(self.store,'research',{'text','web_research'},options={'model':self.model.model})
+        self.engine=Engine(self.store,adapters,reviewer=self.commander)
+        self.requests=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-conversation')
+        from .apply_changes import recover_prepared
+        self.requests.submit(recover_prepared,self.store)
+        self.stop=threading.Event();self.error=None
+        with contextlib.closing(self.store.connect()) as db:
+            db.executescript('''CREATE TABLE IF NOT EXISTS submissions(id TEXT PRIMARY KEY,conversation_id TEXT,text TEXT,state TEXT,error TEXT,job_id TEXT,created REAL);
+            CREATE TABLE IF NOT EXISTS project_tests(project_id TEXT PRIMARY KEY,command TEXT);
+            CREATE TABLE IF NOT EXISTS message_files(submission_id TEXT,attachment_id TEXT,PRIMARY KEY(submission_id,attachment_id));''')
+            db.execute('CREATE TABLE IF NOT EXISTS submission_packets(id TEXT PRIMARY KEY,packet TEXT,kind TEXT)')
+            db.execute("UPDATE submissions SET state='DISPATCHED',job_id=(SELECT job_id FROM job_intakes WHERE job_intakes.id=submissions.id) WHERE id IN (SELECT id FROM job_intakes)")
+            # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
+            db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
+        self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
+        def telemetry():
+            while not self.stop.is_set():
+                try:
+                    if 'codex' in self.engine.adapters and not os.environ.get('KEL_SKIP_TELEMETRY'):
+                        from .telemetry import refresh_codex
+                        refresh_codex(self.store)
+                except Exception:pass  # A missing observation is not a zero quota or a free price.
+                self.stop.wait(60)
+        self.telemetry=threading.Thread(target=telemetry,daemon=True);self.telemetry.start()
+
+    def shutdown(self):
+        """In-process shutdown: stop supervision, close the engine, join workers."""
+        self.stop.set()
+        if self.supervisor.is_alive():
+            self.supervisor.join(timeout=5)
+        self.engine.close()
+        self.requests.shutdown(wait=True,cancel_futures=True)
+
+    def _tick(self):
+        while not self.stop.wait(.2):
+            try:self.engine.tick();self.error=None
+            except Exception as exc:self.error=type(exc).__name__+': '+str(exc)
+
+    def submit(self,data):
+        sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','').strip()
+        if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
+        attachments=data.get('attachments',[])
+        if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
+        kind=data.get('kind')
+        greenfield_flag=False
+        if kind is None:
+            # Deterministic initial routing: the client omitted an explicit kind,
+            # so classify locally instead of paying for a frontier-model decision.
+            from .router import classify
+            result=classify(text)
+            kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
+        packet=self.context.handoff(cid,text,attachments)
+        with self.store.transaction() as db:
+            old=db.execute('SELECT * FROM submissions WHERE id=?',(sid,)).fetchone()
+            if old:
+                if old['conversation_id']!=cid or old['text']!=text:raise PolicyError('Request ID belongs to different content')
+                return sid
+            db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',(sid,cid,text,'PLANNING',None,None,time.time()))
+            db.execute('INSERT INTO submission_packets VALUES(?,?,?)',(sid,encode(packet),kind))
+            for aid in attachments:db.execute('INSERT INTO message_files VALUES(?,?)',(sid,aid))
+            db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'user',text,time.time()))
+            db.execute("UPDATE conversations SET title=? WHERE id=? AND title='New conversation'",(text[:65],cid))
+        self.requests.submit(self._plan,sid,cid,text,packet,kind,greenfield_flag)
+        return sid
+
+    def _plan(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
+        try:
+            lower=text.lower().strip()
+            coding_verb=lower.startswith(CODING_VERBS)
+            if kind=='status' or lower in ('status','what are you working on?','what is running?'):
+                jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
+                answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
+                self.store.add_message(answer,'assistant',cid);jid=None
+            elif coding_verb and not greenfield_flag and not packet['project']['root']:
+                # Coding intent with no selected project and no explicit
+                # greenfield request: ask instead of guessing or silently
+                # adopting a temp/donor workspace as the project root.
+                self.store.add_message('This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.', 'assistant', cid)
+                jid=None
+            elif (kind in ('chat','conversation') and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(('research','search','look up','find current','write','create','draft','summarize','fix','build','implement','change','add','remove','update','make','refactor','test','review','analyze','compare','prepare'))):
+                model=self.model
+                if model is None:
+                    available=next((n for n in ('codex','claude') if n in self.engine.adapters),None)
+                    if not available:raise PolicyError('Connect a model before sending a message')
+                    model=NativeAdapter(available,self.store.root/'workspaces'/available,self.store.root/'logs')
+                kwargs={}
+                image_files=[f for f in packet['files'] if f.get('image_path')]
+                if image_files:
+                    if model is not self.model:raise PolicyError('The image worker is not connected')
+                    kwargs['images']=[{'mime':f['mime'],'data':base64.b64encode((self.store.root/f['image_path']).read_bytes()).decode()} for f in image_files]
+                result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
+                    'Do not imply you performed external actions. You may answer questions about the saved context.\n'+encode(packet),**kwargs)
+                if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
+                self.store.add_message(result['text'],'assistant',cid);jid=None
+            else:
+                coding=kind=='coding' or (packet['project']['root'] and coding_verb)
+                if coding:
+                    root=packet['project']['root']
+                    # Greenfield intent ("create me an app") always wins, even when the
+                    # active project already has a root such as a desktop temp workspace.
+                    greenfield=bool(greenfield_flag) or not bool(root)
+                    if greenfield:
+                        # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
+                        # workspace: a fresh git repo under Documents/Kel Projects with a
+                        # deterministic smoke-test command the worker must make pass.
+                        slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
+                        root=Path.home()/'Documents'/'Kel Projects'/f'{slug}-{secrets.token_hex(2)}'
+                        root.mkdir(parents=True,exist_ok=True)
+                        import subprocess as _sp
+                        _sp.run(['git','init',str(root)],capture_output=True,check=False)
+                        # Keep worker bytecode and caches out of the change set.
+                        (root/'.gitignore').write_text('__pycache__/\n*.pyc\n*.pyo\n',encoding='utf-8')
+                        # A coding snapshot diffs against HEAD; give the new repo an
+                        # empty initial commit so HEAD exists before the worker runs.
+                        _sp.run(['git','-C',str(root),'-c','user.name=Kel','-c','user.email=kel@localhost',
+                                 'commit','--allow-empty','-m','Initial empty project (created by Kel)'],
+                                capture_output=True,check=False)
+                        tests=['python','smoke_test.py']
+                        project_id=self.context.project(slug,str(root),'Created by Kel for: '+text[:120])
+                        with self.store.transaction() as db:
+                            db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(project_id,encode(tests)))
+                    else:
+                        with contextlib.closing(self.store.connect()) as db:
+                            row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(packet['project']['id'],)).fetchone()
+                        if not row:raise PolicyError('This project needs a test command. Set it in Project context before coding.')
+                        project_id=packet['project']['id'];tests=json.loads(row['command'])
+                    contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
+                    contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+                elif kind=='research' or needs_research(text):
+                    from .research import compile_research
+                    contract=compile_research(text,self.commander,packet)
+                    contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+                else:
+                    if self.commander:
+                        contract, meta = self.commander.plan(text, context=packet)
+                        contract['planner'] = {**self.commander.descriptor(), 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
+                    else:
+                        contract = compile_document(text)
+                        contract['planner'] = {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
+                contract['context']=packet
+                if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
+                contract['submission_id']=sid
+                # Create and link the job atomically with intake to prevent duplicate effects on restart.
+                jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+                with self.store.transaction() as db:
+                    # create() records the source request; remove only its duplicate intake message.
+                    dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
+                    if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
+            with self.store.transaction() as db:db.execute("UPDATE submissions SET state='DISPATCHED',job_id=? WHERE id=?",(jid,sid))
+        except Exception as exc:
+            with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+
+    def state(self,cid='main'):
+        with contextlib.closing(self.store.connect()) as db:
+            projects=[dict(r) for r in db.execute('SELECT * FROM projects ORDER BY name')]
+            for p in projects:
+                row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(p['id'],)).fetchone();p['test_command']=json.loads(row['command']) if row else None
+            conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
+            messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
+            submissions=[dict(r) for r in db.execute('SELECT * FROM submissions WHERE conversation_id=? ORDER BY created',(cid,))]
+            approvals=[dict(r) for r in db.execute("SELECT a.*,x.action FROM approvals a JOIN approval_actions x ON x.approval_id=a.id WHERE a.status='PENDING'")]
+            for a in approvals:
+                try:
+                    action=json.loads(a['action']) if isinstance(a['action'],str) else (a['action'] or {})
+                except Exception:
+                    action={}
+                kind=action.get('kind') or (action.get('action',{}) or {}).get('type') or 'permission'
+                if action.get('kind')=='command':
+                    a['action_summary']='run '+str(action.get('command',''))[:120]
+                elif action.get('kind')=='permissions':
+                    a['action_summary']='grant requested permissions'
+                elif action.get('kind')=='grantRoot':
+                    a['action_summary']='grant full workspace access'
+                elif action.get('kind')=='changes':
+                    a['action_summary']='apply the checked change set'
+                else:
+                    a['action_summary']='take the requested '+str(kind)+' action'
+            files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
+        jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
+        return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
+                'submissions':submissions,'approvals':approvals,'attachments':files,'error':self.error,
+                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'draining':self.draining}
+
+    def action(self,path,data):
+        with self.lifecycle_lock:
+            if self.draining:raise PolicyError('Kel is restarting for an update. Try again after it opens.')
+            if path=='/api/shutdown-idle':
+                with self.engine.lock:
+                    with contextlib.closing(self.store.connect()) as db:
+                        planning=db.execute("SELECT count(*) FROM submissions WHERE state='PLANNING'").fetchone()[0]
+                    if planning or self.engine.active or self.engine.reviews or any(j['state'] not in ('CLOSED','CANCELLED') for j in self.store.list_jobs()):
+                        raise PolicyError('Work is still open. Finish or cancel it before updating Kel.')
+                    self.draining=True;self.stop.set()
+                return {'ok':True,'draining':True}
+            return self._action(path,data)
+
+    def _action(self,path,data):
+        if path=='/api/send':return {'id':self.submit(data)}
+        if path=='/api/retry':
+            with self.store.transaction() as db:
+                row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(data['id'],)).fetchone()
+                if not row or row['state'] not in ('FAILED','INTERRUPTED'):raise PolicyError('This request is not ready for retry')
+                db.execute("UPDATE submissions SET state='PLANNING',error=NULL WHERE id=?",(row['id'],))
+            self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],json.loads(row['packet']),row['kind'])
+            return {'id':row['id']}
+        if path=='/api/conversation':return {'id':self.context.conversation(data.get('project','default'))}
+        if path=='/api/project':
+            pid=self.context.project(data['name'],data.get('root') or None,data.get('context',''),data.get('id'))
+            command=data.get('test_command')
+            if command:
+                if not isinstance(command,list) or not all(isinstance(s,str) and s for s in command):raise PolicyError('Test command must be a list of arguments')
+                with self.store.transaction() as db:db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(pid,encode(command)))
+            return {'id':pid}
+        if path=='/api/attach':return {'id':self.context.attach(data['conversation'],data['name'],base64.b64decode(data['content'],validate=True),data.get('mime','text/plain'))}
+        if path=='/api/control':
+            self.engine.control(data['job'],data['action']);return {'ok':True}
+        if path=='/api/apply':
+            from .apply_changes import apply_checked
+            return apply_checked(self.store,data['job'])
+        if path=='/api/approval':
+            with contextlib.closing(self.store.connect()) as db:
+                row=db.execute('SELECT x.action,a.job_id FROM approval_actions x JOIN approvals a ON a.id=x.approval_id WHERE x.approval_id=?',(data['id'],)).fetchone()
+            if not row:raise PolicyError('Permission request missing')
+            action=json.loads(row['action']);status=self.store.resolve_approval(data['id'],action,bool(data['allow']))
+            if status=='APPROVED' and data.get('remember'):
+                job=self.store.get(row['job_id']);self.context.grant(job['contract'].get('project_id','default'),action)
+            return {'status':status}
+        if path=='/api/revoke':self.context.revoke(data['project']);return {'ok':True}
+        raise PolicyError('Unknown action')
+
+
+def serve(root,port=0):
+    service=Service(root);token=secrets.token_urlsafe(32);assets=Path(__file__).parent/'web'
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self,*args):pass
+        def reply(self,status,value,kind='application/json'):
+            raw=encode(value).encode() if kind=='application/json' else value
+            self.send_response(status);self.send_header('Content-Type',kind);self.send_header('Content-Length',str(len(raw)))
+            self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
+            self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'")
+            self.end_headers();self.wfile.write(raw)
+        def authorized(self):
+            host=f'127.0.0.1:{self.server.server_port}'
+            origin=self.headers.get('Origin')
+            return self.headers.get('Host')==host and (not origin or origin=='http://'+host) and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+token)
+        def do_GET(self):
+            parsed=urlparse(self.path)
+            if parsed.path.startswith('/api/'):
+                if not self.authorized():self.reply(403,{'error':'Local session authorization required'});return
+                try:
+                    query=parse_qs(parsed.query)
+                    if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/artifact':
+                        job=service.store.get(query['job'][0]);mid=query['milestone'][0];m=job['milestones'][mid]
+                        if m['state']!='ACCEPTED':raise PolicyError('Artifact has not passed its checks')
+                        self.reply(200,service.store.artifact_text(m['artifact']).encode(),'text/markdown; charset=utf-8');return
+                    self.reply(404,{'error':'Not found'})
+                except Exception as exc:self.reply(400,{'error':str(exc)})
+                return
+            mapping={'/':'index.html','/app.js':'app.js','/style.css':'style.css'}
+            name=mapping.get(parsed.path)
+            if not name or not (assets/name).is_file():self.reply(404,{'error':'Not found'});return
+            kind={'index.html':'text/html; charset=utf-8','app.js':'text/javascript; charset=utf-8','style.css':'text/css; charset=utf-8'}[name]
+            self.reply(200,(assets/name).read_bytes(),kind)
+        def do_POST(self):
+            if not self.authorized():self.reply(403,{'error':'Local session authorization required'});return
+            try:
+                size=int(self.headers.get('Content-Length','0'))
+                if not 0<size<8_000_000:raise PolicyError('Request body is too large or empty')
+                data=json.loads(self.rfile.read(size))
+                route=urlparse(self.path).path
+                result=service.action(route,data)
+                self.reply(200,result)
+                if route=='/api/shutdown-idle':threading.Thread(target=self.server.shutdown,daemon=True).start()
+            except Exception as exc:self.reply(400,{'error':str(exc)})
+    server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
+    descriptor={'url':f'http://127.0.0.1:{server.server_port}/','token':token,'pid':os.getpid(),'engine_version':ENGINE_VERSION}
+    path=service.store.root/'desktop-session.json';path.write_text(encode(descriptor),encoding='utf-8')
+    print(encode({'url':descriptor['url'],'pid':descriptor['pid'],'engine_version':ENGINE_VERSION}),flush=True)
+    try:server.serve_forever()
+    finally:
+        service.stop.set();service.supervisor.join(timeout=2)
+        service.requests.shutdown(wait=True)
+        service.engine.close();server.server_close()
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--data',required=True);p.add_argument('--port',type=int,default=0)
+    args=p.parse_args()
+    try:serve(args.data,args.port)
+    except Conflict as exc:print(str(exc),flush=True);raise SystemExit(2)

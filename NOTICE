@@ -1,0 +1,27 @@
+Kel - durable local AI work engine (Windows)
+
+Copyright 2026 BeardedBats and the Kel contributors.
+Kel original code is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Kel incorporates and adapts components from the following projects:
+
+  AionUI (https://github.com/iOfficeAI/AionUi), Apache License 2.0.
+  Copyright 2025 AionUi (aionui.com).
+  The desktop/ directory is a fork of AionUI revision
+  6744099b279b991c17e31c243f0920477bd31cb6 (source version 2.2.2), modified by
+  Kel for branding, single-assistant scope, the Kel engine connection, history
+  recovery, work controls, keyboard access and Windows packaging.
+  This is a Kel adaptation; it is not an official AionUI release.
+  License text retained in third_party/AionUI-LICENSE.txt.
+
+  AionCore (https://github.com/iOfficeAI/AionCore), Apache License 2.0.
+  Copyright the AionCore authors. Kel releases bundle the stock Windows v0.2.2
+  build (source revision 47e66d0d151123e973b3fd1e77afcb5671b3f8c5). The binary
+  is not stored in this repository; license text retained in
+  third_party/AionCore-LICENSE.txt.
+
+Electron and Chromium are build/runtime dependencies obtained separately;
+their notices are not reproduced here (see the Electron and Chromium releases).
+
+Additional component attributions and reference-only donor records:
+THIRD_PARTY_NOTICES.md.

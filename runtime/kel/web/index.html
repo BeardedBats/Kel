@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kel</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<aside id="sidebar" aria-label="Projects and conversations">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">K</span>Kel</div><button id="close-sidebar" aria-label="Close projects">×</button><button id="new-chat" class="nav-action"><span aria-hidden="true">＋</span> New chat</button>
+  <label class="sr-only" for="search-chats">Search conversations</label><input id="search-chats" type="search" placeholder="Search conversations">
+  <label for="projects">Project</label><select id="projects"></select>
+  <button id="new-project" class="quiet">＋ Add project</button>
+  <div class="nav-label">Conversations</div><nav id="conversations" aria-label="Conversation history"></nav>
+  <div class="sidebar-footer"><button id="project-context" class="quiet">⚙ Saved context</button><span id="connection">Connecting…</span></div>
+</aside>
+<div class="main-shell"><header><button id="menu" aria-label="Show projects">☰</button><span id="conversation-title">New conversation</span><button id="files" class="quiet">Files</button><button id="details" class="quiet">Work details</button></header>
+<main id="journal" aria-label="Conversation"><div class="empty"><p>Your work, in order</p><h1>What shall we work on?</h1><p>Send a request. Add files or project context when they help.</p></div></main>
+<div id="alerts" role="status" aria-live="polite"></div>
+<footer class="composer-shell"><div class="assistant-mode"><span class="mini-mark" aria-hidden="true">K</span><strong>Kel</strong><span>Automatic</span></div><div id="work-status" aria-live="polite"></div><form id="composer">
+  <label class="sr-only" for="message">Message Kel</label><textarea id="message" placeholder="What would you like to work on?" rows="2"></textarea>
+  <div id="pending-files"></div><div class="compose-tools"><button type="button" id="attach" class="quiet" aria-label="Attach file">＋</button><input id="file" type="file" multiple hidden><span class="hint">Attach files or send a message</span><button type="submit" id="send" class="primary" aria-label="Send message">↑</button></div>
+</form><div class="footer-note">You can keep chatting while Kel works.</div></footer></div>
+<dialog id="project-dialog"><form id="project-form"><div class="dialog-head"><h2>Project context</h2><button type="button" data-close="project-dialog" aria-label="Close project context">×</button></div>
+<label for="project-name">Project name</label><input id="project-name" required maxlength="120">
+<label for="project-root">Project folder <span>Optional, for coding</span></label><div class="folder-field"><input id="project-root" placeholder="Choose a local repository"><button type="button" id="browse-folder">Browse</button></div>
+<label for="project-notes">Saved instructions</label><textarea id="project-notes" rows="6" maxlength="12000" placeholder="Decisions and preferences for this project"></textarea>
+<details><summary>Coding checks</summary><label for="test-command">Test command arguments (JSON)</label><input id="test-command" placeholder='["python", "-m", "unittest", "discover", "-v"]'><p>Native tools run with your Windows user permissions. Code changes use a project copy. WSL is not required.</p><button type="button" id="revoke">Forget saved permissions</button></details>
+<p id="project-error" class="error" role="alert"></p><div class="dialog-actions"><button type="button" data-close="project-dialog">Cancel</button><button type="submit" class="primary">Save context</button></div></form></dialog>
+<dialog id="work-dialog"><div class="dialog-head"><h2>Work details</h2><button data-close="work-dialog" aria-label="Close work details">×</button></div><div id="work-content"></div></dialog>
+<dialog id="files-dialog"><div class="dialog-head"><h2>Files</h2><button data-close="files-dialog" aria-label="Close files">×</button></div><div id="file-list"></div><div id="preview-tools" hidden><button id="preview-rendered" aria-pressed="true">Preview</button><button id="preview-source" aria-pressed="false">Source</button><button id="preview-download">Download</button></div><div id="file-preview" class="message-body"></div></dialog>
+<script src="/app.js"></script></body></html>

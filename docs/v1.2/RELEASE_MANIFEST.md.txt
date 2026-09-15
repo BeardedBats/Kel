@@ -1,0 +1,28 @@
+# Kel V1.2 Frozen Release
+
+Status: VERIFIED
+Frozen: 2026-09-14
+
+Scope: polish + trust release.
+- A  approval attention badge (Work-context badge for pending approvals; clears on resolution)
+- B  Aion donor shell cleanup (agent/assistant/team/channel surfaces hidden; useful settings kept)
+- E  window title "Kel"
+- C  reviewer diversity (different reviewer family/provider when genuinely available; single-provider fallback preserved)
+- D  trust/verification display (concise Verified / Uncertain / Failed summary with evidence, identities, and limitations)
+
+Verified:
+- Kel.exe launches; window title "Kel"; settings walkthrough clean; zero pageerrors
+- Engine boots live: engine_version 0.5.0, providers listed (codex, claude, codex-code, claude-code)
+- Full engine suite: 181 passed (167 V1.1 baseline + 14 new), 10 subtests
+- Packaged engine PYZ carries the V1.2 modules; exactly 5 kel modules differ from V1.1, nothing added or removed
+- Approval badge (packaged, throwaway data dir): real PENDING approval shows badge "1"; resolved via the engine API -> badge cleared
+- Real tasks: CLOSED / VERIFIED published with trust summary; CLOSED / UNCERTAIN published with the B2 explanation plus summary
+- Normal shutdown: app quit drains and stops the idle engine; zero orphan processes
+
+Key hashes (see SHA256Sums.txt.txt):
+- Kel.exe                                E048632E... (unchanged from V1.1)
+- resources/app.asar                     B56816B6... (Round 1 shell)
+- resources/kel-engine/KelEngine.exe     11D9DBC0... (Round 2 engine)
+
+Do not modify this folder.
+All future work must happen in a separate copy.
