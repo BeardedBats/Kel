@@ -17,6 +17,25 @@ Status: v0.1 (Gate 0) · Initial triage complete for all 200 items; evidence col
 `EXTEND` (real foundation exists; V1.4 extends it) · `NEW` (not present; build in V1.4) ·
 `IMPLEMENTED` / `VERIFIED` (post-implementation states) · `DEFERRED` / `BLOCKED` (require written rationale).
 
+**Gate 3 (engine) implementation status (2026-09-15).** `runtime/kel/solution.py` (migration 005)
+and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
+(`tests/test_v14_solution.py`, `tests/test_v14_team.py`; full suite now 296 passed + 10 subtests):
+
+- **IMPLEMENTED (engine):** V14-001 outcome brief · V14-002 assumptions/constraints fields ·
+  V14-003 materially different options · V14-004 existing-solution search · V14-006 capability
+  opportunity classification (PROCEED / ASK_ONCE / PAUSE, with fallback) · V14-008 recorded fallback ·
+  V14-009 decision criteria + comparisons · V14-010 tradeoff comparison · V14-011 optimal-enough
+  review gate (independent review; self-certification refused) · V14-012 wrong-layer flag ·
+  V14-013 workaround-vs-root-fix label · V14-014 rework forecast · V14-015 user-idea evaluator ·
+  V14-016 evidence-to-switch · V14-018 approval receipt fields · V14-019…040 engine portions:
+  role templates · append-only versions · project/task overrides · scope resolution · assignment
+  snapshots · tool policies · model-preference and budget fields · assignment records · staffing
+  reasons · activity stream.
+- **PENDING (later gates):** V14-005 donor/library scan record (covered by the search record; donor
+  audit reuse pending) · V14-007 Better-with-access card (UI, G4) · V14-017 reviewed-plan autonomy
+  and the AUTO-NO-PROMPT test (lease engine, G6) · Office/Roster/Studio UI + budget enforcement (G4) ·
+  role model-preference resolution against live providers (G6).
+
 ## A. Solution quality, ideation, and autonomous execution (V14-001…018)
 
 | ID | Feature | Source | Status | Subsystem | Vis | Int | Evidence / notes |

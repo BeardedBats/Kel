@@ -71,3 +71,13 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G2-PROVIDERS | state model + DeepSeek first-class + credential custody | docs | **PASS** (`KEL_V1.4_PROVIDER_SPEC.md`) |
 | G2-UX | IA + surface specs + old-surface migration + screenshot strategy | docs | **PASS** (`KEL_V1.4_UX_SPEC.md`) |
 | G2-SECURITY | threat model + sanitizer + retention + supply chain | docs | **PASS** (`KEL_V1.4_SECURITY_MODEL.md`) |
+
+## 7. Gate 3 additions
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G3-SUITE | full engine suite after V1.4 modules | U/I | **PASS** (296 passed + 10 subtests; retention rule ≥267 + 10 held) |
+| G3-SLN | brief/options/comparison/search/opportunity/idea/recommend/review/approve gate | U | **PASS** (12 tests, `tests/test_v14_solution.py`) |
+| G3-TEAM | role versioning · rollback · project/task override precedence · locked-section isolation · assignment snapshot immutability · tool policy fails closed · no recursive delegation · activity contract (no hidden reasoning) · staffing reasons · seed idempotency | U/I | **PASS** (17 tests, `tests/test_v14_team.py`) |
+| G3-MIGRATION | migrations 005/006 additive, recorded in `schema_migrations`, idempotent | I | **PASS** |
+| G3-API | `/api/brief` + `/api/team` wired in `service._action` | I | **PASS** (service envelope test) |

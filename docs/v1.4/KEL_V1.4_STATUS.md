@@ -10,7 +10,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 | G0 — baseline, branch, isolation, ledger, visual capture | **COMPLETE** | reviewer relay CONTINUE (2026-09-15); remainders tracked: perf baseline (G8), state-matrix expansion (G1), harness v3 fixes |
 | G1 — visual audit, design directions, design system | **COMPLETE** | 2 directions rendered + audited; “Desk” selected via the Best Solution Gate; design system, interaction patterns, accessibility standard, acceptance matrix landed; reviewer relay CONTINUE |
 | G2 — architecture / safety / implementation design | **COMPLETE** | 6 documents (architecture + 5 Best Solution Gate decisions, Team model, autonomy policy, provider spec, UX spec, security model); reviewer relay CONTINUE |
-| G3 — solution quality + Team foundation | NOT STARTED | |
+| G3 — solution quality + Team foundation | **COMPLETE** | engine: `kel/solution.py` (migration 005) + `kel/team.py` (migration 006) + `/api/brief` + `/api/team`; 29 new tests; suite 296 + 10; UI lands at G4, lease enforcement at G6 |
 | G4 — Team Office / Roster / Studio + Work Center | NOT STARTED | |
 | G5 — verification / continuation / memory / recipes UX | NOT STARTED | |
 | G6 — providers / credentials / autonomy | NOT STARTED | |
@@ -37,9 +37,8 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 
 ## Exact next actions (resume here)
 
-1. Start **Gate 3**: implement the solution-quality system + Team foundation in the engine — solution
-   briefs, capability opportunities, role templates/versions/overrides, assignments with snapshots,
-   staffing reasons, team API — with SLN-*/TEAM-* tests, then Best Solution Gate wiring.
+1. Start **Gate 4**: Team Office / Roster / Studio + unified Work Center UI over the G3 engine
+   (`/api/team`, `/api/brief`), allowlisted in `KelService.ts`; rendered verification per surface.
 2. Performance baseline (startup spans) when G8 diagnostics tooling exists; noted as G0 remainder.
 3. Harness v3 candidates (pet-window capture, dialog states, provider-unavailable state, dense/long
    content) plus the a11y-probe breadth expansion at G4/G5/G7.
@@ -57,6 +56,7 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 11:24 — Gate 0 close-out committed as `6ba5b1f` (75 files: harness, fixture generator, 2×30 captures, docs); reviewer relay: **CONTINUE**. **Gate 0 CLOSED.**
 - 11:37–11:52 — Session 3 (Gate 1): a11y/keyboard probe of the packaged V1.3 app (6 contrast failures, 0/30 focus rings, 12px minimum text, clean shutdown); chromium installed under `dev-tools` for mockup rendering; two directions built, rendered, and audited (0 contrast failures, 12px floor, 14 focusables); independent design review delegated → 3 risks, all fixed (Uncertain chip restyled, focus assertion added to the renderer, audit-breadth scope note); five Gate 1 documents written; reviewer relay: **CONTINUE**. **Gate 1 CLOSED.**
 - 11:55–12:05 — Session 4 (Gate 2): source-grounded architecture design (engine schema inventory, migration gate, providers table, KelService IPC/allowlist, token files, env surface); six documents written (`KEL_V1.4_ARCHITECTURE` with 5 Best Solution Gate decisions, `TEAM_MODEL`, `AUTONOMY_POLICY`, `PROVIDER_SPEC`, `UX_SPEC`, `SECURITY_MODEL`); reviewer relay: **CONTINUE**. **Gate 2 CLOSED.**
+- 12:05–12:35 — Session 5 (Gate 3): engine implementation — `kel/guardrails.py` (14 locked rules with test ids), `kel/solution.py` (briefs/options/comparisons/search/opportunities/ideas/reviews/approve gate), `kel/team.py` (role templates + append-only versions + scoped overrides + assignment snapshots + activity contract + staffing + seeded 9 roles), service endpoints `/api/brief` + `/api/team`, migrations 005/006 additive; 29 new tests; full suite **296 passed + 10 subtests** (one transient Windows temp-cleanup flake, green on re-run). Gate 3 engine scope complete; UI at G4, lease enforcement at G6.
 
 ## Blockers
 
