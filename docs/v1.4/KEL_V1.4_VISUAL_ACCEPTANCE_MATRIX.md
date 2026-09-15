@@ -136,3 +136,14 @@ step (`ok: true`, clean close, 0 errors).
 
 In-gate fix: the Projects Map tab sent the map action `build`, which the engine does not implement; it
 now sends `refresh` (engine vocabulary: `refresh`, `stale`).
+
+## 11. Gate 6 surface verdicts (2026-09-15)
+
+Evidence: `docs/v1.4/screenshots/g6/` (tags `g6`/`g6b`, 27 shots each: five-width core views plus the
+two new surfaces) and `docs/v1.4/screenshots/audit/v14/` (route sampling, contrast 0/0 on the new
+routes).
+
+| Surface | Baseline (V1.3) | Final (V1.4) | Verdict |
+|---|---|---|---|
+| Providers (`/providers`) | donor provider settings (`baseline/…09-settings-model`) | `g6/g6b-22-12-providers.png` + `…13-providers-at-1280x720.png` | **accepted-with-notes** — real provider states (healthy · quota not reported · installed not authenticated), models with capabilities, readiness preflight, credential-metadata section; notes: credential **value** storage (OS-backed) still to land, so only metadata is shown |
+| Autonomy (`/autonomy`) | none | `g6/g6b-23-12-autonomy.png` + `…13-autonomy-at-1280x720.png` | **accepted-with-notes** — lease with full scope list + revoke, boundary request with the recorded why/benefit/fallback/risk and the three decisions, locked guardrail block, and a scope probe that fails closed; notes: running a live allow/deny through the probe is verified at the API level (`AUTO-*` tests) rather than by click in this pass |
