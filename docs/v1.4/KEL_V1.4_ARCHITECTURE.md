@@ -27,21 +27,22 @@ Status: v1 (2026-09-15) · Gate 2 design document. Grounded in the current sourc
 
 ## 2. What V1.4 adds (all additive)
 
-- **Team**: `role_templates`, `role_versions` (append-only), `role_overrides` (project|task scope),
-  `role_tool_policies`, `role_model_preferences`, `role_budgets`, `role_departments`,
+- **Team**: `role_templates`, `role_versions` (append-only; tool policy / model preference / budget
+  are fields on the version), `role_overrides` (project|task scope),
   `team_assignments` (links `job_id`/`milestone_id`/`run_id`, provider, model, state, budget,
-  blocker, start/end, `role_version_id` snapshot), `assignment_activity`, `assignment_artifacts`.
+  blocker, start/end, `role_version_id` snapshot), `team_events`, `assignment_artifacts`.
 - **Solution quality**: `solution_briefs`, `solution_options`, `option_comparisons`,
   `capability_opportunities`, `solution_reviews` (chosen option, rejected reasons, evidence-to-switch,
   rollback plan, reviewer disposition).
-- **Autonomy**: `capability_leases` (+ `lease_roots`, `lease_repositories`, `lease_domains`,
-  `lease_tools`, `lease_external_actions`, `lease_events`), `boundary_expansion_requests`,
-  `guardrail_decisions`.
+- **Autonomy**: `capability_leases`, `lease_scope` (kind/value rows — root, repo, domain, tool,
+  external), `lease_events`, `boundary_expansion_requests`. `guardrail_decisions` is **not yet a
+  table** (V1.5; decisions are recorded in `lease_events`).
 - **Providers**: keep `providers(id, data)` as the state row (same JSON pattern), add
   `provider_definitions` (class: native-cli | api; auth mode; capability matrix) and
   `provider_usage` (append-only observations), with credential *metadata only* (`credential_ref`).
 - **Diagnostics**: `startup_spans`, `health_observations`, `process_observations`,
-  `provider_observations`, `performance_measurements`, `retention_settings`.
+  `performance_measurements`, `retention_settings` (provider observations live in
+  `provider_usage`, providers migration 007).
 - **Activity contract**: one append-only stream `team_events(id, at, kind, actor, refs_json, detail)`
   for Office timelines and receipts (mirrors the existing events discipline; never raw reasoning).
 
@@ -73,7 +74,7 @@ Status: v1 (2026-09-15) · Gate 2 design document. Grounded in the current sourc
 | G3 | solution briefs + roles + assignments + team API + tests | — |
 | G4 | activity stream + assignment/artifact APIs | Office/Roster/Studio + Work Center |
 | G5 | evidence/verification endpoints (existing tables surfaced) | memory/continuation/verification/recipes UX |
-| G6 | provider registry, credential metadata, lease engine + enforcement | Provider Setup + Autonomy/Permissions UI |
+| G6 | provider registry, credential metadata, lease engine + policy checker (execution-path enforcement deferred; V1.4.1 adds tamper detection + protected-path denial) | Provider Setup + Autonomy/Permissions UI |
 | G7 | readiness/preflight hooks | onboarding, search, palette, settings, tray, a11y |
 | G8 | diagnostics tables + sanitized export | Diagnostics UI |
 | G9 | — | full-app visual pass (Repair with the design system) |

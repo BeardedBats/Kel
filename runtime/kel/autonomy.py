@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 from .core import PolicyError, encode, uid
+from . import guardrails
 from .guardrails import RULES, locked_block
 from .memory import _backup, _is_fresh_database, _table
 
@@ -54,10 +55,9 @@ BLOCKED_KINDS = {
     'purchase': 'no-purchase-or-communication',
     'policy': 'policy-immutable',
 }
-FROZEN_MARKERS = ('kel releases', 'kel-v1-frozen', 'kel-v1.1-frozen', 'kel-v1.2-frozen',
-                  'kel-v1.3-frozen', 'frozen')
-SYSTEM_PREFIXES = ('c:\\windows', 'c:\\program files', 'c:\\program files (x86)', 'c:\\programdata')
-GUARDRAIL_DIGEST = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdigest()
+FROZEN_MARKERS = guardrails.FROZEN_MARKERS
+SYSTEM_PREFIXES = guardrails.SYSTEM_PREFIXES
+GUARDRAIL_DIGEST = guardrails.DIGEST
 
 
 def ensure_schema(store):
@@ -88,16 +88,15 @@ def _text(value, label, limit=2000):
 
 
 def _norm(path):
-    return str(path or '').replace('/', '\\').lower()
+    return guardrails._norm(path)
 
 
 def _frozen(target):
-    text = _norm(target)
-    return any(marker in text for marker in FROZEN_MARKERS)
+    return guardrails.frozen_path(target)
 
 
 def _system(target):
-    return any(_norm(target).startswith(prefix) for prefix in SYSTEM_PREFIXES)
+    return guardrails.system_path(target)
 
 
 class Autonomy:
@@ -109,7 +108,7 @@ class Autonomy:
     def assert_intact(self):
         digest_now = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdigest()
         if digest_now != GUARDRAIL_DIGEST:
-            raise PolicyError('Locked guardrails were modified; refusing to continue')
+            raise PolicyError('Locked guardrails were modified; refusing new work')
         return True
 
     def guardrails(self):
@@ -324,6 +323,12 @@ class Autonomy:
             return [dict(row) for row in rows]
 
     def emergency_stop(self, actor='user'):
+        """Revoke every active lease and pause all active or queued work (V1.4.1 scope).
+
+        Runs are marked CANCEL_REQUESTED so brokers and adapters stop their workers at the next
+        cancellation check; pending approvals for those jobs are cancelled by the pause. It does not
+        terminate uncooperative OS processes and does not undo completed effects.
+        """
         if actor != 'user':
             raise PolicyError('Only the user can trigger an emergency stop')
         stopped = []
@@ -334,7 +339,14 @@ class Autonomy:
                            "reason='emergency stop' WHERE lease_id=?", (time.time(), row['lease_id']))
                 self._event(db, row['lease_id'], 'emergency_stop', {'actor': actor})
                 stopped.append(row['lease_id'])
-        return {'stopped': stopped, 'count': len(stopped)}
+        paused = []
+        for job in self.store.list_jobs():
+            if job['state'] in ('CLOSED', 'CANCELLED', 'CANCELLING', 'PAUSING', 'PAUSED'):
+                continue
+            self.store.control(job['id'], 'pause')
+            paused.append(job['id'])
+        return {'stopped': stopped, 'count': len(stopped), 'paused_jobs': paused,
+                'paused_count': len(paused)}
 
     # ---- service envelope -----------------------------------------------------
     def apply(self, data):

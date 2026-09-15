@@ -3,6 +3,11 @@
 Date: 2026-09-15 · Branch: `v1.4-dev` (based on `b6974cf`, pushed) · Sessions: #1 (verification) → #2 (tooling, harness, captures) → #3 (Gate 1: audit, directions, design system) → #4 (Gate 2: architecture + safety design)
 Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger + this file are the resume anchors.
 
+> **Post-release note (added in V1.4.1):** the independent post-release audit (docs/v1.4-postrelease/)
+> found that execution-path enforcement of capability leases / red lines was overstated in V1.4
+> documents (Bone 19). Corrections and the exact V1.4.1 runtime boundary are in `docs/v1.4.1/`. This
+> historical record is otherwise preserved unchanged.
+
 ## Gate board
 
 | Gate | State | Note |

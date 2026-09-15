@@ -282,17 +282,16 @@ export const kelAutonomy = {
   revoke: (leaseId: string, reason = '') =>
     call<Record<string, unknown>>('/api/autonomy', { action: 'revoke', lease_id: leaseId, reason }),
   emergencyStop: () =>
-    call<{ stopped: string[]; count: number }>('/api/autonomy', {
-      action: 'emergency_stop',
-      actor: 'user',
-    }),
+    call<{ stopped: string[]; count: number; paused_jobs: string[]; paused_count: number }>(
+      '/api/autonomy',
+      { action: 'emergency_stop' }
+    ),
   resolveRequest: (requestId: string, allow: boolean, grantKind: 'once' | 'project' = 'once') =>
     call<Record<string, unknown>>('/api/autonomy', {
       action: 'resolve',
       request_id: requestId,
       allow,
       grant_kind: grantKind,
-      actor: 'user',
     }),
 };
 
