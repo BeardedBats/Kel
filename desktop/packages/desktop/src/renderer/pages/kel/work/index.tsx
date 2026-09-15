@@ -83,6 +83,9 @@ const WorkCenter: React.FC = () => {
   const waiting = (jobs ?? []).filter((job) =>
     ['AWAITING_USER', 'PAUSED', 'WAITING_RESOURCE', 'BLOCKED'].includes(job.state)
   ).length;
+  // Design system §6: the same components switch to compact density above ten rows on table-first
+  // views, rather than shrinking type below the scale.
+  const dense = (jobs?.length ?? 0) + (assignments?.length ?? 0) > 10;
   const activeJob = jobs?.find((job) => job.id === (selected ?? jobs[0]?.id)) ?? null;
   const activeMilestones = activeJob
     ? Object.entries(activeJob.milestones ?? {}).map(([id, runtime]) => ({
@@ -118,7 +121,7 @@ const WorkCenter: React.FC = () => {
   }, [activeJob, newestAccepted]);
 
   return (
-    <div className="kel-scope">
+    <div className="kel-scope" data-density={dense ? 'compact' : 'comfortable'}>
       <a className="kel-skip" href="#kel-work-main">
         Skip to main content
       </a>
