@@ -150,6 +150,15 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G6-AUTONOMY-API | `/api/autonomy` service envelope (`issue`, `check`, `revoke`, `leases`, `request`, `resolve`, `requests`, `guardrails`, `emergency_stop`) | I | **PASS** |
 | G6-MIGRATION-8 | migration 008 (`capability_leases`, `lease_scope`, `lease_events`, `boundary_expansion_requests`) additive + idempotent | I | **PASS** — suite **346 passed + 10 subtests** (30 AUTO-* tests) |
 
+## 13. Gate 6 UI additions
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G6-PROVIDERS-UI | `/providers` renders one card per provider with the engine's real state, models + capabilities, readiness preflight, credential-metadata section | V | **PASS** — “Claude (Claude Code) · healthy · quota not reported · Native CLI · subscription session”; “DeepSeek API · installed not authenticated · API key · https://api.deepseek.com/v1”; readiness panel with capability + prefer; “Credential metadata (values are never stored here)” |
+| G6-AUTONOMY-UI | `/autonomy` renders leases with scope/expiry/revoke, boundary requests with the recorded what/why/benefit/fallback/risk and the three decisions, the locked guardrail block, and the scope probe | V | **PASS** — “1 active lease · 1 boundary request waiting on you”; scope list `domain: docs.python.org`, `repo: …\fixture-project`, `root: …\fixture-project`; request `domain: github.com` with Allow once / Allow for this project / Deny |
+| G6-ENGINE-PACKAGING | the candidate's engine must be rebuilt after engine changes | I | **FINDING + FIXED** — the first capture returned “Unknown action” for both pages because the candidate still carried the pre-`providers.py` engine; after `scripts/build-runtime.ps1` + `verify_engine_pyz.py` (`RESULT: OK`) and replacing `resources/kel-engine`, both pages read real data. Packaging step recorded in AUTO_RESUME |
+| G6-CAPTURE | captures + route probe for the new surfaces | V | **PASS** — tags `g6`/`g6b` (27 shots each incl. five-width core views), 0 renderer errors, 0 blank, app exit 0; route contrast failures **0/0** on `/providers` and `/autonomy`; 12px floor; 0 emoji |
+
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
 Manager), and the Providers + Autonomy surfaces with rendered evidence (cards with the eight states,
 test connection, readiness panel, lease viewer with revoke, Approval Inbox, locked-guardrail block).
