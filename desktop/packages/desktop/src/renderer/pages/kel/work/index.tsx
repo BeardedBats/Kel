@@ -10,12 +10,21 @@ import {
   KelErrorState,
   KelLoading,
   KelMeter,
+  KelSection,
   KelStatusChip,
   KelTable,
   formatWhen,
   statusFromDerived,
 } from '@renderer/components/kel/KelPrimitives';
-import { kelState, kelTeam, type KelAssignment, type KelWorkJob } from '@renderer/components/kel/kelApi';
+import {
+  kelArtifact,
+  kelControl,
+  kelState,
+  kelTeam,
+  type KelAssignment,
+  type KelContinuationCandidate,
+  type KelWorkJob,
+} from '@renderer/components/kel/kelApi';
 
 const WAIT_REASON: Record<string, string> = {
   PAUSED: 'Paused — resume when you are ready.',
@@ -27,12 +36,18 @@ const WAIT_REASON: Record<string, string> = {
 const WorkCenter: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [assignments, setAssignments] = useState<KelAssignment[]>([]);
+  const [continuation, setContinuation] = useState<KelContinuationCandidate[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [artifact, setArtifact] = useState<{ milestone: string; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<{ cause: string; fix: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
       const [state, team] = await Promise.all([kelState(), kelTeam.office('default')]);
       setJobs(state.jobs ?? []);
+      setContinuation(state.continuation ?? []);
       setAssignments(team.assignments ?? []);
       setError(null);
     } catch (err) {
@@ -44,6 +59,23 @@ const WorkCenter: React.FC = () => {
     }
   }, []);
 
+  const act = useCallback(
+    async (label: string, fn: () => Promise<unknown>) => {
+      setBusy(true);
+      setNote(null);
+      try {
+        await fn();
+        setNote(`${label} sent to the engine.`);
+        await load();
+      } catch (err) {
+        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load]
+  );
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -51,6 +83,15 @@ const WorkCenter: React.FC = () => {
   const waiting = (jobs ?? []).filter((job) =>
     ['AWAITING_USER', 'PAUSED', 'WAITING_RESOURCE', 'BLOCKED'].includes(job.state)
   ).length;
+  const activeJob = jobs?.find((job) => job.id === (selected ?? jobs[0]?.id)) ?? null;
+  const activeMilestones = activeJob
+    ? Object.entries(activeJob.milestones ?? {}).map(([id, runtime]) => ({
+        id,
+        runtime,
+        spec: (activeJob.contract?.milestones ?? []).find((m) => m.id === id),
+      }))
+    : [];
+  const accepted = activeMilestones.filter((m) => m.runtime.state === 'ACCEPTED');
 
   return (
     <div className="kel-scope">
@@ -109,6 +150,126 @@ const WorkCenter: React.FC = () => {
             />
           </KelCard>
         )}
+
+        {activeJob && (
+          <KelCard
+            title={`Verification — ${activeJob.contract?.request?.slice(0, 60) ?? activeJob.id}`}
+            chip={<KelStatusChip status={statusFromDerived(activeJob.state)} />}
+            actions={
+              <span className="kel-row">
+                <KelButton
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => void act('Pause', () => kelControl(activeJob.id, 'pause'))}
+                >
+                  Pause
+                </KelButton>
+                <KelButton
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => void act('Resume', () => kelControl(activeJob.id, 'resume'))}
+                >
+                  Resume
+                </KelButton>
+                <KelButton
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => void act('Cancel', () => kelControl(activeJob.id, 'cancel'))}
+                >
+                  Cancel
+                </KelButton>
+              </span>
+            }
+          >
+            <p className="kel-sub">
+              {`Worker reported: ${accepted.length} of ${activeMilestones.length} milestones accepted · Kel verified: `}
+              {activeJob.verdict ?? 'not yet — verification runs after the checks pass'}
+            </p>
+            {activeMilestones.length === 0 ? (
+              <KelEmpty
+                title="No milestone has started yet."
+                why="Kel reports work as it runs, and reports nothing as verified until the checks pass."
+              />
+            ) : (
+              <KelTable
+                head={['Milestone', 'Worker state', 'Attempts', 'Checks', 'Evidence']}
+                rows={activeMilestones.map((m) => [
+                  <span className="kel-strong" key={`${m.id}-n`}>
+                    {m.spec?.objective ?? m.id}
+                  </span>,
+                  <span className="kel-meta" key={`${m.id}-s`}>
+                    {m.runtime.state ?? 'unknown'}
+                  </span>,
+                  <span className="kel-meta" key={`${m.id}-a`}>
+                    {`${m.runtime.attempts ?? 0}${(m.runtime.attempts ?? 0) > 1 ? ' · retried' : ''}`}
+                  </span>,
+                  <span className="kel-meta" key={`${m.id}-c`}>
+                    {`${m.spec?.checks?.length ?? 0} checks${m.spec?.filename ? ` · ${m.spec.filename}` : ''}`}
+                  </span>,
+                  m.runtime.state === 'ACCEPTED' ? (
+                    <KelButton
+                      key={`${m.id}-e`}
+                      variant="quiet"
+                      disabled={busy}
+                      onClick={() =>
+                        void act('Open artifact', async () => {
+                          const text = await kelArtifact(activeJob.id, m.id);
+                          setArtifact({
+                            milestone: m.id,
+                            text: typeof text === 'string' ? text : JSON.stringify(text, null, 2),
+                          });
+                        })
+                      }
+                    >
+                      View artifact
+                    </KelButton>
+                  ) : (
+                    <span className="kel-meta" key={`${m.id}-e`}>
+                      not verified — checks have not passed
+                    </span>
+                  ),
+                ])}
+              />
+            )}
+            {note && <p className="kel-meta">{note}</p>}
+            {artifact && (
+              <KelSection title={`Artifact — ${artifact.milestone}`}>
+                <pre className="kel-code">{artifact.text.slice(0, 4000)}</pre>
+              </KelSection>
+            )}
+          </KelCard>
+        )}
+
+        <KelCard title="Continuation">
+          {continuation.length === 0 ? (
+            <KelEmpty
+              title="Nothing waiting to continue."
+              why="When a job pauses, is interrupted, or waits on you, it appears here with the exact reason."
+            />
+          ) : (
+            <ol>
+              {continuation.map((candidate, index) => {
+                const id = candidate.job?.id ?? candidate.job_id ?? `candidate-${index}`;
+                const reasons = candidate.reasons ?? [];
+                return (
+                  <li key={id}>
+                    <span className="kel-strong">{`${index + 1}. ${candidate.summary ?? id}`}</span>{' '}
+                    <KelStatusChip
+                      status={statusFromDerived(candidate.state ?? candidate.job?.state ?? 'QUEUED')}
+                    />
+                    <div className="kel-meta">
+                      {candidate.verdict ? `verdict: ${candidate.verdict} · ` : ''}
+                      {reasons.length ? `why: ${reasons.join(', ')}` : 'durable state only — no hidden reasoning'}
+                      {' · '}
+                      Continue from chat (say “continue”, or pick a number) — Kel never resumes work in the
+                      background without you.
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </KelCard>
 
         <KelCard title="Team assignments">
           {assignments.length === 0 ? (

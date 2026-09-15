@@ -46,13 +46,39 @@ export interface KelRoleDetail {
   locked_block: Array<{ rule: string; text: string; test: string }>;
 }
 
+export interface KelJobMilestoneRuntime {
+  state?: string;
+  attempts?: number;
+  artifact?: string;
+  digest?: string;
+}
+
+export interface KelJobContractMilestone {
+  id: string;
+  objective?: string;
+  filename?: string;
+  depends_on?: string[];
+  checks?: Array<{ kind?: string; value?: unknown }>;
+}
+
 export interface KelWorkJob {
   id: string;
+  conversation?: string;
   state: string;
+  verdict?: string;
   spent?: number;
   budget?: number;
-  contract?: { request?: string; milestones?: Array<{ id: string; objective?: string }> };
-  milestones?: Record<string, { state?: string; attempts?: number; checks?: unknown[] }>;
+  contract?: { request?: string; project_id?: string; milestones?: KelJobContractMilestone[] };
+  milestones?: Record<string, KelJobMilestoneRuntime>;
+}
+
+export interface KelContinuationCandidate {
+  job_id?: string;
+  job?: { id?: string; state?: string; verdict?: string };
+  state?: string;
+  verdict?: string;
+  summary?: string;
+  reasons?: string[];
 }
 
 declare global {
@@ -147,9 +173,24 @@ export const kelTeam = {
 };
 
 export const kelState = () =>
-  call<{ jobs: KelWorkJob[]; providers: string[]; projects: Array<{ id: string; name: string }> }>(
-    '/api/state'
+  call<{
+    jobs: KelWorkJob[];
+    continuation?: KelContinuationCandidate[];
+    approvals?: Array<Record<string, unknown>>;
+    providers: string[];
+    projects: Array<{ id: string; name: string }>;
+    engine_version?: string;
+    draining?: boolean;
+  }>('/api/state');
+
+/** Markdown artifact text for an ACCEPTED milestone (the engine refuses anything unverified). */
+export const kelArtifact = (job: string, milestone: string) =>
+  call<unknown>(
+    `/api/artifact?job=${encodeURIComponent(job)}&milestone=${encodeURIComponent(milestone)}`
   );
+
+export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =>
+  call<{ ok: boolean }>('/api/control', { job, action });
 
 export const kelBriefs = {
   list: (projectId = 'default') =>
