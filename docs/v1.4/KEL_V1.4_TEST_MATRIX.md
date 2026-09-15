@@ -129,6 +129,27 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G6-API | `/api/providers` service envelope | I | **PASS** — actions `list`, `status`, `readiness`, `credentials`, `set_credential`, `delete_credential`, `usage` |
 | G6-MIGRATION | migration 007 (`provider_credentials`, `provider_usage`) additive + idempotent | I | **PASS** — recorded in `schema_migrations`; suite **316 passed + 10 subtests** (20 new PROV-* tests) |
 
+## 12. Gate 6 autonomy additions
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G6-LEASE-ISSUE | a lease requires a reviewed plan (`review_ref`), ≥1 existing root; frozen releases and system locations cannot be leased | U | **PASS** |
+| G6-AUTO-ROOT | writes inside the lease are allowed, outside are denied (`lease-scope`) | U | **PASS** |
+| G6-AUTO-REPO | repository actions match only leased repositories | U | **PASS** |
+| G6-AUTO-BROWSER | browser targets limited to leased domains (suffix-aware), others denied | U | **PASS** |
+| G6-AUTO-TOOL | tool policy fails closed for unleased tools | U | **PASS** |
+| G6-AUTO-BLOCK | locked kinds (`registry`, `system`, `credential`, `github_admin`) are never allowed and map to their guardrail rule ids | U | **PASS** |
+| G6-AUTO-FROZEN | frozen paths are denied even inside a leased root | U | **PASS** |
+| G6-AUTO-DESTRUCT | destructive actions require a snapshot reference **and** stay inside the leased root | U | **PASS** (code fixed in-gate: `destructive` now matches root scope) |
+| G6-AUTO-LEASE-EXPIRY | expired, revoked, and unknown leases deny everything | U | **PASS** |
+| G6-AUTO-NO-PROMPT | approved-plan writes never create approval rows (no prompting) | U | **PASS** |
+| G6-AUTO-ASK-ONCE | boundary requests: deny keeps the target blocked; a one-time grant is used exactly once (`grant-used`); a project grant repeats; only the user can resolve; a request resolves once | U | **PASS** |
+| G6-AUTO-GUARDRAIL-IMMUTABLE | the locked block is presented read-only and weakened rules are detected (tamper → `PolicyError`) | U | **PASS** |
+| G6-AUTO-EMERGENCY-STOP | emergency stop revokes every active lease (user only) | U | **PASS** |
+| G6-LEASE-EVENTS | `issued` / `allowed` / `denied` / `expansion.*` / `emergency_stop` recorded for the receipt | U | **PASS** |
+| G6-AUTONOMY-API | `/api/autonomy` service envelope (`issue`, `check`, `revoke`, `leases`, `request`, `resolve`, `requests`, `guardrails`, `emergency_stop`) | I | **PASS** |
+| G6-MIGRATION-8 | migration 008 (`capability_leases`, `lease_scope`, `lease_events`, `boundary_expansion_requests`) additive + idempotent | I | **PASS** — suite **346 passed + 10 subtests** (30 AUTO-* tests) |
+
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
-Manager), the autonomy engine (capability leases, boundary-expansion requests, guardrail enforcement),
-the AUTO-* test set, and the Providers + Autonomy surfaces with rendered evidence.
+Manager), and the Providers + Autonomy surfaces with rendered evidence (cards with the eight states,
+test connection, readiness panel, lease viewer with revoke, Approval Inbox, locked-guardrail block).
