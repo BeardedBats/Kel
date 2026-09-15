@@ -55,7 +55,11 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
      remaining failures were white text on the dark accent (3.16:1) in primary buttons and selected tabs,
      now fixed with a per-theme **accent ink** token (`#ffffff` light / `#101418` dark). Final audits:
      **0 contrast failures in BOTH themes** — boot 0 · drawer 0 · 0 on all eleven routes.
-  3. **Dense states**: render Work Center with >10 jobs, long lists, and long content.
+  3. ~~Dense states~~ **DONE** (commit `d77b4b2`): the compact density mode was defined in tokens but never
+     applied; the Work Center now sets `data-density` from its row count (`jobs + assignments > 10`) and compact
+     visibly tightens rows/cards instead of shrinking type. `seed_ui_fixture.py --dense` seeds twelve varied
+     jobs, and the harness dismisses first-run setup on a freshly seeded root (found while running this check).
+     Verified: **`density: compact`, 19 rows**, contrast 0.
   4. **Donor-surface repairs carried forward**: work-drawer tabs as semantic buttons, unused lazy imports
      in `Router.tsx`, donor CSS gradient/cream findings from the design review, live pet-window capture
      (`app.windows()` support in the harness).
