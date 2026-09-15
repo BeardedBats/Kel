@@ -26,8 +26,13 @@ Updated: 2026-09-15 ~19:58 ET · Session: #6 boundary (Gate 9 CLOSED via relay)
   2. **Full suites**: engine `pytest tests/` — **DONE** (363 + 10) — and every packaged harness
      (`capture-screens`, `a11y-probe`, `verify-actions`, `verify-credentials`, `verify-palette`,
      `verify-onboarding`, `probe-skip-link`, `probe-tokens`, `probe-drawer-tabs`, `make-comparisons`).
-  3. **Adversarial review pass** against the brief's §12 quality bar and the acceptance matrix, then fix
-     anything it finds (or record it with a reason).
+  3. ~~Adversarial review pass~~ **DONE** (commit `3f9b1e5`): `packaging/adversarial-review.py` sweeps the
+     shipped tree (do-not-ship list, packaged contract, ledger honesty, evidence coverage, code smells) and
+     writes `docs/v1.4/KEL_V1.4_ADVERSARIAL_REVIEW.md`. Result: **0 blocking findings**; do-not-ship clean
+     (0 emoji, 0 gradients, 0 bounce easing, reduced-motion present); packaged routes present; 527 captures.
+     The ledger advanced **58 rows** to `IMPLEMENTED`, each citing the artifact that delivered it
+     (`runtime/kel/solution.py` + its tests, etc.); the remaining **142** triage rows are named in the review
+     as a freeze-time task, with the reason a blanket advance would over-claim.
   4. **Package + freeze**: build the release candidate with `scripts/build-runtime.ps1` +
      `scripts/build-desktop.ps1` semantics, asar dedup + inspect, `verify_engine_pyz.py`;
      freeze to `Kel Releases/Kel-V1.4-Frozen` with a manifest (hashes, sizes, dates) — **never touching
