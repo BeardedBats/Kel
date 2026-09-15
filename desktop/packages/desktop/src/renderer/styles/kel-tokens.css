@@ -120,9 +120,9 @@
 
 /* Skip link — first tab stop on every Kel surface. */
 .kel-skip {
-  position: absolute;
+  position: fixed;
   left: 8px;
-  top: 8px;
+  top: 10px;
   transform: translateY(-200%);
   background: var(--kel-surface-1);
   color: var(--kel-text-1);
@@ -130,7 +130,7 @@
   border-radius: var(--kel-radius-control);
   padding: 8px 12px;
   font-size: var(--kel-type-label);
-  z-index: 60;
+  z-index: 300;
 }
 .kel-skip:focus {
   transform: none;
