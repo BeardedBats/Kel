@@ -160,3 +160,4 @@ and the V1.3 baseline for comparison (`screenshots/baseline/`).
 | Legacy settings routes (`model`/`tools`/`skills`) | redirected to `#/guid` (audited keyboard/IA defect) | land on `/providers`, `/autonomy`, `/team/roster` | **accepted** |
 | Smallest text / emoji icons | 12px / 0 | 12px / 0 | **accepted** |
 | Focus rings on tab stops | 0 of 30 | still to re-verify in the keyboard pass | **pending (G7 remainder)** |
+| Pet / confirm overlay | never captured (V1.3 evidence gap) | `screenshots/pet/` (three documents, 1440 + 1280) with 0 contrast failures; muted tone, 12px floor and reduced-motion repaired | **accepted-with-notes** — CSS/DOM level only; the pet bodies are script-rendered, so a live pet-window capture still belongs to a later pass |

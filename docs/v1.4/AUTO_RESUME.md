@@ -28,7 +28,9 @@ Updated: 2026-09-15 ~18:30 ET · Session: #6 (Gate 7 in progress; no blocker)
      change, pet states driven only by real engine state.
   3. **Sider consolidation** — Kel entries (Work · Team · Projects · Providers · Autonomy) plus the donor
      surfaces that remain; no dead entries.
-  4. **G9 carry-overs**: donor drawer tabs are `DIV`s with `tabindex` (not buttons); unused lazy imports
+  4. **Pet live capture** (polish, optional): the pet documents are audited statically (0 contrast
+     failures); a live pet-window capture needs `app.windows()` handling in the harness.
+  5. **G9 carry-overs**: donor drawer tabs are `DIV`s with `tabindex` (not buttons); unused lazy imports
      in `Router.tsx`; donor CSS gradient/cream patterns flagged by the design review.
 - **PROVEN UI VERIFICATION LOOP**: build (`bun x electron-vite build --config
   packages/desktop/electron.vite.config.ts`) → overlay `desktop/out` into
