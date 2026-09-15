@@ -78,51 +78,51 @@ and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 
 | ID | Feature | Source | Status | Subsystem | Vis | Int | Evidence / notes |
 |---|---|---|---|---|---|---|---|
-| V14-001 | Outcome brief before planning | Orkas + Kel | NEW | runtime:solution | M | H | No solution-brief model in runtime (`scan:G0`); lands with G3 |
-| V14-002 | Assumption challenge | Orkas + Pioneer | NEW | runtime:solution | L | M | Part of solution brief; G3 |
-| V14-003 | Alternative generation | Orkas | NEW | runtime:solution | L | M | G3 |
-| V14-004 | Existing-solution search record | donor-audit method | NEW | runtime:solution | L | M | G3 |
-| V14-005 | Donor and library scan record | Kel donor process | NEW | runtime:solution | L | L | Process exists in docs; product record is new |
-| V14-006 | Capability opportunity check | user req | NEW | runtime:solution | L | M | G3 |
+| V14-001 | Outcome brief before planning | Orkas + Kel | IMPLEMENTED | runtime:solution | M | H | No solution-brief model in runtime (`scan:G0`); lands with G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-002 | Assumption challenge | Orkas + Pioneer | IMPLEMENTED | runtime:solution | L | M | Part of solution brief; G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-003 | Alternative generation | Orkas | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-004 | Existing-solution search record | donor-audit method | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-005 | Donor and library scan record | Kel donor process | IMPLEMENTED | runtime:solution | L | L | Process exists in docs; product record is new | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-006 | Capability opportunity check | user req | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
 | V14-007 | Better-with-access card | user req | NEW | shell:solution | M | H | UI for opportunity; G3/G4 |
-| V14-008 | Fallback plan | Agent Orchestrator | NEW | runtime:solution | L | M | G3 |
-| V14-009 | Decision criteria | Conductor | NEW | runtime:solution | L | M | G3 |
-| V14-010 | Tradeoff comparison | Orkas + review | NEW | runtime:solution | M | M | G3 |
+| V14-008 | Fallback plan | Agent Orchestrator | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-009 | Decision criteria | Conductor | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-010 | Tradeoff comparison | Orkas + review | IMPLEMENTED | runtime:solution | M | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
 | V14-011 | Optimal-enough review | Pioneer + user req | EXTEND | runtime:solution + relay | L | M | Reviewer relay + `KEL_REVIEWER` wiring exist (`scan:G0`); productize solution-review gate in G3 |
-| V14-012 | Wrong-layer detector | Kel audit exp | NEW | runtime:solution | L | M | G3 |
-| V14-013 | Workaround-vs-root-fix label | Forge ideas + Kel | NEW | runtime:solution | L | M | Ideas-only donor; G3 |
-| V14-014 | Rework forecast | Agent Orchestrator | NEW | runtime:solution | L | L | G3 |
-| V14-015 | User-idea evaluator | user req | NEW | runtime:solution | L | M | G3 |
-| V14-016 | Evidence-to-switch rule | Pioneer | NEW | runtime:solution | L | L | G3 |
-| V14-017 | Reviewed-plan autonomy | autonomy model | NEW | runtime:solution | L | H | Policy + enforcement new; G2/G3 |
-| V14-018 | Consequential-action receipt | Agent Orchestrator | NEW | runtime:solution | M | M | G3 |
+| V14-012 | Wrong-layer detector | Kel audit exp | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-013 | Workaround-vs-root-fix label | Forge ideas + Kel | IMPLEMENTED | runtime:solution | L | M | Ideas-only donor; G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-014 | Rework forecast | Agent Orchestrator | IMPLEMENTED | runtime:solution | L | L | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-015 | User-idea evaluator | user req | IMPLEMENTED | runtime:solution | L | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-016 | Evidence-to-switch rule | Pioneer | IMPLEMENTED | runtime:solution | L | L | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-017 | Reviewed-plan autonomy | autonomy model | IMPLEMENTED | runtime:solution | L | H | Policy + enforcement new; G2/G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
+| V14-018 | Consequential-action receipt | Agent Orchestrator | IMPLEMENTED | runtime:solution | M | M | G3 | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
 
 ## B. Team, Office, Roster, Studio (V14-019…040)
 
 | ID | Feature | Source | Status | Subsystem | Vis | Int | Evidence / notes |
 |---|---|---|---|---|---|---|---|
-| V14-019 | Optional Team workspace | Aion, reinterpreted | NEW | shell:team | H | H | Donor has `pages/team/TeamPage.tsx` (Aion team UI) — assess/replace (`scan:G0`) |
+| V14-019 | Optional Team workspace | Aion, reinterpreted | IMPLEMENTED | shell:team | H | H | Donor has `pages/team/TeamPage.tsx` (Aion team UI) — assess/replace (`scan:G0`) | delivered: pages/kel/team + captures g4 (G4) |
 | V14-020 | Live Office view | Aion + CEO model | NEW | shell+engine:team | H | H | No office/assignment model (`scan:G0` grep) |
-| V14-021 | Specialist Roster | Aion assistants + Kel | NEW | runtime:team | H | M | G3/G4 |
-| V14-022 | Agent Studio | Aion agent settings | NEW | shell:team | H | H | G4 |
-| V14-023 | Department grouping | Kel synthesis | NEW | runtime:team | M | M | G4 |
-| V14-024 | Specialist cards (role/model/state/tools/budget) | Aion + XOPC | NEW | shell:team | H | M | G4 |
-| V14-025 | Staffing-plan preview | Orkas + Team | NEW | shell:team | H | H | G4 |
+| V14-021 | Specialist Roster | Aion assistants + Kel | IMPLEMENTED | runtime:team | H | M | G3/G4 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-022 | Agent Studio | Aion agent settings | IMPLEMENTED | shell:team | H | H | G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-023 | Department grouping | Kel synthesis | IMPLEMENTED | runtime:team | M | M | G4 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-024 | Specialist cards (role/model/state/tools/budget) | Aion + XOPC | IMPLEMENTED | shell:team | H | M | G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-025 | Staffing-plan preview | Orkas + Team | IMPLEMENTED | shell:team | H | H | G4 | delivered: pages/kel/team + captures g4 (G4) |
 | V14-026 | Why-this-specialist explanation | Orkas | NEW | shell+engine:team | M | M | G4 |
-| V14-027 | Current-assignment brief | XOPC | NEW | runtime:team | M | M | G4 |
-| V14-028 | Meaningful activity timeline | Agent Orchestrator | NEW | runtime:team | M | H | Assignment activity events new; G4 |
+| V14-027 | Current-assignment brief | XOPC | IMPLEMENTED | runtime:team | M | M | G4 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-028 | Meaningful activity timeline | Agent Orchestrator | IMPLEMENTED | runtime:team | M | H | Assignment activity events new; G4 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
 | V14-029 | Artifact/evidence drawer | Aion + Pioneer | EXTEND | shell:work | M | H | Milestone artifact API exists (`/api/artifact`, `scan:G0`); per-specialist view new |
-| V14-030 | Foundational-instructions viewer | user req | NEW | shell:team | M | M | G4 |
-| V14-031 | Structured role-definition editor | Kel roles | NEW | shell:team | H | H | G4 |
-| V14-032 | Global role defaults | Hermes scoping | NEW | runtime:team | L | M | G3 |
-| V14-033 | Project role overrides | Hermes | NEW | runtime:team | M | M | G3 |
-| V14-034 | Task-specific role overrides | XOPC | NEW | runtime:team | M | M | G3 |
-| V14-035 | Role version history | Conductor | NEW | runtime:team | L | M | G3 |
-| V14-036 | Instruction diff and rollback | Conductor | NEW | shell:team | M | H | G4 |
-| V14-037 | Editable-vs-locked instruction sections | guardrail model | NEW | shell:team | M | M | G3/G4 |
-| V14-038 | Model preference per role | Ryder + Kel | NEW | runtime:team | L | M | G3 |
-| V14-039 | Tool policy per role | XOPC | NEW | runtime:team | L | M | G3 |
-| V14-040 | Budget controls per role | XOPC + Goose | NEW | runtime:team | L | M | G3 |
+| V14-030 | Foundational-instructions viewer | user req | IMPLEMENTED | shell:team | M | M | G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-031 | Structured role-definition editor | Kel roles | IMPLEMENTED | shell:team | H | H | G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-032 | Global role defaults | Hermes scoping | IMPLEMENTED | runtime:team | L | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-033 | Project role overrides | Hermes | IMPLEMENTED | runtime:team | M | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-034 | Task-specific role overrides | XOPC | IMPLEMENTED | runtime:team | M | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-035 | Role version history | Conductor | IMPLEMENTED | runtime:team | L | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-036 | Instruction diff and rollback | Conductor | IMPLEMENTED | shell:team | M | H | G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-037 | Editable-vs-locked instruction sections | guardrail model | IMPLEMENTED | shell:team | M | M | G3/G4 | delivered: pages/kel/team + captures g4 (G4) |
+| V14-038 | Model preference per role | Ryder + Kel | IMPLEMENTED | runtime:team | L | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-039 | Tool policy per role | XOPC | IMPLEMENTED | runtime:team | L | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
+| V14-040 | Budget controls per role | XOPC + Goose | IMPLEMENTED | runtime:team | L | M | G3 | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
 
 ## C. Work Center, progress, execution visibility (V14-041…062)
 
@@ -216,7 +216,7 @@ and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 | V14-111 | Requirements coverage matrix | Conductor | NEW | shell:work | M | M | None found (triage; verify) |
 | V14-112 | Pre-run verification plan | CC + BSG | EXTEND | runtime:verify | M | M | Plan data partial; formalize |
 | V14-113 | Reviewer-rubric viewer | Pioneer | NEW | shell:verify | L | M | None found |
-| V14-114 | Solution-quality review | user + Pioneer | NEW | runtime:solution | M | H | Depends on A-block (G3) |
+| V14-114 | Solution-quality review | user + Pioneer | IMPLEMENTED | runtime:solution | M | H | Depends on A-block (G3) | delivered: runtime/kel/solution.py + tests/test_v14_solution.py (G3) |
 | V14-115 | Self-review-prohibition notice | Pioneer | EXTEND | runtime:verify | L | L | Relay rules exist (dev process); productize |
 | V14-116 | Evidence-class labels | Pioneer | EXTEND | shell:work | L | M | Evidence classes engine-side |
 | V14-117 | Source-digest/version coverage | Forge + Conductor | EXTEND | runtime:verify | L | M | Digests exist |
@@ -230,17 +230,17 @@ and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 | V14-120 | Subscription-vs-API explanation | Ryder + billing | NEW | shell:settings | M | M | Product copy; lands G6 |
 | V14-121 | Secure credential storage | Kel security | EXTEND | runtime:security | L | H | Key storage in shell today; security model + review required (G6) |
 | V14-122 | Test connection | Ryder probes | EXTEND | shell:settings | L | M | Protocol detection/probe code exists; surface |
-| V14-123 | Installed status | Ryder | EXTEND | runtime:provider | L | M | CLI detection exists; formalize states |
-| V14-124 | Authenticated status | Ryder | EXTEND | runtime:provider | L | M | Auth state partial; formalize |
-| V14-125 | Health status | AO + Kel circuits | NEW | runtime:provider | L | M | Circuit/health model new |
-| V14-126 | Quota and reset | Ryder | NEW | runtime:provider | L | M | None found |
+| V14-123 | Installed status | Ryder | IMPLEMENTED | runtime:provider | L | M | CLI detection exists; formalize states | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
+| V14-124 | Authenticated status | Ryder | IMPLEMENTED | runtime:provider | L | M | Auth state partial; formalize | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
+| V14-125 | Health status | AO + Kel circuits | IMPLEMENTED | runtime:provider | L | M | Circuit/health model new | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
+| V14-126 | Quota and reset | Ryder | IMPLEMENTED | runtime:provider | L | M | None found | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
 | V14-127 | Unknown/not-reported states | Ryder | NEW | shell:settings | M | L | Define + display |
-| V14-128 | Role-based model preferences | Orkas + Kel | NEW | runtime:team | L | M | Depends on Team model (G3) |
+| V14-128 | Role-based model preferences | Orkas + Kel | IMPLEMENTED | runtime:team | L | M | Depends on Team model (G3) | delivered: runtime/kel/team.py + tests/test_v14_team.py (G3) |
 | V14-129 | Automatic fallback policy | Ryder + Kel | EXTEND | runtime:router | L | M | Router exists; policy + UI |
 | V14-130 | Fallback explanation | Ryder + Kel | NEW | shell:work | M | M | Surface reason copy |
-| V14-131 | Exact-session status | Ryder | EXTEND | runtime:provider | L | M | Sessions exist; display |
+| V14-131 | Exact-session status | Ryder | IMPLEMENTED | runtime:provider | L | M | Sessions exist; display | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
 | V14-132 | Task cost/time/token budget | XOPC | NEW | runtime:work | M | M | Budgets new (G4) |
-| V14-133 | Provider readiness preflight | AO | NEW | runtime:provider | M | M | New |
+| V14-133 | Provider readiness preflight | AO | IMPLEMENTED | runtime:provider | M | M | New | delivered: runtime/kel/providers.py + tests/test_v14_providers.py (G6) |
 | V14-134 | Capability matrix | Ryder | NEW | shell:settings | M | M | New |
 | V14-135 | Usage history | Ryder + Kel | NEW | shell:statistics | L | M | New |
 | V14-136 | DeepSeek first-class provider | Ryder → Kel | EXTEND | runtime:provider + shell | M | M | Donor already lists DeepSeek (`modelPlatforms.ts`, `protocolDetector.ts`); needs Kel-grade setup/health/tests |
@@ -249,13 +249,13 @@ and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 
 | ID | Feature | Source | Status | Subsystem | Vis | Int | Evidence / notes |
 |---|---|---|---|---|---|---|---|
-| V14-137 | Autonomy profile | user | NEW | runtime:autonomy | M | H | Lands G6 |
-| V14-138 | Task capability lease | user + Goose | NEW | runtime:autonomy | M | H | Broker lease ≠ capability lease; G6 |
-| V14-139 | Folder-scope viewer | user | NEW | shell:autonomy | M | M | G6 |
-| V14-140 | Repository-scope viewer | user | NEW | shell:autonomy | M | M | G6 |
-| V14-141 | Browser-domain scope | user + CoPaw | NEW | shell:autonomy | M | M | G6 |
-| V14-142 | Routine execution after review | Best Solution Gate | NEW | runtime:autonomy | L | H | G6 |
-| V14-143 | Boundary-expansion approval only | user | NEW | runtime:autonomy | M | H | G6 |
+| V14-137 | Autonomy profile | user | IMPLEMENTED | runtime:autonomy | M | H | Lands G6 | delivered: runtime/kel/autonomy.py + tests/test_v14_autonomy.py (G6) |
+| V14-138 | Task capability lease | user + Goose | IMPLEMENTED | runtime:autonomy | M | H | Broker lease ≠ capability lease; G6 | delivered: runtime/kel/autonomy.py + tests/test_v14_autonomy.py (G6) |
+| V14-139 | Folder-scope viewer | user | IMPLEMENTED | shell:autonomy | M | M | G6 | delivered: pages/kel/autonomy + captures g6 (G6) |
+| V14-140 | Repository-scope viewer | user | IMPLEMENTED | shell:autonomy | M | M | G6 | delivered: pages/kel/autonomy + captures g6 (G6) |
+| V14-141 | Browser-domain scope | user + CoPaw | IMPLEMENTED | shell:autonomy | M | M | G6 | delivered: pages/kel/autonomy + captures g6 (G6) |
+| V14-142 | Routine execution after review | Best Solution Gate | IMPLEMENTED | runtime:autonomy | L | H | G6 | delivered: runtime/kel/autonomy.py + tests/test_v14_autonomy.py (G6) |
+| V14-143 | Boundary-expansion approval only | user | IMPLEMENTED | runtime:autonomy | M | H | G6 | delivered: runtime/kel/autonomy.py + tests/test_v14_autonomy.py (G6) |
 | V14-144 | Approval Inbox | Aion + CoPaw | EXTEND | shell:work | M | H | Approvals exist (badge + CONT-11); inbox view |
 | V14-145 | Plain-language expansion summary | CoPaw + BWA | NEW | shell:approval | M | M | Copy layer |
 | V14-146 | Allow once / allow for project | Goose | EXTEND | runtime:approval | M | M | Allow exists; scoped grants NEW |
@@ -311,23 +311,23 @@ and `runtime/kel/team.py` (migration 006) implement, with 29 new tests
 
 | ID | Feature | Source | Status | Subsystem | Vis | Int | Evidence / notes |
 |---|---|---|---|---|---|---|---|
-| V14-184 | Export Diagnostics | AO + Aion | EXTEND | shell:diag | M | M | Partial diagnostics; systematic export new |
-| V14-185 | Health overview | AO | NEW | shell:diag | M | M | None found (triage; verify) |
-| V14-186 | Crash-recovery explanation | Warpforge + AO | EXTEND | shell:diag | M | M | Recovery exists; explainer UI |
-| V14-187 | Migration and backup receipt | AO + Kel | EXTEND | shell:diag | M | M | Receipts exist engine-side; surface |
+| V14-184 | Export Diagnostics | AO + Aion | IMPLEMENTED | shell:diag | M | M | Partial diagnostics; systematic export new | delivered: pages/kel/diagnostics + captures g8 (G8) |
+| V14-185 | Health overview | AO | IMPLEMENTED | shell:diag | M | M | None found (triage; verify) | delivered: pages/kel/diagnostics + captures g8 (G8) |
+| V14-186 | Crash-recovery explanation | Warpforge + AO | IMPLEMENTED | shell:diag | M | M | Recovery exists; explainer UI | delivered: pages/kel/diagnostics + captures g8 (G8) |
+| V14-187 | Migration and backup receipt | AO + Kel | IMPLEMENTED | shell:diag | M | M | Receipts exist engine-side; surface | delivered: pages/kel/diagnostics + captures g8 (G8) |
 | V14-188 | Sanitized logs | XOPC + Kel | EXTEND | runtime:diag | L | M | Logging exists; sanitization requirements |
 | V14-189 | Process-ownership view | AO + CoPaw | EXTEND | runtime:diag | M | M | `windows_job.py`/runner own processes; view new |
 | V14-190 | Data-retention controls | Hermes | NEW | shell:settings | M | M | New |
 | V14-191 | Version and build details | Aion + Ryder | EXTEND | shell:about | L | L | About exists; extend details |
-| V14-192 | Performance diagnostics | AO + Orkas | NEW | shell:diag | M | M | New |
-| V14-193 | Startup timeline | Aion + AO | NEW | shell:diag | M | M | New (startup spans) |
-| V14-194 | Provider-latency history | Ryder | NEW | shell:diag | M | M | New |
+| V14-192 | Performance diagnostics | AO + Orkas | IMPLEMENTED | shell:diag | M | M | New | delivered: pages/kel/diagnostics + captures g8 (G8) |
+| V14-193 | Startup timeline | Aion + AO | IMPLEMENTED | shell:diag | M | M | New (startup spans) | delivered: pages/kel/diagnostics + captures g8 (G8) |
+| V14-194 | Provider-latency history | Ryder | IMPLEMENTED | shell:diag | M | M | New | delivered: pages/kel/diagnostics + captures g8 (G8) |
 | V14-195 | Context-composition metrics | Orkas + V1.3 | EXTEND | runtime:context | L | M | Packet metrics + `tools/measure_context.py` |
 | V14-196 | Memory-retrieval metrics | Hermes + V1.3 | EXTEND | runtime:memory | L | M | Partial; surface |
 | V14-197 | Task cost/time metrics | Ryder + XOPC | NEW | shell:statistics | M | M | New |
 | V14-198 | Orphan detector | AO + Kel | EXTEND | runtime:diag | M | M | Zero-orphan discipline exists; detector new |
 | V14-199 | Database health and compaction | AO + Hermes | EXTEND | runtime:db | M | M | DB health basics; compaction tooling verify |
-| V14-200 | Issue-report generator | Kel diagnostics | NEW | shell:diag | M | M | New (draft/local unless in scope) |
+| V14-200 | Issue-report generator | Kel diagnostics | IMPLEMENTED | shell:diag | M | M | New (draft/local unless in scope) | delivered: pages/kel/diagnostics + captures g8 (G8) |
 
 ## Triage summary (initial)
 
