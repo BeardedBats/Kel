@@ -776,5 +776,6 @@
       "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
     }
   ],
-  "focusIndicatorMissing": 0
+  "focusIndicatorMissing": 0,
+  "closeOutcome": "close-timeout"
 }
