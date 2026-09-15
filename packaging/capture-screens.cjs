@@ -1,7 +1,7 @@
 // Repeatable packaged-UI screenshot harness for Kel (V1.3 baseline + V1.4 regression).
 //
 // Usage:
-//   node capture-screens.cjs <appDir> <dataDir> <outDir> [--tag v13] [--widths 1440x900,...] [--explore]
+//   node capture-screens.cjs <appDir> <dataDir> <outDir> [--tag v13] [--widths 1440x900,...] [--views work:/work,team-office:/team/office] [--explore]
 //
 // Requirements: Playwright resolvable (`PLAYWRIGHT_MODULE` env, or `playwright` on NODE_PATH).
 //
@@ -39,6 +39,18 @@ const widths = String(flag('widths', '1440x900,1280x720,1920x1080,2560x1440,1024
   .split(',')
   .map((s) => s.split('x').map(Number))
   .filter((p) => p.length === 2 && p[0] > 0 && p[1] > 0);
+// Optional route views (V1.4 surfaces): --views "work:/work,team-office:/team/office" — captured at
+// every width alongside the core view set.
+const routeViews = String(flag('views', ''))
+  .split(',')
+  .map((entry) => entry.trim())
+  .filter(Boolean)
+  .map((entry) => {
+    const at = entry.indexOf(':');
+    const id = at >= 0 ? entry.slice(0, at) : entry;
+    const hash = at >= 0 ? entry.slice(at + 1) : '/guid';
+    return { id: (id || 'route').replace(/[^a-z0-9-]/gi, '-'), hash: hash || '/guid' };
+  });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const manifest = { schema: 1, tag, appDir, dataDir, startedAt: new Date().toISOString(), entries: [], errors: [], shutdown: {} };
@@ -85,8 +97,20 @@ async function readDescriptor(dir, timeoutMs) {
 }
 
 async function main() {
+  // Packaged mode: <appDir>/Kel.exe. Dev mode (no Kel.exe): Electron from
+  // desktop/node_modules with the app directory as the first argument — used to verify V1.4 UI
+  // before a candidate package exists. Isolation env + parking are identical in both modes.
+  const packagedExe = path.join(appDir, 'Kel.exe');
+  const packaged = fs.existsSync(packagedExe);
+  const launchTarget = packaged
+    ? { executablePath: packagedExe, args: ['--no-sandbox', '--window-position=-32000,-32000'] }
+    : {
+        executablePath: path.join(path.resolve(__dirname, '..'), 'desktop', 'node_modules', 'electron', 'dist', 'electron.exe'),
+        args: [appDir, '--no-sandbox', '--window-position=-32000,-32000'],
+      };
+  manifest.launchMode = packaged ? 'packaged' : 'dev';
   const app = await electron.launch({
-    executablePath: path.join(appDir, 'Kel.exe'),
+    executablePath: launchTarget.executablePath,
     cwd: appDir,
     timeout: 120000,
     env: {
@@ -97,7 +121,7 @@ async function main() {
       AIONUI_E2E_USER_DATA_DIR: path.join(dataDir, 'e2e-user-data'),
       KEL_SKIP_TELEMETRY: '1',
     },
-    args: ['--no-sandbox', '--window-position=-32000,-32000'],
+    args: launchTarget.args,
   });
   manifest.launchedAt = new Date().toISOString();
   APP = app;
@@ -231,6 +255,21 @@ async function main() {
       await page.evaluate((p) => { location.hash = '#/settings/' + p; }, pageName).catch(() => {});
       await page.waitForTimeout(1600);
       await shot(`09-settings-${pageName}`);
+    }
+  }
+
+  // --- V1.4 route views (--views id:hash) --------------------------------
+  for (const view of routeViews) {
+    await page.evaluate((hash) => { location.hash = hash; }, view.hash).catch(() => {});
+    await page.waitForTimeout(1800);
+    await shot(`12-${view.id}`);
+  }
+  for (const [rw, rh] of widths.slice(1)) {
+    await setSize(rw, rh);
+    for (const view of routeViews) {
+      await page.evaluate((hash) => { location.hash = hash; }, view.hash).catch(() => {});
+      await page.waitForTimeout(1200);
+      await shot(`13-${view.id}-at-${rw}x${rh}`);
     }
   }
 
