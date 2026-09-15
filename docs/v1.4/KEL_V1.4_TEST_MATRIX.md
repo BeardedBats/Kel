@@ -192,7 +192,8 @@ Remaining in Gate 7: onboarding for first run, search + command palette, tray/no
 and the shell-level keyboard pass (skip link, nav-first order, 30/30 focus rings).
 
 | G7-FOCUS | visible focus ring on every tab stop | P/V | **PASS** — **0/30 → 30/30** stops carry `solid 2px rgb(14, 124, 90)` (the Kel accent); probe resets focus before the pass so the sequence starts like a fresh load |
-| G7-SKIP-LINK | the shell's first tab stop is the skip link | I/V | **NOTE (open)** — the skip link is rendered as the first element of the shell (`Layout.tsx`) with a `#kel-shell-content` target, but it does not appear in the 30-stop sequence, so it is **not yet measurably reachable**; needs the layout branch/CSS checked (the drawer also takes the first stop while it is open) |
+| G7-SKIP-LINK | the shell's first tab stop is the skip link | I/V | **PASS** — on a fresh load the first stop is `A “Skip to main content”` (`isSkipLink: true`), focused and visible (`rect [8, 10, 162, 39]`) with a ring, targeting the existing `#kel-shell-content`; verified by `packaging/probe-skip-link.cjs` (`firstTabStop.isSkipLink: true`, `targetExists: true`, 0 errors) and by the a11y probe's fresh-load order (`focusOrderBoot[0]`, 15/15 stops ringed). The earlier “not in the tab order” observation was a **probe-ordering artifact** (the pass ran after the drawer had been opened) — fixed by collecting the fresh-load order before any interaction |
+| G7-FOCUS-BOOT | fresh-load tab order | V | **PASS** — 15/15 stops ringed, first stop = skip link |
 | G7-SEMANTICS | donor drawer controls use semantic elements | I | **NOTE (open)** — the work-drawer tabs are `DIV`s with `tabindex` (reachable and now ringed, but not buttons); converting them is a donor-surface refactor for the G9 pass |
 
 Remaining in Gate 6: OS-backed credential custody through the shell (Windows DPAPI/Credential
