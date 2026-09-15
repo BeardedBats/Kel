@@ -1,9 +1,9 @@
-# KEL V1.4 — UI AUDIT (v0)
+# KEL V1.4 — UI AUDIT (v0.2 — capture evidence collected)
 
-Status: v0 — method + preliminary source-level observations. **No rendered capture yet.** Per brief
-§11.6, source inspection alone never proves UI quality — nothing here is a verdict, and the audit
-is not complete until packaged screenshots, state matrix, keyboard, resizing, and accessibility
-checks have run.
+Status: v0.2 (2026-09-15). Packaged baseline captures are **complete** (frozen V1.3 copy, isolated data
+roots, five widths, zero renderer errors — `docs/v1.4/screenshots/baseline/`). This audit is still NOT
+a visual verdict: the aesthetic review requires a vision-capable pass (see §4 limitations); keyboard and
+full state-matrix checks expand in Gate 1.
 
 ## 1. Method (executes with the screenshot harness)
 
@@ -22,10 +22,21 @@ checks have run.
 
 ## 3. Checklist for the full audit (brief §11.1 + §11.7)
 
-- [ ] Packaged audit at all five widths
-- [ ] State matrix captured (all states above)
-- [ ] Defect list with severity + screenshot evidence
-- [ ] Inherited-Aion surface list vs Kel-identity target
-- [ ] Keyboard/focus audit
-- [ ] Accessibility audit (contrast, labels, non-color states)
-- [ ] Baseline screenshot set committed under `docs/v1.4/screenshots/baseline/`
+- [x] Packaged audit at five widths (boot + drawer views; per-view matrix widens in Gate 1) — captures committed
+- [~] State matrix: empty + populated + approval-visible + paused-work captured; provider-unavailable, dialogs, pet windows pending
+- [ ] Defect list with severity + screenshot evidence (Gate 1)
+- [ ] Inherited-Aion surface list vs Kel-identity target (Gate 1)
+- [ ] Keyboard/focus audit (Gate 1 + G7)
+- [ ] Accessibility audit (contrast, labels, non-color states) (Gate 1 + G7 + G9)
+- [x] Baseline screenshot set committed under `docs/v1.4/screenshots/baseline/`
+
+## 4. Known limitations (honest)
+
+1. **No vision-based review yet.** This runtime has no image-viewing capability, so this pass is
+   text/structural (route, size, innerText, discovery dump) + raw captures. A vision-capable review is
+   a flagged capability opportunity for visual acceptance; until then, captures are evidence and
+   before/after material, not an approved aesthetic judgement.
+2. Some settings routes recorded redirects in earlier sweeps; the v2 captures record their real
+   behavior (see manifests).
+3. Not yet captured: provider-unavailable, dialogs beyond the work drawer, pet windows,
+   offline/recovery screens, dense/long content.

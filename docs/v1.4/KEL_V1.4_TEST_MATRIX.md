@@ -45,7 +45,9 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 
 | Id | Check | Level | Status |
 |---|---|---|---|
-| G0-REF | refs/tag/frozen-hash verification | U (to be scripted) | **PASS this session** (manual) |
-| G0-SUITE | baseline suite green | U | **PASS** |
-| G0-HARNESS | packaged screenshot harness (isolated, hidden) | P | pending |
-| G0-PERF | startup/performance baseline | L | pending |
+| G0-REF | refs/tag/frozen-hash verification | U (to be scripted) | **PASS** (session 1; manual) |
+| G0-SUITE | baseline suite green (267 + 10) | U | **PASS** (session 1) |
+| G0-HARNESS | packaged screenshot harness (isolated, offscreen, bounded shutdown) | P | **PASS** (`packaging/capture-screens.cjs`) |
+| G0-CAPTURES | baseline captures (2 states × 30 views, 5 widths, 0 errors) | P/V | **PASS** (`docs/v1.4/screenshots/baseline/`) |
+| G0-FIXTURE | fixture generator for populated states (jobs/approval/memory) | I | **PASS** (`runtime/tools/seed_ui_fixture.py`) |
+| G0-PERF | startup/performance baseline | L | pending (G8 tooling) |

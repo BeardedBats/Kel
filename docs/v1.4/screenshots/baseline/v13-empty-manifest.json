@@ -1,0 +1,412 @@
+{
+  "schema": 1,
+  "tag": "v13-empty",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\pkg",
+  "dataDir": "C:\\Users\\Nick\\Desktop\\Kel\\dev-tools\\runs\\v13\\data\\empty",
+  "startedAt": "2026-09-15T15:13:20.134Z",
+  "entries": [
+    {
+      "view": "00-explore-boot",
+      "file": "v13-empty-01-00-explore-boot.png",
+      "inner": [
+        1440,
+        960
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 44516,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "01-boot-chat",
+      "file": "v13-empty-02-01-boot-chat.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 44711,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "02-work-drawer",
+      "file": "v13-empty-03-02-work-drawer.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 53549,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "02b-work-tab-default",
+      "file": "v13-empty-04-02b-work-tab-default.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 53611,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "03-continue",
+      "file": "v13-empty-05-03-continue.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 54228,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "04-knowledge",
+      "file": "v13-empty-06-04-knowledge.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 55518,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "05-map",
+      "file": "v13-empty-07-05-map.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 57396,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "06-recipes",
+      "file": "v13-empty-08-06-recipes.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 77843,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "07-recipe-preview",
+      "file": "v13-empty-09-07-recipe-preview.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 81773,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "07b-map-after-refresh",
+      "file": "v13-empty-10-07b-map-after-refresh.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 46681,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "08-after-drawer-close",
+      "file": "v13-empty-11-08-after-drawer-close.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 46681,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "09-settings-open",
+      "file": "v13-empty-12-09-settings-open.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 64787,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System default"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "v13-empty-13-09-settings-appearance.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/appearance",
+      "title": "Kel",
+      "bytes": 64787,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Theme Select or customize a theme Add Theme Light Dark Follow System Fonts Global System default System default - 14 + Reset Chat System default System default - 14 + Reset Markdown System default System default"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "v13-empty-14-09-settings-system.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/system",
+      "title": "Kel",
+      "bytes": 92662,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Language English Start on Boot Launch Kel automatically when you sign in to macOS or Windows. Close to Tray Hardware Acceleration Use the GPU to render the UI. Disable if the app crashes on launch or graphics fl"
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "v13-empty-15-09-settings-pet.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/pet",
+      "title": "Kel",
+      "bytes": 44058,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Enable Desktop Pet Pet Size Small (200px) Medium (280px) Large (360px) Do Not Disturb Pet stays idle, ignores AI events Show authorizations on the pet When off, AI tool authorizations stay in the main chat windo"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "v13-empty-16-09-settings-webui.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/webui",
+      "title": "Kel",
+      "bytes": 57486,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat WebUI Use Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere. 1 Enable WebUI 2 Access URL 3 Allow Remote Access Enable WebUI so your phone or remote browser can access "
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "v13-empty-17-09-settings-archived.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/archived",
+      "title": "Kel",
+      "bytes": 28562,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Archived conversations No archived items"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "v13-empty-18-09-settings-about.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/settings/about",
+      "title": "Kel",
+      "bytes": 41826,
+      "blankSuspect": false,
+      "textSample": "K Kel Application Appearance Archived Archived conversations Work & context Back to Chat Kel One desktop. Your AI work engine. v0.5.0 Check for updates Include prerelease/dev builds Help Documentation Update Log Report Issue Contact Me Official Website"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "v13-empty-19-09-settings-model.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 43807,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "v13-empty-20-09-settings-agent.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 43807,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "v13-empty-21-09-settings-skills.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 43807,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "v13-empty-22-09-settings-tools.png",
+      "inner": [
+        1456,
+        908
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 43807,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "10-boot-chat-at-1280x720",
+      "file": "v13-empty-23-10-boot-chat-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 42864,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+    },
+    {
+      "view": "11-work-drawer-at-1280x720",
+      "file": "v13-empty-24-11-work-drawer-at-1280x720.png",
+      "inner": [
+        1296,
+        728
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 72977,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "10-boot-chat-at-1920x1080",
+      "file": "v13-empty-25-10-boot-chat-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 88985,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "11-work-drawer-at-1920x1080",
+      "file": "v13-empty-26-11-work-drawer-at-1920x1080.png",
+      "inner": [
+        1936,
+        1088
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 88985,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "10-boot-chat-at-2560x1440",
+      "file": "v13-empty-27-10-boot-chat-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 98543,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "11-work-drawer-at-2560x1440",
+      "file": "v13-empty-28-11-work-drawer-at-2560x1440.png",
+      "inner": [
+        2576,
+        1448
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 98543,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "10-boot-chat-at-1024x768",
+      "file": "v13-empty-29-10-boot-chat-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 68235,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    },
+    {
+      "view": "11-work-drawer-at-1024x768",
+      "file": "v13-empty-30-11-work-drawer-at-1024x768.png",
+      "inner": [
+        1040,
+        776
+      ],
+      "hash": "#/guid",
+      "title": "Kel",
+      "bytes": 68235,
+      "blankSuspect": false,
+      "textSample": "K Kel New Chat No chat history Work & context Settings Hi, what's your plan for today? Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change. Work & context Conversation New conversation Work Saved context S"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": true,
+    "engineKilled": false,
+    "appExitCode": 0
+  },
+  "launchedAt": "2026-09-15T15:13:20.621Z",
+  "engine": {
+    "pid": 39672,
+    "version": "0.5.0"
+  },
+  "finishedAt": "2026-09-15T15:14:55.204Z",
+  "closeOutcome": "closed"
+}
