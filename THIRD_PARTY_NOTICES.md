@@ -14,6 +14,15 @@ Attribution requirements: retain the Apache-2.0 license texts (`third_party/Aion
 `third_party/AionCore-LICENSE.txt`), the `NOTICE` file, and the modification notes above in any
 redistribution. The desktop fork remains Apache-2.0 and is not an official AionUI release.
 
+## Copied code (adapted)
+
+| Source | Upstream | Pinned revision | License | Copied material | Kel file | Modifications |
+|---|---|---|---|---|---|---|
+| hermes-agent | https://github.com/NousResearch/hermes-agent | 40f2702b22a3 | MIT (full text: `third_party/HERMES-AGENT-LICENSE.txt`) | Injected-context fence tags + sanitizer regexes (`agent/memory_manager.py:167-177`) | `runtime/kel/composer.py` (`sanitize_context`, `fence`) | Trimmed to the two fence patterns; exposed as module-level helpers; `<memory-context>` fences retained; behavior mirrored by `tests/test_v13_composer.py::test_fence_sanitizer_mirrors_donor_behaviour` |
+
+Copyright (c) 2025 Nous Research. Material from other donors below remains pattern-level
+(no literal copying) unless stated here.
+
 ## Build and tool dependencies (obtained separately; not committed)
 
 | Component | License | Role |
@@ -23,15 +32,15 @@ redistribution. The desktop fork remains Apache-2.0 and is not an official AionU
 | PyInstaller | GPL-2.0 with bootloader exception | Runtime packaging tool (build-time only) |
 | Python standard library | PSF | Runtime engine |
 
-## Evaluated donors (reference-only; no code copied)
+## Evaluated donors (pattern-level; see "Copied code (adapted)" above)
 
-These projects were studied during development. **None of their code is present in this
-repository.** Records are kept for auditability; the full audit is
-`docs/v1.3/KEL_V1.3_DONOR_AUDIT.md` on the `v1.3-dev` branch.
+These projects were studied during development. **No donor code is present except the single
+adapted snippet listed under "Copied code (adapted)" above.** Records are kept for
+auditability; the full audit is `docs/v1.3/KEL_V1.3_DONOR_AUDIT.md` on the `v1.3-dev` branch.
 
 | Donor | License | Use |
 |---|---|---|
-| NousResearch/hermes-agent | MIT | Patterns only (memory interfaces, context fencing) |
+| NousResearch/hermes-agent | MIT | **Code adapted: context fences + sanitizer (see "Copied code (adapted)")**; other patterns reference-only |
 | Untrivial-ai/agent-orchestrator | Apache-2.0 | Patterns only (derived status, fail-closed observations) |
 | ephor/warpforge | MIT | Patterns only (wake/attach semantics) |
 | Chuzom/Chuzom | MIT | Patterns only (freeze frontier, bounded escalation) |
