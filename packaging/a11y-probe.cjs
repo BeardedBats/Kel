@@ -24,6 +24,22 @@ const { _electron: electron } = playwright;
 const appDir = path.resolve(process.argv[2] || '.');
 const dataDir = path.resolve(process.argv[3] || '');
 const outDir = path.resolve(process.argv[4] || '');
+// Optional V1.4 surface sampling: --routes "work:/work,team-office:/team/office" (same shape as
+// capture-screens.cjs --views).
+const routeArgIndex = process.argv.indexOf('--routes');
+const viewArgIndex = process.argv.indexOf('--views');
+const routeSpec = routeArgIndex >= 0 ? process.argv[routeArgIndex + 1]
+  : (viewArgIndex >= 0 ? process.argv[viewArgIndex + 1] : '');
+const routeList = String(routeSpec || '')
+  .split(',')
+  .map((entry) => entry.trim())
+  .filter(Boolean)
+  .map((entry) => {
+    const at = entry.indexOf(':');
+    const id = at >= 0 ? entry.slice(0, at) : entry;
+    const hash = at >= 0 ? entry.slice(at + 1) : '/guid';
+    return { id: (id || 'route').replace(/[^a-z0-9-]/gi, '-'), hash: hash || '/guid' };
+  });
 fs.mkdirSync(outDir, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = { schema: 1, startedAt: new Date().toISOString(), errors: [] };
@@ -127,8 +143,19 @@ const PAGE_AUDIT = () => {
 };
 
 async function main() {
+  // Packaged mode: <appDir>/Kel.exe. Dev mode: Electron from desktop/node_modules with the app
+  // directory as the first argument (V1.4 UI verification before a candidate package exists).
+  const packagedExe = path.join(appDir, 'Kel.exe');
+  const packaged = fs.existsSync(packagedExe);
+  const launchTarget = packaged
+    ? { executablePath: packagedExe, args: ['--no-sandbox', '--window-position=-32000,-32000'] }
+    : {
+        executablePath: path.join(path.resolve(__dirname, '..'), 'desktop', 'node_modules', 'electron', 'dist', 'electron.exe'),
+        args: [appDir, '--no-sandbox', '--window-position=-32000,-32000'],
+      };
+  out.launchMode = packaged ? 'packaged' : 'dev';
   const app = await electron.launch({
-    executablePath: path.join(appDir, 'Kel.exe'),
+    executablePath: launchTarget.executablePath,
     cwd: appDir,
     timeout: 120000,
     env: {
@@ -139,7 +166,7 @@ async function main() {
       AIONUI_E2E_USER_DATA_DIR: path.join(dataDir, 'e2e-user-data'),
       KEL_SKIP_TELEMETRY: '1',
     },
-    args: ['--no-sandbox', '--window-position=-32000,-32000'],
+    args: launchTarget.args,
   });
   APP = app;
   const page = await app.firstWindow({ timeout: 120000 });
@@ -168,6 +195,19 @@ async function main() {
   const trigger = page.locator('text=Work & context').first();
   if (await trigger.count()) { await trigger.click({ timeout: 8000 }).catch(() => {}); await page.waitForTimeout(1500); }
   out.workDrawer = await page.evaluate(PAGE_AUDIT);
+
+  // V1.4 surfaces: sample each route (--routes id:hash) after the drawer pass.
+  out.routes = {};
+  for (const route of routeList) {
+    await page.evaluate((hash) => { location.hash = hash; }, route.hash).catch(() => {});
+    await page.waitForTimeout(1800);
+    out.routes[route.id] = await page.evaluate(PAGE_AUDIT);
+    if (routeList.indexOf(route) < 2) {
+      await page.screenshot({
+        path: path.join(outDir, `v14-a11y-${route.id}.png`),
+      }).catch(() => {});
+    }
+  }
 
   // Keyboard order evidence (app-scoped Tab presses inside the test window only).
   const stops = [];
@@ -215,7 +255,9 @@ async function main() {
   fs.writeFileSync(path.join(outDir, 'v13-a11y.json'), JSON.stringify(out, null, 2));
   console.log(JSON.stringify({
     ok: true,
+    launchMode: out.launchMode,
     contrastFailures: out.workDrawer.contrastFailureCount + out.bootScreen.contrastFailureCount,
+    routeContrastFailures: Object.entries(out.routes || {}).map(([id, r]) => [id, r.contrastFailureCount]),
     smallestText: out.bootScreen.smallestText,
     emoji: out.bootScreen.emojiCharacters + out.workDrawer.emojiCharacters,
     focusStops: out.focusOrder.length,
