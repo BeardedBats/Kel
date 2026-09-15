@@ -89,5 +89,5 @@ Retention rule: the engine suite must stay ≥ **267 passed + 10 subtests** at e
 | G4-BUILD | desktop dependencies + renderer build on this machine | I | **PASS** (`bun install --frozen-lockfile` 1591 pkgs; `bun x electron-vite build` exit 0 → `desktop/out/{main,preload,renderer}`) |
 | G4-ALLOWLIST | `/api/brief` + `/api/team` reachable from the renderer | I | **PASS** (`KelService.ts` route allowlist) |
 | G4-FIXTURES | team/solution fixtures seed an isolated data root | I | **PASS** (`data/fixture-team`: 9 roles, 2 assignments, activity + artifact, APPROVED brief) |
-| G4-UI | Office / Roster / Studio + Work Center surfaces rendered and verified | V | pending (in progress) |
+| G4-UI | Office / Roster / Studio + Work Center surfaces implemented, routed, and compiling into the renderer bundle | I/V | **PASS (code)** — `030cb61`; rendered capture verification pending |
 | G4-CAPTURE | five-width captures of the new surfaces + comparisons | V | pending |

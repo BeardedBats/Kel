@@ -1,42 +1,38 @@
 # KEL V1.4 — AUTO-RESUME
 
-Updated: 2026-09-15 ~12:55 ET · Session: #6 (Gate 4 in progress; work continues, no blocker)
+Updated: 2026-09-15 ~13:12 ET · Session: #6 (Gate 4 in progress; no blocker)
 
-- **Current gate**: Gate 4 — **IN PROGRESS** (Team Office / Roster / Studio + unified Work Center UI).
-- **Current phase**: Gate 4 build preparation complete; UI surfaces not yet written.
-- **Completed this session**: desktop deps installed, renderer build green, route allowlist extended,
-  team/solution fixtures seeding verified.
-- **Branch / commit / remote**: `v1.4-dev` @ `f268719`/`73bc304` (+ this commit) · pushed to `origin`.
-- **Files changed this session**: `desktop/packages/desktop/src/process/services/kel/KelService.ts`
-  (route allowlist += `brief`, `team`), `runtime/tools/seed_ui_fixture.py` (team + solution fixtures),
-  `docs/v1.4/{STATUS,TEST_MATRIX,AUTO_RESUME}.md`. Build artifacts are git-ignored (`desktop/out`,
-  `desktop/node_modules`).
-- **Verified this session**:
-  - `bun install --frozen-lockfile` → 1591 packages, exit 0, lockfile unchanged.
-  - `bun x electron-vite build --config packages/desktop/electron.vite.config.ts` → exit 0 in 36.7s,
-    emitting `desktop/out/{main,preload,renderer}` (+ fonts, pet, pet-states).
-  - `python tools/seed_ui_fixture.py --data …/data/fixture-team` → 9 roles, 2 assignments
-    (implementation-engineer + qa-engineer) with activity/artifact rows, 1 APPROVED solution brief.
-- **Build recipe (important)**: use `bun x electron-vite build --config packages/desktop/electron.vite.config.ts`
-  from `desktop/`. Do **not** use `bun run build` — that is the donor’s multi-arch mac
-  electron-builder wrapper and fails here because `bunx` is not on PATH (only `bun.exe` exists in
-  `dev-tools/bun`). For Windows packaging at G10 use `scripts/build-desktop.ps1` semantics plus the
-  repo’s asar/verify tooling.
-- **Tests**: engine suite 296 passed + 10 subtests (unchanged this session).
+- **Current gate**: Gate 4 — **IN PROGRESS** (Team Office / Roster / Studio + unified Work Center).
+- **Current phase**: UI surfaces implemented + compiling; **rendered verification and navigation wiring
+  are the remaining work**.
+- **Completed so far in Gate 4**:
+  1. Desktop deps installed (`bun install --frozen-lockfile`, 1591 pkgs, lockfile unchanged).
+  2. Renderer/main/preload build green (`bun x electron-vite build --config packages/desktop/electron.vite.config.ts` → `desktop/out`).
+  3. `/api/brief` + `/api/team` added to the KelService route allowlist.
+  4. Fixture generator seeds 9 roles, 2 assignments (activity + artifact), an APPROVED solution brief
+     (`data/fixture-team`).
+  5. `kel-tokens.css`, `components/kel/{kelApi.ts,KelPrimitives.tsx}`, `pages/kel/team/index.tsx`,
+     `pages/kel/work/index.tsx` written; routes `/work`, `/team`, `/team/office|roster|studio` mounted;
+     renderer build green (25.7s).
+- **Branch / commit / remote**: `v1.4-dev` @ `030cb61` · pushed to `origin`.
+- **Tests**: engine suite 296 passed + 10 subtests (unchanged this session); renderer build = the UI gate
+  available so far.
 - **Tests failing**: none.
-- **Active reviewer state**: Gate 3 = CONTINUE (Gate 4 checkpoint not yet requested).
+- **Active reviewer state**: Gate 3 = CONTINUE; Gate 4 checkpoint not yet requested.
 - **Current blocker**: none. **HARD STOP: no.**
-- **Running processes / ownership**: none (install and build both exited).
+- **Running processes / ownership**: none (builds exited).
 - **Frozen-hash state**: 3/3 verified, unchanged; `Kel Releases/` untouched.
 - **Dogfood isolation**: intact.
-- **Exact next action** (Gate 4 UI):
-  1. Add `desktop/packages/desktop/src/renderer/styles/kel-tokens.css` (`--kel-*` tokens, light + dark)
-     and wire it through `uno.config.ts` / `arco-override.css`.
-  2. Build Kel component wrappers (button, status chip, card, sheet, table, empty, meter) and the
-     Team surfaces (Office, Roster, Studio) plus the unified Work Center, calling `/api/team` and
-     `/api/brief` through the existing Kel bridge.
-  3. Extend `runtime/tools/seed_ui_fixture.py` states if needed; capture the new surfaces at five
-     widths (`packaging/capture-screens.cjs`), run `packaging/a11y-probe.cjs` for focus/contrast, and
-     record verdicts in `KEL_V1.4_VISUAL_ACCEPTANCE_MATRIX.md`.
-  4. Rebuild, commit, push, reviewer relay, update ledger/STATUS/TEST_MATRIX.
+- **Exact next action** (finish Gate 4):
+  1. Add Kel navigation entries to the app Sider (Work → `/work`, Team → `/team/office`) so the new
+     surfaces are reachable in-product; keep the donor Team page hidden.
+  2. Launch the app under the harness with the team fixture data root and capture `/work`,
+     `/team/office`, `/team/roster`, `/team/studio` at five widths
+     (`packaging/capture-screens.cjs`), then run `packaging/a11y-probe.cjs` on those routes for
+     contrast/focus evidence.
+  3. Record verdicts in `KEL_V1.4_VISUAL_ACCEPTANCE_MATRIX.md` (Team Office/Roster/Studio + Work
+     Center rows) and add before/after comparisons where a V1.3 equivalent exists.
+  4. Commit + push, then request the Gate 4 reviewer relay checkpoint.
+- **Build recipe**: `bun x electron-vite build --config packages/desktop/electron.vite.config.ts` from
+  `desktop/` (do **not** use `bun run build` — donor multi-arch mac wrapper needing `bunx`).
 - **Continuation safety**: safe (tree clean except untracked `Agents.md`).
