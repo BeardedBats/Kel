@@ -100,4 +100,12 @@ contextBridge.exposeInMainWorld('kelAPI', {
   history: (id: string) => ipcRenderer.invoke('kel:history', id),
   conversation: (id: string) => ipcRenderer.invoke('kel:conversation', id),
   historySearch: (query: string) => ipcRenderer.invoke('kel:history-search', query),
+  // Credential custody: store, list field names, delete. Deliberately no value getter, so a secret
+  // cannot reach the renderer even by mistake.
+  credentials: {
+    status: () => ipcRenderer.invoke('kel:credential-status'),
+    set: (provider: string, field: string, value: string) =>
+      ipcRenderer.invoke('kel:credential-set', provider, field, value),
+    remove: (provider: string) => ipcRenderer.invoke('kel:credential-delete', provider),
+  },
 });

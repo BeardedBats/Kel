@@ -1,0 +1,781 @@
+{
+  "schema": 1,
+  "startedAt": "2026-09-15T19:37:42.363Z",
+  "errors": [],
+  "launchMode": "packaged",
+  "engine": {
+    "pid": 39748,
+    "version": "0.5.0"
+  },
+  "bootScreen": {
+    "textSamples": 22,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
+    "smallestText": 12,
+    "largestText": 21,
+    "fontSizeHistogram": {
+      "12": 1,
+      "13": 1,
+      "14": 16,
+      "16": 1,
+      "21": 1,
+      "12.5": 2
+    },
+    "paletteText": [
+      {
+        "value": "rgb(255,255,255)",
+        "count": 14
+      },
+      {
+        "value": "rgb(169,182,198)",
+        "count": 5
+      },
+      {
+        "value": "rgb(230,237,243)",
+        "count": 1
+      },
+      {
+        "value": "rgb(144,152,161)",
+        "count": 1
+      },
+      {
+        "value": "rgb(206,211,218)",
+        "count": 1
+      }
+    ],
+    "paletteBg": [
+      {
+        "value": "rgb(38,38,38)",
+        "count": 17
+      },
+      {
+        "value": "rgb(26,26,26)",
+        "count": 4
+      },
+      {
+        "value": "rgb(22,27,34)",
+        "count": 1
+      }
+    ],
+    "emojiCharacters": 0
+  },
+  "focusOrderBoot": [
+    {
+      "tag": "A",
+      "name": null,
+      "text": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        10,
+        162,
+        39
+      ],
+      "isSkipLink": true
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Collapse",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        16,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Search messages",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        52,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Minimize",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        1328,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Maximize",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        1368,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Close",
+      "text": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        1408,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "New Chat",
+      "outline": "solid 2px rgb(53, 166, 128)",
+      "rect": [
+        8,
+        91,
+        208,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Work",
+      "text": "Work",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        127,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Team",
+      "text": "Team",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        163,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Projects",
+      "text": "Projects",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        199,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Providers",
+      "text": "Providers",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        235,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Autonomy",
+      "text": "Autonomy",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        271,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "name": "Diagnostics",
+      "text": "Diagnostics",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        307,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "New conversation",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        425,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Baseline fixture chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "rect": [
+        8,
+        461,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    }
+  ],
+  "workDrawer": {
+    "textSamples": 41,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
+    "smallestText": 12,
+    "largestText": 21,
+    "fontSizeHistogram": {
+      "12": 1,
+      "13": 1,
+      "14": 34,
+      "16": 2,
+      "21": 1,
+      "12.5": 2
+    },
+    "paletteText": [
+      {
+        "value": "rgb(255,255,255)",
+        "count": 33
+      },
+      {
+        "value": "rgb(169,182,198)",
+        "count": 5
+      },
+      {
+        "value": "rgb(230,237,243)",
+        "count": 1
+      },
+      {
+        "value": "rgb(144,152,161)",
+        "count": 1
+      },
+      {
+        "value": "rgb(206,211,218)",
+        "count": 1
+      }
+    ],
+    "paletteBg": [
+      {
+        "value": "rgb(42,42,43)",
+        "count": 19
+      },
+      {
+        "value": "rgb(38,38,38)",
+        "count": 17
+      },
+      {
+        "value": "rgb(26,26,26)",
+        "count": 4
+      },
+      {
+        "value": "rgb(22,27,34)",
+        "count": 1
+      }
+    ],
+    "emojiCharacters": 0
+  },
+  "routes": {
+    "work": {
+      "textSamples": 81,
+      "contrastFailures": [],
+      "contrastFailureCount": 0,
+      "smallestText": 12,
+      "largestText": 24,
+      "fontSizeHistogram": {
+        "12": 27,
+        "14": 43,
+        "16": 6,
+        "24": 5
+      },
+      "paletteText": [
+        {
+          "value": "rgb(255,255,255)",
+          "count": 28
+        },
+        {
+          "value": "rgb(169,182,198)",
+          "count": 23
+        },
+        {
+          "value": "rgb(125,139,158)",
+          "count": 14
+        },
+        {
+          "value": "rgb(230,237,243)",
+          "count": 13
+        },
+        {
+          "value": "rgb(144,152,161)",
+          "count": 1
+        },
+        {
+          "value": "rgb(47,163,124)",
+          "count": 1
+        },
+        {
+          "value": "rgb(242,200,121)",
+          "count": 1
+        }
+      ],
+      "paletteBg": [
+        {
+          "value": "rgb(22,27,34)",
+          "count": 35
+        },
+        {
+          "value": "rgb(38,38,38)",
+          "count": 15
+        },
+        {
+          "value": "rgb(42,42,43)",
+          "count": 15
+        },
+        {
+          "value": "rgb(28,35,44)",
+          "count": 13
+        },
+        {
+          "value": "rgb(16,20,24)",
+          "count": 2
+        },
+        {
+          "value": "rgb(42,33,19)",
+          "count": 1
+        }
+      ],
+      "emojiCharacters": 0
+    }
+  },
+  "focusOrder": [
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        916,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        983,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1109,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Continue work",
+      "rect": [
+        1230,
+        142,
+        95,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Project knowledge",
+      "rect": [
+        1357,
+        142,
+        122,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Project map",
+      "rect": [
+        1233,
+        142,
+        79,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Recipes",
+      "rect": [
+        1344,
+        142,
+        52,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Do the workCLOSED · VERIFIEDout.mdDo the workAWAIT",
+      "rect": [
+        872,
+        198,
+        568,
+        589
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "out.md",
+      "rect": [
+        872,
+        286,
+        78,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Pause",
+      "rect": [
+        872,
+        431,
+        72,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Resume",
+      "rect": [
+        944,
+        431,
+        85,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Cancel",
+      "rect": [
+        1028,
+        431,
+        77,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Pause",
+      "rect": [
+        872,
+        576,
+        72,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Resume",
+      "rect": [
+        944,
+        576,
+        85,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Cancel",
+      "rect": [
+        1028,
+        576,
+        77,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Allow",
+      "rect": [
+        872,
+        739,
+        67,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Deny",
+      "rect": [
+        947,
+        739,
+        66,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "New conversation",
+      "rect": [
+        872,
+        90,
+        568,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        916,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        983,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1109,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Continue work",
+      "rect": [
+        1230,
+        142,
+        95,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Project knowledge",
+      "rect": [
+        1357,
+        142,
+        122,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Project map",
+      "rect": [
+        1233,
+        142,
+        79,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Recipes",
+      "rect": [
+        1344,
+        142,
+        52,
+        40
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "name": null,
+      "text": "Do the workCLOSED · VERIFIEDout.mdDo the workAWAIT",
+      "rect": [
+        872,
+        198,
+        568,
+        589
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "out.md",
+      "rect": [
+        872,
+        286,
+        78,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Pause",
+      "rect": [
+        872,
+        431,
+        72,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Resume",
+      "rect": [
+        944,
+        431,
+        85,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": null,
+      "text": "Cancel",
+      "rect": [
+        1028,
+        431,
+        77,
+        32
+      ],
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px"
+    }
+  ],
+  "focusIndicatorMissing": 0,
+  "closeOutcome": "close-timeout"
+}

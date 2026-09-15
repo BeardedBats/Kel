@@ -15,6 +15,8 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
+import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
+import { configService } from '@/common/config/configService';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
 import { ProjectPanelMobileOverlay } from '@renderer/components/layout/ProjectPanelMobileOverlay';
@@ -132,6 +134,36 @@ const Layout: React.FC<{
   useDesktopTurnNotification();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Kel V1.4 first-run: a genuinely fresh install (no completion flag and no conversations) is offered
+  // onboarding once. An install that already holds conversations is never interrupted, so migrated
+  // users skip the flow entirely.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      // Flag-only rule, and the flag is read from the same store the onboarding flow writes to
+      // (`configService`), never from the migration's local config file.
+      //
+      // Why not "no conversations ⇒ fresh": the donor keeps a default conversation even on a brand-new
+      // profile, so a conversation count can never distinguish a fresh install (measured: a new data root
+      // still renders the guid shell with one conversation row). Consequence, recorded rather than
+      // hidden: an install migrated from V1.3 sees the flow once and dismisses it with "Skip setup",
+      // which is one click; a stricter migrated-install rule needs a renderer-readable "previous install"
+      // signal and is carried as an open item.
+      await configService.initialize().catch(() => undefined);
+      if (cancelled) return;
+      let completed = false;
+      try {
+        completed = Boolean(configService.get('kel.onboardingCompleted_v1'));
+      } catch {
+        completed = false;
+      }
+      if (!completed) navigate('/onboarding', { replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
   const workspaceAvailable =
     location.pathname.startsWith('/conversation/') || (TEAM_MODE_ENABLED && location.pathname.startsWith('/team/'));
   const toggleSider = useCallback(() => {
@@ -374,6 +406,12 @@ const Layout: React.FC<{
     <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed }}>
       <NavigationHistoryProvider>
         <div className='app-shell flex flex-col size-full min-h-0'>
+          {/* Kel V1.4: the shell's first tab stop — jumps past the sider to the routed content. */}
+          <a className='kel-skip' href='#kel-shell-content'>
+            Skip to main content
+          </a>
+          {/* Kel V1.4: Ctrl+K anywhere (or `/` to search) opens the command palette. */}
+          <KelCommandPalette />
           <Titlebar workspaceAvailable={workspaceAvailable} />
           {/* 移动端左侧边栏蒙板 / Mobile left sider backdrop */}
           {isMobile && !collapsed && (
@@ -477,6 +515,8 @@ const Layout: React.FC<{
                 per-conversation subtree → persists across same-project switches. */}
             <div ref={mainRowRef} className='flex flex-1 min-h-0 overflow-hidden'>
               <ArcoLayout.Content
+                id='kel-shell-content'
+                tabIndex={-1}
                 className={'bg-1 layout-content flex flex-col min-h-0 flex-1'}
                 onClick={() => {
                   if (isMobile && !collapsed) setCollapsed(true);

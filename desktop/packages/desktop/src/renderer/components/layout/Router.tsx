@@ -25,6 +25,13 @@ const ComponentsShowcase = React.lazy(() => import('@renderer/pages/TestShowcase
 const ScheduledTasksPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage'));
 const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage/TaskDetailPage'));
 const TeamIndex = React.lazy(() => import('@renderer/pages/team'));
+const KelWorkCenter = React.lazy(() => import('@renderer/pages/kel/work'));
+const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
+const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
+const KelProviders = React.lazy(() => import('@renderer/pages/kel/providers'));
+const KelAutonomy = React.lazy(() => import('@renderer/pages/kel/autonomy'));
+const KelOnboarding = React.lazy(() => import('@renderer/pages/kel/onboarding'));
+const KelDiagnostics = React.lazy(() => import('@renderer/pages/kel/diagnostics'));
 
 const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => (
   <Suspense fallback={<AppLoader />}>
@@ -97,40 +104,40 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           />
           <Route
             path='/settings/model'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(ModeSettings)}
+            element={<Navigate to='/providers' replace />}
           />
           <Route
             path='/assistants'
             element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(AssistantSettings)}
           />
-          <Route path='/settings/assistants' element={<Navigate to='/guid' replace />} />
+          <Route path='/settings/assistants' element={<Navigate to='/team/roster' replace />} />
           <Route
             path='/settings/agent'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(AgentSettings)}
+            element={<Navigate to='/team/roster' replace />}
           />
           <Route
             path='/settings/agent/:id/repair'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(AgentRepairPage)}
+            element={<Navigate to='/team/roster' replace />}
           />
           <Route
             path='/settings/skills'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(SkillsSettings)}
+            element={<Navigate to='/team/roster' replace />}
           />
           <Route
             path='/settings/skills/import-history'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(SkillsSettings)}
+            element={<Navigate to='/team/roster' replace />}
           />
           <Route
             path='/settings/skills/detail/:skillName'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(SkillDetailPage)}
+            element={<Navigate to='/team/roster' replace />}
           />
           <Route
             path='/settings/tools'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(ToolsSettings)}
+            element={<Navigate to='/autonomy' replace />}
           />
-          <Route path='/settings/capabilities' element={<Navigate to='/guid' replace />} />
-          <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/guid' replace />} />
-          <Route path='/settings/skills-hub' element={<Navigate to='/guid' replace />} />
+          <Route path='/settings/capabilities' element={<Navigate to='/team/roster' replace />} />
+          <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/team/roster' replace />} />
+          <Route path='/settings/skills-hub' element={<Navigate to='/team/roster' replace />} />
           <Route path='/settings/appearance' element={withRouteFallback(AppearanceSettings)} />
           <Route path='/settings/display' element={<Navigate to='/settings/appearance' replace />} />
           <Route path='/settings/webui' element={withRouteFallback(WebuiSettings)} />
@@ -143,6 +150,19 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/test/components' element={withRouteFallback(ComponentsShowcase)} />
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
+          <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
+          <Route path='/team' element={<Navigate to='/team/office' replace />} />
+          <Route path='/team/office' element={withRouteFallback(KelTeam)} />
+          <Route path='/team/roster' element={withRouteFallback(KelTeam)} />
+          <Route path='/team/studio' element={withRouteFallback(KelTeam)} />
+          <Route path='/projects' element={<Navigate to='/projects/knowledge' replace />} />
+          <Route path='/projects/knowledge' element={withRouteFallback(KelProjects)} />
+          <Route path='/projects/map' element={withRouteFallback(KelProjects)} />
+          <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />
+          <Route path='/providers' element={withRouteFallback(KelProviders)} />
+          <Route path='/autonomy' element={withRouteFallback(KelAutonomy)} />
+          <Route path='/onboarding' element={withRouteFallback(KelOnboarding)} />
+          <Route path='/diagnostics' element={withRouteFallback(KelDiagnostics)} />
         </Route>
         <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
       </Routes>

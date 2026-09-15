@@ -164,7 +164,12 @@ export default function KelWorkPanel() {
   return (
     <>
       <Badge count={pendingApprovals} maxCount={9} offset={[10, -4]}>
-        <Button long type='text' onClick={() => setVisible(true)}>
+        <Button
+          long
+          type='text'
+          onClick={() => setVisible(true)}
+          className='kel-work-context-btn'
+        >
           {t('common.kel.workContext')}
         </Button>
       </Badge>
