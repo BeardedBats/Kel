@@ -84,7 +84,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
       },
       skills: {
         id: 'skills',
-        label: t('settings.skills', { defaultValue: 'Skills' }),
+        label: t('settings.skills', { defaultValue: 'Team roles' }),
         icon: <Lightning />,
         path: 'skills',
       },
