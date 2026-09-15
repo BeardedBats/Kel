@@ -24,6 +24,13 @@ packaged candidate (44 shots at five widths, 0 renderer errors, 0 blank; route c
 portions of the memory/knowledge, map, and recipes items are **IMPLEMENTED**; verification/evidence UX,
 continuation UX, memory action round-trips, and recipe preview/dry-run remain open in Gate 5.
 
+**Gate 5 (UI), second increment (2026-09-15).** Work Center verification panel (worker-reported vs
+Kel-verified, milestone state/attempts/checks, artifact viewer gated on acceptance, Pause · Resume ·
+Cancel via `/api/control`) and the continuation chooser (`/api/state.continuation`) are implemented and
+rendered from the packaged candidate (34 shots at five widths, 0 renderer errors, 0 blank). Remaining:
+memory action round-trip, an accepted-milestone fixture to exercise the artifact viewer, and recipe
+preview/dry-run.
+
 **Gate 4 (UI) implementation status (2026-09-15).** `renderer/styles/kel-tokens.css`,
 `components/kel/{kelApi.ts,KelPrimitives.tsx}`, `pages/kel/team/index.tsx` (Office / Roster / Studio)
 and `pages/kel/work/index.tsx` (Work Center) are implemented, routed at `/work`, `/team`,

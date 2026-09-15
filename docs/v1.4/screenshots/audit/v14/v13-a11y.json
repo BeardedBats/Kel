@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "startedAt": "2026-09-15T16:39:11.144Z",
+  "startedAt": "2026-09-15T16:45:32.921Z",
   "errors": [],
   "launchMode": "packaged",
   "engine": {
-    "pid": 43688,
+    "pid": 19132,
     "version": "0.5.0"
   },
   "bootScreen": {
@@ -146,185 +146,67 @@
     "emojiCharacters": 0
   },
   "routes": {
-    "projects-knowledge": {
-      "textSamples": 59,
+    "work": {
+      "textSamples": 72,
       "contrastFailures": [],
       "contrastFailureCount": 0,
       "smallestText": 12,
       "largestText": 24,
       "fontSizeHistogram": {
-        "12": 16,
-        "14": 39,
-        "16": 3,
-        "24": 1
+        "12": 27,
+        "14": 35,
+        "16": 6,
+        "24": 4
       },
       "paletteText": [
         {
           "value": "rgb(90,98,112)",
-          "count": 16
-        },
-        {
-          "value": "rgb(78,89,105)",
-          "count": 14
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 10
+          "count": 22
         },
         {
           "value": "rgb(107,114,128)",
-          "count": 9
-        },
-        {
-          "value": "rgb(20,22,26)",
-          "count": 3
-        },
-        {
-          "value": "rgb(14,124,90)",
-          "count": 3
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(255,255,255)",
-          "count": 1
-        }
-      ],
-      "paletteBg": [
-        {
-          "value": "rgb(255,255,255)",
-          "count": 34
-        },
-        {
-          "value": "rgb(242,243,245)",
-          "count": 23
-        },
-        {
-          "value": "rgb(250,250,251)",
-          "count": 1
-        },
-        {
-          "value": "rgb(14,124,90)",
-          "count": 1
-        }
-      ],
-      "emojiCharacters": 0
-    },
-    "projects-map": {
-      "textSamples": 37,
-      "contrastFailures": [],
-      "contrastFailureCount": 0,
-      "smallestText": 14,
-      "largestText": 24,
-      "fontSizeHistogram": {
-        "14": 31,
-        "16": 5,
-        "24": 1
-      },
-      "paletteText": [
-        {
-          "value": "rgb(78,89,105)",
-          "count": 13
-        },
-        {
-          "value": "rgb(0,0,0)",
-          "count": 10
-        },
-        {
-          "value": "rgb(20,22,26)",
-          "count": 5
-        },
-        {
-          "value": "rgb(90,98,112)",
-          "count": 4
-        },
-        {
-          "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(255,255,255)",
-          "count": 2
-        }
-      ],
-      "paletteBg": [
-        {
-          "value": "rgb(255,255,255)",
-          "count": 18
-        },
-        {
-          "value": "rgb(242,243,245)",
-          "count": 16
-        },
-        {
-          "value": "rgb(14,124,90)",
-          "count": 2
-        },
-        {
-          "value": "rgb(250,250,251)",
-          "count": 1
-        }
-      ],
-      "emojiCharacters": 0
-    },
-    "projects-recipes": {
-      "textSamples": 43,
-      "contrastFailures": [],
-      "contrastFailureCount": 0,
-      "smallestText": 12,
-      "largestText": 16,
-      "fontSizeHistogram": {
-        "12": 5,
-        "14": 35,
-        "16": 3
-      },
-      "paletteText": [
-        {
-          "value": "rgb(78,89,105)",
           "count": 14
         },
         {
-          "value": "rgb(90,98,112)",
+          "value": "rgb(78,89,105)",
           "count": 12
         },
         {
+          "value": "rgb(20,22,26)",
+          "count": 11
+        },
+        {
           "value": "rgb(0,0,0)",
           "count": 10
         },
         {
           "value": "rgb(29,33,41)",
-          "count": 3
-        },
-        {
-          "value": "rgb(20,22,26)",
           "count": 2
         },
         {
-          "value": "rgb(255,255,255)",
-          "count": 1
-        },
-        {
-          "value": "rgb(107,114,128)",
+          "value": "rgb(122,74,0)",
           "count": 1
         }
       ],
       "paletteBg": [
         {
           "value": "rgb(255,255,255)",
-          "count": 21
+          "count": 44
         },
         {
           "value": "rgb(242,243,245)",
-          "count": 20
+          "count": 25
+        },
+        {
+          "value": "rgb(229,230,235)",
+          "count": 1
         },
         {
           "value": "rgb(250,250,251)",
           "count": 1
         },
         {
-          "value": "rgb(14,124,90)",
+          "value": "rgb(254,243,199)",
           "count": 1
         }
       ],

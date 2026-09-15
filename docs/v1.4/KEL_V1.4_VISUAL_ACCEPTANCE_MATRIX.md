@@ -115,6 +115,8 @@ Evidence: `docs/v1.4/screenshots/g5/` (tag `g5`, packaged candidate: 44 shots, 0
 | Projects — Knowledge | donor “Saved context” drawer tab (`baseline/…02b`) | `g5/g5-12-projects-knowledge.png` + `…13-*.png` | **accepted-with-notes** — 3 fixture records with trust scores (6/10, 3/10), statuses, sources, and Confirm · Retract · Forget; action round-trip still to verify |
 | Projects — Map | donor map tab (`baseline/…05-map`, `…07b`) | `g5/g5-12-projects-map.png` + `…13-*.png` | **accepted-with-notes** — honest empty state plus Build action (the fixture project has no map) |
 | Projects — Recipes | donor recipes tab (`baseline/…06-recipes`) | `g5/g5-12-projects-recipes.png` + `…13-*.png` | **accepted-with-notes** — 5 built-in recipes listed; preview/dry-run still to build |
+| Work Center — verification | donor work drawer (`baseline/…02-work-drawer`) | `g5/g5b-12-work.png` + `…13-*.png` | **accepted-with-notes** — two-step “worker reported” vs “Kel verified”, milestone table (state · attempts · checks · filename), Pause/Resume/Cancel; artifact viewer only appears for accepted milestones (none in this fixture — needs an accepted-milestone fixture) |
+| Work Center — continuation | donor “Continue work” tab (`baseline/…03-continue`) | `g5/g5b-12-work.png` | **accepted-with-notes** — numbered candidate with recorded verdict and the explicit “never resumes in the background” rule |
 
 Notes: contrast failures 0/0/0 on the three new routes; smallest text 12px; 0 emoji; the
 before/after comparison images for these surfaces are still to be generated at G9.
