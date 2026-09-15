@@ -47,7 +47,8 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 10:34 ET — recon: refs, tags, drift identified; frozen manifest read.
 - 10:36 — baseline suite started (background) → `267 passed, 10 subtests` (55.58s, exit 0); frozen hashes verified 3/3.
 - 10:38 — `v1.4-dev` created and pushed; source probes (runtime API, screens, tabs) for ledger triage.
-- 10:45 — Gate 0 doc set written; commit + push; reviewer checkpoint.
+- 10:45 — Gate 0 doc set written; committed as `6528d92` on `v1.4-dev` and pushed.
+- 10:50 — Gate 0 reviewer relay checkpoint: **CONTINUE** (2026-09-15); proceed to harness + captures.
 
 ## Blockers
 
