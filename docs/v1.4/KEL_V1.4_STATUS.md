@@ -1,13 +1,13 @@
 # KEL V1.4 — STATUS
 
-Date: 2026-09-15 · Branch: `v1.4-dev` (based on `b6974cf`, pushed) · Session: autonomous session #1
+Date: 2026-09-15 · Branch: `v1.4-dev` (based on `b6974cf`, pushed) · Sessions: #1 (verification) → #2 (tooling, harness, baseline captures)
 Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger + this file are the resume anchors.
 
 ## Gate board
 
 | Gate | State | Note |
 |---|---|---|
-| G0 — baseline, branch, isolation, ledger, visual capture | **IN PROGRESS (~70%)** | Verification + branch + ledger done; screenshot harness/captures pending |
+| G0 — baseline, branch, isolation, ledger, visual capture | **CLOSING** | verification + branch + ledger + tooling + harness + baseline captures + provenance done; remaining: perf baseline + reviewer checkpoint |
 | G1 — visual audit, design directions, design system | NOT STARTED | needs harness + bun/Playwright setup first |
 | G2 — architecture / safety / implementation design | NOT STARTED | |
 | G3 — solution quality + Team foundation | NOT STARTED | |
@@ -26,21 +26,22 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - [x] Baseline suite green: 267 passed + 10 subtests (BASELINE §3)
 - [x] Create + push `v1.4-dev`
 - [x] Feature ledger: 200 items, initial triage (`KEL_V1.4_FEATURE_LEDGER.md`)
-- [x] Screen inventory v0 (`KEL_V1.4_SCREEN_INVENTORY.md`)
-- [x] UI audit v0: method + preliminary notes (`KEL_V1.4_UI_AUDIT.md`)
-- [ ] Screenshot harness (Playwright, isolated data root, hidden/minimized windows)
-- [ ] Baseline captures: all routes/states @ 1280/1440/1920/2560 + narrow window
-- [ ] Performance baseline measurements
-- [ ] Packaged-route capture replaces the source-only inventory v0
+- [x] Screen inventory v0 + captured routes (`KEL_V1.4_SCREEN_INVENTORY.md`)
+- [x] UI audit v0 + capture evidence (`KEL_V1.4_UI_AUDIT.md`)
+- [x] Portable tooling: Bun 1.4.2 + Playwright 1.63.0 (`dev-tools/`; no registry/PATH changes)
+- [x] Screenshot harness v2 (`packaging/capture-screens.cjs`) + fixture generator (`runtime/tools/seed_ui_fixture.py`)
+- [x] Baseline captures: 30×2 views at five widths, zero errors, clean shutdown (`docs/v1.4/screenshots/baseline/`)
+- [x] V1.3 source ↔ frozen provenance resolved (BASELINE §8)
+- [ ] Performance baseline measurements (startup spans; with G8 tooling)
+- [ ] Gate 0 reviewer checkpoint
 
 ## Exact next actions (resume here)
 
-1. Install `bun` (user-level dev tool) + `bun install` in `desktop/`; confirm the build pipeline runs.
-2. Add Playwright (skip browser download when driving Electron only) and write the screenshot harness:
-   packaged `Kel.exe` copy + isolated `--data` root + hidden/minimized windows; no focus stealing.
-3. Capture V1.3 packaged baseline screenshots at all required resolutions/states → `docs/v1.4/screenshots/baseline/`.
-4. Capture performance baseline (startup spans; provider latency where observable).
-5. Close G0 with a reviewer checkpoint → start G1 (two materially different design directions).
+1. Gate 0 reviewer checkpoint (relay) → on CONTINUE, start **Gate 1**: two materially different
+   design directions + Best Solution Gate comparison + Kel design system + interaction patterns +
+   accessibility standard.
+2. Performance baseline (startup spans) when G8 diagnostics tooling exists; noted as G0 remainder.
+3. Harness v3 candidates: pet-window capture, dialog states, provider-unavailable state, dense/long content.
 
 ## Session log (evidence trail)
 
@@ -49,6 +50,9 @@ Rule: no V1.5 work. Partial completion is reported honestly; the feature ledger 
 - 10:38 — `v1.4-dev` created and pushed; source probes (runtime API, screens, tabs) for ledger triage.
 - 10:45 — Gate 0 doc set written; committed as `6528d92` on `v1.4-dev` and pushed.
 - 10:50 — Gate 0 reviewer relay checkpoint: **CONTINUE** (2026-09-15); proceed to harness + captures.
+- 11:00–11:15 — Session 2: portable Bun 1.4.2 + Playwright 1.63.0 under `dev-tools/`; harness v1 first run (12 clean captures; shutdown bug found → fixed).
+- 11:15 — Harness v2 (bounded shutdown + watchdog + full text dumps + real settings routes + resize re-nav); baseline captures `v13-empty` + `v13-fixture` (30 each, five widths, zero console errors, clean shutdown).
+- 11:20 — Provenance + Gate 0 docs updated; Gate 0 reviewer checkpoint requested.
 
 ## Blockers
 

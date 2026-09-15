@@ -1,0 +1,175 @@
+{
+  "buttons": [
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Collapse",
+      "title": null,
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Search messages",
+      "title": "Search messages",
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Back",
+      "title": "Back",
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Forward",
+      "title": "Forward",
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Minimize",
+      "title": null,
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Maximize",
+      "title": null,
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Close",
+      "title": null,
+      "cls": "app-window-controls__button app-window-controls__button--close"
+    },
+    {
+      "tag": "DIV",
+      "text": "New Chat",
+      "aria": null,
+      "title": null,
+      "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps-10px pe-8px rd-0.5r"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Work & context",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+    },
+    {
+      "tag": "DIV",
+      "text": "Settings",
+      "aria": null,
+      "title": null,
+      "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1 min-w-0 justify-sta"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Kel",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square !inline-flex !min-w-0 !h-auto !it"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-secondary arco-btn-size-default arco-btn-shape-circle arco-btn-icon-only"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-primary arco-btn-size-default arco-btn-shape-circle arco-btn-icon-only send-button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Work in a project",
+      "aria": null,
+      "title": null,
+      "cls": "_workspaceEmptyBtn_1km42_145"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Explain this project in plain words.",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square group !h-auto !w-full !border-non"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Review this project and suggest the next useful change.",
+      "aria": null,
+      "title": null,
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square group !h-auto !w-full !border-non"
+    }
+  ],
+  "links": [],
+  "labels": [
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Collapse",
+      "title": null,
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Search messages",
+      "title": "Search messages",
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Back",
+      "title": "Back",
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Forward",
+      "title": "Forward",
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "DIV",
+      "text": "",
+      "aria": "AionUi",
+      "title": "AionUi",
+      "cls": "app-titlebar__brand app-titlebar__brand--centered"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Minimize",
+      "title": null,
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Maximize",
+      "title": null,
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "",
+      "aria": "Close",
+      "title": null,
+      "cls": "app-window-controls__button app-window-controls__button--close"
+    }
+  ]
+}
