@@ -156,6 +156,19 @@ class CodingAdapter:
         if phase and phase['phase'] not in ('TURN_COMPLETED','TURN_DISPATCHED','TESTS_DISPATCHED'):
             raise PolicyError('Coding execution already dispatched; reconcile its durable phase')
         job=self.store.get(run['job_id']);contract=job['contract']
+        # V1.5: the real effect point. A worker cannot start repository work or run the configured
+        # test command without a valid lease and role policy; a revoked lease stops it here.
+        from .authorize import authorize,role_for
+        for tool in ('git','run_tests'):
+            decision=authorize(self.store,{'actor':'worker','worker':run_id,'job':run['job_id'],
+                'milestone':run['milestone_id'],'role':role_for(self.store,run['job_id'],run['milestone_id']),
+                'action_kind':'repo','tool':tool,'target':str(contract.get('root') or ''),
+                'metadata':{'what':'the isolated repository workspace','why':'run the reviewed coding turn',
+                            'fallback':'stop before any change and report'}})
+            if decision['outcome']!='ALLOW':
+                return {'outcome':'BLOCKED','error':'Kel paused this work before any change: '+
+                        str(decision.get('reason') or decision.get('rule') or 'authorization required'),
+                        'authorization':decision.get('outcome')}
         if row:
             workspace=Path(row['path']);base=row['base'];baseline=json.loads(row['manifest'])
         else:

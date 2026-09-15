@@ -1,6 +1,10 @@
 """Capability leases, boundary expansion, and guardrail enforcement (V1.4 migration 008).
 
-Design: docs/v1.4/KEL_V1.4_AUTONOMY_POLICY.md. Rules enforced here, not by convention:
+V1.5: this module is the single implementation of lease state, expiry, and scope, and it is called
+from the real execution path -- the engine claim gate and every effect point go through
+`kel.authorize`, which delegates here (`consume=False` on pre-flight checks, so one authorized
+action consumes a one-time grant exactly once). Design: docs/v1.4/KEL_V1.4_AUTONOMY_POLICY.md.
+Rules enforced here, not by convention:
 
 - A lease can only be issued for a **reviewed plan** (`review_ref` is required).
 - Every check **fails closed**: unknown lease, expired lease, unknown kind, blocked kind, frozen path,
@@ -119,6 +123,25 @@ class Autonomy:
         db.execute('INSERT INTO lease_events(at, lease_id, kind, detail) VALUES(?,?,?,?)',
                    (time.time(), lease_id, kind, encode(detail)))
 
+    def _denied(self, db, lease_id, detail):
+        """Record a denial once per identical target inside a short window; polls are not noise."""
+        payload = encode(detail)
+        row = db.execute("SELECT detail, at FROM lease_events WHERE kind='denied' AND "
+                         "IFNULL(lease_id,'')=IFNULL(?,'') ORDER BY seq DESC LIMIT 1",
+                         (lease_id,)).fetchone()
+        if row and row['detail'] == payload and time.time() - row['at'] < 60:
+            return
+        self._event(db, lease_id, 'denied', detail)
+
+    def _granted(self, db, lease_id, detail):
+        """Record an allowed check once per identical target inside a short window."""
+        payload = encode(detail)
+        row = db.execute("SELECT detail, at FROM lease_events WHERE kind='allowed' AND "
+                         "lease_id=? ORDER BY seq DESC LIMIT 1", (lease_id,)).fetchone()
+        if row and row['detail'] == payload and time.time() - row['at'] < 60:
+            return
+        self._event(db, lease_id, 'allowed', detail)
+
     def _lease(self, db, lease_id):
         row = db.execute('SELECT * FROM capability_leases WHERE lease_id=?', (lease_id,)).fetchone()
         if not row:
@@ -185,37 +208,44 @@ class Autonomy:
                 out.append(item)
             return out
 
+    def latest_lease(self, job_id):
+        """Most recent lease for a job in any state (Kel renewal logic needs the state)."""
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT * FROM capability_leases WHERE job_id=? '
+                             'ORDER BY issued_at DESC LIMIT 1', (job_id,)).fetchone()
+        return dict(row) if row else None
+
     # ---- enforcement ---------------------------------------------------------
-    def check(self, lease_id, kind, target='', tool='', destructive_snapshot=''):
+    def check(self, lease_id, kind, target='', tool='', destructive_snapshot='', consume=True):
         """Fails closed. Returns {'allowed': bool, 'rule': str, 'reason': str}."""
         self.assert_intact()
         with self.store.transaction() as db:
             lease = self._lease(db, lease_id)
             if not lease:
-                self._event(db, lease_id, 'denied', {'kind': kind, 'reason': 'unknown lease'})
+                self._denied(db, lease_id, {'kind': kind, 'reason': 'unknown lease'})
                 return {'allowed': False, 'rule': 'lease-unknown', 'reason': 'Unknown lease'}
             if lease['state'] != 'ACTIVE':
-                self._event(db, lease_id, 'denied', {'kind': kind, 'reason': lease['state']})
+                self._denied(db, lease_id, {'kind': kind, 'reason': lease['state']})
                 return {'allowed': False, 'rule': 'lease-' + lease['state'].lower(),
                         'reason': 'Lease is %s' % lease['state']}
             if lease['expires_at'] <= time.time():
-                self._event(db, lease_id, 'denied', {'kind': kind, 'reason': 'expired'})
+                self._denied(db, lease_id, {'kind': kind, 'reason': 'expired'})
                 return {'allowed': False, 'rule': 'lease-expired',
                         'reason': 'Lease expired at %s' % lease['expires_at']}
             if kind in BLOCKED_KINDS:
                 rule = BLOCKED_KINDS[kind]
-                self._event(db, lease_id, 'denied', {'kind': kind, 'rule': rule, 'target': target})
+                self._denied(db, lease_id, {'kind': kind, 'rule': rule, 'target': target})
                 return {'allowed': False, 'rule': rule, 'reason': 'Locked guardrail: %s' % rule}
             if kind not in KINDS:
-                self._event(db, lease_id, 'denied', {'kind': kind, 'reason': 'unknown kind'})
+                self._denied(db, lease_id, {'kind': kind, 'reason': 'unknown kind'})
                 return {'allowed': False, 'rule': 'kind-unknown', 'reason': 'Unknown action kind'}
             if kind in ('write', 'repo') and _frozen(target):
-                self._event(db, lease_id, 'denied', {'kind': kind, 'target': target,
-                                                     'rule': 'frozen-immutable'})
+                self._denied(db, lease_id, {'kind': kind, 'target': target,
+                                            'rule': 'frozen-immutable'})
                 return {'allowed': False, 'rule': 'frozen-immutable',
                         'reason': 'Frozen releases and their manifests are read-only'}
             if kind == 'destructive' and not str(destructive_snapshot).strip():
-                self._event(db, lease_id, 'denied', {'kind': kind, 'rule': 'destructive-snapshot'})
+                self._denied(db, lease_id, {'kind': kind, 'rule': 'destructive-snapshot'})
                 return {'allowed': False, 'rule': 'destructive-snapshot',
                         'reason': 'A snapshot or backup reference is required before a destructive action'}
             rows = [dict(row) for row in db.execute(
@@ -232,8 +262,8 @@ class Autonomy:
                     except (OSError, ValueError):
                         continue
                 if match is None and _system(target):
-                    self._event(db, lease_id, 'denied', {'kind': kind, 'target': target,
-                                                         'rule': 'system-path'})
+                    self._denied(db, lease_id, {'kind': kind, 'target': target,
+                                                'rule': 'system-path'})
                     return {'allowed': False, 'rule': 'system-path',
                             'reason': 'System locations are outside every lease'}
             elif kind == 'browser':
@@ -249,21 +279,21 @@ class Autonomy:
                         match = row
                         break
             if match is None:
-                self._event(db, lease_id, 'denied', {'kind': kind, 'target': target,
-                                                     'reason': 'outside the lease'})
+                self._denied(db, lease_id, {'kind': kind, 'target': target,
+                                            'reason': 'outside the lease'})
                 return {'allowed': False, 'rule': 'lease-scope',
                         'reason': 'Target is outside the leased scope'}
             if match['uses_remaining'] == 0:
-                self._event(db, lease_id, 'denied', {'kind': kind, 'target': target,
-                                                     'reason': 'grant used'})
+                self._denied(db, lease_id, {'kind': kind, 'target': target,
+                                            'reason': 'grant used'})
                 return {'allowed': False, 'rule': 'grant-used',
                         'reason': 'This one-time grant was already used'}
-            if match['uses_remaining'] > 0:
+            if match['uses_remaining'] > 0 and consume:
                 db.execute('UPDATE lease_scope SET uses_remaining=uses_remaining-1 '
                            'WHERE lease_id=? AND kind=? AND value=?',
                            (lease_id, match['kind'], match['value']))
-            self._event(db, lease_id, 'allowed', {'kind': kind, 'target': target,
-                                                  'value': match['value']})
+            self._granted(db, lease_id, {'kind': kind, 'target': target,
+                                         'value': match['value']})
             return {'allowed': True, 'rule': 'lease-scope', 'reason': 'Inside the leased scope',
                     'scope': match['value']}
 
@@ -376,6 +406,10 @@ class Autonomy:
             return {'requests': self.requests(data.get('lease_id'))}
         if action == 'guardrails':
             return {'rules': self.guardrails(), 'digest': GUARDRAIL_DIGEST}
+        if action == 'decisions':
+            from .authorize import decisions
+            return {'decisions': decisions(self.store, data.get('job_id'),
+                                           int(data.get('limit', 50)))}
         if action == 'emergency_stop':
             return self.emergency_stop(data.get('actor', 'user'))
         raise PolicyError('Unknown autonomy action: %s' % action)
