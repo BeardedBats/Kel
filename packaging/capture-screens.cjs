@@ -34,6 +34,7 @@ const flag = (name, dflt) => {
 };
 const hasFlag = (name) => argv.includes('--' + name);
 const tag = flag('tag', 'v13');
+const theme = flag('theme', 'light');
 const explore = hasFlag('explore');
 const widths = String(flag('widths', '1440x900,1280x720,1920x1080,2560x1440,1024x768'))
   .split(',')
@@ -160,6 +161,19 @@ async function main() {
     index += 1;
     const label = String(index).padStart(2, '0');
     const file = path.join(outDir, `${tag}-${label}-${name}.png`);
+    // Dark mode is the donor's root-attribute switch; re-apply it before every capture so a re-render
+    // during the run cannot silently drop back to the light token set.
+    if (theme === 'dark') {
+      await page
+        .evaluate(() => {
+          // Both halves of the donor's theme switch: the root attribute for the CSS-file tokens and
+          // body[arco-theme] for Arco's component styles.
+          document.documentElement.setAttribute('data-color-scheme', 'default');
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.body.setAttribute('arco-theme', 'dark');
+        })
+        .catch(() => {});
+    }
     await page.screenshot({ path: file });
     const stat = fs.statSync(file);
     const fullText = String(await page.locator('body').innerText().catch(() => ''));

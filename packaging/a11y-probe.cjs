@@ -24,6 +24,23 @@ const { _electron: electron } = playwright;
 const appDir = path.resolve(process.argv[2] || '.');
 const dataDir = path.resolve(process.argv[3] || '');
 const outDir = path.resolve(process.argv[4] || '');
+// --theme dark renders the dark token set (the donor switches on the root attributes) so the audit can
+// measure contrast in dark mode as well as light.
+const themeIndex = process.argv.indexOf('--theme');
+const theme = themeIndex >= 0 ? process.argv[themeIndex + 1] : 'light';
+const applyTheme = async (target) => {
+  if (theme !== 'dark') return;
+  await target
+    .evaluate(() => {
+      // The donor switches themes with a PAIR: the root attribute drives the CSS-file tokens, while
+      // body[arco-theme] drives Arco's own component styles. Setting only the root left Arco components
+      // on their light rules (measured: body.arco-theme stayed "light").
+      document.documentElement.setAttribute('data-color-scheme', 'default');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.setAttribute('arco-theme', 'dark');
+    })
+    .catch(() => undefined);
+};
 // Optional V1.4 surface sampling: --routes "work:/work,team-office:/team/office" (same shape as
 // capture-screens.cjs --views).
 const routeArgIndex = process.argv.indexOf('--routes');
@@ -190,6 +207,7 @@ async function main() {
   await win.evaluate((w) => w.setContentSize(1440, 900));
   await page.waitForTimeout(900);
 
+  await applyTheme(page);
   out.bootScreen = await page.evaluate(PAGE_AUDIT);
 
   // Fresh-load focus order: collected before any interaction so the sequence reflects what a keyboard
@@ -226,6 +244,7 @@ async function main() {
   for (const route of routeList) {
     await page.evaluate((hash) => { location.hash = hash; }, route.hash).catch(() => {});
     await page.waitForTimeout(1800);
+    await applyTheme(page);
     out.routes[route.id] = await page.evaluate(PAGE_AUDIT);
     if (routeList.indexOf(route) < 2) {
       await page.screenshot({
