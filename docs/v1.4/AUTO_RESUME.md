@@ -16,8 +16,10 @@ Updated: 2026-09-15 ~18:30 ET · Session: #6 (Gate 7 in progress; no blocker)
      trigger verified end-to-end** (`verify-onboarding.cjs` exit 0: fresh → onboarding → finish →
      `/work`; second launch skipped).
 - **Open Gate 7 items** (precise):
-  1. **Tray/notification remainder** and **Sider consolidation** (Kel entries + donor surfaces, no dead
-     entries).
+  1. **Tray/notification remainder** and **Sider consolidation** — the Kel entries already render in the
+     spec order (`Work · Team · Projects · Providers · Autonomy`); the open detail is a duplicated
+     “Projects” token (Kel nav entry + a donor conversation-group heading rendered by a child component
+     outside `components/layout/Sider`), plus Recipes/Search reachability from the primary nav.
   2. **Pet live capture** (optional): needs `app.windows()` handling in the harness.
   3. **Recorded deviation — migrated profiles see onboarding once**: the gate is flag-only because the
      donor keeps a default conversation on a brand-new profile, so a conversation count cannot detect a
