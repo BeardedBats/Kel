@@ -559,6 +559,13 @@ class Service:
                 job=self.store.get(row['job_id']);self.context.grant(job['contract'].get('project_id','default'),action)
             return {'status':status}
         if path=='/api/revoke':self.context.revoke(data['project']);return {'ok':True}
+        if path=='/api/brief':
+            from .solution import SolutionBriefs
+            payload=dict(data);payload.setdefault('project_id',self._project_of(data.get('conversation','main')))
+            return SolutionBriefs(self.store).apply(payload)
+        if path=='/api/team':
+            from .team import Team
+            return Team(self.store).apply(data)
         raise PolicyError('Unknown action')
 
 
