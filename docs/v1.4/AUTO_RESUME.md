@@ -4,34 +4,26 @@ Updated: 2026-09-15 ~18:30 ET · Session: #6 (Gate 7 in progress; no blocker)
 
 - **Current gate**: Gate 7 — **IN PROGRESS** (desktop productization). Gates 0–6 are CLOSED
   (reviewer-relay CONTINUE each).
-- **Done in Gate 7** (commits `deeec99`, `bcdaf72`, `4ca8172`, `5efc1de`, `e03e46e`, `10b66e2`):
-  1. **Dead navigation repaired** — the donor settings routes that dumped users on `#/guid` now land on
-     real Kel surfaces (`/settings/model` → `/providers`, `/settings/tools` → `/autonomy`, `skills`,
-     `agent`, `assistants`, `capabilities`, `skills-hub` → `/team/roster`); proven by capture hashes and
-     byte-identical renders.
-  2. **Contrast 6 → 0** (boot 0 · drawer 0 · routes 0/0/0; smallest text 12px; 0 emoji), fixed at the
-     source (`--bg-6`, `.arco-btn-outline`, `.assistantPromptHint`, `.workspaceEmptyBtn`).
-  3. **Focus rings 0/30 → 30/30** stops (`solid 2px rgb(14,124,90)`), fresh-load order captured before
-     interactions (15/15 ringed).
-  4. **Skip link proven**: on a fresh load the first tab stop is `A “Skip to main content”`, focused and
-     visible (`rect [8, 10, 162, 39]`), targeting the existing `#kel-shell-content`
-     (`packaging/probe-skip-link.cjs`, 0 errors).
-  5. **Command palette**: `Ctrl+K` anywhere, `/` opens it in search mode — 24 engine-derived results
-     (navigation · jobs with verdicts · knowledge with trust · recipes · roles), keyboard-only verified
-     (`packaging/verify-palette.cjs`, exit 0: filter → Enter → `#/providers`, Esc closes).
-  6. Kel tokens load globally (`main.tsx`), so donor and Kel surfaces share one token source.
-- **Remaining in Gate 7** (in order):
-  1. **First-run onboarding** (welcome → local/private → provider setup → project location → Broad
-     Autonomy explanation → locked guardrails → Team explanation → harmless test task → readiness);
-     migrated installs skip it.
-  2. **Tray / notifications / pet tokenization** to the design system, one OS notification per job state
-     change, pet states driven only by real engine state.
-  3. **Sider consolidation** — Kel entries (Work · Team · Projects · Providers · Autonomy) plus the donor
-     surfaces that remain; no dead entries.
-  4. **Pet live capture** (polish, optional): the pet documents are audited statically (0 contrast
-     failures); a live pet-window capture needs `app.windows()` handling in the harness.
-  5. **G9 carry-overs**: donor drawer tabs are `DIV`s with `tabindex` (not buttons); unused lazy imports
-     in `Router.tsx`; donor CSS gradient/cream patterns flagged by the design review.
+- **Done in Gate 7** (commits `deeec99`, `bcdaf72`, `4ca8172`, `5efc1de`, `e03e46e`, `10b66e2`, `cf4b7a1`, `32155be`, `9dcf3ea`, `7fbb9af`):
+  1. **Dead navigation repaired** — donor settings routes now land on real Kel surfaces.
+  2. **Contrast 6 → 0** at the source; **focus rings 0/30 → 30/30**; skip link proven as the first tab
+     stop on a fresh load.
+  3. **Command palette** (`Ctrl+K`, `/`) with 24 engine-derived results, keyboard-only verified.
+  4. **Pet surface tokenized + audited** for the first time (muted tone, 12px floor, reduced-motion).
+  5. **First-run onboarding flow** implemented and rendered (`#/onboarding`: “Set up Kel · Step 1 of 5 ·
+     Welcome”, providers from `/api/providers`, project from `/api/state`, locked guardrails from
+     `/api/autonomy`, Skip setup, completion flag `kel.onboardingCompleted_v1`).
+- **Open Gate 7 items** (precise):
+  1. **First-run gate does not fire** (page verified, trigger not): on a brand-new data root the app stays
+     on `#/guid` for a 20 s polled timeline; migrated roots correctly stay put. Engine reads are not the
+     cause (palette on the same fresh root resolves 14 entries, 0 errors). Next step: log the gate's two
+     decision inputs — `configService.get('kel.onboardingCompleted_v1')` and the conversation count — in a
+     probe build, or read the donor's own conversation list instead of `/api/state`.
+  2. **Tray/notification remainder** and **Sider consolidation** (Kel entries + donor surfaces, no dead
+     entries).
+  3. **Pet live capture** (optional): needs `app.windows()` handling in the harness.
+  4. **G9 carry-overs**: donor drawer `DIV`-tabs, unused lazy imports in `Router.tsx`, donor CSS
+     gradient/cream findings from the design review.
 - **PROVEN UI VERIFICATION LOOP**: build (`bun x electron-vite build --config
   packages/desktop/electron.vite.config.ts`) → overlay `desktop/out` into
   `dev-tools/runs/v14/shell-stage/out` → `asar-dedup-pack.js` → copy the asar into
