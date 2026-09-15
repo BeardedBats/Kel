@@ -17,11 +17,11 @@
         --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
         --card-border: rgba(0, 0, 0, 0.08);
         --text-primary: #1d2129;
-        --text-secondary: #86909c;
+        --text-secondary: #5c6470;
         --border: #e5e6eb;
         --bg-hover: #f3f4f6;
         --shortcut-bg: rgba(229, 230, 235, 0.6);
-        --shortcut-text: #86909c;
+        --shortcut-text: #5c6470;
       }
 
       /* Dark theme */
@@ -139,10 +139,18 @@
         height: 18px;
         border-radius: 4px;
         background: var(--shortcut-bg);
-        font-size: 11px;
+        font-size: 12px;
         color: var(--shortcut-text);
         font-family: monospace;
         flex-shrink: 0;
+      }
+
+      /* Kel V1.4: the design system requires a reduced-motion fallback for every transition. */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
       }
     </style>
   </head>
