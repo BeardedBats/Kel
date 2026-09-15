@@ -405,3 +405,23 @@ project isolation, secret rejection, and malicious-README defense.
 - No memory write path from the ACP transport layer (KellShell) — memory authority lives in the
   Kel engine.
 - No automatic recipe/decision extraction from transcripts beyond L6 proposals.
+
+## 17. As-built addendum (Gate 2 implementation, 2026-09-15)
+
+Delivered in `runtime/kel/memory.py`; evidence: `runtime/tests/test_v13_memory.py` (16 tests).
+Adjustments recorded against this specification:
+
+1. `memory_events.action` also uses `refused` (secret-like write rejected): `detail` carries only
+   the pattern name, never the value. Refusals are mirrored into the durable `events` log so they
+   are auditable without content.
+2. Explicit replacement supersession runs through `correct()` (user edit); brand-new contradicting
+   decisions at equal authority remain open conflicts until `resolve_conflict` — matching §8's
+   "no auto-resolution for decisions".
+3. `confirm()` refuses trust-7 rows; external content is adopted only by restating it as a user
+   decision (citation kept in `source_ref`).
+4. Migration receipt handling: an existing `migration-receipt.json` is preserved as
+   `migration-receipt-legacy.json` before the V1.3 receipt is written.
+5. FTS: capability probe at migration; both paths are exercised in tests; the LIKE fallback is
+   deterministic.
+6. Decisions at trust 4 are writable only with `source_type='system'` (accepted work), matching
+   §5's "previously accepted project decision".

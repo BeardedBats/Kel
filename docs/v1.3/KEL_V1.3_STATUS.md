@@ -1,8 +1,8 @@
 # KEL V1.3 — STATUS
 
-Date: 2026-09-14 (Gate 1 close). Owner: Kel V1.3 lead-engineer session.
-Production code changed: **none**. Git operations performed: **none** (per directive — repository
-consolidation to `BeardedBats/Kel` happens only after Gate 1 approval).
+Date: 2026-09-15. Owner: Kel V1.3 autonomous execution session.
+Gate 1 and the repository consolidation were approved 2026-09-15; implementation continues on
+`v1.3-dev` (remote `BeardedBats/Kel`).
 
 ## Gate board
 
@@ -10,7 +10,7 @@ consolidation to `BeardedBats/Kel` happens only after Gate 1 approval).
 |---|---|---|
 | G0 — baseline and source provenance | **COMPLETE** | evidence in §Gate 0 |
 | G1 — donor audit + design docs | **COMPLETE — awaiting user approval** | six deliverables below |
-| G2 — memory foundation | not started | blocked on approval |
+| G2 — memory foundation | **COMPLETE** | `kel/memory.py` + 16 tests; migration 001 with backup/receipt; see §Gate 2 (as-built) |
 | G3 — project map + context composer | not started | blocked on approval |
 | G4 — continuation | not started | blocked on approval |
 | G5 — recipes | not started | blocked on approval |
@@ -253,5 +253,38 @@ approval — nothing was pushed in Gate 1.
 - **After Gate 1 approval** (in order): (1) consolidate the authoritative V1.2 source and
   packaging pipeline into the new `BeardedBats/Kel` repository; (2) tag the baseline; (3) create
   the V1.3 development branch; (4) begin Gate 2 (memory foundation) on that branch.
+
+## Gate 2 (as-built) — structured project memory  [2026-09-15]
+
+Implemented on `v1.3-dev`:
+
+- `runtime/kel/memory.py` (581 lines): migration 001 (`schema_migrations`, `memories`,
+  `memory_events`, `memory_conflicts`, optional `memories_fts`) with a one-time pre-migration
+  backup (`backups/pre-v13-*.sqlite3`, integrity-checked) and `migration-receipt.json`;
+  deterministic LIKE fallback when FTS5 is unavailable (`Memory(use_fts=False)`; auto-probe
+  default); the 7-level authority model; supersession + history chains; open conflicts for
+  equal-authority decision contradictions with `resolve_conflict`; `confirm`/`correct`/
+  `retract`/`forget`; secret refusal with content-free audit events; strict project isolation;
+  durable event-log mirror (`events` rows under `memory:<id>`).
+- `runtime/tests/test_v13_memory.py` (16 tests): MEM-01..MEM-12 plus conflict resolution,
+  backup-failure refusal, partial-migration recovery, and event-log coverage. Targeted: 16
+  passed; full suite: **197 passed + 10 subtests** (was 181+10).
+
+As-built notes (evidence-backed adjustments; specification updates recorded here):
+
+- `memory_events.action` additionally uses `refused` for rejected secret-like writes
+  (content-free `detail={'scan': <pattern-name>}`), and refusals are mirrored to the durable
+  event log.
+- Explicit replacement supersession is driven by `correct()` (new record supersedes the old one
+  with a `superseded_by`/`supersedes` chain); brand-new contradicting user decisions at equal
+  authority stay open conflicts by design (reconciles matrix MEM-04 with MEMORY_MODEL §8).
+- `confirm()` refuses trust-7 (external) rows: external content is adopted only by restating it
+  as a user decision (citation kept in `source_ref`).
+- Migration receipt: a pre-existing `migration-receipt.json` is preserved as
+  `migration-receipt-legacy.json` before the V1.3 receipt is written.
+- Donor code copied in Gate 2: **none** (original implementation). The hermes context-fencing
+  sanitizer remains scheduled for Gate 3 (`kel/composer.py`) with attribution at copy time.
+
+Next: Gate 3 (project map + context composer).
 
 
