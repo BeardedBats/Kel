@@ -60,11 +60,11 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
      visibly tightens rows/cards instead of shrinking type. `seed_ui_fixture.py --dense` seeds twelve varied
      jobs, and the harness dismisses first-run setup on a freshly seeded root (found while running this check).
      Verified: **`density: compact`, 19 rows**, contrast 0.
-     **Drawer-tab semantics: still OPEN** — the library source assigns `role="tab"`/`aria-controls` to Arco tab
-     titles, but the capture's focused elements report `role=None` on all seven stops, so the two measurements
-     disagree. Next step: inspect those nodes' outer HTML (or check for a drawer-level override of the Arco
-     Tabs header) and then add the missing roles or close it as a sampling artefact. They are reachable,
-     ringed and keyboard-operable today, so nothing is broken for users.
+     **Drawer-tab semantics: resolved (false positive)** — `packaging/probe-drawer-tabs.cjs` inspected the
+     mounted drawer and found WAI-ARIA tabs wired to their panels
+     (`<div class="arco-tabs-header-title" role="tab" aria-selected aria-controls="…panel-N">` plus
+     `role="tabpanel"` panes, seven tabs). The `role=None` reading was my own sampling artifact (the
+     post-interaction focus recorder does not capture roles). No user-facing gap and nothing to refactor.
   4. **Donor-surface repairs carried forward**: unused lazy imports in `Router.tsx`, live pet-window capture
      (`app.windows()` support in the harness), and the remaining design-review items.
   5. **Provider/process populated states** (G8 capture gaps): a fixture with an authenticated provider
