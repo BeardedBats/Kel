@@ -351,6 +351,11 @@
   outline: 2px solid var(--kel-accent);
   outline-offset: 2px;
 }
+/* Kel V1.4: the chat's Work & context trigger is an Arco text button whose own colour rules are
+   important, so the Kel muted token needs the same weight to win in both themes. */
+.kel-work-context-btn {
+  color: var(--kel-text-2) !important;
+}
 /* Kel V1.4 shell focus ring: the V1.3 audit measured 0 of 30 tab stops with a detectable ring.
    `:where()` keeps specificity at zero; `!important` is required to beat the donor's outline reset. */
 :where(a, button, [role='button'], input, select, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
