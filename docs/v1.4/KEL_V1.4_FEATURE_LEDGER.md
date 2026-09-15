@@ -31,6 +31,14 @@ rendered from the packaged candidate (34 shots at five widths, 0 renderer errors
 memory action round-trip, an accepted-milestone fixture to exercise the artifact viewer, and recipe
 preview/dry-run.
 
+**Gate 5 (UI), fourth increment — gate close (2026-09-15).** Recipes gained a **dry-run preview**
+(`/api/recipes` action `preview`, rendered as the compiled payload with its required inputs and
+permission preview), the Projects Map action was corrected to the engine's `refresh` vocabulary, and
+`packaging/verify-actions.cjs` was added: it drives the packaged candidate with real clicks and reads the
+engine before/after each step. Result: `knowledge-confirm` **changed engine state** (live memory action
+round-trip), `recipe-preview` rendered “Dry run” with state unchanged **by design**, and `work-resume`
+was reachable and correctly a no-op on a verified job — `ok: true`, clean close, 0 errors.
+
 **Gate 5 (UI), third increment (2026-09-15).** `seed_ui_fixture.py` now drives one milestone through the
 engine's real path (claim → fixture worker result → `verify` → `assess` → `publish`) into the `main`
 conversation, so the Work Center shows **Kel verified: VERIFIED** with an accepted milestone and an

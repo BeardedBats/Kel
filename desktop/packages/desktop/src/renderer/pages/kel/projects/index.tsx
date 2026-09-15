@@ -15,7 +15,7 @@ import {
   KelTabs,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
-import { kelMapAction, kelMemoryAction, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
+import { kelMapAction, kelMemoryAction, kelRecipePreview, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
 
 type View = 'knowledge' | 'map' | 'recipes';
 
@@ -37,6 +37,9 @@ export default function KelProjectsPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ recipe: string; payload: Record<string, unknown> } | null>(
+    null
+  );
 
   const load = useCallback(async () => {
     try {
@@ -194,7 +197,7 @@ export default function KelProjectsPage() {
           <KelCard
             title={`Project map${work.map ? ` · v${work.map.version}` : ''}`}
             actions={
-              <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('build'))}>
+              <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
                 Refresh map
               </KelButton>
             }
@@ -203,8 +206,8 @@ export default function KelProjectsPage() {
               <KelEmpty
                 title="No map built yet."
                 why="Kel builds a map of the project from its own verified work."
-                actionLabel="Build map"
-                onAction={() => void act('Build map', () => kelMapAction('build'))}
+                actionLabel="Refresh map"
+                onAction={() => void act('Refresh map', () => kelMapAction('refresh'))}
               />
             ) : (
               <KelTable
@@ -236,22 +239,47 @@ export default function KelProjectsPage() {
               />
             ) : (
               <KelTable
-                head={['Recipe', 'Steps', 'Inputs', 'Source']}
-                rows={entries.map((entry) => [
-                  <span className="kel-strong" key={`${entry.id ?? entry.name}-name`}>
-                    {entry.name ?? entry.title ?? String(entry.id)}
-                  </span>,
-                  <span className="kel-meta" key={`${entry.id ?? entry.name}-steps`}>
-                    {Array.isArray(entry.steps) ? entry.steps.length : '—'}
-                  </span>,
-                  <span className="kel-meta" key={`${entry.id ?? entry.name}-inputs`}>
-                    {Array.isArray(entry.inputs) ? entry.inputs.length : '—'}
-                  </span>,
-                  <span className="kel-meta" key={`${entry.id ?? entry.name}-source`}>
-                    {entry.source ?? 'project'}
-                  </span>,
-                ])}
+                head={['Recipe', 'Steps', 'Inputs', 'Source', 'Dry run']}
+                rows={entries.map((entry) => {
+                  const recipeId = String(entry.recipe_id ?? entry.id ?? '');
+                  return [
+                    <span className="kel-strong" key={`${recipeId}-name`}>
+                      {entry.name ?? entry.title ?? recipeId}
+                    </span>,
+                    <span className="kel-meta" key={`${recipeId}-steps`}>
+                      {Array.isArray(entry.steps) ? entry.steps.length : '—'}
+                    </span>,
+                    <span className="kel-meta" key={`${recipeId}-inputs`}>
+                      {Array.isArray(entry.inputs) ? entry.inputs.length : '—'}
+                    </span>,
+                    <span className="kel-meta" key={`${recipeId}-source`}>
+                      {entry.source ?? 'project'}
+                    </span>,
+                    <KelButton
+                      key={`${recipeId}-preview`}
+                      variant="quiet"
+                      disabled={busy !== null || !recipeId}
+                      onClick={() =>
+                        void act('Preview', async () => {
+                          const payload = await kelRecipePreview(recipeId);
+                          setPreview({ recipe: recipeId, payload });
+                        })
+                      }
+                    >
+                      Preview (dry run)
+                    </KelButton>,
+                  ];
+                })}
               />
+            )}
+            {preview && (
+              <KelSection title={`Dry run — ${preview.recipe}`}>
+                <p className="kel-sub">
+                  Compiled without running anything: this is what the recipe would do, including the
+                  inputs it needs and the permissions it would ask for.
+                </p>
+                <pre className="kel-code">{JSON.stringify(preview.payload, null, 2).slice(0, 4000)}</pre>
+              </KelSection>
             )}
           </KelCard>
         )}

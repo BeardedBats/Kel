@@ -120,3 +120,19 @@ Evidence: `docs/v1.4/screenshots/g5/` (tag `g5`, packaged candidate: 44 shots, 0
 
 Notes: contrast failures 0/0/0 on the three new routes; smallest text 12px; 0 emoji; the
 before/after comparison images for these surfaces are still to be generated at G9.
+
+## 10. Gate 5 interaction verification (2026-09-15)
+
+Evidence: `docs/v1.4/screenshots/audit/v14/actions/actions-evidence.json` +
+`actions-<step>-{before,after}.png`, produced by the new `packaging/verify-actions.cjs`, which drives the
+packaged candidate with real clicks and reads the engine over its loopback API before and after each
+step (`ok: true`, clean close, 0 errors).
+
+| Step | Clicked | Engine state | Rendered | Verdict |
+|---|---|---|---|---|
+| `knowledge-confirm` (Knowledge → Confirm) | yes | **changed** (memory record confirmation) | “Confirm recorded.” | **PASS** — live memory action round-trip proven |
+| `recipe-preview` (Recipes → Preview (dry run)) | yes | unchanged (by design: a dry run compiles, never runs) | “Dry run — …” with the compiled payload | **PASS** |
+| `work-resume` (Work → Resume) | yes | unchanged (the fixture job is already verified) | control present and reachable | **PASS (no-op recorded honestly)** |
+
+In-gate fix: the Projects Map tab sent the map action `build`, which the engine does not implement; it
+now sends `refresh` (engine vocabulary: `refresh`, `stale`).
