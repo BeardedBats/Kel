@@ -34,8 +34,10 @@ Updated: 2026-09-15 ~19:10 ET · Session: #6 boundary (Gate 8 CLOSED via relay)
   `PLAYWRIGHT_BROWSERS_PATH=C:/Users/Nick/Desktop/Kel/dev-tools/playwright/browsers`.
   Fixture root `dev-tools/runs/v13/data/fixture-team`; fresh-install root `dev-tools/runs/v14/data/fresh`.
 - **Exact next action (Gate 9 — full visual redesign / polish)**:
-  1. **Before/after comparisons** for every surface that has a V1.3 counterpart, generated scripted into
-     `docs/v1.4/screenshots/comparisons/` (baseline vs final, same state, same width).
+  1. ~~Before/after comparisons~~ **DONE** (commit `4f692e7`): `packaging/make-comparisons.cjs` produced
+     **23 sheets** in `docs/v1.4/screenshots/comparisons/` (boot, work drawer + tabs, all eleven settings
+     pages, 1280 repeats) with `index.json` recording per-pair byte deltas; only true pairs are listed,
+     and V1.4-only surfaces are covered by their own gate captures instead of a fake baseline.
   2. **Dark mode**: render the key surfaces with the dark token set and audit contrast (the light set is
      already at 0 failures).
   3. **Dense states**: render Work Center with >10 jobs, long lists, and long content.

@@ -218,3 +218,11 @@ and the shell-level keyboard pass (skip link, nav-first order, 30/30 focus rings
 
 Remaining in Gate 8: nothing — the gate is closed; its honestly-empty states (no live provider, no
 running worker) are carried into Gate 9 as capture gaps rather than defects.
+
+## 17. Gate 9 additions (in progress)
+
+| Id | Check | Level | Status |
+|---|---|---|---|
+| G9-COMPARE | scripted before/after comparison pipeline | I | **PASS** — `packaging/make-comparisons.cjs` pairs capture runs that share the harness view ids (handling each generation's run-index prefix) and composes side-by-side sheets with a byte-delta index |
+| G9-COMPARE-COVER | comparisons generated for every view the V1.3 baseline and V1.4 share | V | **PASS** — **23 sheets** in `screenshots/comparisons/` (boot/chat, work drawer + its tabs: continue · knowledge · map · recipes · preview · refresh-after, drawer close, all eleven settings pages, 1280-wide repeats); `index.json` records baseline/final sizes and deltas |
+| G9-GAPS | views that exist in only one generation are listed rather than faked | I | **PASS** — the index lists only true pairs; V1.4-only surfaces (work/team/projects/providers/autonomy/diagnostics/onboarding) have no baseline counterpart and are covered by their own gate captures |
