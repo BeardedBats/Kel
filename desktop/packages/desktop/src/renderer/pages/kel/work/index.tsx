@@ -92,6 +92,30 @@ const WorkCenter: React.FC = () => {
       }))
     : [];
   const accepted = activeMilestones.filter((m) => m.runtime.state === 'ACCEPTED');
+  const newestAccepted = accepted.length ? accepted[accepted.length - 1].id : null;
+
+  // The receipt is shown by default for the newest accepted milestone; the per-row buttons stay
+  // available, and a refusal from the engine is swallowed here because the row still reports it.
+  useEffect(() => {
+    if (!activeJob || !newestAccepted) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const text = await kelArtifact(activeJob.id, newestAccepted);
+        if (!cancelled) {
+          setArtifact({
+            milestone: newestAccepted,
+            text: typeof text === 'string' ? text : JSON.stringify(text, null, 2),
+          });
+        }
+      } catch {
+        /* the receipt is optional; the View artifact button stays available */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeJob, newestAccepted]);
 
   return (
     <div className="kel-scope">
@@ -233,7 +257,7 @@ const WorkCenter: React.FC = () => {
             )}
             {note && <p className="kel-meta">{note}</p>}
             {artifact && (
-              <KelSection title={`Artifact — ${artifact.milestone}`}>
+              <KelSection title={`Receipt — ${artifact.milestone}`}>
                 <pre className="kel-code">{artifact.text.slice(0, 4000)}</pre>
               </KelSection>
             )}
