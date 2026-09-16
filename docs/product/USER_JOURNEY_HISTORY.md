@@ -232,6 +232,41 @@ Baseline evidence: `docs/product/evidence/v15-ux-fixes/baseline/` (raw runs also
   packaged app reports zero offenders on `/guid`; the earlier 2.72:1 entry is gone
   (`evidence/v15-ux-fixes/fixed2/readability`).
 
+### H18 - The composer's speech button was a donor dead end (medium) -> JR-35/JR-9
+- **Problem:** the chat composer reserved its speech slot for the donor's browser-speech control,
+  which depends on a network speech service and fails silently in packaged builds - a control that
+  looks live and does nothing (the JR-9 family of defects).
+- **Fix:** the slot now hosts Kel's own microphone (`KelMicButton`) wired to `/api/transcription`:
+  recording state with a stop square, label and timer, explicit Cancel, Escape to cancel, and a
+  transcript that lands in the composer as editable text.
+- **Lesson:** a control that cannot work in the shipped runtime is worse than no control; replace it
+  with the product's own path instead of porting the donor's.
+- **Rule:** JR-35 (created), JR-9.
+- **Evidence:** packaged E2E `transcription` (runs/transcription{,2}): `composerRecording=true`,
+  `composerText` non-empty, `composerCleared=true`, zero console errors.
+
+### H19 - Dictation must never become an accidental message -> JR-36
+- **Problem (risk removed):** with voice input, auto-send turns every misheard word into a committed
+  chat message; the program brief makes editable-before-send the default.
+- **Design:** the composer mic inserts text (appending to what is already there); the Transcription
+  page's "Send to chat" hands the text over through a one-shot draft the composer consumes and
+  clears; nothing in the feature sends on the user's behalf.
+- **Lesson:** machine-written text is a draft until the user acts; the composer is the review step.
+- **Rule:** JR-36 (created).
+- **Evidence:** E2E `composerText` + `composerCleared`; `GuidPage` draft-consumption effect.
+
+### H20 - Provider machinery stays one sentence away from the user -> JR-37
+- **Problem (risk removed):** transcription invites endpoint/model/websocket vocabulary into the UI;
+  the donor showed key handling in a settings sheet and errors as raw reasons.
+- **Design:** the page shows one plain status ("Practice mode" or "Muse (Meta)") with a single
+  "Source" entry; every failure is one plain sentence (microphone denied/busy/missing, unreadable
+  file, provider rejection); no provider term appears in any surface copy.
+- **Lesson:** providers are implementation; the interface speaks about the user's recording, not the
+  vendor's protocol.
+- **Rule:** JR-37 (created).
+- **Evidence:** `docs/transcription/10_KNOWN_LIMITATIONS.md` copy table; E2E `invalid-copy` and mode
+  label assertions.
+
 ---
 
 ## Open items (recorded, not fixed in this pass)

@@ -1,0 +1,6 @@
+folders: [('Interviews',)]
+transcripts:
+  Morning note                             | recording | complete | folder=True | 5120 ms | audio=759a7258-e54b-46f5-9b58-ebe68805d2f6.wav (present)
+  Audio Was Captured Clearly and the Trans | upload | complete | folder=False | 1000 ms | audio=8ba5ab90-5ca5-4c04-b8d8-48ab0b82fedf.mp3 (present)
+audio files on disk: 2
+vetting sessions in this profile: [('voice routing', 'ACTIVE')]

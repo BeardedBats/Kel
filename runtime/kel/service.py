@@ -616,6 +616,7 @@ class Service:
             from .diagnostics import Diagnostics
             return Diagnostics(self.store,ENGINE_VERSION).apply(data)
         if path=='/api/vetting':return self._vetting_action(data)
+        if path=='/api/transcription':return self._transcription_action(data)
         raise PolicyError('Unknown action')
 
     def _vetting_action(self,data):
@@ -678,7 +679,50 @@ class Service:
         if action=='apply_pending':
             return vetting.apply_pending(data['session'],accept=bool(data.get('accept',True)),
                                          correction=data.get('correction',''))
+        if action=='transcript_preview':
+            return vetting.preview_transcript(conversation,data.get('text',''),mode=data.get('mode','answers'))
+        if action=='transcript_apply':
+            return vetting.apply_transcript(conversation,data.get('text',''),mode=data.get('mode','answers'),
+                                            accept_all=bool(data.get('accept_all',False)),
+                                            then_process=bool(data.get('then_process',False)))
         raise PolicyError('Unknown vetting action')
+
+    def _transcription_action(self,data):
+        # Transcription is an input source: this family stores/inspects audio artifacts and text.
+        # Vetting answers derived from transcripts flow through /api/vetting's transcript actions,
+        # never through a second parser.
+        from .transcription import Transcription
+        service=Transcription(self.store)
+        action=data.get('action')
+        if action=='status':return service.status()
+        if action=='library':return service.library()
+        if action=='folder_create':return service.folder_create(data.get('name',''))
+        if action=='folder_rename':return service.folder_rename(data['id'],data.get('name',''))
+        if action=='folder_delete':return service.folder_delete(data['id'])
+        if action=='rename':return service.transcript_rename(data['id'],data.get('name',''))
+        if action=='delete':return service.transcript_delete(data['id'])
+        if action=='assign':return service.assign(data['id'],data.get('folder') or None)
+        if action=='combine':return service.combine(data['id'],data['source'])
+        if action=='save_recording':
+            return service.save_recording(data.get('text',''),data.get('duration_ms',0),data.get('audio',''),
+                                          extension=data.get('extension','wav'),
+                                          append_to=data.get('append_to') or None,
+                                          name_hint=data.get('name',''))
+        if action=='upload':
+            return service.transcribe_upload(data.get('filename','audio.wav'),data.get('audio',''),
+                                             title_hint=data.get('title',''))
+        if action=='quick_transcribe':
+            return service.quick_transcribe(data.get('filename','audio.wav'),data.get('audio',''),
+                                            data.get('duration_ms'))
+        if action=='stream_start':return service.stream_start(data.get('conversation'))
+        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''))
+        if action=='stream_status':return service.stream_status(data['session'])
+        if action=='stream_finish':return service.stream_finish(data['session'])
+        if action=='export_text':return service.export_text(data['id'])
+        if action=='export_audio':return service.export_audio(data['id'])
+        if action=='set_key':return service.set_key(data.get('key',''))
+        if action=='clear_key':return service.clear_key()
+        raise PolicyError('Unknown transcription action')
 
     def _vetting_all_answered(self,questions):
         return all((q.get('answer') or {}).get('status') in ('ANSWERED','PARTIALLY_ANSWERED','SKIPPED','DEFERRED')
