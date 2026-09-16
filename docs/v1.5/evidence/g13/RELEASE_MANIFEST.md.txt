@@ -1,0 +1,13 @@
+﻿# Kel Release Manifest
+
+Assembled: 2026-09-16T10:03:01.9714114-04:00
+Scope: release folder assembled from built artifacts by scripts/freeze-release.ps1.
+
+Key hashes (positional order matches SHA256Sums.txt.txt, the file scripts/verify-release.ps1 reads):
+- Kel.exe                                          CF1984AC...
+- resources/app.asar                               51DD5DFE...
+- resources/kel-engine/KelEngine.exe                AB3024A0...
+- resources/bundled-aioncore/win32-x64/aioncore.exe 67EB0277...
+
+Also written: SHA256Sums.txt (V1.5) - the same hashes as 'HASH  path' lines for standard tooling.
+

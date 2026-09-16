@@ -39,28 +39,26 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. G13 — freeze / tag / release (G11+G12 closed; at HEAD with the G12 remediation):
-   a) final rebuild in the main repo IN ORDER: `powershell scripts/build-runtime.ps1` →
-      `cd desktop && npm run package` → `./node_modules/.bin/electron-builder --config
-      kel-builder.json --win --dir --publish=never` (engine BEFORE packaging — a package built
-      without `dist/runtime/KelEngine` ships without `resources/kel-engine`);
-   b) probes on the final package: `verify-packaged-smoke.cjs`, `verify-packaged-ui.cjs`,
-      `a11y-probe.cjs` (fresh data dirs) — record results;
-   c) freeze: `powershell scripts/freeze-release.ps1 -PackageDir dist/package/win-unpacked
-      -AppAsar dist/package/win-unpacked/resources/app.asar [-OutDir "...\Kel Releases\Kel-V1.5-Frozen"]`
-      (script removes + recreates the output dir; frozen prior releases untouched);
-   d) verify `scripts/verify-release.ps1 -ReleaseDir <frozen> -Manifest <frozen>/SHA256Sums.txt.txt` → 3/3;
-   e) tag `v1.5.0` + release record (`15_RELEASE_MANIFEST.md` + 00_STATUS + AUTO_RESUME).
+1. **V1.5 is RELEASED** (2026-09-16): tagged `v1.5.0`; frozen at
+   `C:\Users\Nick\Desktop\Kel\Kel Releases\Kel-V1.5-Frozen` (verify 3/3 at the frozen location,
+   candidate↔frozen byte-identical, prior frozen releases 3/3 and untouched). Release manifest `15`;
+   evidence `evidence/g13/`. **Nothing left in the V1.5 engineering program.**
+2. Post-release surface workstream — the ledger rows classified OUT OF V1.5 in `08_LEDGER.md`
+   (G13 delivery check) and `16_KNOWN_LIMITATIONS.md` ("Surface rows deferred out of V1.5"):
+   timelines, meters, banners, indicator panels, usage/test-connection views. Engine data exists
+   and is tested; panels are the next build item.
+3. The dedicated real-user usability/simplicity audit (provided separately by the owner):
+   evaluate the frozen V1.5 build at `Kel Releases\Kel-V1.5-Frozen`; do NOT run it before this
+   checkpoint — it was explicitly sequenced after the engineering release.
 
-## Current position (2026-09-16, post-G12)
+## Current position (2026-09-16, V1.5 RELEASED)
 
-- **G0–G12 closed** (each with review/audit CONTINUE). Key commits: G11 `bbe388c`; RC `270e3cc`;
-  G12 remediation `ed0b35e`.
-- Clean-clone chain verified green (install → build → tsc → vitest → package → PYZ → smoke → UI,
-  engine reports 1.5.0); migration matrix in `13_MIGRATIONS.md`; G10 evidence in `evidence/g10/`;
-  suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0.
-- **Next: G13 only** (step 1 above): rebuild → probes → freeze → verify 3/3 → tag `v1.5.0` →
-  release record. Do NOT start the separate usability audit until V1.5 is frozen and tagged.
+- **G0–G13 closed** — every gate with independent review/audit CONTINUE where required.
+- Final verification: suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0; packaged smoke +
+  UI + a11y (0 contrast failures) on the frozen candidate; clean clone at the release commit
+  green across all nine stages; migration matrix `13`; security/reliability `09`/`10`.
+- Key commits: G11 `bbe388c`; RC `270e3cc`; G12 `ed0b35e`; freeze tooling `9841395`; release
+  record = the commit this file was finalized in (tag `v1.5.0`).
 
 ## Historical checkpoint (2026-09-15, superseded by Current position)
 
