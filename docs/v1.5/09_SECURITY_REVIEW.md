@@ -1,9 +1,9 @@
 # 09 — Security Review (Kel V1.5)
 
-Status: **G2 closure matrix — all 25 cases evidenced** (implementation + tests); the G4
-credential-leak suite has landed (`04_CREDENTIAL_RUNTIME.md`). The G9 gate re-runs this sweep on
-the assembled release with runtime evidence from the packaged build, and adds the reliability
-sweep (`10_RELIABILITY_REVIEW.md`).
+Status: **G2 closure matrix — all 25 cases evidenced** (implementation + tests). G9 re-ran the
+whole matrix on the assembled working tree (suite **444 + 10** after the G9 additions) and added the
+credential-leak and reliability evidence; packaged-build runtime evidence is re-verified at G11.
+See `10_RELIABILITY_REVIEW.md` for the reliability sweep.
 
 "Evidence" names the test or the documented trust-boundary record; no case is marked covered by
 prose alone.
@@ -39,11 +39,25 @@ prose alone.
 Note on case 21: the alternate-path claim is proven the other way round — the boundary sits at the
 effect points, so a caller that skips the engine still cannot skip the boundary.
 
-## Still to come
+## G9 sweep record
 
-- Credential-leak suite (G4, engine-side): complete for the env / child-inheritance / command-line
-  / durable-text / request-scope vectors — `test_v15_credentials.py` (6 tests) + redaction in
-  `kel/internal.py` / `kel/research.py`; the packaged end-to-end injection check runs at G11, and
-  desktop-side (crash-report) vectors are re-checked at G9.
-- Full re-run of this matrix against the assembled release at G9, with runtime (not only test)
-  evidence from the packaged build.
+- **All 25 cases re-run** on this working tree as part of the full suite (`441` pre-G9 evidence +
+  G9 additions); none failed, none were skipped. The authorization cases live in
+  `test_v15_authorize.py` (43 tests), the credential vectors in `test_v15_credentials.py` (6/6).
+- **Credential-leak suite (G4)**: engine-side env / child-inheritance / command-line / durable-text
+  / request-scope vectors covered; redaction in `kel/internal.py` / `kel/research.py`. IPC re-check:
+  credential values cross renderer→main only on explicit set (what the user typed); nothing sends a
+  stored value back (status/remove are metadata-only), and the diagnostics snapshot and exports
+  carry metadata only (`04_CREDENTIAL_RUNTIME.md`).
+- **G9 found two reliability-adjacent defects** (fixed; see `10_RELIABILITY_REVIEW.md`): a masked
+  `database is locked` error in `Store.transaction()`, and the telemetry thread (and its
+  `appserver.stderr` handle) outliving `Service.shutdown()`.
+- **WS23 hygiene is security-relevant**: the packaging override `publish: null` removes the
+  inherited donor update channel (frozen V1.4.1 never shipped an `app-update.yml`, so this was
+  latent, not active). The packaged artifact re-check runs at G11.
+
+## Still to come (G11)
+
+- Packaged-build runtime evidence: credential injection end-to-end (`verify-credentials.cjs`),
+  packaged smoke (`verify-packaged-smoke.cjs`), no `app-update.yml` in the artifact, Kel-branded
+  metadata.
