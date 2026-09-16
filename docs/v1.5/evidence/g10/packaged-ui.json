@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "checks": {
+    "title": "Kel",
+    "workButton": 1,
+    "tab:Work": 8,
+    "tab:Continue work": 1,
+    "tab:Project knowledge": 1,
+    "tab:Project map": 1,
+    "tab:Recipes": 1,
+    "tab:Saved context": 1,
+    "tab:Saved history": 1,
+    "continueEmpty": 1,
+    "knowledgeEmpty": 1,
+    "mapEmpty": 1,
+    "mapRefreshMessage": 0,
+    "recipeFixBug": 1,
+    "recipeContinueWork": 2,
+    "previewShown": 1,
+    "consoleErrors": []
+  }
+}
+UI2_EXIT=0

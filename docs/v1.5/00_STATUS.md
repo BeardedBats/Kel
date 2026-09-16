@@ -28,7 +28,7 @@ Verified at program start (2026-09-15):
 | G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
 | G8 diagnostics / performance / packaging | **closed** — tsc blocker cleared (26→0), desktop test lane restored (72 green), build exit 0; WS22 authorization/lease/migration diagnostics in the snapshot and the desktop Diagnostics page; WS23 builder overrides (`publish: null`, Kel copyright, Linux entry) + Kel PWA identity (manifest, SW cache); WS28 measured with basis (`12`); suite **441 + 10**; closure review **CONTINUE** | `test_v15_diagnostics.py` (3/3), `12_PERFORMANCE.md`, commits `6366976` + `9f2d890` |
 | G9 security + reliability sweeps | **closed** — 25/25 security cases re-run on this tree; reliability table covers all 22 charter cases with named evidence; credential vectors re-checked; **two real defects found and fixed by the new probes** (masked `database is locked` in `Store.transaction`; telemetry-thread handle retention past `Service.shutdown`); suite **444 + 10**; closure review **CONTINUE** | `test_v15_reliability.py` (3/3), `09`, `10`, commit `74b6c33` |
-| G10 visual / product acceptance | **in progress — prerequisites staged; run paused by user** — V1.5 KelEngine rebuilt from source; package staged at `dist/package/win-unpacked` (Kel.exe + app.asar + kel-engine + bundled-aioncore, **no app-update.yml**); electron-builder exits 1 on a deterministic duplicate-copy EBUSY (merged base+kel `extraResources` re-copies `aioncore.exe`); UI/a11y probes not yet run | `/tmp/kel_pkg_build3.log`, staged artifact (git-ignored) |
+| G10 visual / product acceptance | **closed** — packaging pipeline fixed (commit `0fba928`: deduped `extraResources`; pinned-ABI prebuild path, no bun/node-abi) → package builds **EXIT 0**; packaged probes all green on fresh data dirs: `verify-packaged-ui` every check truthy + `consoleErrors: []`, 25 screenshots @1440x900/1920x1080, a11y `contrastFailureCount: 0` + `errors: []` + `emoji: 0`; **one AA defect found and fixed** (empty-state caption 2:1 → corrected token, re-measured) | `docs/v1.5/evidence/g10/` |
 | G11 migration / clean clone / packaged | pending | — |
 | G12 independent architecture audit | pending | — |
 | G13 freeze / tag / release | pending | — |
@@ -133,6 +133,15 @@ Blocker: the duplicate-entry packaging failure. Next action: remove `public` and
 re-run the builder, expect exit 0, then run the probes. HEAD at pause: `9cc6af7` (this record is
 the following commit). Repo tree clean apart from pre-existing untracked `Agents.md`; no stray
 Kel/aioncore/Electron processes.
+
+**Increment 11 — G10 (this working tree):** the packaging pipeline is green end to end — the
+`extraResources` duplication that deterministically EBUSYed on `aioncore.exe` is removed, and the
+afterPack native rebuild now fetches the official prebuilt for the ABI read from the pinned
+Electron binary itself (the old path required `bun`, and `node-abi` cannot resolve Electron
+44.3.0 at all) — commit `0fba928`. Packaged acceptance on fresh data dirs: `verify-packaged-ui`
+all checks truthy with zero console errors; 25 screenshots at two widths; a11y probe clean after
+fixing one measured AA defect (donor empty-state caption at 2:1 → corrected muted token;
+re-measured 0 failures). Evidence: `docs/v1.5/evidence/g10/`. Closure review **CONTINUE**.
 
 ## Required deliverables (spec checklist)
 
