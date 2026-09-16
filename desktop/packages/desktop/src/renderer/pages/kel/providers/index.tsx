@@ -57,7 +57,7 @@ const Providers: React.FC = () => {
 
   useEffect(() => {
     void (async () => {
-      const status = await window.kelAPI?.credentials?.status().catch(() => null);
+      const status = await window.kelAPI?.credentials?.status().catch((): null => null);
       if (status) setSecure(status);
     })();
   }, []);

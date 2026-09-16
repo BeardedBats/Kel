@@ -35,7 +35,7 @@ export async function initializeKel(port: number): Promise<void> {
     event.preventDefault();
     drained = true;
     kelRequest('/api/shutdown-idle', {})
-      .catch(() => undefined)
+      .catch((): undefined => undefined)
       .finally(() => {
         setTimeout(() => app.quit(), 50);
       });
@@ -350,21 +350,21 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:credential-status', () => credentialStatus());
   ipcMain.handle(
     'kel:credential-set',
-    async (event, provider: string, field: string, value: string) => {
+    async (event, provider: string, field: string, value: string): Promise<{ provider: string; fields: string[] }> => {
       const stored = setCredential(provider, field, value);
       await kelRequest('/api/providers', {
         action: 'set_credential',
         provider,
         fields: stored.fields,
         credential_ref: `kel:provider:${provider}:${field}`,
-      }).catch(() => undefined);
+      }).catch((): undefined => undefined);
       return { provider: stored.provider, fields: stored.fields };
     }
   );
-  ipcMain.handle('kel:credential-delete', async (event, provider: string) => {
+  ipcMain.handle('kel:credential-delete', async (event, provider: string): Promise<{ provider: string; removed: number }> => {
     const removed = removeCredential(provider);
     await kelRequest('/api/providers', { action: 'delete_credential', provider }).catch(
-      () => undefined
+      (): undefined => undefined
     );
     return removed;
   });

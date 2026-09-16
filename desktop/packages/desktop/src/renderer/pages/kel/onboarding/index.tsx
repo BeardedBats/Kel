@@ -68,7 +68,7 @@ export default function KelOnboardingPage() {
 
   const finish = useCallback(
     async (skipped: boolean) => {
-      await configService.set('kel.onboardingCompleted_v1', true).catch(() => undefined);
+      await configService.set('kel.onboardingCompleted_v1', true).catch((): undefined => undefined);
       navigate(skipped ? '/guid' : '/work', { replace: true });
     },
     [navigate]
