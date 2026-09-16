@@ -113,6 +113,10 @@ class Service:
             self.supervisor.join(timeout=5)
         self.engine.close()
         self.requests.shutdown(wait=True,cancel_futures=True)
+        # The telemetry thread may be inside a provider call (bounded by that call's own timeout);
+        # joining it releases its stderr handle before the caller cleans the data root up.
+        if self.telemetry.is_alive():
+            self.telemetry.join(timeout=30)
 
     def _tick(self):
         while not self.stop.wait(.2):
