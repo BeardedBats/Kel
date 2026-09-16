@@ -150,7 +150,7 @@ const Layout: React.FC<{
       // hidden: an install migrated from V1.3 sees the flow once and dismisses it with "Skip setup",
       // which is one click; a stricter migrated-install rule needs a renderer-readable "previous install"
       // signal and is carried as an open item.
-      await configService.initialize().catch(() => undefined);
+      await configService.initialize().catch((): undefined => undefined);
       if (cancelled) return;
       let completed = false;
       try {

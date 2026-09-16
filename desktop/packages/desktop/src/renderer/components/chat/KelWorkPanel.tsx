@@ -54,9 +54,19 @@ declare global {
   interface Window {
     kelAPI?: {
       request: (route: string, body?: unknown) => Promise<unknown>;
-      history: (id: string) => Promise<import('@/common/chat/chatLib').TMessage[]>;
-      conversation: (id: string) => Promise<string | null>;
-      historySearch: (query: string) => Promise<import('@/common/chat/chatLib').TMessage[]>;
+      history: (id: string) => Promise<unknown>;
+      conversation: (id: string) => Promise<unknown>;
+      historySearch: (query: string) => Promise<unknown>;
+      /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
+      credentials?: {
+        status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
+        set: (
+          provider: string,
+          field: string,
+          value: string
+        ) => Promise<{ provider: string; fields: string[] }>;
+        remove: (provider: string) => Promise<{ provider: string; removed: number }>;
+      };
     };
   }
 }
@@ -134,8 +144,8 @@ export default function KelWorkPanel() {
     if (!id) return;
     void window.kelAPI
       ?.conversation(id)
-      .then((saved) => {
-        if (saved) setCid(saved);
+      .then((saved: unknown) => {
+        if (typeof saved === 'string' && saved) setCid(saved);
       })
       .catch((e: unknown) => setError(String(e)));
   }, [location.pathname, visible]);

@@ -10,7 +10,7 @@ type SearchOptions = { keyword: string; page?: number; page_size?: number };
 export async function searchKelConversationMessages(
   options: SearchOptions
 ): Promise<PaginatedResult<IMessageSearchItem>> {
-  const host = globalThis as typeof globalThis & {
+  const host = globalThis as unknown as {
     window?: { kelAPI?: { historySearch?: (query: string) => Promise<TMessage[]> } };
   };
   const history = (await host.window?.kelAPI?.historySearch?.(options.keyword)) ?? [];

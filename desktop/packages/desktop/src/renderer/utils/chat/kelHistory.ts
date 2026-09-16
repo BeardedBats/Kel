@@ -13,7 +13,7 @@ type PageLoader = (options: PageOptions) => Promise<MessageCursorPage<TMessage>>
 const PREFIX = 'kel-merged:';
 
 export async function readKelHistory(conversationId: string): Promise<TMessage[]> {
-  const host = globalThis as typeof globalThis & {
+  const host = globalThis as unknown as {
     window?: { kelAPI?: { history?: (id: string) => Promise<TMessage[]> } };
   };
   return (await host.window?.kelAPI?.history?.(conversationId)) ?? [];

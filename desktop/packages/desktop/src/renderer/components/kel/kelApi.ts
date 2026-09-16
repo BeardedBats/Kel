@@ -134,6 +134,7 @@ export interface KelMapSection {
 
 export interface KelRecipeEntry {
   id?: string;
+  recipe_id?: string;
   name?: string;
   title?: string;
   steps?: unknown[];

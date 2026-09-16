@@ -59,9 +59,9 @@ const KelCommandPalette: React.FC = () => {
     setLoading(true);
     try {
       const [state, work, roster] = await Promise.all([
-        kelState().catch(() => ({ jobs: [], providers: [], projects: [] })),
-        kelWork('main').catch(() => null),
-        kelTeam.roster().catch(() => ({ roles: [], departments: [] })),
+        kelState().catch((): Awaited<ReturnType<typeof kelState>> => ({ jobs: [], providers: [], projects: [] })),
+        kelWork('main').catch((): null => null),
+        kelTeam.roster().catch((): Awaited<ReturnType<typeof kelTeam.roster>> => ({ roles: [], departments: [] })),
       ]);
       const items: PaletteItem[] = [];
       (state.jobs ?? []).forEach((job) => {
