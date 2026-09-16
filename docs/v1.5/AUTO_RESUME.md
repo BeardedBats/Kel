@@ -33,14 +33,14 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 | `runtime/tests/test_v15_memory_packets.py` | G6 — packet lifecycle probes (4 tests) |
 | `desktop/src` (G7) | donor sweep: `[AionUi]`→`[Kel]` logs ×21 files; tray, notification, app-name, `X-Title`, updater, browser copy; Autonomy copy with claims re-pin |
 | `desktop/src` (G8) | tsc release blocker cleared — 9 files, type-only + behavior-preserving; `tests/vitest.setup.ts` + `tests/vitest.dom.setup.ts` restored (commit `6366976`) |
+| `runtime/kel/diagnostics.py`, desktop diagnostics page, `kel-builder.json`, PWA assets (G8/2) | policy/lease/migration summary in the snapshot + rendered; `publish: null`, Kel copyright/linux entry, Kel manifest + SW cache (commit `9f2d890`) |
 | `docs/v1.5/*` | status board, authorization model, **effect-path matrix `02A`**, ledger classification, security matrix, test matrix, skeletons |
 
 ## Next steps, in order
 
-1. G8 (in progress): desktop `tsc` release blocker **cleared** (26→0) and desktop test lane
-   restored (4 files / 72 tests green; build exit 0) — commit `6366976`. Remaining G8:
-   authorization/provider diagnostics surfaces (WS22), performance measurement with a recorded
-   basis (WS28), WS23 packaging-hygiene items. Then G9–G13.
+1. G8: **closed** (review CONTINUE). Next: G9 — security + reliability sweeps
+   (adversarial-review pass, restart/crash probes beyond the G2 set, retention/purge evidence);
+   then G10–G13.
 2. G6–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
 3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired
