@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "scenario": "settings",
+  "siderItems": [],
+  "pages": {
+    "/settings/appearance": {
+      "finalHash": "#/settings/appearance",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/archived": {
+      "finalHash": "#/settings/archived",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/system": {
+      "finalHash": "#/settings/system",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/webui": {
+      "finalHash": "#/settings/webui",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/pet": {
+      "finalHash": "#/settings/pet",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/about": {
+      "finalHash": "#/settings/about",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/model": {
+      "finalHash": "#/settings/model",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/agent": {
+      "finalHash": "#/settings/agent",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/skills": {
+      "finalHash": "#/settings/skills",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/tools": {
+      "finalHash": "#/settings/tools",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings": {
+      "finalHash": "#/settings",
+      "headings": [],
+      "text": "",
+      "interactives": [],
+      "tabs": [],
+      "scroll": []
+    }
+  },
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "gearExists": 1,
+  "hashAfterGear": "#/settings/appearance",
+  "consoleErrors": [
+    "TypeError: Cannot read properties of undefined (reading 'id')"
+  ],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

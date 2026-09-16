@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "scenario": "palette",
+  "steps": [
+    {
+      "name": "initial",
+      "at": 1789569646002,
+      "state": {
+        "open": false,
+        "label": "",
+        "options": [],
+        "active": null,
+        "hash": "#/guid",
+        "emptyText": ""
+      }
+    },
+    {
+      "name": "ctrl-k-open",
+      "at": 1789569647431,
+      "state": {
+        "open": true,
+        "label": "Run a command or jump to a surface",
+        "options": [
+          "Go toWorkjob center",
+          "Go toTeam · Officelive assignments",
+          "Go toTeam · Rosterrole templates",
+          "Go toTeam · Studiorole editor",
+          "Go toProjects · Knowledgememory",
+          "Go toProjects · Mapproject map",
+          "Go toProjects · Recipeslibrary",
+          "Go toProvidersmodels and credentials",
+          "Go toAutonomyleases and guardrails",
+          "RecipesAudit and Repairdry run from Projects · Recipes",
+          "RecipesContinue Workdry run from Projects · Recipes",
+          "RecipesFix Bugdry run from Projects · Recipes",
+          "RecipesResearch Then Implementdry run from Projects · Recipes",
+          "RecipesShip Releasedry run from Projects · Recipes",
+          "RolesDocumentation SpecialistDelivery · v1",
+          "RolesRelease EngineerDelivery · v1",
+          "RolesImplementation EngineerEngineering · v1",
+          "RolesResearch SpecialistProduct · v1",
+          "RolesUI/UX ExpertProduct · v1",
+          "RolesSolution StrategistStrategy · v1",
+          "RolesIndependent ReviewerVerification · v1",
+          "RolesQA EngineerVerification · v1",
+          "RolesSecurity ReviewerVerification · v1"
+        ],
+        "active": "Go toWorkjob center",
+        "hash": "#/guid",
+        "emptyText": "Go to\nWork\njob center\nGo to\nTeam · Office\nlive assignments\nGo to\nTeam · Roster\nrole templates\nGo to\nTeam · Studio\nrole editor\nGo to\nProjects · Knowledge\nmemory\nGo to\nProjects · Map\nproject map\nGo to\nP"
+      }
+    },
+    {
+      "name": "filter-knowledge",
+      "at": 1789569648263,
+      "state": {
+        "open": true,
+        "label": "Run a command or jump to a surface",
+        "options": [
+          "Go toProjects · Knowledgememory"
+        ],
+        "active": "Go toProjects · Knowledgememory",
+        "hash": "#/guid",
+        "emptyText": "Go to\nProjects · Knowledge\nmemory"
+      }
+    },
+    {
+      "name": "arrow-down",
+      "at": 1789569648574,
+      "state": {
+        "open": true,
+        "label": "Run a command or jump to a surface",
+        "options": [
+          "Go toProjects · Knowledgememory"
+        ],
+        "active": "Go toProjects · Knowledgememory",
+        "hash": "#/guid",
+        "emptyText": "Go to\nProjects · Knowledge\nmemory"
+      }
+    },
+    {
+      "name": "enter-nav",
+      "at": 1789569650183,
+      "state": {
+        "open": false,
+        "label": "",
+        "options": [],
+        "active": null,
+        "hash": "#/projects/knowledge",
+        "emptyText": ""
+      }
+    },
+    {
+      "name": "slash-open",
+      "at": 1789569651198,
+      "state": {
+        "open": true,
+        "label": "Search work, knowledge, recipes and roles",
+        "options": [
+          "RecipesAudit and Repairdry run from Projects · Recipes",
+          "RecipesContinue Workdry run from Projects · Recipes",
+          "RecipesFix Bugdry run from Projects · Recipes",
+          "RecipesResearch Then Implementdry run from Projects · Recipes",
+          "RecipesShip Releasedry run from Projects · Recipes",
+          "RolesDocumentation SpecialistDelivery · v1",
+          "RolesRelease EngineerDelivery · v1",
+          "RolesImplementation EngineerEngineering · v1",
+          "RolesResearch SpecialistProduct · v1",
+          "RolesUI/UX ExpertProduct · v1",
+          "RolesSolution StrategistStrategy · v1",
+          "RolesIndependent ReviewerVerification · v1",
+          "RolesQA EngineerVerification · v1",
+          "RolesSecurity ReviewerVerification · v1"
+        ],
+        "active": "RecipesAudit and Repairdry run from Projects · Recipes",
+        "hash": "#/projects/knowledge",
+        "emptyText": "Recipes\nAudit and Repair\ndry run from Projects · Recipes\nRecipes\nContinue Work\ndry run from Projects · Recipes\nRecipes\nFix Bug\ndry run from Projects · Recipes\nRecipes\nResearch Then Implement\ndry run f"
+      }
+    },
+    {
+      "name": "no-match",
+      "at": 1789569651882,
+      "state": {
+        "open": true,
+        "label": "Search work, knowledge, recipes and roles",
+        "options": [],
+        "active": null,
+        "hash": "#/projects/knowledge",
+        "emptyText": "Nothing matches “zzzz”. Try a job, a knowledge topic, a recipe or a role."
+      }
+    },
+    {
+      "name": "escape-close",
+      "at": 1789569652401,
+      "state": {
+        "open": false,
+        "label": "",
+        "options": [],
+        "active": null,
+        "hash": "#/projects/knowledge",
+        "emptyText": ""
+      }
+    },
+    {
+      "name": "slash-in-composer",
+      "at": 1789569683136,
+      "state": {
+        "open": true,
+        "label": "Search work, knowledge, recipes and roles",
+        "options": [
+          "RecipesAudit and Repairdry run from Projects · Recipes",
+          "RecipesContinue Workdry run from Projects · Recipes",
+          "RecipesFix Bugdry run from Projects · Recipes",
+          "RecipesResearch Then Implementdry run from Projects · Recipes",
+          "RecipesShip Releasedry run from Projects · Recipes",
+          "RolesDocumentation SpecialistDelivery · v1",
+          "RolesRelease EngineerDelivery · v1",
+          "RolesImplementation EngineerEngineering · v1",
+          "RolesResearch SpecialistProduct · v1",
+          "RolesUI/UX ExpertProduct · v1",
+          "RolesSolution StrategistStrategy · v1",
+          "RolesIndependent ReviewerVerification · v1",
+          "RolesQA EngineerVerification · v1",
+          "RolesSecurity ReviewerVerification · v1"
+        ],
+        "active": "RecipesAudit and Repairdry run from Projects · Recipes",
+        "hash": "#/projects/knowledge",
+        "emptyText": "Recipes\nAudit and Repair\ndry run from Projects · Recipes\nRecipes\nContinue Work\ndry run from Projects · Recipes\nRecipes\nFix Bug\ndry run from Projects · Recipes\nRecipes\nResearch Then Implement\ndry run f"
+      }
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

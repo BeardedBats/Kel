@@ -1,0 +1,1257 @@
+{
+  "schema": 1,
+  "scenario": "first-run",
+  "steps": [],
+  "errors": [],
+  "timeline": [
+    {
+      "ms": 4141,
+      "hash": ""
+    },
+    {
+      "ms": 4666,
+      "hash": "#/onboarding"
+    }
+  ],
+  "timeToComposerBeforeOnboardingMs": null,
+  "hashAtBoot": "#/onboarding",
+  "title": "Kel",
+  "bodyText": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is a local work engine. Your projects, its knowledge about them, and every receipt stay in your folders and in Kel's own data directory.\n\nNothing leaves this machine except the model providers you choose.\nKel works only inside the project you point it at.\nEvery finished job leaves evidence you can inspect.\nNext",
+  "sider": [
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "name": "Collapse",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Search messages",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Back",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Forward",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "New Chat",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Team",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Projects",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Providers",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Autonomy",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 271,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Diagnostics",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 307,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work & context",
+      "tag": "button",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(90, 98, 112)",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "name": "Settings",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -69,
+        "w": 154,
+        "h": 40
+      }
+    }
+  ],
+  "composer": [],
+  "onboarding": {
+    "steps": [
+      {
+        "heading": [
+          "Set up Kel",
+          "Kel runs on this machine"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is a local work engine. Your projects, its knowledge about them, and every receipt stay in your folders and in Kel's own data directory.\n\nNothing leaves this machine except the model providers you choose.\nKel works only inside the project you point it at.\nEvery finished job leaves evidence you can inspect.\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Team",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Providers",
+            "disabled": false
+          },
+          {
+            "name": "Autonomy",
+            "disabled": false
+          },
+          {
+            "name": "Diagnostics",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 16568,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "Model providers"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 2 of 5 · Providers\n\nSkip setup\nModel providers\nOpen Providers\nClaude (Claude Code) \nQueued · quota not reported · subscription\nCodex \nQueued · quota not reported · subscription\nAnthropic API \nWaiting on you · installed not authenticated · api key\nDeepSeek API \nWaiting on you · installed not authenticated · api key\n\nKel can be explored without a provider, but running a job needs one: a CLI subscription session, or an API key kept in Windows' protected store.\n\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Team",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Providers",
+            "disabled": false
+          },
+          {
+            "name": "Autonomy",
+            "disabled": false
+          },
+          {
+            "name": "Diagnostics",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Open Providers",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 17609,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "Where work happens"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 3 of 5 · Project\n\nSkip setup\nWhere work happens\n\nKel is currently pointed at General. Nothing outside it is read or written unless you grant that scope explicitly.\n\nProjects are records, not copies — Files stay where you keep them.\n\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Team",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Providers",
+            "disabled": false
+          },
+          {
+            "name": "Autonomy",
+            "disabled": false
+          },
+          {
+            "name": "Diagnostics",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 18608,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "How much Kel does on its own",
+          "Locked guardrails (read-only)"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 4 of 5 · Autonomy\n\nSkip setup\nHow much Kel does on its own\n\nKel works on its own after you approve a plan, and asks once when the work needs more scope than that plan covered. Three answers are always available: allow once, allow for this project, or deny.\n\nSome things are never automatic, and cannot be unlocked by Kel, by a role, or by anything written in a repository.\n\nLocked guardrails (read-only)\nno-registry-write — Windows Registry writes are refused; read-only inspection only when diagnosing.\nno-screen-takeover — Agents never move the mouse, type into the active desktop, or steal focus.\nno-os-critical-write — Windows, boot, EFI, partitions, firmware, drivers, BitLocker, and system restore are never modified.\nno-security-weakening — Defender, UAC, firewall, SmartScreen, TLS validation, VPN, proxy, DNS, and hosts are never weakened or bypassed.\ncredential-boundary — Kel reads or writes only its own namespaced credential entries; unrelated secrets are never enumerated, exported, or logged.\nno-identity-change — Passwords, MFA, recovery settings, and OS accounts are never changed.\n\nguardrail digest e666e7c598739ec8\n\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Team",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Providers",
+            "disabled": false
+          },
+          {
+            "name": "Autonomy",
+            "disabled": false
+          },
+          {
+            "name": "Diagnostics",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 19622,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "Ready"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 5 of 5 · Ready\n\nSkip setup\nReady\nEngine: 1.5.0\nProviders registered: 4 (none healthy yet — open Providers when you are ready)\nLocked guardrails: loaded\n\nStart in chat. Kel will turn your request into a plan, and you approve it before work begins.\n\nBack\nStart using Kel",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Team",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Providers",
+            "disabled": false
+          },
+          {
+            "name": "Autonomy",
+            "disabled": false
+          },
+          {
+            "name": "Diagnostics",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Start using Kel",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 20636,
+        "skipOffered": true
+      }
+    ],
+    "forwardClicks": 5,
+    "finishedHash": "#/work",
+    "totalMs": 21618
+  },
+  "timeToComposerMs": null,
+  "hashAfterOnboarding": "#/work",
+  "landingBody": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nNo chat history\nWork & context\nSettings\nSkip to main content\nWork\n\n0 jobs in this project · 0 waiting on you\n\nReload\nNo unfinished work in this project.\nJobs appear here as soon as Kel accepts a task, and they stay until they are verified or cancelled.\nContinuation\nNothing waiting to continue.\nWhen a job pauses, is interrupted, or waits on you, it appears here with the exact reason.\nTeam assignments\nNo specialist has been assigned yet.\nKel assigns a specialist only when a milestone actually runs — there are never decorative workers.",
+  "landingComposer": [],
+  "landingInteractives": [
+    {
+      "tag": "a",
+      "role": "",
+      "type": "",
+      "name": "Skip to main content",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      },
+      "cls": "kel-skip"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Collapse",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Search messages",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Back",
+      "disabled": true,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Forward",
+      "disabled": true,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Minimize",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Maximize",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Close",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button app-window-controls__button--close"
+    },
+    {
+      "tag": "div",
+      "role": "button",
+      "type": "",
+      "name": "New Chat",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      },
+      "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Work",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Team",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Projects",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Providers",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Autonomy",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 271,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Diagnostics",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 307,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Work & context",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+    },
+    {
+      "tag": "div",
+      "role": "button",
+      "type": "",
+      "name": "Settings",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+    },
+    {
+      "tag": "a",
+      "role": "",
+      "type": "",
+      "name": "Skip to main content",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": -69,
+        "w": 154,
+        "h": 40
+      },
+      "cls": "kel-skip"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Reload",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 1331,
+        "y": 125,
+        "w": 77,
+        "h": 34
+      },
+      "cls": "kel-btn kel-btn--secondary"
+    }
+  ],
+  "landingSider": [
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "name": "Collapse",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Search messages",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Back",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Forward",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "New Chat",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work",
+      "tag": "button",
+      "current": "page",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Team",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Projects",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Providers",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Autonomy",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 271,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Diagnostics",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 307,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work & context",
+      "tag": "button",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(90, 98, 112)",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "name": "Settings",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -69,
+        "w": 154,
+        "h": 40
+      }
+    }
+  ],
+  "newChat": {
+    "clicked": true,
+    "msToComposer": 444,
+    "hashAfter": "#/guid",
+    "composer": [
+      {
+        "tag": "textarea",
+        "testid": "guid-input",
+        "placeholder": "|",
+        "ariaLabel": "",
+        "fontSize": "14px",
+        "valueLength": 0,
+        "rect": {
+          "x": 480,
+          "y": 392,
+          "w": 742,
+          "h": 44
+        },
+        "outer": "<textarea spellcheck=\"false\" data-testid=\"guid-input\" class=\"arco-textarea text-14px focus:b-none rounded-xl !bg-transparent !b-none !resize-none !py-0 !pe-0 !p"
+      }
+    ]
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

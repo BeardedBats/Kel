@@ -31,7 +31,12 @@ export const getWorkspaceDisplayName = (
     return t ? t('conversation.workspace.temporarySpace') : 'Temporary Session';
   }
   const parts = splitPathSegments(workspacePath);
-  return parts[parts.length - 1] || workspacePath;
+  const last = parts[parts.length - 1] || workspacePath;
+  // Auto-created workspaces are named after their UUID; a raw id is not a name a user can read.
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last)) {
+    return t ? t('conversation.workspace.unnamedSpace') : 'Workspace';
+  }
+  return last;
 };
 
 /**

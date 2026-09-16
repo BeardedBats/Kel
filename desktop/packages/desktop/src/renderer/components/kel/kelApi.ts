@@ -68,6 +68,8 @@ export interface KelWorkJob {
   verdict?: string;
   spent?: number;
   budget?: number;
+  /** Engine-reported last update, when the engine provides one. */
+  updated?: number;
   contract?: { request?: string; project_id?: string; milestones?: KelJobContractMilestone[] };
   milestones?: Record<string, KelJobMilestoneRuntime>;
 }

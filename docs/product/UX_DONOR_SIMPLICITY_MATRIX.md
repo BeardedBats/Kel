@@ -1,0 +1,103 @@
+# UX Donor Simplicity Matrix
+
+Engineering-reference extraction for the Kel V1.5 user-journey audit (2026-09-16). Each donor below was opened read-only and mined for *structural* patterns — navigation shape, settings organization, search reach, background-work signaling, approval phrasing, progressive disclosure, empty states, and workspace navigation — not for visual identity. Every "Kel equivalent" cell names a real Kel surface from V1.5 primary nav (New Chat, Work, Team, Projects, Providers, Autonomy, Diagnostics, Settings gear), the Ctrl+K palette, the 5-step onboarding, or the "Work & context" drawer; "Gap" is a concrete missing thing, not a wish.
+
+## Goose (block/goose)
+
+Electron/React desktop agent with a settings modal, a left navigation panel of grouped entries, an explicit tool-approval UI, and a Hub landing screen. Posture: feature-complete and therefore inclined toward exposure — settings tabs are top-level verbs (Models, Local Inference, Chat, External Backend, Prompts, Keyboard, Auth, App), which is the exact anti-pattern Kel's "Settings shows only Appearance + Archived" avoids.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| Goose | Machine-named settings tabs (`tabModels`, `tabLocalInference`, `tabChat`, `tabExternalBackend`, `tabPrompts`, `tabKeyboard`, `tabAuth`, `tabApp` — `settings/SettingsView.tsx:35-62`) | One flat list; every tab reachable in one click, no nesting | Settings sider (`SettingsSider.tsx:17` — `BUILTIN_TAB_IDS = ['appearance','archived']`) | Kel has no visible home for prompt/behavior tuning once onboarding ends | Reject: this is the machinery-exposure Kel's north star forbids; keep the two-item sider |
+| Goose | Section→tab deep-link mapping (`SettingsView.tsx:96-100` — `sectionToTab` maps a `section` prop onto a tab) | Any surface can link straight to the exact setting it means | Ctrl+K palette "Go to" entries (fixed `NAVIGATION` list, `KelCommandPalette.tsx:142-147`) | Kel palette navigates to *pages*, never into a specific settings section | Adapt: allow palette rows to target `/settings/<section>` deep links |
+| Goose | Tool approvals as inline buttons in the transcript (`ToolApprovalButtons.tsx`), plus a blocking `PermissionModal.tsx` | Decision sits where the user's eyes already are; the modal only for hard stops | Work page runs; "Work & context" drawer | Kel's Autonomy page is the only permission surface — no in-transcript approve/deny | Adapt: inline approve/deny on Work runs, Autonomy stays the policy home |
+| Goose | `Hub.tsx:2-8` — empty-chat landing is "Pair with no messages yet": greeting + time over a centered narrow input; submit creates a session and routes to `/pair` | The empty state *is* the composer; no separate "get started" screen | New Chat + onboarding step 1/5 | Kel's New Chat empty state does not restate time/greeting context | Adapt: keep Kel's composer-first land, borrow only the quiet time context line |
+| Goose | Onboarding as a route guard (`onboarding/OnboardingGuard.tsx`) that can be re-entered | First-run flow is testable and resumable, not a modal chain | 5-step onboarding | Onboarding cannot be revisited after dismissal | Adopt: make onboarding re-runnable from Settings or the palette |
+
+## Orkas (Orkas-AI/Orkas)
+
+A vanilla-ES-module Electron renderer split into small concern files (`settings_tabs.js`, `search.js`, `sidebar-sections.js`, `conversation.js`). Posture: modular and legible *internally*, heavily exposed *externally* — the module split is the strongest idea here and the settings surface the weakest.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| Orkas | Settings declared as a data table in one module (`renderer/modules/settings_tabs.js`) rather than JSX per tab | Tab list is diffable, reorderable, and honest about size at a glance | Settings sider built from `BUILTIN_TAB_IDS` + extension anchoring (`SettingsSider.tsx:17,44-54`) | Kel's sider is a constant + a 10-entry `builtinMap`; adding a section means editing two places | Adapt: single declarative settings-section registry consumed by both sider and router |
+| Orkas | Search isolated in its own module (`renderer/modules/search.js`) with its own scope/section logic | Search quality is reviewable independently of the surface that hosts it | Ctrl+K palette (`KelCommandPalette.tsx`) — filtering, ranking, and rendering in one 281-line component | No separable, testable search/rank module | Adopt: extract palette matching into its own unit before it grows |
+| Orkas | Sidebar sections as a data-driven list (`renderer/modules/sidebar-sections.js`) | Nav shape is a product decision stored as data, not as markup | V1.5 primary nav (New Chat, Work, Team, Projects, Providers, Autonomy, Diagnostics, gear) | Nav order/labels are hard-coded per-entry components | Adapt: one nav manifest the sider renders |
+| Orkas | Conversation rendering in a monolithic `conversation.js` (13k+ lines) | Counter-example: shows the cost of letting one surface absorb everything | Conversation page (vendored) + Work page | Kel risks the same drift if Work keeps absorbing surfaces | Reject: treat as a boundary warning, not a pattern |
+
+## Pioneer (pioneerdotai/pioneer)
+
+100% Rust, GPUI native desktop over a gateway; no Electron, no web renderer. Posture: gateway-centered and protocol-first, with jobs/subagents modeled as first-class durable objects and a deliberate shell/domain split (`crates/client/AGENTS.md`). Simplicity here is architectural, not visual.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| Pioneer | Shell-neutral planner/reducer layer, UI code only applies projections (`crates/client/AGENTS.md:33-40`; `crates/desktop/AGENTS.md:44-47`) | Navigation and state rules stay testable without the UI, so surfaces stay thin | Kel renderer + engine `/api/state`, `/api/work`, `/api/team` consumed by the palette | Rules live in components; surfaces re-derive their own view state | Adopt: keep pushing derivation into the engine, components render |
+| Pioneer | Result *production* vs *delivery* as separate claims (`skills/pioneer/tasks/references/delivery-and-scheduled.md:18-27` — "A task run can finish successfully… That does not mean the main thread gets an assistant message") | Prevents "it ran" from being misread as "you were told" | Work page run results + "Work & context" drawer | Kel does not distinguish "produced" from "delivered into your view" | Adopt: explicit produced/delivered state on Work runs |
+| Pioneer | `reviewRequired` results that are explicitly *not final* until accepted, revised, or cancelled (`subagents/SKILL.md:19, 114, 120-136`) | Gives background work a real state instead of a spinner that resolves to text | Work page; Autonomy page | No "needs your review" outcome distinct from done | Adopt: third terminal state — needs review — surfaced on Work |
+| Pioneer | Delivery modes (`thread`, `user_notification`, `webhook`, `none`) chosen deliberately; notification ≠ durable history (`delivery-and-scheduled.md:25-27, 72-92`) | Users pick the interruption channel instead of getting everything | Work page results, Diagnostics | No notion of where a background result lands | Adapt: quiet default delivery, per-job override |
+| Pioneer | Workspace-scoped everything, and one desktop talks to many gateways (README "One desktop, many gateways"; keystore-scoped provider keys) | Multi-context is a property of the model, not a screen | Projects navigation; workspace-grouped conversation history (`GroupedHistory/index.tsx:221`) | Workspaces are folders in history, not selectable contexts | Adapt: workspace as a filterable context in the palette |
+
+## Hermes (NousResearch/hermes-agent)
+
+Python CLI/TUI agent with a status-bar mixin, a parser-driven flag surface, and (important) a one-file voice contract, `SOUL.md`. Posture: maximal capability, deliberately hidden — the surface is a prompt and a status line; the machinery is flags and config.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| Hermes | `SOUL.md` — one paragraph of voice rules (match reply length to the ask, no filler, no restating, report "what changed, what's verified, what's left", plain claims over adjectives) | The assistant's tone becomes a reviewable artifact, not a vibe | Kel's system/agent voice in engine prompts | Kel's voice contract is not a single auditable document | Adopt: one reviewable voice contract governing all Kel output |
+| Hermes | Approval modes as three plain words — `("manual", "smart", "off")` (`approval_mode.py:16`), inspected/persisted with a one-line response ("Approval mode: smart (persistent profile setting).") | The whole safety posture fits in one control and one sentence | Autonomy page | Autonomy is a page of settings, not one named dial | Adopt: name the Autonomy posture in three words and show the active one |
+| Hermes | Approval mode is *profile-scoped, not conversation state*, and re-read on each guard check (`approval_mode.py:5-8`) | Changing policy never requires restarting or rebuilding a session | Autonomy page + Work page runs | Policy changes and live runs have no stated relationship in Kel | Adapt: state plainly on Autonomy that changes apply to subsequent runs |
+| Hermes | Four-key approval vocabulary (`acp_adapter/permissions.py:44-50` — "Allow edit" / "Allow always" / "Deny" / "Deny always") | Users learn the grid once; no per-tool bespoke phrasing | Work-page permission prompts (in-flight) | Kel's prompt wording is not yet a fixed vocabulary | Adopt: fix allow-once/allow-always/deny/deny-always across every prompt |
+| Hermes | Status bar states elapsed per prompt and idle-since-last-answer (`cli_status_bar_mixin.py:184-187`, `✓ 42s`) | Turns a spinner into a truthful, glanceable time claim | Work page background work | Kel has no quiet "last result was N ago" signal | Adopt: idle-since line on Work, no extra chrome |
+| Hermes | One-shot mode suppresses all chrome (`_parser.py:113-114` — "No banner, no spinner, no tool previews") | Same engine, two honesty levels; scripts get pure output | New Chat vs Work page | Kel mixes conversational and pipeline output in one surface | Reject for UI: Kel's single surface is the product; do not add a chrome-free mode |
+
+## Warpforge (ephor/warpforge)
+
+A desktop "mission control" with a settings view split into per-page files (`settings/pages/Advanced.tsx`, `settings/nav.ts`), a quick-open overlay, and an explicit attention/badge vocabulary. Posture: operational dashboard that keeps one loud signal per row — the closest donor to Kel's background-work problem.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| Warpforge | Task grouping logic extracted into a pure module (`Sidebar/logic/buildRows.ts`, `Sidebar/logic/taskState.ts`) with the tree hook on top | Row meaning is unit-testable and identical across surfaces | Conversation history grouped by workspace folders (`GroupedHistory/index.tsx`) | Grouping logic is inline in the page component | Adopt: extract Kel's history/nav grouping into a pure module |
+| Warpforge | Collapsed rail is a first-class component (`Sidebar/CollapsedRail.tsx`), not a CSS state of the expanded sider | Icons-only mode gets its own affordances and tooltips | Collapsible main sider (`Sider/SiderToolbar.tsx` has an explicit `collapsed` branch) | Kel's collapsed mode still inherits expanded-mode structure | Adapt: treat collapsed nav as a designed surface |
+| Warpforge | Status tokens are semantically named, not decorative (`DESIGN.md:119-126`: "Needs human input — `--color-status-needs-you` … blocked, question, actionable interruption") | Forces every indicator to answer "which decision does this drive?" | Work page statuses; Autonomy | Kel's status vocabulary is not tied to required actions | Adopt: name states after the user's next action, not the system's |
+| Warpforge | Settings sections as separate page files under a `settings/nav.ts` manifest | Adding a section is additive and the nav stays the single source of order | Settings sider (2 items) | Same as Orkas: order lives in a component constant | Adapt: nav manifest in front of the Settings sider for future growth |
+| Warpforge | Quick-open overlay separate from the main nav (`components/QuickOpen.tsx`) | Fast jump and structured browsing are different jobs | Ctrl+K palette | Kel's palette also carries dynamic Work/Team/Knowledge rows — stretched | Adapt: keep one palette, but section it so fixed "Go to" never drowns in dynamic rows |
+| Warpforge | Bootstrap wizard (`components/BootstrapWizard.tsx`) as an explicit first-run sequence | Setup is a named, resumable object | 5-step onboarding | Onboarding state is not a re-enterable object | Adopt: name the onboarding sequence and make it resumable |
+
+## Agent Orchestrator (Untrivial-ai/agent-orchestrator)
+
+Electron + React supervisor for parallel coding sessions, with a DESIGN.md that is itself a *simplicity* document, a grouped command palette, and a four-zone attention model. Posture: explicitly "makes the state of a project legible" — the single best donor for Kel's Work/background-work design.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| AO | Fixed attention-zone vocabulary in the user's language — `"zone.action": "Needs you"`, `"zone.pending": "In review"`, `"zone.working": "Working"`, `"zone.merge": "Ready to merge"` (`packages/product-ui/src/session-presentation.ts:50-54`) | Five words cover every background state; no jargon leaks to the surface | Work page; "Work & context" drawer | Kel's run states do not speak in user-decision terms | Adopt: a fixed five-state vocabulary for all background work |
+| AO | Zones have an explicit rank order — `attentionZoneOrder = ["merge","action","pending","working","done"]` (`session-presentation.ts:321`) | Sorting is a stated product decision; "Needs you" cannot be buried below "Working" | Work page ordering; conversation history ordering | Kel orders by recency only | Adopt: attention-ordered lists, recency as the tiebreak |
+| AO | One status slot per row, and only one signal — "Do not show multiple competing status chips on a session card or sidebar row" (`DESIGN.md:137`) | Scannability comes from subtraction | Conversation rows; Work rows | Kel rows risk chip stacking as states grow | Adopt: one glyph/one word per row, expandable for detail |
+| AO | Status glyph precedence rules (`DESIGN.md:129-135`: spinner if working → PR glyph → dot; amber/red only for attention, muted for idle) | Deterministic rendering beats per-surface improvisation | Work page rows | No stated precedence rule in Kel | Adopt: write the precedence rule down and enforce it |
+| AO | Palette ranks results and *reorders groups by best match*, keeping categories while typing (`lib/command-palette.ts:413-427, 493-507`) | Users keep their mental categories and still get the best hit first | Ctrl+K palette (flat `includes()` filter, first 24) | Kel's single substring filter with no ranking and no per-group caps | Adopt: scored ranking + per-group caps in the palette |
+| AO | Palette rows can be disabled *with a reason* — `disabledReason: t("command.reviewAlreadyRunning")` (`lib/command-palette.ts:318-322`) | Explains why an action is unavailable instead of hiding it | Ctrl+K palette | Kel rows are either present or absent | Adopt: show disabled rows with a one-line reason |
+
+## AionUI (vendored, Kel-Repo desktop)
+
+The vendored Electron/React desktop Kel is built on: sider nav entries, a settings sider, a grouped conversation history, and the Guid page. Posture: the baseline Kel inherited — settings already narrowed to two sections, history already grouped by workspace, and the shell already hosting the Ctrl+K palette.
+
+| Donor | Pattern | Why it works | Kel equivalent | Gap | Adopt / Adapt / Reject |
+|---|---|---|---|---|---|
+| AionUI | Settings nav narrowed to two tabs with intent recorded in code — `// Modified for Kel: keep appearance and archived conversations in scope` + `BUILTIN_TAB_IDS = ['appearance','archived']` (`pages/settings/components/SettingsSider.tsx:1,17`) | The constraint is documentation, not a convention people forget | Settings gear → Appearance + Archived only | Narrowing is a fork comment, not a documented product rule | Adopt: write the "why only two" rule into Kel's product docs |
+| AionUI | Codex-style history split — "project folders (workspaces) on top, free conversations below" (`pages/conversation/GroupedHistory/index.tsx:221`), with per-workspace collapse (`:441-442`) | Two kinds of work get two shapes without a second nav | Conversation history grouped by workspace folders | Workspace groups are not mirrored in Projects or the palette | Adopt: same workspace grouping in Projects and palette results |
+| AionUI | Sider toolbar gives New Chat its own row plus a modest batch-manage affordance (`SiderNav/SiderToolbar.tsx:67-104`) | Primary action stays unmistakable; management stays secondary | New Chat (nav item #1) | Batch/manage affordances are scattered, not one secondary control | Adapt: one clearly secondary management entry per list |
+| AionUI | Extension settings tabs anchor `before`/`after` a builtin id, with legacy anchor remapping (`SettingsSider.tsx:44-54`, `LEGACY_ANCHOR_REMAP`) | Third parties can add surface without Kel renaming its nav | Providers page; extension tabs | Kel has no stated policy for where new surfaces attach | Adapt: define anchor points so growth does not reorder core nav |
+| AionUI | Settings page shell centralizes width and padding (`SettingsPageWrapper.tsx` — `md:max-w-1024px`) with a mobile top-nav variant | Every settings page reads the same regardless of author | Settings page (Appearance, Archived) | Only two pages exist today, so the shell is under-exercised | Adapt: keep the shell; use it when sections return |
+| AionUI | Declarative nav maps (`builtinMap` in both `SettingsSider.tsx:71-105` and `SettingsPageWrapper.tsx:42-84`) duplicate the same list | Shows the drift cost of two registries for one nav | Settings sider + router | Two places to edit for one section | Reject the duplication: one registry, two consumers |
+
+## Top adoptions for Kel
+
+1. **Five-word background-work vocabulary.** Adopt AO's `Needs you / In review / Working / Ready / Terminated` (`session-presentation.ts:50-54`) verbatim across the Work page and "Work & context" drawer, so no run state is ever described in engine terms.
+2. **Attention-ordered lists.** Adopt AO's explicit zone rank (`attentionZoneOrder`, `session-presentation.ts:321`) for Work and history: "Needs you" first, working next, terminal last, recency as tiebreak.
+3. **Ranked, sectioned Ctrl+K.** Adopt AO's scored matching with per-group caps and group reordering (`command-palette.ts:413-427, 493-507`) over Kel's flat `includes()` slice of 24, and give fixed "Go to" rows their own section.
+4. **Disabled rows that explain themselves.** Adopt AO's `disabledReason` pattern (`command-palette.ts:318-322`) so palette actions that cannot run say why instead of vanishing.
+5. **A three-word Autonomy dial.** Adopt Hermes' `manual / smart / off` (`approval_mode.py:16`) as the named posture shown on the Autonomy page, with the current mode stated in one sentence.
+6. **Fixed approval vocabulary.** Adopt Hermes' four options — allow once / allow always / deny / deny always (`acp_adapter/permissions.py:44-50`) — for every in-run permission prompt, with Autonomy as the policy home (Goose's inline buttons as placement).
+7. **"Needs review" as a third terminal state.** Adopt Pioneer's `reviewRequired` model (`subagents/SKILL.md:19, 120-136`): a finished run can be done-pending-review, and only accept/revise/cancel resolves it.
+8. **Produced vs delivered.** Adopt Pioneer's separation (`delivery-and-scheduled.md:18-27`) so Work distinguishes "the run finished" from "the result is in front of you," with a quiet default delivery channel.
+9. **One status slot per row.** Adopt AO's precedence rule and single-signal rule (`DESIGN.md:129-137`) for Work rows, history rows, and Team roster rows: spinner → relevant glyph → attention dot, never stacked chips.
+10. **One reviewable voice contract.** Adopt Hermes' `SOUL.md` (`SOUL.md:1`) as a single Kel document specifying reply length, no filler, and the "what changed / what's verified / what's left" closing — the cheapest possible upgrade to the "simple to talk to" half of the north star.

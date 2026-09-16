@@ -92,11 +92,11 @@ export default function KelAutonomyPage() {
       <main className="kel-page" id="kel-autonomy-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Autonomy</h1>
+            <h1 className="kel-h1">Permissions</h1>
             <p className="kel-sub">
               {leases === null
-                ? 'Loading autonomy state…'
-                : `${active.length} active ${active.length === 1 ? 'lease' : 'leases'} · ${pending.length} boundary ${pending.length === 1 ? 'request' : 'requests'} waiting on you`}
+                ? 'Loading…'
+                : `${active.length === 1 ? '1 active permission' : `${active.length} active permissions`} · ${pending.length} waiting on you`}
             </p>
           </div>
           <span className="kel-grow" />

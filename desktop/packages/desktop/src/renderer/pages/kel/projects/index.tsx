@@ -88,7 +88,7 @@ export default function KelProjectsPage() {
             <h1 className="kel-h1">Projects</h1>
             <p className="kel-sub">
               {work
-                ? `${work.project_id} · ${records.length} knowledge records · map ${work.map ? 'v' + work.map.version : '—'} · ${entries.length} recipes`
+                ? `${work.project_id === 'default' ? 'General' : work.project_id} · ${records.length} knowledge records · map ${work.map ? 'v' + work.map.version : '—'} · ${entries.length} recipes`
                 : 'Loading project context…'}
             </p>
           </div>
@@ -197,9 +197,11 @@ export default function KelProjectsPage() {
           <KelCard
             title={`Project map${work.map ? ` · v${work.map.version}` : ''}`}
             actions={
-              <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
-                Refresh map
-              </KelButton>
+              work.map ? (
+                <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
+                  Refresh map
+                </KelButton>
+              ) : undefined
             }
           >
             {!work.map ? (

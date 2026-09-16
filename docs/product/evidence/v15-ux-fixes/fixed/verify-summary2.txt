@@ -1,0 +1,16 @@
+SETTINGS siderItems(0): 
+SETTINGS consoleErrors: ["TypeError: Cannot read properties of undefined (reading 'id')"]
+SETTINGS errors: []
+SETTINGS appearance text: 
+SETTINGS system hash: #/settings/system; text: 
+TOUR work around 'Waiting to continue': on, to turn it on and off from my keyboard Hey! How do I configure the agents inside this app? Work & context Settings Skip to main content Work 0 active · 2 waiting to continue · 0 need you Reload Waiting to continue 1. A task is waiting to continue Queued not verified yet · To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its own. 2. A task is waiting to continue Queued not verified yet · To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its own. Team assignments No specialist has been assigned yet. Kel assigns a specialist only when a milestone actually runs — there are never decorative specialists.
+TOUR work contains 'verdict:'? false; 'durable state only'? false; 'active ·'? true
+TOUR tour consoleErrors: []
+MAINTEXT /guid: Hi, what's your plan for today? None of your connected models is available right now, so Kel will wait instead of guessing. Open Providers Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change.
+MAINTEXT /work: Skip to main content Work 0 active · 2 waiting to continue · 0 need you Reload Waiting to continue 1. A task is waiting to continue Queued not verified yet · To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its own. 2. A task is waiting to continue Queued not verified yet · To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its own. Team assignments No specialist has been assigned yet. Kel assigns a specialist only when a milestone actually runs — there are never decorative specialists.
+MAINTEXT /autonomy: Skip to main content Permissions 1 active permission · 0 waiting on you Reload Emergency stop Emergency stop revokes every active lease and pauses all active or queued work; workers stop at their next cancellation check. It does not undo completed effects. Capability leases Job State Review Expires Scope Actions fb26e5
+MAINTEXT /settings/webui: 
+MAINTEXT /settings/about: 
+MAINTEXT consoleErrors: ["TypeError: Cannot read properties of undefined (reading 'id')"]
+SIDER unnamedSpace-visible: true
+SIDER uuid-visible: false

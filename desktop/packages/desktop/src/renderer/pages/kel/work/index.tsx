@@ -27,10 +27,12 @@ import {
 } from '@renderer/components/kel/kelApi';
 
 const WAIT_REASON: Record<string, string> = {
+  QUEUED: 'Queued — Kel will pick this up in order.',
+  READY: 'Ready to run as soon as a model is available.',
   PAUSED: 'Paused — resume when you are ready.',
   AWAITING_USER: 'Waiting on you — an approval is pending.',
-  WAITING_RESOURCE: 'Waiting on a resource; Kel will continue automatically.',
-  BLOCKED: 'Blocked by a guardrail; the reason is recorded.',
+  WAITING_RESOURCE: 'Waiting for an available model — Kel will continue automatically.',
+  BLOCKED: 'Blocked by a safety rule; the reason is recorded.',
 };
 
 const WorkCenter: React.FC = () => {
@@ -132,7 +134,7 @@ const WorkCenter: React.FC = () => {
             <p className="kel-sub">
               {jobs === null
                 ? 'Loading jobs…'
-                : `${jobs.length} ${jobs.length === 1 ? 'job' : 'jobs'} in this project · ${waiting} waiting on you`}
+                : `${jobs.length} active · ${continuation.length} waiting to continue · ${waiting} need you`}
             </p>
           </div>
           <span className="kel-grow" />
@@ -144,7 +146,7 @@ const WorkCenter: React.FC = () => {
         {error && <KelErrorState title="Work could not be loaded" cause={error.cause} fix={error.fix} />}
         {!error && jobs === null && <KelLoading rows={4} />}
 
-        {!error && jobs !== null && jobs.length === 0 && (
+        {!error && jobs !== null && jobs.length === 0 && continuation.length === 0 && (
           <KelEmpty
             title="No unfinished work in this project."
             why="Jobs appear here as soon as Kel accepts a task, and they stay until they are verified or cancelled."
@@ -171,7 +173,7 @@ const WorkCenter: React.FC = () => {
                 </span>,
                 <KelMeter key={`${job.id}-budget`} used={job.spent ?? 0} total={job.budget ?? 8} />,
                 <span className="kel-meta" key={`${job.id}-when`}>
-                  {formatWhen(job.id ? Date.now() / 1000 : null)}
+                  {formatWhen(job.updated ?? null)}
                 </span>,
               ])}
             />
@@ -209,7 +211,7 @@ const WorkCenter: React.FC = () => {
             }
           >
             <p className="kel-sub">
-              {`Worker reported: ${accepted.length} of ${activeMilestones.length} milestones accepted · Kel verified: `}
+              {`Progress: ${accepted.length} of ${activeMilestones.length} steps verified · Kel verified: `}
               {activeJob.verdict ?? 'not yet — verification runs after the checks pass'}
             </p>
             {activeMilestones.length === 0 ? (
@@ -267,7 +269,7 @@ const WorkCenter: React.FC = () => {
           </KelCard>
         )}
 
-        <KelCard title="Continuation">
+        <KelCard title="Waiting to continue">
           {continuation.length === 0 ? (
             <KelEmpty
               title="Nothing waiting to continue."
@@ -278,18 +280,30 @@ const WorkCenter: React.FC = () => {
               {continuation.map((candidate, index) => {
                 const id = candidate.job?.id ?? candidate.job_id ?? `candidate-${index}`;
                 const reasons = candidate.reasons ?? [];
+                const related = (jobs ?? []).find((job) => job.id === id);
+                const verdictLabel =
+                  candidate.verdict === 'VERIFIED'
+                    ? 'verified'
+                    : candidate.verdict === 'FAILED'
+                      ? 'checks failed'
+                      : candidate.verdict
+                        ? 'not verified yet'
+                        : null;
                 return (
                   <li key={id}>
-                    <span className="kel-strong">{`${index + 1}. ${candidate.summary ?? id}`}</span>{' '}
+                    <span className="kel-strong">
+                      {`${index + 1}. ${
+                        candidate.summary ?? related?.contract?.request ?? 'A task is waiting to continue'
+                      }`}
+                    </span>{' '}
                     <KelStatusChip
                       status={statusFromDerived(candidate.state ?? candidate.job?.state ?? 'QUEUED')}
                     />
                     <div className="kel-meta">
-                      {candidate.verdict ? `verdict: ${candidate.verdict} · ` : ''}
-                      {reasons.length ? `why: ${reasons.join(', ')}` : 'durable state only — no hidden reasoning'}
-                      {' · '}
-                      Continue from chat (say “continue”, or pick a number) — Kel never resumes work in the
-                      background without you.
+                      {verdictLabel ? `${verdictLabel} · ` : ''}
+                      {reasons.length ? `${reasons.join(', ')} · ` : ''}
+                      To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its
+                      own.
                     </div>
                   </li>
                 );
@@ -302,7 +316,7 @@ const WorkCenter: React.FC = () => {
           {assignments.length === 0 ? (
             <KelEmpty
               title="No specialist has been assigned yet."
-              why="Kel assigns a specialist only when a milestone actually runs — there are never decorative workers."
+              why="Kel assigns a specialist only when a milestone actually runs — there are never decorative specialists."
             />
           ) : (
             <KelTable

@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "scenario": "sider",
+  "probes": [],
+  "errors": [],
+  "hash": "#/guid",
+  "siderText": "K\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nProject conversations\n7c2c2250-291f-4f13-9c62-83edf8fe44f4\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "rows": [
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Badge chat"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "status"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Hey! I wanted to test this out. How far along are we?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Hey! What fonts are you using?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": ""
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "I want to create a little app that allows me to control my microphone'"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "I want to create a little app that allows me to control my microphone'"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "I want to create a little app that allows me to control my microphone'"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Hey! How do I configure the agents inside this app?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    }
+  ],
+  "bodyText": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nProject conversations\n7c2c2250-291f-4f13-9c62-83edf8fe44f4\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "palette": [
+    "Go toWorkjob center",
+    "Go toTeam · Officelive assignments",
+    "Go toTeam · Rosterrole templates",
+    "Go toTeam · Studiorole editor",
+    "Go toProjects · Knowledgememory",
+    "Go toProjects · Mapproject map",
+    "Go toProjects · Recipeslibrary",
+    "Go toProvidersmodels and credentials",
+    "Go toAutonomyleases and guardrails",
+    "RecipesAudit and Repairdry run from Projects · Recipes",
+    "RecipesContinue Workdry run from Projects · Recipes",
+    "RecipesFix Bugdry run from Projects · Recipes",
+    "RecipesResearch Then Implementdry run from Projects · Recipes",
+    "RecipesShip Releasedry run from Projects · Recipes",
+    "RolesDocumentation SpecialistDelivery · v1",
+    "RolesRelease EngineerDelivery · v1",
+    "RolesImplementation EngineerEngineering · v1",
+    "RolesResearch SpecialistProduct · v1",
+    "RolesUI/UX ExpertProduct · v1",
+    "RolesSolution StrategistStrategy · v1",
+    "RolesIndependent ReviewerVerification · v1",
+    "RolesQA EngineerVerification · v1",
+    "RolesSecurity ReviewerVerification · v1"
+  ],
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}
