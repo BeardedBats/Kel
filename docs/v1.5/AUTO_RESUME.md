@@ -57,7 +57,7 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 ## Current position (2026-09-16)
 
 - **G0–G10 closed**; **G11 in progress** (migration proofs done; clean clone pending).
-  Key commits: G8 `6366976`+`9f2d890`; G9 `74b6c33`+`9cc6af7`; G10 `0fba928`+`6af1189`; G11 checkpoint `23c06f1`.
+  Key commits: G8 `6366976`+`9f2d890`; G9 `74b6c33`+`9cc6af7`; G10 `0fba928`+`6af1189`; G11 checkpoint: the commit titled `feat(v1.5): G11 - migration matrix measured`.
 - Packaged artifact builds **EXIT 0**; G10 acceptance evidence in `docs/v1.5/evidence/g10/`;
   migration matrix in `13_MIGRATIONS.md`; suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0.
 - Next: G11 clean-clone workstream (step 1) → G12 audit → G13 freeze/tag/release.
