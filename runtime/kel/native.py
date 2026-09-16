@@ -28,6 +28,21 @@ def executable(provider):
     raise ValueError('Unknown native provider')
 
 
+def child_env(provider, base=None):
+    """Environment for a native CLI child: never CLAUDECODE, never the other provider's key.
+
+    A native child receives at most its own provider's credentials; Kel-managed keys for other
+    providers are never forwarded into it.
+    """
+    env = dict(os.environ if base is None else base)
+    env.pop('CLAUDECODE', None)
+    if provider == 'codex':
+        env.pop('ANTHROPIC_API_KEY', None)
+    else:
+        env.pop('OPENAI_API_KEY', None)
+    return env
+
+
 class NativeAdapter:
     def __init__(self, provider, workspace, logs, timeout=100):
         self.provider = provider
@@ -74,13 +89,7 @@ class NativeAdapter:
         run_id = run_id or uid()
         stdout_path, stderr_path = self.logs/(run_id+'.stdout'), self.logs/(run_id+'.stderr')
         started = time.monotonic()
-        env = os.environ.copy()
-        env.pop('CLAUDECODE', None)
-        # Do not forward unrelated provider keys into a native worker.
-        if self.provider == 'codex':
-            env.pop('ANTHROPIC_API_KEY', None)
-        else:
-            env.pop('OPENAI_API_KEY', None)
+        env = child_env(self.provider)
         try:
             with stdout_path.open('wb') as out, stderr_path.open('wb') as err:
                 process = subprocess.Popen(self.argv(session_id), cwd=self.workspace, stdin=subprocess.PIPE,

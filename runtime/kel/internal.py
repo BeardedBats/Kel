@@ -1,9 +1,27 @@
-"""A bounded API model loop with two allowlisted tools and structured results."""
+"""A bounded API model loop with two allowlisted tools and structured results.
+
+Kel-managed provider keys travel only in request headers; anything that can become durable
+(job errors, messages, stores) is redacted first (`redact`).
+"""
 import json
 import os
+import re
 import time
 import urllib.request
 from .core import uid
+
+_SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
+
+
+def redact(text):
+    """Remove secret-shaped tokens and live key values from anything that can become durable."""
+    text = str(text)
+    text = re.sub(r'sk-[A-Za-z0-9_\-]{8,}', '[redacted]', text)
+    for name in _SECRET_ENV_KEYS:
+        value = os.environ.get(name)
+        if value and len(value) >= 8:
+            text = text.replace(value, '[redacted]')
+    return text
 
 
 class InternalAdapter:
@@ -81,4 +99,4 @@ class InternalAdapter:
                 messages.append({'role': 'user', 'content': replies})
             return {'outcome': 'FAILED', 'error': 'Internal iteration, token, or time budget exhausted', 'tool_calls': calls}
         except Exception as exc:
-            return {'outcome': 'FAILED', 'error': type(exc).__name__+': '+str(exc)}
+            return {'outcome': 'FAILED', 'error': redact(type(exc).__name__+': '+str(exc))}

@@ -269,10 +269,11 @@ const Providers: React.FC = () => {
         <KelSection title="Store a provider credential (OS-backed)">
           <p className="kel-sub">
             The value is encrypted by the desktop main process with Windows DPAPI (Electron
-            <span className="kel-code"> safeStorage </span>) and never reaches the engine, which keeps
-            only the field names and a reference. No IPC returns the value to this window. Stored values
-            are not yet injected into provider runs: live calls use each provider CLI's own sign-in or
-            ambient environment keys, and injection is deferred (see docs/v1.4.1).
+            <span className="kel-code"> safeStorage </span>) and never reaches the engine's database,
+            which keeps only the field names and a reference. No IPC returns the value to this window.
+            Stored values are injected into provider runs from OS-backed storage at engine start —
+            never into logs, exports, or the engine database. New values apply the next time Kel
+            starts its engine.
           </p>
           <div className="kel-row">
             <select

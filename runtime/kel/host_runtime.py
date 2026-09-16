@@ -9,6 +9,15 @@ from .native import executable
 from .core import PolicyError
 
 
+def test_command_env():
+    """Environment for the configured test command: provider authentication is not needed."""
+    env = os.environ.copy()
+    env['PYTHONDONTWRITEBYTECODE'] = '1'
+    for key in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'):
+        env.pop(key, None)
+    return env
+
+
 def host_command(command):
     if not command or not all(isinstance(p,str) and p and '\0' not in p for p in command):
         raise PolicyError('Invalid native test command')
@@ -52,9 +61,7 @@ class HostConnection(CodexConnection):
         if cwd!=Path(self.workspace).resolve():raise PolicyError('Trusted tests changed their working directory')
         argv=host_command(params['command'])
         out=self.logs/'host-tests.stdout';err=self.logs/'host-tests.stderr'
-        env=os.environ.copy();env['PYTHONDONTWRITEBYTECODE']='1'
-        # Test commands do not need provider authentication to build the project.
-        for key in ('ANTHROPIC_API_KEY','OPENAI_API_KEY'):env.pop(key,None)
+        env=test_command_env()
         with out.open('wb') as stdout,err.open('wb') as stderr:
             process=subprocess.Popen(argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env,
                 creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

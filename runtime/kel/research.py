@@ -4,7 +4,7 @@ import json
 import re
 import time
 from urllib.parse import urlsplit
-from .internal import InternalAdapter
+from .internal import InternalAdapter, redact
 from .core import digest, encode, validate_contract
 
 
@@ -95,7 +95,7 @@ class ResearchAdapter:
                     (run_id,encode(response),digest(response),digest(text.encode()),time.time()))
             return {'outcome':'SUCCESS','text':text,'provider':'research','searches':queries,
                     'sources':len(sources),'usage':response.get('usage'),'model':self.model.model}
-        except Exception as exc:return {'outcome':'FAILED','error':type(exc).__name__+': '+str(exc)}
+        except Exception as exc:return {'outcome':'FAILED','error':redact(type(exc).__name__+': '+str(exc))}
 
 
 def check_research_evidence(store,run_id,text):
