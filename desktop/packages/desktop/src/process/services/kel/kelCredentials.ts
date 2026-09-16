@@ -80,7 +80,8 @@ export function removeCredential(provider: string): { provider: string; removed:
   return { provider, removed };
 }
 
-/** Main-process only, reserved for the V1.5 injection path; no caller in V1.4.1 (docs/v1.4.1/06_V1_5_DEFERRED_WORK.md). */
+/** Main-process only; since V1.5 this reads the OS-backed value for spawn-time injection in
+ * KelService. No other caller — values never return to the renderer or the engine database. */
 export function getCredential(provider: string, field: string): string | null {
   const blob = read()[`${provider}:${field}`];
   if (!blob || !credentialsAvailable()) return null;

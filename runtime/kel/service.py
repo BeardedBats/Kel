@@ -21,7 +21,7 @@ from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
 
-ENGINE_VERSION='1.4.1'
+ENGINE_VERSION='1.5.0'
 
 # Verbs that mean "change code in an existing project". These are the only
 # requests that need a project root; greenfield ("create an app") is classified

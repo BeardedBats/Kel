@@ -231,8 +231,9 @@ export default function KelAutonomyPage() {
         <KelCard title="Ask the engine about a scope">
           <p className="kel-sub">
             The policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the
-            leased scope, locked, frozen, or missing a snapshot reference is refused. This checker is not
-            yet called on the worker execution path — enforcement there is deferred (see docs/v1.4.1).
+            leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same
+            boundary is called at every worker effect point, so this checker's verdict is what stops
+            execution before anything runs.
           </p>
           <div className="kel-row">
             <KelTabs
