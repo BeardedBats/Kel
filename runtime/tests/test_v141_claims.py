@@ -61,8 +61,9 @@ REQUIRED = {
         'execution-path',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx': (
-        'not yet implemented',
-        'not yet called on the worker execution path',
+        # Updated in V1.5 G7: enforcement is real; the pinned claim is the shipped copy.
+        'Kel enforces that scope on the worker execution path',
+        'denied before anything runs',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
         # Updated in V1.5 G4: injection is real; the pinned claim is the shipped copy.

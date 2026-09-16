@@ -25,7 +25,7 @@ Verified at program start (2026-09-15):
 | G4 credentials / provider runtime | **closed** — injection live (secure store → engine spawn env only), engine-side redaction / child-env / test-command hygiene, leak suite 6/6, provider audit (`03`), credential doc (`04`); closure review **CONTINUE**; desktop tsc baseline recorded for G8 | `test_v15_credentials.py`, `03_PROVIDER_RUNTIME.md`, `04_CREDENTIAL_RUNTIME.md` |
 | G5 routing / completion / review | **closed** — claims compiler (finalized contracts only; transient drafts stay clean), escalation-aware `routing_outcomes` (`job_kind`/`attempts`/`escalated`), routing + completion + reviewer-independence audits (`05`, `06`); closure review **CONTINUE** | `test_v15_completion.py`, `05_ROUTING.md`, `06_COMPLETION_AUTHORITY.md` |
 | G6 memory / continuation / recipes | **closed** — packet-lifecycle probes 4/4; physical forget purge (`secure_delete`, FTS segment merge, WAL checkpoint) closed a real residue gap the probes found; memory/continuation/recipes audited (`07`); closure review **CONTINUE** | `test_v15_memory_packets.py`, `07_MEMORY_AND_CONTEXT.md` |
-| G7 donor sunset / chat purity / UX | pending (includes the Autonomy page copy correction) | — |
+| G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
 | G8 diagnostics / performance / packaging | pending | — |
 | G9 security + reliability sweeps | pending (a first slice of the security matrix is covered by `test_v15_authorize.py`) | — |
 | G10 visual / product acceptance | pending | — |
@@ -84,12 +84,19 @@ memory/continuation/recipes audited (`07`); ledger UI rows re-pointed to the des
 tests `test_v15_memory_packets.py` **4/4**; full suite **438 passed + 10 subtests**; closure review
 **CONTINUE**.
 
+**Increment 7 — G7 (this working tree):** donor identity sunset — `[AionUi]` log prefixes renamed to
+`[Kel]` across 21 source files (verified zero remain), tray tooltip / browser-notification title /
+app-name fallback / provider header / updater strings corrected; the Autonomy page copy states the
+shipped enforcement truth with the claims test re-pinned; default-chat surfaces verified donor-free;
+kept donor infrastructure and the advanced donor surfaces queued for G10 are recorded in `11`;
+closure review **CONTINUE**.
+
 ## Required deliverables (spec checklist)
 
 `00_STATUS` ✅ · `01_ARCHITECTURE` ◻ skeleton · `02_AUTHORIZATION_MODEL` ✅ ·
 `02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ✅
 · `06_COMPLETION_AUTHORITY` ✅ · `07_MEMORY_AND_CONTEXT` ✅ · `08_LEDGER` ✅ working ·
 `09_SECURITY_REVIEW` ✅ working (G2 matrix complete) · `10_RELIABILITY_REVIEW` ◻ ·
-`11_DESIGN_SYSTEM` ◻ · `12_PERFORMANCE` ◻ · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
+`11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ◻ · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
 `15_RELEASE_MANIFEST` ◻ · `16_KNOWN_LIMITATIONS` ✅ working · `17_V2_PLUS_DEFERRED` ✅ ·
 `AUTO_RESUME` ✅
