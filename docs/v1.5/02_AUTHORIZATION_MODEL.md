@@ -64,10 +64,12 @@ broadens authority granted by a stricter layer; each layer only narrows.
 3. **One-time grants consume exactly once.** Pre-flight checks run with `consume=False`; the
    effect-point check consumes. A spent one-time grant denies (`grant-used`) and Kel does not
    silently re-ask; a denied boundary target stays denied (`boundary-denied`).
-4. **Boundary expansion is asked once per target.** Out of scope → `REQUIRES_BOUNDARY_EXPANSION`
-   with a durable request (pending requests are reused, never duplicated). Grants are `once`
-   (used-once) or `project` (repeatable, scoped). Only the user resolves a request. On grant, the
-   blocked job resumes automatically.
+4. **Boundary expansion reuses the pending request per lease.** Out of scope →
+   `REQUIRES_BOUNDARY_EXPANSION` with a durable request: a pending request for the same target on
+   the same lease is reused, never duplicated. Grants are `once` (used-once) or `project`
+   (repeatable, scoped). Requests and grants are keyed to the lease, so a renewed lease re-asks
+   for the same target instead of silently inheriting the old request. Only the user resolves a
+   request. On grant, the blocked job resumes automatically.
 5. **Every decision is durable.** `guardrail_decisions` records decision_id, timestamp, actor,
    worker, role, project, job, milestone, lease, action kind, tool, target, decision, rule, reason,
    policy version, guardrail digest, boundary request id, approval id, and evidence refs.

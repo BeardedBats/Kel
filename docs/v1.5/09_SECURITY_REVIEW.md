@@ -31,7 +31,7 @@ prose alone.
 | 19 | resumed worker after lease expiry | ✅ G2 | adapter `BLOCKED` with zero workspaces created |
 | 20 | parallel authorized + unauthorized workers | ✅ G2 | `ParallelIsolationTests` — B's denial touches only B's lease and request list |
 | 21 | alternate legacy effect path | ✅ G2 | effects are gated even when the caller bypasses the engine chain: direct `CodingAdapter.execute`, direct `apply_checked` (`AdapterEffectPointTests`, `ApplicationGateTests`) |
-| 22 | external-agent effect boundary | ✅ G2 | dispatch gate blocks the full agent (`AdapterEffectPointTests`); read-only agent argv pinned (`NativeTrustBoundaryTests`); internal worker cannot spawn (`InternalWorkerBoundaryTests`); inner-loop trust stated in `02A` §5 |
+| 22 | external-agent effect boundary | ✅ G2 | dispatch gate blocks the full agent (`AdapterEffectPointTests`); read-only agent argv pinned (`NativeTrustBoundaryTests`); internal worker cannot spawn (`InternalWorkerBoundaryTests`); ACP host refuses donor-agent permission requests by policy and implements no tool execution (`acp_host.py`, V1.5 G12); inner-loop trust stated in `02A` §5 |
 | 23 | malformed context | ✅ G2 | `FailClosedTests` — actor/kind/job/milestone/target/worker cases deny or return `INVALID_CONTEXT`; no default lease, no "unknown = allowed" |
 | 24 | guardrail tamper | ✅ G2 | `test_guardrail_tampering_refuses_every_decision` + engine tick refusal (V1.4.1 suite) |
 | 25 | emergency-stop then attempted effect | ✅ G2 | `test_emergency_stop_stops_the_worker_effect_point`; jobs pause; work resumes only through the recorded reissue decision |

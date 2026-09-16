@@ -17,7 +17,8 @@ engine adapters use it only in the request header of the intended provider call
         ↓
 native CLI children receive at most their own provider's key (cross-provider keys stripped)
         ↓
-test commands and the isolated WSL runtime receive no provider keys
+test commands receive no provider keys; the isolated WSL runtime gets none from Kel — the WSL
+distro keeps its own in-distro auth file (see Known limits)
         ↓
 never persisted in the engine database · never returned to the renderer · never logged or
 exported · durable error text is redacted before it can be stored

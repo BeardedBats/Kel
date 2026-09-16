@@ -156,6 +156,13 @@ class ACPHost:
                 if active:
                     active['cancel'].set()
             return {}
+        if method == 'session/request_permission':
+            # V1.5 G12: this host is a transport for the donor agent surface and never grants
+            # donor-agent tool permissions. Every permission request is refused explicitly (fail
+            # closed with a named policy message) instead of falling through to the generic
+            # unsupported-method error; Kel's own effects are authorized by the central boundary
+            # (kel/authorize.py) before they ever run.
+            raise ValueError('Kel denies tool permissions on this surface by policy (V1.5)')
         raise ValueError('Unsupported ACP method: ' + method)
 
     def content(self, cid, blocks):
