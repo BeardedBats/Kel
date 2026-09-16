@@ -1,14 +1,15 @@
-"""Locked safety guardrails (V1.4; status corrected in V1.4.1).
+"""Locked safety guardrails (V1.4; enforcement completed in V1.5).
 
 These definitions are locked against roles, overrides, project files, repository text, web content,
-and worker output. What the engine actually enforces at runtime today (V1.4.1):
+and worker output. What the engine enforces at runtime today (V1.5):
 
-- runtime modification of this rule set is detected (`assert_intact`) and stops new worker runs;
+- runtime modification of this rule set is detected (`assert_intact`) and refuses every
+  authorization decision and new worker runs;
+- worker actions on the execution path are refused against these rules through the central
+  authorization boundary (`kel/authorize.py`) — every effect point calls it before acting;
 - engine-owned project writes refuse frozen-release and system paths (`protected_reason`).
 
-Not yet implemented (deferred to V1.5 — docs/v1.4.1/06_V1_5_DEFERRED_WORK.md): refusing worker
-actions against these rules on the execution path. Each rule carries the id of the AUTO-* test that
-exercises its checker rule.
+Each rule carries the id of the AUTO-* test that exercises its checker rule.
 """
 import hashlib
 import json
@@ -40,7 +41,7 @@ DIGEST = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdi
 
 # Locations the engine refuses to write into from its own execution paths (V1.4.1).
 FROZEN_MARKERS = ('kel releases', 'kel-v1-frozen', 'kel-v1.1-frozen', 'kel-v1.2-frozen',
-                  'kel-v1.3-frozen', 'kel-v1.4-frozen', 'frozen')
+                  'kel-v1.3-frozen', 'kel-v1.4-frozen', 'kel-v1.5-frozen', 'frozen')
 SYSTEM_PREFIXES = ('c:\\windows', 'c:\\program files', 'c:\\program files (x86)', 'c:\\programdata')
 
 
@@ -69,8 +70,9 @@ def assert_intact():
     """Detect runtime modification of the locked rule set; refuse new work when detected.
 
     This catches in-memory or monkey-patched changes to RULES during the engine's lifetime. It does
-    not detect a pre-built modified module (that is release-integrity territory), and it is not an
-    execution-path gate against worker actions (deferred to V1.5, docs/v1.4.1/06).
+    not detect a pre-built modified module (that is release-integrity territory). Since V1.5 the
+    digest is also checked on every authorization decision (`kel/authorize.py`), so a tampered
+    rule set refuses execution rather than only blocking new work.
     """
     digest_now = hashlib.sha256(json.dumps(RULES, sort_keys=True).encode('utf-8')).hexdigest()
     if digest_now != DIGEST:

@@ -208,7 +208,7 @@ class ActorBoundaryTests(unittest.TestCase):
 
     def test_state_reports_engine_version_and_guardrails(self):
         state = self.service.state('main')
-        self.assertEqual(state['engine_version'], '1.4.1')
+        self.assertEqual(state['engine_version'], '1.5.0')
         self.assertTrue(state['guardrails_ok'])
 
 
@@ -238,4 +238,4 @@ class CredentialCustodyTests(unittest.TestCase):
             db.execute('INSERT INTO providers VALUES(?,?)',
                        ('deepseek', encode({'failures': 0, 'quota_source': 'sk-live-abc123'})))
         with self.assertRaises(PolicyError):
-            Diagnostics(self.store, '1.4.1').export()
+            Diagnostics(self.store, '1.5.0').export()
