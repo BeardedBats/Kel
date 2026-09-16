@@ -23,6 +23,7 @@ checks inside a bounded window collapse into one record so the audit stays signa
 """
 import contextlib
 import json
+from pathlib import Path
 import time
 
 from .core import PolicyError, encode, uid, digest
@@ -93,6 +94,11 @@ def role_for(store, job_id, milestone_id):
     return row['template_id'] if row else None
 
 
+def project_creation_root():
+    """The only location where an explicit user request may create a new project folder."""
+    return (Path.home() / 'Documents' / 'Kel Projects').resolve()
+
+
 class Authorizer:
     def __init__(self, store):
         ensure_schema(store)
@@ -135,6 +141,9 @@ class Authorizer:
             if job_id and str(run['job_id']) != str(job_id):
                 return _result('INVALID_CONTEXT', 'worker-mismatch',
                                'The worker belongs to another job')
+            if milestone_id and str(run['milestone_id']) != str(milestone_id):
+                return _result('INVALID_CONTEXT', 'worker-milestone-mismatch',
+                               'The worker belongs to another milestone')
         job = None
         if job_id:
             try:
@@ -160,6 +169,21 @@ class Authorizer:
         if kind == 'destructive' and not str(intent.get('snapshot_ref') or '').strip():
             return _result('DENY', 'destructive-snapshot',
                            'A snapshot or backup reference is required before a destructive action')
+        # 3b. Creating a new project folder from the user's explicit request is a user-actor effect
+        #     confined to the Kel Projects root (guardrail checks above already applied).
+        meta = intent.get('metadata') or {}
+        if (actor == 'user' and kind == 'write'
+                and str(meta.get('operation') or '') == 'create-project'):
+            allowed_root = project_creation_root()
+            try:
+                probe = Path(target).resolve()
+            except OSError:
+                probe = None
+            if probe is None or not probe.is_relative_to(allowed_root):
+                return _result('DENY', 'project-create-scope',
+                               'New projects are created only under the Kel Projects folder')
+            return _result('ALLOW', 'user-project-create',
+                           'An explicit user request creates a new project folder')
         # 4. Role tool policy narrows; it can never broaden the lease or the guardrails.
         role = intent.get('role')
         if role and tool:
@@ -184,6 +208,9 @@ class Authorizer:
             lease = None
             if intent.get('lease_id'):
                 lease = self._lease_by_id(str(intent['lease_id']))
+                if lease and job_id and str(lease['job_id']) != str(job_id):
+                    return _result('INVALID_CONTEXT', 'lease-mismatch',
+                                   'The lease belongs to another job')
             elif job_id:
                 lease = self.autonomy.latest_lease(str(job_id))
             if not lease:
@@ -225,7 +252,11 @@ class Authorizer:
             return False
         with contextlib.closing(self.store.connect()) as db:
             row = db.execute('SELECT * FROM approvals WHERE id=?', (str(approval_id),)).fetchone()
-        return bool(row and row['status'] == 'APPROVED' and row['action_digest'] == digest(action))
+        if not row or row['status'] != 'APPROVED' or row['action_digest'] != digest(action):
+            return False
+        if intent.get('job') and str(row['job_id']) != str(intent.get('job')):
+            return False  # an approval for another job is not this job's approval
+        return True
 
     def _expansion(self, intent, lease, kind, tool, target):
         """Outside the leased scope: reuse a pending request, honor a denial, or ask once."""

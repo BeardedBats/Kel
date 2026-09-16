@@ -220,6 +220,15 @@ class Service:
                         # deterministic smoke-test command the worker must make pass.
                         slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
                         root=Path.home()/'Documents'/'Kel Projects'/f'{slug}-{secrets.token_hex(2)}'
+                        # V1.5: creating project files is an effect; it crosses the boundary under the
+                        # user-project-create policy (user actor, confined to the Kel Projects root).
+                        from .authorize import authorize
+                        decision=authorize(self.store,{'actor':'user','action_kind':'write','target':str(root),
+                            'metadata':{'operation':'create-project','what':'create a new project folder',
+                                        'why':'the user asked Kel to build a new project'}})
+                        if decision['outcome']!='ALLOW':
+                            raise PolicyError('Kel cannot create the project folder: '+
+                                              str(decision.get('reason') or decision.get('rule')))
                         root.mkdir(parents=True,exist_ok=True)
                         import subprocess as _sp
                         _sp.run(['git','init',str(root)],capture_output=True,check=False)
@@ -586,6 +595,9 @@ class Service:
             return Providers(self.store).apply(data)
         if path=='/api/autonomy':
             from .autonomy import Autonomy
+            # Lease issuance is Kel's decision; the shell can inspect, resolve, and revoke only.
+            if data.get('action') not in ('leases','requests','guardrails','decisions','check','revoke','resolve','emergency_stop'):
+                raise PolicyError("Lease issuance is Kel's decision; this action is not available through the shell")
             payload=dict(data);payload['actor']='user'
             result=Autonomy(self.store).apply(payload)
             if data.get('action')=='emergency_stop':
