@@ -39,28 +39,28 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. G11 (in progress — migration proofs DONE this run, see `13_MIGRATIONS.md`): remaining =
-   CLEAN CLONE workstream —
-   a) clone the repo to a scratch dir; restore git-ignored build inputs
-      (`desktop/resources/bundled-aioncore/win32-x64`, 199MB — copy from the current tree or the
-      frozen V1.4.1 release; `desktop/public/fonts` if present);
-   b) install with bun (`npm i -g bun`, network OK) → `bun install --frozen-lockfile` in
-      `desktop/` (lockfile `bun.lock`);
-   c) from the clone: renderer build (`npm run package`), `tsc --noEmit`, `vitest run`,
-      `electron-builder --config kel-builder.json --win --dir` (pinned-ABI prebuild path),
-      rebuild the engine (`scripts/build-runtime.ps1`) and run
-      `python packaging/verify_engine_pyz.py <clone>/dist/runtime/KelEngine/KelEngine.exe`,
-      then `verify-packaged-smoke.cjs` + `verify-packaged-ui.cjs` on the clone's package;
-   d) compare candidate vs assembled release; confirm no stale candidate artifacts.
-   Then G12 (independent architecture audit) → G13 (freeze/tag/release).
+1. G13 — freeze / tag / release (G11+G12 closed; at HEAD with the G12 remediation):
+   a) final rebuild in the main repo IN ORDER: `powershell scripts/build-runtime.ps1` →
+      `cd desktop && npm run package` → `./node_modules/.bin/electron-builder --config
+      kel-builder.json --win --dir --publish=never` (engine BEFORE packaging — a package built
+      without `dist/runtime/KelEngine` ships without `resources/kel-engine`);
+   b) probes on the final package: `verify-packaged-smoke.cjs`, `verify-packaged-ui.cjs`,
+      `a11y-probe.cjs` (fresh data dirs) — record results;
+   c) freeze: `powershell scripts/freeze-release.ps1 -PackageDir dist/package/win-unpacked
+      -AppAsar dist/package/win-unpacked/resources/app.asar [-OutDir "...\Kel Releases\Kel-V1.5-Frozen"]`
+      (script removes + recreates the output dir; frozen prior releases untouched);
+   d) verify `scripts/verify-release.ps1 -ReleaseDir <frozen> -Manifest <frozen>/SHA256Sums.txt.txt` → 3/3;
+   e) tag `v1.5.0` + release record (`15_RELEASE_MANIFEST.md` + 00_STATUS + AUTO_RESUME).
 
-## Current position (2026-09-16)
+## Current position (2026-09-16, post-G12)
 
-- **G0–G10 closed**; **G11 in progress** (migration proofs done; clean clone pending).
-  Key commits: G8 `6366976`+`9f2d890`; G9 `74b6c33`+`9cc6af7`; G10 `0fba928`+`6af1189`; G11 checkpoint: the commit titled `feat(v1.5): G11 - migration matrix measured`.
-- Packaged artifact builds **EXIT 0**; G10 acceptance evidence in `docs/v1.5/evidence/g10/`;
-  migration matrix in `13_MIGRATIONS.md`; suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0.
-- Next: G11 clean-clone workstream (step 1) → G12 audit → G13 freeze/tag/release.
+- **G0–G12 closed** (each with review/audit CONTINUE). Key commits: G11 `bbe388c`; RC `270e3cc`;
+  G12 remediation `ed0b35e`.
+- Clean-clone chain verified green (install → build → tsc → vitest → package → PYZ → smoke → UI,
+  engine reports 1.5.0); migration matrix in `13_MIGRATIONS.md`; G10 evidence in `evidence/g10/`;
+  suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0.
+- **Next: G13 only** (step 1 above): rebuild → probes → freeze → verify 3/3 → tag `v1.5.0` →
+  release record. Do NOT start the separate usability audit until V1.5 is frozen and tagged.
 
 ## Historical checkpoint (2026-09-15, superseded by Current position)
 
