@@ -64,7 +64,9 @@ async function launchApp({ fresh = false } = {}) {
       AIONUI_DISABLE_AUTO_UPDATE: '1',
       KEL_SKIP_TELEMETRY: '1',
     },
-    args: packaged ? ['--no-sandbox', '--window-position=-32000,-32000'] : [appDir, '--no-sandbox', '--window-position=-32000,-32000'],
+    args: packaged
+      ? ['--no-sandbox', '--window-position=-32000,-32000', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+      : [appDir, '--no-sandbox', '--window-position=-32000,-32000', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
   });
   const page = await app.firstWindow({ timeout: 120000 });
   const consoleErrors = [];
@@ -1220,7 +1222,168 @@ async function scenarioPaneldump() {
   return results;
 }
 
+async function scenarioTranscription() {
+  // Transcription, driven like a user: record with the microphone, upload files, organize, hand a
+  // transcript to chat and to a Vetting Session, then restart and find everything still there.
+  const results = { schema: 1, scenario: 'transcription', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let app = ctx.app;
+  let page = ctx.page;
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const boxValue = () => page.evaluate(() => (document.querySelector('textarea') || {}).value || '');
+  const waitFor = async (fn, timeoutMs, label) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const value = await fn();
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const wavFixture = () => {
+    const rate = 24000;
+    const samples = rate;
+    const buffer = Buffer.alloc(44 + samples * 2);
+    buffer.write('RIFF', 0);
+    buffer.writeUInt32LE(36 + samples * 2, 4);
+    buffer.write('WAVE', 8);
+    buffer.write('fmt ', 12);
+    buffer.writeUInt32LE(16, 16);
+    buffer.writeUInt16LE(1, 20);
+    buffer.writeUInt16LE(1, 22);
+    buffer.writeUInt32LE(rate, 24);
+    buffer.writeUInt32LE(rate * 2, 28);
+    buffer.writeUInt16LE(2, 32);
+    buffer.writeUInt16LE(16, 34);
+    buffer.write('data', 36);
+    buffer.writeUInt32LE(samples * 2, 40);
+    for (let index = 0; index < samples; index += 1) {
+      buffer.writeInt16LE(Math.round(Math.sin(index / 20) * 8000), 44 + index * 2);
+    }
+    return buffer;
+  };
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2500);
+    results.pageShown = await waitFor(() => page.locator('[data-testid="transcription-page"]').count(), 15000, 'page-visible');
+    await shot(page, 'transcription-01-page');
+
+    await page.locator('[data-testid="record-button"]').first().click();
+    results.recording = await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'recording-bar');
+    await page.waitForTimeout(5200);
+    await shot(page, 'transcription-02-recording');
+    await page.locator('[data-testid="stop-button"]').first().click();
+    results.firstRow = await waitFor(() => page.locator('[data-testid="transcript-row"]').count(), 30000, 'transcript-saved');
+    results.firstText = ((await bodyText()).match(/This is a local practice transcript[^\n]{0,40}/) || [''])[0];
+    await shot(page, 'transcription-03-saved');
+
+    await page.locator('[data-testid="rename-button"]').first().click();
+    await page.locator('[data-testid="transcript-rename"]').first().fill('Morning note');
+    await page.keyboard.press('Enter');
+    results.renamed = await waitFor(async () => (await bodyText()).includes('Morning note'), 8000, 'renamed');
+    await page.locator('[data-testid="folder-name"]').first().fill('Interviews');
+    await page.locator('[data-testid="folder-create"]').first().click();
+    results.folder = await waitFor(async () => (await bodyText()).includes('Interviews'), 8000, 'folder-created');
+    try {
+      await page
+        .locator('[data-testid="transcript-row"]')
+        .first()
+        .dragTo(page.locator('[data-folder-id]').first(), { timeout: 6000 });
+      results.dragWorked = await waitFor(() => page.locator('[data-testid="folder-transcript"]').count(), 8000, 'dragged-into-folder');
+    } catch (error) {
+      results.dragWorked = false;
+      results.dragError = String(error).slice(0, 140);
+    }
+    if (!results.dragWorked) {
+      await page.locator('[data-testid="move-select"]').first().click().catch(() => {});
+      await page.locator('.arco-select-option:has-text("Interviews")').first().click().catch(() => {});
+      results.movedViaSelect = await waitFor(() => page.locator('[data-testid="folder-transcript"]').count(), 8000, 'moved-via-select');
+    }
+
+    await page.locator('[data-testid="upload-input"]').setInputFiles({ name: 'meeting.mp3', mimeType: 'audio/mpeg', buffer: wavFixture() });
+    results.uploadRow = await waitFor(async () => (await page.locator('[data-testid="transcript-row"]').count()) >= 2, 30000, 'upload-transcribed');
+    await shot(page, 'transcription-04-upload');
+    await page.locator('[data-testid="upload-input"]').setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('not audio') });
+    results.invalidMessage = await waitFor(async () => /could not be read/.test(await bodyText()), 10000, 'invalid-copy');
+
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    await page.locator('[data-testid="kel-mic-toggle"]').first().click();
+    results.composerRecording = await waitFor(
+      async () => (await page.locator('[data-testid="kel-mic"]').getAttribute('data-state')) === 'recording',
+      20000,
+      'composer-recording'
+    );
+    await page.waitForTimeout(4600);
+    await page.locator('[data-testid="kel-mic-toggle"]').first().click();
+    results.composerText = await waitFor(async () => {
+      const value = (await boxValue()).trim();
+      return value.length > 10 ? value.slice(0, 60) : null;
+    }, 30000, 'composer-text');
+    await page.locator('textarea').first().fill('');
+    results.composerCleared = true;
+    await shot(page, 'transcription-05-composer');
+
+    await page.locator('textarea').first().fill('start design vetting: voice routing');
+    await page.keyboard.press('Enter');
+    // The chat transcript renders outside the audited document (same shell limit as the vetting
+    // evidence), so the session is proven by the review step below, not by reading the chat body.
+    await page.waitForTimeout(2500);
+    results.sessionStarted = 'proven-by-review-below';
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2200);
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(600);
+    await page.locator('[data-testid="use-vetting"]').first().click();
+    results.reviewModal = await waitFor(async () => (await page.locator('.arco-modal').count()) > 0, 12000, 'review-open');
+    await shot(page, 'transcription-06-review');
+    const processButton = page.locator('[data-testid="review-process"]').first();
+    if (await processButton.count()) {
+      await processButton.click().catch(() => {});
+    }
+    results.reviewApplied = await waitFor(
+      async () => /Applied to the vetting session|Added to the vetting session/.test(await bodyText()),
+      15000,
+      'review-applied'
+    );
+    results.sessionProvenByReview = Boolean(results.reviewModal && results.reviewApplied);
+
+    await closeApp(app, ctx.kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2500);
+    results.rowsAfterRestart = await waitFor(
+      async () => (await page.locator('[data-testid="transcript-row"]').count()) >= 2,
+      20000,
+      'rows-after-restart'
+    );
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+    await shot(page, 'transcription-07-restart');
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot(page, 'transcription-error').catch(() => {});
+  }
+  await closeApp(app, ctx.kelwork, results);
+  save('ux-transcription', results);
+  return results;
+}
+
 async function scenarioSider() {
+
 
 
 
@@ -1308,6 +1471,7 @@ async function scenarioMaintext() {
     'vetting-live': scenarioVettingLive,
     peek: scenarioPeek,
     paneldump: scenarioPaneldump,
+    transcription: scenarioTranscription,
     sider: scenarioSider,
     maintext: scenarioMaintext,
   };

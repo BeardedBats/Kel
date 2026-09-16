@@ -338,7 +338,7 @@ export async function initializeKel(port: number): Promise<void> {
     )
       throw new Error('Unknown Kel window');
     if (
-      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|providers|autonomy|diagnostics|control|approval|retry|apply|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+)$/.test(
+      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|providers|autonomy|diagnostics|control|approval|retry|apply|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+)$/.test(
         route
       )
     )

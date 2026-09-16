@@ -26,6 +26,7 @@ const ScheduledTasksPage = React.lazy(() => import('@renderer/pages/cron/Schedul
 const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage/TaskDetailPage'));
 const TeamIndex = React.lazy(() => import('@renderer/pages/team'));
 const KelWorkCenter = React.lazy(() => import('@renderer/pages/kel/work'));
+const KelTranscription = React.lazy(() => import('@renderer/pages/kel/transcription'));
 const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
 const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
 const KelProviders = React.lazy(() => import('@renderer/pages/kel/providers'));
@@ -151,6 +152,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
           <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
+          <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
           <Route path='/team' element={<Navigate to='/team/office' replace />} />
           <Route path='/team/office' element={withRouteFallback(KelTeam)} />
           <Route path='/team/roster' element={withRouteFallback(KelTeam)} />

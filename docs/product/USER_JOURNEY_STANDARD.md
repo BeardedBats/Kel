@@ -92,6 +92,12 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-34 - A new engine route is wired for every consumer.** Adding an engine route means adding it to the renderer bridge whitelist (`KelService.ts` `kel:request` allowlist) and any other consumer registry in the same change; verify by driving the surface in the packaged app, never only by unit tests. A route that exists but cannot be reached is invisible work.
 
+**JR-35 - Recording is loud, stoppable, and never hidden.** Any capture state must be unmistakable (visible mark + plain label + elapsed time), have an explicit stop **and** an explicit cancel, be cancellable with Escape, and must never be triggered by a hidden or global shortcut (no spacebar recording, no hint for one, no setting for one). Verify: record, watch the state, stop, cancel; confirm a hidden shortcut does nothing.
+
+**JR-36 - Machine-written text lands editable before it acts.** Dictated or generated text enters the composer as text the user can edit or clear; it is never auto-sent and never replaces what the user already typed (it appends). Hand-offs between surfaces use a one-shot draft the receiving surface consumes and clears. Verify: dictate, edit, clear; confirm no message was sent.
+
+**JR-37 - One plain status hides every provider.** A feature that talks to an external provider exposes exactly one human status ("Practice mode", "Muse (Meta)") with a single settings entry; endpoints, model names, protocol states, quota math, and socket errors stay out of the interface. Verify: no raw provider term appears in any surface copy.
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

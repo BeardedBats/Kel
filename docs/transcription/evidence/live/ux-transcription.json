@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "scenario": "transcription",
+  "steps": [
+    {
+      "label": "page-visible",
+      "ms": 18
+    },
+    {
+      "label": "recording-bar",
+      "ms": 2
+    },
+    {
+      "label": "transcript-saved",
+      "ms": 418
+    },
+    {
+      "label": "renamed",
+      "ms": 408
+    },
+    {
+      "label": "folder-created",
+      "ms": 414
+    },
+    {
+      "label": "dragged-into-folder",
+      "ms": 411
+    },
+    {
+      "label": "upload-transcribed",
+      "ms": 408
+    },
+    {
+      "label": "invalid-copy",
+      "ms": 413
+    },
+    {
+      "label": "composer-recording",
+      "ms": 412
+    },
+    {
+      "label": "composer-text",
+      "ms": 1
+    },
+    {
+      "label": "review-open",
+      "ms": 1
+    },
+    {
+      "label": "review-applied",
+      "ms": 409
+    },
+    {
+      "label": "rows-after-restart",
+      "ms": 17
+    }
+  ],
+  "errors": [],
+  "pageShown": 1,
+  "recording": 1,
+  "firstRow": 1,
+  "firstText": "This is a local practice transcript so the recording and saving flow can be",
+  "renamed": true,
+  "folder": true,
+  "dragWorked": 1,
+  "uploadRow": true,
+  "invalidMessage": true,
+  "composerRecording": true,
+  "composerText": "This is a local practice transcript so the recording and sav",
+  "composerCleared": true,
+  "sessionStarted": "proven-by-review-below",
+  "reviewModal": true,
+  "reviewApplied": true,
+  "sessionProvenByReview": true,
+  "closeOutcome": "closed",
+  "engineKilled": true,
+  "rowsAfterRestart": true,
+  "consoleErrors": []
+}

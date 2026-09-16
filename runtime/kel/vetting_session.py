@@ -20,6 +20,7 @@ from .core import PolicyError, uid
 from . import vetting_bank as bank_mod
 from . import vetting_spec as spec_mod
 from .vetting import VettingAnswerIngestion, ensure_schema, parse_control
+from .transcription import think_out_loud_buckets
 
 BATCH_TARGET = 12
 
@@ -885,6 +886,100 @@ class Vetting:
                     conflicts.append({'question_a': older, 'question_b': newer, 'statement': statement})
         return conflicts
 
+
+    # ---- transcripts as an input source (Think Out Loud included) ----------------------------
+
+    def _active_session_any(self, conversation):
+        """Transcript actions may arrive from the Transcription tool without a conversation id."""
+        session = self.active(conversation) if conversation else None
+        if session:
+            return session
+        with contextlib.closing(self.store.connect()) as db:
+            return _row(db.execute(
+                "SELECT * FROM vetting_sessions WHERE state IN ('ACTIVE','PAUSED')"
+                ' ORDER BY created DESC LIMIT 1').fetchone())
+
+    def preview_transcript(self, conversation, text, mode='answers'):
+        """Pure extraction preview: nothing is written; low-confidence stays a proposal.
+
+        The transcript is understood by the SAME VettingAnswerIngestion service that serves typed
+        and pasted answers — voice is an input source, never a second parser or engine.
+        """
+        session = self._active_session_any(conversation)
+        if not session:
+            raise PolicyError('No vetting session is open. Start one in a chat with '
+                              '“start design vetting: …” and speak again.')
+        with contextlib.closing(self.store.connect()) as db:
+            questions = self._questions(db, session['id'])
+            answers = self._answers_map(questions)
+            parse = VettingAnswerIngestion(questions, answers).parse(text, 'transcript')
+            conflicts = self._preview_conflicts(questions, answers, parse['updates'])
+        by_id = {q['id']: q for q in questions}
+        preview = []
+        for update in parse['updates']:
+            question = by_id.get(update['question_id']) or {}
+            labels = [o['label'] for o in question.get('options', [])
+                      if o['code'] in (update.get('selected') or [])]
+            preview.append({'question_id': update['question_id'], 'status': update['status'],
+                            'answer': ', '.join(labels) or (update.get('custom') or '').strip()
+                                      or '(see note)',
+                            'note': (update.get('notes') or update.get('custom') or '').strip(),
+                            'confidence': update['confidence']})
+        payload = {'session_id': session['id'], 'mode': mode, 'preview': preview,
+                   'proposals': parse['proposals'], 'unmatched': parse['unmatched'],
+                   'confidence_summary': parse['confidence_summary'],
+                   'potential_conflicts': conflicts}
+        if mode == 'freethink':
+            payload['buckets'] = think_out_loud_buckets(text)
+        return payload
+
+    def apply_transcript(self, conversation, text, mode='answers', accept_all=False,
+                         then_process=False):
+        """Apply a transcript through the normal ingestion; proposals stay proposals unless asked."""
+        session = self._active_session_any(conversation)
+        if not session:
+            raise PolicyError('No vetting session is open. Start one in a chat with '
+                              '“start design vetting: …” and speak again.')
+        result = self.ingest(session['id'], text, source='transcript')
+        accepted = None
+        if accept_all:
+            accepted = self.apply_pending(session['id'], accept=True, source='transcript')
+        result['accepted'] = accepted
+        result['mode'] = mode
+        if then_process:
+            processed = self.process(session['id'])
+            result['processed'] = {'message': processed['message'], 'batch': processed['batch'],
+                                   'question_ids': processed['question_ids']}
+        return result
+
+    def _preview_conflicts(self, questions, answers, updates):
+        """Read-only contradiction scan over current answers plus the parsed updates."""
+        by_id = {q['id']: q for q in questions}
+        merged = {}
+        for qid, answer in answers.items():
+            merged[qid] = {'selected_options': list(answer.get('selected_options') or [])}
+        for update in updates:
+            merged[update['question_id']] = {'selected_options': list(update.get('selected') or [])}
+        chosen = {}
+        for qid, answer in merged.items():
+            question = by_id.get(qid)
+            if not question:
+                continue
+            labels = [o['label'].lower() for o in question['options']
+                      if o['code'] in answer['selected_options']]
+            if labels:
+                chosen[qid] = ' '.join(labels)
+        found = []
+        for _axis, group_a, group_b in OPPOSITIONS:
+            side_a = [qid for qid, text in chosen.items() if any(k in text for k in group_a)]
+            side_b = [qid for qid, text in chosen.items() if any(k in text for k in group_b)]
+            for qa in side_a:
+                for qb in side_b:
+                    if qa != qb:
+                        found.append({'question_a': qa, 'question_b': qb,
+                                      'statement': 'Earlier answer leans “%s”; this transcript '
+                                                   'leans “%s”.' % (chosen[qa][:70], chosen[qb][:70])})
+        return found[:4]
 
 def snapshot(store, session_id):
     """Canonical session state used for equality checks across input paths and by tests.

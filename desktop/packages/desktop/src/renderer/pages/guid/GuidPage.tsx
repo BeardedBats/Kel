@@ -29,7 +29,7 @@ import { useGuidSend } from './hooks/useGuidSend';
 import { useTypewriterPlaceholder } from './hooks/useTypewriterPlaceholder';
 import { ensureBackendMcpCatalog } from '@/renderer/hooks/mcp/catalog';
 import { resolveGuidAssistantDefaults } from './utils/assistantDefaults';
-import SpeechInputButton from '@/renderer/components/chat/SpeechInputButton';
+import KelMicButton from './components/KelMicButton';
 import { chatFileRefPath, uploadFileRef } from '@/common/types/chatFile';
 import { useOpenFileSelector } from '@/renderer/hooks/file/useOpenFileSelector';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
@@ -605,6 +605,21 @@ const GuidPage: React.FC = () => {
   );
   const { handleLiveTranscript } = useLiveTranscriptInsertion(guidInput.setInput);
 
+  // A transcript sent from the Transcription tool lands here as editable text - never auto-sent,
+  // so it can be corrected, shortened, or cancelled before the user presses send.
+  useEffect(() => {
+    try {
+      const draft = window.sessionStorage.getItem('kel.transcription.draft');
+      if (draft && draft.trim()) {
+        window.sessionStorage.removeItem('kel.transcription.draft');
+        guidInput.setInput((prev) => appendSpeechTranscript(prev, draft));
+      }
+    } catch {
+      /* storage is a convenience; the page still works without it */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Build the action row
   const actionRowNode = (
     <GuidActionRow
@@ -633,7 +648,7 @@ const GuidPage: React.FC = () => {
       selectedMcpServerIds={guidSelectedMcpServerIds ?? []}
       onToggleMcpServer={handleToggleMcpServer}
       speechInputNode={
-        <SpeechInputButton onLiveTranscript={handleLiveTranscript} onTranscript={handleSpeechTranscript} />
+        <KelMicButton onLiveTranscript={handleLiveTranscript} onTranscript={handleSpeechTranscript} />
       }
       loading={guidInput.loading}
       isButtonDisabled={send.isButtonDisabled}
