@@ -1,0 +1,16 @@
+{
+  "steps": [
+    "launched",
+    "window",
+    "checks-done",
+    "quit-observed"
+  ],
+  "errors": [],
+  "title": "Kel",
+  "hash": "#/guid",
+  "bodyPreview": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nProject conversations\n7c2c2250-291f-4f13-9c62-83edf8fe44f4\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this ",
+  "enginePid": 45984,
+  "engineVersion": "1.5.0",
+  "engineStopped": true,
+  "appExited": true
+}
