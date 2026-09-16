@@ -680,14 +680,33 @@ class Service:
             return vetting.apply_pending(data['session'],accept=bool(data.get('accept',True)),
                                          correction=data.get('correction',''))
         if action=='transcript_preview':
-            return vetting.preview_transcript(conversation,data.get('text',''),mode=data.get('mode','answers'))
+            return self._plain_errors(lambda: vetting.preview_transcript(
+                conversation,data.get('text',''),mode=data.get('mode','answers')))
         if action=='transcript_apply':
-            return vetting.apply_transcript(conversation,data.get('text',''),mode=data.get('mode','answers'),
-                                            accept_all=bool(data.get('accept_all',False)),
-                                            then_process=bool(data.get('then_process',False)))
+            return self._plain_errors(lambda: vetting.apply_transcript(
+                conversation,data.get('text',''),mode=data.get('mode','answers'),
+                accept_all=bool(data.get('accept_all',False)),
+                then_process=bool(data.get('then_process',False))))
         raise PolicyError('Unknown vetting action')
 
     def _transcription_action(self,data):
+        # Unexpected failures still answer in one plain sentence; PolicyError keeps its own copy.
+        try:
+            return self._transcription_dispatch(data)
+        except PolicyError:
+            raise
+        except Exception:
+            raise PolicyError('Kel could not finish that recording action. Try again.') from None
+
+    def _plain_errors(self,call):
+        try:
+            return call()
+        except PolicyError:
+            raise
+        except Exception:
+            raise PolicyError('Kel could not finish that voice action. Try again.') from None
+
+    def _transcription_dispatch(self,data):
         # Transcription is an input source: this family stores/inspects audio artifacts and text.
         # Vetting answers derived from transcripts flow through /api/vetting's transcript actions,
         # never through a second parser.

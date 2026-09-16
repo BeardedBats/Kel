@@ -32,10 +32,10 @@ type ProviderStatus = { mode: string; has_key: boolean; live_capable: boolean; l
 type ReviewPayload = {
   session_id?: string;
   mode?: string;
-  preview?: { question_id: string; answer: string; note?: string; confidence: string }[];
+  preview: { question_id: string; answer: string; note?: string; confidence: string }[];
   proposals?: { question_id: string; option: string; option_label?: string }[];
   unmatched?: { payload: string }[];
-  potential_conflicts?: { statement: string }[];
+  potential_conflicts: { statement: string }[];
   buckets?: { requirements: string[]; concerns: string[]; unresolved: string[] };
 };
 
@@ -102,6 +102,9 @@ const TranscriptionPage: React.FC = () => {
   const timerRef = useRef<number | null>(null);
   const pollRef = useRef<number | null>(null);
   const appendTargetRef = useRef<string | null>(null);
+  const recEpochRef = useRef(0);
+  const [combineOpen, setCombineOpen] = useState(false);
+  const [combineSource, setCombineSource] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const selected = useMemo(
@@ -150,6 +153,7 @@ const TranscriptionPage: React.FC = () => {
   const beginRecording = useCallback(
     async (appendTo?: string) => {
       if (recState !== 'idle') return;
+      const epoch = (recEpochRef.current += 1);
       setRecState('working');
       setProgress('');
       appendTargetRef.current = appendTo || null;
@@ -161,8 +165,19 @@ const TranscriptionPage: React.FC = () => {
             .then(() => transcription<{ text?: string }>({ action: 'stream_chunk', session, pcm }))
             .catch(() => {});
         });
+        if (epoch !== recEpochRef.current) {
+          capture.cancel();
+          return;
+        }
         captureRef.current = capture;
         const started = await transcription<{ session_id: string | null; live: boolean }>({ action: 'stream_start' });
+        if (epoch !== recEpochRef.current) {
+          capture.cancel();
+          if (started.live && started.session_id) {
+            void transcription({ action: 'stream_finish', session: started.session_id }).catch(() => {});
+          }
+          return;
+        }
         sessionRef.current = started.live ? started.session_id : null;
         setLiveText('');
         setSeconds(0);
@@ -181,7 +196,13 @@ const TranscriptionPage: React.FC = () => {
         captureRef.current?.cancel();
         captureRef.current = null;
         setRecState('idle');
-        Message.error(friendlyMicError(error));
+        const name = (error as { name?: string })?.name || '';
+        const message = String((error as Error)?.message || error);
+        if (/NotAllowed|NotFound|NotReadable|Overconstrained|Security|Permission/i.test(name + message)) {
+          Message.error(friendlyMicError(error));
+        } else {
+          Message.error(message);
+        }
       }
     },
     [recState]
@@ -189,6 +210,7 @@ const TranscriptionPage: React.FC = () => {
 
   const finishRecording = useCallback(
     async (keep: boolean) => {
+      recEpochRef.current += 1;
       const capture = captureRef.current;
       captureRef.current = null;
       stopTimers();
@@ -234,10 +256,11 @@ const TranscriptionPage: React.FC = () => {
           audio: recording.base64,
           append_to: appendTargetRef.current || undefined,
         });
+        const appended = Boolean(appendTargetRef.current);
         appendTargetRef.current = null;
         await refresh();
         setSelectedId(saved.id);
-        Message.success(appendTargetRef.current ? 'Recording saved.' : 'Recording saved to Recents.');
+        Message.success(appended ? 'Recording added to the transcript.' : 'Recording saved to Recents.');
       } catch (error) {
         Message.error(String((error as Error)?.message || error));
       } finally {
@@ -276,6 +299,18 @@ const TranscriptionPage: React.FC = () => {
     [refresh]
   );
 
+  useEffect(() => {
+    if (recState === 'idle') return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        void finishRecording(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [recState, finishRecording]);
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -283,7 +318,9 @@ const TranscriptionPage: React.FC = () => {
       const transcriptId = event.dataTransfer.getData('text/kel-transcript');
       const folderId = (event.target as HTMLElement).closest<HTMLElement>('[data-folder-id]')?.dataset.folderId;
       if (transcriptId && folderId) {
-        void transcription({ action: 'assign', id: transcriptId, folder: folderId }).then(() => refresh());
+        void transcription({ action: 'assign', id: transcriptId, folder: folderId })
+          .then(() => refresh())
+          .catch((error) => Message.error(String((error as Error)?.message || error)));
         return;
       }
       const file = event.dataTransfer.files?.[0];
@@ -327,8 +364,12 @@ const TranscriptionPage: React.FC = () => {
         okText: 'Delete folder',
         cancelText: 'Keep',
         onOk: async () => {
-          await transcription({ action: 'folder_delete', id: folder.id });
-          await refresh();
+          try {
+            await transcription({ action: 'folder_delete', id: folder.id });
+            await refresh();
+          } catch (error) {
+            Message.error(String((error as Error)?.message || error));
+          }
         },
       });
     },
@@ -359,9 +400,13 @@ const saveName = useCallback(async () => {
         okText: 'Delete',
         cancelText: 'Keep',
         onOk: async () => {
-          await transcription({ action: 'delete', id: item.id });
-          if (selectedId === item.id) setSelectedId(null);
-          await refresh();
+          try {
+            await transcription({ action: 'delete', id: item.id });
+            if (selectedId === item.id) setSelectedId(null);
+            await refresh();
+          } catch (error) {
+            Message.error(String((error as Error)?.message || error));
+          }
         },
       });
     },
@@ -411,6 +456,19 @@ const saveName = useCallback(async () => {
       Message.error(String((error as Error)?.message || error));
     }
   }, [selected]);
+
+  const runCombine = useCallback(async () => {
+    if (!selected || !combineSource) return;
+    try {
+      await transcription({ action: 'combine', id: selected.id, source: combineSource });
+      setCombineOpen(false);
+      setCombineSource('');
+      await refresh();
+      Message.success('Merged into this transcript.');
+    } catch (error) {
+      Message.error(String((error as Error)?.message || error));
+    }
+  }, [combineSource, refresh, selected]);
 
   const sendToChat = useCallback(() => {
     if (!selected) return;
@@ -479,23 +537,27 @@ const saveName = useCallback(async () => {
     }
   }, [refresh]);
 
+  const loadPreview = useCallback(async (text: string, mode: 'answers' | 'freethink') => {
+    try {
+      const payload = await request<ReviewPayload>('/api/vetting', {
+        action: 'transcript_preview',
+        text,
+        mode,
+      });
+      setReview((current) => ({ ...current, busy: false, payload, editing: false }));
+    } catch (error) {
+      setReview((current) => ({ ...current, busy: false }));
+      Message.error(String((error as Error)?.message || error));
+    }
+  }, []);
+
   const openReview = useCallback(
     async (mode: 'answers' | 'freethink') => {
       if (!selected) return;
       setReview({ open: true, mode, text: selected.text || '', editing: false, busy: true });
-      try {
-        const payload = await request<ReviewPayload>('/api/vetting', {
-          action: 'transcript_preview',
-          text: selected.text || '',
-          mode,
-        });
-        setReview((current) => ({ ...current, busy: false, payload }));
-      } catch (error) {
-        setReview((current) => ({ ...current, busy: false }));
-        Message.error(String((error as Error)?.message || error));
-      }
+      await loadPreview(selected.text || '', mode);
     },
-    [selected]
+    [loadPreview, selected]
   );
 
   const runReview = useCallback(
@@ -837,6 +899,16 @@ const statusCopy =
                   <Button disabled={!selected.has_audio} onClick={() => void downloadAudio()} data-testid='download-audio'>
                     Download Audio
                   </Button>
+                  <Button
+                    disabled={library.transcripts.length < 2}
+                    onClick={() => {
+                      setCombineSource('');
+                      setCombineOpen(true);
+                    }}
+                    data-testid='combine-open'
+                  >
+                    Combine with…
+                  </Button>
                   <Button onClick={sendToChat} data-testid='send-to-chat'>
                     Send to chat
                   </Button>
@@ -890,6 +962,34 @@ const statusCopy =
       </Modal>
 
       <Modal
+        title='Merge another transcript into this one'
+        visible={combineOpen}
+        footer={null}
+        onCancel={() => setCombineOpen(false)}
+        style={{ maxWidth: 480 }}
+      >
+        <p style={{ marginBottom: 8 }}>
+          The other transcript's text and audio join this one, and it leaves the list.
+        </p>
+        <Select
+          value={combineSource}
+          onChange={(value) => setCombineSource((value as string) || '')}
+          placeholder='Choose a transcript'
+          style={{ width: '100%' }}
+          options={library.transcripts
+            .filter((row) => row.id !== selected?.id)
+            .map((row) => ({ value: row.id, label: `${row.name || 'Untitled'} · ${formatWhen(row.created)}` }))}
+          data-testid='combine-select'
+        />
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+          <Button onClick={() => setCombineOpen(false)}>Cancel</Button>
+          <Button type='primary' disabled={!combineSource} onClick={() => void runCombine()} data-testid='combine-confirm'>
+            Merge
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
         title='Use this transcript as vetting answers'
         visible={review.open}
         footer={null}
@@ -910,7 +1010,7 @@ const statusCopy =
               <>
                 {review.payload.preview.length === 0 && (
                   <p>
-                    Kel did not find answers in this transcript yet. Try naming questions (“12: F”) or use Think
+                    Kel did not find answers in this transcript yet. Try naming questions (“12: A”) or use Think
                     out loud.
                   </p>
                 )}
@@ -980,6 +1080,11 @@ const statusCopy =
               <Button onClick={() => setReview((current) => ({ ...current, editing: true }))} data-testid='review-edit'>
                 Edit
               </Button>
+              {review.editing && (
+                <Button onClick={() => void loadPreview(review.text, review.mode)} data-testid='review-recheck'>
+                  Check again
+                </Button>
+              )}
               <Button
                 onClick={() => void runReview({ acceptAll: true, thenProcess: false })}
                 data-testid='review-accept'
@@ -988,7 +1093,7 @@ const statusCopy =
               </Button>
               <Button
                 type='primary'
-                onClick={() => void runReview({ acceptAll: true, thenProcess: true })}
+                onClick={() => void runReview({ acceptAll: false, thenProcess: true })}
                 data-testid='review-process'
               >
                 Process batch

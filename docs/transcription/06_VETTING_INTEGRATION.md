@@ -22,7 +22,7 @@ chat started the vetting session.
 
 ```
 I pulled these answers from your transcript:
-12 — F, matchup visually dominant        (check this one)   ← anything not EXPLICIT
+12 — A, matchup visually dominant        (check this one)   ← anything not EXPLICIT
 13 — Progressive density
 15 — Wants examples
 Suggested matches to confirm: Q16 → C
@@ -31,9 +31,12 @@ Possible conflict: Earlier answer leans “a summary/overview…”; this transc
 Close · Edit · Accept all · Process batch
 ```
 
-- **Edit** turns the transcript into a textarea; "check again" re-runs `transcript_preview`.
-- **Accept all** applies the explicit answers **and** confirms the suggested matches.
-- **Process batch** applies and asks the session for its next batch.
+- **Edit** turns the transcript into a textarea; **Check again** re-runs `transcript_preview` on
+  the edited text and shows the new extraction without applying anything.
+- **Accept all** applies the explicit answers **and** confirms the suggested matches
+  (`accept_all`).
+- **Process batch** applies the explicit answers only and asks the session for its
+  next batch; suggested matches stay unconfirmed until Accept all.
 - If no session is open, the action answers with plain copy: *"No vetting session is open. Start one
   in a chat with “start design vetting: …” and speak again."*
 

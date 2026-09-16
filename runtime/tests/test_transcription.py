@@ -7,6 +7,7 @@ VettingAnswerIngestion pipeline produce equivalent Vetting state.
 """
 import base64
 import io
+import os
 import sys
 import tempfile
 import unittest
@@ -14,7 +15,8 @@ import wave
 from pathlib import Path
 
 from kel.core import PolicyError, Store
-from kel.transcription import Transcription, contextual_title, think_out_loud_buckets
+from kel.transcription import Transcription, contextual_title
+from kel.vetting import think_out_loud_buckets
 from kel.service import Service
 from kel.vetting_session import Vetting, snapshot
 
@@ -122,7 +124,7 @@ class UploadTests(TranscriptionBase):
     def test_upload_rejects_unsupported_extension(self):
         with self.assertRaises(PolicyError) as raised:
             self.t.transcribe_upload('notes.xyz', b64(wav_bytes(1.0)))
-        self.assertIn('MP3, MP4, or WAV', str(raised.exception))
+        self.assertIn('not supported', str(raised.exception))
 
     def test_upload_rejects_long_audio(self):
         with self.assertRaises(PolicyError) as raised:
@@ -141,6 +143,13 @@ class UploadTests(TranscriptionBase):
         self.assertTrue(export['name'].endswith('.txt'))
         self.assertIn('exportable words', export['text'])
 
+
+    def test_export_audio_without_audio_is_a_plain_error(self):
+        row = self.t.save_recording('mutable audio note', 400, b64(wav_bytes(0.4)))
+        os.remove(self.t.transcript(row['id'])['audio_path'])
+        with self.assertRaises(PolicyError) as raised:
+            self.t.export_audio(row['id'])
+        self.assertIn('no saved audio', str(raised.exception))
 
 class StreamTests(TranscriptionBase):
     def test_stream_lifecycle_produces_text_and_duration(self):
@@ -227,6 +236,15 @@ class TranscriptVettingTests(unittest.TestCase):
         self.assertEqual(snap_a, snap_b)
         self.assertEqual(snap_a['answers']['Q1']['selected'], ['C'])
         self.assertEqual([r[3] for r in snap_a['revisions']], [])
+
+        def sources(store, sid):
+            import contextlib as _contextlib
+            with _contextlib.closing(store.connect()) as db:
+                return sorted(row['source'] for row in db.execute(
+                    'SELECT source FROM vetting_answers WHERE session_id=?', (sid,)))
+
+        self.assertEqual(sources(self.store, self.sid), sources(store_b, sid_b))
+        self.assertEqual(sources(self.store, self.sid), ['transcript'] * 3)
 
     def test_low_confidence_transcript_is_proposed_not_applied(self):
         text = 'the sidebar keeps me oriented'

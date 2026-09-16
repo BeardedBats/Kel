@@ -4,15 +4,23 @@
   "steps": [
     {
       "label": "page-visible",
-      "ms": 18
+      "ms": 4
     },
     {
       "label": "recording-bar",
-      "ms": 2
+      "ms": 1
     },
     {
       "label": "transcript-saved",
-      "ms": 418
+      "ms": 405
+    },
+    {
+      "label": "escape-bar",
+      "ms": 2
+    },
+    {
+      "label": "escape-cancelled",
+      "ms": 15
     },
     {
       "label": "renamed",
@@ -20,26 +28,42 @@
     },
     {
       "label": "folder-created",
-      "ms": 414
+      "ms": 404
     },
     {
       "label": "dragged-into-folder",
-      "ms": 411
+      "ms": 405
     },
     {
       "label": "upload-transcribed",
-      "ms": 408
+      "ms": 417
     },
     {
       "label": "invalid-copy",
-      "ms": 413
+      "ms": 417
+    },
+    {
+      "label": "combined",
+      "ms": 419
+    },
+    {
+      "label": "second-bar",
+      "ms": 2
+    },
+    {
+      "label": "second-row",
+      "ms": 407
     },
     {
       "label": "composer-recording",
-      "ms": 412
+      "ms": 416
     },
     {
       "label": "composer-text",
+      "ms": 2
+    },
+    {
+      "label": "composer-single-copy",
       "ms": 1
     },
     {
@@ -47,12 +71,16 @@
       "ms": 1
     },
     {
+      "label": "review-recheck",
+      "ms": 414
+    },
+    {
       "label": "review-applied",
-      "ms": 409
+      "ms": 403
     },
     {
       "label": "rows-after-restart",
-      "ms": 17
+      "ms": 14
     }
   ],
   "errors": [],
@@ -60,20 +88,25 @@
   "recording": 1,
   "firstRow": 1,
   "firstText": "This is a local practice transcript so the recording and saving flow can be",
+  "escapeCancelled": true,
   "renamed": true,
   "folder": true,
   "dragWorked": 1,
   "uploadRow": true,
   "invalidMessage": true,
+  "combined": true,
+  "secondRow": true,
   "composerRecording": true,
   "composerText": "This is a local practice transcript so the recording and sav",
+  "composerSingleCopy": true,
   "composerCleared": true,
   "sessionStarted": "proven-by-review-below",
   "reviewModal": true,
+  "recheckWorked": 1,
   "reviewApplied": true,
   "sessionProvenByReview": true,
   "closeOutcome": "closed",
-  "engineKilled": true,
+  "engineKilled": false,
   "rowsAfterRestart": true,
   "consoleErrors": []
 }

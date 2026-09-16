@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "scenario": "transcription",
+  "steps": [
+    {
+      "label": "page-visible",
+      "ms": 5
+    },
+    {
+      "label": "recording-bar",
+      "ms": 2
+    },
+    {
+      "label": "transcript-saved",
+      "ms": 403
+    },
+    {
+      "label": "escape-bar",
+      "ms": 2
+    },
+    {
+      "label": "escape-cancelled",
+      "ms": 15
+    },
+    {
+      "label": "renamed",
+      "ms": 406
+    },
+    {
+      "label": "folder-created",
+      "ms": 405
+    },
+    {
+      "label": "dragged-into-folder",
+      "ms": 404
+    },
+    {
+      "label": "upload-transcribed",
+      "ms": 407
+    },
+    {
+      "label": "invalid-copy",
+      "ms": 418
+    },
+    {
+      "label": "combined",
+      "ms": 407
+    },
+    {
+      "label": "second-bar",
+      "ms": 1
+    },
+    {
+      "label": "second-row",
+      "ms": 406
+    },
+    {
+      "label": "composer-recording",
+      "ms": 410
+    },
+    {
+      "label": "composer-text",
+      "ms": 1
+    },
+    {
+      "label": "composer-single-copy",
+      "ms": 2
+    },
+    {
+      "label": "send-to-chat",
+      "ms": 4
+    },
+    {
+      "label": "review-open",
+      "ms": 2
+    },
+    {
+      "label": "review-recheck",
+      "ms": 403
+    },
+    {
+      "label": "review-applied",
+      "ms": 416
+    },
+    {
+      "label": "rows-after-restart",
+      "ms": 15
+    }
+  ],
+  "errors": [],
+  "pageShown": 1,
+  "recording": 1,
+  "firstRow": 1,
+  "firstText": "This is a local practice transcript so the recording and saving flow can be",
+  "escapeCancelled": true,
+  "renamed": true,
+  "folder": true,
+  "dragWorked": 1,
+  "uploadRow": true,
+  "invalidMessage": true,
+  "downloadAudioEnabled": true,
+  "copyAndDownload": true,
+  "combined": true,
+  "secondRow": true,
+  "composerRecording": true,
+  "composerText": "This is a local practice transcript so the recording and sav",
+  "composerSingleCopy": true,
+  "composerCleared": true,
+  "sendToChat": "This is a local practice transcript so t",
+  "sessionStarted": "proven-by-review-below",
+  "reviewModal": true,
+  "recheckWorked": 1,
+  "reviewApplied": true,
+  "sessionProvenByReview": true,
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "rowsAfterRestart": true,
+  "consoleErrors": []
+}

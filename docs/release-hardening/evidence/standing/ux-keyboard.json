@@ -1,0 +1,496 @@
+{
+  "schema": 1,
+  "scenario": "keyboard",
+  "stops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Permissions",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Transcription",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Badge chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 353,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "status",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 422,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Hey! I wanted to test this out. How far along are we?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 491,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 561,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 597,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 633,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 669,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 705,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "start design vetting: Basketball matchup dashboard",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 741,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audi",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 777,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "In one short sentence, what can you help me with?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 783,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\s",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 532,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "In one short sentence, what can you help me with?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 568,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "workStops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 154,
+        "h": 40
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Reload",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1331,
+        "y": 125,
+        "w": 77,
+        "h": 34
+      }
+    },
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Back",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 1px rgb(50, 165, 126)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Permissions",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Transcription",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Badge chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 353,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "status",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 422,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "errors": [],
+  "afterSkipEnter": {
+    "active": "TEXTAREA",
+    "hash": "#/conversation/3e7cddd9"
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

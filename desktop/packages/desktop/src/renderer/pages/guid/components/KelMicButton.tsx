@@ -12,7 +12,7 @@ type MicState = 'idle' | 'requesting' | 'recording' | 'working';
 
 type Props = {
   onTranscript: (text: string) => void;
-  onLiveTranscript?: (text: string) => void;
+  onLiveTranscript?: (text: string | null) => void;
   disabled?: boolean;
 };
 
@@ -101,6 +101,7 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
       sessionRef.current = null;
       if (cancel) {
         capture.cancel();
+        onLiveTranscript?.(null);
         if (session) void request('/api/transcription', { action: 'stream_finish', session }).catch(() => {});
         liveRef.current = false;
         setSeconds(0);
@@ -125,9 +126,11 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
           });
           text = typeof quick.text === 'string' ? quick.text : '';
         }
+        onLiveTranscript?.(null);
         if (text.trim()) onTranscript(text.trim());
         else Message.warning('Kel could not make out any speech in that recording.');
       } catch (error) {
+        onLiveTranscript?.(null);
         Message.error(String((error as Error)?.message || error));
       } finally {
         liveRef.current = false;
@@ -135,7 +138,7 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
         setState('idle');
       }
     },
-    [onTranscript, stopTimer]
+    [onLiveTranscript, onTranscript, stopTimer]
   );
 
   useEffect(() => {

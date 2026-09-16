@@ -18,7 +18,7 @@ rapid structured questioning, without the user waiting for Kel between answers.
 ## What the experience is
 
 - It lives inside the normal conversation. Batches render as chat content; answers are typed in the
-  same composer (`12: F`, `13: D`), quickly and out of order, with no assistant turn in between.
+  same composer (`12: A`, `13: D`), quickly and out of order, with no assistant turn in between.
 - A companion **Vetting tab** in Kel's "Work & context" drawer shows the batch, decisions, open
   questions, conflicts, spec preview, and greybox directions. It is a mirror of the conversation
   state, not a separate workspace.

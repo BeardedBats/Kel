@@ -284,6 +284,28 @@ Baseline evidence: `docs/product/evidence/v15-ux-fixes/baseline/` (raw runs also
 | O9 | ~~Workspace group label renders the raw key~~ **Fixed & verified in batch 2 (H16)** - `getWorkspaceDisplayName` resolves both namespace paths and never returns a raw key; keys added to the conversation and common bundles. | - | JR-17 |
 | O10 | ~~13px Kel at 2.72:1~~ **Fixed & verified in batch 2 (H17)** - the chip paints with the theme-aware `--aou-9` token; the readability probe measures SVG fill and no longer reports the logo false positive. | - | JR-25 |
 
+
+## H21 — Independent transcription review fix round (2026-09-16)
+
+The independent review of `27215b6` returned REVIEW-FAIL (one UX-P1, several UX-P2/P3). All findings
+were fixed, the package was rebuilt, and the affected journeys were re-run (evidence:
+`docs/transcription/evidence/live/`).
+
+| Finding | Class | Fix | Rule |
+|---|---|---|---|
+| Composer dictation duplicated/overwrote text (live region never finalized) | UX-P1 | `KelMicButton` sends `onLiveTranscript(null)` on stop and cancel; E2E `composerSingleCopy` | JR-38 |
+| `combine` shipped in engine + docs with no UI door | UX-P2 | "Combine with…" control on the transcript view; E2E `combined` | JR-39 |
+| HTTP status code leaked into "could not complete" copy | UX-P2 | plain sentence; the code stays in logs | JR-37 |
+| Append-save message always claimed "saved to Recents" | UX-P2 | message picks by the captured flag | JR-31 |
+| "Preferences" name; "WAV"/wrong extension list in copy | P3 | "Settings"; plain file-type sentence | JR-37 |
+| Page record bar had no Escape cancel | UX-P2 | Escape cancels the page recording; E2E `escapeCancelled` | JR-35 |
+| "Check again" documented but did not exist | UX-P2 | `review-recheck` re-runs preview on the edited text | JR-8 |
+| Process batch silently confirmed suggested matches | UX-P2 | Process batch applies explicit answers only; Accept all confirms | JR-31 |
+| Donor speech button still mounted in the conversation composer (Ctrl/Cmd+M) | UX-P2 | both composers mount `KelMicButton`; donor control unmounted | JR-40 |
+| Equivalence test could pass while surfaces diverged | P3 | test also compares answer sources + decision events | JR-34 |
+| Preview/apply opposition scans duplicated (drift risk) | P3 | one shared `chosen_labels` + `opposition_pairs` | - |
+| Drag-assign and delete confirmations had silent failure paths | P3 | one plain error sentence each | JR-9 |
+
 ---
 
 ## Process (permanent)

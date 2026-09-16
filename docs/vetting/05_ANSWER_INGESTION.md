@@ -31,7 +31,7 @@ a direct/test harness without rewriting Vetting Sessions.
 
 | Input | Result |
 |---|---|
-| `12: F` / `18: D  12: F  20: skip` | explicit answers, any order |
+| `12: A` / `18: D  12: A  20: skip` | explicit answers, any order |
 | `13: D + F` (comma/plus/and lists) | multi-select where the option set allows it |
 | `14: change to D` | revision (history preserved) |
 | `16: none of these, pickups belong in category rows` | custom answer (ANSWERED + custom text) |
@@ -65,7 +65,7 @@ future transcription review layer will display as:
 
 ```
 I pulled these answers from what you wrote:
-Q12 — F, matchup dominant
+Q12 — A, matchup dominant
 Q13 — Progressive density
 …
 Accept all · Edit · Process batch

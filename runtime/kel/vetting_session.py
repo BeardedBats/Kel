@@ -19,8 +19,8 @@ import time
 from .core import PolicyError, uid
 from . import vetting_bank as bank_mod
 from . import vetting_spec as spec_mod
-from .vetting import VettingAnswerIngestion, ensure_schema, parse_control
-from .transcription import think_out_loud_buckets
+from .vetting import (VettingAnswerIngestion, ensure_schema, parse_control,
+                       think_out_loud_buckets)
 
 BATCH_TARGET = 12
 
@@ -45,6 +45,43 @@ def _loads(raw, fallback):
         return json.loads(raw) if raw else fallback
     except (TypeError, ValueError):
         return fallback
+
+
+def chosen_labels(questions, updates=None):
+    """Question id -> chosen option labels (lowercased), with parsed updates overlaid.
+
+    One implementation serves the recording conflict check and the read-only transcript preview,
+    so the two scans cannot drift apart.
+    """
+    by_id = {q['id']: q for q in questions}
+    selected = {}
+    for question in questions:
+        answer = question.get('answer') or {}
+        selected[question['id']] = list(answer.get('selected') or [])
+    for update in updates or []:
+        selected[update['question_id']] = list(update.get('selected') or [])
+    chosen = {}
+    for qid, codes in selected.items():
+        question = by_id.get(qid)
+        if not question:
+            continue
+        labels = [o['label'].lower() for o in question['options'] if o['code'] in codes]
+        if labels:
+            chosen[qid] = ' '.join(labels)
+    return chosen
+
+
+def opposition_pairs(chosen):
+    """(candidate_a, candidate_b) pairs whose labels oppose on a philosophy axis."""
+    pairs = []
+    for _axis, group_a, group_b in OPPOSITIONS:
+        side_a = [qid for qid, text in chosen.items() if any(k in text for k in group_a)]
+        side_b = [qid for qid, text in chosen.items() if any(k in text for k in group_b)]
+        for qa in side_a:
+            for qb in side_b:
+                if qa != qb and (qa, qb) not in pairs and (qb, qa) not in pairs:
+                    pairs.append((qa, qb))
+    return pairs
 
 
 class Vetting:
@@ -844,46 +881,33 @@ class Vetting:
     def _conflict_check(self, db, session):
         """Surface contradictions between philosophy-level choices. Never overwrite silently."""
         rows = self._questions(db, session['id'])
-        chosen = {}
-        for question in rows:
-            answer = question.get('answer') or {}
-            if answer.get('status') in ('ANSWERED', 'PARTIALLY_ANSWERED', 'CONFLICTING'):
-                labels = [o['label'].lower() for o in question['options']
-                          if o['code'] in (answer.get('selected') or [])]
-                if labels:
-                    chosen[question['id']] = ' '.join(labels)
+        chosen = chosen_labels(rows)
         conflicts = []
-        for axis, group_a, group_b in OPPOSITIONS:
-            side_a = [qid for qid, text in chosen.items() if any(k in text for k in group_a)]
-            side_b = [qid for qid, text in chosen.items() if any(k in text for k in group_b)]
-            for qa in side_a:
-                for qb in side_b:
-                    if qa == qb:
-                        continue
-                    existing = db.execute(
-                        "SELECT 1 FROM vetting_conflicts WHERE session_id=? AND state='OPEN' AND "
-                        '((question_a=? AND question_b=?) OR (question_a=? AND question_b=?))',
-                        (session['id'], qa, qb, qb, qa)).fetchone()
-                    if existing:
-                        continue
-                    times = {}
-                    for qid in (qa, qb):
-                        row = db.execute('SELECT updated FROM vetting_answers'
-                                         ' WHERE question_id=? AND session_id=?',
-                                         (qid, session['id'])).fetchone()
-                        times[qid] = row['updated'] if row else 0
-                    newer = qa if times.get(qa, 0) >= times.get(qb, 0) else qb
-                    older = qb if newer == qa else qa
-                    label_a = chosen.get(older, '')[:80]
-                    label_b = chosen.get(newer, '')[:80]
-                    statement = ('Earlier you chose “%s” (%s), but later chose “%s” (%s).'
-                                 % (label_a, older, label_b, newer))
-                    db.execute('INSERT INTO vetting_conflicts(id,session_id,question_a,question_b,statement,'
-                               'state,created) VALUES(?,?,?,?,?,?,?)',
-                               (uid(), session['id'], older, newer, statement, 'OPEN', time.time()))
-                    db.execute("UPDATE vetting_answers SET status='CONFLICTING' WHERE question_id=? AND session_id=?",
-                               (newer, session['id']))
-                    conflicts.append({'question_a': older, 'question_b': newer, 'statement': statement})
+        for qa, qb in opposition_pairs(chosen):
+            existing = db.execute(
+                "SELECT 1 FROM vetting_conflicts WHERE session_id=? AND state='OPEN' AND "
+                '((question_a=? AND question_b=?) OR (question_a=? AND question_b=?))',
+                (session['id'], qa, qb, qb, qa)).fetchone()
+            if existing:
+                continue
+            times = {}
+            for qid in (qa, qb):
+                row = db.execute('SELECT updated FROM vetting_answers'
+                                 ' WHERE question_id=? AND session_id=?',
+                                 (qid, session['id'])).fetchone()
+                times[qid] = row['updated'] if row else 0
+            newer = qa if times.get(qa, 0) >= times.get(qb, 0) else qb
+            older = qb if newer == qa else qa
+            label_a = chosen.get(older, '')[:80]
+            label_b = chosen.get(newer, '')[:80]
+            statement = ('Earlier you chose “%s” (%s), but later chose “%s” (%s).'
+                         % (label_a, older, label_b, newer))
+            db.execute('INSERT INTO vetting_conflicts(id,session_id,question_a,question_b,statement,'
+                       'state,created) VALUES(?,?,?,?,?,?,?)',
+                       (uid(), session['id'], older, newer, statement, 'OPEN', time.time()))
+            db.execute("UPDATE vetting_answers SET status='CONFLICTING' WHERE question_id=? AND session_id=?",
+                       (newer, session['id']))
+            conflicts.append({'question_a': older, 'question_b': newer, 'statement': statement})
         return conflicts
 
 
@@ -913,7 +937,7 @@ class Vetting:
             questions = self._questions(db, session['id'])
             answers = self._answers_map(questions)
             parse = VettingAnswerIngestion(questions, answers).parse(text, 'transcript')
-            conflicts = self._preview_conflicts(questions, answers, parse['updates'])
+            conflicts = self._preview_conflicts(questions, parse['updates'])
         by_id = {q['id']: q for q in questions}
         preview = []
         for update in parse['updates']:
@@ -952,33 +976,14 @@ class Vetting:
                                    'question_ids': processed['question_ids']}
         return result
 
-    def _preview_conflicts(self, questions, answers, updates):
+    def _preview_conflicts(self, questions, updates):
         """Read-only contradiction scan over current answers plus the parsed updates."""
-        by_id = {q['id']: q for q in questions}
-        merged = {}
-        for qid, answer in answers.items():
-            merged[qid] = {'selected_options': list(answer.get('selected_options') or [])}
-        for update in updates:
-            merged[update['question_id']] = {'selected_options': list(update.get('selected') or [])}
-        chosen = {}
-        for qid, answer in merged.items():
-            question = by_id.get(qid)
-            if not question:
-                continue
-            labels = [o['label'].lower() for o in question['options']
-                      if o['code'] in answer['selected_options']]
-            if labels:
-                chosen[qid] = ' '.join(labels)
+        chosen = chosen_labels(questions, updates)
         found = []
-        for _axis, group_a, group_b in OPPOSITIONS:
-            side_a = [qid for qid, text in chosen.items() if any(k in text for k in group_a)]
-            side_b = [qid for qid, text in chosen.items() if any(k in text for k in group_b)]
-            for qa in side_a:
-                for qb in side_b:
-                    if qa != qb:
-                        found.append({'question_a': qa, 'question_b': qb,
-                                      'statement': 'Earlier answer leans “%s”; this transcript '
-                                                   'leans “%s”.' % (chosen[qa][:70], chosen[qb][:70])})
+        for qa, qb in opposition_pairs(chosen):
+            found.append({'question_a': qa, 'question_b': qb,
+                          'statement': 'Earlier answer leans “%s”; this transcript '
+                                       'leans “%s”.' % (chosen[qa][:70], chosen[qb][:70])})
         return found[:4]
 
 def snapshot(store, session_id):
