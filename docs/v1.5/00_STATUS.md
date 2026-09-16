@@ -27,7 +27,7 @@ Verified at program start (2026-09-15):
 | G6 memory / continuation / recipes | **closed** — packet-lifecycle probes 4/4; physical forget purge (`secure_delete`, FTS segment merge, WAL checkpoint) closed a real residue gap the probes found; memory/continuation/recipes audited (`07`); closure review **CONTINUE** | `test_v15_memory_packets.py`, `07_MEMORY_AND_CONTEXT.md` |
 | G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
 | G8 diagnostics / performance / packaging | **closed** — tsc blocker cleared (26→0), desktop test lane restored (72 green), build exit 0; WS22 authorization/lease/migration diagnostics in the snapshot and the desktop Diagnostics page; WS23 builder overrides (`publish: null`, Kel copyright, Linux entry) + Kel PWA identity (manifest, SW cache); WS28 measured with basis (`12`); suite **441 + 10**; closure review **CONTINUE** | `test_v15_diagnostics.py` (3/3), `12_PERFORMANCE.md`, commits `6366976` + `9f2d890` |
-| G9 security + reliability sweeps | pending (a first slice of the security matrix is covered by `test_v15_authorize.py`) | — |
+| G9 security + reliability sweeps | **closed** — 25/25 security cases re-run on this tree; reliability table covers all 22 charter cases with named evidence; credential vectors re-checked; **two real defects found and fixed by the new probes** (masked `database is locked` in `Store.transaction`; telemetry-thread handle retention past `Service.shutdown`); suite **444 + 10**; closure review **CONTINUE** | `test_v15_reliability.py` (3/3), `09`, `10`, commit `74b6c33` |
 | G10 visual / product acceptance | pending | — |
 | G11 migration / clean clone / packaged | pending | — |
 | G12 independent architecture audit | pending | — |
@@ -110,12 +110,20 @@ donor cache on first boot); `12_PERFORMANCE.md` records measured numbers with me
 ~8 ms · build ~32–39 s · bundle vendor 4.76 MB). Probes `test_v15_diagnostics.py` **3/3**; full
 suite **441 passed + 10 subtests**; desktop tsc 0 / vitest 72 / build exit 0. Commit `9f2d890`.
 
+**Increment 10 — G9 (this working tree):** the security sweep re-ran the full 25-case matrix on this
+tree and the reliability sweep now maps all 22 charter cases to named evidence (`09`, `10`); the new
+probes found and fixed two real defects — `Store.transaction()` masked a failed `BEGIN IMMEDIATE`
+with `cannot rollback - no transaction is active` (now guarded by `in_transaction`), and
+`Service.shutdown()` never joined the telemetry thread, holding `appserver.stderr` open past
+shutdown (now joined, bounded at 30 s). Probes `test_v15_reliability.py` **3/3**; full suite
+**444 passed + 10 subtests**; closure review **CONTINUE**. Commit `74b6c33`.
+
 ## Required deliverables (spec checklist)
 
 `00_STATUS` ✅ · `01_ARCHITECTURE` ◻ skeleton · `02_AUTHORIZATION_MODEL` ✅ ·
 `02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ✅
 · `06_COMPLETION_AUTHORITY` ✅ · `07_MEMORY_AND_CONTEXT` ✅ · `08_LEDGER` ✅ working ·
-`09_SECURITY_REVIEW` ✅ working (G2 matrix complete) · `10_RELIABILITY_REVIEW` ◻ ·
+`09_SECURITY_REVIEW` ✅ (G9 sweep recorded) · `10_RELIABILITY_REVIEW` ✅ (22-case map) ·
 `11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ✅ measured · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
 `15_RELEASE_MANIFEST` ◻ · `16_KNOWN_LIMITATIONS` ✅ working · `17_V2_PLUS_DEFERRED` ✅ ·
 `AUTO_RESUME` ✅
