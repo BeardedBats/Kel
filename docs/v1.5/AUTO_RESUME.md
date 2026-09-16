@@ -4,10 +4,11 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Position (turn 2026-09-16, continuing)
 
-- Commits on `main`: `b1f9aa5` (G1), `d0c1990` (record), `5ed6e1d` (G2 complete). **G3** is in the
+- Commits on `main`: `b1f9aa5` (G1), `d0c1990`, `5ed6e1d` (G2), `f12bff6` (G3). **G4** is in the
   working tree (commit follows).
-- Gates: G0 verified · G1 ✓ · G2 ✓ · G3 closed (role snapshots + tool-class enforcement) · next G4.
-- Full suite **423 passed + 10 subtests** (43-test authorization suite + 5-test roles suite); zero
+- Gates: G0 ✓ · G1 ✓ · G2 ✓ · G3 ✓ · G4 closed (credential injection + leak suite + provider
+  audit) · next G5.
+- Full suite **429 passed + 10 subtests** (43 authorization + 5 roles + 6 credentials); zero
   regressions.
 - Frozen releases remain untouched and verify 3/3.
 
@@ -23,14 +24,19 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 | `runtime/kel/apply_changes.py` | `write` authorization before touching the user's project; `actor` param |
 | `runtime/kel/service.py` | uniform payload-`actor` rejection; `/api/apply` as `user`; grant wakes the blocked job; autonomy shell restricted to the user-safe set; greenfield creation gated |
 | `runtime/tests/test_v15_authorize.py` | **new** — 43 adversarial tests (G2 charter matrix 25/25) |
+| `runtime/tests/test_v15_roles.py` | G3 — frozen role snapshots (5 tests) |
+| `runtime/kel/internal.py`, `native.py`, `host_runtime.py`, `research.py` | G4 — `redact`, `child_env`, `test_command_env` |
+| `runtime/tests/test_v15_credentials.py` | G4 — leak suite (6 tests) |
+| `desktop/.../KelService.ts`, `.../providers/index.tsx` | G4 — spawn-time injection; corrected Providers copy (claims test re-pinned) |
 | `docs/v1.5/*` | status board, authorization model, **effect-path matrix `02A`**, ledger classification, security matrix, test matrix, skeletons |
 
 ## Next steps, in order
 
-1. Commit G3; then G4 — credentials + provider runtime (the largest remaining engine task): real
-   injection (secure store → per-run env only; never persisted/logged/exported), leak-detection
-   suite, provider audit (WS8), and the WSL setup credential propagation (`02A` row 28).
-2. G5–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
+1. Commit G4; then G5 — routing / Completion Authority / independent review: re-audit routing
+   against the new authorization + provider signals (learned signals advise deterministic routing;
+   never override hard capability rules), re-check Completion Authority still depends on evidence,
+   and harden independent review (reviewer independence, artifact-first, rubric handling).
+2. G6–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
 3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired
    `test_v141_claims.py` update), decisions surface, Work Center rows, provider settings,

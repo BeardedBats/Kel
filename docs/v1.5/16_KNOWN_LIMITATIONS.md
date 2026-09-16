@@ -16,6 +16,16 @@ Status: **working** — kept current; nothing is removed without evidence.
 - The desktop Autonomy page copy still carries V1.4.1 "not yet" wording; it must be corrected
   before release (G7).
 
+## Credentials (G4)
+
+- New or changed credentials apply at the next engine start; a running engine keeps its spawn-time
+  environment.
+- Only `anthropic:api_key` is consumed by a live engine call path today (internal worker and
+  research). Other stored providers keep custody + metadata until their execution paths exist.
+- Desktop `tsc --noEmit` currently reports ~25 pre-existing type errors in regions untouched by
+  G4 (implicit-any style; verified at file/line level). Baseline-and-fix is a G8 item so a failing
+  typecheck never ships unnoticed.
+
 ## Carried from V1.4.1 (still true)
 
 - No OS-level sandboxing for native hosts: the documented user-authorized trust model applies

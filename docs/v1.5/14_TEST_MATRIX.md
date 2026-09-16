@@ -25,3 +25,10 @@ number; this file carries the per-suite citations).
 run at claim; the snapshot governs after a role edit; a strict snapshot blocks the coding
 dispatcher before any workspace exists; retries reuse the same frozen assignment; text jobs attach
 the documentation role.
+
+## Credentials (G4)
+
+`runtime/tests/test_v15_credentials.py` — **6 tests** (run: 6 passed): secret redaction for durable
+text; transport errors never echo the key; the key travels only in the request header; native
+children get no cross-provider key; test commands get no provider keys; a completed run leaves no
+key bytes anywhere in the store.

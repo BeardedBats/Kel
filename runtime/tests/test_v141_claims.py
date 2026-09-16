@@ -65,7 +65,8 @@ REQUIRED = {
         'not yet called on the worker execution path',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
-        'not yet injected into provider runs',
+        # Updated in V1.5 G4: injection is real; the pinned claim is the shipped copy.
+        'injected into provider runs from OS-backed storage',
     ),
 }
 

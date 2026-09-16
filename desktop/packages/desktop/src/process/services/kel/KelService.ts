@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { recoverHistory, type HistoryMessage } from './reconcileHistory';
-import { credentialStatus, removeCredential, setCredential } from './kelCredentials';
+import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
 const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
@@ -90,10 +90,17 @@ export async function initializeKel(port: number): Promise<void> {
   const baseArgs = engineCommand.baseArgs;
   if (!connected) {
     const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
+    // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
+    // spawn and passed only through this child's environment. Values never enter the renderer, the
+    // engine database, exports, or logs; native children and test commands strip them again.
+    const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
+    const anthropicKey = getCredential('anthropic', 'api_key');
+    if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
     const child = spawn(command, [...baseArgs, '--data', root], {
       cwd: engineCommand.cwd,
       detached: true,
       windowsHide: true,
+      env: injectedEnv,
       stdio: ['ignore', log, log],
     });
     child.unref();

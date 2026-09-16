@@ -1,8 +1,9 @@
 # 09 — Security Review (Kel V1.5)
 
-Status: **G2 closure matrix — all 25 cases evidenced** (implementation + tests). The G9 gate
-re-runs this sweep on the assembled release, adds runtime evidence from the packaged build, and
-adds the credential-leak suite (with G4) and the reliability sweep (`10_RELIABILITY_REVIEW.md`).
+Status: **G2 closure matrix — all 25 cases evidenced** (implementation + tests); the G4
+credential-leak suite has landed (`04_CREDENTIAL_RUNTIME.md`). The G9 gate re-runs this sweep on
+the assembled release with runtime evidence from the packaged build, and adds the reliability
+sweep (`10_RELIABILITY_REVIEW.md`).
 
 "Evidence" names the test or the documented trust-boundary record; no case is marked covered by
 prose alone.
@@ -40,8 +41,9 @@ effect points, so a caller that skips the engine still cannot skip the boundary.
 
 ## Still to come
 
-- Credential-leak suite (process env, child inheritance, command lines, logs, crash reports,
-  diagnostics, exports, error messages, retries, provider fallback) — lands with G4 and the G9
-  sweep.
+- Credential-leak suite (G4, engine-side): complete for the env / child-inheritance / command-line
+  / durable-text / request-scope vectors — `test_v15_credentials.py` (6 tests) + redaction in
+  `kel/internal.py` / `kel/research.py`; the packaged end-to-end injection check runs at G11, and
+  desktop-side (crash-report) vectors are re-checked at G9.
 - Full re-run of this matrix against the assembled release at G9, with runtime (not only test)
   evidence from the packaged build.
