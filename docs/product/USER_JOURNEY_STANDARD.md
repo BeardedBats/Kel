@@ -86,6 +86,12 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-30 — One registry, every consumer.** Navigation and settings registries are consumed by more than one component (sider, page shell, router). Adding an entry to one registry while another still lacks it must fail the build or the journey harness's `settings` scenario — never ship a renderer that crashes on a registry lookup. Verify: add/remove a setting id in one place matches every consumer; the `settings` scenario must produce zero console errors and a non-empty sider item list.
 
+**JR-31 — Progress counters count what the user has handled.** A progress line may never argue with the user's effort: statuses the user has acted on (answered, not sure, needs examples, awaiting visual selection, skipped, deferred) count as *recorded*; only strictly resolved answers count as *answered* for coverage and specs. After handling every question in a batch the line must read like "12 of 12 recorded", never "10 of 12". Verify: answer a full batch including `not sure` and `skip`; the progress line reaches n of n and the next-step hint appears.
+**JR-32 — Every conversation exit path returns to the pending guided work.** Any assistant reply that interrupts a guided flow (chat answer, job completion, cancelled or *failed* planning) must end by re-surfacing the flow's open prompts; a silent exit path that drops them is a defect. Verify: trigger an interruption on each terminal branch, including failure, and assert the open prompts reappear.
+**JR-33 — Advertised commands must parse exactly as advertised.** Every command a product surface lists ("explain 12", "challenge 12", "more options for 12") needs a test that parses that exact form; a hint the parser rejects is a JR-9-class silence defect. Verify: one test per advertised command that dispatches the literal string.
+
+**JR-34 - A new engine route is wired for every consumer.** Adding an engine route means adding it to the renderer bridge whitelist (`KelService.ts` `kel:request` allowlist) and any other consumer registry in the same change; verify by driving the surface in the packaged app, never only by unit tests. A route that exists but cannot be reached is invisible work.
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

@@ -1,0 +1,6276 @@
+{
+  "schema": 1,
+  "scenario": "settings",
+  "siderItems": [
+    {
+      "id": "model",
+      "path": "model",
+      "label": "Model"
+    },
+    {
+      "id": "agent",
+      "path": "agent",
+      "label": "Agents"
+    },
+    {
+      "id": "skills",
+      "path": "skills",
+      "label": "Skills"
+    },
+    {
+      "id": "tools",
+      "path": "tools",
+      "label": "Tools"
+    },
+    {
+      "id": "appearance",
+      "path": "appearance",
+      "label": "Appearance"
+    },
+    {
+      "id": "webui",
+      "path": "webui",
+      "label": "Remote"
+    },
+    {
+      "id": "pet",
+      "path": "pet",
+      "label": "Desktop Pet"
+    },
+    {
+      "id": "system",
+      "path": "system",
+      "label": "System"
+    },
+    {
+      "id": "archived",
+      "path": "archived",
+      "label": "Archived conversations"
+    },
+    {
+      "id": "about",
+      "path": "about",
+      "label": "About"
+    }
+  ],
+  "pages": {
+    "/settings/appearance": {
+      "finalHash": "#/settings/appearance",
+      "headings": [],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nTheme\nSelect or customize a theme\nAdd Theme\nLight\nDark\nFollow System\nFonts\nGlobal\nSystem default\nSystem default\n-\n14\n+\nReset\nChat\nSystem default\nSystem default\n-\n14\n+\nReset\nMarkdown\nSystem default\nSystem default\n-\n13\n+\nReset\nCode\nSystem default\nSystem default\n-\n12\n+\nReset\nScale\n-\n+\n95%\nReset zoom",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Add Theme",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1229,
+            "y": 125,
+            "w": 105,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-primary arco-btn-size-small arco-btn-shape-square !h-32px !rou"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 375,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 383,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 375,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 383,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 379,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 379,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 377,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 432,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 440,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 432,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 440,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 436,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 436,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 434,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 489,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 497,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 489,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 497,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 493,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 493,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 491,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 546,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 554,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 546,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 554,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 550,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 550,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 548,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "-",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 715,
+            "y": 652,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "div",
+          "role": "slider",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 859,
+            "y": 658,
+            "w": 12,
+            "h": 12
+          },
+          "cls": "arco-slider-button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "+",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1141,
+            "y": 652,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset zoom",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1247,
+            "y": 650,
+            "w": 87,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/archived": {
+      "finalHash": "#/settings/archived",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Archived conversations"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nArchived conversations\nNo archived items",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/system": {
+      "finalHash": "#/settings/system",
+      "headings": [],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nLanguage\nEnglish\nStart on Boot\nLaunch Kel automatically when you sign in to macOS or Windows.\nClose to Tray\nHardware Acceleration\nUse the GPU to render the UI. Disable if the app crashes on launch or graphics flicker.\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nKill idle agent processes after this duration to free memory\nmin\nPreview Size Limit (MB)\nText files larger than this open with a notice instead of content. Applies to newly opened tabs only.\nMB\nSave Uploads to Project Folder\nCross-conversation messages\nLet agents send messages to your other conversations. Turning this off also disables the @@ conversation mention in the input box.\nNotifications\nScheduled Task Completion\nWork Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\b2-settings\\kelwork\\host\\aionui\nLog Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\b2-settings\\kelwork\\host\\logs\nSpeech to Text\nConfigure the voice input provider used by the chat box on desktop and WebUI.\nIn-app browser\nLet the agent use the in-app browser\nWhen on, the agent can open pages, click and fill in forms in the in-app browser for you — for example to look something up or complete a flow on a website. It can only drive that one browser view: it cannot reach the AionUi interface itself, and it never opens a separate Chrome window. When off, the browser still works for you; only the agent loses access.\nClear browsing data\nSigns out of every site the browser is logged into and clears its cache. Open browser tabs take effect after a reload.\nClear",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "English",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1168,
+            "y": 103,
+            "w": 160,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1180,
+            "y": 111,
+            "w": 120,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 170,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 228,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "true",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 287,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle arco-switch-checked"
+        },
+        {
+          "tag": "input",
+          "role": "spinbutton",
+          "type": "",
+          "name": "300",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1221,
+            "y": 346,
+            "w": 87,
+            "h": 30
+          },
+          "cls": "arco-input arco-input-size-default"
+        },
+        {
+          "tag": "input",
+          "role": "spinbutton",
+          "type": "",
+          "name": "5",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1221,
+            "y": 409,
+            "w": 70,
+            "h": 30
+          },
+          "cls": "arco-input arco-input-size-default"
+        },
+        {
+          "tag": "input",
+          "role": "spinbutton",
+          "type": "",
+          "name": "1",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1221,
+            "y": 477,
+            "w": 73,
+            "h": 30
+          },
+          "cls": "arco-input arco-input-size-default"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 538,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "true",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 597,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle arco-switch-checked"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Notifications",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 368,
+            "y": 654,
+            "w": 960,
+            "h": 40
+          },
+          "cls": "arco-collapse-item-header arco-collapse-item-header-left"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "true",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 662,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle arco-switch-checked"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 714,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "div",
+          "role": "",
+          "type": "",
+          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\b2-settings\\kelwork\\host\\aionui",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 368,
+            "y": 812,
+            "w": 960,
+            "h": 34
+          },
+          "cls": "aion-dir-input h-[32px] flex items-center rounded-8px border border-solid border"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Change work directory",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1295,
+            "y": 813,
+            "w": 32,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-icon"
+        },
+        {
+          "tag": "div",
+          "role": "",
+          "type": "",
+          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\b2-settings\\kelwork\\host\\logs",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 368,
+            "y": 912,
+            "w": 960,
+            "h": 34
+          },
+          "cls": "aion-dir-input h-[32px] flex items-center rounded-8px border border-solid border"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Change log directory",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1295,
+            "y": 913,
+            "w": 32,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-icon"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1287,
+            "y": 1014,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "true",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1288,
+            "y": 1181,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle arco-switch-checked"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Clear",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1261,
+            "y": 1264,
+            "w": 67,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-small arco-btn-shape-square arco-btn-s"
+        }
+      ],
+      "tabs": [],
+      "scroll": [
+        {
+          "cls": "settings-page-wrapper w-full min-h-full box-border overflow-y-auto px-",
+          "scrollHeight": 1333,
+          "clientHeight": 857,
+          "delta": 476
+        }
+      ]
+    },
+    "/settings/webui": {
+      "finalHash": "#/settings/webui",
+      "headings": [
+        {
+          "tag": "h2",
+          "text": "WebUI"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nWebUI\n\nUse Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere.\n\n1\nEnable WebUI\n2\nAccess URL\n3\nAllow Remote Access\nEnable WebUI so your phone or remote browser can access Kel.\nEnable WebUI\nAllow Remote Access\nUse remote software/server for secure remote access Set up secure remote access\nLogin Info\nUsername:\nadmin\nInitial Password:\n******",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1267,
+            "y": 246,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "",
+          "name": "Set up secure remote access",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 701,
+            "y": 320,
+            "w": 164,
+            "h": 14
+          },
+          "cls": "text-primary hover:underline cursor-pointer bg-transparent border-none p-0 text-"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1267,
+            "y": 302,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1232,
+            "y": 433,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-mini arco-btn-shape-square rd-100px !px-6px"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1268,
+            "y": 433,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-mini arco-btn-shape-square rd-100px !px-6px"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1268,
+            "y": 491,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-mini arco-btn-shape-square rd-100px !px-6px"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/pet": {
+      "finalHash": "#/settings/pet",
+      "headings": [],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nEnable Desktop Pet\nPet Size\nSmall (200px)\nMedium (280px)\nLarge (360px)\nDo Not Disturb\nPet stays idle, ignores AI events\nShow authorizations on the pet\nWhen off, AI tool authorizations stay in the main chat window",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1291,
+            "y": 103,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": true,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1291,
+            "y": 208,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": true,
+          "checked": "true",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1291,
+            "y": 276,
+            "w": 40,
+            "h": 24
+          },
+          "cls": "arco-switch arco-switch-type-circle arco-switch-checked"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/about": {
+      "finalHash": "#/settings/about",
+      "headings": [
+        {
+          "tag": "h3",
+          "text": "Kel"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nKel\nOne desktop. Your AI work engine.\nv1.5.0\nCheck for updates\nInclude prerelease/dev builds\nHelp Documentation\nUpdate Log\nReport Issue\nContact Me\nOfficial Website",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Check for updates",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 701,
+            "y": 248,
+            "w": 300,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-primary arco-btn-size-default arco-btn-shape-square arco-btn-l"
+        },
+        {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 973,
+            "y": 294,
+            "w": 28,
+            "h": 16
+          },
+          "cls": "arco-switch arco-switch-small arco-switch-type-circle"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    },
+    "/settings/model": {
+      "finalHash": "#/providers",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Providers"
+        },
+        {
+          "tag": "h2",
+          "text": "Claude (Claude Code)"
+        },
+        {
+          "tag": "h2",
+          "text": "Codex"
+        },
+        {
+          "tag": "h2",
+          "text": "Anthropic API"
+        },
+        {
+          "tag": "h2",
+          "text": "DeepSeek API"
+        },
+        {
+          "tag": "h2",
+          "text": "Readiness preflight"
+        },
+        {
+          "tag": "h2",
+          "text": "Store a provider credential (OS-backed)"
+        },
+        {
+          "tag": "h2",
+          "text": "Credential metadata (values are never stored here)"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nProject conversations\nconversation.workspace.unnamedSpace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nSkip to main content\nProviders\n\n4 providers · 0 usable right now\n\nReload\nClaude (Claude Code)\nquota not reported\n\nNative CLI · subscription session\n\nCLI present\n\nModel\tCapabilities\nclaude-native\ttext · tools · edit · shell\nCodex\nunavailable\n\nNative CLI · subscription session\n\nCLI session present\n\nModel\tCapabilities\ncodex-native\ttext · tools · edit · shell\nAnthropic API\ninstalled not authenticated\nSet credential metadata\nRemove\n\nAPI · API key (billed per use) · https://api.anthropic.com\n\nAPI key needed\n\nModel\tCapabilities\nclaude-sonnet-4-6\ttext · vision · tools\nDeepSeek API\ninstalled not authenticated\nSet credential metadata\nRemove\n\nAPI · API key (billed per use) · https://api.deepseek.com/v1\n\nAPI key needed\n\nModel\tCapabilities\ndeepseek-chat\ttext · tools\ndeepseek-reasoner\ttext · tools\nReadiness preflight\n\nWhat Kel would use for a capability right now, and why — the engine records the fallback reason instead of guessing.\n\ntext\nvision\ntools\nedit\nshell\nprefer\nauto\nclaude-code\ncodex\ninternal\ndeepseek\nCheck readiness\nStore a provider credential (OS-backed)\n\nThe value is encrypted by the desktop m",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "New Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 91,
+            "w": 208,
+            "h": 34
+          },
+          "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 127,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Projects",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 163,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Permissions",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 199,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Badge chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 317,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "status",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 386,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! I wanted to test this out. How far along are we?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 455,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that print",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 525,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 561,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing ex",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 597,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 633,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! What fonts are you using?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 669,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 705,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 741,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 777,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 813,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! How do I configure the agents inside this app?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 849,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Settings",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -69,
+            "w": 154,
+            "h": 40
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reload",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1331,
+            "y": 125,
+            "w": 77,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Set credential metadata",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1101,
+            "y": 965,
+            "w": 185,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Remove",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1298,
+            "y": 965,
+            "w": 85,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Set credential metadata",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1101,
+            "y": 1308,
+            "w": 185,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Remove",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1298,
+            "y": 1308,
+            "w": 85,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "text",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 318,
+            "y": 1833,
+            "w": 59,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--primary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "vision",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 389,
+            "y": 1833,
+            "w": 71,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "tools",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 472,
+            "y": 1833,
+            "w": 65,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "edit",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 549,
+            "y": 1833,
+            "w": 59,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "shell",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 620,
+            "y": 1833,
+            "w": 63,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "auto",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 738,
+            "y": 1833,
+            "w": 63,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--primary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "claude-code",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 813,
+            "y": 1833,
+            "w": 112,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "codex",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 937,
+            "y": 1833,
+            "w": 72,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "internal",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1021,
+            "y": 1833,
+            "w": 83,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "deepseek",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1116,
+            "y": 1833,
+            "w": 94,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Check readiness",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1222,
+            "y": 1833,
+            "w": 136,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--primary"
+        },
+        {
+          "tag": "select",
+          "role": "",
+          "type": "",
+          "name": "Provider",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 318,
+            "y": 2136,
+            "w": 176,
+            "h": 35
+          },
+          "cls": "kel-input"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "Field name",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 506,
+            "y": 2130,
+            "w": 169,
+            "h": 46
+          },
+          "cls": "kel-input"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "password",
+          "name": "Credential value",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 687,
+            "y": 2130,
+            "w": 169,
+            "h": 46
+          },
+          "cls": "kel-input"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Store credential",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 868,
+            "y": 2136,
+            "w": 134,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--primary"
+        }
+      ],
+      "tabs": [],
+      "scroll": [
+        {
+          "cls": "flex-1 min-h-0 overflow-y-auto _scrollArea_14ap0_34",
+          "scrollHeight": 637,
+          "clientHeight": 571,
+          "delta": 66
+        }
+      ]
+    },
+    "/settings/agent": {
+      "finalHash": "#/team/roster",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Team"
+        },
+        {
+          "tag": "h2",
+          "text": "Roster"
+        },
+        {
+          "tag": "h2",
+          "text": "Strategy"
+        },
+        {
+          "tag": "h2",
+          "text": "Product"
+        },
+        {
+          "tag": "h2",
+          "text": "Engineering"
+        },
+        {
+          "tag": "h2",
+          "text": "Verification"
+        },
+        {
+          "tag": "h2",
+          "text": "Delivery"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nProject conversations\nconversation.workspace.unnamedSpace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n9 roles\nStrategy\nSolution Strategist\nv1 · 0 assignments\nOpen in Studio\nProduct\nResearch Specialist\nv1 · 0 assignments\nOpen in Studio\nUI/UX Expert\nv1 · 0 assignments\nOpen in Studio\nEngineering\nImplementation Engineer\nv1 · 0 assignments\nOpen in Studio\nVerification\nIndependent Reviewer\nv1 · 0 assignments\nOpen in Studio\nQA Engineer\nv1 · 0 assignments\nOpen in Studio\nSecurity Reviewer\nv1 · 0 assignments\nOpen in Studio\nDelivery\nDocumentation Specialist\nv1 · 0 assignments\nOpen in Studio\nRelease Engineer\nv1 · 0 assignments\nOpen in Studio",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "New Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 91,
+            "w": 208,
+            "h": 34
+          },
+          "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 127,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Projects",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 163,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Permissions",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 199,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Badge chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 317,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "status",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 386,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! I wanted to test this out. How far along are we?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 455,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that print",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 525,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 561,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing ex",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 597,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 633,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! What fonts are you using?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 669,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 705,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 741,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 777,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 813,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! How do I configure the agents inside this app?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 849,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Settings",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -69,
+            "w": 154,
+            "h": 40
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Office",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1187,
+            "y": 127,
+            "w": 68,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Roster",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1261,
+            "y": 127,
+            "w": 70,
+            "h": 30
+          },
+          "cls": "kel-tab kel-tab--on"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1337,
+            "y": 127,
+            "w": 71,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 416,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 550,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 594,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 728,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 862,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 906,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 950,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 1084,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 1128,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        }
+      ],
+      "tabs": [
+        {
+          "text": "Office",
+          "selected": "false"
+        },
+        {
+          "text": "Roster",
+          "selected": "true"
+        },
+        {
+          "text": "Studio",
+          "selected": "false"
+        }
+      ],
+      "scroll": [
+        {
+          "cls": "flex-1 min-h-0 overflow-y-auto _scrollArea_14ap0_34",
+          "scrollHeight": 637,
+          "clientHeight": 571,
+          "delta": 66
+        }
+      ]
+    },
+    "/settings/skills": {
+      "finalHash": "#/team/roster",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Team"
+        },
+        {
+          "tag": "h2",
+          "text": "Roster"
+        },
+        {
+          "tag": "h2",
+          "text": "Strategy"
+        },
+        {
+          "tag": "h2",
+          "text": "Product"
+        },
+        {
+          "tag": "h2",
+          "text": "Engineering"
+        },
+        {
+          "tag": "h2",
+          "text": "Verification"
+        },
+        {
+          "tag": "h2",
+          "text": "Delivery"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nProject conversations\nconversation.workspace.unnamedSpace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n9 roles\nStrategy\nSolution Strategist\nv1 · 0 assignments\nOpen in Studio\nProduct\nResearch Specialist\nv1 · 0 assignments\nOpen in Studio\nUI/UX Expert\nv1 · 0 assignments\nOpen in Studio\nEngineering\nImplementation Engineer\nv1 · 0 assignments\nOpen in Studio\nVerification\nIndependent Reviewer\nv1 · 0 assignments\nOpen in Studio\nQA Engineer\nv1 · 0 assignments\nOpen in Studio\nSecurity Reviewer\nv1 · 0 assignments\nOpen in Studio\nDelivery\nDocumentation Specialist\nv1 · 0 assignments\nOpen in Studio\nRelease Engineer\nv1 · 0 assignments\nOpen in Studio",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "New Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 91,
+            "w": 208,
+            "h": 34
+          },
+          "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 127,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Projects",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 163,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Permissions",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 199,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Badge chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 317,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "status",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 386,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! I wanted to test this out. How far along are we?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 455,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that print",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 525,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 561,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing ex",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 597,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 633,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! What fonts are you using?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 669,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 705,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 741,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 777,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 813,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! How do I configure the agents inside this app?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 849,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Settings",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -69,
+            "w": 154,
+            "h": 40
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Office",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1187,
+            "y": 127,
+            "w": 68,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Roster",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1261,
+            "y": 127,
+            "w": 70,
+            "h": 30
+          },
+          "cls": "kel-tab kel-tab--on"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1337,
+            "y": 127,
+            "w": 71,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 416,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 550,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 594,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 728,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 862,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 906,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 950,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 1084,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Open in Studio",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1254,
+            "y": 1128,
+            "w": 129,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        }
+      ],
+      "tabs": [
+        {
+          "text": "Office",
+          "selected": "false"
+        },
+        {
+          "text": "Roster",
+          "selected": "true"
+        },
+        {
+          "text": "Studio",
+          "selected": "false"
+        }
+      ],
+      "scroll": [
+        {
+          "cls": "flex-1 min-h-0 overflow-y-auto _scrollArea_14ap0_34",
+          "scrollHeight": 637,
+          "clientHeight": 571,
+          "delta": 66
+        }
+      ]
+    },
+    "/settings/tools": {
+      "finalHash": "#/autonomy",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "Permissions"
+        },
+        {
+          "tag": "h2",
+          "text": "Capability leases"
+        },
+        {
+          "tag": "h2",
+          "text": "Boundary requests"
+        },
+        {
+          "tag": "h2",
+          "text": "Ask the engine about a scope"
+        },
+        {
+          "tag": "h2",
+          "text": "Locked guardrails · digest e666e7c59873"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nProject conversations\nconversation.workspace.unnamedSpace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nSkip to main content\nPermissions\n\n1 active permission · 0 waiting on you\n\nReload\nEmergency stop\n\nEmergency stop revokes every active lease and pauses all active or queued work; workers stop at their next cancellation check. It does not undo completed effects.\n\nCapability leases\nJob\tState\tReview\tExpires\tScope\tActions\nfb26e510-5482-4827-8023-3b7657994985\tactive\tkel-contract:fd697f6f5dfc43265eebf7b8445ba69b6dbc3eedaff5212d393ea8065cc54339\t0s ago\trepo: C:\\Users\\Nick\\Documents\\Kel Projects\\write-a-tiny-python-script-sum-py-in-1094 · root: C:\\Users\\Nick\\Documents\\Kel\tRevoke\nBoundary requests\nNothing needs a wider scope.\nKel asks here when work genuinely crosses outside the reviewed lease — once per scope, never per command.\nAsk the engine about a scope\n\nThe policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same boundary runs at the effect points that exist today — repository work, file application, and project creation — so this checker's verdict is what stops executi",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "New Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 91,
+            "w": 208,
+            "h": 34
+          },
+          "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 127,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Projects",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 163,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Permissions",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 8,
+            "y": 199,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Badge chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 317,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "status",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 386,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! I wanted to test this out. How far along are we?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 455,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that print",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 525,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 561,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing ex",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 597,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "In one short sentence, what can you help me with?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 633,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! What fonts are you using?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 669,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 705,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 741,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 777,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "I want to create a little app that allows me to control my microphone's mute button, to tu",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 813,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Hey! How do I configure the agents inside this app?",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 849,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Settings",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 244,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -69,
+            "w": 154,
+            "h": 40
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reload",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1183,
+            "y": 125,
+            "w": 77,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Emergency stop",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1272,
+            "y": 125,
+            "w": 136,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Revoke",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1291,
+            "y": 477,
+            "w": 80,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--quiet"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "write",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 318,
+            "y": 1083,
+            "w": 62,
+            "h": 30
+          },
+          "cls": "kel-tab kel-tab--on"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "repo",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 386,
+            "y": 1083,
+            "w": 59,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "browser",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 451,
+            "y": 1083,
+            "w": 81,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "tool",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 539,
+            "y": 1083,
+            "w": 55,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "button",
+          "role": "tab",
+          "type": "button",
+          "name": "destructive",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 600,
+            "y": 1083,
+            "w": 100,
+            "h": 30
+          },
+          "cls": "kel-tab"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "Scope target",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 318,
+            "y": 1120,
+            "w": 169,
+            "h": 46
+          },
+          "cls": "kel-input"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Ask the engine",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 499,
+            "y": 1126,
+            "w": 128,
+            "h": 34
+          },
+          "cls": "kel-btn kel-btn--secondary"
+        }
+      ],
+      "tabs": [
+        {
+          "text": "write",
+          "selected": "true"
+        },
+        {
+          "text": "repo",
+          "selected": "false"
+        },
+        {
+          "text": "browser",
+          "selected": "false"
+        },
+        {
+          "text": "tool",
+          "selected": "false"
+        },
+        {
+          "text": "destructive",
+          "selected": "false"
+        }
+      ],
+      "scroll": [
+        {
+          "cls": "flex-1 min-h-0 overflow-y-auto _scrollArea_14ap0_34",
+          "scrollHeight": 637,
+          "clientHeight": 571,
+          "delta": 66
+        }
+      ]
+    },
+    "/settings": {
+      "finalHash": "#/settings/appearance",
+      "headings": [],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nTheme\nSelect or customize a theme\nAdd Theme\nLight\nDark\nFollow System\nFonts\nGlobal\nSystem default\nSystem default\n-\n14\n+\nReset\nChat\nSystem default\nSystem default\n-\n14\n+\nReset\nMarkdown\nSystem default\nSystem default\n-\n13\n+\nReset\nCode\nSystem default\nSystem default\n-\n12\n+\nReset\nScale\n-\n+\n95%\nReset zoom",
+      "interactives": [
+        {
+          "tag": "a",
+          "role": "",
+          "type": "",
+          "name": "Skip to main content",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": -68,
+            "w": 162,
+            "h": 39
+          },
+          "cls": "kel-skip"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Collapse",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 16,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Search messages",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 52,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Back",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 88,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Forward",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 124,
+            "y": 3,
+            "w": 36,
+            "h": 36
+          },
+          "cls": "app-titlebar__button app-titlebar__button--nav"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Minimize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1312,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Maximize",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1352,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Close",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1392,
+            "y": 0,
+            "w": 40,
+            "h": 42
+          },
+          "cls": "app-window-controls__button app-window-controls__button--close"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "16px",
+          "rect": {
+            "x": 62,
+            "y": 55,
+            "w": 24,
+            "h": 24
+          },
+          "cls": "text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Work & context",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 817,
+            "w": 244,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Back to Chat",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 8,
+            "y": 858,
+            "w": 202,
+            "h": 34
+          },
+          "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "type": "",
+          "name": "Light",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 212,
+            "y": 859,
+            "w": 40,
+            "h": 32
+          },
+          "cls": "h-32px w-40px shrink-0 flex items-center justify-center cursor-pointer rd-0.5rem"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Add Theme",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1229,
+            "y": 125,
+            "w": 105,
+            "h": 32
+          },
+          "cls": "arco-btn arco-btn-primary arco-btn-size-small arco-btn-shape-square !h-32px !rou"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 375,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 383,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 375,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 383,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 379,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 379,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 377,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 432,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 440,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 432,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 440,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 436,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 436,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 434,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 489,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 497,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 489,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 497,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 493,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 493,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 491,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 805,
+            "y": 546,
+            "w": 200,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 817,
+            "y": 554,
+            "w": 160,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "div",
+          "role": "combobox",
+          "type": "",
+          "name": "System default",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1017,
+            "y": 546,
+            "w": 140,
+            "h": 32
+          },
+          "cls": "arco-select arco-select-single arco-select-size-default aion-select [&_.arco-sel"
+        },
+        {
+          "tag": "input",
+          "role": "",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": -1,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1029,
+            "y": 554,
+            "w": 100,
+            "h": 16
+          },
+          "cls": "arco-select-view-input arco-select-hidden"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Decrease",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1169,
+            "y": 550,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Increase",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1249,
+            "y": 550,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1287,
+            "y": 548,
+            "w": 47,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "-",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 715,
+            "y": 652,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "div",
+          "role": "slider",
+          "type": "",
+          "name": "",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 859,
+            "y": 658,
+            "w": 12,
+            "h": 12
+          },
+          "cls": "arco-slider-button"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "+",
+          "disabled": false,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "12px",
+          "rect": {
+            "x": 1141,
+            "y": 652,
+            "w": 28,
+            "h": 24
+          },
+          "cls": "arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28"
+        },
+        {
+          "tag": "button",
+          "role": "",
+          "type": "button",
+          "name": "Reset zoom",
+          "disabled": true,
+          "checked": null,
+          "tabIndex": 0,
+          "fontSize": "14px",
+          "rect": {
+            "x": 1247,
+            "y": 650,
+            "w": 87,
+            "h": 28
+          },
+          "cls": "arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabl"
+        }
+      ],
+      "tabs": [],
+      "scroll": []
+    }
+  },
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "gearExists": 1,
+  "hashAfterGear": "#/settings/appearance",
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

@@ -433,7 +433,8 @@
       "terminal": "终端",
       "explorer": "文件资源管理器",
       "browser": "浏览器"
-    }
+    },
+    "unnamedSpace": "工作区"
   },
   "minimap": {
     "searchAria": "搜索会话",

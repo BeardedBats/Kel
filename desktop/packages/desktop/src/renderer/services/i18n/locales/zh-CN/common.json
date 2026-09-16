@@ -203,6 +203,11 @@
   "selectedCount": "已选 {{count}}",
   "selectedSkills": "已选技能",
   "aiAssistant": "AI 助手",
+  "conversation": {
+    "workspace": {
+      "unnamedSpace": "工作区"
+    }
+  },
   "kel": {
     "workContext": "Work & context",
     "conversation": "Conversation",

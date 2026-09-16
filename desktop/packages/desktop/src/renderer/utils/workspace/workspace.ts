@@ -27,14 +27,26 @@ export const getWorkspaceDisplayName = (
   isTemporaryWorkspace: boolean,
   t?: (key: string) => string
 ): string => {
+  // Callers sit in different i18next namespaces, so the same label has two possible key paths
+  // ('conversation.workspace.*' in the common bundle, 'workspace.*' in the conversation bundle).
+  // i18next returns the key itself when a path is absent; a raw key is never a name a user can
+  // read, so fall back to the product-visible literal (JR-17).
+  const resolve = (fullKey: string, shortKey: string, fallback: string): string => {
+    if (!t) return fallback;
+    for (const key of [fullKey, shortKey]) {
+      const value = t(key);
+      if (value && value !== key) return value;
+    }
+    return fallback;
+  };
   if (isTemporaryWorkspace) {
-    return t ? t('conversation.workspace.temporarySpace') : 'Temporary Session';
+    return resolve('conversation.workspace.temporarySpace', 'workspace.temporarySpace', 'Temporary Space');
   }
   const parts = splitPathSegments(workspacePath);
   const last = parts[parts.length - 1] || workspacePath;
   // Auto-created workspaces are named after their UUID; a raw id is not a name a user can read.
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last)) {
-    return t ? t('conversation.workspace.unnamedSpace') : 'Workspace';
+    return resolve('conversation.workspace.unnamedSpace', 'workspace.unnamedSpace', 'Workspace');
   }
   return last;
 };

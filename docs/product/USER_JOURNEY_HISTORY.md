@@ -141,6 +141,97 @@ Baseline evidence: `docs/product/evidence/v15-ux-fixes/baseline/` (raw runs also
 - **Verified (rebuilt build):** the map empty state shows exactly one “Refresh map” action (`fixed/ux-tour.json`,
   `fixed/ux-maintext.json`).
 
+### H11 - The progress line argued with the user's own effort (medium) → JR-31
+- **Problem:** after answering a whole batch, including `not sure` and `skip`, the line still read
+  "Recorded: 10 of 12" — the counter counted only strict answers, so the user's work looked unfinished
+  and the "process answers" prompt never appeared.
+- **Fix:** progress counts *recorded* (handled) states — answered, unsure, needs-examples, awaiting
+  visual, skipped, deferred — while the spec keeps strict answered coverage. Shown as
+  "Recorded: 12 of 12 recorded.".
+- **Lesson:** a counter that disagrees with what the user just did is a lie; counters must count what
+  the user handled, and specs must keep the strict number.
+- **Rule:** JR-31 (created).
+- **Evidence:** `runtime/tests/test_vetting.py::RapidAnsweringTests::test_rapid_answering_ten_plus_without_synthesis`.
+
+### H12 - One interruption path forgot to bring the prompts back (medium) → JR-32
+- **Problem:** during a vetting session, an unrelated question whose planning *failed* exited the reply
+  path before the resurface hook — the user's open questions silently disappeared from the screen
+  (they were still in the session, but nothing on screen said so).
+- **Fix:** the resurface hook now runs on every normal-path exit — dispatched replies, terminal jobs,
+  and failed/interrupted planning.
+- **Lesson:** every exit path of a conversation turn is a user-visible path; guidance attached to "the
+  normal path" must be attached to all of them, including failures.
+- **Rule:** JR-32 (created).
+- **Evidence:** `test_vetting.py::VettingChatPathTests::test_interruption_answers_normally_and_prompts_come_back`
+  (fails against the pre-fix host; passes after).
+
+### H13 - The product advertised commands the engine rejected (medium) → JR-33
+- **Problem:** the vetting batch footer told users to type `explain 12` and `challenge 12`, but the
+  control parser matched only "explain simply" / "challenge this"; the advertised commands fell
+  through as unmatched chat.
+- **Fix:** the control patterns accept the numeric forms the UI advertises; unit tests now parse every
+  advertised command in its advertised form.
+- **Lesson:** a hint the parser doesn't accept is a silence defect (JR-9 family) — every advertised
+  command needs a parse test.
+- **Rule:** JR-33 (created).
+- **Evidence:** `test_vetting.py::HelpTests` (three tests, one per advertised help command).
+
+### H14 - A new engine route was invisible to the whole UI (high) → JR-34
+- **Problem:** in the packaged app the vetting panel always showed its start form even though a live
+  session existed. The renderer bridge (`process/services/kel/KelService.ts`) whitelists route names
+  for `kel:request`; `/api/vetting` was missing, so every panel call threw "Unknown Kel action" and the
+  panel's catch left the view empty. The engine and the chat path had worked the whole time — proven by
+  the session, answers, conflict, greyboxes and spec snapshot in the engine database, and by the full
+  alternating transcript in the donor's own store.
+- **Fix:** added `vetting` to the bridge whitelist; the same live scenario now shows the panel session
+  (topic, FINISHED, recorded progress, decisions, spec preview).
+- **Lesson:** a route exists only when *every* consumer can reach it — engine action, renderer call,
+  and the main-process bridge whitelist. Grep the whitelist whenever a surface is added.
+- **Rule:** JR-34 (created).
+- **Evidence:** `paneldump` run (drawer showed the start form, no response recorded) → bridge fix →
+  `b2-vetting-live` (panel booleans true); `docs/vetting/evidence/live/`.
+
+### H15 - The settings registry listed 2 of 10 tabs (medium) → JR-30
+- **Problem:** `BUILTIN_TAB_IDS` — the ordered list both the settings sider and `SettingsPageWrapper`
+  map over — contained only `appearance` and `archived` while both presentation maps defined ten tabs;
+  the settings nav rendered a two-item shell and extension tabs anchored to the other ids silently fell
+  to "unanchored".
+- **Fix:** the registry now holds the full ordered set (model, agent, skills, tools, appearance, webui,
+  pet, system, archived, about) with the single-registry rule stated in the file; the browser filter
+  for desktop-only tabs is unchanged.
+- **Lesson:** a registry that lists only part of reality is worse than duplication — consumers look
+  correct while rendering a fraction of the product.
+- **Rule:** JR-30 (applied).
+- **Evidence:** `settings` scenario on the rebuilt package (`b2-settings`): every tab visits clean,
+  zero console errors.
+
+### H16 - The workspace label rendered a raw translation key (low) → JR-17
+- **Problem:** `getWorkspaceDisplayName` called `t('conversation.workspace.unnamedSpace')`, but the
+  namespace bundles resolve `workspace.*` (the sibling `temporarySpace` key lives at
+  `conversation.json` → `workspace.temporarySpace`), so unnamed workspaces surfaced as a raw key.
+- **Fix:** the helper resolves both key paths and never returns a raw key (falls back to the
+  product-visible literal); the key was added next to its sibling in the conversation bundle for
+  en-US and zh-CN (and to the common bundle for the full-path callers).
+- **Lesson:** every `t()` key the code calls must exist in the namespace the caller actually uses, or
+  the fallback must be the product-visible string.
+- **Rule:** JR-17 (applied).
+- **Evidence:** `sider` scenario (`final-sider`): the workspace group label reads "Workspace",
+  no raw key in `siderText`.
+
+### H17 - Dark-mode chip failed contrast; the probe mis-read SVG paint (medium) → JR-25
+- **Problem:** the inactive assistant chip painted `text-t-secondary` (#4E5969 — pinned to light values
+  in this colour scheme) on the dark base: 2.72:1 at 13px. The readability probe also flagged the
+  white-on-black Kel logo as 1:1 because it measured CSS `color` on SVG `<text>` instead of `fill`.
+- **Fix:** the chip paints with the theme-aware `--aou-9` token (light #262c41 / dark #e5e7f0); the
+  probe measures `fill` for SVG text and no longer stringifies `SVGAnimatedString` class names.
+- **Lesson:** a token that is not redefined per theme silently inherits light values in dark mode; and
+  a measuring tool that guesses the paint source reports phantom defects — fix the tool and the
+  product.
+- **Rule:** JR-25 (applied).
+- **Evidence:** readability runs (`b2-readability`, `final-readability`, `final3-readability`): the
+  packaged app reports zero offenders on `/guid`; the earlier 2.72:1 entry is gone
+  (`evidence/v15-ux-fixes/fixed2/readability`).
+
 ---
 
 ## Open items (recorded, not fixed in this pass)
@@ -154,9 +245,9 @@ Baseline evidence: `docs/product/evidence/v15-ux-fixes/baseline/` (raw runs also
 | O5 | Diagnostics maintenance actions lack confirmations/explanations ("Purge...", "Compact...", "Problems: N recorded process(es)...") | Advanced surface; low priority, one pass does not cover it. | JR-8 |
 | O6 | Settings pages show two "Back to Chat" affordances and a theme toggle in the footer | Donor shell; cosmetic, but a JR-21 violation. | JR-21 |
 | O7 | Provider notice shows on the chat landing but not inside an open conversation | Requires a conversation-level mount; follow-up. | JR-9 |
-| O8 | Settings-sider expansion crashed a second settings registry (`SettingsPageWrapper.tsx` also maps the tab ids); change reverted | Next step: extend **both** registries (or unify them into one, as `UX_DONOR_SIMPLICITY_MATRIX.md` recommends), rebuild, and require the `settings` scenario to show a non-empty sider with zero console errors. | JR-20, JR-30 |
-| O9 | Workspace group label renders the raw key `conversation.workspace.unnamedSpace` | Add the key (e.g. `"unnamedSpace": "Workspace"`) to `renderer/services/i18n/locales/en-US/common.json` under `conversation.workspace`, or return the literal when `t` cannot resolve it; rebuild + re-run `sider`. | JR-17 |
-| O10 | One 13 px “Kel” on `/guid` still measures 2.72:1 | Identify the element (not the assistant chip) with the readability probe's DOM dump; then fix its token. | JR-25 |
+| O8 | ~~Settings registry listed 2 of 10 tabs~~ **Fixed & verified in batch 2 (H15)** - `BUILTIN_TAB_IDS` is the single full registry both consumers derive from; `b2-settings` visits every tab with zero console errors. | - | JR-30 |
+| O9 | ~~Workspace group label renders the raw key~~ **Fixed & verified in batch 2 (H16)** - `getWorkspaceDisplayName` resolves both namespace paths and never returns a raw key; keys added to the conversation and common bundles. | - | JR-17 |
+| O10 | ~~13px Kel at 2.72:1~~ **Fixed & verified in batch 2 (H17)** - the chip paints with the theme-aware `--aou-9` token; the readability probe measures SVG fill and no longer reports the logo false positive. | - | JR-25 |
 
 ---
 

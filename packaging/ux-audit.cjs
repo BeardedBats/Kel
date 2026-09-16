@@ -312,14 +312,31 @@ async function probeReadability(page) {
       const cs = getComputedStyle(el);
       if (r.width < 2 || r.height < 2 || cs.visibility === 'hidden' || cs.display === 'none') continue;
       const px = Math.round(parseFloat(cs.fontSize));
+      // SVG text paints with `fill`, not `color`; measuring color here produced false positives
+      // (e.g. the white-on-black Kel logo counted as black-on-black). Use fill when present.
+      const isSvg = (el.namespaceURI || '').indexOf('svg') >= 0;
+      const paint = isSvg ? cs.fill : cs.color;
       histogram[px] = (histogram[px] || 0) + text.length;
-      const fg = parse(cs.color);
+      const fg = parse(paint);
       if (!fg) continue;
       const cr = ratio(fg, bgOf(el));
       const bold = parseInt(cs.fontWeight, 10) >= 600;
       const large = px >= 24 || (px >= 18.66 && bold);
       const need = large ? 3 : 4.5;
-      const entry = { text: text.slice(0, 70), px, contrast: cr, need, color: cs.color };
+      const entry = {
+        text: text.slice(0, 70), px, contrast: cr, need, color: paint,
+        cls: String(typeof el.className === 'string' ? el.className : el.getAttribute('class') || '').slice(0, 400),
+        trail: (() => {
+          const parts = [];
+          let walk = el;
+          for (let i = 0; i < 4 && walk; i += 1) {
+            parts.push(String(walk.tagName || '').toLowerCase() + '.' + String(walk.className || '').slice(0, 400));
+            walk = walk.parentElement;
+          }
+          return parts;
+        })(),
+        bg: (() => { const c = bgOf(el); return 'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ')'; })(),
+      };
       if (cr < need && offenders.length < 40) offenders.push(entry);
       if (px < 13 && tiny.length < 40) tiny.push(entry);
     }
@@ -918,7 +935,296 @@ async function scenarioCompose() {
   return results;
 }
 
+async function scenarioVetting() {
+  // Design Vetting Sessions, driven like a user: start from the composer, answer rapidly with no
+  // assistant turn between answers, process, answer more, finish the spec, then use the panel.
+  const results = { schema: 1, scenario: 'vetting', steps: [], errors: [] };
+  const { app, page, kelwork, consoleErrors } = await launchApp();
+  const send = async (text, label) => {
+    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    await composer.click({ timeout: 15000 });
+    await composer.fill('');
+    await composer.type(text, { delay: 8 });
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1600);
+    const body = await page.evaluate(() => document.body.innerText || '');
+    const step = { label, text, tail: body.slice(-500) };
+    results.steps.push(step);
+    return body;
+  };
+  const waitFor = async (needle, timeoutMs, label) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const body = await page.evaluate(() => document.body.innerText || '');
+      if (body.includes(needle)) {
+        results.steps.push({ label, found: needle, ms: Date.now() - start });
+        return true;
+      }
+      await page.waitForTimeout(500);
+    }
+    results.steps.push({ label, found: needle, ms: -1, timedOut: true });
+    return false;
+  };
+  try {
+    await page.waitForTimeout(9000);
+    results.onboardingAtBoot = await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2000);
+
+    await send('start design vetting: Basketball matchup dashboard', 'start');
+    results.batchShown = await waitFor('Design vetting', 25000, 'batch-1-visible');
+    await shot(page, 'vetting-01-batch');
+
+    const answers = ['1: C', '2: A', '3: B', '4: D', '5: B', '6: A', '7: A', '8: C', '9: D', '10: B'];
+    for (const answer of answers) {
+      const body = await send(answer, 'answer-' + answer);
+      results.lastAnswerSawProgress = /Recorded: \d+ of \d+ recorded/.test(body);
+    }
+    results.allAnswersRecorded = await waitFor('Recorded: 10 of 12 recorded', 25000, 'all-answers-recorded');
+    results.answerProgressCount = await page.evaluate(
+      () => ((document.body.innerText || '').match(/Recorded: \d+ of \d+ recorded/g) || []).length
+    );
+    await shot(page, 'vetting-02-rapid-answers');
+
+    await send('process answers', 'process');
+    results.batch2Shown = await waitFor('Batch 2', 30000, 'batch-2-visible');
+    await shot(page, 'vetting-03-batch-2');
+
+    await send('19: B', 'answer-19');
+    let body = await send('view decisions', 'view-decisions');
+    results.decisionsSeen = body.includes('Decisions so far:');
+    await send('show greyboxes 19', 'greyboxes');
+    results.greyboxesSeen = await waitFor('greybox direction', 20000, 'greyboxes-generated');
+    await shot(page, 'vetting-04-greyboxes');
+
+    await send('finish spec now', 'finish');
+    results.specSaved = await waitFor('Spec snapshot saved', 25000, 'spec-saved');
+    await shot(page, 'vetting-05-spec-saved');
+
+    // The panel mirrors the same state.
+    const trigger = page.locator('text=Work & context').first();
+    if (await trigger.count()) {
+      await trigger.click();
+      await page.waitForTimeout(1200);
+      const vettingTab = page.locator('[role="tab"]:has-text("Vetting")').first();
+      results.panelTab = await vettingTab.count();
+      if (results.panelTab) {
+        await vettingTab.click();
+        await page.waitForTimeout(1500);
+        const panelText = await page.evaluate(() => document.body.innerText || '');
+        results.panelShowsTopic = panelText.includes('Basketball matchup dashboard');
+        results.panelShowsProgress = /recorded/.test(panelText);
+        results.panelShowsDecisions = panelText.includes('Decisions');
+        await shot(page, 'vetting-06-panel');
+        const preview = page.locator('button:has-text("Preview spec")').first();
+        if (await preview.count()) {
+          await preview.click();
+          await page.waitForTimeout(2000);
+          const afterPreview = await page.evaluate(() => document.body.innerText || '');
+          results.panelSpecPreview = afterPreview.includes('Design specification');
+          await shot(page, 'vetting-07-panel-spec');
+        }
+      }
+    }
+    results.consoleErrors = consoleErrors.slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot(page, 'vetting-error').catch(() => {});
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-vetting', results);
+  return results;
+}
+
+async function scenarioVettingLive() {
+  // Live vetting: the donor transcript streams, while the Vetting panel is Kel's own surface and
+  // reads engine state directly. The transcript is re-read after a reload to prove durability.
+  const results = { schema: 1, scenario: 'vetting-live', steps: [], errors: [] };
+  const { app, page, kelwork, consoleErrors } = await launchApp();
+  const send = async (text, label) => {
+    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    await composer.click({ timeout: 15000 });
+    await composer.fill('');
+    await composer.type(text, { delay: 6 });
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1400);
+    const body = await page.evaluate(() => document.body.innerText || '');
+    results.steps.push({ label, tail: body.slice(-400) });
+    return body;
+  };
+  const panelText = () => page.evaluate(() => document.body.innerText || '');
+  try {
+    await page.waitForTimeout(9000);
+    results.onboardingAtBoot = await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2000);
+
+    await send('start design vetting: Matchup center', 'start');
+    for (const answer of ['1: C', '2: A', '3: B', '4: D', '5: B', '6: A', '7: A', '8: C', '9: D', '10: B']) {
+      await send(answer, 'answer-' + answer);
+    }
+    await send('process answers', 'process');
+    await send('19: B', 'answer-19');
+    await send('finish spec now', 'finish');
+
+    const trigger = page.locator('text=Work & context').first();
+    if (await trigger.count()) {
+      await trigger.click();
+      await page.waitForTimeout(1200);
+      const vettingTab = page.locator('[role="tab"]:has-text("Vetting")').first();
+      results.panelTab = await vettingTab.count();
+      if (results.panelTab) {
+        await vettingTab.click();
+        await page.waitForTimeout(1800);
+        const panel = await panelText();
+        results.panelTopic = panel.includes('Matchup center');
+        results.panelState = /FINISHED/i.test(panel);
+        results.panelProgress = /recorded/i.test(panel);
+        results.panelDecisions = panel.includes('Decisions');
+        await shot(page, 'vetting-live-01-panel');
+        const preview = page.locator('button:has-text("Preview spec")').first();
+        if (await preview.count()) {
+          await preview.click();
+          await page.waitForTimeout(2500);
+          const after = await panelText();
+          results.panelSpec = after.includes('Design specification');
+          await shot(page, 'vetting-live-02-spec');
+        }
+      }
+    }
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(700);
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    await page.waitForTimeout(9000);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(3000);
+    const body = await page.evaluate(() => document.body.innerText || '');
+    results.transcriptRecordedLines = (body.match(/Recorded: \d+ of \d+ recorded/g) || []).length;
+    results.transcriptBatchShown = body.includes('Design vetting');
+    results.transcriptSpecSaved = body.includes('Spec snapshot saved');
+    results.transcriptSynthesis = body.includes('Synthesis');
+    await shot(page, 'vetting-live-03-transcript');
+    const frameTexts = [];
+    for (const frame of page.frames()) {
+      try {
+        const t = await frame.evaluate(() => (document.body ? document.body.innerText : ''));
+        if (t && t.length > 30) frameTexts.push(t);
+      } catch (e) { /* cross-frame reads can fail; skip */ }
+    }
+    const frameText = frameTexts.sort((a, b) => b.length - a.length)[0] || '';
+    results.frameCount = page.frames().length;
+    results.frameTextLength = frameText.length;
+    results.frameHasRecorded = frameText.includes('Recorded:');
+    results.frameHasBatch = frameText.includes('Design vetting');
+    results.frameHasSpec = frameText.includes('Spec snapshot');
+    results.consoleErrors = consoleErrors.slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot(page, 'vetting-live-error').catch(() => {});
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-vetting-live', results);
+  return results;
+}
+
+async function scenarioPeek() {
+  const results = { schema: 1, scenario: 'peek', probes: {}, errors: [] };
+  const { app, page, kelwork, consoleErrors } = await launchApp();
+  try {
+    await page.waitForTimeout(10000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(3000);
+    results.probes = await page.evaluate(() => {
+      const body = document.body.innerText || '';
+      const containers = Array.from(document.querySelectorAll('main, section, div'))
+        .map((el) => ({ cls: String(el.className || '').slice(0, 60), len: (el.innerText || '').length }))
+        .filter((entry) => entry.len > 200)
+        .sort((a, b) => b.len - a.len)
+        .slice(0, 12);
+      return {
+        bodyLength: body.length,
+        hasRecorded: body.includes('Recorded:'),
+        hasDesignVetting: body.includes('Design vetting'),
+        hasSpecSnapshot: body.includes('Spec snapshot'),
+        hasSynthesis: body.includes('Synthesis'),
+        markers: ['Recorded:', 'Design vetting', 'Spec snapshot', 'Synthesis', 'Matchup center']
+          .filter((needle) => body.includes(needle)),
+        containers
+      };
+    });
+    await shot(page, 'peek-01-guid');
+    const html = await page.content();
+    results.htmlLength = html.length;
+    results.htmlHasRecorded = html.includes('Recorded:');
+    results.htmlHasVetting = html.includes('Design vetting');
+    results.consoleErrors = consoleErrors.slice(0, 10);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-peek', results);
+  return results;
+}
+
+async function scenarioPaneldump() {
+  const results = { schema: 1, scenario: 'paneldump', apiResponses: [], errors: [] };
+  const { app, page, kelwork, consoleErrors } = await launchApp();
+  page.on('response', async (response) => {
+    if (response.url().includes('/api/vetting')) {
+      try {
+        results.apiResponses.push({ url: response.url(), body: (await response.text()).slice(0, 500) });
+      } catch (e) { /* body may be unavailable */ }
+    }
+  });
+  try {
+    await page.waitForTimeout(10000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2500);
+    const triggers = ['text=Work & context', '[title="Work & context"]', 'text=Work'];
+    for (const selector of triggers) {
+      const el = page.locator(selector).first();
+      if (await el.count()) {
+        try { await el.click({ timeout: 4000 }); results.trigger = selector; break; } catch (e) { /* try next */ }
+      }
+    }
+    await page.waitForTimeout(2500);
+    const tab = page.locator('[role="tab"]:has-text("Vetting")').first();
+    results.tabCount = await tab.count();
+    if (results.tabCount) {
+      await tab.click().catch((e) => { results.tabClickError = String(e).slice(0, 120); });
+      await page.waitForTimeout(2500);
+    }
+    results.dom = await page.evaluate(() => {
+      const drawer = document.querySelector('.arco-drawer');
+      const text = drawer ? drawer.innerText : '(no drawer)';
+      return {
+        drawerFound: !!drawer,
+        drawerText: text.slice(0, 700),
+        hasFinished: text.includes('FINISHED'),
+        hasTopic: text.includes('Matchup'),
+        hasRecorded: /recorded/.test(text),
+        hasDecisions: text.includes('Decisions'),
+        startForm: text.includes('Start vetting session')
+      };
+    });
+    await shot(page, 'paneldump-01');
+    results.consoleErrors = consoleErrors.slice(0, 10);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+    await shot(page, 'paneldump-error').catch(() => {});
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-paneldump', results);
+  return results;
+}
+
 async function scenarioSider() {
+
+
+
+
   const results = { schema: 1, scenario: 'sider', probes: [], errors: [] };
   const { app, page, kelwork, consoleErrors } = await launchApp();
   try {
@@ -998,6 +1304,10 @@ async function scenarioMaintext() {
     keyboard: scenarioKeyboard,
     readability: scenarioReadability,
     compose: scenarioCompose,
+    vetting: scenarioVetting,
+    'vetting-live': scenarioVettingLive,
+    peek: scenarioPeek,
+    paneldump: scenarioPaneldump,
     sider: scenarioSider,
     maintext: scenarioMaintext,
   };

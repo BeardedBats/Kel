@@ -203,6 +203,11 @@
   "selectedCount": "Selected {{count}}",
   "selectedSkills": "Selected skills",
   "aiAssistant": "AI Assistant",
+  "conversation": {
+    "workspace": {
+      "unnamedSpace": "Workspace"
+    }
+  },
   "kel": {
     "workContext": "Work & context",
     "conversation": "Conversation",

@@ -30,6 +30,11 @@ class ACPHostTests(unittest.TestCase):
                 self.reply(owner.state)
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                if self.path == '/api/vetting':
+                    # No vetting session exists for this conversation: the ingestion probe answers
+                    # 'none' and the prompt proceeds down the normal submission path.
+                    self.reply({'kind': 'none'})
+                    return
                 owner.requests.append((self.path, body))
                 if self.path == '/api/send':
                     # Keep one row per submission id; concurrent prompts share the engine.

@@ -433,7 +433,8 @@
       "terminal": "Terminal",
       "explorer": "File Explorer",
       "browser": "Browser"
-    }
+    },
+    "unnamedSpace": "Workspace"
   },
   "minimap": {
     "searchAria": "Search conversation",

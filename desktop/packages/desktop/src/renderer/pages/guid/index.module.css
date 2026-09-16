@@ -485,9 +485,22 @@
   animation: assistantOverflowPanelIn 0.16s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-:global([data-theme='dark']) .assistantSelectorInactive {
-  opacity: 1;
+/* Inactive assistant chips: readable in BOTH themes. `--aou-9` is redefined per theme
+   (light #262c41 / dark #e5e7f0); `!important` is required because Arco's .arco-btn-text
+   sets its own colour at the same specificity. Measured by the readability probe (JR-25). */
+.assistantSelectorInactive {
   color: var(--aou-9) !important;
+}
+
+.assistantSelectorInactive:hover {
+  color: var(--color-text-1) !important;
+}
+
+/* The selected chip has a solid background (--bg-base), so its label must be the strongest
+   text colour; Arco's .arco-btn-text overrides plain colour utilities at equal specificity,
+   hence !important (JR-25). */
+.assistantSelectorSelected {
+  color: var(--color-text-1) !important;
 }
 
 /* 底部快捷按钮：基础间距 + 安全区 */

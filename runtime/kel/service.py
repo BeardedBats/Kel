@@ -615,7 +615,74 @@ class Service:
         if path=='/api/diagnostics':
             from .diagnostics import Diagnostics
             return Diagnostics(self.store,ENGINE_VERSION).apply(data)
+        if path=='/api/vetting':return self._vetting_action(data)
         raise PolicyError('Unknown action')
+
+    def _vetting_action(self,data):
+        # Design Vetting Sessions. One ingestion service serves chat answers, panel actions,
+        # pasted text and direct callers; this layer only routes and persists the durable
+        # out-of-band messages (panel-driven start/process/finish) as conversation content.
+        from .vetting_session import Vetting
+        vetting=Vetting(self.store)
+        action=data.get('action')
+        conversation=data.get('conversation') or 'main'
+        if action=='start':
+            result=vetting.start(self._project_of(conversation),conversation,data.get('topic',''))
+            self.store.add_message(result['message'],'assistant',conversation)
+            result['panel']=vetting.panel(conversation=conversation)
+            return result
+        if action=='ingest_chat':
+            result=vetting.ingest_chat(conversation,data.get('text',''),source=data.get('source','chat'))
+            kind=result.get('kind');message=result.get('message') or ''
+            # Durable acknowledgments: the donor transcript renders stored engine messages, so the
+            # batch and each 'Recorded: n of m recorded.' line are written as conversation content
+            # (a lightweight progress state, never a synthesis or an assistant turn).
+            durable=(kind in ('started','ingested','proposal')
+                     or (kind=='control' and result.get('verb') in ('process','finish_spec')))
+            if durable and message:
+                self.store.add_message(message,'assistant',conversation)
+            return result
+        if action=='ingest':
+            result=vetting.ingest(data['session'],data.get('text',''),source=data.get('source','direct'))
+            return {'kind':'ingested','session_id':data['session'],'progress':result['progress'],
+                    'applied':result['applied']['applied'],'conflicts':result['conflicts_open'],
+                    'proposals':result['proposals'],'unmatched':result['unmatched']}
+        if action=='panel':
+            return vetting.panel(conversation=conversation,session_id=data.get('session'))
+        if action=='process':
+            result=vetting.process(data['session'])
+            self.store.add_message(result['message'],'assistant',conversation)
+            return result
+        if action=='finish':
+            result=vetting.finish(data['session'])
+            self.store.add_message(result['message'],'assistant',conversation)
+            return result
+        if action=='preview':
+            return {'markdown':vetting.preview(data['session'])}
+        if action=='resurface':
+            session=vetting.active(conversation)
+            if not session:
+                return {'message':''}
+            with contextlib.closing(self.store.connect()) as db:
+                questions=vetting._questions(db,session['id'])
+            return {'message':vetting._format_resurface(questions) if not self._vetting_all_answered(questions) else '',
+                    'progress':vetting._progress(questions)}
+        if action=='help':
+            return vetting.help(data['session'],data['question'],data.get('kind','explain'))
+        if action=='conflict':
+            return vetting.conflict_action(data['session'],data['conflict'],data['choice'])
+        if action=='greybox':
+            return vetting.greybox(data['session'],data['question'],action=data.get('mode','design'),
+                                   feedback_kind=data.get('feedback_kind',''),
+                                   greybox_id=data.get('greybox_id',''),note=data.get('note',''))
+        if action=='apply_pending':
+            return vetting.apply_pending(data['session'],accept=bool(data.get('accept',True)),
+                                         correction=data.get('correction',''))
+        raise PolicyError('Unknown vetting action')
+
+    def _vetting_all_answered(self,questions):
+        return all((q.get('answer') or {}).get('status') in ('ANSWERED','PARTIALLY_ANSWERED','SKIPPED','DEFERRED')
+                   for q in questions)
 
 
 def serve(root,port=0):
