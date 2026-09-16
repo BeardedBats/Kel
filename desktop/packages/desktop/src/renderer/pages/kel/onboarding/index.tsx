@@ -28,6 +28,17 @@ const STATUS_CHIP: Record<string, 'verified' | 'waiting' | 'uncertain' | 'failed
   not_installed: 'failed',
 };
 
+// Plain-language labels for provider states (the raw states stay on the Providers page).
+const STATUS_LABEL: Record<string, string> = {
+  healthy: 'ready',
+  quota: 'ready',
+  quota_not_reported: 'ready, usage not reported',
+  installed_not_authenticated: 'needs you to sign in',
+  degraded: 'limited right now',
+  unavailable: 'not available',
+  not_installed: 'not installed',
+};
+
 export default function KelOnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('Welcome');
@@ -69,7 +80,8 @@ export default function KelOnboardingPage() {
   const finish = useCallback(
     async (skipped: boolean) => {
       await configService.set('kel.onboardingCompleted_v1', true).catch((): undefined => undefined);
-      navigate(skipped ? '/guid' : '/work', { replace: true });
+      // Useful work within moments: setup ends in the chat composer, not on a browsing page.
+      navigate('/guid', { replace: true });
     },
     [navigate]
   );
@@ -102,11 +114,11 @@ export default function KelOnboardingPage() {
         {step === 'Welcome' && (
           <KelCard title='Kel runs on this machine'>
             <p className='kel-sub'>
-              Kel is a local work engine. Your projects, its knowledge about them, and every receipt
-              stay in your folders and in Kel's own data directory.
+              Kel is your assistant on this machine. What it learns about your projects, and every
+              receipt for work it does, stays in your folders and in Kel's own data directory.
             </p>
             <ul>
-              <li className='kel-meta'>Nothing leaves this machine except the model providers you choose.</li>
+              <li className='kel-meta'>Nothing leaves this machine except the model you connect.</li>
               <li className='kel-meta'>Kel works only inside the project you point it at.</li>
               <li className='kel-meta'>Every finished job leaves evidence you can inspect.</li>
             </ul>
@@ -115,7 +127,7 @@ export default function KelOnboardingPage() {
 
         {step === 'Providers' && (
           <KelCard
-            title='Model providers'
+            title='Connect a model'
             actions={
               <KelButton variant='secondary' onClick={() => navigate('/providers')}>
                 Open Providers
@@ -123,21 +135,21 @@ export default function KelOnboardingPage() {
             }
           >
             {providers.length === 0 ? (
-              <p className='kel-sub'>No provider is registered yet.</p>
+              <p className='kel-sub'>No model is connected yet.</p>
             ) : (
               <ul>
                 {providers.map((item) => (
                   <li key={item.provider} className='kel-meta'>
                     <span className='kel-strong'>{item.label}</span>{' '}
                     <KelStatusChip status={STATUS_CHIP[item.status] ?? 'queued'} />{' '}
-                    {`· ${item.status.replace(/_/g, ' ')} · ${item.auth_mode.replace(/_/g, ' ')}`}
+                    {`· ${STATUS_LABEL[item.status] ?? item.status.replace(/_/g, ' ')}`}
                   </li>
                 ))}
               </ul>
             )}
             <p className='kel-sub'>
-              Kel can be explored without a provider, but running a job needs one: a CLI subscription
-              session, or an API key kept in Windows' protected store.
+              Kel can be explored without one, but answering and running jobs need a model: a CLI
+              subscription, or an API key kept in Windows' protected store.
             </p>
           </KelCard>
         )}
@@ -145,7 +157,7 @@ export default function KelOnboardingPage() {
         {step === 'Project' && (
           <KelCard title='Where work happens'>
             <p className='kel-sub'>
-              {`Kel is currently pointed at ${project}. Nothing outside it is read or written unless you grant that scope explicitly.`}
+              {`Kel is pointed at ${project === 'default' ? 'General' : project}. Nothing outside it is read or written unless you say yes when Kel asks.`}
             </p>
             <p className='kel-meta'>
               Projects are records, not copies — Files stay where you keep them.
@@ -157,9 +169,9 @@ export default function KelOnboardingPage() {
           <>
             <KelCard title='How much Kel does on its own'>
               <p className='kel-sub'>
-                Kel works on its own after you approve a plan, and asks once when the work needs more
-                scope than that plan covered. Three answers are always available: allow once, allow for
-                this project, or deny.
+                Kel works on its own after you approve a plan, and asks you first when work needs to
+                reach outside what that plan covered. Three answers are always available: allow once,
+                allow for this project, or deny.
               </p>
               <p className='kel-meta'>
                 Some things are never automatic, and cannot be unlocked by Kel, by a role, or by
@@ -167,7 +179,7 @@ export default function KelOnboardingPage() {
               </p>
             </KelCard>
             {rules.length > 0 && (
-              <KelSection title='Locked guardrails (read-only)'>
+              <KelSection title='Rules that are always on'>
                 <ul>
                   {rules.map((rule) => (
                     <li key={rule.rule} className='kel-meta'>
@@ -175,24 +187,21 @@ export default function KelOnboardingPage() {
                     </li>
                   ))}
                 </ul>
-                {digest && <p className='kel-code'>{`guardrail digest ${digest.slice(0, 16)}`}</p>}
               </KelSection>
             )}
           </>
         )}
 
         {step === 'Ready' && (
-          <KelCard title='Ready'>
+          <KelCard title="You're set">
             <ul>
-              <li className='kel-meta'>{`Engine: ${engine || 'unknown'}`}</li>
+              <li className='kel-meta'>{`Kel ${engine || ''}`.trim()}</li>
               <li className='kel-meta'>
-                {`Providers registered: ${providers.length}${
-                  providers.some((item) => item.status === 'healthy')
-                    ? ' (one is healthy)'
-                    : ' (none healthy yet — open Providers when you are ready)'
-                }`}
+                {providers.some((item) => item.status === 'healthy' || item.status === 'quota')
+                  ? 'A model is connected.'
+                  : 'No model is connected yet — you can add one anytime in Settings › Providers.'}
               </li>
-              <li className='kel-meta'>{`Locked guardrails: ${rules.length > 0 ? 'loaded' : 'unknown'}`}</li>
+              <li className='kel-meta'>Safety rules: on</li>
             </ul>
             <p className='kel-sub'>
               Start in chat. Kel will turn your request into a plan, and you approve it before work

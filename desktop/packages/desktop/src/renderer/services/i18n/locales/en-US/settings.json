@@ -1337,7 +1337,7 @@
   "assistantAgentUnchecked": "The required agent has not been checked yet.",
   "assistantAgentMissing": "The required agent is not installed.",
   "assistantTeamUnsupported": "This assistant cannot be used in team mode right now.",
-  "webui.letButlerSetup": "Let the butler set it up",
+  "webui.letButlerSetup": "Set up secure remote access",
   "talkToButler": {
     "createViaChat": "Create via chat",
     "createManually": "Create manually",

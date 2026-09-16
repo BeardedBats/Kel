@@ -18,16 +18,29 @@ type PaletteItem = {
 };
 
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
-  { id: 'nav-work', label: 'Work', hint: 'job center', path: '/work' },
-  { id: 'nav-office', label: 'Team · Office', hint: 'live assignments', path: '/team/office' },
-  { id: 'nav-roster', label: 'Team · Roster', hint: 'role templates', path: '/team/roster' },
-  { id: 'nav-studio', label: 'Team · Studio', hint: 'role editor', path: '/team/studio' },
-  { id: 'nav-knowledge', label: 'Projects · Knowledge', hint: 'memory', path: '/projects/knowledge' },
+  { id: 'nav-work', label: 'Work', hint: 'jobs and what needs you', path: '/work' },
+  { id: 'nav-office', label: 'Team · Office', hint: 'who is working', path: '/team/office' },
+  { id: 'nav-roster', label: 'Team · Roster', hint: 'specialists', path: '/team/roster' },
+  { id: 'nav-studio', label: 'Team · Studio', hint: 'edit a specialist', path: '/team/studio' },
+  { id: 'nav-knowledge', label: 'Projects · Knowledge', hint: 'what Kel learned', path: '/projects/knowledge' },
   { id: 'nav-map', label: 'Projects · Map', hint: 'project map', path: '/projects/map' },
-  { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'library', path: '/projects/recipes' },
-  { id: 'nav-providers', label: 'Providers', hint: 'models and credentials', path: '/providers' },
-  { id: 'nav-autonomy', label: 'Autonomy', hint: 'leases and guardrails', path: '/autonomy' },
+  { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
+  { id: 'nav-providers', label: 'Providers', hint: 'connect a model', path: '/providers' },
+  { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
 ];
+
+// Plain-language job states for hints; the raw states stay on the Work page.
+const JOB_STATE_LABEL: Record<string, string> = {
+  QUEUED: 'queued',
+  READY: 'ready to run',
+  RUNNING: 'working',
+  WAITING_RESOURCE: 'waiting for a model',
+  AWAITING_USER: 'waiting on you',
+  PAUSED: 'paused',
+  BLOCKED: 'blocked by a safety rule',
+  CLOSED: 'finished',
+  CANCELLED: 'cancelled',
+};
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null;
@@ -69,7 +82,7 @@ const KelCommandPalette: React.FC = () => {
           id: `job-${job.id}`,
           group: 'Jobs',
           label: job.contract?.request?.slice(0, 60) ?? job.id,
-          hint: `${job.state}${job.verdict ? ` · ${job.verdict}` : ''}`,
+          hint: JOB_STATE_LABEL[job.state] ?? job.state.toLowerCase().replace(/_/g, ' '),
           run: () => navigate('/work'),
         });
       });
@@ -210,7 +223,7 @@ const KelCommandPalette: React.FC = () => {
         onClick={(event) => event.stopPropagation()}
       >
         <label className='kel-meta' htmlFor='kel-palette-input'>
-          {mode === 'search' ? 'Search work, knowledge, recipes and roles' : 'Run a command or jump to a surface'}
+          {mode === 'search' ? 'Search your work and knowledge' : 'Search or jump to…'}
         </label>
         <input
           id='kel-palette-input'
@@ -221,7 +234,7 @@ const KelCommandPalette: React.FC = () => {
           aria-expanded='true'
           aria-controls='kel-palette-list'
           aria-activedescendant={items[active] ? `kel-palette-${items[active].id}` : undefined}
-          placeholder={mode === 'search' ? 'Search…' : 'Type a command…'}
+          placeholder={mode === 'search' ? 'Search…' : 'Type to search…'}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onInputKeyDown}
@@ -234,7 +247,7 @@ const KelCommandPalette: React.FC = () => {
         >
           {loading && items.length === 0 && (
             <li className='kel-meta' style={{ padding: '8px 10px' }}>
-              Loading engine results…
+              Loading…
             </li>
           )}
           {!loading && items.length === 0 && (

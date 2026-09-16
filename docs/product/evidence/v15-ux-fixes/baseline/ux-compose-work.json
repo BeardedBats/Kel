@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scenario": "compose",
+  "message": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.",
+  "timeline": [
+    {
+      "ms": 1013,
+      "tail": "keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nAutomatic\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\n10:43\nProcessing...(0s)\nFiles\nChanges\nacp-temp-7b024f90",
+      "busy": true,
+      "stopButtons": []
+    },
+    {
+      "ms": 2025,
+      "tail": "keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nAutomatic\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\n10:43\nProcessing...(1s)\nFiles\nChanges\nacp-temp-7b024f90",
+      "busy": true,
+      "stopButtons": []
+    },
+    {
+      "ms": 3039,
+      "tail": "s me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nAutomatic\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\n10:43\nView Steps · 1\nKel work: WAITING_RESOURCE / UNCERTAINexecute\n10:43\nFiles\nChanges\nacp-temp-7b024f90",
+      "busy": false,
+      "stopButtons": []
+    }
+  ],
+  "errors": [],
+  "composer": [
+    {
+      "tag": "textarea",
+      "testid": "guid-input",
+      "placeholder": "Send a message, upload files, open a folder, or type / for commands...",
+      "ariaLabel": "",
+      "fontSize": "14px",
+      "valueLength": 0,
+      "rect": {
+        "x": 480,
+        "y": 392,
+        "w": 742,
+        "h": 44
+      },
+      "outer": "<textarea spellcheck=\"false\" data-testid=\"guid-input\" class=\"arco-textarea text-14px focus:b-none rounded-xl !bg-transparent !b-none !resize-none !py-0 !pe-0 !p"
+    }
+  ],
+  "typedText": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.",
+  "finalHash": "#/conversation/7b024f90",
+  "finalText": "Skip to main content\nK\nKel\nNew Chat\nWork\nTeam\nProjects\nProviders\nAutonomy\nDiagnostics\nProject conversations\n7c2c2250-291f-4f13-9c62-83edf8fe44f4\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nAutomatic\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\n10:43\nView Steps · 1\nKel work: WAITING_RESOURCE / UNCERTAINexecute\n10:43\nFiles\nChanges\nacp-temp-7b024f90",
+  "terms": {
+    "providers": {
+      "count": 1,
+      "sample": "ntent K Kel New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations 7"
+    },
+    "autonomy": {
+      "count": 1,
+      "sample": "l New Chat Work Team Projects Providers Autonomy Diagnostics Project conversations 7c2c2250-2"
+    },
+    "sandbox": {
+      "count": 3,
+      "sample": "d in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel,"
+    },
+    "agents": {
+      "count": 1,
+      "sample": "my keyboard Hey! How do I configure the agents inside this app? Work & context Settings Cre"
+    },
+    "acp": {
+      "count": 1,
+      "sample": "/ UNCERTAINexecute 10:43 Files Changes acp-temp-7b024f90"
+    }
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

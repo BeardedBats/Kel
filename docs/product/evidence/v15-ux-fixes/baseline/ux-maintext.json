@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "scenario": "maintext",
+  "pages": {
+    "/guid": {
+      "hash": "#/guid",
+      "mainText": "Hi, what's your plan for today?\n\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change."
+    },
+    "/work": {
+      "hash": "#/work",
+      "mainText": "Skip to main content\nWork\n\n0 jobs in this project · 0 waiting on you\n\nReload\nNo unfinished work in this project.\nJobs appear here as soon as Kel accepts a task, and they stay until they are verified or cancelled.\nContinuation\n1. fb26e510-5482-4827-8023-3b7657994985 \nQueued\nverdict: UNCERTAIN · durable state only — no hidden reasoning · Continue from chat (say “continue”, or pick a number) — Kel never resumes work in the background without you.\n2. 619294aa-90d3-40df-a08d-faf9743bb0a4 \nQueued\nverdict: UNCERTAIN · durable state only — no hidden reasoning · Continue from chat (say “continue”, or pick a number) — Kel never resumes work in the background without you.\nTeam assignments\nNo specialist has been assigned yet.\nKel assigns a specialist only when a milestone actually runs — there are never decorative workers."
+    },
+    "/providers": {
+      "hash": "#/providers",
+      "mainText": "Skip to main content\nProviders\n\n4 providers · 0 usable right now\n\nReload\nClaude (Claude Code)\nquota not reported\n\nNative CLI · subscription session\n\nCLI present\n\nModel\tCapabilities\nclaude-native\ttext · tools · edit · shell\nCodex\nunavailable\n\nNative CLI · subscription session\n\nCLI session present\n\nModel\tCapabilities\ncodex-native\ttext · tools · edit · shell\nAnthropic API\ninstalled not authenticated\nSet credential metadata\nRemove\n\nAPI · API key (billed per use) · https://api.anthropic.com\n\nAPI key needed\n\nModel\tCapabilities\nclaude-sonnet-4-6\ttext · vision · tools\nDeepSeek API\ninstalled not authenticated\nSet credential metadata\nRemove\n\nAPI · API key (billed per use) · https://api.deepseek.com/v1\n\nAPI key needed\n\nModel\tCapabilities\ndeepseek-chat\ttext · tools\ndeepseek-reasoner\ttext · tools\nReadiness preflight\n\nWhat Kel would use for a capability right now, and why — the engine records the fallback reason instead of guessing.\n\ntext\nvision\ntools\nedit\nshell\nprefer\nauto\nclaude-code\ncodex\ninternal\ndeepseek\nCheck readiness\nStore a provider credential (OS-backed)\n\nThe value is encrypted by the desktop main process with Windows DPAPI (Electron safeStorage ) and never reaches the engine's database, which keeps only the field names and a reference. No IPC returns the value to this window. Stored values are injected into provider runs from OS-backed storage at engine start — never into logs, exports, or the engine database. New values apply the next time Kel starts its engine.\n\nClaude (Claude Code)\nCodex\nAnthropic API\nDeepSeek API\nStore credential\n\nOS-backed storage available · stored: nothing yet\n\nCredential metadata (values are never stored here)\nNo Kel-owned credential metadata yet.\nThe engine stores the provider, the field names, and a reference — the value itself lives in the OS-backed store."
+    },
+    "/autonomy": {
+      "hash": "#/autonomy",
+      "mainText": "Skip to main content\nAutonomy\n\n1 active lease · 0 boundary requests waiting on you\n\nReload\nEmergency stop\n\nEmergency stop revokes every active lease and pauses all active or queued work; workers stop at their next cancellation check. It does not undo completed effects.\n\nCapability leases\nJob\tState\tReview\tExpires\tScope\tActions\nfb26e510-5482-4827-8023-3b7657994985\tactive\tkel-contract:fd697f6f5dfc43265eebf7b8445ba69b6dbc3eedaff5212d393ea8065cc54339\t0s ago\trepo: C:\\Users\\Nick\\Documents\\Kel Projects\\write-a-tiny-python-script-sum-py-in-1094 · root: C:\\Users\\Nick\\Documents\\Kel\tRevoke\nBoundary requests\nNothing needs a wider scope.\nKel asks here when work genuinely crosses outside the reviewed lease — once per scope, never per command.\nAsk the engine about a scope\n\nThe policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same boundary runs at the effect points that exist today — repository work, file application, and project creation — so this checker's verdict is what stops execution before anything runs.\n\nwrite\nrepo\nbrowser\ntool\ndestructive\nAsk the engine\nLocked guardrails · digest e666e7c59873\n\nThese rules are locked against roles, projects, repositories, and web content; the engine detects runtime modification of the rule set and refuses new work. Worker actions are checked against these rules on the execution path: locked action kinds, frozen releases, and system locations are denied before anything runs, and every decision is recorded.\n\nRule\tWhat it means\tCovered by test\nno-registry-write\tWindows Registry writes are refused; read-only inspection only when diagnosing.\tAUTO-BLOCK-REG\nno-screen-takeover\tAgents never move the mouse, type into the active desktop, or steal focus.\tAUTO-BLOCK-SYSTEM\nno-os-critical-write\tWindows, boot, EFI, partitions, firmware, drivers, BitLocker, and system restore are never modified.\tAUTO-BLOCK-SYSTEM\nno-security-weakening\tDefender, UAC, firewall, SmartScreen, TLS validation, VPN, proxy, DNS, and hosts are never weakened or bypassed.\tAUTO-BLOCK-SYSTEM\ncredential-boundary\tKel reads or writes only its own namespaced credential entries; unrelated secrets are never enumerated, exported, or logged.\tAUTO-CRED\nno-identity-change\tPasswords, MFA, recovery settings, and OS accounts are never changed.\tAUTO-BLOCK-SYSTEM\nno-covert-persistence\tNo services, scheduled tasks, startup entries, recorders, or remote-access agents are installed.\tAUTO-BLOCK-SYSTEM\nno-destructive-machine-op\tNo format, wipe, partition change, "
+    },
+    "/diagnostics": {
+      "hash": "#/diagnostics",
+      "mainText": "Skip to main content\nDiagnostics\n\nEngine 1.5.0 · 4 jobs · 2 runs · database integrity ok\n\nReload\nObserve now\nHealth\nMeasure\tValue\tNote\nDatabase integrity\tok\tPRAGMA integrity_check\nDatabase size\t23.5 MB\tmain file\nWrite-ahead log\t0 B\twal sidecar\nFree pages\t0 of 6021\t0% fragmented\nRuns past their fence\t0\tnone waiting\nAuthorization policy\tkel-authz-1.5\tALLOW 3\nCapability leases\tACTIVE 1\tcapability_leases by state\nSchema history\t9\tlatest: v15-authorization\n\nProblems: 2 recorded process(es) are no longer alive — database health is reported, not guessed.\n\nMeasured performance\nPhase\tDuration\tEngine\tWhen\nengine-start\t102.92 ms\t1.5.0\t22s ago\nengine-start\t106.85 ms\t1.5.0\t11m ago\nengine-start\t106.44 ms\t1.5.0\t13m ago\nengine-start\t100.95 ms\t1.5.0\t17m ago\nengine-start\t98.08 ms\t1.5.0\t19m ago\nengine-start\t95.99 ms\t1.5.0\t19m ago\nengine-start\t100.58 ms\t1.5.0\t21m ago\nengine-start\t101.21 ms\t1.5.0\t21m ago\nengine-start\t99.3 ms\t1.5.0\t22m ago\nengine-start\t107.73 ms\t1.5.0\t22m ago\nengine-start\t404.42 ms\t1.5.0\t40m ago\nengine-start\t378.23 ms\t1.4.1\t12h ago\n\nmeasured from recorded spans; phases not recorded are simply unknown\n\nProviders\nProvider\tFailures\tCircuit until\tQuota\tObserved\nclaude\t0\tclosed\tNot reported\t—\nclaude-code\t0\tclosed\tNot reported\t—\ncodex\t0\tclosed\t0% left\t39m ago\ncodex-code\t0\tclosed\t0% left\t39m ago\nProcess ownership\nRun\tPID\tAlive\tDeadline\tIdentity\n29804a1c-4da\t31600\tno — orphan candidate\tpast deadline\t134338621878088306\n8ff4615b-944\t59248\tno — orphan candidate\tpast deadline\t134338658922620166\nMaintenance\nPurge expired observations\nCompact database\nRetention\tDays kept\tWhat it applies to\nevents\t30\tobservations only — jobs, memories and approvals are never purged\nhealth_observations\t14\tobservations only — jobs, memories and approvals are never purged\nperformance_measurements\t30\tobservations only — jobs, memories and approvals are never purged\nprocess_observations\t7\tobservations only — jobs, memories and approvals are never purged\nprovider_observations\t30\tobservations only — jobs, memories and approvals are never purged\nstartup_spans\t14\tobservations only — jobs, memories and approvals are never purged\n\nCompaction writes a backup first, then vacuums; the receipt names both sizes.\n\nExport and issue report\nExport sanitized diagnostics\n\nThe export is built from an allowlist, not by filtering a dump: credentials, tokens and API keys, prompts, transcripts of unrelated conversations, personal files and environment dumps are excluded by construction.\n\nWrite local draft"
+    },
+    "/projects/knowledge": {
+      "hash": "#/projects/knowledge",
+      "mainText": "Skip to main content\nProjects\n\ndefault · 0 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\nKnowledge\nNo saved knowledge in this project yet.\nKel records what it learns while working — with its source and a trust score.\nConflicts\n\nNo conflicting knowledge for this project."
+    },
+    "/projects/map": {
+      "hash": "#/projects/map",
+      "mainText": "Skip to main content\nProjects\n\ndefault · 0 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\nProject map\nRefresh map\nNo map built yet.\nKel builds a map of the project from its own verified work.\nRefresh map"
+    },
+    "/projects/recipes": {
+      "hash": "#/projects/recipes",
+      "mainText": "Skip to main content\nProjects\n\ndefault · 0 knowledge records · map — · 5 recipes\n\nReload\nKnowledge\nMap\nRecipes\nRecipes\nRecipe\tSteps\tInputs\tSource\tDry run\nAudit and Repair\t—\t—\tbuiltin\tPreview (dry run)\nContinue Work\t—\t—\tbuiltin\tPreview (dry run)\nFix Bug\t—\t—\tbuiltin\tPreview (dry run)\nResearch Then Implement\t—\t—\tbuiltin\tPreview (dry run)\nShip Release\t—\t—\tbuiltin\tPreview (dry run)"
+    },
+    "/team/office": {
+      "hash": "#/team/office",
+      "mainText": "Skip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nOffice\nreal assignments only\nNo specialists are working right now.\nAssignments appear here as soon as Kel staffs a step of a real job.\nSeed the default roster"
+    },
+    "/team/roster": {
+      "hash": "#/team/roster",
+      "mainText": "Skip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n9 roles\nStrategy\nSolution Strategist\nv1 · 0 assignments\nOpen in Studio\nProduct\nResearch Specialist\nv1 · 0 assignments\nOpen in Studio\nUI/UX Expert\nv1 · 0 assignments\nOpen in Studio\nEngineering\nImplementation Engineer\nv1 · 0 assignments\nOpen in Studio\nVerification\nIndependent Reviewer\nv1 · 0 assignments\nOpen in Studio\nQA Engineer\nv1 · 0 assignments\nOpen in Studio\nSecurity Reviewer\nv1 · 0 assignments\nOpen in Studio\nDelivery\nDocumentation Specialist\nv1 · 0 assignments\nOpen in Studio\nRelease Engineer\nv1 · 0 assignments\nOpen in Studio"
+    },
+    "/team/studio": {
+      "hash": "#/team/studio",
+      "mainText": "Skip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nChoose a role to configure.\nStudio shows the structured instructions, tool policy, budget, and version history.\nGo to the roster"
+    },
+    "/settings/appearance": {
+      "hash": "#/settings/appearance",
+      "mainText": "Theme\nSelect or customize a theme\nAdd Theme\nLight\nDark\nFollow System\nFonts\nGlobal\nSystem default\nSystem default\n-\n14\n+\nReset\nChat\nSystem default\nSystem default\n-\n14\n+\nReset\nMarkdown\nSystem default\nSystem default\n-\n13\n+\nReset\nCode\nSystem default\nSystem default\n-\n12\n+\nReset\nScale\n-\n+\n95%\nReset zoom"
+    },
+    "/settings/system": {
+      "hash": "#/settings/system",
+      "mainText": "Language\nEnglish\nStart on Boot\nLaunch Kel automatically when you sign in to macOS or Windows.\nClose to Tray\nHardware Acceleration\nUse the GPU to render the UI. Disable if the app crashes on launch or graphics flicker.\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nKill idle agent processes after this duration to free memory\nmin\nPreview Size Limit (MB)\nText files larger than this open with a notice instead of content. Applies to newly opened tabs only.\nMB\nSave Uploads to Project Folder\nCross-conversation messages\nLet agents send messages to your other conversations. Turning this off also disables the @@ conversation mention in the input box.\nNotifications\nScheduled Task Completion\nWork Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\seeded3\\kelwork\\host\\aionui\nLog Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\seeded3\\kelwork\\host\\logs\nSpeech to Text\nConfigure the voice input provider used by the chat box on desktop and WebUI.\nIn-app browser\nLet the agent use the in-app browser\nWhen on, the agent can open pages, click and fill in forms in the in-app browser for you — for example to look something up or complete a flow on a website. It can only drive that one browser view: it cannot reach the AionUi interface itself, and it never opens a separate Chrome window. When off, the browser still works for you; only the agent loses access.\nClear browsing data\nSigns out of every site the browser is logged into and clears its cache. Open browser tabs take effect after a reload.\nClear"
+    },
+    "/settings/webui": {
+      "hash": "#/settings/webui",
+      "mainText": "WebUI\n\nUse Kel as your \"24/7 Remote Assistant\" - arrange tasks from any remote device, anytime, anywhere.\n\n1\nEnable WebUI\n2\nAccess URL\n3\nAllow Remote Access\nEnable WebUI so your phone or remote browser can access Kel.\nEnable WebUI\nAllow Remote Access\nUse remote software/server for secure remote access Let the butler set it up\nLogin Info\nUsername:\nadmin\nInitial Password:\n******"
+    },
+    "/settings/about": {
+      "hash": "#/settings/about",
+      "mainText": "Kel\nOne desktop. Your AI work engine.\nv1.5.0\nCheck for updates\nInclude prerelease/dev builds\nHelp Documentation\nUpdate Log\nReport Issue\nContact Me\nOfficial Website"
+    },
+    "/settings/archived": {
+      "hash": "#/settings/archived",
+      "mainText": "Archived conversations\nNo archived items"
+    }
+  },
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

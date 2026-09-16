@@ -19,6 +19,7 @@ import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/componen
 import AssistantSelectionArea from './components/AssistantSelectionArea';
 import GuidActionRow from './components/GuidActionRow';
 import GuidInputCard from './components/GuidInputCard';
+import KelProviderNotice from './components/KelProviderNotice';
 import GuidModelSelector from './components/GuidModelSelector';
 import FeedbackReportModal from '@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
@@ -664,6 +665,8 @@ const GuidPage: React.FC = () => {
           <div className={styles.heroHeader}>
             <p className='text-2xl font-semibold mb-0 text-t-primary text-center'>{t('conversation.welcome.title')}</p>
           </div>
+
+          <KelProviderNotice />
 
           <AssistantSelectionArea
             selectedAssistantId={agentSelection.selectedAssistantId}

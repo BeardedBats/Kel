@@ -1,0 +1,496 @@
+{
+  "schema": 1,
+  "scenario": "keyboard",
+  "stops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Team",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Providers",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Autonomy",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 271,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Diagnostics",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 307,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Badge chat",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 425,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "status",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 494,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Hey! I wanted to test this out. How far along are we?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 563,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Hey! What fonts are you using?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 633,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 669,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "I want to create a little app that allows me to control my microphone'",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 705,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "I want to create a little app that allows me to control my microphone'",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 741,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "I want to create a little app that allows me to control my microphone'",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 777,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Hey! How do I configure the agents inside this app?",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 783,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work & context",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "rgb(95, 95, 96) 0px 0px 0px 2px",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Settings",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "workStops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 154,
+        "h": 40
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Reload",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1331,
+        "y": 125,
+        "w": 77,
+        "h": 34
+      }
+    },
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Back",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 1px rgb(50, 165, 126)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Team",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Providers",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Autonomy",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 271,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Diagnostics",
+      "outline": "solid 2px rgb(47, 163, 124)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 307,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "errors": [],
+  "afterSkipEnter": {
+    "active": "BUTTON",
+    "hash": "#/guid"
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

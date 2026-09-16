@@ -1,0 +1,283 @@
+{
+  "schema": 1,
+  "scenario": "readability",
+  "pages": {
+    "guid": {
+      "histogram": {
+        "12": 9,
+        "13": 116,
+        "14": 1094,
+        "16": 94,
+        "21": 31,
+        "48": 1
+      },
+      "offenders": [
+        {
+          "text": "K",
+          "px": 48,
+          "contrast": 1,
+          "need": 3,
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "Kel",
+          "px": 13,
+          "contrast": 2.72,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)"
+        }
+      ],
+      "tiny": [
+        {
+          "text": "Automatic",
+          "px": 12,
+          "contrast": 10.06,
+          "need": 4.5,
+          "color": "rgb(206, 211, 218)"
+        }
+      ]
+    },
+    "work": {
+      "histogram": {
+        "12": 220,
+        "14": 1101,
+        "16": 250,
+        "24": 35,
+        "32": 4,
+        "48": 1
+      },
+      "offenders": [
+        {
+          "text": "K",
+          "px": 48,
+          "contrast": 1,
+          "need": 3,
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "tiny": [
+        {
+          "text": "not verified yet ·",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "To continue, reply “continue” (or pick a number) in the chat — Kel nev",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "not verified yet ·",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "To continue, reply “continue” (or pick a number) in the chat — Kel nev",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        }
+      ]
+    },
+    "projects-knowledge": {
+      "histogram": {
+        "12": 42,
+        "14": 1108,
+        "16": 168,
+        "24": 18,
+        "32": 8,
+        "48": 1
+      },
+      "offenders": [
+        {
+          "text": "K",
+          "px": 48,
+          "contrast": 1,
+          "need": 3,
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "tiny": [
+        {
+          "text": "No conflicting knowledge for this project.",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        }
+      ]
+    },
+    "providers": {
+      "histogram": {
+        "12": 280,
+        "14": 1404,
+        "16": 878,
+        "24": 158,
+        "32": 9,
+        "48": 1
+      },
+      "offenders": [
+        {
+          "text": "K",
+          "px": 48,
+          "contrast": 1,
+          "need": 3,
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "tiny": [
+        {
+          "text": "CLI present",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "text · tools · edit · shell",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "CLI session present",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "text · tools · edit · shell",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "API key needed",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "text · vision · tools",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "API key needed",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 7.69,
+          "need": 4.5,
+          "color": "rgb(169, 182, 198)"
+        },
+        {
+          "text": "text · tools",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "text · tools",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "prefer",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        },
+        {
+          "text": "OS-backed storage available · stored: nothing yet",
+          "px": 12,
+          "contrast": 4.99,
+          "need": 4.5,
+          "color": "rgb(125, 139, 158)"
+        }
+      ]
+    },
+    "settings-appearance": {
+      "histogram": {},
+      "offenders": [],
+      "tiny": []
+    }
+  },
+  "errors": [],
+  "consoleErrors": [
+    "TypeError: Cannot read properties of undefined (reading 'id')"
+  ],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

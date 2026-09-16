@@ -1,0 +1,1160 @@
+{
+  "schema": 1,
+  "scenario": "first-run",
+  "steps": [],
+  "errors": [],
+  "timeline": [
+    {
+      "ms": 3808,
+      "hash": ""
+    },
+    {
+      "ms": 4873,
+      "hash": "#/onboarding"
+    }
+  ],
+  "timeToComposerBeforeOnboardingMs": null,
+  "hashAtBoot": "#/onboarding",
+  "title": "Kel",
+  "bodyText": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is your assistant on this machine. What it learns about your projects, and every receipt for work it does, stays in your folders and in Kel's own data directory.\n\nNothing leaves this machine except the model you connect.\nKel works only inside the project you point it at.\nEvery finished job leaves evidence you can inspect.\nNext",
+  "sider": [
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "name": "Collapse",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Search messages",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Back",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Forward",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "New Chat",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Projects",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Permissions",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work & context",
+      "tag": "button",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(90, 98, 112)",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "name": "Settings",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -69,
+        "w": 154,
+        "h": 40
+      }
+    }
+  ],
+  "composer": [],
+  "onboarding": {
+    "steps": [
+      {
+        "heading": [
+          "Set up Kel",
+          "Kel runs on this machine"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 1 of 5 · Welcome\n\nSkip setup\nKel runs on this machine\n\nKel is your assistant on this machine. What it learns about your projects, and every receipt for work it does, stays in your folders and in Kel's own data directory.\n\nNothing leaves this machine except the model you connect.\nKel works only inside the project you point it at.\nEvery finished job leaves evidence you can inspect.\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Permissions",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 16246,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "Connect a model"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 2 of 5 · Providers\n\nSkip setup\nConnect a model\nOpen Providers\nClaude (Claude Code) \nQueued · ready, usage not reported\nCodex \nQueued · ready, usage not reported\nAnthropic API \nWaiting on you · needs you to sign in\nDeepSeek API \nWaiting on you · needs you to sign in\n\nKel can be explored without one, but answering and running jobs need a model: a CLI subscription, or an API key kept in Windows' protected store.\n\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Permissions",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Open Providers",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 17268,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "Where work happens"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 3 of 5 · Project\n\nSkip setup\nWhere work happens\n\nKel is pointed at General. Nothing outside it is read or written unless you say yes when Kel asks.\n\nProjects are records, not copies — Files stay where you keep them.\n\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Permissions",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 18284,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "How much Kel does on its own",
+          "Rules that are always on"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 4 of 5 · Autonomy\n\nSkip setup\nHow much Kel does on its own\n\nKel works on its own after you approve a plan, and asks you first when work needs to reach outside what that plan covered. Three answers are always available: allow once, allow for this project, or deny.\n\nSome things are never automatic, and cannot be unlocked by Kel, by a role, or by anything written in a repository.\n\nRules that are always on\nno-registry-write — Windows Registry writes are refused; read-only inspection only when diagnosing.\nno-screen-takeover — Agents never move the mouse, type into the active desktop, or steal focus.\nno-os-critical-write — Windows, boot, EFI, partitions, firmware, drivers, BitLocker, and system restore are never modified.\nno-security-weakening — Defender, UAC, firewall, SmartScreen, TLS validation, VPN, proxy, DNS, and hosts are never weakened or bypassed.\ncredential-boundary — Kel reads or writes only its own namespaced credential entries; unrelated secrets are never enumerated, exported, or logged.\nno-identity-change — Passwords, MFA, recovery settings, and OS accounts are never changed.\nBack\nNext",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Permissions",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Next",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 19288,
+        "skipOffered": true
+      },
+      {
+        "heading": [
+          "Set up Kel",
+          "You're set"
+        ],
+        "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\nSkip to main content\nSet up Kel\n\nStep 5 of 5 · Ready\n\nSkip setup\nYou're set\nKel 1.5.0\nNo model is connected yet — you can add one anytime in Settings › Providers.\nSafety rules: on\n\nStart in chat. Kel will turn your request into a plan, and you approve it before work begins.\n\nBack\nStart using Kel",
+        "buttons": [
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Collapse",
+            "disabled": false
+          },
+          {
+            "name": "Search messages",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": true
+          },
+          {
+            "name": "Forward",
+            "disabled": true
+          },
+          {
+            "name": "Minimize",
+            "disabled": false
+          },
+          {
+            "name": "Maximize",
+            "disabled": false
+          },
+          {
+            "name": "Close",
+            "disabled": false
+          },
+          {
+            "name": "New Chat",
+            "disabled": false
+          },
+          {
+            "name": "Work",
+            "disabled": false
+          },
+          {
+            "name": "Projects",
+            "disabled": false
+          },
+          {
+            "name": "Permissions",
+            "disabled": false
+          },
+          {
+            "name": "Work & context",
+            "disabled": false
+          },
+          {
+            "name": "Settings",
+            "disabled": false
+          },
+          {
+            "name": "Skip to main content",
+            "disabled": false
+          },
+          {
+            "name": "Skip setup",
+            "disabled": false
+          },
+          {
+            "name": "Back",
+            "disabled": false
+          },
+          {
+            "name": "Start using Kel",
+            "disabled": false
+          }
+        ],
+        "hash": "#/onboarding",
+        "atMs": 20276,
+        "skipOffered": true
+      }
+    ],
+    "forwardClicks": 5,
+    "finishedHash": "#/guid",
+    "totalMs": 21270
+  },
+  "timeToComposerMs": 21271,
+  "hashAfterOnboarding": "#/guid",
+  "landingBody": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nNo chat history\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "landingComposer": [
+    {
+      "tag": "textarea",
+      "testid": "guid-input",
+      "placeholder": "Send a|",
+      "ariaLabel": "",
+      "fontSize": "14px",
+      "valueLength": 0,
+      "rect": {
+        "x": 480,
+        "y": 449,
+        "w": 742,
+        "h": 44
+      },
+      "outer": "<textarea spellcheck=\"false\" data-testid=\"guid-input\" class=\"arco-textarea text-14px focus:b-none rounded-xl !bg-transparent !b-none !resize-none !py-0 !pe-0 !p"
+    }
+  ],
+  "landingPlaceholderSamples": [
+    "Send a message, upload files, open a folder, or ty|",
+    "Send a message, upload files, open a folder,|",
+    "Send a message, upload files, open a |"
+  ],
+  "landingInteractives": [
+    {
+      "tag": "a",
+      "role": "",
+      "type": "",
+      "name": "Skip to main content",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      },
+      "cls": "kel-skip"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Collapse",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Search messages",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Back",
+      "disabled": true,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Forward",
+      "disabled": true,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      },
+      "cls": "app-titlebar__button app-titlebar__button--nav"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Minimize",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Maximize",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Close",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "cls": "app-window-controls__button app-window-controls__button--close"
+    },
+    {
+      "tag": "div",
+      "role": "button",
+      "type": "",
+      "name": "New Chat",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      },
+      "cls": "_newChatTrigger_14ap0_3 h-34px flex-1 flex items-center justify-start gap-8px ps"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Work",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Projects",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Permissions",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13.3333px",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "box-border h-34px w-full flex items-center cursor-pointer rd-8px transition-colo"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Work & context",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square arco-btn-long"
+    },
+    {
+      "tag": "div",
+      "role": "button",
+      "type": "",
+      "name": "Settings",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      },
+      "cls": "group h-34px flex items-center rd-0.5rem cursor-pointer transition-colors flex-1"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Open Providers",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 1070,
+        "y": 287,
+        "w": 140,
+        "h": 34
+      },
+      "cls": "kel-btn kel-btn--primary"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Kel",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "13px",
+      "rect": {
+        "x": 816,
+        "y": 377,
+        "w": 70,
+        "h": 36
+      },
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square !inline-flex "
+    },
+    {
+      "tag": "textarea",
+      "role": "",
+      "type": "",
+      "name": "Send a message, upload files, open a folder, or type / fo|",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 480,
+        "y": 449,
+        "w": 742,
+        "h": 44
+      },
+      "cls": "arco-textarea text-14px focus:b-none rounded-xl !bg-transparent !b-none !resize-"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 480,
+        "y": 505,
+        "w": 32,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-secondary arco-btn-size-default arco-btn-shape-circle arco-btn"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 1190,
+        "y": 505,
+        "w": 32,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-primary arco-btn-size-default arco-btn-shape-circle arco-btn-i"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "",
+      "name": "Work in a project",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "14px",
+      "rect": {
+        "x": 481,
+        "y": 556,
+        "w": 145,
+        "h": 22
+      },
+      "cls": "_workspaceEmptyBtn_avs43_149"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Explain this project in plain words.",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "12.5px",
+      "rect": {
+        "x": 487,
+        "y": 636,
+        "w": 768,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square group !h-auto"
+    },
+    {
+      "tag": "button",
+      "role": "",
+      "type": "button",
+      "name": "Review this project and suggest the next useful change.",
+      "disabled": false,
+      "checked": null,
+      "tabIndex": 0,
+      "fontSize": "12.5px",
+      "rect": {
+        "x": 487,
+        "y": 676,
+        "w": 768,
+        "h": 32
+      },
+      "cls": "arco-btn arco-btn-text arco-btn-size-default arco-btn-shape-square group !h-auto"
+    }
+  ],
+  "landingSider": [
+    {
+      "name": "Skip to main content",
+      "tag": "a",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(20, 22, 26)",
+      "rect": {
+        "x": 8,
+        "y": -68,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "name": "Collapse",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Search messages",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Back",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "Forward",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 124,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "name": "New Chat",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Projects",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Permissions",
+      "tag": "button",
+      "current": "",
+      "fontSize": "13.3333px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "name": "Work & context",
+      "tag": "button",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(90, 98, 112)",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "name": "Settings",
+      "tag": "div",
+      "current": "",
+      "fontSize": "14px",
+      "color": "rgb(0, 0, 0)",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "newChat": {
+    "clicked": false,
+    "msToComposer": null
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

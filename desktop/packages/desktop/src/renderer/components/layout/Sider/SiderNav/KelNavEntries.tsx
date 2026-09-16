@@ -1,22 +1,21 @@
 /**
- * Kel navigation entries — Work and Team, per the V1.4 information architecture
- * (docs/v1.4/KEL_V1.4_UX_SPEC.md §1). Rendered in the fixed nav slot above the scrollable
- * history area. Real buttons, Kel labels, active state from the route.
+ * Kel navigation entries — the primary nav is only the places a user *does* something
+ * (Work, Projects) plus the two review surfaces that unblock them (Permissions).
+ * Configuration surfaces (Providers, Team, Diagnostics) live in Settings.
+ * Rendered in the fixed nav slot above the scrollable history area. Real buttons, Kel labels,
+ * active state from the route.
  */
 import React from 'react';
 import { Tooltip } from '@arco-design/web-react';
-import { Folder, ListView, Lock, Peoples, Setting, Stethoscope } from '@icon-park/react';
+import { Folder, ListView, Lock } from '@icon-park/react';
 import classNames from 'classnames';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 
 const ENTRIES = [
   { id: 'work', path: '/work', label: 'Work', Icon: ListView },
-  { id: 'team', path: '/team/office', label: 'Team', Icon: Peoples },
   { id: 'projects', path: '/projects', label: 'Projects', Icon: Folder },
-  { id: 'providers', path: '/providers', label: 'Providers', Icon: Setting },
-  { id: 'autonomy', path: '/autonomy', label: 'Autonomy', Icon: Lock },
-  { id: 'diagnostics', path: '/diagnostics', label: 'Diagnostics', Icon: Stethoscope },
+  { id: 'autonomy', path: '/autonomy', label: 'Permissions', Icon: Lock },
 ] as const;
 
 const KelNavEntries: React.FC<{
