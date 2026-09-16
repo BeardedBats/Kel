@@ -2,13 +2,13 @@
 
 Continuation record for the V1.5 program. Read this first when work resumes, then `00_STATUS.md`.
 
-## Position (continuing turn 2026-09-16)
+## Position (turn 2026-09-16, continuing)
 
-- `main` carries **`b1f9aa5`** (increment 1, G1). The **G2 completion pass** is in the working tree
-  (commit follows the closure review): effect-path inventory (`02A`), side-door closures, 25/25
-  charter cases, restart/resume + parallel-isolation proofs.
-- Full suite **418 passed + 10 subtests** (43-test adversarial suite); zero regressions from the
-  375+10 baseline.
+- Commits on `main`: `b1f9aa5` (G1), `d0c1990` (record), `5ed6e1d` (G2 complete). **G3** is in the
+  working tree (commit follows).
+- Gates: G0 verified · G1 ✓ · G2 ✓ · G3 closed (role snapshots + tool-class enforcement) · next G4.
+- Full suite **423 passed + 10 subtests** (43-test authorization suite + 5-test roles suite); zero
+  regressions.
 - Frozen releases remain untouched and verify 3/3.
 
 ## What landed (files)
@@ -27,20 +27,15 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. (this pass) closure review recorded; commit increment 2 (`feat(v1.5): complete G2 — effect-path
-   coverage, side-door closures, 25/25 charter cases`); adjust the gate board if the review says so.
-2. G3 — roles / leases / boundary-expansion completion: decide where assignments come from and wire
-   role attachment; native-adapter tool-class enforcement; record decisions. Leases and expansion
-   are already end-to-end.
-3. G4 — credentials + provider runtime: real injection (secure store → per-run env only; never
-   persisted/logged/exported), leak-detection suite, provider audit (WS8), and the WSL setup
-   credential propagation recorded in `02A` row 28.
-4. G5–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
+1. Commit G3; then G4 — credentials + provider runtime (the largest remaining engine task): real
+   injection (secure store → per-run env only; never persisted/logged/exported), leak-detection
+   suite, provider audit (WS8), and the WSL setup credential propagation (`02A` row 28).
+2. G5–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
-5. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired
+3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired
    `test_v141_claims.py` update), decisions surface, Work Center rows, provider settings,
    performance surfaces.
-6. Release: bump `ENGINE_VERSION` to `1.5.0` at G13; packaging hygiene (WS23); freeze via
+4. Release: bump `ENGINE_VERSION` to `1.5.0` at G13; packaging hygiene (WS23); freeze via
    `scripts/freeze-release.ps1`; verify + smoke; tag; release record.
 
 ## Commands and guardrails

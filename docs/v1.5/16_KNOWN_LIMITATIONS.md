@@ -10,8 +10,9 @@ Status: **working** — kept current; nothing is removed without evidence.
   future caller already passes the gate.
 - `no-screen-takeover` and `firefox-only` remain checker-level rules: no current action family
   synthesizes input or drives a browser (G2 review decision: gate or truthful scope statement).
-- Role tool policy applies when a run carries an assigned role; automatic role attachment to every
-  run is a later G3 step.
+- Role snapshots are attached to every run at claim time, and enforcement reads the frozen
+  snapshot; roles only narrow (lease and guardrails always apply). Live role edits govern ad-hoc
+  intents that pass a role directly and apply to new runs, never retroactively to a frozen one.
 - The desktop Autonomy page copy still carries V1.4.1 "not yet" wording; it must be corrected
   before release (G7).
 
