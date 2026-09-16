@@ -30,7 +30,7 @@ export const showAndFocusMainWindow = (window: BrowserWindow): void => {
   // the window actually gains focus.
   setTimeout(() => {
     if (!window.isDestroyed() && !window.isFocused()) {
-      console.log('[AionUi] focus was denied (foreground lock); flashing taskbar to request attention');
+      console.log('[Kel] focus was denied (foreground lock); flashing taskbar to request attention');
       window.flashFrame(true);
       window.once('focus', () => {
         if (!window.isDestroyed()) {

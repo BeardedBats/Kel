@@ -132,7 +132,7 @@ export default function KelAutonomyPage() {
             {leases.length === 0 ? (
               <KelEmpty
                 title="No lease has been issued in this project."
-                why="A lease is created only after a reviewed plan is approved and records the scope you granted. Enforcing that scope on the worker execution path is not yet implemented (deferred — see docs/v1.4.1)."
+                why="A lease is created only after a reviewed plan is approved and records the scope you granted. Kel enforces that scope on the worker execution path: a worker cannot start, and a change cannot be applied, outside it — anything else comes back to you as one boundary request."
               />
             ) : (
               <KelTable
@@ -278,10 +278,10 @@ export default function KelAutonomyPage() {
         {rules.length > 0 && (
           <KelSection title={`Locked guardrails · digest ${digest.slice(0, 12)}`}>
             <p className="kel-sub">
-              These rules are locked against roles, projects, repositories, and web content, and the engine
-              detects runtime modification of the rule set and refuses new work. Blocking worker actions
-              against these rules (execution-path enforcement) is not yet implemented — deferred (see
-              docs/v1.4.1).
+              These rules are locked against roles, projects, repositories, and web content; the engine
+              detects runtime modification of the rule set and refuses new work. Worker actions are checked
+              against these rules on the execution path: locked action kinds, frozen releases, and system
+              locations are denied before anything runs, and every decision is recorded.
             </p>
             <KelTable
               head={['Rule', 'What it means', 'Covered by test']}

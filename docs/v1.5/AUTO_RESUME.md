@@ -5,11 +5,10 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 ## Position (turn 2026-09-16, continuing)
 
 - Commits on `main`: `b1f9aa5` (G1), `d0c1990`, `5ed6e1d` (G2), `f12bff6` (G3), `439de12` (G4),
-  `7e60203` (G5). **G6** is in the working tree (commit follows).
-- Gates: G0 ✓ · G1 ✓ · G2 ✓ · G3 ✓ · G4 ✓ · G5 ✓ · G6 closed (physical forget purge + packet
-  lifecycle probes; audits `05`–`07`) · next G7.
-- Full suite **438 passed + 10 subtests** (43 authorization + 5 roles + 6 credentials + 5
-  completion + 4 memory); zero regressions.
+  `7e60203` (G5), `6a8e593` (G6). **G7** is in the working tree (commit follows).
+- Gates: G0 ✓ · G1 ✓ · G2 ✓ · G3 ✓ · G4 ✓ · G5 ✓ · G6 ✓ · G7 closed (donor sunset + copy truth +
+  claims re-pin) · next G8 (starts with the carried desktop `tsc` blocker).
+- Full suite **438 passed + 10 subtests**; zero regressions.
 - Frozen releases remain untouched and verify 3/3.
 
 ## What landed (files)
@@ -32,14 +31,15 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 | `runtime/tests/test_v15_completion.py` | G5 — claims + escalation outcomes (5 tests) |
 | `runtime/kel/memory.py`, `core.py` (G6) | physical forget purge (`secure_delete`, FTS merge, WAL checkpoint) |
 | `runtime/tests/test_v15_memory_packets.py` | G6 — packet lifecycle probes (4 tests) |
+| `desktop/src` (G7) | donor sweep: `[AionUi]`→`[Kel]` logs ×21 files; tray, notification, app-name, `X-Title`, updater, browser copy; Autonomy copy with claims re-pin |
 | `docs/v1.5/*` | status board, authorization model, **effect-path matrix `02A`**, ledger classification, security matrix, test matrix, skeletons |
 
 ## Next steps, in order
 
-1. Commit G6; then G7 — donor sunset / default-chat purity / UX truthfulness: correct the Autonomy
-   page copy (with the paired `test_v141_claims.py` update), fix tray tooltip + notification title
-   + `[AionUi]` logs, and carry the ledger desktop surfaces with the desktop program; then G8,
-   which includes the desktop `tsc --noEmit` baseline fix (carried release blocker).
+1. Commit G7; then G8 — diagnostics / performance / packaging, starting with the carried release
+   blocker: baseline-and-fix the desktop `tsc --noEmit` errors (or re-scope with recorded evidence
+   — never ship unexamined), add authorization/provider diagnostics surfaces, measure performance
+   with a recorded basis, and complete the WS23 packaging-hygiene items. Then G9–G13.
 2. G6–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
 3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired
@@ -55,6 +55,6 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 - Frozen verify: `powershell -ExecutionPolicy Bypass -File scripts/verify-release.ps1 -ReleaseDir
   "<dir>" -Manifest "<dir>/SHA256Sums.txt.txt"` (expect 3/3).
 - Frozen releases are immutable; never edit `docs/v1.4*` (historical record).
-- `runtime/tests/test_v141_claims.py` pins V1.4.1-era phrases, including desktop copy that says the
-  engine is "not yet" wired; when G7 corrects the copy, update that test in the same change.
+- `runtime/tests/test_v141_claims.py` pins shipped UI copy; both UI pins were re-anchored in
+  G4 (injection) and G7 (enforcement). Any future copy edit must update the pin in the same change.
 - Keep bash tool commands under ~9 KB — longer inputs are truncated mid-file.
