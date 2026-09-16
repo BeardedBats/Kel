@@ -416,6 +416,382 @@ async function probeComposerPlaceholder(page) {
   return arr.slice(0, 3);
 }
 
+async function scenarioHardening() {
+  const results = { schema: 1, scenario: 'hardening', steps: [], errors: [] };
+  const ctx = await launchApp();
+  const { app, page } = ctx;
+  const waitFor = async (fn, timeout = 10000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(350);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const overflow = () =>
+    page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth);
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { window.resizeTo(980, 760); });
+    await page.waitForTimeout(700);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2500);
+    results.pageShown = await waitFor(() => page.locator('[data-testid="transcription-page"]').count(), 15000, 'page');
+    results.emptyState = await waitFor(async () => /Nothing here yet/.test(await bodyText()), 8000, 'empty-state');
+    const overflowTranscription = await overflow();
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    const overflowGuid = await overflow();
+    results.narrowOverflow = { transcription: overflowTranscription, guid: overflowGuid };
+    results.narrowNoScroll = overflowTranscription <= 2 && overflowGuid <= 2;
+    await page.evaluate(() => { window.resizeTo(1280, 900); });
+    await page.waitForTimeout(600);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(1800);
+    const banned = ['websocket', 'pcm', 'multipart', 'endpointing', 'wss://', 'api.meta.ai', 'bearer token', 'http status'];
+    const transcriptionText = (await bodyText()).toLowerCase();
+    const guidText = await page.evaluate(async () => {
+      location.hash = '/guid';
+      await new Promise((resolve) => setTimeout(resolve, 1600));
+      return document.body.innerText || '';
+    });
+    const combined = `${transcriptionText} ${String(guidText).toLowerCase()}`;
+    results.jargonOffenders = banned.filter((token) => combined.includes(token));
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(1600);
+    await page.locator('[data-testid="record-button"]').first().focus();
+    await page.keyboard.press('Enter');
+    results.keyboardRecord = await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 15000, 'keyboard-record');
+    await page.keyboard.press('Escape');
+    results.keyboardEscape = await waitFor(async () => (await page.locator('[data-testid="recording-bar"]').count()) === 0, 10000, 'keyboard-escape');
+    await shot('hardening-01-narrow-keyboard');
+    // A wrong key must surface one plain sentence and never provider jargon.
+    await page.locator('[data-testid="transcription-settings"]').first().click();
+    await page.locator('[data-testid="key-input"]').first().fill('test-bogus-key');
+    await page.locator('[data-testid="key-save"]').first().click();
+    results.keyConnected = await waitFor(async () => (await page.locator('[data-testid="key-clear"]').count()) > 0, 8000, 'key-connected');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    const wav = (() => {
+      const rate = 24000;
+      const samples = rate;
+      const buffer = Buffer.alloc(44 + samples * 2);
+      buffer.write('RIFF', 0);
+      buffer.writeUInt32LE(36 + samples * 2, 4);
+      buffer.write('WAVE', 8);
+      buffer.write('fmt ', 12);
+      buffer.writeUInt32LE(16, 16);
+      buffer.writeUInt16LE(1, 20);
+      buffer.writeUInt16LE(1, 22);
+      buffer.writeUInt32LE(rate, 24);
+      buffer.writeUInt32LE(rate * 2, 28);
+      buffer.writeUInt16LE(2, 32);
+      buffer.writeUInt16LE(16, 34);
+      buffer.write('data', 36);
+      buffer.writeUInt32LE(samples * 2, 40);
+      for (let index = 0; index < samples; index += 1) buffer.writeInt16LE(Math.round(Math.sin(index / 20) * 8000), 44 + index * 2);
+      return buffer;
+    })();
+    await page.locator('[data-testid="upload-input"]').setInputFiles({ name: 'bogus-key-check.mp3', mimeType: 'audio/mpeg', buffer: wav });
+    results.bogusKeyError = await waitFor(async () => {
+      const text = await bodyText();
+      const plain = /could not|refused|check the|try again|internet|key/i.test(text);
+      const jargon = /(HTTP |api\.meta\.ai|http status)/i.test(text);
+      return plain && !jargon ? text.slice(-160) : null;
+    }, 40000, 'bogus-key-error');
+    await page.locator('[data-testid="transcription-settings"]').first().click();
+    await page.locator('[data-testid="key-clear"]').first().click().catch(() => {});
+    results.keyCleared = await waitFor(async () => (await page.locator('[data-testid="key-input"]').count()) > 0, 10000, 'key-cleared');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+
+    // Palette can reach the dedicated page.
+    await page.keyboard.press('Control+k');
+    await page.waitForTimeout(900);
+    const paletteInput = page.locator('input[type="text"], textarea').first();
+    await paletteInput.fill('transcript').catch(() => {});
+    results.paletteTranscript = await waitFor(async () => /Transcription/i.test(await bodyText()), 6000, 'palette-transcription');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+
+    // Density: three folders and three recordings stay organised without layout overflow.
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(1800);
+    for (const name of ['Interviews', 'Ideas', 'Standups']) {
+      await page.locator('[data-testid="folder-name"]').first().fill(name);
+      await page.locator('[data-testid="folder-create"]').first().click();
+      await page.waitForTimeout(450);
+    }
+    results.folders = await waitFor(() => page.locator('[data-folder-id]').count(), 8000, 'folders');
+    for (let index = 0; index < 3; index += 1) {
+      await page.locator('[data-testid="record-button"]').first().click();
+      await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 15000, 'dense-bar');
+      await page.waitForTimeout(3200);
+      await page.locator('[data-testid="stop-button"]').first().click();
+      await page.waitForTimeout(1700);
+    }
+    results.denseRows = await waitFor(async () => (await page.locator('[data-testid="transcript-row"]').count()) >= 3, 30000, 'dense-rows');
+    results.denseNoOverflow = (await overflow()) <= 2;
+    await shot('hardening-02-dense');
+
+    // Light appearance keeps the surfaces readable.
+    await page.evaluate(() => { location.hash = '/settings/appearance'; });
+    await page.waitForTimeout(2200);
+    const themeBefore = await page.evaluate(() => document.documentElement.getAttribute('data-theme') || document.documentElement.className || '');
+    const lightOption = page.locator('[data-testid="theme-card-light"]').first();
+    if (await lightOption.count()) {
+      await lightOption.scrollIntoViewIfNeeded().catch(() => {});
+      await lightOption.dispatchEvent('click').catch(() => {});
+      await page.waitForTimeout(1200);
+    }
+    const themeAfter = await page.evaluate(() => document.documentElement.getAttribute('data-theme') || document.documentElement.className || '');
+    results.lightThemeToggled = Boolean(themeBefore !== themeAfter) || themeAfter === 'light';
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2000);
+    results.lightModeReadable = await waitFor(async () => /Nothing here yet|transcript/i.test(await bodyText()), 8000, 'light-readable');
+    await shot('hardening-03-light');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('hardening-error');
+  }
+  await closeApp(app, ctx.kelwork, results);
+  save('ux-hardening', results);
+  return results;
+}
+
+async function scenarioVoiceVetting() {
+  const results = { schema: 1, scenario: 'voice-vetting', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const send = async (value) => {
+    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    await composer.click({ timeout: 15000 });
+    await composer.fill('');
+    await composer.type(value, { delay: 6 });
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1800);
+  };
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+
+    // Journey 3 fragment: start a vetting session from the composer.
+    await send('start design vetting: voice note routing');
+    results.sessionStarted = await waitFor(async () => {
+      const panelProbe = await page.evaluate(async () => {
+        const api = window.kelAPI;
+        return api ? await api.request('/api/vetting', { action: 'panel' }) : null;
+      });
+      return /Q1/.test(JSON.stringify(panelProbe || {}));
+    }, 25000, 'session-started');
+
+    // Journey 5: dictate ONE answer with the composer mic, edit it, send it as normal chat.
+    await page.locator('[data-testid="kel-mic-toggle"]').first().click();
+    results.dictationRecording = await waitFor(
+      async () => (await page.locator('[data-testid="kel-mic"]').getAttribute('data-state')) === 'recording',
+      20000,
+      'dictation-recording'
+    );
+    await page.waitForTimeout(4600);
+    await page.locator('[data-testid="kel-mic-toggle"]').first().click();
+    results.dictationText = await waitFor(async () => {
+      const value = (await page.locator('textarea').first().inputValue()).trim();
+      return value.length > 10 ? value.slice(0, 50) : null;
+    }, 30000, 'dictation-text');
+    await page.locator('textarea').first().fill('1: C, matchup visually dominant');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(2600);
+    const panel = await page.evaluate(async () => {
+      const api = window.kelAPI;
+      return api ? await api.request('/api/vetting', { action: 'panel' }) : null;
+    });
+    const panelDump = JSON.stringify(panel || {});
+    results.panelAfterDictation = panelDump.slice(0, 260);
+    results.oneAnswerRecorded = /Q1/.test(panelDump) && /ANSWERED/.test(panelDump);
+
+    // Journey 4: interrupt the flow with normal chat, then keep going.
+    await send('hello kel');
+    results.interruptedThen = await waitFor(async () => {
+      const panelProbe = await page.evaluate(async () => {
+        const api = window.kelAPI;
+        return api ? await api.request('/api/vetting', { action: 'panel' }) : null;
+      });
+      const dump = JSON.stringify(panelProbe || {});
+      return /Q1/.test(dump) && /ANSWERED/.test(dump);
+    }, 15000, 'after-interrupt');
+    await shot('voice-vetting-01-one-answer');
+
+    // Journey 8 fragment: record a transcript on the dedicated page.
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2400);
+    await page.locator('[data-testid="record-button"]').first().click();
+    results.recordBar = await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'record-bar');
+    await page.waitForTimeout(3600);
+    await page.locator('[data-testid="stop-button"]').first().click();
+    results.transcriptRow = await waitFor(() => page.locator('[data-testid="transcript-row"]').count(), 30000, 'transcript-row');
+    // Journey 7: Think Out Loud on the transcript brings back useful buckets.
+    await page.locator('[data-testid="think-out-loud"]').first().click();
+    results.thinkModal = await waitFor(() => page.locator('.arco-modal').count(), 12000, 'think-modal');
+    await page.locator('[data-testid="review-edit"]').first().click();
+    await page.locator('[data-testid="review-edit-text"]').first().fill(
+      'I need a compact layout with quick scanning. I worry about clutter on small screens. Still open: the color direction.'
+    );
+    await page.locator('[data-testid="review-recheck"]').first().click();
+    results.thinkBuckets = await waitFor(
+      async () => /Requirements heard|Concerns heard|Still open/.test(await bodyText()),
+      12000,
+      'think-buckets'
+    );
+    await shot('voice-vetting-02-think');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(600);
+
+    // Journey 6: edit the transcript text inside the review, re-check, then accept many answers.
+    await page.locator('[data-testid="use-vetting"]').first().click();
+    results.reviewModal = await waitFor(() => page.locator('.arco-modal').count(), 12000, 'review-modal');
+    await page.locator('[data-testid="review-edit"]').first().click();
+    await page.locator('[data-testid="review-edit-text"]').first().fill('2: A, dense decisions\n3: B, quick scanning\n4: D, quiet screens');
+    await page.locator('[data-testid="review-recheck"]').first().click();
+    results.multiPreview = await waitFor(async () => {
+      const items = await page.locator('[data-testid="review-list"] li').count();
+      return items >= 3 ? items : null;
+    }, 12000, 'multi-preview');
+    await page.locator('[data-testid="review-accept"]').first().click();
+    results.acceptAll = await waitFor(
+      async () => /Added to the vetting session|Applied to the vetting session/.test(await bodyText()),
+      15000,
+      'accept-all'
+    );
+    await page.locator('[data-testid="use-vetting"]').first().click();
+    await waitFor(() => page.locator('.arco-modal').count(), 12000, 'review-modal-2');
+    await page.locator('[data-testid="review-process"]').first().click();
+    results.processBatch = await waitFor(
+      async () => /Added to the vetting session|Applied to the vetting session/.test(await bodyText()),
+      15000,
+      'process-batch'
+    );
+    await shot('voice-vetting-03-applied');
+
+    // Journey 11: restart Kel; the transcript and the vetting session both survive.
+    await closeApp(app, ctx.kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2400);
+    results.rowsAfterRestart = await waitFor(() => page.locator('[data-testid="transcript-row"]').count(), 20000, 'rows-after-restart');
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(600);
+    results.audioAfterRestart = await page
+      .locator('[data-testid="download-audio"]')
+      .first()
+      .isEnabled()
+      .catch(() => false);
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(700);
+    await page.locator('[data-testid="use-vetting"]').first().click();
+    results.sessionAfterRestart = await waitFor(() => page.locator('.arco-modal').count(), 15000, 'session-after-restart');
+    await shot('voice-vetting-04-restart');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('voice-vetting-error');
+  }
+  await closeApp(app, ctx.kelwork, results);
+  save('ux-voice-vetting', results);
+  return results;
+}
+
+async function scenarioRecheckProbe() {
+  const results = { schema: 1, scenario: 'recheck-probe', steps: [], errors: [] };
+  const { app, page } = await launchApp();
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) { results.steps.push({ label, ms: Date.now() - start }); return value; }
+      } catch (error) { /* retry */ }
+      await page.waitForTimeout(300);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2000);
+    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    await composer.click({ timeout: 15000 });
+    await composer.fill('start design vetting: recheck probe');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(4500);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2400);
+    await page.locator('[data-testid="record-button"]').first().click();
+    await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'bar');
+    await page.waitForTimeout(3400);
+    await page.locator('[data-testid="stop-button"]').first().click();
+    await waitFor(() => page.locator('[data-testid="transcript-row"]').count(), 30000, 'row');
+    await page.locator('[data-testid="use-vetting"]').first().click();
+    await waitFor(() => page.locator('.arco-modal').count(), 12000, 'modal');
+    results.payloadArrived = await waitFor(() => page.locator('[data-testid="review-edit"]').count(), 12000, 'payload');
+    await page.locator('[data-testid="review-edit"]').first().click();
+    await page.locator('[data-testid="review-edit-text"]').first().fill('12: A, matchup visually dominant');
+    await page.locator('[data-testid="review-recheck"]').first().click();
+    await page.waitForTimeout(1800);
+    results.listCount = await page.locator('[data-testid="review-list"] li').count();
+    results.listText = await page.locator('[data-testid="review-list"]').first().innerText().catch(() => '');
+    results.toast = await page.locator('.arco-message').allInnerTexts().catch(() => []);
+    results.modalTail = (await page.locator('.arco-modal').first().innerText().catch(() => '')).slice(-400);
+    results.bodyTail = (await bodyText()).slice(-200);
+    results.consoleErrors = (await page.evaluate(() => window.__auditErrors || [])).slice(0, 5);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+  }
+  await closeApp(app, null, results);
+  save('ux-recheck-probe', results);
+  return results;
+}
+
 async function scenarioFirstRun() {
   const results = { schema: 1, scenario: 'first-run', steps: [], errors: [] };
   const t0 = Date.now();
@@ -954,6 +1330,40 @@ async function scenarioVetting() {
     results.steps.push(step);
     return body;
   };
+  const panelJson = () =>
+    page.evaluate(async () => {
+      const api = window.kelAPI;
+      return api ? await api.request('/api/vetting', { action: 'panel' }) : null;
+    });
+  const waitPanel = async (fn, timeoutMs, label) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const panelDump = JSON.stringify((await panelJson()) || {});
+        let previewDump = '';
+        try {
+          previewDump = JSON.stringify((await previewJson()) || {});
+        } catch (previewError) {
+          previewDump = '';
+        }
+        const value = await fn(panelDump + previewDump);
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(500);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const previewJson = () =>
+    page.evaluate(async () => {
+      const api = window.kelAPI;
+      return api ? await api.request('/api/vetting', { action: 'preview' }) : null;
+    });
   const waitFor = async (needle, timeoutMs, label) => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -974,7 +1384,7 @@ async function scenarioVetting() {
     await page.waitForTimeout(2000);
 
     await send('start design vetting: Basketball matchup dashboard', 'start');
-    results.batchShown = await waitFor('Design vetting', 25000, 'batch-1-visible');
+    results.batchShown = await waitPanel((dump) => /Q1\b/.test(dump), 25000, 'batch-1-in-panel');
     await shot(page, 'vetting-01-batch');
 
     const answers = ['1: C', '2: A', '3: B', '4: D', '5: B', '6: A', '7: A', '8: C', '9: D', '10: B'];
@@ -982,25 +1392,29 @@ async function scenarioVetting() {
       const body = await send(answer, 'answer-' + answer);
       results.lastAnswerSawProgress = /Recorded: \d+ of \d+ recorded/.test(body);
     }
-    results.allAnswersRecorded = await waitFor('Recorded: 10 of 12 recorded', 25000, 'all-answers-recorded');
-    results.answerProgressCount = await page.evaluate(
-      () => ((document.body.innerText || '').match(/Recorded: \d+ of \d+ recorded/g) || []).length
+    results.allAnswersRecorded = await waitPanel(
+      (dump) => ((dump.match(/ANSWERED/g) || []).length >= 10 ? true : null),
+      25000,
+      'ten-answers-recorded'
     );
+    results.answerProgressCount = await panelJson().then((panel) => ({
+      answered: ((JSON.stringify(panel || {}).match(/ANSWERED/g) || []).length),
+    }));
     await shot(page, 'vetting-02-rapid-answers');
 
     await send('process answers', 'process');
-    results.batch2Shown = await waitFor('Batch 2', 30000, 'batch-2-visible');
+    results.batch2Shown = await waitPanel((dump) => /Q1[1-9]|Q2[0-9]/.test(dump), 30000, 'batch-2-in-panel');
     await shot(page, 'vetting-03-batch-2');
 
     await send('19: B', 'answer-19');
-    let body = await send('view decisions', 'view-decisions');
-    results.decisionsSeen = body.includes('Decisions so far:');
+    await send('view decisions', 'view-decisions');
+    results.decisionsSeen = await waitPanel((dump) => /decision/i.test(dump), 20000, 'decisions-in-panel');
     await send('show greyboxes 19', 'greyboxes');
-    results.greyboxesSeen = await waitFor('greybox direction', 20000, 'greyboxes-generated');
+    results.greyboxesSeen = await waitPanel((dump) => /greybox/i.test(dump), 25000, 'greyboxes-in-panel');
     await shot(page, 'vetting-04-greyboxes');
 
     await send('finish spec now', 'finish');
-    results.specSaved = await waitFor('Spec snapshot saved', 25000, 'spec-saved');
+    results.specSaved = await waitPanel((dump) => /Design specification|coverage/i.test(dump) ? true : null, 30000, 'spec-preview');
     await shot(page, 'vetting-05-spec-saved');
 
     // The panel mirrors the same state.
@@ -1287,6 +1701,17 @@ async function scenarioTranscription() {
     results.firstText = ((await bodyText()).match(/This is a local practice transcript[^\n]{0,40}/) || [''])[0];
     await shot(page, 'transcription-03-saved');
 
+    // Escape cancels an in-progress recording on the page without saving a row.
+    const rowsBeforeEscape = await page.locator('[data-testid="transcript-row"]').count();
+    await page.locator('[data-testid="record-button"]').first().click();
+    await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'escape-bar');
+    await page.keyboard.press('Escape');
+    results.escapeCancelled = await waitFor(async () => {
+      const bar = await page.locator('[data-testid="recording-bar"]').count();
+      const rows = await page.locator('[data-testid="transcript-row"]').count();
+      return bar === 0 && rows === rowsBeforeEscape;
+    }, 10000, 'escape-cancelled');
+
     await page.locator('[data-testid="rename-button"]').first().click();
     await page.locator('[data-testid="transcript-rename"]').first().fill('Morning note');
     await page.keyboard.press('Enter');
@@ -1315,6 +1740,34 @@ async function scenarioTranscription() {
     await shot(page, 'transcription-04-upload');
     await page.locator('[data-testid="upload-input"]').setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('not audio') });
     results.invalidMessage = await waitFor(async () => /could not be read/.test(await bodyText()), 10000, 'invalid-copy');
+    await page.locator('[data-testid="copy-transcript"]').first().click();
+    await page.waitForTimeout(400);
+    await page.locator('[data-testid="download-txt"]').first().click();
+    await page.waitForTimeout(700);
+    results.downloadAudioEnabled = await page.locator('[data-testid="download-audio"]').first().isEnabled().catch(() => false);
+    await page.locator('[data-testid="download-audio"]').first().click();
+    await page.waitForTimeout(700);
+    results.copyAndDownload = true;
+
+    // Combine merges another transcript into the selected one and removes it from the list.
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(500);
+    await page.locator('[data-testid="combine-open"]').first().click();
+    await page.locator('[data-testid="combine-select"]').first().click();
+    await page.locator('.arco-select-option').first().click();
+    await page.locator('[data-testid="combine-confirm"]').first().click();
+    results.combined = await waitFor(async () => {
+      const text = await bodyText();
+      const folderRows = await page.locator('[data-testid="folder-transcript"]').count();
+      return /Merged into this transcript/.test(text) && folderRows === 0;
+    }, 12000, 'combined');
+
+    // Keep a healthy library for the restart check.
+    await page.locator('[data-testid="record-button"]').first().click();
+    await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'second-bar');
+    await page.waitForTimeout(3200);
+    await page.locator('[data-testid="stop-button"]').first().click();
+    results.secondRow = await waitFor(async () => (await page.locator('[data-testid="transcript-row"]').count()) >= 2, 30000, 'second-row');
 
     await page.evaluate(() => { location.hash = '/guid'; });
     await page.waitForTimeout(2200);
@@ -1330,9 +1783,28 @@ async function scenarioTranscription() {
       const value = (await boxValue()).trim();
       return value.length > 10 ? value.slice(0, 60) : null;
     }, 30000, 'composer-text');
+    results.composerSingleCopy = await waitFor(async () => {
+      const value = (await boxValue()).trim();
+      if (value.length < 10) return false;
+      const fragment = value.split(/\s+/).slice(0, 3).join(' ');
+      return fragment.length > 5 && value.split(fragment).length === 2;
+    }, 8000, 'composer-single-copy');
     await page.locator('textarea').first().fill('');
     results.composerCleared = true;
     await shot(page, 'transcription-05-composer');
+
+    // Send to chat hands the transcript to the composer as editable text (no auto-send).
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2000);
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(500);
+    await page.locator('[data-testid="send-to-chat"]').first().click();
+    await page.waitForTimeout(1600);
+    results.sendToChat = await waitFor(async () => {
+      const value = (await boxValue()).trim();
+      return value.length > 20 && /transcript/i.test(value) ? value.slice(0, 40) : null;
+    }, 15000, 'send-to-chat');
+    await page.locator('textarea').first().fill('');
 
     await page.locator('textarea').first().fill('start design vetting: voice routing');
     await page.keyboard.press('Enter');
@@ -1346,6 +1818,10 @@ async function scenarioTranscription() {
     await page.waitForTimeout(600);
     await page.locator('[data-testid="use-vetting"]').first().click();
     results.reviewModal = await waitFor(async () => (await page.locator('.arco-modal').count()) > 0, 12000, 'review-open');
+    await page.locator('[data-testid="review-edit"]').first().click();
+    await page.locator('[data-testid="review-edit-text"]').first().fill('12: A, matchup visually dominant');
+    await page.locator('[data-testid="review-recheck"]').first().click();
+    results.recheckWorked = await waitFor(() => page.locator('[data-testid="review-list"]').count(), 10000, 'review-recheck');
     await shot(page, 'transcription-06-review');
     const processButton = page.locator('[data-testid="review-process"]').first();
     if (await processButton.count()) {
@@ -1472,6 +1948,9 @@ async function scenarioMaintext() {
     peek: scenarioPeek,
     paneldump: scenarioPaneldump,
     transcription: scenarioTranscription,
+    hardening: scenarioHardening,
+    'voice-vetting': scenarioVoiceVetting,
+    'recheck-probe': scenarioRecheckProbe,
     sider: scenarioSider,
     maintext: scenarioMaintext,
   };

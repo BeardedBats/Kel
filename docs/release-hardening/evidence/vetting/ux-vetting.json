@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "scenario": "vetting",
+  "steps": [
+    {
+      "label": "start",
+      "text": "start design vetting: Basketball matchup dashboard",
+      "tail": "off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "batch-1-in-panel",
+      "ms": 24
+    },
+    {
+      "label": "answer-1: C",
+      "text": "1: C",
+      "tail": "ard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-2: A",
+      "text": "2: A",
+      "tail": "ate a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-3: B",
+      "text": "3: B",
+      "tail": "that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-4: D",
+      "text": "4: D",
+      "tail": " control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-5: B",
+      "text": "5: B",
+      "tail": "phone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-6: A",
+      "text": "6: A",
+      "tail": "on, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-7: A",
+      "text": "7: A",
+      "tail": " and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-8: C",
+      "text": "8: C",
+      "tail": "keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-9: D",
+      "text": "9: D",
+      "tail": "o create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "answer-10: B",
+      "text": "10: B",
+      "tail": "app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "ten-answers-recorded",
+      "ms": 27
+    },
+    {
+      "label": "process",
+      "text": "process answers",
+      "tail": "l my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nprocess answers\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "batch-2-in-panel",
+      "ms": 25
+    },
+    {
+      "label": "answer-19",
+      "text": "19: B",
+      "tail": "mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nprocess answers\n16:00\n16:00\n19: B\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "view-decisions",
+      "text": "view decisions",
+      "tail": "and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nprocess answers\n16:00\n16:00\n19: B\n16:00\n16:00\nview decisions\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "decisions-in-panel",
+      "ms": 25
+    },
+    {
+      "label": "greyboxes",
+      "text": "show greyboxes 19",
+      "tail": "How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nprocess answers\n16:00\n16:00\n19: B\n16:00\n16:00\nview decisions\n16:00\n16:00\nshow greyboxes 19\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "greyboxes-in-panel",
+      "ms": 29
+    },
+    {
+      "label": "finish",
+      "text": "finish spec now",
+      "tail": "s inside this app?\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nAutomatic\nstart design vetting: Basketball matchup dashboard\n16:00\n16:00\n1: C\n16:00\n16:00\n2: A\n16:00\n16:00\n3: B\n16:00\n16:00\n4: D\n16:00\n16:00\n5: B\n16:00\n16:00\n6: A\n16:00\n16:00\n7: A\n16:00\n16:00\n8: C\n16:00\n16:00\n9: D\n16:00\n16:00\n10: B\n16:00\n16:00\nprocess answers\n16:00\n16:00\n19: B\n16:00\n16:00\nview decisions\n16:00\n16:00\nshow greyboxes 19\n16:00\n16:00\nfinish spec now\n16:00\n16:00\nFiles\nChanges\nacp-temp-d158d2b0"
+    },
+    {
+      "label": "spec-preview",
+      "ms": 28
+    }
+  ],
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "batchShown": true,
+  "lastAnswerSawProgress": false,
+  "allAnswersRecorded": true,
+  "answerProgressCount": {
+    "answered": 10
+  },
+  "batch2Shown": true,
+  "decisionsSeen": true,
+  "greyboxesSeen": true,
+  "specSaved": true,
+  "panelTab": 1,
+  "panelShowsTopic": true,
+  "panelShowsProgress": true,
+  "panelShowsDecisions": true,
+  "panelSpecPreview": false,
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

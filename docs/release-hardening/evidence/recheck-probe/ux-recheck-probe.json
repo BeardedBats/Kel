@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scenario": "recheck-probe",
+  "steps": [
+    {
+      "label": "bar",
+      "ms": 2
+    },
+    {
+      "label": "row",
+      "ms": 317
+    },
+    {
+      "label": "modal",
+      "ms": 2
+    },
+    {
+      "label": "payload",
+      "ms": 3
+    }
+  ],
+  "errors": [],
+  "payloadArrived": 1,
+  "listCount": 1,
+  "listText": "12 — Text label only · A, matchup visually dominant",
+  "toast": [
+    "Recording saved to Recents."
+  ],
+  "modalTail": "Use this transcript as vetting answers\n\nI pulled these answers from your transcript:\n\n12 — Text label only · A, matchup visually dominant\nClose\nEdit\nAccept all\nProcess batch",
+  "bodyTail": "ecording saved to Recents.\nUse this transcript as vetting answers\n\nI pulled these answers from your transcript:\n\n12 — Text label only · A, matchup visually dominant\nClose\nEdit\nAccept all\nProcess batch",
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

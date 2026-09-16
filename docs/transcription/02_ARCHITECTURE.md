@@ -50,6 +50,11 @@ Input routing
   with the stdlib `wave` module.
 - **Donor CSS/lucide → Kel surfaces**: Arco components + Kel tokens; the page follows the User
   Journey standard (plain copy, visible states, no tiny status text).
+- **One understanding module**: `think_out_loud_buckets` lives in `kel/vetting.py`; the
+  transcription module knows providers and the library, never answers.
+- **One mic control**: both composers (guid and the conversation `SendBox`) mount
+  `KelMicButton`; the donor `SpeechInputButton` is not mounted anywhere, so its global
+  Ctrl/Cmd+M path is inert.
 
 ## Provider modes (plain language surfaced in the UI)
 

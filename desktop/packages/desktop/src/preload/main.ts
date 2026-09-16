@@ -96,7 +96,17 @@ for (const channel of trayEvents) {
 }
 
 contextBridge.exposeInMainWorld('kelAPI', {
-  request: (route: string, body?: unknown) => ipcRenderer.invoke('kel:request', route, body),
+  request: async (route: string, body?: unknown) => {
+    try {
+      return await ipcRenderer.invoke('kel:request', route, body);
+    } catch (error) {
+      // Electron wraps handler failures as "Error invoking remote method '…': Error: <message>".
+      // The engine already writes user-facing sentences; never leak the transport envelope.
+      const raw = String((error as Error)?.message || error);
+      const message = raw.replace(/^Error invoking remote method '[^']*':\s*/, '').replace(/^Error:\s*/, '');
+      throw new Error(message || 'Kel request failed');
+    }
+  },
   history: (id: string) => ipcRenderer.invoke('kel:history', id),
   conversation: (id: string) => ipcRenderer.invoke('kel:conversation', id),
   historySearch: (query: string) => ipcRenderer.invoke('kel:history-search', query),

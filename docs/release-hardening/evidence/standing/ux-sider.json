@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "scenario": "sider",
+  "probes": [],
+  "errors": [],
+  "hash": "#/guid",
+  "siderText": "K\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nProject conversations\nWorkspace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that",
+  "rows": [
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Badge chat"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "status"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Hey! I wanted to test this out. How far along are we?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "start design vetting: Basketball matchup dashboard"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Write a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audi"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "In one short sentence, what can you help me with?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Create a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\s"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "In one short sentence, what can you help me with?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Hey! What fonts are you using?"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": ""
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    }
+  ],
+  "bodyText": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nProject conversations\nWorkspace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nstart design vetting: Basketball matchup dashboard\nWrite a tiny Python script sum.py in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox that prints the sum of the numbers 1 to 10, then run it to verify.\nIn one short sentence, what can you help me with?\nCreate a file named ux-test.md in C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\sandbox containing exactly the line Hello from Kel, then tell me when it is done.\nIn one short sentence, what can you help me with?\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "palette": [
+    "Go toWorkjobs and what needs you",
+    "Go toTeam · Officewho is working",
+    "Go toTeam · Rosterspecialists",
+    "Go toTeam · Studioedit a specialist",
+    "Go toProjects · Knowledgewhat Kel learned",
+    "Go toProjects · Mapproject map",
+    "Go toProjects · Recipesready-made tasks",
+    "Go toProvidersconnect a model",
+    "Go toPermissionswhat Kel can access",
+    "RecipesAudit and Repairdry run from Projects · Recipes",
+    "RecipesContinue Workdry run from Projects · Recipes",
+    "RecipesFix Bugdry run from Projects · Recipes",
+    "RecipesResearch Then Implementdry run from Projects · Recipes",
+    "RecipesShip Releasedry run from Projects · Recipes",
+    "RolesDocumentation SpecialistDelivery · v1",
+    "RolesRelease EngineerDelivery · v1",
+    "RolesImplementation EngineerEngineering · v1",
+    "RolesResearch SpecialistProduct · v1",
+    "RolesUI/UX ExpertProduct · v1",
+    "RolesSolution StrategistStrategy · v1",
+    "RolesIndependent ReviewerVerification · v1",
+    "RolesQA EngineerVerification · v1",
+    "RolesSecurity ReviewerVerification · v1"
+  ],
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

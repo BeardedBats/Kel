@@ -20,9 +20,9 @@ Kel synthesizes once and publishes the next adaptive batch
 
 ## Answering
 
-- Stable question ids (`Q12`, `Q13`, …) are shown as plain numbers; answers are typed `12: F`,
-  `13: D`, `14: C` — several per message, any order (`18: D  12: F  20: skip`).
-- One message may carry the whole batch (`12: F\n13: D\n14: C`), or a pasted block of natural
+- Stable question ids (`Q12`, `Q13`, …) are shown as plain numbers; answers are typed `12: A`,
+  `13: D`, `14: C` — several per message, any order (`18: D  12: A  20: skip`).
+- One message may carry the whole batch (`12: A\n13: D\n14: C`), or a pasted block of natural
   answers (see 05_ANSWER_INGESTION.md).
 - Control words are conversational: `skip`, `defer`, `I'm not sure`, `not sure, show examples`,
   `none of these …`, `make greyboxes, I'll decide later`, `change 14 to D`.

@@ -98,6 +98,12 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-37 - One plain status hides every provider.** A feature that talks to an external provider exposes exactly one human status ("Practice mode", "Muse (Meta)") with a single settings entry; endpoints, model names, protocol states, quota math, and socket errors stay out of the interface. Verify: no raw provider term appears in any surface copy.
 
+**JR-38 - Live regions finalize exactly once.** Any live or placeholder region inserted into user-editable text (dictation previews, template inserts) must be cleared and replaced by the final value exactly once when the session ends, and cancel must restore the pre-session text. A stale region may never duplicate or overwrite what the user has. Verify: dictate with live text, stop, and confirm exactly one copy lands; cancel mid-session and confirm the original text returns.
+
+**JR-39 - Every engine capability has a door or an honest label.** A capability that ships in the engine must be reachable from a user surface, or explicitly documented as API-only in the feature's status and limitations docs. Shipping neither is invisible work. Verify: for each action in a feature's engine family, either find the control that calls it or the doc line that says API-only.
+
+**JR-40 - Superseded donor controls are removed everywhere.** When a Kel-native control replaces a donor control, every mount point of the donor control is swapped in the same change: no second path to the same capability, no hidden global shortcut left behind. Verify: grep the donor component's mount points; only the native control remains mounted.
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

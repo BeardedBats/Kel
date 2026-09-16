@@ -329,7 +329,7 @@ export default function KelWorkPanel() {
               <>
                 <Typography.Paragraph type='secondary'>
                   Turn a rough idea into a developer-ready spec: Kel asks in batches, you answer with
-                  numbers in the chat (like 12: F), and every decision is kept with its rationale.
+                  numbers in the chat (like 12: A), and every decision is kept with its rationale.
                 </Typography.Paragraph>
                 <Space>
                   <Input

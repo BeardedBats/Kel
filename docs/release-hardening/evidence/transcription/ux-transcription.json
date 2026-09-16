@@ -4,15 +4,15 @@
   "steps": [
     {
       "label": "page-visible",
-      "ms": 4
+      "ms": 5
     },
     {
       "label": "recording-bar",
-      "ms": 1
+      "ms": 2
     },
     {
       "label": "transcript-saved",
-      "ms": 405
+      "ms": 403
     },
     {
       "label": "escape-bar",
@@ -24,63 +24,67 @@
     },
     {
       "label": "renamed",
-      "ms": 408
+      "ms": 406
     },
     {
       "label": "folder-created",
-      "ms": 404
-    },
-    {
-      "label": "dragged-into-folder",
       "ms": 405
     },
     {
+      "label": "dragged-into-folder",
+      "ms": 404
+    },
+    {
       "label": "upload-transcribed",
-      "ms": 417
-    },
-    {
-      "label": "invalid-copy",
-      "ms": 417
-    },
-    {
-      "label": "combined",
-      "ms": 419
-    },
-    {
-      "label": "second-bar",
-      "ms": 2
-    },
-    {
-      "label": "second-row",
       "ms": 407
     },
     {
+      "label": "invalid-copy",
+      "ms": 418
+    },
+    {
+      "label": "combined",
+      "ms": 407
+    },
+    {
+      "label": "second-bar",
+      "ms": 1
+    },
+    {
+      "label": "second-row",
+      "ms": 406
+    },
+    {
       "label": "composer-recording",
-      "ms": 416
+      "ms": 410
     },
     {
       "label": "composer-text",
-      "ms": 2
+      "ms": 1
     },
     {
       "label": "composer-single-copy",
-      "ms": 1
+      "ms": 2
+    },
+    {
+      "label": "send-to-chat",
+      "ms": 4
     },
     {
       "label": "review-open",
-      "ms": 1
+      "ms": 2
     },
     {
       "label": "review-recheck",
-      "ms": 414
-    },
-    {
-      "label": "review-applied",
       "ms": 403
     },
     {
+      "label": "review-applied",
+      "ms": 416
+    },
+    {
       "label": "rows-after-restart",
-      "ms": 14
+      "ms": 15
     }
   ],
   "errors": [],
@@ -94,12 +98,15 @@
   "dragWorked": 1,
   "uploadRow": true,
   "invalidMessage": true,
+  "downloadAudioEnabled": true,
+  "copyAndDownload": true,
   "combined": true,
   "secondRow": true,
   "composerRecording": true,
   "composerText": "This is a local practice transcript so the recording and sav",
   "composerSingleCopy": true,
   "composerCleared": true,
+  "sendToChat": "This is a local practice transcript so t",
   "sessionStarted": "proven-by-review-below",
   "reviewModal": true,
   "recheckWorked": 1,

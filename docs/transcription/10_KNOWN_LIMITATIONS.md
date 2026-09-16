@@ -15,7 +15,8 @@ Recorded honestly; none of these block the shipped flows.
    deliberately no FFmpeg sidecar in the package.
 4. **Combine and Record more concatenate audio only when both sides are WAV.** That is always true
    for anything recorded or uploaded in Kel (the renderer normalizes), so foreign audio files copied
-   into the data directory by hand are the only exception; text and duration always combine.
+   into the data directory by hand are the only exception; text and duration always combine. The transcript view exposes this as
+   “Combine with…”, which states that the other transcript leaves the list.
 5. **One transcript text field.** Speaker labels appear only when the provider returns diarized
    turns (Muse file mode); there is no per-word editing UI, timestamps, or per-line seek.
 6. **Dictation is not saved to the library.** Composer transcripts are input; only the dedicated
@@ -27,3 +28,7 @@ Recorded honestly; none of these block the shipped flows.
 9. **The composer mic uses the chat conversation**, while the dedicated page applies vetting
    transcripts to the newest active session when no conversation is given. Two chats with two active
    sessions is the one ambiguous case; the review modal names the answers it will apply.
+
+10. **The donor speech component remains in the tree, unmounted.** `SpeechInputButton` (browser
+    speech recognition) is no longer mounted by either composer — `KelMicButton` replaced it — so
+    its Ctrl/Cmd+M registration is inert; the file is kept only as donor reference.

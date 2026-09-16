@@ -1,6 +1,21 @@
-folders: [('Interviews',)]
-transcripts:
-  Morning note                             | recording | complete | folder=True | 5120 ms | audio=759a7258-e54b-46f5-9b58-ebe68805d2f6.wav (present)
-  Audio Was Captured Clearly and the Trans | upload | complete | folder=False | 1000 ms | audio=8ba5ab90-5ca5-4c04-b8d8-48ab0b82fedf.mp3 (present)
-audio files on disk: 2
-vetting sessions in this profile: [('voice routing', 'ACTIVE')]
+Transcription/vetting databases after the final review runs
+
+DB: C:\Users\Nick\Desktop\Kel\ux-audit\runs\final2-transcription\root\kelwork\host\aionui\aionui-backend.db
+  folders: 1
+DB: C:\Users\Nick\Desktop\Kel\ux-audit\runs\final2-transcription\root\kelwork\backups\pre-v13-20260916-151425.sqlite3
+DB: C:\Users\Nick\Desktop\Kel\ux-audit\runs\final2-transcription\root\kelwork\kel.sqlite3
+  transcription_folders: 1
+  transcription_settings: 0
+  transcripts: 2
+  vetting_answer_revisions: 0
+  vetting_answers: 1
+  vetting_batches: 2
+  vetting_conflicts: 0
+  vetting_decisions: 1
+  vetting_events: 3
+  vetting_greybox_feedback: 0
+  vetting_greyboxes: 0
+  vetting_help: 0
+  vetting_questions: 24
+  vetting_sessions: 1
+  vetting_specs: 0

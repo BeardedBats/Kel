@@ -445,3 +445,25 @@ class VettingAnswerIngestion:
         self.answers[question['id']] = {'status': update['status'], 'selected': update['selected'],
                                         'custom': update['custom'], 'notes': update['notes'],
                                         'feedback': update['feedback']}
+
+
+def think_out_loud_buckets(text):
+    """Deterministic Think-Out-Loud extraction over a spoken transcript (no provider involved).
+
+    Decisions/preferences come from the ingestion parse at review time; here we classify the raw
+    sentences into the buckets the review surface shows so nothing said is silently dropped.
+    """
+    buckets = {'requirements': [], 'concerns': [], 'unresolved': []}
+    for sentence in re.split(r'(?<=[.!?])\s+|\n+', text or ''):
+        clean = sentence.strip()
+        if len(clean) < 8:
+            continue
+        lowered = clean.lower()
+        if re.search(r'\b(must|need to|needs to|have to|has to|should|require[sd]?|shall)\b', lowered):
+            buckets['requirements'].append(clean)
+        if re.search(r'\b(worry|worried|concern|concerned|risk|afraid|problem|issue|danger|break)\b', lowered):
+            buckets['concerns'].append(clean)
+        if re.search(r'\b(not sure|unsure|open question|later|tbd|decide later|need to decide|'
+                     r'figure out|unclear)\b', lowered):
+            buckets['unresolved'].append(clean)
+    return {key: value[:8] for key, value in buckets.items()}

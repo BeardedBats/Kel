@@ -65,7 +65,7 @@ import { useUploadState } from '@renderer/hooks/file/useUploadState';
 import { useAbortUploadsOnConversationChange } from '@renderer/hooks/file/useAbortUploadsOnConversationChange';
 import UploadProgressBar from '@renderer/components/media/UploadProgressBar';
 import { allSupportedExts } from '@renderer/services/FileService';
-import SpeechInputButton from '@/renderer/components/chat/SpeechInputButton';
+import KelMicButton from '@renderer/pages/guid/components/KelMicButton';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
 import { createChainedDispatch, useLiveTranscriptInsertion } from '@/renderer/hooks/system/useLiveTranscriptInsertion';
 import { getConversationInputHistory, isCaretOnFirstLine } from '@/renderer/utils/chat/messageHistory';
@@ -1868,7 +1868,7 @@ const SendBox: React.FC<{
   const renderedTools = isMobileCompact ? mobilePlusButton : tools;
   const renderedRightTools = isMobileCompact ? null : rightTools;
   const renderedSpeechButton = (
-    <SpeechInputButton onLiveTranscript={handleLiveTranscript} onTranscript={handleSpeechTranscript} />
+    <KelMicButton onLiveTranscript={handleLiveTranscript} onTranscript={handleSpeechTranscript} />
   );
 
   const renderHighlightedInputValue = useCallback(() => {
