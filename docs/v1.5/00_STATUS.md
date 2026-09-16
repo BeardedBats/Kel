@@ -26,7 +26,7 @@ Verified at program start (2026-09-15):
 | G5 routing / completion / review | **closed** — claims compiler (finalized contracts only; transient drafts stay clean), escalation-aware `routing_outcomes` (`job_kind`/`attempts`/`escalated`), routing + completion + reviewer-independence audits (`05`, `06`); closure review **CONTINUE** | `test_v15_completion.py`, `05_ROUTING.md`, `06_COMPLETION_AUTHORITY.md` |
 | G6 memory / continuation / recipes | **closed** — packet-lifecycle probes 4/4; physical forget purge (`secure_delete`, FTS segment merge, WAL checkpoint) closed a real residue gap the probes found; memory/continuation/recipes audited (`07`); closure review **CONTINUE** | `test_v15_memory_packets.py`, `07_MEMORY_AND_CONTEXT.md` |
 | G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
-| G8 diagnostics / performance / packaging | **in progress** — desktop `tsc --noEmit` release blocker cleared (**26 → 0** errors, behavior-preserving type fixes), desktop vitest entry lane restored (**4 files / 72 tests passed**), production build **exit 0**; diagnostics surfaces / performance measurement / WS23 hygiene next | commit `6366976` (tsc + vitest + build logs) |
+| G8 diagnostics / performance / packaging | **closed** — tsc blocker cleared (26→0), desktop test lane restored (72 green), build exit 0; WS22 authorization/lease/migration diagnostics in the snapshot and the desktop Diagnostics page; WS23 builder overrides (`publish: null`, Kel copyright, Linux entry) + Kel PWA identity (manifest, SW cache); WS28 measured with basis (`12`); suite **441 + 10**; closure review **CONTINUE** | `test_v15_diagnostics.py` (3/3), `12_PERFORMANCE.md`, commits `6366976` + `9f2d890` |
 | G9 security + reliability sweeps | pending (a first slice of the security matrix is covered by `test_v15_authorize.py`) | — |
 | G10 visual / product acceptance | pending | — |
 | G11 migration / clean clone / packaged | pending | — |
@@ -101,12 +101,21 @@ passed**; a full `electron-vite build` is **exit 0**. Note: `scripts/verify-rele
 neither lane — the blocker escaped automated release coverage and is now recorded. Commit
 `6366976`.
 
+**Increment 9 — G8 (part 2, this working tree):** WS22 authorization/lease/migration diagnostics land
+in the snapshot and the desktop Diagnostics page; WS23 packaging hygiene — `kel-builder.json` pins
+`publish: null` (no donor update channel), Kel copyright, and Linux entry identity, and the shipped
+PWA assets carry the Kel name and cache (manifest, service worker; the SW activate path deletes the
+donor cache on first boot); `12_PERFORMANCE.md` records measured numbers with method (engine import
+~60 ms · Service start ~650 ms · authorization ~30 ms/decision on the durable-write basis · snapshot
+~8 ms · build ~32–39 s · bundle vendor 4.76 MB). Probes `test_v15_diagnostics.py` **3/3**; full
+suite **441 passed + 10 subtests**; desktop tsc 0 / vitest 72 / build exit 0. Commit `9f2d890`.
+
 ## Required deliverables (spec checklist)
 
 `00_STATUS` ✅ · `01_ARCHITECTURE` ◻ skeleton · `02_AUTHORIZATION_MODEL` ✅ ·
 `02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ✅
 · `06_COMPLETION_AUTHORITY` ✅ · `07_MEMORY_AND_CONTEXT` ✅ · `08_LEDGER` ✅ working ·
 `09_SECURITY_REVIEW` ✅ working (G2 matrix complete) · `10_RELIABILITY_REVIEW` ◻ ·
-`11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ◻ · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
+`11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ✅ measured · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
 `15_RELEASE_MANIFEST` ◻ · `16_KNOWN_LIMITATIONS` ✅ working · `17_V2_PLUS_DEFERRED` ✅ ·
 `AUTO_RESUME` ✅
