@@ -232,8 +232,8 @@ export default function KelAutonomyPage() {
           <p className="kel-sub">
             The policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the
             leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same
-            boundary is called at every worker effect point, so this checker's verdict is what stops
-            execution before anything runs.
+            boundary runs at the effect points that exist today — repository work, file application, and
+            project creation — so this checker's verdict is what stops execution before anything runs.
           </p>
           <div className="kel-row">
             <KelTabs

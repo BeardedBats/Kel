@@ -13,8 +13,11 @@ Status: **working** — kept current; nothing is removed without evidence.
 - Role snapshots are attached to every run at claim time, and enforcement reads the frozen
   snapshot; roles only narrow (lease and guardrails always apply). Live role edits govern ad-hoc
   intents that pass a role directly and apply to new runs, never retroactively to a frozen one.
-- The desktop Autonomy page copy still carries V1.4.1 "not yet" wording; it must be corrected
-  before release (G7).
+- The Autonomy page copy is current (G7 correction, G12 qualification): the boundary runs at the
+  execution-path effect points that exist today — repository work, file application, and project
+  creation — stated per effect point instead of a blanket claim.
+- The ACP host is a transport for the donor agent surface: donor-agent tool permission requests
+  are refused by policy and no tool execution is implemented there (V1.5 G12).
 
 ## Credentials (G4)
 
@@ -22,12 +25,15 @@ Status: **working** — kept current; nothing is removed without evidence.
   environment.
 - Only `anthropic:api_key` is consumed by a live engine call path today (internal worker and
   research). Other stored providers keep custody + metadata until their execution paths exist.
-- Desktop `tsc --noEmit` currently reports ~25 pre-existing type errors in regions untouched by
-  G4 (implicit-any style; verified at file/line level). Baseline-and-fix is a G8 item so a failing
-  typecheck never ships unnoticed.
+- Desktop `tsc --noEmit` is clean as of G8 (26 → 0 errors, behavior-preserving fixes) and is kept
+  green through the release.
 
 ## Carried from V1.4.1 (still true)
 
+- `docs/v1.4.1/06_V1_5_DEFERRED_WORK.md` is the frozen historical ledger: its items 1–4
+  (execution-path enforcement, central authorization, role tool-policy at effect points,
+  `guardrail_decisions`) shipped in V1.5 — see `02`/`02A`; the v1.4.1 document itself is not
+  edited (historical record).
 - No OS-level sandboxing for native hosts: the documented user-authorized trust model applies
   (`docs/v1.4.1/02_RUNTIME_TRUST_BOUNDARY.md`); Codex Windows sandbox modes remain the blocker.
 - Byte-identical release rebuilds are not promised; verify with `scripts/verify-release.ps1`.

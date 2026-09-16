@@ -224,6 +224,9 @@ class Engine:
                         lease_id, failure = ensure_job_lease(self.store, job)
                         if failure is None:
                             role_info = role_for(self.store, job['id'], mid)
+                            # Lease/scope level: no tool is chosen yet. The per-tool role policy
+                            # is enforced at the adapter's effect point (kel/coding.py) where each
+                            # of git/run_tests/write is checked against the frozen role snapshot.
                             decision = authorize(self.store, {
                                 'actor': 'kel', 'job': job['id'], 'milestone': mid,
                                 'role': (role_info or {}).get('template_id'),

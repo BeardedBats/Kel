@@ -1,2 +1,2 @@
 """Kel compatibility prototype. Local, bounded, evidence-led work."""
-__version__ = "0.1.1"
+__version__ = "1.5.0"
