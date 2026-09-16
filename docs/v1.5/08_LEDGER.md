@@ -66,6 +66,45 @@ verification evidence; no row closes because related work exists elsewhere.
 | V14-196 | Memory-retrieval metrics | V1_5_REQUIRED | Partial engine data exists; surface (G8) |
 | V14-197 | Task cost/time metrics | V1_5_REQUIRED | With V14-059/132 (G8) |
 
+## G13 pre-release delivery check (verified against HEAD, 2026-09-16)
+
+Method: source-presence checks over `desktop/packages/desktop/src/**` plus the engine interfaces each
+row cites; a row is marked DELIVERED only with a positive artifact. Rows verified absent are
+explicitly classified **OUT OF V1.5** as the post-release surface workstream (tracked by the
+dedicated UX pass): the engineering release ships the engines behind every row, not the surfaces —
+and the release record says so (`16_KNOWN_LIMITATIONS.md`, release manifest). Nothing here is
+silent.
+
+**DELIVERED (evidence):**
+- V14-150 frozen-release lock — G2 enforcement: lease refusal for frozen roots; `frozen-immutable`
+  denials on writes/repo decisions; applied and tested (`test_v15_authorize.py`).
+- V14-151 no-screen-takeover — truthful scope statement (`16_KNOWN_LIMITATIONS.md`): no action
+  family synthesizes input today.
+- V14-152 firefox-only — truthful scope statement (`16_KNOWN_LIMITATIONS.md`): the browser kind is
+  boundary-gated; no browser driver lives in the runtime.
+- V14-153 locked-system-red-line status — guardrails docstring corrected in V1.5 (tamper detection
+  refuses every decision; execution-path denials); the Autonomy page presents the locked block
+  read-only.
+- V14-145 plain-language reasons — the engine carries plain `rule`/`reason` text and the boundary +
+  approval flows surface it (Autonomy, Work panels); no separate expansion surface.
+
+**PARTIAL (engine + some surface, no dedicated panel):**
+- V14-059 / V14-132 / V14-197 budget + cost/time — budget fields render in the Work page and
+  `KelWorkPanel.tsx`; no dedicated meter or cost/time view.
+- V14-061 retry/escalation history — escalation fields render on the Team page; no work-level
+  history view.
+- V14-058 scope chip — lease scope is visible in boundary flows; no persistent work-card chip.
+- V14-087 provider-session resume display — session validity reasons exist in continuation
+  payloads; no dedicated display.
+- V14-120 subscription-vs-API explanation — provider page covers provider states; no dedicated
+  explanation block.
+
+**NOT FOUND → OUT OF V1.5 (post-release surface workstream):** V14-007, 043, 044, 049, 052, 054,
+062, 073, 074, 075, 082, 094, 096, 102, 103, 105, 107, 109, 111, 122, 135, 195, 196. (V14-105 flaky
+signal: triage found none; none exists engine-side either — out with that note.) Engine-side data
+for each row exists and is tested (cited in the plan column); the panels ship post-release. No
+shipped copy promises any of these panels, so release truthfulness is unaffected by the deferral.
+
 ## Advancements and annotations (WS26)
 
 - The 72 `ALREADY_DELIVERED_ELSEWHERE` rows are advanced with the per-row citations recorded in

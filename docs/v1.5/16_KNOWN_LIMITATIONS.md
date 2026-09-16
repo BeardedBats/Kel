@@ -37,3 +37,12 @@ Status: **working** — kept current; nothing is removed without evidence.
 - No OS-level sandboxing for native hosts: the documented user-authorized trust model applies
   (`docs/v1.4.1/02_RUNTIME_TRUST_BOUNDARY.md`); Codex Windows sandbox modes remain the blocker.
 - Byte-identical release rebuilds are not promised; verify with `scripts/verify-release.ps1`.
+
+## Surface rows deferred out of V1.5 (explicit, G13)
+
+The V1.5 engineering release completes the enforcement/diagnostics machine. Twenty-plus
+`V1_5_REQUIRED` ledger rows are *surface* rows (timelines, meters, banners, indicator panels,
+usage/test-connection views, flaky/coverage views). Their engines and data exist and are tested;
+the panels are **not in this release** and are tracked as the post-release surface workstream,
+which the dedicated UX audit will inform. Per-row verified evidence: `08_LEDGER.md`
+(G13 delivery check). No shipped copy promises these panels, so no release claim needs softening.
