@@ -199,7 +199,11 @@ class Store:
             yield db
             db.execute("COMMIT")
         except BaseException:
-            db.execute("ROLLBACK")
+            # BEGIN IMMEDIATE itself can fail (e.g. the 10 s busy timeout under a competing
+            # writer). Rolling back a transaction that never started would replace the real
+            # error ("database is locked") with "cannot rollback - no transaction is active".
+            if db.in_transaction:
+                db.execute("ROLLBACK")
             raise
         finally:
             db.close()
