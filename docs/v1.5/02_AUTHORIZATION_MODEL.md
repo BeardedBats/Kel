@@ -39,7 +39,8 @@ Actor identities:
 | Claim gate | `Engine.tick` (`kel`) | a coding milestone cannot claim a worker without an `ALLOW` for `repo` on the project root (`consume=False` pre-flight) |
 | Coding execution | `CodingAdapter.execute` (`worker`) | `repo` + tools `git` / `run_tests` before any dispatch; denial returns `BLOCKED` with no change made |
 | Change application | `apply_changes.apply_checked` (`user` via `/api/apply`; `kel` on crash recovery) | `write` on the project root before any write into the user's project |
-| Service identity | `Service._action` | uniform rejection of payload-supplied `actor` for every engine action family |
+| Project creation | `Service._plan` (`user`) | `user-project-create` policy: a user-actor request confined to `<home>/Documents/Kel Projects`; guardrails still applied; a denial leaves no folder behind |
+| Service identity | `Service._action` | uniform rejection of payload-supplied `actor` for every engine action family; the autonomy surface is restricted to the user-safe action set (no lease issuance) |
 | Boundary grant | `Service` `/api/autonomy resolve` | a granted request wakes exactly the blocked job (`resume_after_grant`); work continues without the user orchestrating anything |
 
 ## Decision outcomes
@@ -74,6 +75,17 @@ broadens authority granted by a stricter layer; each layer only narrows.
 6. **Blocked work is visible, never silent.** `authorization.blocked` sets the milestone error and
    an assistant message (with the request id when one exists), and moves the job to
    `AWAITING_USER` once no run is active. The Autonomy page remains the user's decision surface.
+7. **The shell is user-safe only.** Through the authenticated service the shell may inspect leases
+   and requests, resolve or deny boundary requests, revoke a lease, run the emergency stop, and
+   evaluate checks. It cannot issue leases — issuance is Kel's decision. Every route rejects
+   payload-supplied actor identity.
+8. **Identity bindings are checked, not assumed.** An explicit lease id must belong to the
+   intent's job (`lease-mismatch`); a worker's run must match its job and milestone
+   (`worker-milestone-mismatch`); a destructive approval must belong to the same job as the
+   intent; an unknown role denies (`role-unknown`).
+9. **Creating a new project is an effect.** The greenfield flow crosses the boundary under the
+   `user-project-create` policy. The full path inventory, the side doors this G2 pass found and
+   closed, and the explicit trusted-runtime exceptions live in `02A_EFFECT_PATH_MATRIX.md`.
 
 ## What is enforced now vs. known limits (truthful)
 
@@ -81,7 +93,9 @@ Enforced today on the execution path: lease issuance/state/expiry/scope at every
 frozen-release and system-path denial (shared predicates in `kel.guardrails`); locked action kinds;
 destructive snapshot + explicit-approval rules; role tool policy whenever a run carries an assigned
 role; service-level actor binding for all action families; guardrail tamper refusal at every
-decision (`GUARDRAIL_TAMPERED`).
+decision (`GUARDRAIL_TAMPERED`); the autonomy shell surface restricted to the user-safe set; the
+new-project creation path gated. The full path inventory and the explicit list of what Kel cannot
+intercept (inside a running external agent) are in `02A_EFFECT_PATH_MATRIX.md`.
 
 Not yet part of this increment (tracked in `16_KNOWN_LIMITATIONS.md`, gates noted):
 
@@ -90,8 +104,9 @@ Not yet part of this increment (tracked in `16_KNOWN_LIMITATIONS.md`, gates note
 - `browser` and `external` kinds have no calling runtime today — policy for them is authored here
   so any future caller already passes the boundary;
 - `no-screen-takeover` and `firefox-only` remain checker-level rules because no current action
-  family synthesizes input or drives a browser; closure requires a real gate or a truthful scope
-  statement (G2 review decision);
+  family synthesizes input or drives a browser. Recorded G2 decision: no calling runtime exists
+  today, so there is nothing to gate; the product copy must state exactly this, and any future
+  input/browser family must enter through the boundary before release;
 - role enforcement applies when an assignment exists; automatically attaching roles to every run
   is a later G3 step;
 - the desktop copy on the Autonomy page still carries the V1.4.1 "not yet" wording — a G7 item;

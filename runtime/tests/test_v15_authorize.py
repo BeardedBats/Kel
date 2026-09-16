@@ -148,6 +148,18 @@ class DecisionTests(AuthorizeBase):
                                           metadata={'action': action}))
         self.assertEqual(approved['outcome'], 'ALLOW', approved)
 
+    def test_approval_from_another_job_is_not_this_jobs_approval(self):
+        action = {'kind': 'delete-backup', 'target': 'old.db'}
+        with self.store.transaction() as db:
+            db.execute('INSERT INTO approvals VALUES(?,?,?,?,?,?,?)',
+                       ('other-approval', 'some-other-job', None, digest(action), 'APPROVED',
+                        time.time() + 300, 'user'))
+        decision = self.authz.decide(self.intent(
+            action_kind='destructive', target=str(self.project / 'old.db'),
+            snapshot_ref='backup:old.db', approval_id='other-approval',
+            metadata={'action': action}))
+        self.assertEqual(decision['outcome'], 'REQUIRES_USER_APPROVAL')
+
     def test_guardrail_tampering_refuses_every_decision(self):
         weakened = (('weakened', 'Rule removed.', 'AUTO-X'),)
         with mock.patch('kel.guardrails.RULES', weakened):
@@ -341,6 +353,42 @@ class ServiceIdentityTests(unittest.TestCase):
         result = self.service.action('/api/autonomy', {'action': 'guardrails'})
         self.assertTrue(result['rules'])
 
+    def test_lease_issuance_is_not_available_through_the_shell(self):
+        with self.assertRaises(PolicyError):
+            self.service.action('/api/autonomy', {'action': 'issue', 'job_id': 'x',
+                                                  'review_ref': 'attacker', 'roots': [str(self.root)]})
+
+    def test_greenfield_project_creation_crosses_the_boundary(self):
+        home = self.root / 'home'
+        (home / 'Documents' / 'Kel Projects').mkdir(parents=True)
+        packet = {'project': {'root': None, 'id': None}, 'files': []}
+        with mock.patch.object(Path, 'home', return_value=home):
+            self.service._plan('sid-allow', 'main', 'create a tiny app', dict(packet),
+                               kind='coding', greenfield_flag=True)
+        with contextlib.closing(self.service.store.connect()) as db:
+            projects = [dict(r) for r in db.execute('SELECT * FROM projects')]
+        self.assertTrue(any('Kel Projects' in (r['root'] or '') for r in projects),
+                        'an authorized request creates the project folder')
+        self.assertTrue(any(j.get('contract', {}).get('greenfield')
+                            for j in self.service.store.list_jobs()))
+        # A target outside the Kel Projects root is refused and nothing is created.
+        before = len(projects)
+        with self.service.store.transaction() as db:
+            db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',
+                       ('sid-deny', 'main', 'create another tiny app', 'PLANNING', None, None,
+                        time.time()))
+        with mock.patch.object(Path, 'home', return_value=home), \
+                mock.patch('kel.authorize.project_creation_root',
+                           return_value=(home / 'elsewhere').resolve()):
+            self.service._plan('sid-deny', 'main', 'create another tiny app', dict(packet),
+                               kind='coding', greenfield_flag=True)
+        with contextlib.closing(self.service.store.connect()) as db:
+            row = db.execute('SELECT * FROM submissions WHERE id=?', ('sid-deny',)).fetchone()
+            after = db.execute('SELECT COUNT(*) FROM projects').fetchone()[0]
+        self.assertEqual(row['state'], 'FAILED')
+        self.assertIn('project folder', (row['error'] or '').lower())
+        self.assertEqual(after, before, 'a denied creation leaves no project behind')
+
 
 class AdapterEffectPointTests(unittest.TestCase):
     """The coding adapter is the real effect point; a revoked lease stops it before any change."""
@@ -369,6 +417,262 @@ class AdapterEffectPointTests(unittest.TestCase):
         with contextlib.closing(self.store.connect()) as db:
             workspaces = db.execute('SELECT COUNT(*) FROM code_workspaces').fetchone()[0]
         self.assertEqual(workspaces, 0)  # nothing was copied, cloned, or changed
+
+
+class FailClosedTests(AuthorizeBase):
+    def test_malformed_contexts_fail_closed(self):
+        cases = [
+            ({'actor': 'robot', 'action_kind': 'write', 'target': str(self.project)},
+             'INVALID_CONTEXT', 'actor-unknown'),
+            ({'actor': 'kel', 'action_kind': 'teleport', 'target': 'x'},
+             'INVALID_CONTEXT', 'kind-unknown'),
+            ({'actor': 'kel', 'job': 'no-such-job', 'action_kind': 'write',
+              'target': str(self.project)}, 'INVALID_CONTEXT', 'job-unknown'),
+            ({'actor': 'kel', 'job': self.job, 'milestone': 'ghost', 'action_kind': 'write',
+              'target': str(self.project)}, 'INVALID_CONTEXT', 'milestone-unknown'),
+            ({'actor': 'kel', 'job': self.job, 'action_kind': 'write', 'target': '  '},
+             'DENY', 'target-required'),
+            ({'actor': 'worker', 'worker': 'no-such-run', 'job': self.job,
+              'action_kind': 'repo', 'tool': 'git', 'target': str(self.project)},
+             'INVALID_CONTEXT', 'worker-not-active'),
+        ]
+        for intent, outcome, rule in cases:
+            decision = self.authz.decide(intent)
+            self.assertEqual((decision['outcome'], decision['rule']), (outcome, rule), intent)
+
+    def test_worker_and_lease_identity_forgery_is_invalid(self):
+        run = self.claim_run()
+        wrong_milestone = self.authz.decide({'actor': 'worker', 'worker': run['id'],
+                                             'job': self.job, 'milestone': 'other',
+                                             'action_kind': 'repo', 'tool': 'git',
+                                             'target': str(self.project)})
+        self.assertEqual(wrong_milestone['rule'], 'worker-milestone-mismatch')
+        other_job = self.store.create(compile_coding('Other work.', self.other,
+                                                     ['python', '-m', 'unittest']))
+        other_lease = Autonomy(self.store).latest_lease(other_job)['lease_id']
+        borrowed = self.authz.decide({'actor': 'kel', 'job': self.job, 'action_kind': 'write',
+                                      'target': str(self.project / 'x.txt'),
+                                      'lease_id': other_lease})
+        self.assertEqual((borrowed['outcome'], borrowed['rule']),
+                         ('INVALID_CONTEXT', 'lease-mismatch'))
+
+    def test_unknown_role_is_denied(self):
+        decision = self.authz.decide(self.intent(action_kind='repo', tool='git',
+                                                 target=str(self.project), role='ghost-role'))
+        self.assertEqual((decision['outcome'], decision['rule']), ('DENY', 'role-unknown'))
+
+
+class ExpansionScopeTests(AuthorizeBase):
+    def test_unauthorized_domain_asks_once(self):
+        lease = Autonomy(self.store).issue(self.job, review_ref='kel-contract:test',
+                                           roots=[str(self.project)], domains=['docs.python.org'])
+        allowed = self.authz.decide({'actor': 'kel', 'job': self.job, 'action_kind': 'browser',
+                                     'target': 'docs.python.org', 'lease_id': lease['lease_id']})
+        self.assertEqual(allowed['outcome'], 'ALLOW')
+        denied = self.authz.decide({'actor': 'kel', 'job': self.job, 'action_kind': 'browser',
+                                    'target': 'evil.example.com', 'lease_id': lease['lease_id']})
+        self.assertEqual(denied['outcome'], 'REQUIRES_BOUNDARY_EXPANSION')
+        requests = Autonomy(self.store).requests(lease['lease_id'])
+        self.assertEqual((requests[0]['scope'], requests[0]['target']),
+                         ('domain', 'evil.example.com'))
+
+    def test_unauthorized_tool_asks_once(self):
+        decision = self.authz.decide(self.intent(action_kind='tool', tool='shell', target=''))
+        self.assertEqual(decision['outcome'], 'REQUIRES_BOUNDARY_EXPANSION')
+        requests = Autonomy(self.store).requests(self.lease_id)
+        self.assertEqual((requests[0]['scope'], requests[0]['target']), ('tool', 'shell'))
+
+    def test_revoked_project_grant_is_asked_again_not_silently_allowed(self):
+        run = self.claim_run()
+        third = self.base / 'third'
+        third.mkdir()
+        base = {'actor': 'worker', 'worker': run['id'], 'job': self.job, 'milestone': 'code',
+                'action_kind': 'repo', 'tool': 'git', 'target': str(third)}
+        first = self.authz.decide(base)
+        Autonomy(self.store).resolve_expansion(first['boundary_request_id'], allow=True,
+                                               grant_kind='project')
+        self.assertEqual(self.authz.decide(base)['outcome'], 'ALLOW')
+        with self.store.transaction() as db:
+            db.execute('DELETE FROM lease_scope WHERE lease_id=? AND kind=? AND value=?',
+                       (self.lease_id, 'repo', str(third)))
+        after = self.authz.decide(base)
+        self.assertEqual(after['outcome'], 'REQUIRES_BOUNDARY_EXPANSION',
+                         'a revoked grant returns to asking, never to a silent allow')
+
+
+class RestartResumeTests(AuthorizeBase):
+    def test_restarted_engine_reevaluates_against_durable_state(self):
+        Autonomy(self.store).revoke(self.lease_id, 'revoked while offline')
+        restarted = Store(self.store.root)
+        decision = Authorizer(restarted).decide({'actor': 'kel', 'job': self.job,
+                                                 'action_kind': 'write',
+                                                 'target': str(self.project / 'x.txt')})
+        self.assertEqual(decision['outcome'], 'REVOKED_LEASE',
+                         'stale in-memory authorization must not survive a restart')
+
+    def test_resumed_after_emergency_stop_requires_current_durable_rules(self):
+        Autonomy(self.store).emergency_stop()
+        restarted = Store(self.store.root)
+        self.assertEqual(restarted.get(self.job)['state'], 'PAUSED')
+        decision = Authorizer(restarted).decide({'actor': 'kel', 'job': self.job,
+                                                 'action_kind': 'repo',
+                                                 'target': str(self.project)})
+        self.assertEqual(decision['outcome'], 'REVOKED_LEASE')
+        restarted.control(self.job, 'resume')
+        lease_id, failure = ensure_job_lease(restarted, restarted.get(self.job))
+        self.assertIsNone(failure)
+        self.assertNotEqual(lease_id, self.lease_id)
+
+    def test_expired_lease_stops_a_resumed_worker_at_the_effect_point(self):
+        run = self.claim_run()
+        with self.store.transaction() as db:
+            db.execute('UPDATE capability_leases SET expires_at=0 WHERE lease_id=?',
+                       (self.lease_id,))
+        from kel.coding import CodingAdapter
+        result = CodingAdapter(self.store).execute('Change app.txt.', run_id=run['id'],
+                                                   session_id=None, cancel=None)
+        self.assertEqual(result['outcome'], 'BLOCKED')
+        self.assertEqual(result['authorization'], 'EXPIRED_LEASE')
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM code_workspaces').fetchone()[0], 0)
+
+    def test_emergency_stop_stops_the_worker_effect_point(self):
+        run = self.claim_run()
+        Autonomy(self.store).emergency_stop()
+        from kel.coding import CodingAdapter
+        result = CodingAdapter(self.store).execute('Change app.txt.', run_id=run['id'],
+                                                   session_id=None, cancel=None)
+        self.assertEqual(result['outcome'], 'BLOCKED')
+        # The stop marks the run CANCEL_REQUESTED (worker no longer live) before the lease check;
+        # either way no effect may occur.
+        self.assertIn(result['authorization'], ('INVALID_CONTEXT', 'REVOKED_LEASE'))
+
+    def test_role_changes_apply_immediately_without_restart_caches(self):
+        team = Team(self.store)
+        team.define_role('fresh-role', 'Fresh Role', 'Engineering',
+                         {'goal': 'Work.', 'outputs': 'code', 'quality_bar': 'tests pass',
+                          'tool_policy': {'allow': ['read', 'git'], 'deny': []}, 'budget': 8})
+        before = self.authz.decide(self.intent(action_kind='repo', tool='git',
+                                               target=str(self.project), role='fresh-role'))
+        self.assertEqual(before['outcome'], 'ALLOW')
+        team.edit_role('fresh-role', {'tool_policy': {'allow': ['read'], 'deny': ['git']}})
+        restarted = Store(self.store.root)
+        after = Authorizer(restarted).decide(self.intent(action_kind='repo', tool='git',
+                                                         target=str(self.project),
+                                                         role='fresh-role'))
+        self.assertEqual((after['outcome'], after['rule']), ('DENY', 'role-policy'))
+
+
+class ParallelIsolationTests(AuthorizeBase):
+    def test_unauthorized_worker_does_not_disturb_an_authorized_one(self):
+        run_a = self.claim_run()
+        job_b = self.store.create(compile_coding('Change other.txt.', self.other,
+                                                 ['python', '-m', 'unittest']))
+        run_b = self.store.claim(job_b, 'code', provider='codex-code')
+        lease_b = Autonomy(self.store).latest_lease(job_b)['lease_id']
+        intent_a = {'actor': 'worker', 'worker': run_a['id'], 'job': self.job,
+                    'milestone': 'code', 'action_kind': 'repo', 'tool': 'git',
+                    'target': str(self.project)}
+        intent_b = {'actor': 'worker', 'worker': run_b['id'], 'job': job_b,
+                    'milestone': 'code', 'action_kind': 'repo', 'tool': 'git',
+                    'target': str(self.project)}
+        self.assertEqual(self.authz.decide(intent_a)['outcome'], 'ALLOW')
+        intrude = self.authz.decide(intent_b)
+        self.assertEqual(intrude['outcome'], 'REQUIRES_BOUNDARY_EXPANSION')
+        self.assertEqual(self.authz.decide(intent_a)['outcome'], 'ALLOW',
+                         'worker A keeps its authority while worker B is denied')
+        self.assertEqual(Autonomy(self.store).requests(self.lease_id), [])
+        self.assertEqual(len(Autonomy(self.store).requests(lease_b)), 1)
+        own = dict(intent_b, target=str(self.other))
+        self.assertEqual(self.authz.decide(own)['outcome'], 'ALLOW',
+                         'worker B keeps its own scope')
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT state FROM capability_leases WHERE lease_id=?',
+                             (self.lease_id,)).fetchone()
+        self.assertEqual(row['state'], 'ACTIVE')
+
+
+class ProjectCreationPolicyTests(AuthorizeBase):
+    def test_user_project_creation_is_confined_and_actor_bound(self):
+        allowed_root = self.base / 'home' / 'Documents' / 'Kel Projects'
+        allowed_root.mkdir(parents=True)
+        with mock.patch('kel.authorize.project_creation_root',
+                        return_value=allowed_root.resolve()):
+            allowed = self.authz.decide({'actor': 'user', 'action_kind': 'write',
+                                         'target': str(allowed_root / 'app-1'),
+                                         'metadata': {'operation': 'create-project'}})
+            outside = self.authz.decide({'actor': 'user', 'action_kind': 'write',
+                                         'target': str(self.base / 'elsewhere'),
+                                         'metadata': {'operation': 'create-project'}})
+            forged = self.authz.decide({'actor': 'kel', 'action_kind': 'write',
+                                        'target': str(allowed_root / 'app-2'),
+                                        'metadata': {'operation': 'create-project'}})
+            frozen = self.authz.decide({'actor': 'user', 'action_kind': 'write',
+                                        'target': str(allowed_root / 'Kel-V1.3-Frozen' / 'app'),
+                                        'metadata': {'operation': 'create-project'}})
+        self.assertEqual((allowed['outcome'], allowed['rule']),
+                         ('ALLOW', 'user-project-create'))
+        self.assertEqual((outside['outcome'], outside['rule']),
+                         ('DENY', 'project-create-scope'))
+        self.assertEqual((forged['outcome'], forged['rule']), ('DENY', 'lease-required'),
+                         'only the user actor carries creation authority')
+        self.assertEqual((frozen['outcome'], frozen['rule']), ('DENY', 'frozen-immutable'))
+
+
+class NativeTrustBoundaryTests(unittest.TestCase):
+    def test_readonly_codex_agent_flags_are_pinned(self):
+        from kel.native import NativeAdapter
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        adapter = NativeAdapter('codex', Path(tmp.name) / 'ws', Path(tmp.name) / 'logs')
+        joined = ' '.join(adapter.argv())
+        self.assertIn('sandbox_mode="read-only"', joined)
+        self.assertIn('approval_policy="never"', joined)
+        self.assertIn('--disable', joined)
+        self.assertIn('-s read-only', joined)
+
+
+class InternalWorkerBoundaryTests(unittest.TestCase):
+    """G2 case 22: the internal worker cannot spawn agents; its allowlist refuses everything else."""
+
+    def test_internal_worker_cannot_spawn_agents(self):
+        from kel.internal import InternalAdapter
+
+        def transport(body, timeout):
+            return {'content': [{'type': 'tool_use', 'id': 't1', 'name': 'spawn_agent',
+                                 'input': {}}],
+                    'usage': {'output_tokens': 1}}
+
+        adapter = InternalAdapter(transport=transport, timeout=30)
+        result = adapter.execute('Do the task.')
+        self.assertEqual(result['outcome'], 'FAILED')
+        self.assertIn('Tool denied: spawn_agent', result['error'])
+
+
+class ActiveWorkDenialTests(AuthorizeBase):
+    """G2 case 25: a denial during active work is announced once and never touches the live run."""
+
+    def test_denial_during_active_work_is_announced_once_and_never_touches_the_run(self):
+        run = self.claim_run()
+        third = self.base / 'third'
+        third.mkdir()
+        decision = self.authz.decide({'actor': 'worker', 'worker': run['id'], 'job': self.job,
+                                      'milestone': 'code', 'action_kind': 'repo', 'tool': 'git',
+                                      'target': str(third)})
+        self.assertEqual(decision['outcome'], 'REQUIRES_BOUNDARY_EXPANSION')
+        self.assertTrue(block_job(self.store, self.job, 'code', decision))
+        with contextlib.closing(self.store.connect()) as db:
+            first = db.execute("SELECT COUNT(*) FROM messages WHERE job_id=? AND role='assistant'",
+                               (self.job,)).fetchone()[0]
+            run_state = db.execute('SELECT state FROM runs WHERE id=?', (run['id'],)).fetchone()[0]
+        self.assertEqual(run_state, 'RUNNING', 'a denial never cancels a live run')
+        self.assertEqual(self.store.get(self.job)['state'], 'RUNNING',
+                         'the job stays live while its run is')
+        self.assertFalse(block_job(self.store, self.job, 'code', decision))
+        with contextlib.closing(self.store.connect()) as db:
+            second = db.execute("SELECT COUNT(*) FROM messages WHERE job_id=? AND role='assistant'",
+                                (self.job,)).fetchone()[0]
+        self.assertEqual(first, second, 'no repeated announcement for the same block')
 
 
 if __name__ == '__main__':
