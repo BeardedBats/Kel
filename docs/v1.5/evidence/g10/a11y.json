@@ -1,0 +1,781 @@
+{
+  "schema": 1,
+  "startedAt": "2026-09-16T04:15:20.681Z",
+  "errors": [],
+  "launchMode": "packaged",
+  "engine": {
+    "pid": 50860,
+    "version": "1.4.1"
+  },
+  "bootScreen": {
+    "textSamples": 21,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
+    "smallestText": 12,
+    "largestText": 32,
+    "fontSizeHistogram": {
+      "12": 3,
+      "14": 13,
+      "16": 3,
+      "24": 1,
+      "32": 1
+    },
+    "paletteText": [
+      {
+        "value": "rgb(0,0,0)",
+        "count": 9
+      },
+      {
+        "value": "rgb(20,22,26)",
+        "count": 3
+      },
+      {
+        "value": "rgb(90,98,112)",
+        "count": 3
+      },
+      {
+        "value": "rgb(107,114,128)",
+        "count": 3
+      },
+      {
+        "value": "rgb(92,100,112)",
+        "count": 1
+      },
+      {
+        "value": "rgb(14,124,90)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255,255,255)",
+        "count": 1
+      }
+    ],
+    "paletteBg": [
+      {
+        "value": "rgb(242,243,245)",
+        "count": 11
+      },
+      {
+        "value": "rgb(255,255,255)",
+        "count": 6
+      },
+      {
+        "value": "rgb(250,250,251)",
+        "count": 3
+      },
+      {
+        "value": "rgb(14,124,90)",
+        "count": 1
+      }
+    ],
+    "emojiCharacters": 0
+  },
+  "focusOrderBoot": [
+    {
+      "tag": "A",
+      "role": null,
+      "name": null,
+      "text": "Skip to main content",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        10,
+        162,
+        39
+      ],
+      "isSkipLink": true
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Collapse",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        16,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Search messages",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        52,
+        3,
+        36,
+        36
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Minimize",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1312,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Maximize",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1352,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Close",
+      "text": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        1392,
+        0,
+        40,
+        42
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "role": "button",
+      "name": null,
+      "text": "New Chat",
+      "outline": "solid 1px rgb(14, 122, 89)",
+      "rect": [
+        8,
+        91,
+        208,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Work",
+      "text": "Work",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        127,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Team",
+      "text": "Team",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        163,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Projects",
+      "text": "Projects",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        199,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Providers",
+      "text": "Providers",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        235,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Autonomy",
+      "text": "Autonomy",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        271,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": "Diagnostics",
+      "text": "Diagnostics",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        307,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "BUTTON",
+      "role": null,
+      "name": null,
+      "text": "Work & context",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        817,
+        244,
+        32
+      ],
+      "isSkipLink": false
+    },
+    {
+      "tag": "DIV",
+      "role": "button",
+      "name": null,
+      "text": "Settings",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "rect": [
+        8,
+        858,
+        244,
+        34
+      ],
+      "isSkipLink": false
+    }
+  ],
+  "workDrawer": {
+    "textSamples": 30,
+    "contrastFailures": [],
+    "contrastFailureCount": 0,
+    "smallestText": 12,
+    "largestText": 32,
+    "fontSizeHistogram": {
+      "12": 3,
+      "14": 22,
+      "16": 3,
+      "24": 1,
+      "32": 1
+    },
+    "paletteText": [
+      {
+        "value": "rgb(0,0,0)",
+        "count": 9
+      },
+      {
+        "value": "rgb(78,89,105)",
+        "count": 7
+      },
+      {
+        "value": "rgb(20,22,26)",
+        "count": 3
+      },
+      {
+        "value": "rgb(90,98,112)",
+        "count": 3
+      },
+      {
+        "value": "rgb(107,114,128)",
+        "count": 3
+      },
+      {
+        "value": "rgb(29,33,41)",
+        "count": 2
+      },
+      {
+        "value": "rgb(92,100,112)",
+        "count": 1
+      },
+      {
+        "value": "rgb(14,124,90)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255,255,255)",
+        "count": 1
+      }
+    ],
+    "paletteBg": [
+      {
+        "value": "rgb(255,255,255)",
+        "count": 15
+      },
+      {
+        "value": "rgb(242,243,245)",
+        "count": 11
+      },
+      {
+        "value": "rgb(250,250,251)",
+        "count": 3
+      },
+      {
+        "value": "rgb(14,124,90)",
+        "count": 1
+      }
+    ],
+    "emojiCharacters": 0
+  },
+  "routes": {},
+  "focusOrder": [
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        900,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        967,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1093,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Continue work",
+      "rect": [
+        1214,
+        142,
+        95,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project knowledge",
+      "rect": [
+        1341,
+        142,
+        122,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project map",
+      "rect": [
+        1217,
+        142,
+        79,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Recipes",
+      "rect": [
+        1328,
+        142,
+        52,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tabpanel",
+      "name": null,
+      "text": "No saved work in this conversation.",
+      "rect": [
+        856,
+        198,
+        568,
+        36
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "combobox",
+      "name": null,
+      "text": "New conversation",
+      "rect": [
+        856,
+        90,
+        568,
+        32
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        900,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        967,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1093,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Continue work",
+      "rect": [
+        1214,
+        142,
+        95,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project knowledge",
+      "rect": [
+        1341,
+        142,
+        122,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project map",
+      "rect": [
+        1217,
+        142,
+        79,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Recipes",
+      "rect": [
+        1328,
+        142,
+        52,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tabpanel",
+      "name": null,
+      "text": "No saved work in this conversation.",
+      "rect": [
+        856,
+        198,
+        568,
+        36
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "combobox",
+      "name": null,
+      "text": "New conversation",
+      "rect": [
+        856,
+        90,
+        568,
+        32
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        900,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        967,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1093,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Continue work",
+      "rect": [
+        1214,
+        142,
+        95,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project knowledge",
+      "rect": [
+        1341,
+        142,
+        122,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Project map",
+      "rect": [
+        1217,
+        142,
+        79,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Recipes",
+      "rect": [
+        1328,
+        142,
+        52,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tabpanel",
+      "name": null,
+      "text": "No saved work in this conversation.",
+      "rect": [
+        856,
+        198,
+        568,
+        36
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "combobox",
+      "name": null,
+      "text": "New conversation",
+      "rect": [
+        856,
+        90,
+        568,
+        32
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Work",
+      "rect": [
+        900,
+        142,
+        35,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved context",
+      "rect": [
+        967,
+        142,
+        94,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    },
+    {
+      "tag": "DIV",
+      "role": "tab",
+      "name": null,
+      "text": "Saved history",
+      "rect": [
+        1093,
+        142,
+        89,
+        40
+      ],
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none"
+    }
+  ],
+  "focusIndicatorMissing": 0,
+  "closeOutcome": "closed"
+}

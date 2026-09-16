@@ -678,3 +678,11 @@ h5,
 h6 {
   font-family: var(--kel-font-display);
 }
+
+/* Kel V1.5 (G10): the packaging a11y probe measured the empty-state caption on the packaged app
+   at 2:1 (rgb(169,174,184) on rgb(242,243,245)) — Arco renders it with the uncorrected
+   --gray-5 while the V1.3 audit corrected muted ink via --color-bg-6. Pin the caption to the
+   corrected token; dark mode follows --color-bg-6's dark value from kel-tokens.css. */
+.arco-empty .arco-empty-description {
+  color: var(--color-bg-6);
+}

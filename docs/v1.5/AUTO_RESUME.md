@@ -39,16 +39,20 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. G10 (paused mid-prerequisites — run halted by user after the packaging attempt): staged = V1.5
-   KelEngine rebuilt; `dist/package/win-unpacked` holds Kel.exe / app.asar / kel-engine /
-   bundled-aioncore with **no app-update.yml**. Resume: fix the builder duplicate entry — remove
-   `public` and `resources/bundled-aioncore` from `kel-builder.json` `extraResources` (base
-   `electron-builder.yml` already contributes both; arrays merge, and the second copy of
-   `aioncore.exe` deterministically EBUSYs) — then re-run from `desktop/`:
-   `./node_modules/.bin/electron-builder --config kel-builder.json --win --dir --publish=never`
-   expect EXIT 0. Then run the G10 probes with Playwright from `desktop/node_modules`:
-   `node packaging/verify-packaged-ui.cjs <dist/package/win-unpacked> <fresh dataDir>` plus
-   `capture-screens.cjs` and `a11y-probe.cjs` into an evidence dir; review JSONs, then G11–G13.
+1. G11 — migration, clean clone, assembled package: prove fresh / V1.4 / V1.4.1 paths (database,
+   jobs, milestones, memory, knowledge, roles, frozen role snapshots, providers, credential
+   metadata, leases, grants, approvals, recipes, configuration), then clean clone → lockfile
+   install → renderer build → tsc → vitest → package → `packaging/verify_engine_pyz.py` →
+   `verify-packaged-smoke.cjs` → compare candidate vs assembled release; no stale candidate
+   artifacts. Then G12 (independent architecture audit) → G13 (freeze/tag/release).
+
+## Current position (2026-09-16)
+
+- **G0–G10 closed** (each with review CONTINUE). Latest commits: G8 `6366976`+`9f2d890`; G9
+  `74b6c33`+`9cc6af7`; G10 pipeline fix `0fba928` + closure record.
+- Packaged artifact `dist/package/win-unpacked` builds **EXIT 0**; acceptance evidence in
+  `docs/v1.5/evidence/g10/`; suite **444 + 10**; desktop tsc 0 / vitest 72 / build 0.
+- Next: G11 (step 1 above) → G12 independent audit → G13 freeze/tag/release.
 
 ## Run checkpoint (paused 2026-09-15, user-requested)
 
