@@ -151,6 +151,29 @@ const Diagnostics: React.FC = () => {
                       ? 'the engine will fence these on its next sweep'
                       : 'none waiting',
                   ],
+                  [
+                    'Authorization policy',
+                    snapshot.policy?.version ?? 'not migrated yet',
+                    snapshot.policy
+                      ? Object.entries(snapshot.policy.by_decision)
+                          .map(([decision, count]) => `${decision} ${count}`)
+                          .join(' · ') || 'no decisions recorded yet'
+                      : 'this database predates the V1.5 policy',
+                  ],
+                  [
+                    'Capability leases',
+                    Object.entries(snapshot.leases ?? {})
+                      .map(([state, count]) => `${state} ${count}`)
+                      .join(' · ') || 'none issued yet',
+                    'capability_leases by state',
+                  ],
+                  [
+                    'Schema history',
+                    String(snapshot.migrations?.length ?? 0),
+                    snapshot.migrations?.length
+                      ? `latest: ${snapshot.migrations[snapshot.migrations.length - 1].name}`
+                      : 'no migrations recorded',
+                  ],
                 ]}
               />
               {snapshot.database.problems.length > 0 && (

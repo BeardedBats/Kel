@@ -311,6 +311,23 @@ export interface KelDiagnosticsSnapshot {
   };
   jobs: Record<string, number>;
   runs: { by_state: Record<string, number>; expired_unfenced: number };
+  policy?: {
+    version: string | null;
+    by_decision: Record<string, number>;
+    recent: Array<{
+      at: number;
+      decision: string;
+      rule: string | null;
+      reason: string | null;
+      actor: string;
+      job_id: string | null;
+      action_kind: string;
+      policy_version: string;
+    }>;
+    error?: string;
+  };
+  leases?: Record<string, number>;
+  migrations?: Array<{ version: number; name: string }>;
   providers: Record<string, Record<string, unknown>>;
   processes: Array<{
     run_id: string;

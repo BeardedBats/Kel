@@ -87,6 +87,43 @@ def _pid_alive(pid):
         return False
 
 
+def _policy_summary(db):
+    """V1.5 authorization posture: policy version, decision roll-up, and a bounded recent tail.
+
+    Degrades to empty results on a database that predates the authorization migration and never
+    raises: the snapshot is the one surface a user consults when something is wrong."""
+    try:
+        from .authorize import POLICY_VERSION
+        if not _table(db, 'guardrail_decisions'):
+            return {'version': POLICY_VERSION, 'by_decision': {}, 'recent': []}
+        by_decision = {decision: count for decision, count in db.execute(
+            'SELECT decision, COUNT(*) FROM guardrail_decisions GROUP BY decision').fetchall()}
+        recent = [{'at': row['at'], 'decision': row['decision'], 'rule': row['rule'],
+                   'reason': row['reason'], 'actor': row['actor'], 'job_id': row['job_id'],
+                   'action_kind': row['action_kind'], 'policy_version': row['policy_version']}
+                  for row in db.execute(
+                      'SELECT * FROM guardrail_decisions ORDER BY at DESC LIMIT 10').fetchall()]
+        return {'version': POLICY_VERSION, 'by_decision': by_decision, 'recent': recent}
+    except Exception as exc:  # pragma: no cover - defensive; a broken snapshot helps nobody
+        return {'version': None, 'by_decision': {}, 'recent': [], 'error': str(exc)}
+
+
+def _lease_summary(db):
+    """Live capability-lease states, for the same reason as the policy summary."""
+    if not _table(db, 'capability_leases'):
+        return {}
+    return {state: count for state, count in db.execute(
+        'SELECT state, COUNT(*) FROM capability_leases GROUP BY state').fetchall()}
+
+
+def _migrations(db):
+    if not _table(db, 'schema_migrations'):
+        return []
+    return [{'version': row['version'], 'name': row['name']}
+            for row in db.execute(
+                'SELECT version, name FROM schema_migrations ORDER BY version').fetchall()]
+
+
 class Diagnostics:
     def __init__(self, store, engine_version=''):
         self.store = store
@@ -131,6 +168,9 @@ class Diagnostics:
             page_size = db.execute('PRAGMA page_size').fetchone()[0]
             page_count = db.execute('PRAGMA page_count').fetchone()[0]
             freelist = db.execute('PRAGMA freelist_count').fetchone()[0]
+            policy = _policy_summary(db)
+            leases = _lease_summary(db)
+            migrations = _migrations(db)
             # Jobs keep their state inside the JSON payload (jobs(id, revision, data)), unlike runs.
             jobs = {}
             for row in db.execute('SELECT data FROM jobs').fetchall():
@@ -188,6 +228,9 @@ class Diagnostics:
             },
             'jobs': jobs,
             'runs': {'by_state': runs, 'expired_unfenced': expired},
+            'policy': policy,
+            'leases': leases,
+            'migrations': migrations,
             'providers': providers,
             'processes': processes,
         }
