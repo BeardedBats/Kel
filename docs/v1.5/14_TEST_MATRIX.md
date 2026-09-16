@@ -32,3 +32,11 @@ the documentation role.
 text; transport errors never echo the key; the key travels only in the request header; native
 children get no cross-provider key; test commands get no provider keys; a completed run leaves no
 key bytes anywhere in the store.
+
+## Completion + routing (G5)
+
+`runtime/tests/test_v15_completion.py` — **4 tests** (run: 4 passed): every compiled family has
+explicit claims (all required fields, objective/subjective split, coding repository-evidence
+claim); transient drafts never carry claims; stored contracts carry claims for inspection;
+trivial requests stay at one objective claim; multi-step claims mirror dependencies; a verified
+escalation records task class, attempts, and the escalated flag in `routing_outcomes`.
