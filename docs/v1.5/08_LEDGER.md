@@ -30,20 +30,20 @@ verification evidence; no row closes because related work exists elsewhere.
 | V14-059 | Task budget meter | V1_5_REQUIRED | Budget model exists; surface spent/reserved (G8) |
 | V14-061 | Retry and escalation history | V1_5_REQUIRED | Retry records exist; history view (G7) |
 | V14-062 | Stall detection display | V1_5_REQUIRED | Stall signals exist (heartbeats/deadlines); display (G7) |
-| V14-073 | Superseded-history view | V1_5_REQUIRED | `history()` exists engine-side; surface (G6) |
-| V14-074 | Stale-memory warning | V1_5_REQUIRED | `revalidate→stale` exists (MEM-10); surface (G6) |
-| V14-075 | Project-isolation indicator | V1_5_REQUIRED | Isolation enforced (MEM-07); indicator (G6) |
-| V14-082 | Context size / source-mix indicator | V1_5_REQUIRED | `context_packets` metrics exist; surface (G6) |
-| V14-087 | Exact provider-session resume display | V1_5_REQUIRED | Session reuse is engine-side (CONT-03); display state (G6) |
-| V14-094 | Continuation history | V1_5_REQUIRED | `job_links` exist; history view (G6) |
-| V14-096 | Recovered-work banner | V1_5_REQUIRED | Recovery exists; banner (G6) |
-| V14-102 | Reviewer-independence indicator | V1_5_REQUIRED | Reviewer diversity records exist; surface (G5) |
-| V14-103 | Evidence-freshness warning | V1_5_REQUIRED | Staleness concepts exist; warning (G5) |
-| V14-105 | Flaky-test indicator | V1_5_REQUIRED | Verify first (triage found none); implement or scope out with evidence (G5) |
-| V14-107 | Why-uncertain explanation | V1_5_REQUIRED | Uncertainty notes exist; surface (G5) |
-| V14-109 | Verification history | V1_5_REQUIRED | Records exist; view (G5) |
-| V14-111 | Requirements coverage matrix | V1_5_REQUIRED | Ties to CompletionContract claims (G5) |
-| V14-113 | Reviewer-rubric viewer | V1_5_OPTIONAL | If it fits G5 coherently |
+| V14-073 | Superseded-history view | V1_5_REQUIRED | `history()` exists engine-side; surface (G7 desktop; engine complete as of G6) |
+| V14-074 | Stale-memory warning | V1_5_REQUIRED | `revalidate→stale` exists (MEM-10); surface (G7 desktop; engine complete) |
+| V14-075 | Project-isolation indicator | V1_5_REQUIRED | Isolation enforced (MEM-07); indicator (G7 desktop; engine enforced) |
+| V14-082 | Context size / source-mix indicator | V1_5_REQUIRED | `context_packets` metrics exist; surface (G7 desktop) |
+| V14-087 | Exact provider-session resume display | V1_5_REQUIRED | Session reuse is engine-side (CONT-03); display state (G7 desktop) |
+| V14-094 | Continuation history | V1_5_REQUIRED | `job_links` exist; history view (G7 desktop) |
+| V14-096 | Recovered-work banner | V1_5_REQUIRED | Recovery exists; banner (G7 desktop) |
+| V14-102 | Reviewer-independence indicator | V1_5_REQUIRED | Reviewer diversity records exist; surface (G7 desktop) |
+| V14-103 | Evidence-freshness warning | V1_5_REQUIRED | Staleness concepts exist; warning (G7 desktop) |
+| V14-105 | Flaky-test indicator | V1_5_REQUIRED | Verify first (triage found none); engine signal or scope-out with evidence, then surface (G7 desktop) |
+| V14-107 | Why-uncertain explanation | V1_5_REQUIRED | Uncertainty notes exist; surface (G7 desktop) |
+| V14-109 | Verification history | V1_5_REQUIRED | Records exist; view (G7 desktop) |
+| V14-111 | Requirements coverage matrix | V1_5_REQUIRED | Claims exist engine-side (`completion_claims`, G5); matrix surface (G7 desktop) |
+| V14-113 | Reviewer-rubric viewer | V1_5_OPTIONAL | If it fits G7 coherently |
 
 ## Classification (rows 26–42)
 

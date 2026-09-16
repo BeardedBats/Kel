@@ -419,14 +419,26 @@ class Memory:
         return memory_id
 
     def forget(self, memory_id, actor='user'):
-        """Purge content and keep a content-free tombstone plus an audit event."""
+        """Purge content and keep a content-free tombstone plus an audit event.
+
+        Purge is physical as well as logical: `secure_delete` zeroes the freed cells, the FTS row
+        is removed and its segments merged, and the WAL is checkpointed so pre-forget pages are
+        not retained (best effort under concurrent readers). The tombstone and its audit event
+        stay; neither carries content.
+        """
         with self.store.transaction() as db:
             row = self._get(db, memory_id)
             db.execute('UPDATE memories SET value=?, summary=?, status=?, updated=? WHERE id=?',
                        ('', '', 'retracted', time.time(), memory_id))
             if self.fts:
                 db.execute('DELETE FROM memories_fts WHERE mid=?', (memory_id,))
+                db.execute("INSERT INTO memories_fts(memories_fts) VALUES('optimize')")
             self._event(db, row['project_id'], memory_id, 'forgotten', actor, None)
+        try:
+            with contextlib.closing(self.store.connect()) as db:
+                db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+        except sqlite3.OperationalError:
+            pass  # a busy reader delays the scrub; the logical purge is already durable
         return memory_id
 
     def resolve_conflict(self, conflict_id, choice, actor='user'):

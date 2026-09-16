@@ -40,3 +40,10 @@ explicit claims (all required fields, objective/subjective split, coding reposit
 claim); transient drafts never carry claims; stored contracts carry claims for inspection;
 trivial requests stay at one objective claim; multi-step claims mirror dependencies; a verified
 escalation records task class, attempts, and the escalated flag in `routing_outcomes`.
+
+## Memory packets (G6)
+
+`runtime/tests/test_v15_memory_packets.py` — **4 tests** (run: 4 passed): retracted memory leaves
+the packet; stale memory leaves the packet and stays inspectable; forgotten content leaves zero
+bytes and zero search hits (physical purge: `secure_delete`, FTS merge, WAL checkpoint); one
+project's retraction never touches another project's packet.
