@@ -24,7 +24,7 @@ Verified at program start (2026-09-15):
 | G3 roles / leases / boundary | **closed** — frozen role snapshot per run at claim, enforcement reads the snapshot, coding gate covers `git`/`run_tests`/`write`; leases + expansion end-to-end; closure review **CONTINUE** | `test_v15_roles.py`, `02_AUTHORIZATION_MODEL.md` |
 | G4 credentials / provider runtime | **closed** — injection live (secure store → engine spawn env only), engine-side redaction / child-env / test-command hygiene, leak suite 6/6, provider audit (`03`), credential doc (`04`); closure review **CONTINUE**; desktop tsc baseline recorded for G8 | `test_v15_credentials.py`, `03_PROVIDER_RUNTIME.md`, `04_CREDENTIAL_RUNTIME.md` |
 | G5 routing / completion / review | **closed** — claims compiler (finalized contracts only; transient drafts stay clean), escalation-aware `routing_outcomes` (`job_kind`/`attempts`/`escalated`), routing + completion + reviewer-independence audits (`05`, `06`); closure review **CONTINUE** | `test_v15_completion.py`, `05_ROUTING.md`, `06_COMPLETION_AUTHORITY.md` |
-| G6 memory / continuation / recipes | pending | — |
+| G6 memory / continuation / recipes | **closed** — packet-lifecycle probes 4/4; physical forget purge (`secure_delete`, FTS segment merge, WAL checkpoint) closed a real residue gap the probes found; memory/continuation/recipes audited (`07`); closure review **CONTINUE** | `test_v15_memory_packets.py`, `07_MEMORY_AND_CONTEXT.md` |
 | G7 donor sunset / chat purity / UX | pending (includes the Autonomy page copy correction) | — |
 | G8 diagnostics / performance / packaging | pending | — |
 | G9 security + reliability sweeps | pending (a first slice of the security matrix is covered by `test_v15_authorize.py`) | — |
@@ -77,11 +77,18 @@ escalated), routing + completion + reviewer-independence audits (`05`, `06`); te
 `test_v15_completion.py` **5/5**; full suite **434 passed + 10 subtests**; closure review
 **CONTINUE**.
 
+**Increment 6 — G6 (this working tree):** memory lifecycle proven end to end in context packets
+(retract/stale/forget; cross-project isolation); `forget` made a physical purge (`secure_delete`
+on every connection, FTS segment merge, WAL checkpoint) after the new probes found residual bytes;
+memory/continuation/recipes audited (`07`); ledger UI rows re-pointed to the desktop program;
+tests `test_v15_memory_packets.py` **4/4**; full suite **438 passed + 10 subtests**; closure review
+**CONTINUE**.
+
 ## Required deliverables (spec checklist)
 
 `00_STATUS` ✅ · `01_ARCHITECTURE` ◻ skeleton · `02_AUTHORIZATION_MODEL` ✅ ·
-`02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ◻
-· `06_COMPLETION_AUTHORITY` ◻ · `07_MEMORY_AND_CONTEXT` ◻ · `08_LEDGER` ✅ working ·
+`02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ✅
+· `06_COMPLETION_AUTHORITY` ✅ · `07_MEMORY_AND_CONTEXT` ✅ · `08_LEDGER` ✅ working ·
 `09_SECURITY_REVIEW` ✅ working (G2 matrix complete) · `10_RELIABILITY_REVIEW` ◻ ·
 `11_DESIGN_SYSTEM` ◻ · `12_PERFORMANCE` ◻ · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
 `15_RELEASE_MANIFEST` ◻ · `16_KNOWN_LIMITATIONS` ✅ working · `17_V2_PLUS_DEFERRED` ✅ ·

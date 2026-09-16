@@ -182,6 +182,9 @@ class Store:
                 db.row_factory = sqlite3.Row
                 db.execute("PRAGMA foreign_keys=ON")
                 db.execute("PRAGMA synchronous=FULL")
+                # V1.5 G6: deleted/updated content is zeroed as cells are freed, so "forget"
+                # leaves no readable residue behind in the engine database.
+                db.execute("PRAGMA secure_delete=ON")
                 return db
             except sqlite3.OperationalError as exc:
                 db.close()
