@@ -39,22 +39,30 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. G11 — migration, clean clone, assembled package: prove fresh / V1.4 / V1.4.1 paths (database,
-   jobs, milestones, memory, knowledge, roles, frozen role snapshots, providers, credential
-   metadata, leases, grants, approvals, recipes, configuration), then clean clone → lockfile
-   install → renderer build → tsc → vitest → package → `packaging/verify_engine_pyz.py` →
-   `verify-packaged-smoke.cjs` → compare candidate vs assembled release; no stale candidate
-   artifacts. Then G12 (independent architecture audit) → G13 (freeze/tag/release).
+1. G11 (in progress — migration proofs DONE this run, see `13_MIGRATIONS.md`): remaining =
+   CLEAN CLONE workstream —
+   a) clone the repo to a scratch dir; restore git-ignored build inputs
+      (`desktop/resources/bundled-aioncore/win32-x64`, 199MB — copy from the current tree or the
+      frozen V1.4.1 release; `desktop/public/fonts` if present);
+   b) install with bun (`npm i -g bun`, network OK) → `bun install --frozen-lockfile` in
+      `desktop/` (lockfile `bun.lock`);
+   c) from the clone: renderer build (`npm run package`), `tsc --noEmit`, `vitest run`,
+      `electron-builder --config kel-builder.json --win --dir` (pinned-ABI prebuild path),
+      rebuild the engine (`scripts/build-runtime.ps1`) and run
+      `python packaging/verify_engine_pyz.py <clone>/dist/runtime/KelEngine/KelEngine.exe`,
+      then `verify-packaged-smoke.cjs` + `verify-packaged-ui.cjs` on the clone's package;
+   d) compare candidate vs assembled release; confirm no stale candidate artifacts.
+   Then G12 (independent architecture audit) → G13 (freeze/tag/release).
 
 ## Current position (2026-09-16)
 
-- **G0–G10 closed** (each with review CONTINUE). Latest commits: G8 `6366976`+`9f2d890`; G9
-  `74b6c33`+`9cc6af7`; G10 pipeline fix `0fba928` + closure record.
-- Packaged artifact `dist/package/win-unpacked` builds **EXIT 0**; acceptance evidence in
-  `docs/v1.5/evidence/g10/`; suite **444 + 10**; desktop tsc 0 / vitest 72 / build 0.
-- Next: G11 (step 1 above) → G12 independent audit → G13 freeze/tag/release.
+- **G0–G10 closed**; **G11 in progress** (migration proofs done; clean clone pending).
+  Key commits: G8 `6366976`+`9f2d890`; G9 `74b6c33`+`9cc6af7`; G10 `0fba928`+`6af1189`; G11 checkpoint `23c06f1`.
+- Packaged artifact builds **EXIT 0**; G10 acceptance evidence in `docs/v1.5/evidence/g10/`;
+  migration matrix in `13_MIGRATIONS.md`; suite **445 + 10**; desktop tsc 0 / vitest 72 / build 0.
+- Next: G11 clean-clone workstream (step 1) → G12 audit → G13 freeze/tag/release.
 
-## Run checkpoint (paused 2026-09-15, user-requested)
+## Historical checkpoint (2026-09-15, superseded by Current position)
 
 - **Current gate:** G10 (visual / product acceptance). G8 and G9 are **closed** (review CONTINUE).
 - **Completed:** G8 commits `6366976` + `9f2d890`; G9 commits `74b6c33` + `9cc6af7`; V1.5 KelEngine

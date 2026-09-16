@@ -29,7 +29,7 @@ Verified at program start (2026-09-15):
 | G8 diagnostics / performance / packaging | **closed** — tsc blocker cleared (26→0), desktop test lane restored (72 green), build exit 0; WS22 authorization/lease/migration diagnostics in the snapshot and the desktop Diagnostics page; WS23 builder overrides (`publish: null`, Kel copyright, Linux entry) + Kel PWA identity (manifest, SW cache); WS28 measured with basis (`12`); suite **441 + 10**; closure review **CONTINUE** | `test_v15_diagnostics.py` (3/3), `12_PERFORMANCE.md`, commits `6366976` + `9f2d890` |
 | G9 security + reliability sweeps | **closed** — 25/25 security cases re-run on this tree; reliability table covers all 22 charter cases with named evidence; credential vectors re-checked; **two real defects found and fixed by the new probes** (masked `database is locked` in `Store.transaction`; telemetry-thread handle retention past `Service.shutdown`); suite **444 + 10**; closure review **CONTINUE** | `test_v15_reliability.py` (3/3), `09`, `10`, commit `74b6c33` |
 | G10 visual / product acceptance | **closed** — packaging pipeline fixed (commit `0fba928`: deduped `extraResources`; pinned-ABI prebuild path, no bun/node-abi) → package builds **EXIT 0**; packaged probes all green on fresh data dirs: `verify-packaged-ui` every check truthy + `consoleErrors: []`, 25 screenshots @1440x900/1920x1080, a11y `contrastFailureCount: 0` + `errors: []` + `emoji: 0`; **one AA defect found and fixed** (empty-state caption 2:1 → corrected token, re-measured) | `docs/v1.5/evidence/g10/` |
-| G11 migration / clean clone / packaged | pending | — |
+| G11 migration / clean clone / packaged | **in progress** — migration matrix measured (`13`): fresh ✓ (G10 probes + smoke), **real V1.3-origin root upgraded through V1.4 → V1.5 `RESULT: OK`** (zero rows lost, integrity ok, 010 lazy + policy-stamped), synthetic pre-010 `test_v15_upgrade.py` 1/1, retained upgrade suites 7/7; engine PYZ **`RESULT: OK`** (34 modules structurally matched); packaged smoke clean (`errors: []`, engineStopped, appExited); suite **445 + 10**. Remaining: clean clone + lockfile install + build/test/package from clone; candidate-vs-assembled compare | `13_MIGRATIONS.md`, `test_v15_upgrade.py` |
 | G12 independent architecture audit | pending | — |
 | G13 freeze / tag / release | pending | — |
 
@@ -149,6 +149,6 @@ re-measured 0 failures). Evidence: `docs/v1.5/evidence/g10/`. Closure review **C
 `02A_EFFECT_PATH_MATRIX` ✅ · `03_PROVIDER_RUNTIME` ✅ · `04_CREDENTIAL_RUNTIME` ✅ · `05_ROUTING` ✅
 · `06_COMPLETION_AUTHORITY` ✅ · `07_MEMORY_AND_CONTEXT` ✅ · `08_LEDGER` ✅ working ·
 `09_SECURITY_REVIEW` ✅ (G9 sweep recorded) · `10_RELIABILITY_REVIEW` ✅ (22-case map) ·
-`11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ✅ measured · `13_MIGRATIONS` ◻ · `14_TEST_MATRIX` ✅ working ·
+`11_DESIGN_SYSTEM` ✅ · `12_PERFORMANCE` ✅ measured · `13_MIGRATIONS` ✅ measured · `14_TEST_MATRIX` ✅ working ·
 `15_RELEASE_MANIFEST` ◻ · `16_KNOWN_LIMITATIONS` ✅ working · `17_V2_PLUS_DEFERRED` ✅ ·
 `AUTO_RESUME` ✅
