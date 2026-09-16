@@ -84,6 +84,47 @@ def validate_contract(contract):
     return contract
 
 
+def completion_claims(contract):
+    """Explicit CompletionContract claims: what will be verified, how, and with what evidence.
+
+    Deterministic projection of the trusted acceptance checks (V1.5 G5). A claim is never
+    invented for work the contract does not ask for, so trivial requests stay at one or two
+    objective claims. Coding contracts additionally claim the repository-evidence path.
+    """
+    claims = []
+    for milestone in contract.get('milestones', []):
+        for index, check in enumerate(milestone.get('checks', []), start=1):
+            kind = check.get('kind')
+            subjective = kind == 'manual_review'
+            if kind == 'contains':
+                criterion = 'the output contains %r' % check.get('value')
+                method = 'artifact contains check (trusted builtin)'
+            elif kind == 'min_chars':
+                criterion = 'the output has at least %d characters of text' % check.get('value')
+                method = 'artifact length check (trusted builtin)'
+            else:
+                criterion = check.get('rubric') or 'the output satisfies the recorded rubric'
+                method = 'independent rubric review'
+            claims.append({'id': '%s.c%d' % (milestone.get('id'), index),
+                           'requirement': milestone.get('objective', ''),
+                           'acceptance_criterion': criterion,
+                           'verification_method': method,
+                           'objective_or_subjective': 'subjective' if subjective else 'objective',
+                           'evidence_required': 'reviewer findings' if subjective else 'artifact digest + check result',
+                           'failure_condition': 'reviewer verdict FAILED' if subjective else 'check result FAILED',
+                           'dependencies': list(milestone.get('depends_on', []))})
+    if contract.get('kind') == 'coding':
+        claims.append({'id': 'repository.evidence',
+                       'requirement': contract.get('request', ''),
+                       'acceptance_criterion': 'the configured test command passes on the isolated copy, existing tests are preserved, and the diff digest matches the recorded evidence',
+                       'verification_method': 'repository evidence (test exit, preserved tests, source stability, diff digest)',
+                       'objective_or_subjective': 'objective',
+                       'evidence_required': 'code_evidence row + diff digest',
+                       'failure_condition': 'repository evidence FAILED or UNCERTAIN',
+                       'dependencies': []})
+    return claims
+
+
 class Store:
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -126,6 +167,11 @@ class Store:
             # B3: executor model provenance. Older data dirs predate the column.
             if 'model' not in {r[1] for r in db.execute('PRAGMA table_info(runs)')}:
                 db.execute('ALTER TABLE runs ADD COLUMN model TEXT')
+            # V1.5 G5: bounded routing-outcome learning needs the task class and escalation context.
+            outcome_columns = {r[1] for r in db.execute('PRAGMA table_info(routing_outcomes)')}
+            for column, kind in (('job_kind', 'TEXT'), ('attempts', 'INTEGER'), ('escalated', 'INTEGER')):
+                if column not in outcome_columns:
+                    db.execute('ALTER TABLE routing_outcomes ADD COLUMN %s %s' % (column, kind))
 
     def connect(self):
         # A killed Windows process can briefly retain a WAL mapping. Retry only
@@ -174,6 +220,10 @@ class Store:
 
     def create(self, contract, budget=8, conversation="main"):
         validate_contract(contract)
+        # V1.5 G5: finalized contracts carry their explicit claims. Claims are computed here —
+        # never on transient drafts — so a scope rewrite can never leave stale claims behind.
+        if 'claims' not in contract:
+            contract['claims'] = completion_claims(contract)
         if type(budget) is not int or not 1 <= budget <= 100:
             raise PolicyError("Budget must be 1 to 100 attempt units")
         job_id = uid()
@@ -397,7 +447,13 @@ class Store:
             combined=aggregate([c['verdict'] for c in m['checks']])
             m['state']='ACCEPTED' if combined=='VERIFIED' else ('NEEDS_REPAIR' if combined=='FAILED' else 'UNCERTAIN')
             if combined in ('VERIFIED','FAILED'):
-                db.execute('INSERT OR IGNORE INTO routing_outcomes VALUES(?,?,?)',(m['artifact']['run_id'],m['provider'],combined))
+                runs=db.execute('SELECT provider FROM runs WHERE job_id=? AND milestone_id=? ORDER BY rowid',
+                                (job_id,milestone_id)).fetchall()
+                escalated=int(bool(runs) and len(runs)>1 and runs[0]['provider']!=m['provider'])
+                db.execute('INSERT OR IGNORE INTO routing_outcomes(run_id,provider,verdict,job_kind,attempts,escalated) '
+                           'VALUES(?,?,?,?,?,?)',
+                           (m['artifact']['run_id'],m['provider'],combined,
+                            job['contract'].get('kind'),len(runs),escalated))
                 samples=db.execute('SELECT verdict FROM routing_outcomes WHERE provider=?',(m['provider'],)).fetchall()
                 old=db.execute('SELECT data FROM providers WHERE id=?',(m['provider'],)).fetchone()
                 provider_state=json.loads(old['data']) if old else {'failures':0,'circuit_until':0,'quota':None}
@@ -599,6 +655,8 @@ class Store:
 
     def revise(self, job_id, contract, expected_revision):
         validate_contract(contract)
+        if 'claims' not in contract:
+            contract['claims'] = completion_claims(contract)
         with self.transaction() as db:
             job = self._get(db, job_id)
             if job['revision'] != expected_revision:

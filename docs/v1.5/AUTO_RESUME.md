@@ -4,12 +4,12 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Position (turn 2026-09-16, continuing)
 
-- Commits on `main`: `b1f9aa5` (G1), `d0c1990`, `5ed6e1d` (G2), `f12bff6` (G3). **G4** is in the
-  working tree (commit follows).
-- Gates: G0 ✓ · G1 ✓ · G2 ✓ · G3 ✓ · G4 closed (credential injection + leak suite + provider
-  audit) · next G5.
-- Full suite **429 passed + 10 subtests** (43 authorization + 5 roles + 6 credentials); zero
-  regressions.
+- Commits on `main`: `b1f9aa5` (G1), `d0c1990`, `5ed6e1d` (G2), `f12bff6` (G3), `439de12` (G4).
+  **G5** is in the working tree (commit follows).
+- Gates: G0 ✓ · G1 ✓ · G2 ✓ · G3 ✓ · G4 ✓ · G5 closed (claims compiler, escalation-aware routing
+  records, routing/completion/review audits) · next G6.
+- Full suite **434 passed + 10 subtests** (43 authorization + 5 roles + 6 credentials + 5
+  completion); zero regressions.
 - Frozen releases remain untouched and verify 3/3.
 
 ## What landed (files)
@@ -28,14 +28,15 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 | `runtime/kel/internal.py`, `native.py`, `host_runtime.py`, `research.py` | G4 — `redact`, `child_env`, `test_command_env` |
 | `runtime/tests/test_v15_credentials.py` | G4 — leak suite (6 tests) |
 | `desktop/.../KelService.ts`, `.../providers/index.tsx` | G4 — spawn-time injection; corrected Providers copy (claims test re-pinned) |
+| `runtime/kel/core.py` (G5) | `completion_claims` on finalized contracts; `routing_outcomes.job_kind/attempts/escalated` |
+| `runtime/tests/test_v15_completion.py` | G5 — claims + escalation outcomes (5 tests) |
 | `docs/v1.5/*` | status board, authorization model, **effect-path matrix `02A`**, ledger classification, security matrix, test matrix, skeletons |
 
 ## Next steps, in order
 
-1. Commit G4; then G5 — routing / Completion Authority / independent review: re-audit routing
-   against the new authorization + provider signals (learned signals advise deterministic routing;
-   never override hard capability rules), re-check Completion Authority still depends on evidence,
-   and harden independent review (reviewer independence, artifact-first, rubric handling).
+1. Commit G5; then G6 — memory and knowledge hardening (provenance, trust, correction, conflict
+   resolution, freshness, scope, retract/forget, project vs global memory) and continuation
+   hardening, with deterministic recipes expanded only where a known recipe exists.
 2. G6–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
 3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired

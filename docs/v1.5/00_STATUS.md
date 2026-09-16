@@ -23,7 +23,7 @@ Verified at program start (2026-09-15):
 | G2 execution-path enforcement | **closed** — source-traced effect-path inventory (`02A`, 28 rows), side doors closed (lease-issuance API, greenfield creation, forgery bindings), 25/25 G2 cases evidenced, restart/resume + parallel isolation proven; closure review **CONTINUE** | `02A_EFFECT_PATH_MATRIX.md`, `test_v15_authorize.py` |
 | G3 roles / leases / boundary | **closed** — frozen role snapshot per run at claim, enforcement reads the snapshot, coding gate covers `git`/`run_tests`/`write`; leases + expansion end-to-end; closure review **CONTINUE** | `test_v15_roles.py`, `02_AUTHORIZATION_MODEL.md` |
 | G4 credentials / provider runtime | **closed** — injection live (secure store → engine spawn env only), engine-side redaction / child-env / test-command hygiene, leak suite 6/6, provider audit (`03`), credential doc (`04`); closure review **CONTINUE**; desktop tsc baseline recorded for G8 | `test_v15_credentials.py`, `03_PROVIDER_RUNTIME.md`, `04_CREDENTIAL_RUNTIME.md` |
-| G5 routing / completion / review | pending | — |
+| G5 routing / completion / review | **closed** — claims compiler (finalized contracts only; transient drafts stay clean), escalation-aware `routing_outcomes` (`job_kind`/`attempts`/`escalated`), routing + completion + reviewer-independence audits (`05`, `06`); closure review **CONTINUE** | `test_v15_completion.py`, `05_ROUTING.md`, `06_COMPLETION_AUTHORITY.md` |
 | G6 memory / continuation / recipes | pending | — |
 | G7 donor sunset / chat purity / UX | pending (includes the Autonomy page copy correction) | — |
 | G8 diagnostics / performance / packaging | pending | — |
@@ -69,6 +69,13 @@ hygiene (`redact`, `child_env`, `test_command_env`); leak suite `test_v15_creden
 provider audit (`03`) + credential runtime (`04`); Providers copy corrected with the claims test
 re-pinned; full suite **429 passed + 10 subtests**; closure review **CONTINUE**. Found: desktop
 `tsc --noEmit` has ~25 pre-existing errors (G8 item; none from G4).
+
+**Increment 5 — G5 (this working tree):** explicit CompletionContract claims on finalized
+contracts (`completion_claims`; transient drafts stay clean — proven by the scope tests and by a
+first-attempt regression they caught), escalation-aware `routing_outcomes` (task class, attempts,
+escalated), routing + completion + reviewer-independence audits (`05`, `06`); tests
+`test_v15_completion.py` **5/5**; full suite **434 passed + 10 subtests**; closure review
+**CONTINUE**.
 
 ## Required deliverables (spec checklist)
 
