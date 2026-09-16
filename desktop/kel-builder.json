@@ -41,14 +41,6 @@
   },
   "extraResources": [
     {
-      "from": "public",
-      "to": "."
-    },
-    {
-      "from": "resources/bundled-aioncore",
-      "to": "bundled-aioncore"
-    },
-    {
       "from": "../dist/runtime/KelEngine",
       "to": "kel-engine"
     },
