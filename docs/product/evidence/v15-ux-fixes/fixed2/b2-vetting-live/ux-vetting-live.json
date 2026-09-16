@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "scenario": "vetting-live",
+  "steps": [
+    {
+      "label": "start",
+      "tail": "trol my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-1: C",
+      "tail": "e's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-2: A",
+      "tail": "to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-3: B",
+      "tail": " off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-4: D",
+      "tail": "oard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-5: B",
+      "tail": "eate a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-6: A",
+      "tail": " that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-7: A",
+      "tail": "o control my microphone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-8: C",
+      "tail": "ophone's mute button, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-9: D",
+      "tail": "ton, to turn it on and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\n9: D\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-10: B",
+      "tail": " and off from my keyboard\nHey! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\n9: D\n12:40\n12:40\n10: B\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "process",
+      "tail": "y! How do I configure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\n9: D\n12:40\n12:40\n10: B\n12:40\n12:40\nprocess answers\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "answer-19",
+      "tail": "ure the agents inside this app?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\n9: D\n12:40\n12:40\n10: B\n12:40\n12:40\nprocess answers\n12:40\n12:40\n19: B\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    },
+    {
+      "label": "finish",
+      "tail": "pp?\nWork & context\nSettings\nstart design vetting: Matchup center\nAutomatic\nstart design vetting: Matchup center\n12:40\n12:40\n1: C\n12:40\n12:40\n2: A\n12:40\n12:40\n3: B\n12:40\n12:40\n4: D\n12:40\n12:40\n5: B\n12:40\n12:40\n6: A\n12:40\n12:40\n7: A\n12:40\n12:40\n8: C\n12:40\n12:40\n9: D\n12:40\n12:40\n10: B\n12:40\n12:40\nprocess answers\n12:40\n12:40\n19: B\n12:40\n12:40\nfinish spec now\n12:40\n12:40\nFiles\nChanges\nacp-temp-b230dd7c"
+    }
+  ],
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "panelTab": 1,
+  "panelTopic": true,
+  "panelState": true,
+  "panelProgress": true,
+  "panelDecisions": true,
+  "panelSpec": false,
+  "transcriptRecordedLines": 0,
+  "transcriptBatchShown": false,
+  "transcriptSpecSaved": false,
+  "transcriptSynthesis": false,
+  "frameCount": 1,
+  "frameTextLength": 1418,
+  "frameHasRecorded": false,
+  "frameHasBatch": false,
+  "frameHasSpec": false,
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

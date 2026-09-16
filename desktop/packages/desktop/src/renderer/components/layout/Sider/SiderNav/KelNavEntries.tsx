@@ -29,7 +29,7 @@ const KelNavEntries: React.FC<{
   return (
     <>
       {ENTRIES.map(({ id, path, label, Icon }) => {
-        const active = pathname === path || (id === 'team' && pathname.startsWith('/team'));
+        const active = pathname === path;
         return (
           <Tooltip key={id} {...siderTooltipProps} content={label} position='right'>
             <button

@@ -25,8 +25,26 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Tooltip } from '@arco-design/web-react';
 import { getSiderTooltipProps } from '@/renderer/utils/ui/siderTooltip';
 
-/** Builtin settings tab IDs in display order (must match router paths). */
-export const BUILTIN_TAB_IDS = ['appearance', 'archived'] as const;
+/**
+ * Builtin settings tab IDs in display order (must match router paths).
+ *
+ * This is the single registry: both the settings sider and SettingsPageWrapper derive their
+ * ordered item lists from it (JR-30). Every id listed here must exist in both presentation maps
+ * (`SettingsSider.builtinMap` and `getBuiltinSettingsNavItems`); adding a tab means adding it once
+ * here plus its page route, and the sider filter below hides desktop-only tabs in browser mode.
+ */
+export const BUILTIN_TAB_IDS = [
+  'model',
+  'agent',
+  'skills',
+  'tools',
+  'appearance',
+  'webui',
+  'pet',
+  'system',
+  'archived',
+  'about',
+] as const;
 
 /**
  * Legacy anchor IDs that have been merged into other tabs.

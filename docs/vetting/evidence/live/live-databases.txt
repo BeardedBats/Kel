@@ -1,0 +1,15 @@
+session: Matchup center | FINISHED | batch 2
+answers: 11
+revisions: 0
+decisions: 11
+conflicts: 2
+greyboxes: 0
+spec coverage: {"answered": 10, "open": 14, "deferred": 0, "skipped": 0, "total": 24}
+message kinds: [('assistant', 14)]
+donor store rows (newest first):
+  text | {"content":"Recorded: 11 of 24 recorded. A c
+  text | {"content":"**Synthesis** — 10 of 12 answere
+  text | {"content":"Recorded: 10 of 12 recorded. Alm
+  text | {"content":"Recorded: 9 of 12 recorded.\n\n"
+  text | {"content":"Recorded: 8 of 12 recorded.\n\n"
+  text | {"content":"Recorded: 7 of 12 recorded.\n\n"

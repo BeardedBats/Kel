@@ -238,8 +238,8 @@ const AssistantSelectionArea: React.FC<AssistantSelectionAreaProps> = ({
           fullWidth ? '!w-full !justify-start' : ''
         } ${
           isSelected
-            ? 'font-600 text-t-primary shadow-sm'
-            : `text-t-secondary hover:text-t-primary ${styles.assistantSelectorInactive}`
+            ? `font-600 shadow-sm ${styles.assistantSelectorSelected}`
+            : `${styles.assistantSelectorInactive}`
         }`}
         style={isSelected ? { background: 'var(--bg-base, #fff)' } : { background: 'transparent' }}
         onClick={() => {
@@ -309,7 +309,7 @@ const AssistantSelectionArea: React.FC<AssistantSelectionAreaProps> = ({
               <Button
                 data-testid='assistant-more-btn'
                 type='text'
-                className={`!ms-6px !inline-flex !h-34px !shrink-0 !items-center !gap-4px !rounded-999px !border-none !px-12px !py-8px !text-13px !text-t-secondary transition-colors hover:!text-t-primary ${styles.assistantSelectorInactive}`}
+                className={`!ms-6px !inline-flex !h-34px !shrink-0 !items-center !gap-4px !rounded-999px !border-none !px-12px !py-8px !text-13px ${styles.assistantSelectorInactive}`}
                 onClick={() => setMoreVisible((visible) => !visible)}
               >
                 <span>{t('common.more', { defaultValue: 'More' })}</span>

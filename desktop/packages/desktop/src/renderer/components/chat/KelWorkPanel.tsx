@@ -36,6 +36,27 @@ type MemoryConflict = { id: string; memory_a: string; memory_b: string; state: s
 type MapSection = { name: string; trust: string; stale: boolean; sources: string[] };
 type MapInfo = { version: number; fingerprint: string; note?: string; sections: MapSection[] };
 type RecipeEntry = { recipe_id: string; name: string; version: string; scope: string; kind: string };
+type VettingQuestion = {
+  id: string;
+  section: string;
+  prompt: string;
+  open: boolean;
+  visual: number;
+  options: { code: string; label: string }[];
+  answer?: { status: string; selected: string[]; custom: string } | null;
+};
+type VettingGreybox = { id: string; question_id: string; name: string; description: string; svg: string; is_base: number };
+type VettingPanelData = {
+  session: { id: string; topic: string; state: string } | null;
+  progress?: { answered: number; handled: number; total: number };
+  questions?: VettingQuestion[];
+  unanswered?: string[];
+  decisions?: { statement: string; rationale: string }[];
+  conflicts?: { id: string; statement: string }[];
+  spec?: { id: string; created: number; coverage: Record<string, number> } | null;
+  greyboxes?: VettingGreybox[];
+  pending?: { question_id: string; option: string }[];
+};
 type WorkExtras = {
   project_id: string;
   memory: { records: MemoryRecord[]; conflicts: MemoryConflict[] };
@@ -100,15 +121,53 @@ export default function KelWorkPanel() {
     [extras, setExtras] = useState<WorkExtras>(),
     [preview, setPreview] = useState(''),
     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
+  const [vetting, setVetting] = useState<VettingPanelData>(),
+    [vettingTopic, setVettingTopic] = useState(''),
+    [vettingSpec, setVettingSpec] = useState(''),
+    [unansweredOnly, setUnansweredOnly] = useState(false),
+    [combineNote, setCombineNote] = useState('');
+  const vettingAction = async (body: Record<string, unknown>, quiet = false) => {
+    setBusy(true);
+    try {
+      const result = await request<Record<string, unknown>>('/api/vetting', { ...body, conversation: cid });
+      const message = typeof result.message === 'string' ? result.message : '';
+      if (!quiet && message) Message.info(message.slice(0, 240));
+      if (typeof result.markdown === 'string') setVettingSpec(result.markdown);
+      await refresh();
+      return result;
+    } catch (e) {
+      setError(String(e));
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  };
   const refresh = async () => {
     try {
       const data = await request<State>('/api/state?conversation=' + cid);
       setState(data);
       setPendingApprovals((data.approvals || []).length);
+      // The drawer follows the conversation the app is actually showing: when the historical
+      // hard-coded 'main' is not among the conversations, the newest one becomes the drawer's
+      // target, so Work, Knowledge, Map, Recipes and Vetting never point at a conversation
+      // that does not exist while the open chat is somewhere else.
+      let active = cid;
+      if (cid === 'main' && data.conversations?.length && !data.conversations.some((c) => c.id === cid)) {
+        active = data.conversations[0].id;
+        setCid(active);
+        const fresh = await request<State>('/api/state?conversation=' + active);
+        setState(fresh);
+        setPendingApprovals((fresh.approvals || []).length);
+      }
       try {
-        setExtras(await request<WorkExtras>('/api/work?conversation=' + cid));
+        setExtras(await request<WorkExtras>('/api/work?conversation=' + active));
       } catch {
         /* the drawer still works from /api/state alone when extras are unavailable */
+      }
+      try {
+        setVetting(await request<VettingPanelData>('/api/vetting', { action: 'panel', conversation: active }));
+      } catch {
+        /* vetting is an added surface; its absence must not break the drawer */
       }
       setError('');
     } catch (e) {
@@ -264,6 +323,193 @@ export default function KelWorkPanel() {
                   </Space>
                 </section>
               ))}
+          </Tabs.TabPane>
+          <Tabs.TabPane key='vetting' title='Vetting'>
+            {!vetting?.session && (
+              <>
+                <Typography.Paragraph type='secondary'>
+                  Turn a rough idea into a developer-ready spec: Kel asks in batches, you answer with
+                  numbers in the chat (like 12: F), and every decision is kept with its rationale.
+                </Typography.Paragraph>
+                <Space>
+                  <Input
+                    value={vettingTopic}
+                    onChange={setVettingTopic}
+                    placeholder='What are you designing? e.g. a basketball matchup dashboard'
+                    style={{ width: 300 }}
+                  />
+                  <Button
+                    type='primary'
+                    disabled={busy || !vettingTopic.trim()}
+                    onClick={() => vettingAction({ action: 'start', topic: vettingTopic })}
+                  >
+                    Start vetting session
+                  </Button>
+                </Space>
+              </>
+            )}
+            {vetting?.session && (
+              <>
+                <Typography.Paragraph>
+                  <Typography.Text bold>{vetting.session.topic}</Typography.Text> · {vetting.session.state}
+                  {vetting.progress ? ` · ${vetting.progress.handled}/${vetting.progress.total} recorded` : ''}
+                </Typography.Paragraph>
+                <Space wrap>
+                  <Button
+                    disabled={busy}
+                    onClick={() =>
+                      void vettingAction({ action: 'process' }, true).then((r) => r && Message.info('Next batch is in the chat.'))
+                    }
+                  >
+                    Process answers
+                  </Button>
+                  <Button disabled={busy} onClick={() => vettingAction({ action: 'finish' })}>
+                    Finish spec now
+                  </Button>
+                  <Button disabled={busy} onClick={() => vettingAction({ action: 'preview' })}>
+                    Preview spec
+                  </Button>
+                  <Button onClick={() => setUnansweredOnly((value) => !value)}>
+                    {unansweredOnly ? 'Show all questions' : 'Show unanswered only'}
+                  </Button>
+                </Space>
+                {(vetting.pending || []).length > 0 && (
+                  <Alert
+                    style={{ marginTop: 8 }}
+                    content={`Suggested mapping: ${(vetting.pending || [])
+                      .map((pending) => `${pending.question_id} → ${pending.option}`)
+                      .join(', ')}`}
+                    action={
+                      <Space>
+                        <Button size='mini' onClick={() => vettingAction({ action: 'apply_pending', accept: true })}>
+                          Confirm
+                        </Button>
+                        <Button size='mini' onClick={() => vettingAction({ action: 'apply_pending', accept: false })}>
+                          Dismiss
+                        </Button>
+                      </Space>
+                    }
+                  />
+                )}
+                {(vetting.conflicts || []).map((conflict) => (
+                  <section key={conflict.id} className='py-12px border-b border-solid border-[var(--color-border-2)]'>
+                    <Typography.Paragraph>{conflict.statement}</Typography.Paragraph>
+                    <Space wrap>
+                      <Button size='small' onClick={() => vettingAction({ action: 'conflict', conflict: conflict.id, choice: 'keep_earlier' })}>
+                        Keep earlier
+                      </Button>
+                      <Button size='small' onClick={() => vettingAction({ action: 'conflict', conflict: conflict.id, choice: 'use_newer' })}>
+                        Use newer
+                      </Button>
+                      <Button size='small' onClick={() => vettingAction({ action: 'conflict', conflict: conflict.id, choice: 'show_tradeoff' })}>
+                        Show tradeoff
+                      </Button>
+                      <Button size='small' onClick={() => vettingAction({ action: 'conflict', conflict: conflict.id, choice: 'resolve_later' })}>
+                        Resolve later
+                      </Button>
+                    </Space>
+                  </section>
+                ))}
+                <section className='py-12px'>
+                  {(vetting.questions || [])
+                    .filter((question) => !unansweredOnly || (vetting.unanswered || []).includes(question.id))
+                    .map((question) => (
+                      <Typography.Paragraph key={question.id}>
+                        <Typography.Text bold>{question.id}</Typography.Text> {question.prompt}{' '}
+                        <Typography.Text type='secondary'>
+                          {question.answer ? question.answer.status.toLowerCase().replace(/_/g, ' ') : 'unanswered'}
+                          {question.answer?.custom ? ` · ${question.answer.custom}` : ''}
+                        </Typography.Text>{' '}
+                        {question.visual ? (
+                          <Button
+                            size='mini'
+                            disabled={busy}
+                            onClick={() => vettingAction({ action: 'greybox', question: question.id, mode: 'design' })}
+                          >
+                            Show greyboxes
+                          </Button>
+                        ) : null}
+                      </Typography.Paragraph>
+                    ))}
+                </section>
+                {(vetting.greyboxes || []).length > 0 && (
+                  <section className='py-12px'>
+                    <Typography.Title heading={6}>Greybox directions</Typography.Title>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+                      {(vetting.greyboxes || []).map((box) => (
+                        <div key={box.id} style={{ border: '1px solid var(--color-border-2)', borderRadius: 8, padding: 8 }}>
+                          <div dangerouslySetInnerHTML={{ __html: box.svg }} />
+                          <Typography.Paragraph type='secondary' style={{ fontSize: 12 }}>
+                            {box.name}
+                          </Typography.Paragraph>
+                          <Space wrap>
+                            <Button
+                              size='mini'
+                              type={box.is_base ? 'primary' : 'default'}
+                              onClick={() =>
+                                vettingAction({ action: 'greybox', question: box.question_id, mode: 'feedback', feedback_kind: 'choose_base', greybox_id: box.id })
+                              }
+                            >
+                              Choose as base
+                            </Button>
+                            <Button
+                              size='mini'
+                              onClick={() => vettingAction({ action: 'greybox', question: box.question_id, mode: 'feedback', feedback_kind: 'like', greybox_id: box.id }, true)}
+                            >
+                              Like
+                            </Button>
+                            <Button
+                              size='mini'
+                              onClick={() => vettingAction({ action: 'greybox', question: box.question_id, mode: 'feedback', feedback_kind: 'dislike', greybox_id: box.id }, true)}
+                            >
+                              Dislike
+                            </Button>
+                          </Space>
+                        </div>
+                      ))}
+                    </div>
+                    <Space style={{ marginTop: 8 }}>
+                      <Input
+                        value={combineNote}
+                        onChange={setCombineNote}
+                        placeholder='Direction 4 → base, Direction 2 → header'
+                        style={{ width: 300 }}
+                      />
+                      <Button
+                        size='small'
+                        disabled={busy || !combineNote.trim()}
+                        onClick={() => {
+                          const target =
+                            (vetting.questions || []).find((question) => question.visual)?.id ||
+                            (vetting.greyboxes || [])[0]?.question_id;
+                          if (target) void vettingAction({ action: 'greybox', question: target, mode: 'combine', note: combineNote });
+                        }}
+                      >
+                        Combine directions
+                      </Button>
+                    </Space>
+                  </section>
+                )}
+                {(vetting.decisions || []).length > 0 && (
+                  <section className='py-12px'>
+                    <Typography.Title heading={6}>Decisions</Typography.Title>
+                    {(vetting.decisions || []).map((decision, index) => (
+                      <Typography.Paragraph key={index}>
+                        {decision.statement}
+                        {decision.rationale ? <Typography.Text type='secondary'> — {decision.rationale}</Typography.Text> : null}
+                      </Typography.Paragraph>
+                    ))}
+                  </section>
+                )}
+                {vettingSpec && (
+                  <section className='py-12px'>
+                    <Typography.Title heading={6}>Spec preview</Typography.Title>
+                    <Markdown>{vettingSpec}</Markdown>
+                    <Button onClick={() => setVettingSpec('')}>Close preview</Button>
+                  </section>
+                )}
+              </>
+            )}
           </Tabs.TabPane>
           <Tabs.TabPane key='context' title={t('common.kel.context')}>
             <Form

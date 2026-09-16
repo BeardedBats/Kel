@@ -93,6 +93,25 @@ class ACPHost:
     def text(self, session, text):
         self.update(session, {'sessionUpdate': 'agent_message_chunk', 'content': {'type': 'text', 'text': text}})
 
+    def _vetting(self, cid, text):
+        """Design Vetting: silent ingestion of answers/controls. Returns the result or None."""
+        try:
+            result = self.client.call('/api/vetting',
+                                      {'action': 'ingest_chat', 'conversation': cid, 'text': text})
+        except Exception:
+            return None
+        return result if isinstance(result, dict) and result.get('kind') not in (None, 'none') else None
+
+    def _resurface(self, session, cid):
+        """After an interruption, bring the active vetting prompts back into view."""
+        try:
+            pending = self.client.call('/api/vetting', {'action': 'resurface', 'conversation': cid})
+        except Exception:
+            return
+        message = (pending or {}).get('message')
+        if message:
+            self.text(session, '\n' + message + '\n')
+
     def session(self, session):
         if not isinstance(session, str) or not session.startswith('kel:'):
             raise ValueError('Unknown Kel session')
@@ -218,6 +237,14 @@ class ACPHost:
             self.active[session] = active
         try:
             text, attachments = self.content(cid, params.get('prompt', []))
+            # Vetting answers and batch controls are understood by the ingestion service and
+            # answered inline: no submission, no assistant turn, immediate next answer.
+            if not attachments:
+                vetting = self._vetting(cid, text)
+                if vetting:
+                    if vetting.get('message'):
+                        self.text(session, vetting['message'] + '\n\n')
+                    return {'stopReason': 'end_turn'}
             sid = 'acp-' + uuid.uuid4().hex
             self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments})
             seen = {m['seq'] for m in baseline['messages']}
@@ -235,6 +262,7 @@ class ACPHost:
                     raise RuntimeError('Kel lost the submitted request record')
                 if submission['state'] in ('FAILED', 'INTERRUPTED'):
                     self.text(session, 'Kel could not plan this request: ' + (submission.get('error') or submission['state']))
+                    self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
                 job_id = submission.get('job_id')
                 if job_id:
@@ -279,8 +307,10 @@ class ACPHost:
                             # the verdict; only unresolved or cancelled states
                             # still need this one-line status.
                             self.text(session, 'Work state: ' + status + '. Verification: ' + verdict + '.\n')
+                        self._resurface(session, cid)
                         return {'stopReason': 'cancelled' if status == 'CANCELLED' else 'end_turn'}
                 elif submission['state'] == 'DISPATCHED':
+                    self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
                 self.closed.wait(self.poll_interval)
             return {'stopReason': 'end_turn'}
