@@ -107,6 +107,124 @@ function buildEnvironment(platform, targetArch, electronVersion) {
 }
 
 /**
+ * Read the NODE_MODULE_VERSION of the pinned Electron binary (ELECTRON_RUN_AS_NODE makes it
+ * behave as Node for a single evaluation). Used to resolve prebuilds without node-abi's tables.
+ */
+function electronAbi(projectRoot) {
+  const exe = path.join(
+    projectRoot,
+    'node_modules',
+    'electron',
+    'dist',
+    process.platform === 'win32' ? 'electron.exe' : 'electron'
+  );
+  if (!fs.existsSync(exe)) return null;
+  try {
+    const out = execFileSync(exe, ['-p', 'process.versions.modules'], {
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      encoding: 'utf8',
+      timeout: 30000,
+    });
+    const abi = parseInt(String(out).trim(), 10);
+    return Number.isFinite(abi) ? abi : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Locate the prebuild-install library inside the project's dependency tree. Works for npm
+ * layouts (hoisted or nested) and for bun's `.bun/` layout used by this repository.
+ */
+function resolvePrebuildInstall(projectRoot) {
+  const candidates = [];
+  try {
+    candidates.push(
+      path.dirname(require.resolve('prebuild-install/package.json', { paths: [projectRoot, __dirname] }))
+    );
+  } catch {
+    /* not resolvable from here */
+  }
+  try {
+    for (const root of [
+      path.join(projectRoot, 'node_modules'),
+      path.join(__dirname, '..', 'node_modules'),
+    ]) {
+      const bunRoot = path.join(root, '.bun');
+      if (!fs.existsSync(bunRoot)) continue;
+      for (const entry of fs.readdirSync(bunRoot)) {
+        if (entry.startsWith('prebuild-install@')) {
+          candidates.push(path.join(bunRoot, entry, 'node_modules', 'prebuild-install'));
+        }
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return candidates.find((dir) => fs.existsSync(path.join(dir, 'util.js'))) || null;
+}
+
+/**
+ * V1.5: fetch the official prebuilt binary for the *pinned* Electron ABI through the
+ * prebuild-install library API. The CLI cannot be used here: it resolves the ABI via
+ * node-abi, whose tables do not know Electron 44.3.0, so any electron-runtime invocation
+ * exits before parsing flags. Passing the ABI explicitly (read from the pinned binary)
+ * keeps the download path working without touching the dependency tree.
+ *
+ * Returns nothing when the download was started (the async callback exits the process);
+ * returns an exit code number on early failure. Run as a child process via `--fetch-prebuild`.
+ */
+function fetchPrebuildForPinnedAbi(payload) {
+  const { moduleRoot, moduleName, platform, arch, electronVersion, abi, projectRoot } = payload;
+  if (!moduleRoot || !moduleName || !fs.existsSync(moduleRoot)) {
+    console.error('fetch-prebuild: module root not found:', moduleRoot);
+    return 2;
+  }
+  const installDir = resolvePrebuildInstall(projectRoot);
+  if (!installDir) {
+    console.error('fetch-prebuild: prebuild-install is not resolvable from', projectRoot);
+    return 2;
+  }
+  const util = require(path.join(installDir, 'util'));
+  const download = require(path.join(installDir, 'download'));
+  const pkg = JSON.parse(fs.readFileSync(path.join(moduleRoot, 'package.json'), 'utf8'));
+  const log = {
+    info: (...a) => console.log('    ', ...a),
+    warn: (...a) => console.warn('    ', ...a),
+    error: (...a) => console.error('    ', ...a),
+    http: () => {},
+    verbose: () => {},
+  };
+  const opts = {
+    pkg,
+    log,
+    force: true,
+    path: moduleRoot,
+    runtime: 'electron',
+    target: electronVersion,
+    platform,
+    arch,
+    abi: String(abi),
+    tagPrefix: 'v',
+    'tag-prefix': 'v',
+  };
+  const url = util.getDownloadUrl(opts);
+  console.log('     URL:', url);
+  download(url, opts, (err) => {
+    if (err) {
+      console.error('     download failed:', err.message);
+      process.exit(1);
+    }
+    if (findNodeFiles(moduleRoot).length > 0) {
+      console.log('     ✓ prebuilt binary installed');
+      process.exit(0);
+    }
+    console.error('     download completed but no .node file was installed');
+    process.exit(1);
+  });
+}
+
+/**
  * Rebuild native modules using electron-rebuild
  *
  * @param {Object} options
@@ -198,6 +316,30 @@ function rebuildSingleModule(options) {
   // For Linux cross-compilation, ALWAYS use prebuild-install
   // because electron-rebuild cannot cross-compile without ARM64 toolchain
   const mustUsePrebuild = platform === 'linux' && isCrossCompile;
+
+  // V1.5: same-architecture rebuilds first try the official prebuilt for the pinned Electron
+  // ABI (resolved from the pinned binary itself — see fetchPrebuildForPinnedAbi for why the
+  // CLI path cannot work against Electron 44).
+  if (!forceRebuild && normalizedBuildArch === targetArch) {
+    const abi = electronAbi(projectRoot);
+    if (abi) {
+      console.log(`     Using pinned Electron ABI ${abi} for prebuilt resolution`);
+      try {
+        execFileSync(
+          process.execPath,
+          [
+            __filename,
+            '--fetch-prebuild',
+            JSON.stringify({ moduleRoot, moduleName, platform, arch: targetArch, electronVersion, abi, projectRoot }),
+          ],
+          { stdio: 'inherit', timeout: 300000 }
+        );
+        return true;
+      } catch (error) {
+        console.log(`     Direct prebuild fetch failed (${error.message}); falling back...`);
+      }
+    }
+  }
 
   if (mustUsePrebuild) {
     console.log(`     Linux cross-compilation detected (${normalizedBuildArch} → ${targetArch})`);
@@ -385,6 +527,19 @@ function verifyModuleBinary(moduleRoot, moduleName) {
 
   console.log(`     Debug: No .node files found in ${moduleRoot}`);
   return false;
+}
+
+// Child mode: `node rebuildNativeModules.js --fetch-prebuild <json>` performs ONE prebuilt
+// download with an explicit ABI and exits (see fetchPrebuildForPinnedAbi).
+if (process.argv[2] === '--fetch-prebuild') {
+  let code;
+  try {
+    code = fetchPrebuildForPinnedAbi(JSON.parse(process.argv[3] || '{}'));
+  } catch (error) {
+    console.error('fetch-prebuild failed:', error.message);
+    code = 1;
+  }
+  if (typeof code === 'number') process.exit(code);
 }
 
 module.exports = {
