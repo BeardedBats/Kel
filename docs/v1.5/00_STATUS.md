@@ -26,7 +26,7 @@ Verified at program start (2026-09-15):
 | G5 routing / completion / review | **closed** — claims compiler (finalized contracts only; transient drafts stay clean), escalation-aware `routing_outcomes` (`job_kind`/`attempts`/`escalated`), routing + completion + reviewer-independence audits (`05`, `06`); closure review **CONTINUE** | `test_v15_completion.py`, `05_ROUTING.md`, `06_COMPLETION_AUTHORITY.md` |
 | G6 memory / continuation / recipes | **closed** — packet-lifecycle probes 4/4; physical forget purge (`secure_delete`, FTS segment merge, WAL checkpoint) closed a real residue gap the probes found; memory/continuation/recipes audited (`07`); closure review **CONTINUE** | `test_v15_memory_packets.py`, `07_MEMORY_AND_CONTEXT.md` |
 | G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
-| G8 diagnostics / performance / packaging | pending | — |
+| G8 diagnostics / performance / packaging | **in progress** — desktop `tsc --noEmit` release blocker cleared (**26 → 0** errors, behavior-preserving type fixes), desktop vitest entry lane restored (**4 files / 72 tests passed**), production build **exit 0**; diagnostics surfaces / performance measurement / WS23 hygiene next | commit `6366976` (tsc + vitest + build logs) |
 | G9 security + reliability sweeps | pending (a first slice of the security matrix is covered by `test_v15_authorize.py`) | — |
 | G10 visual / product acceptance | pending | — |
 | G11 migration / clean clone / packaged | pending | — |
@@ -90,6 +90,16 @@ app-name fallback / provider header / updater strings corrected; the Autonomy pa
 shipped enforcement truth with the claims test re-pinned; default-chat surfaces verified donor-free;
 kept donor infrastructure and the advanced donor surfaces queued for G10 are recorded in `11`;
 closure review **CONTINUE**.
+
+**Increment 8 — G8 (part 1, this working tree):** the desktop `tsc --noEmit` blocker carried from
+V1.4.1 is cleared — 26 → **0 errors** across nine files (explicit callback return types, a `typeof`
+guard on the restored conversation id, the duplicate `window.kelAPI` global declaration unified
+with its canonical `kelApi.ts` definition, `recipe_id` typed on `KelRecipeEntry`, and the
+`globalThis` structural casts in the two chat-history utils); the desktop vitest lane was
+unrunnable pre-existing (donor setup files stripped) and is restored — **4 files / 72 tests
+passed**; a full `electron-vite build` is **exit 0**. Note: `scripts/verify-release.ps1` covers
+neither lane — the blocker escaped automated release coverage and is now recorded. Commit
+`6366976`.
 
 ## Required deliverables (spec checklist)
 
