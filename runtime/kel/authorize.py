@@ -85,13 +85,20 @@ def _result(outcome, rule, reason, **extra):
 
 
 def role_for(store, job_id, milestone_id):
-    """The role template assigned to a run, or None. Assignment is Kel's decision only."""
+    """The frozen role snapshot attached to a run, or None. Assignment is Kel's decision only."""
     with contextlib.closing(store.connect()) as db:
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='team_assignments'").fetchone():
             return None
-        row = db.execute('SELECT template_id FROM team_assignments WHERE job_id=? AND milestone_id=?'
-                         ' ORDER BY created DESC LIMIT 1', (job_id, milestone_id)).fetchone()
-    return row['template_id'] if row else None
+        row = db.execute('SELECT template_id, snapshot FROM team_assignments WHERE job_id=? AND '
+                         'milestone_id=? ORDER BY created DESC LIMIT 1',
+                         (job_id, milestone_id)).fetchone()
+    if not row:
+        return None
+    try:
+        snapshot = json.loads(row['snapshot'])
+    except (TypeError, ValueError):
+        snapshot = {}
+    return {'template_id': row['template_id'], 'tool_policy': snapshot.get('tool_policy') or {}}
 
 
 def project_creation_root():
@@ -187,12 +194,18 @@ class Authorizer:
         # 4. Role tool policy narrows; it can never broaden the lease or the guardrails.
         role = intent.get('role')
         if role and tool:
-            from .team import Team
-            try:
-                allowed = Team(self.store).tool_allowed(str(role), tool, project_id or '',
-                                                        str(intent.get('task') or ''))
-            except PolicyError:
-                return _result('DENY', 'role-unknown', 'Unknown role for this action')
+            snapshot = intent.get('role_tool_policy')
+            if isinstance(snapshot, dict):
+                # A frozen assignment snapshot governs: role edits never rewrite a run's policy.
+                allowed = (tool in (snapshot.get('allow') or [])
+                           and tool not in (snapshot.get('deny') or []))
+            else:
+                from .team import Team
+                try:
+                    allowed = Team(self.store).tool_allowed(str(role), tool, project_id or '',
+                                                            str(intent.get('task') or ''))
+                except PolicyError:
+                    return _result('DENY', 'role-unknown', 'Unknown role for this action')
             if not allowed:
                 return _result('DENY', 'role-policy',
                                'Role %s does not allow tool %s' % (role, tool))

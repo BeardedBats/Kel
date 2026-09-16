@@ -18,3 +18,10 @@ restart/resume reauthorization, malformed contexts, denial during active work.
 
 Full-suite counts per increment are recorded in `00_STATUS.md` (`00` carries the last verified
 number; this file carries the per-suite citations).
+
+## Roles (G3)
+
+`runtime/tests/test_v15_roles.py` — **5 tests** (run: 5 passed): frozen snapshot attached to every
+run at claim; the snapshot governs after a role edit; a strict snapshot blocks the coding
+dispatcher before any workspace exists; retries reuse the same frozen assignment; text jobs attach
+the documentation role.

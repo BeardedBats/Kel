@@ -38,6 +38,7 @@ class Engine:
         self.review_pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='kel-review')
         self.reviews={}
         self.owner=uid()
+        self._roles_seeded=False
         try:
             self.store.controller_lease(self.owner, kernel_lock_acquired=True)
             with self.store.transaction() as db:
@@ -222,9 +223,11 @@ class Engine:
                         from .authorize import authorize, block_job, ensure_job_lease, role_for
                         lease_id, failure = ensure_job_lease(self.store, job)
                         if failure is None:
+                            role_info = role_for(self.store, job['id'], mid)
                             decision = authorize(self.store, {
                                 'actor': 'kel', 'job': job['id'], 'milestone': mid,
-                                'role': role_for(self.store, job['id'], mid),
+                                'role': (role_info or {}).get('template_id'),
+                                'role_tool_policy': (role_info or {}).get('tool_policy'),
                                 'action_kind': 'repo',
                                 'target': str(job['contract'].get('root') or ''),
                                 'lease_id': lease_id, 'consume': False,
@@ -257,9 +260,40 @@ class Engine:
                         run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model)
                     except PolicyError:
                         continue
+                    try:
+                        self._attach_role(job, mid, run)
+                    except PolicyError:
+                        pass  # roles only narrow; a missing snapshot must never block a run
                     cancel = threading.Event()
                     future = self.pool.submit(self._execute, run, self.adapters[route['selected']], cancel)
                     self.active[run['id']] = (future, cancel, run)
+
+    def _attach_role(self, job, mid, run):
+        """Kel attaches a role snapshot to every run (V1.5 G3).
+
+        The snapshot freezes the role policy for the run's retries; enforcement reads the frozen
+        copy, so later role edits never silently rewrite authority mid-run. One assignment per
+        milestone; roles only narrow, so a missing or failed attachment never blocks work.
+        """
+        from .team import Team
+        team = Team(self.store)
+        if not self._roles_seeded:
+            team.seed_defaults()
+            self._roles_seeded = True
+        with contextlib.closing(self.store.connect()) as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE name='team_assignments'").fetchone():
+                return
+            existing = db.execute('SELECT 1 FROM team_assignments WHERE job_id=? AND milestone_id=?',
+                                  (job['id'], mid)).fetchone()
+        if existing:
+            return
+        template = {'coding': 'implementation-engineer',
+                    'research': 'research-specialist'}.get(job['contract'].get('kind'),
+                                                           'documentation-specialist')
+        team.create_assignment(job['id'], mid, template,
+                               project_id=job['contract'].get('project_id', 'default'),
+                               run_id=run['id'], provider=run.get('provider'),
+                               model=run.get('model'))
 
     def control(self, job_id, action):
         runs = self.store.control(job_id, action)

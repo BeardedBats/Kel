@@ -21,7 +21,7 @@ Verified at program start (2026-09-15):
 | G0 baseline / scope / ledger | **open** — baseline verified; `docs/v1.5` created; ledger classified (`08_LEDGER.md`); remaining: per-row requirement texts are re-read from the ledger when each row is worked | this file, `08_LEDGER.md` |
 | G1 authorization architecture | **implemented** — `kel/authorize.py`, migration 010, model doc; review checkpoint run this turn (**CONTINUE**) | `02_AUTHORIZATION_MODEL.md`, `test_v15_authorize.py` |
 | G2 execution-path enforcement | **closed** — source-traced effect-path inventory (`02A`, 28 rows), side doors closed (lease-issuance API, greenfield creation, forgery bindings), 25/25 G2 cases evidenced, restart/resume + parallel isolation proven; closure review **CONTINUE** | `02A_EFFECT_PATH_MATRIX.md`, `test_v15_authorize.py` |
-| G3 roles / leases / boundary | **partial** — leases + expansion end-to-end; roles enforced when assigned; automatic role attachment pending | `08_LEDGER.md` |
+| G3 roles / leases / boundary | **closed** — frozen role snapshot per run at claim, enforcement reads the snapshot, coding gate covers `git`/`run_tests`/`write`; leases + expansion end-to-end; closure review **CONTINUE** | `test_v15_roles.py`, `02_AUTHORIZATION_MODEL.md` |
 | G4 credentials / provider runtime | pending | — |
 | G5 routing / completion / review | pending | — |
 | G6 memory / continuation / recipes | pending | — |
@@ -56,6 +56,12 @@ expansion end-to-end (ask-once, once/project grants, denied-sticky, automatic re
   (375 + 10 baseline; zero regressions);
 - documents `01`–`17` present plus `02A`; substantive: `02`, `02A`, `08`, `09`; working: `14`,
   `16`, this file; skeletons: the rest, each marked so.
+
+**Increment 3 — G3 (this working tree):** frozen role snapshot attached to every run at claim (one
+per milestone, reused across retries; coding → Implementation Engineer, research → Research
+Specialist, text → Documentation Specialist); enforcement reads the snapshot; the coding dispatcher
+gate covers `git` / `run_tests` / `write`; tests `test_v15_roles.py` **5/5**; full suite **423
+passed + 10 subtests**; closure review **CONTINUE**.
 
 ## Required deliverables (spec checklist)
 

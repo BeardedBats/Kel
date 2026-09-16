@@ -37,6 +37,7 @@ Actor identities:
 |---|---|---|
 | Job creation | `Store.create` (`kel`) | effect-capable jobs (coding) get an execution lease bound to the compiled contract digest (`review_ref = kel-contract:<sha>`); ineligible roots (frozen/system) stay unleased and fail closed at the next gate |
 | Claim gate | `Engine.tick` (`kel`) | a coding milestone cannot claim a worker without an `ALLOW` for `repo` on the project root (`consume=False` pre-flight) |
+| Role attachment | `Engine.tick` after claim (`kel`) | one frozen role snapshot per milestone; enforcement reads the snapshot (ad-hoc role intents resolve live) |
 | Coding execution | `CodingAdapter.execute` (`worker`) | `repo` + tools `git` / `run_tests` before any dispatch; denial returns `BLOCKED` with no change made |
 | Change application | `apply_changes.apply_checked` (`user` via `/api/apply`; `kel` on crash recovery) | `write` on the project root before any write into the user's project |
 | Project creation | `Service._plan` (`user`) | `user-project-create` policy: a user-actor request confined to `<home>/Documents/Kel Projects`; guardrails still applied; a denial leaves no folder behind |
@@ -86,6 +87,11 @@ broadens authority granted by a stricter layer; each layer only narrows.
 9. **Creating a new project is an effect.** The greenfield flow crosses the boundary under the
    `user-project-create` policy. The full path inventory, the side doors this G2 pass found and
    closed, and the explicit trusted-runtime exceptions live in `02A_EFFECT_PATH_MATRIX.md`.
+10. **Every run carries a frozen role snapshot (G3).** Kel attaches an assignment at claim time
+    (coding → Implementation Engineer; research → Research Specialist; text → Documentation
+    Specialist). Enforcement reads the snapshot's tool policy, so role edits never rewrite a run
+    mid-flight; one assignment per milestone, reused across retries. Roles only narrow, so a
+    failed attachment never blocks work.
 
 ## What is enforced now vs. known limits (truthful)
 
@@ -107,7 +113,7 @@ Not yet part of this increment (tracked in `16_KNOWN_LIMITATIONS.md`, gates note
   family synthesizes input or drives a browser. Recorded G2 decision: no calling runtime exists
   today, so there is nothing to gate; the product copy must state exactly this, and any future
   input/browser family must enter through the boundary before release;
-- role enforcement applies when an assignment exists; automatically attaching roles to every run
-  is a later G3 step;
+- role enforcement reads the frozen snapshot attached to each run at claim; an ad-hoc intent that
+  passes a role directly resolves the live version;
 - the desktop copy on the Autonomy page still carries the V1.4.1 "not yet" wording — a G7 item;
   since this change, the engine is the truth and the copy must catch up before release.
