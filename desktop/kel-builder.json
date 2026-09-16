@@ -3,6 +3,21 @@
   "appId": "com.kel.desktop",
   "productName": "Kel",
   "executableName": "Kel",
+  "copyright": "Copyright © 2026 Kel",
+  "publish": null,
+  "linux": {
+    "maintainer": "Kel",
+    "vendor": "Kel",
+    "desktop": {
+      "entry": {
+        "Name": "Kel",
+        "Comment": "Kel desktop application",
+        "Icon": "Kel",
+        "Categories": "Office;Utility;",
+        "MimeType": "x-scheme-handler/kel;"
+      }
+    }
+  },
   "protocols": [
     {
       "name": "Kel",
