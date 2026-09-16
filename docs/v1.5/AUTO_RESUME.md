@@ -39,8 +39,30 @@ Continuation record for the V1.5 program. Read this first when work resumes, the
 
 ## Next steps, in order
 
-1. G9: **closed** (review CONTINUE; suite 444+10). Next: G10 — visual/product acceptance on the
-   desktop shell (packaged-or-dev surface, a11y/token probes, screenshot capture); then G11–G13.
+1. G10 (paused mid-prerequisites — run halted by user after the packaging attempt): staged = V1.5
+   KelEngine rebuilt; `dist/package/win-unpacked` holds Kel.exe / app.asar / kel-engine /
+   bundled-aioncore with **no app-update.yml**. Resume: fix the builder duplicate entry — remove
+   `public` and `resources/bundled-aioncore` from `kel-builder.json` `extraResources` (base
+   `electron-builder.yml` already contributes both; arrays merge, and the second copy of
+   `aioncore.exe` deterministically EBUSYs) — then re-run from `desktop/`:
+   `./node_modules/.bin/electron-builder --config kel-builder.json --win --dir --publish=never`
+   expect EXIT 0. Then run the G10 probes with Playwright from `desktop/node_modules`:
+   `node packaging/verify-packaged-ui.cjs <dist/package/win-unpacked> <fresh dataDir>` plus
+   `capture-screens.cjs` and `a11y-probe.cjs` into an evidence dir; review JSONs, then G11–G13.
+
+## Run checkpoint (paused 2026-09-15, user-requested)
+
+- **Current gate:** G10 (visual / product acceptance). G8 and G9 are **closed** (review CONTINUE).
+- **Completed:** G8 commits `6366976` + `9f2d890`; G9 commits `74b6c33` + `9cc6af7`; V1.5 KelEngine
+  rebuilt (`dist/runtime/KelEngine`, PyInstaller exit 0); package staged with no app-update.yml.
+- **Unfinished / uncommitted:** nothing uncommitted in source; G10 probes not run; electron-builder
+  exits 1 on the duplicate `extraResources` EBUSY (staged artifact itself complete).
+- **Latest passing counts:** engine 444 + 10 subtests (EXIT 0, 117.54 s; `/tmp/kel_suite_g9.txt`);
+  desktop tsc 0 / vitest 72 / build 0.
+- **Blocker:** duplicate packaging entry (fix + exact commands in step 1 above). No credential or
+  approval blocker.
+- **HEAD at pause:** `9cc6af7`; this checkpoint is the following commit. Tree clean except
+  pre-existing untracked `Agents.md`; frozen releases untouched; no stray processes.
 2. G6–G13 per the gate board; ledger advancement waves (72 citations, 28 annotations, REQUIRED
    rows in gate order).
 3. Desktop (Electron) work for G7/G8/G10: Autonomy copy correction (with the paired

@@ -28,7 +28,7 @@ Verified at program start (2026-09-15):
 | G7 donor sunset / chat purity / UX | **closed** — `[AionUi` log prefixes eliminated (21 files, verified zero remain); tray tooltip / notification title / app-name fallback / provider `X-Title` / updater strings corrected; Autonomy copy corrected with the claims test re-pinned (2/2); default-chat surfaces donor-free; kept donor infrastructure + advanced donor surfaces recorded (`11`) | `11_DESIGN_SYSTEM.md`, `test_v141_claims.py` |
 | G8 diagnostics / performance / packaging | **closed** — tsc blocker cleared (26→0), desktop test lane restored (72 green), build exit 0; WS22 authorization/lease/migration diagnostics in the snapshot and the desktop Diagnostics page; WS23 builder overrides (`publish: null`, Kel copyright, Linux entry) + Kel PWA identity (manifest, SW cache); WS28 measured with basis (`12`); suite **441 + 10**; closure review **CONTINUE** | `test_v15_diagnostics.py` (3/3), `12_PERFORMANCE.md`, commits `6366976` + `9f2d890` |
 | G9 security + reliability sweeps | **closed** — 25/25 security cases re-run on this tree; reliability table covers all 22 charter cases with named evidence; credential vectors re-checked; **two real defects found and fixed by the new probes** (masked `database is locked` in `Store.transaction`; telemetry-thread handle retention past `Service.shutdown`); suite **444 + 10**; closure review **CONTINUE** | `test_v15_reliability.py` (3/3), `09`, `10`, commit `74b6c33` |
-| G10 visual / product acceptance | pending | — |
+| G10 visual / product acceptance | **in progress — prerequisites staged; run paused by user** — V1.5 KelEngine rebuilt from source; package staged at `dist/package/win-unpacked` (Kel.exe + app.asar + kel-engine + bundled-aioncore, **no app-update.yml**); electron-builder exits 1 on a deterministic duplicate-copy EBUSY (merged base+kel `extraResources` re-copies `aioncore.exe`); UI/a11y probes not yet run | `/tmp/kel_pkg_build3.log`, staged artifact (git-ignored) |
 | G11 migration / clean clone / packaged | pending | — |
 | G12 independent architecture audit | pending | — |
 | G13 freeze / tag / release | pending | — |
@@ -117,6 +117,22 @@ with `cannot rollback - no transaction is active` (now guarded by `in_transactio
 `Service.shutdown()` never joined the telemetry thread, holding `appserver.stderr` open past
 shutdown (now joined, bounded at 30 s). Probes `test_v15_reliability.py` **3/3**; full suite
 **444 passed + 10 subtests**; closure review **CONTINUE**. Commit `74b6c33`.
+
+**Run checkpoint (paused 2026-09-15, user-requested):** current gate **G10**. Completed: G8 + G9
+closed with reviews CONTINUE; V1.5 KelEngine rebuilt (`dist/runtime/KelEngine`, PyInstaller,
+exit 0); packaging inputs restored (199 MB `bundled-aioncore` copied from the frozen V1.4.1 release
+— frozen releases untouched); package staged at `dist/package/win-unpacked` with **no
+app-update.yml** (the G8 `publish: null` override confirmed in the artifact). Unfinished: G10
+acceptance probes (Playwright) not yet run; electron-builder does NOT exit 0 — deterministic EBUSY
+on the DUPLICATE `extraResources` copy of `aioncore.exe` (base `electron-builder.yml` + kel-builder
+both list it; arrays merge). The staged binary itself is complete (dest size = source size
+99,193,856 B). Latest passing counts: engine **444 passed + 10 subtests** (EXIT 0, 117.54 s);
+desktop `tsc --noEmit` 0 errors; desktop vitest 4 files / 72 passed; `electron-vite build` exit 0.
+Blocker: the duplicate-entry packaging failure. Next action: remove `public` and
+`resources/bundled-aioncore` entries from `kel-builder.json` `extraResources` (they are inherited),
+re-run the builder, expect exit 0, then run the probes. HEAD at pause: `9cc6af7` (this record is
+the following commit). Repo tree clean apart from pre-existing untracked `Agents.md`; no stray
+Kel/aioncore/Electron processes.
 
 ## Required deliverables (spec checklist)
 
