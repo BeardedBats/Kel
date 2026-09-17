@@ -29,10 +29,12 @@ FINDING_TYPES = ('pitfall', 'pattern', 'preference', 'architecture', 'tool')
 FILE_CHANGES = ('added', 'modified', 'deleted')
 TEST_RESULTS = ('pass', 'fail', 'skipped')
 
-# Interim static ceilings (doc 03 §7: a contract narrows role authority, never widens it).
-# The charters describe richer words (artifact_write, deploy_gated); these are their
-# project-effect equivalents. Role registry v2 (increment 5.1) moves these into versioned
-# role data and the validator reads the registry instead of this table.
+# Static ceilings (doc 03 §7: a contract narrows role authority, never widens it). The
+# charters describe richer words (artifact_write, deploy_gated); these are their
+# project-effect equivalents. Role registry v2 (increment 5.1) carries the same ceilings
+# as versioned role data (kel/assignment.py: registry_ceilings); callers may pass the
+# registry-derived table via `ceilings=`, and this map stays the static fallback for
+# pure (store-free) validation.
 ROLE_MAX_AUTHORITY = {
     'discovery': 'read-only',
     'architect': 'read-only',
@@ -116,8 +118,12 @@ def _reviewer(value, what):
     return reviewer
 
 
-def validate_task_contract(contract):
-    """Refuse a malformed TaskContract (workforce-os doc 06, schema v1)."""
+def validate_task_contract(contract, *, ceilings=None):
+    """Refuse a malformed TaskContract (workforce-os doc 06, schema v1).
+
+    `ceilings` optionally overrides the role→authority ceiling table with the versioned
+    registry's values (kel.assignment.registry_ceilings); omitted, the static table applies.
+    """
     contract = _object(contract, 'TaskContract')
     _refuse_unknown(contract, CONTRACT_FIELDS, 'TaskContract')
     if contract.get('schema_version') != SCHEMA_VERSION:
@@ -155,9 +161,12 @@ def validate_task_contract(contract):
 
     authority = _object(contract.get('authority'), 'authority')
     klass = _enum(authority.get('class'), AUTHORITY_CLASSES, 'authority.class')
-    if AUTHORITY_RANK[klass] > AUTHORITY_RANK[ROLE_MAX_AUTHORITY[role]]:
+    table = dict(ROLE_MAX_AUTHORITY)
+    if ceilings:
+        table.update(ceilings)
+    if AUTHORITY_RANK[klass] > AUTHORITY_RANK[table[role]]:
         raise PolicyError('Role %s may not hold %s authority (ceiling %s)'
-                          % (role, klass, ROLE_MAX_AUTHORITY[role]))
+                          % (role, klass, table[role]))
     write_scope = _text_list(authority.get('write_scope', []), 'authority.write_scope',
                              allow_empty=True)
     if klass in ('workspace-write', 'leased-write') and not write_scope:

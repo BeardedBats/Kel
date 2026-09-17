@@ -45,7 +45,11 @@ CREATE TABLE IF NOT EXISTS assignment_artifacts(
 """
 
 ROLE_FIELDS = ('goal', 'inputs', 'outputs', 'quality_bar', 'boundaries', 'escalation',
-               'evidence_expectations', 'tool_policy', 'model_preference', 'budget')
+               'evidence_expectations', 'tool_policy', 'model_preference', 'budget',
+               # Workforce v2 additions (doc 03 §7; values are validated by kel.assignment
+               # when a role is used for worker assignment — additive, legacy roles keep v1).
+               'authority_max', 'capability_requirements', 'dispatch_tier', 'budget_class',
+               'default_skill_packs', 'independence', 'anti_patterns')
 REQUIRED_ROLE_FIELDS = ('goal', 'outputs', 'quality_bar', 'tool_policy', 'budget')
 ASSIGNMENT_STATES = ('QUEUED', 'ACTIVE', 'WAITING', 'BLOCKED', 'DONE', 'UNCERTAIN', 'FAILED')
 EVENT_KINDS = ('assignment.created', 'assignment.started', 'step.started', 'step.finished',
@@ -273,7 +277,8 @@ class Team:
 
     # ---- assignments ----------------------------------------------------
     def create_assignment(self, job_id, milestone_id, template_id, project_id='', task_id='',
-                          actor='kel', run_id=None, provider=None, model=None, budget=None):
+                          actor='kel', run_id=None, provider=None, model=None, budget=None,
+                          extra=None):
         if actor != 'kel':
             raise PolicyError('Delegation is Kel’s decision only')
         job = self.store.get(job_id)
@@ -287,6 +292,10 @@ class Team:
                     'tool_policy': fields.get('tool_policy', {}),
                     'model_preference': fields.get('model_preference'),
                     'budget': budget if budget is not None else fields.get('budget')}
+        if extra:
+            if not isinstance(extra, dict):
+                raise PolicyError('Assignment snapshot extras must be an object')
+            snapshot.update(extra)
         assignment_id = uid()
         now = time.time()
         with self.store.transaction() as db:
