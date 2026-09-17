@@ -13,7 +13,8 @@
 Build: `scripts/build-runtime.ps1` → `desktop && bun run package` → `electron-builder --config
 kel-builder.json --win --x64 --config.directories.output=../dist/package-final6` (all exit 0).
 The shell executable and `app.asar` are byte-identical to the previous build; only the engine
-changed (the backup/restore fix below). Source: worktree `kel-ux-v15`, branch `ux/v15-journeys`.
+changed (the backup/restore fix below). Source: worktree `kel-ux-v15`, branch `ux/v15-journeys`,
+committed as `612c325` (the artifact was built from this working tree).
 
 ## How it was verified
 
