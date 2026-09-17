@@ -133,6 +133,7 @@ class ModeTests(Base):
         self.assertEqual(binding['selected']['model'], 'codex-native')
         self.assertEqual(binding['selected']['runtime'], 'native-cli')
         self.assertEqual(binding['policy'], 'eligible-cost-v1')
+        self.assertEqual(binding['fallback_basis'], 'eligible-cost-order')
         self.assertEqual([f['provider'] for f in binding['fallbacks']], ['claude-code'])
 
     def test_preferred_order_is_honored_and_fallbacks_recorded(self):
@@ -142,6 +143,7 @@ class ModeTests(Base):
         self.assertEqual(binding['selected']['provider'], 'claude-code')
         self.assertEqual(binding['fallbacks'][0]['provider'], 'codex')
         self.assertEqual(binding['policy'], 'preferred-order-v1')
+        self.assertEqual(binding['fallback_basis'], 'preferred-order-then-cost')
 
     def test_preferred_needs_an_eligible_entry(self):
         with self.assertRaises(PolicyError):
@@ -154,6 +156,7 @@ class ModeTests(Base):
         self.assertEqual(binding['selected']['provider'], 'claude-code')
         self.assertEqual(binding['selected']['model'], 'claude-native')
         self.assertEqual(binding['policy'], 'fixed-pin-v1')
+        self.assertEqual(binding['fallback_basis'], 'eligible-cost-order-excluding-pin')
 
     def test_fixed_ineligible_is_refused(self):
         with self.assertRaises(PolicyError):
@@ -172,6 +175,12 @@ class ModeTests(Base):
             resolve_binding(candidates(), mode='BEST')
         with self.assertRaises(PolicyError):
             resolve_binding(candidates(), mode='PREFERRED', preferred=[])
+        with self.assertRaises(PolicyError):
+            resolve_binding(candidates(), mode='PREFERRED', preferred=['codex'],
+                            fixed={'provider': 'codex'})
+        with self.assertRaises(PolicyError):
+            resolve_binding(candidates(), mode='FIXED', fixed={'provider': 'codex'},
+                            preferred=['codex'])
 
     def test_advisory_requirements_are_recorded_not_filtering(self):
         binding = resolve_binding(candidates(), mode='AUTO',
@@ -192,10 +201,22 @@ class ModeTests(Base):
         local[2].privacy = 'local'
         binding = resolve_binding(local, mode='AUTO', requirements=['local_only'])
         self.assertEqual(binding['selected']['provider'], 'internal')
+        self.assertEqual(binding['requirements']['privacy_enforced'], ['local_only'])
+        self.assertNotIn('local_only', binding['requirements']['advisory'])
 
     def test_candidates_from_providers_covers_the_registry(self):
         names = {c.name for c in candidates_from_providers(self.store)}
         self.assertGreaterEqual(names, {'claude-code', 'codex', 'internal', 'deepseek'})
+
+    def test_enforced_capabilities_need_a_model_that_declares_them(self):
+        # N1 follow-up: a provider whose capability union is sufficient but whose models
+        # cannot be verified must not freeze a binding with model=None (or accept a pin).
+        synthetic = [Candidate(name='synthetic', capabilities={'text', 'edit'}, cost=1.0)]
+        with self.assertRaises(PolicyError):
+            resolve_binding(synthetic, mode='AUTO', requirements=['repository_edit'])
+        with self.assertRaises(PolicyError):
+            resolve_binding(synthetic, mode='FIXED', requirements=['repository_edit'],
+                            fixed={'provider': 'synthetic', 'model': 'synthetic-model'})
 
 
 class GrantTests(Base):
@@ -244,6 +265,10 @@ class ReservationTests(Base):
     def test_unknown_reservation_is_refused(self):
         with self.assertRaises(PolicyError):
             get_reservation(self.store, 'nope')
+
+    def test_state_filter_is_validated(self):
+        with self.assertRaises(PolicyError):
+            reservations(self.store, state='bogus')
 
 
 class AssignWorkerTests(Base):
@@ -307,6 +332,21 @@ class AssignWorkerTests(Base):
         with self.assertRaises(PolicyError):
             assign_worker(self.store, self.job_id, 'm1', 'builder', mode='AUTO',
                           candidates=candidates(), reservation=row['reservation_id'])
+
+    def test_reservation_milestone_must_match(self):
+        row = reserve_budget(self.store, self.job_id, budget_class='standard', tokens=1,
+                             wallclock=1, cost=0, milestone_id='m2')
+        with self.assertRaises(PolicyError):
+            assign_worker(self.store, self.job_id, 'm1', 'builder', mode='AUTO',
+                          candidates=candidates(), reservation=row['reservation_id'])
+
+    def test_snapshot_extras_are_guarded(self):
+        with self.assertRaises(PolicyError):
+            self.team.create_assignment(self.job_id, 'm1', 'builder',
+                                        extra={'role_template': 'spoofed'})
+        with self.assertRaises(PolicyError):
+            self.team.create_assignment(self.job_id, 'm1', 'builder',
+                                        extra={'notes': {'chain_of_thought': 'because'}})
 
 
 class OverlayTests(unittest.TestCase):

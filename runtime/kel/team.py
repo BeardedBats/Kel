@@ -295,6 +295,15 @@ class Team:
         if extra:
             if not isinstance(extra, dict):
                 raise PolicyError('Assignment snapshot extras must be an object')
+            collisions = sorted(set(extra) & set(snapshot))
+            if collisions:
+                raise PolicyError('Extras may not override snapshot keys: %s'
+                                  % ', '.join(collisions))
+            from .workforce import find_unsafe
+            unsafe = find_unsafe(extra, path='snapshot extras')
+            if unsafe:
+                raise PolicyError('Unsafe assignment snapshot extras: %s'
+                                  % '; '.join(unsafe[:3]))
             snapshot.update(extra)
         assignment_id = uid()
         now = time.time()
