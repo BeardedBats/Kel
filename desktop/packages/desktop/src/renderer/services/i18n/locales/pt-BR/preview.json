@@ -85,7 +85,7 @@
       "outsideSandbox": "Este arquivo está fora da sandbox atual do projeto."
     },
     "serverInstall": {
-      "hint": "O AionUi está sendo executado em um servidor. O componente de pré-visualização precisa ser instalado nesse servidor. Execute o comando abaixo no servidor e tente novamente:",
+      "hint": "O Kel está sendo executado em um servidor. O componente de pré-visualização precisa ser instalado nesse servidor. Execute o comando abaixo no servidor e tente novamente:",
       "icuNote": "Se ainda não iniciar, instale a biblioteca ICU no servidor (Debian/Ubuntu: apt-get install -y libicu-dev)."
     }
   },
@@ -144,7 +144,7 @@
     "loading": "Iniciando visualização do PPT...",
     "installing": "Instalando componente de visualização...",
     "startFailed": "Falha ao iniciar a visualização do PPT",
-    "installHint": "Instale o OfficeCLI pela página oficial de releases iOfficeAI/OfficeCLI"
+    "installHint": "Instale o OfficeCLI pela página oficial de releases OfficeCLI"
   },
   "browser": {
     "newTab": "Nova aba",

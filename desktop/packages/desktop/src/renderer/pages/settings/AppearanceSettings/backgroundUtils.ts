@@ -8,8 +8,8 @@
  * Helpers for injecting user-selected background images into theme CSS.
  */
 
-export const BACKGROUND_BLOCK_START = '/* AionUi Theme Background Start */';
-export const BACKGROUND_BLOCK_END = '/* AionUi Theme Background End */';
+export const BACKGROUND_BLOCK_START = '/* Kel Theme Background Start */';
+export const BACKGROUND_BLOCK_END = '/* Kel Theme Background End */';
 
 // Precompiled regex for better performance / 预编译正则以提升性能
 const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -17,6 +17,10 @@ const BACKGROUND_BLOCK_PATTERN = new RegExp(
   `${escapeRegex(BACKGROUND_BLOCK_START)}[\\s\\S]*?${escapeRegex(BACKGROUND_BLOCK_END)}\n?`,
   'g'
 );
+// Blocks injected by earlier builds name the previous product in their comments; keep matching them
+// so an existing background replaces cleanly instead of being duplicated.
+const LEGACY_BACKGROUND_BLOCK_PATTERN =
+  /\/\* AionUi Theme Background Start \*\/[\s\S]*?\/\* AionUi Theme Background End \*\/\n?/g;
 
 const buildBackgroundCss = (imageDataUrl: string): string => {
   if (!imageDataUrl) return '';
@@ -68,7 +72,11 @@ export const injectBackgroundCssBlock = (css: string, imageDataUrl: string): str
   }
   // Reset lastIndex for global regex reuse / 重置 lastIndex 以重用全局正则
   BACKGROUND_BLOCK_PATTERN.lastIndex = 0;
-  const cleanedCss = css.replace(BACKGROUND_BLOCK_PATTERN, '').trim();
+  LEGACY_BACKGROUND_BLOCK_PATTERN.lastIndex = 0;
+  const cleanedCss = css
+    .replace(BACKGROUND_BLOCK_PATTERN, '')
+    .replace(LEGACY_BACKGROUND_BLOCK_PATTERN, '')
+    .trim();
   const block = buildBackgroundCss(imageDataUrl);
   return [cleanedCss, block].filter(Boolean).join('\n\n');
 };

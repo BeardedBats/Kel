@@ -4,7 +4,7 @@
  */
 import type { DragEndEvent } from '@dnd-kit/core';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
-import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
+import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
 import type { AssistantListItem } from './types';
 import { resolveAssistantSourceTag } from './assistantUtils';
 import AssistantAvatar from './AssistantAvatar';
@@ -364,15 +364,11 @@ const AssistantListPanel: React.FC<AssistantListPanelProps> = ({
               </p>
             </div>
             <div className={`${isMobile ? 'w-full' : 'flex-shrink-0'}`}>
-              <TalkToButlerButton
+              <SettingsCreateMenu
                 className={isMobile ? '!w-full' : undefined}
                 label={t('settings.createAssistant', { defaultValue: 'Create Assistant' })}
-                chatLabel={t('settings.talkToButler.createViaChat', { defaultValue: 'Create via chat' })}
                 onManual={onCreate}
-                manualLabel={t('settings.talkToButler.createManually', { defaultValue: 'Create manually' })}
-                prompt={t('settings.talkToButler.prompt.createAssistant', {
-                  defaultValue: 'Help me create a new assistant and walk me through setting it up.',
-                })}
+                manualLabel='Create manually'
                 data-testid='btn-create-assistant'
               />
             </div>

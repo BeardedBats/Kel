@@ -126,7 +126,7 @@ export async function initializeKel(port: number): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    if (!r.ok) throw new Error(`AionUI integration ${route}: ${r.status} ${await r.text()}`);
+    if (!r.ok) throw new Error(`Kel integration ${route}: ${r.status} ${await r.text()}`);
     if (r.status === 204) return null;
     const payload = await r.json();
     return payload.data ?? payload;

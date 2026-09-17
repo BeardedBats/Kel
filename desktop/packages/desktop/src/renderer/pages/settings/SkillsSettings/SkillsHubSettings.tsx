@@ -10,7 +10,7 @@ import useSWR from 'swr';
 import SkillUsedByStack, { getAssistantsUsingSkill } from './SkillUsedByStack';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
 import SettingsPageHeader from '../components/SettingsPageHeader';
-import TalkToButlerButton from '@/renderer/components/base/TalkToButlerButton';
+import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
 import { AionSearchInput } from '@/renderer/components/base';
 import { formatDateTime } from '@/renderer/services/i18n/format';
 import { buildSkillImportNotice, getSkillImportErrorMessage } from './skillImportMessages';
@@ -928,7 +928,7 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
       <div data-testid='official-skills-section'>
         <p className='m-0 mb-12px text-12px leading-relaxed text-t-tertiary'>
           {t('settings.skillsHub.officialHint', {
-            defaultValue: 'Built-in skills maintained by AionUi — read-only and updated with each release.',
+            defaultValue: 'Built-in skills maintained by Kel — read-only and updated with each release.',
           })}
         </p>
         {officialSkills.length > 0 ? (
@@ -1002,14 +1002,10 @@ const SkillsHubSettings: React.FC<SkillsHubSettingsProps> = ({ withWrapper = tru
             >
               {t('settings.skillsHub.importHistoryTitle', { defaultValue: 'Import history' })}
             </Button>
-            <TalkToButlerButton
+            <SettingsCreateMenu
               label={t('settings.skillsHub.addSkill', { defaultValue: 'Add Skill' })}
-              chatLabel={t('settings.talkToButler.addViaChat', { defaultValue: 'Add via chat' })}
               onManual={handleManualImport}
               manualLabel={t('settings.skillsHub.manualImport', { defaultValue: 'Import Skills' })}
-              prompt={t('settings.talkToButler.prompt.addSkill', {
-                defaultValue: 'Help me import a skill and attach it to an assistant.',
-              })}
               data-testid='btn-add-skill'
             />
           </>

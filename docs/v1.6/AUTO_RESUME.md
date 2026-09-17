@@ -25,13 +25,13 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
-| 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
-| 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
+| 4 i18n / donor-string cleanup | DONE — restoration restored from stash on `267364e`, completed + committed in this increment | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
+| 5–15 | pending | see the program brief; autonomous Main continues per the charter (Workforce OS research packages must be read before Phase 5 implementation) |
 
-Latest verified candidate: `dist/package-p1cap3/win-unpacked` (CAP2-RESIDUAL evidence).
-`dist/package-p1cap2/win-unpacked` remains the CAP2-CLAUSE evidence artifact;
-`dist/package-p1cap/win-unpacked` remains the P1 evidence artifact; `dist/package-final16` remains the
-Phase 3 evidence artifact; `package-final13`/`final15` are the memory/lineage evidence artifacts;
+Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
+probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
+remains the CAP2-RESIDUAL evidence artifact; `package-p1cap2`/`p1cap`/`final16` remain the earlier
+phase evidence artifacts; `package-final13`/`final15` are the memory/lineage evidence artifacts;
 `package-final12` is a superseded intermediate (UI bug); never cite it.
 
 ## P1 capability remediation + Phase 4 pause (2026-09-17)
@@ -162,6 +162,32 @@ as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
 - **Next Audit 1.6 range**: `85cf0f1..NEW_MAIN_HEAD` — `85cf0f1..631881a` is this remediation; the
   state commit on top records this AUTO_RESUME update. CAP-02/CAP2-RESIDUAL must receive independent
   CONTINUE before Phase 4 resumes.
+
+## Phase 4 completion (autonomous Main increment, 2026-09-17)
+
+Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and completed.
+
+- **Safe restoration**: stash `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (base `70d68e4`,
+  object `992ab31c…`, 123 tracked files + 1 untracked) was inspected against the recovery artifact
+  and applied onto clean `267364e` with **zero file overlap** with the P1/CAP2 remediation; the
+  restored file set matched the stash exactly, the restored `SettingsCreateMenu.tsx` hash matched the
+  artifact copy (`2838b3c3…`), and `git diff HEAD -- runtime packaging` stayed empty (no CAP fix was
+  overwritten). The stash was kept until restoration was proven, then dropped after this increment
+  committed.
+- **Completion**: the remaining reachable donor literals were finished (About modal donor
+  links replaced with the product repository, boot-dialog/update links → Kel releases, donor wiki
+  guide links removed from Model/Tools/channels, DingTalk credential links → `open.dingtalk.com`,
+  guid GitHub action → Kel repo, unreferenced donor Skills-Market banner deleted, channel-conflict
+  literals, `i18n-keys.d.ts` Butler keys removed, theme markers renamed with a legacy matcher).
+  Full inventory, keep-list (license headers, internal identifiers, dormant/hidden boundaries) and
+  evidence live in `docs/i18n-cleanup/00_STATUS.md`. The permanent GitHub sync policy is now tracked
+  at `docs/v1.6/GITHUB_SYNC_POLICY.md`.
+- **Verification**: locale transform replay = 0 changes / 0 residual donor values; 247 locale files
+  valid; no removed keys remain; desktop `tsc` 0 errors and vitest 76/76; engine suite 613 passed
+  (+10 subtests); packaged `package-final17` with `ux-audit/run-phase4.sh` (copy-scan over reachable
+  routes + approvals + lineage journeys).
+- **Next Audit 1.6 range**: `267364e..NEW_MAIN_HEAD` (this Phase 4 increment plus the state commit
+  that records it).
 
 ## Verify quickly (any resume)
 
