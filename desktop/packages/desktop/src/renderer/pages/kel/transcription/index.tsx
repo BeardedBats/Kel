@@ -615,6 +615,20 @@ const statusCopy =
         onDrop={onDrop}
       >
         <aside className={styles.sidebar} aria-label='Transcript library'>
+          {/* Authoritative standalone IA (finding 6): the column keeps the donor's own title and a
+              plain-text API Key entry — not a gear — because that is where a user looks for the
+              transcription credential. */}
+          <div className={styles.sidebarHeader}>
+            <h1 className={styles.sidebarTitle}>Transcriptions</h1>
+            <button
+              type='button'
+              className={styles.apiKeyAction}
+              onClick={() => setSettingsOpen(true)}
+              data-testid='transcription-settings'
+            >
+              API Key
+            </button>
+          </div>
           <div className={styles.sectionTitle}>Folders</div>
           <div className={styles.scrollArea}>
             {library.folders.length === 0 && (
@@ -711,7 +725,7 @@ const statusCopy =
             </div>
           </div>
           <div className={styles.divider} />
-          <div className={styles.sectionTitle}>Recent Transcriptions</div>
+          <div className={styles.sectionTitle}>Recent</div>
           <div className={styles.scrollArea} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
@@ -737,14 +751,9 @@ const statusCopy =
               </button>
             ))}
           </div>
-          <div className={styles.divider} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 10px' }}>
-            <span className={styles.rowMeta} data-testid='transcription-mode'>
-              {status?.label || 'Checking…'}
-            </span>
-            <Button size='mini' type='text' style={{ marginLeft: 'auto' }} onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>
-              Source
-            </Button>
+          {/* The connection state stays one quiet line; the entry point moved to the column header. */}
+          <div className={styles.sidebarFooterNote} data-testid='transcription-mode'>
+            {status?.label || 'Checking…'}
           </div>
         </aside>
 
@@ -756,20 +765,27 @@ const statusCopy =
               fix='Reopen this page or check that Kel is running.'
             />
           )}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
+              Record — with Record last and primary. Record More is always present (disabled when there is
+              nothing to append to) instead of appearing conditionally. */}
+          <div className={styles.actionRow}>
             {recState === 'idle' && (
               <>
-                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
-                  Record
-                </Button>
                 <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
                   Upload Audio
                 </Button>
-                {selected?.source_type === 'recording' && (
-                  <Button onClick={() => void beginRecording(selected.id)} data-testid='record-more'>
-                    Record more
-                  </Button>
-                )}
+                <Button
+                  disabled={selected?.source_type !== 'recording'}
+                  onClick={() => {
+                    if (selected) void beginRecording(selected.id);
+                  }}
+                  data-testid='record-more'
+                >
+                  Record More
+                </Button>
+                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
+                  Record
+                </Button>
               </>
             )}
             <input
@@ -826,7 +842,7 @@ const statusCopy =
             )}
             {selected && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div className={styles.documentHeader}>
                   {renaming ? (
                     <Input
                       value={nameDraft}
@@ -838,12 +854,18 @@ const statusCopy =
                       data-testid='transcript-rename'
                     />
                   ) : (
-                    <strong className='text-16px' data-testid='transcript-name'>
+                    <h2 className={styles.documentTitle} data-testid='transcript-name'>
                       {selected.name}
-                    </strong>
+                    </h2>
                   )}
-                  <Button
-                    size='mini'
+                  {/* Saved / recording state reads beside the title, as in the standalone app. */}
+                  <span className={styles.documentStatus} data-testid='transcript-status'>
+                    {statusCopy}
+                  </span>
+                  <span className={styles.grow} />
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
                     onClick={() => {
                       setRenaming(true);
                       setNameDraft(selected.name);
@@ -851,10 +873,7 @@ const statusCopy =
                     data-testid='rename-button'
                   >
                     Rename
-                  </Button>
-                  <span className={styles.rowMeta} data-testid='transcript-status'>
-                    {statusCopy}
-                  </span>
+                  </button>
                 </div>
                 <div className={styles.rowMeta}>
                   {selected.source_type === 'recording' ? 'Recording' : `Upload: ${selected.source_filename || 'audio'}`}
@@ -880,16 +899,9 @@ const statusCopy =
                 <p className={styles.transcriptText} data-testid='transcript-text'>
                   {(selected.text || '').trim() || '(No speech was recognized.)'}
                 </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                    paddingTop: 10,
-                    marginTop: 10,
-                    borderTop: '1px solid var(--color-border-2)',
-                  }}
-                >
+                {/* Authoritative IA: the donor's four actions come first and keep the weight; Kel's
+                    additions stay available but quieter, so the document footer still reads as before. */}
+                <div className={styles.documentActions}>
                   <Button onClick={() => void copyTranscript()} data-testid='copy-transcript'>
                     Copy Transcript
                   </Button>
@@ -907,20 +919,37 @@ const statusCopy =
                     }}
                     data-testid='combine-open'
                   >
-                    Combine with…
+                    Combine
                   </Button>
-                  <Button onClick={sendToChat} data-testid='send-to-chat'>
+                </div>
+                <div className={styles.secondaryActions}>
+                  <button type='button' className={styles.secondaryAction} onClick={sendToChat} data-testid='send-to-chat'>
                     Send to chat
-                  </Button>
-                  <Button type='primary' onClick={() => void openReview('answers')} data-testid='use-vetting'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
+                    onClick={() => void openReview('answers')}
+                    data-testid='use-vetting'
+                  >
                     Use as vetting answers
-                  </Button>
-                  <Button onClick={() => void openReview('freethink')} data-testid='think-out-loud'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
+                    onClick={() => void openReview('freethink')}
+                    data-testid='think-out-loud'
+                  >
                     Think out loud
-                  </Button>
-                  <Button status='danger' onClick={() => removeTranscript(selected)} data-testid='delete-transcript'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.dangerAction}
+                    onClick={() => removeTranscript(selected)}
+                    data-testid='delete-transcript'
+                  >
                     Delete
-                  </Button>
+                  </button>
                 </div>
               </>
             )}
@@ -930,27 +959,38 @@ const statusCopy =
 
       {dragging && <div className={styles.dropOverlay}>Drop audio or video to transcribe</div>}
 
+      {/* The user's explicit decision: the standalone app's key sheet, in Kel's words — a plain
+          "Meta API key" modal with no helper paragraph under the button. */}
       <Modal
-        title='Transcription source'
+        title='Meta API key'
         visible={settingsOpen}
         footer={null}
         onCancel={() => setSettingsOpen(false)}
         style={{ maxWidth: 480 }}
       >
-        <p style={{ marginBottom: 8 }}>{status?.detail || 'Checking the transcription source…'}</p>
+        <p className={styles.keySheetBody}>
+          {status?.has_key
+            ? 'Replace the key used for Muse transcription.'
+            : 'Add a Model API key to begin transcribing.'}
+        </p>
         {status && !status.has_key && (
-          <>
-            <p style={{ fontSize: 13, color: 'var(--color-text-2)', marginBottom: 8 }}>
-              Kel uses Muse (Meta) for live and file transcription when a Meta API key is connected. Without a
-              key, practice mode records exactly the same way and writes clear practice text.
-            </p>
+          <div className={styles.keySheetForm}>
+            <label className={styles.keySheetLabel} htmlFor='meta-api-key'>
+              API key
+            </label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Input.Password value={keyDraft} onChange={setKeyDraft} placeholder='Meta API key' data-testid='key-input' />
+              <Input.Password
+                id='meta-api-key'
+                value={keyDraft}
+                onChange={setKeyDraft}
+                placeholder='Paste your Meta Model API key'
+                data-testid='key-input'
+              />
               <Button type='primary' onClick={() => void saveKey()} disabled={!keyDraft.trim()} data-testid='key-save'>
-                Connect
+                Save and Verify
               </Button>
             </div>
-          </>
+          </div>
         )}
         {status?.has_key && (
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
