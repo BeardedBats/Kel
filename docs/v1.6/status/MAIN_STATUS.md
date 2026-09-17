@@ -1,23 +1,23 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T23:45:00Z
+updated_utc: 2026-09-18T01:00:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
 head: 48dacb3 (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
-state: WAITING_FOR_AUDIT
+state: IMPLEMENTING
 
-current_increment: Phase 5.3 COMPLETE — D2 small pod + verification shipped as commit 48dacb3 (Builder→Verifier flow, two lenses, messages v1, arbitration v1, stall v1, A-vs-C pilot; no new migration; no live consumers). Audit 1.6 coverage requested for `f9cf3ea..48dacb3`. Next after CONTINUE: publish (4472db8..NEW); then Phase 5.4 (assurance army + Sentinel + Oracle)
-current_phase: Phase 5 — 5.3 DONE (audit pending); 5.4 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE), the Phase 5.2 follow-up patch (commit f9cf3ea, audit CONTINUE), and Phase 5.3 D2 pods (commit 48dacb3, audit pending)
+current_increment: Phase 5.3 CLOSED — audit increment 14 CONTINUE accepted `f9cf3ea..48dacb3` (F14-1/F14-2/N14-1 queued). Next: publish (4472db8..NEW); then 5.3 follow-up patch (F14-1 wording, F14-2 exemption restriction, N14-1 clamp + tests) with delta re-audit, then Phase 5.4 (assurance army + Sentinel + Oracle)
+current_phase: Phase 5 — 5.3 DONE + audit-accepted (through 48dacb3); F14-follow-up + 5.4 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE), the Phase 5.2 follow-up patch (commit f9cf3ea, audit CONTINUE), and Phase 5.3 D2 pods (commit 48dacb3, audit CONTINUE)
 
-audit_requested_from: f9cf3ea
-audit_requested_through: 48dacb3
-audit_required: true
-audit_last_seen_head: f9cf3ea
-audit_last_seen_verdict: CONTINUE (increment 13; 5.2 follow-up accepted)
+audit_requested_from: NONE
+audit_requested_through: NONE
+audit_required: false
+audit_last_seen_head: 48dacb3
+audit_last_seen_verdict: CONTINUE (increment 14; Phase 5.3 accepted; F4 open)
 
 visual_state: READY_FOR_VISUAL
 visual_clean_head: 60b2322
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Awaiting Audit 1.6 increment 14 for `f9cf3ea..48dacb3`. On CONTINUE: publish (4472db8..NEW); then implement Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
-external_dependency: AUDIT 1.6 (f9cf3ea..48dacb3)
+next_autonomous_action: Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 4472db8..NEW; includes 59de2a6 + 48dacb3 + 112dea9 + acceptance docs). Then: (1) small 5.3 follow-up patch (F14-1 record wording; F14-2 restrict the pair-budget cmd exemption to escalation types BLOCKER/DECISION_PROPOSAL/REPLAN_REQUEST; N14-1 clamp idle at 0; +2 tests: exemption boundary, negative idle) with a delta re-audit; (2) Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+external_dependency: NONE
 stop_reason: NONE
