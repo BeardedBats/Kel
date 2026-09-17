@@ -1,21 +1,21 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T19:52:00Z
+updated_utc: 2026-09-17T20:15:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: cc909b9 (plus docs/state commits on top; see `git log --oneline -4`)
+head: 9d6ed55 (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
-state: IMPLEMENTING
+state: WAITING_FOR_AUDIT
 
-current_increment: Phase 5.0 CLOSED — audit increment 9 CONTINUE accepted `fd04c00..cc909b9` (increment 8 REVISE → remediation `cc909b9` → re-audit CONTINUE). Next increment = Phase 5.1 (agent-to-model assignment)
-current_phase: Phase 5 — 5.0 DONE + audit-accepted (through cc909b9); 5.1 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), and Phase 5.0 foundations (commit cc909b9, audit CONTINUE)
+current_increment: Phase 5.1 COMPLETE — agent-to-model assignment shipped as commit 9d6ed55 (registry v2, AUTO/PREFERRED/FIXED, grants, reservations, migration 17; no live consumers). Audit 1.6 coverage requested for `cc909b9..9d6ed55`. Next increment after CONTINUE = Phase 5.2 (single-specialist delegation, D1)
+current_phase: Phase 5 — 5.1 DONE (audit pending); 5.2 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), and Phase 5.1 assignment (commit 9d6ed55, audit pending)
 
-audit_requested_from: NONE
-audit_requested_through: NONE
-audit_required: false
+audit_requested_from: cc909b9
+audit_requested_through: 9d6ed55
+audit_required: true
 audit_last_seen_head: cc909b9
 audit_last_seen_verdict: CONTINUE (increment 9; F1-F3 closed)
 
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Implement Phase 5.1 — Agent/Model Assignment (role registry v2 archetype map; AUTO/PREFERRED/FIXED for worker roles; requirement profiles; overlays v1; capability grants fail-closed; budget reservations; tests/test_workforce_assignment.py) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.1; re-read the spec + docs 03/04/05 first. Carry-forward from the 5.0 audit: add a partial-coverage case to the F1 test; optionally harden `_as_record`/Row-path assertions; keep the closure echo-vs-issued-contract reconciliation for the D1/D2 closure increment. The next packaged battery must add a packaged-boot assertion that `schema_migrations` version 16 exists. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
-external_dependency: NONE
+next_autonomous_action: Awaiting Audit 1.6 increment 10 for `cc909b9..9d6ed55`. On CONTINUE: publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 4a5b2d1..NEW; includes 272ab65 + 5.1 + state commits); then implement Phase 5.2 — Single-specialist delegation (D1): staffing decisions for one specialist, contract issuance, evidence-bound completion, ledger projections, read-only data for views, tests/test_workforce_d1.py per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.2. Carry-forward: provider 'web'/context tokens for Discovery profiles when evidence-backed; per-project workforce flag storage at first consumer; overlay content at calibration; packaged battery adds schema_migrations 16+17 assertions. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+external_dependency: AUDIT 1.6 (cc909b9..9d6ed55)
 stop_reason: NONE
