@@ -9,8 +9,8 @@ worktree_clean: true
 
 state: WAITING_FOR_AUDIT
 
-current_increment: Phase 4 complete (i18n / donor-string cleanup) + state/publish step
-current_phase: Phase 4 DONE; next per docket (Phase 5 Workforce OS research first)
+current_increment: Phase 4 complete + published (remote `7ade287`); Workforce OS research review started (package inventory recorded)
+current_phase: Phase 4 DONE; Phase 5 research reading in progress (implementation gated on the audit CONTINUE)
 completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), and Phase 4 (commit fd04c00)
 
 audit_requested_from: 267364e
@@ -42,6 +42,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Read the autonomous Audit status for the 267364e..fd04c00 request; while the audit runs, begin the read-only review of the two Workforce OS research packages (no architectural writes before the audit CONTINUE).
+next_autonomous_action: Complete the read-only review of workforce-os/ (README + 00-15; 62M incl. donors/notes) and workforce-role-charters/ (README + 00-19 + roles/) — read both COMPLETELY before any Phase 5 implementation — and watch AUDIT_STATUS for the 267364e..fd04c00 verdict; implement Phase 5.0 foundations only after that CONTINUE.
 external_dependency: Independent Audit 1.6 re-audit of 267364e..fd04c00 (autonomous audit mode; Main needs its CONTINUE before Phase 5 implementation touches architecture).
 stop_reason: NONE
