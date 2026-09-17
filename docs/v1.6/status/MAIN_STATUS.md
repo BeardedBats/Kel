@@ -1,23 +1,23 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T20:50:00Z
+updated_utc: 2026-09-17T21:05:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: 9d6ed55 (plus docs/state commits on top; see `git log --oneline -4`)
+head: 5b83f0e (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
 state: IMPLEMENTING
 
-current_increment: Phase 5.1 CLOSED — audit increment 10 CONTINUE accepted `cc909b9..9d6ed55` (7 minor non-blocking findings N1-N7 recorded; follow-up patch queued). Next: 5.1 follow-up patch (N1/N2/N6 + N3-N5) with delta re-audit, then Phase 5.2 (single-specialist delegation, D1)
-current_phase: Phase 5 — 5.1 DONE + audit-accepted (through 9d6ed55); N-follow-up + 5.2 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), and Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE)
+current_increment: Phase 5.1 follow-up CLOSED — audit increment 11 CONTINUE accepted `9d6ed55..5b83f0e` (N1-N6 + S2 closed; new suggestions ride the 5.2 wiring review). Next: publish this cycle; then Phase 5.2 (single-specialist delegation, D1)
+current_phase: Phase 5 — 5.1 DONE + audit-accepted (through 5b83f0e, follow-up included); 5.2 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), and the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE)
 
 audit_requested_from: NONE
 audit_requested_through: NONE
 audit_required: false
-audit_last_seen_head: 9d6ed55
-audit_last_seen_verdict: CONTINUE (increment 10; Phase 5.1 accepted; minors N1-N7 carried)
+audit_last_seen_head: 5b83f0e
+audit_last_seen_verdict: CONTINUE (increment 11; Phase 5.1 follow-up accepted)
 
 visual_state: READY_FOR_VISUAL
 visual_clean_head: 60b2322
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Next cycle: (1) implement the small Phase 5.1 follow-up patch per audit increment 10 (`23_PHASE5_1_AUDIT.md`): close N1 (per-model eligibility for pinned caps; refuse model=None for enforced caps), N2 (reservation milestone check + atomic insert+link), N6 (reject core-key collisions in `create_assignment(extra=)`; screen extras with `workforce.find_unsafe`), plus N3-N5 where trivial — with tests, then request a delta re-audit; (2) then Phase 5.2 — Single-specialist delegation (D1): staffing decisions for one specialist, contract issuance, evidence-bound completion, ledger projections, read-only data for views, tests/test_workforce_d1.py per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.2. Carry-forward: N7 at 5.2 wiring; provider 'web'/context tokens when evidence-backed; per-project flag storage at first consumer; overlay content at calibration; packaged battery adds schema_migrations 16+17 assertions. Publication: this cycle publishes the 5.1 checkpoint (4a5b2d1..NEW) per GITHUB_SYNC_POLICY. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+next_autonomous_action: (1) Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 1f5e996..NEW; includes 6e19c97 + the 5.1 follow-up 5b83f0e + acceptance docs). (2) Then Phase 5.2 — Single-specialist delegation (D1): staffing decisions for one specialist, contract issuance, evidence-bound completion, ledger projections, read-only data for views, tests/test_workforce_d1.py per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.2. Carry-forward into 5.2: N7 (per-project ceilings) + audit-11 suggestions (fallback model filtering, link_reservation conditional update, local_only override precedence, falsy extras) + S3/S5/S6; provider 'web'/context tokens when evidence-backed; per-project flag storage at first consumer; packaged battery adds schema_migrations 16+17 assertions. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
 external_dependency: NONE
 stop_reason: NONE
