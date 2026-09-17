@@ -27,7 +27,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
-| 5.1 Agent-to-model assignment | DONE + audit-accepted — commit `9d6ed55` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 689 (+31); audit 10 CONTINUE (minors N1-N7 → follow-up patch) |
+| 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
 | 5.2–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -238,12 +238,14 @@ path only) and `workforce.enabled` defaults off — B-config parity by construct
 demo across all three modes snapshotted. **Audit: increment 10 CONTINUE — Phase 5.1 accepted
 for `cc909b9..9d6ed55`; minors N1-N7 recorded (latent FIXED model-check gap, reservation
 milestone/atomicity, record fidelity, cross-mode arguments, extras sanitization, per-project
-ceilings).** Next: a small follow-up patch closing N1/N2/N6 (+N3-N5) with a delta re-audit,
-then Phase 5.2 — D1 single-specialist delegation (`test_workforce_d1.py`).
+ceilings).** The follow-up patch `5b83f0e` closed N1-N6 + S2; audit increment 11 returned
+**CONTINUE** (all closures verified; carry-forward integrity confirmed; new suggestion-level
+items ride the 5.2 wiring review). Next: publish this checkpoint, then Phase 5.2 — D1
+single-specialist delegation (`test_workforce_d1.py`).
 
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 689 passed (+10 subtests; +76 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 693 passed (+10 subtests; +80 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
