@@ -9,8 +9,8 @@ worktree_clean: true
 
 state: IMPLEMENTING
 
-current_increment: Phase 4 complete + independently audited (Audit 1.6 increment 7: **CONTINUE** for `267364e..fd04c00`); Workforce OS research reading in progress
-current_phase: Phase 4 DONE; Phase 5 research reading (implementation of 5.0 after the reading completes)
+current_increment: Phase 4 complete + independently audited (Audit 1.6 increment 7: **CONTINUE** for `267364e..fd04c00`); Phase 5 research reading COMPLETE (recorded); next increment = Phase 5.0 Foundations
+current_phase: Phase 4 DONE; Phase 5 — implementing 5.0 Foundations as the next increment
 completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), and Phase 4 (commit fd04c00, audit CONTINUE)
 
 audit_requested_from: NONE
@@ -42,6 +42,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Continue and complete the read-only review of `workforce-os/` (README + 00-15; `_donors`/`_notes` as needed) and `workforce-role-charters/` (README + 00-19 + `roles/`) before any Phase 5 implementation; then implement Phase 5.0 — Foundations (role registry, skill registry, TaskContract + CompletionPacket schemas, authority bindings, institutional ledgers) as the next clean increment. Dependency watch follows docs/v1.6/AUTONOMOUS_OPERATION.md (30-second cadence, stop on change). Visual checkpoint pinned for the Visual thread at `60b2322` (docs-only commits may sit above it).
+next_autonomous_action: Implement Phase 5.0 — Foundations per `15_PHASE5_IMPLEMENTATION_SPEC.md` + `14_KEL_ARCHITECTURE_INTEGRATION.md` (role registry, skill registry, TaskContract + CompletionPacket schemas, authority bindings, institutional ledgers) as the next clean increment on `ux/v15-journeys`. The mandatory Phase 5 reading is COMPLETE (2026-09-17; coverage recorded in docs/v1.6/phase5/READING_RECORD.md: 17/17 workforce-os docs + 31/31 role-charter files; `_donors`/`_notes` on-demand only). Dependency watch follows docs/v1.6/AUTONOMOUS_OPERATION.md (30-second cadence, stop on change). Visual checkpoint pinned for the Visual thread at `60b2322` (docs-only commits may sit above it).
 external_dependency: NONE
 stop_reason: NONE

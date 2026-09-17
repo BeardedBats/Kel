@@ -170,7 +170,10 @@ Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and
 writes, Main worktree untouched).** Dependency-watch cadence for autonomous Main is documented in
 `docs/v1.6/AUTONOMOUS_OPERATION.md` (30-second re-read of the authoritative status file when blocked
 on another thread, stop immediately on change, never hot-loop, commit truth over status prose).
-The Visual checkpoint for the Visual thread is pinned at `60b2322`.
+The Visual checkpoint for the Visual thread is pinned at `60b2322`. The mandatory Phase 5 reading is
+complete (coverage recorded in `docs/v1.6/phase5/READING_RECORD.md`: 17/17 `workforce-os` docs +
+31/31 role-charter files); the next increment is **Phase 5.0 — Foundations** per
+`15_PHASE5_IMPLEMENTATION_SPEC.md`.
 
 - **Safe restoration**: stash `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (base `70d68e4`,
   object `992ab31c…`, 123 tracked files + 1 untracked) was inspected against the recovery artifact
