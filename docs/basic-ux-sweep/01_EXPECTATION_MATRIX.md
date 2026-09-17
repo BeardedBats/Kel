@@ -61,3 +61,34 @@ Legend: **PAG** present & good · **PBF** present but flawed · **MBHV** missing
 | 42 | Multi-window | NA | single primary window by design; actions do not spawn duplicates |
 | 43 | Usage / cost awareness | MO | no trustworthy local data source; classified optional |
 | 44 | Window / layout fundamentals | verified per surface | matrix + narrow/keyboard/light/dark/zoom sweeps; see `10_LAYOUT_AND_SCROLLING.md` |
+
+## Donor-derived rows (2026-09-17 pass)
+
+Classification for the second donor pass; full per-item evidence in `17_DONOR_FEATURE_FINDINGS.md`
+and the pattern sources in `16_DONOR_PATTERN_MATRIX.md`. The same legend applies (PAG / PBF /
+MBHV / MO / NA).
+
+| # | Donor-derived capability | Class | Where it lives / evidence |
+|---|---|---|---|
+| D1 | Queue messages while Kel is working | PAG | `CommandQueuePanel` + `useConversationCommandQueue` (edit, send-now, reorder, persisted, 20-item cap) |
+| D2 | Composer prompt history (Up/Down) | PAG | `SendBox/index.tsx` - first-line guard, Escape restores the draft, history scoped to the conversation from its messages |
+| D3 | Find in the current conversation | PAG | Ctrl+F → conversation-title minimap panel (results, next/prev, Escape); works over a 314-message chat |
+| D4 | Conversation timeline / jump rail | PAG | `MessageAnchorRail` (user-turn ticks, hover select, click to jump, hidden on short chats) |
+| D5 | Side-by-side preview rail | PAG | `pages/conversation/Preview/*` + chat slider: HTML, images, files, browser, theme previews |
+| D6 | **Keep the computer awake** | PBF → **built** | was an inert donor-page switch; now a real `prevent-app-suspension` inhibition, live state, Settings · System, released on close (`runs/kaw/out/ux-keepawake.json`) |
+| D7 | Session-scoped tool controls | MBHV (deferred) | only global policy exists (Autonomy + Tools); needs an engine capability contract |
+| D8 | Smart capability recommendations | MO | provider case covered by the plain "Open Providers" notice; no reliable task→capability detector |
+| D9 | Interactive in-chat tool UI | PBF | Vetting is fully interactive; approvals live on Work rather than in the transcript |
+| D10 | Compact tool activity | PAG | tool-group "View Steps · N", plain job-state labels, raw detail behind the group |
+| D11 | Long-conversation virtualization | PAG (measured) | 314 messages: 259 ms to first node, 100 mounted nodes, 61 MB heap, search + rail work, 0 console errors |
+| D12 | Advanced worker view | MO | no strong real use case; Diagnostics covers the need |
+| D13 | Work inspector | PAG | Work page + "Files/Changes" panel + vetting drawer |
+| D14 | Session evidence / replay | PAG / MO | Diagnostics page answers "why"; replay is optional and not built |
+| D15 | Shared knowledge across runtimes | PAG | project memory/context is engine-owned and runtime-agnostic (no per-worker stores) |
+| D16 | Memory change proposals | PBF | engine already refuses silent overwrites and records supersession; a review surface is missing |
+| D17 | Workflow checkpoints | PAG | recipes + conversation plan bar + review gates with completion authority |
+| D18 | Artifact lineage | PBF | records exist (`artifacts/<job>/<run>/…`); no user-facing "where did this come from?" yet |
+| D19 | Auto-detect installed runtimes | PAG | plain availability states ("Available" / "Needs setup" / "needs you to sign in") from `providers.status` |
+| D20 | Unified tool / MCP setup | PAG | one Tools settings surface (`McpManagement`) over a shared store; no per-agent duplication observed |
+| D21 | Profiles / isolated workspaces | MO (rejected) | Projects already scope chats, context, artifacts and knowledge; Profiles would add a concept without a use case |
+| D22 | Remote status / approval | MO | WebUI exists but remote approval is future-facing; not part of this release |

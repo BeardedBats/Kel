@@ -335,6 +335,26 @@ unverifiable in this environment instead of being claimed.
 
 ---
 
+## H23 — Donor-derived user-journey pass (2026-09-17)
+
+A second pass over the engineering donors (Goose, Orkas, Pioneer, Hermes, Warpforge, Agent
+Orchestrator, AionUi) to find mature interaction patterns Kel still lacks. Every candidate was
+checked against the **packaged build** before classification (`docs/basic-ux-sweep/16_…`, `17_…`),
+because the first sweep showed how easily a "present" claim can rest on a primitive that never
+reaches the user.
+
+| Finding | Class | Fix | Rule |
+|---|---|---|---|
+| "Keep awake" existed only as a donor-page switch that stored a value **nobody consumed** (no `powerSaveBlocker` caller anywhere), with donor-named copy in all 13 locales | UX-P1 | a real main-process sleep inhibition (`prevent-app-suspension`), applied at startup, reported live as `{enabled, active}`, hosted as one Kel control in Settings · System; the donor toggle is removed in the same change (JR-40) | JR-48 |
+| A capability could be called "present" from an engine route or a mounted component alone | process | donor-derived capabilities are classified from the packaged journey only - a control that does nothing, or a primitive with no user path, counts as missing | JR-49 |
+| Long conversations were never stress-tested | verified | 314 messages open in 259 ms with **100 mounted nodes** and 61 MB heap; find-in-conversation works over the list; no change needed | JR-49 |
+| Queue-while-working, composer prompt history, find-in-conversation, conversation jump rail, side-by-side preview, compact tool activity, work inspector, diagnostics, cross-runtime project knowledge, workflow checkpoints, runtime detection and unified tool/MCP configuration | verified present | each classified from its code path and packaged evidence in `17_DONOR_FEATURE_FINDINGS.md`; no duplicates were built | JR-49 |
+| Session-scoped tool controls, memory change proposals, artifact lineage, in-chat approvals, remote status | missing (deferred) | documented with reasons and left in the release docket rather than half-built | - |
+
+Provider-dependent behaviours remain unverifiable in this environment, as recorded in H22.
+
+---
+
 ## Process (permanent)
 
 1. Run the journey harness (packaged build, fresh + seeded roots) before tagging any release.

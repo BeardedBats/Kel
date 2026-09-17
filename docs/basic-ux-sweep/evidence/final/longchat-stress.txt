@@ -1,0 +1,13 @@
+{
+ "openMs": 304,
+ "nodesAfterOpen": 100,
+ "scrollHeightPx": 5065,
+ "heapMbAfterOpen": 51,
+ "scrollTopMs": 1216,
+ "nodesAtTop": 200,
+ "backMs": 1212,
+ "nodesAtBottom": 200,
+ "searchInputFocused": true,
+ "searchTail": "s answer 128: tightened spacing, kept the hierarchy, and verified scrolling. Steady pr… | #138 | Q: Stress turn 129: keep the plan readable and the scroll honest. | A: Stress answer 129: tightened spacing, kept the hierarchy, and verified scrolling. Steady pr…",
+ "consoleErrors": []
+}

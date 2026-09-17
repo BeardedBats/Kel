@@ -101,3 +101,23 @@ The vendored Electron/React desktop Kel is built on: sider nav entries, a settin
 8. **Produced vs delivered.** Adopt Pioneer's separation (`delivery-and-scheduled.md:18-27`) so Work distinguishes "the run finished" from "the result is in front of you," with a quiet default delivery channel.
 9. **One status slot per row.** Adopt AO's precedence rule and single-signal rule (`DESIGN.md:129-137`) for Work rows, history rows, and Team roster rows: spinner → relevant glyph → attention dot, never stacked chips.
 10. **One reviewable voice contract.** Adopt Hermes' `SOUL.md` (`SOUL.md:1`) as a single Kel document specifying reply length, no filler, and the "what changed / what's verified / what's left" closing — the cheapest possible upgrade to the "simple to talk to" half of the north star.
+
+## Second pass (2026-09-17)
+
+The ten adoptions above were re-checked against the packaged build in the donor-derived pass
+(`docs/basic-ux-sweep/16_DONOR_PATTERN_MATRIX.md`, `17_DONOR_FEATURE_FINDINGS.md`,
+`18_DONOR_FEATURE_REMEDIATION.md`) together with the 22 candidate journeys from the brief. Outcome:
+
+| # | Status in this pass |
+|---|---|
+| 1–2 (five-word vocabulary, attention order) | still open — ADAPT, release docket (they change Work's presentation model, not a UI pass) |
+| 3 (ranked, sectioned palette) | partially in place: the sweep already made the palette list only real actions with plain hints; scoring/grouping remains open |
+| 4 (disabled rows explain themselves) | open as a palette refinement; the sweep's rule is that non-working entries are omitted rather than disabled |
+| 5–6 (Autonomy dial, approval vocabulary) | open — ADAPT; the permission prompts exist on Work and this pass classified in-chat approvals as deferred |
+| 7–8 (needs-review state, produced vs delivered) | open — ADAPT on Work |
+| 9 (one status slot per row) | open — ADAPT |
+| 10 (one voice contract) | open — ADAPT; not attempted in this pass |
+
+One new donor-derived item was adopted and implemented: **keep the computer awake** (see 18). The
+other 21 candidate journeys were classified from the packaged build — most were already present and
+are now recorded with their evidence instead of being re-built.

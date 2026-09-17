@@ -8,6 +8,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import SystemModalContent from '@/renderer/components/settings/SettingsModal/contents/SystemModalContent';
 import { KelDataCard } from '@/renderer/components/kel/KelDataCard';
+import { KelKeepAwakeCard } from '@/renderer/components/kel/KelKeepAwakeCard';
 import AboutModalContent from '@/renderer/components/settings/SettingsModal/contents/AboutModalContent';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
 
@@ -22,6 +23,7 @@ const SystemSettings: React.FC = () => {
       ) : (
         <>
           <KelDataCard />
+          <KelKeepAwakeCard />
           <SystemModalContent />
         </>
       )}

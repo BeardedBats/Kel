@@ -42,6 +42,7 @@ import { setInitialLanguage } from '@process/services/i18n';
 import { setupApplicationMenu } from './process/utils/appMenu';
 import { startWebHost } from '@aionui/web-host';
 import { initializeZoomFactor, setupZoomForWindow } from './process/utils/zoom';
+import { initKeepAwake } from './process/utils/keepAwake';
 import { hydrateWindowsProcessPath } from './process/startup/windowsPath';
 import { registerWindowsAppUserModelId } from './process/startup/windowsAppUserModelId';
 import {
@@ -933,6 +934,11 @@ const handleAppReady = async (): Promise<void> => {
     console.error('[Kel] Failed to restore zoom factor:', error);
     initializeZoomFactor(undefined);
   }
+
+  // Restore the keep-awake choice as a real power-save inhibition; the process owns the blocker,
+  // so an exit or crash releases it with the process itself.
+  await initKeepAwake();
+  mark('initKeepAwake');
 
   try {
     loadSavedWindowBounds(await ProcessConfig.get('window.bounds'));
