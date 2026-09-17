@@ -24,7 +24,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3 In-chat approvals | DONE — commit `85e99fb` | `docs/in-chat-approvals/` (engine 592, packaged approvals journey all-green + lineage probe re-run on `package-final16`) |
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
-| 3.7 CAP2-RESIDUAL remediation | DONE — commit hash recorded by the follow-up state commit | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
+| 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
 | 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
 
@@ -129,8 +129,9 @@ Independent Audit 1.6 closed the original CAP2-CLAUSE defect but returned REVISE
 `[capability: state]` embedded form still plausibly matched technical strings (`Use C:/projects/[web: off]
 as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
 
-- **Starting HEAD**: `85cf0f1`. **Remediation commit**: recorded by the follow-up state commit.
-  Phase 4 WIP is NOT part of it.
+- **Starting HEAD**: `85cf0f1`. **Remediation commit**: `631881a` ("fix(capabilities): embedded commands use
+  the reserved [kel:...] namespace; technical text is never touched"), on top of `85cf0f1`. Phase 4
+  WIP is NOT part of it.
 - **Embedded grammar now**: the RESERVED Kel namespace, canonical only —
   `[kel:web=off]`, `[kel:web=on]`, `[kel:web=default]`, `[kel:terminal=off]`, `[kel:github=on]`,
   `[kel:files=default]` (capabilities web/files/terminal/github; states on/off/default; case-
@@ -158,8 +159,9 @@ as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
   with the reserved-directive step (Terminal off) and residual steps (path, nested), transcript
   probe, residual forwarded-text probe against the engine database (reserved token never forwarded;
   residual lines and prose byte-identical) and the packaged engine probe as the CAP-01 regression.
-- **Next Audit 1.6 range**: `85cf0f1..NEW_MAIN_HEAD` (this remediation commit plus the state commit).
-  CAP-02/CAP2-RESIDUAL must receive independent CONTINUE before Phase 4 resumes.
+- **Next Audit 1.6 range**: `85cf0f1..NEW_MAIN_HEAD` — `85cf0f1..631881a` is this remediation; the
+  state commit on top records this AUTO_RESUME update. CAP-02/CAP2-RESIDUAL must receive independent
+  CONTINUE before Phase 4 resumes.
 
 ## Verify quickly (any resume)
 
