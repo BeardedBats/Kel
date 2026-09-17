@@ -204,16 +204,18 @@ def grant_once(store, conversation, capability):
 
 
 def _take_grant(store, conversation, capability):
-    """Consume a live one-shot grant (single use, expires on its own)."""
+    """Consume a live one-shot grant atomically: single use, and it expires on its own.
+
+    One statement, so two effects racing inside the same conversation cannot both spend the grant.
+    """
     now = time.time()
     with contextlib.closing(store.connect()) as db:
-        row = db.execute('SELECT grant_id FROM capability_grants WHERE conversation_id=? AND capability=? '
-                         'AND used=0 AND expires>? ORDER BY created LIMIT 1',
-                         (str(conversation or ''), capability, now)).fetchone()
-        if not row:
-            return False
-        db.execute('UPDATE capability_grants SET used=1 WHERE grant_id=?', (row['grant_id'],))
-    return True
+        cursor = db.execute(
+            'UPDATE capability_grants SET used=1 WHERE grant_id IN ('
+            'SELECT grant_id FROM capability_grants WHERE conversation_id=? AND capability=? '
+            'AND used=0 AND expires>? ORDER BY created LIMIT 1)',
+            (str(conversation or ''), capability, now))
+        return cursor.rowcount > 0
 
 
 def _conversation_for_job(store, job_id):

@@ -98,7 +98,7 @@ configuration — each with its code path, UI location and packaged evidence in
 
 1. ~~Session-scoped tool controls — engine contract + chat surface.~~ **DELIVERED 2026-09-17** — see
    `docs/session-tools/` (10 documents) and the packaged journey `ux-sessiontools.json` on
-   `dist/package-final10`: per-conversation capability overrides in the engine
+   `dist/package-final11`: per-conversation capability overrides in the engine
    (`runtime/kel/capabilities.py`, migration 14), enforced at the central authorization boundary
    (`kel.authorize` layer 3c), surfaced as one plain-word control beside the model pill, reachable in
    words through the chat itself, isolated per conversation, surviving restart, resettable to the

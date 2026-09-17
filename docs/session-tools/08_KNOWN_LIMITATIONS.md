@@ -24,6 +24,11 @@ Recorded honestly; each is either an environment limit or a deliberate next incr
    review caught it and `kel.authorize` now spends it, with a regression test.)
 6. **Localisation.** The control is Kel-native and uses plain English strings, like the other Kel
    cards; it is not wired into the 13 donor locale bundles.
-7. **Assistant-level tool lists.** Per-assistant tool configuration (donor surface) is unchanged and
+7. **A one-shot grant can be spent by an attempt that then fails.** The grant is spent at the
+   authorization boundary of the effect, not on success: if the role policy, the lease or a boundary
+   check refuses the action afterwards, the grant is gone and the user can allow once again. This is
+   fail-closed and recorded rather than hidden; spending on success would mean authorizing without
+   spending, which is the defect the review found.
+8. **Assistant-level tool lists.** Per-assistant tool configuration (donor surface) is unchanged and
    is not merged into capabilities; the conversation control governs Kel's effects, not an
    assistant's own settings.

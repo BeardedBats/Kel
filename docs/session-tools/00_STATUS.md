@@ -13,10 +13,10 @@ configuration, in plain words, through the same authorization boundary everythin
 | Conversation UI | done — `KelToolsControl` beside the model pill |
 | Natural-language control | done — same state, answered inline by the ACP host |
 | Engine tests | done — `runtime/tests/test_capabilities.py` (16), full engine suite 545 passed |
-| Packaged journey | done — harness scenario `sessiontools` on `dist/package-final10`; all required checks pass, including Allow once (see 06) |
+| Packaged journey | done — harness scenario `sessiontools` on `dist/package-final11`; all required checks pass, including Allow once (see 06) |
 | Independent review | see `docs/basic-ux-sweep/15_FINAL_VERDICT.md` (session-tools continuation entry) |
 
-Evidence artifacts (scratch, not shipped): `ux-audit/runs/final10-sessiontools/ux-sessiontools.json`,
+Evidence artifacts (scratch, not shipped): `ux-audit/runs/final11-sessiontools/ux-sessiontools.json`,
 `ux-sessiontools-db.json`, screenshots `sessiontools-01-menu.png`, `sessiontools-03-natural-language.png`.
 
 ## Files
