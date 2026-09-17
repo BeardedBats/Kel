@@ -28,19 +28,19 @@
     },
     {
       "label": "default-card",
-      "ms": 2
+      "ms": 1
     },
     {
       "label": "data-path",
-      "ms": 2
+      "ms": 3
     },
     {
       "label": "backup-created",
-      "ms": 2438
+      "ms": 2054
     },
     {
       "label": "restore-confirm",
-      "ms": 411
+      "ms": 402
     }
   ],
   "errors": [],
@@ -92,7 +92,7 @@
   "copyPathToast": true,
   "backupCreated": true,
   "backupFolders": [
-    "Kel-Backup-20260916-212210"
+    "Kel-Backup-20260916-233904"
   ],
   "restoreConfirm": true,
   "restoreCancelled": true,
@@ -108,9 +108,7 @@
     "afterReset": 0.95
   },
   "zoomKeysWork": true,
-  "consoleErrors": [
-    "Error: Open a conversation before choosing its model."
-  ],
+  "consoleErrors": [],
   "closeOutcome": "closed",
   "engineKilled": false
 }
