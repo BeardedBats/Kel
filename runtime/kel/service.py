@@ -532,22 +532,13 @@ class Service:
             messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
             submissions=[dict(r) for r in db.execute('SELECT * FROM submissions WHERE conversation_id=? ORDER BY created',(cid,))]
             approvals=[dict(r) for r in db.execute("SELECT a.*,x.action FROM approvals a JOIN approval_actions x ON x.approval_id=a.id WHERE a.status='PENDING'")]
+            from .chat_approvals import plain_summary
             for a in approvals:
                 try:
                     action=json.loads(a['action']) if isinstance(a['action'],str) else (a['action'] or {})
                 except Exception:
                     action={}
-                kind=action.get('kind') or (action.get('action',{}) or {}).get('type') or 'permission'
-                if action.get('kind')=='command':
-                    a['action_summary']='run '+str(action.get('command',''))[:120]
-                elif action.get('kind')=='permissions':
-                    a['action_summary']='grant requested permissions'
-                elif action.get('kind')=='grantRoot':
-                    a['action_summary']='grant full workspace access'
-                elif action.get('kind')=='changes':
-                    a['action_summary']='apply the checked change set'
-                else:
-                    a['action_summary']='take the requested '+str(kind)+' action'
+                a['action_summary']=plain_summary(action)
             files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
         project_id=next((c['project_id'] for c in conversations if c['id']==cid),None)
         continuation=[]
@@ -640,6 +631,10 @@ class Service:
                 # A granted boundary request wakes exactly the job that was waiting on it.
                 from .authorize import resume_after_grant
                 resume_after_grant(self.store,result['request_id'])
+            if data.get('action')=='resolve' and result.get('status')=='DENIED':
+                # The conversation gets one plain sentence about the consequence.
+                from .chat_approvals import announce_denial
+                announce_denial(self.store,result['request_id'])
             return result
         if path=='/api/diagnostics':
             from .diagnostics import Diagnostics
@@ -653,7 +648,22 @@ class Service:
         if path=='/api/search':
             from .search import Search
             return Search(self.store).run(data.get('q',''))
+        if path=='/api/approvals':
+            return self._approvals_action(data)
         raise PolicyError('Unknown action')
+
+    def _approvals_action(self,data):
+        # In-chat approvals: presentation surface only - resolution runs through the SAME
+        # durable paths as Work (the actor guard above already refused a payload identity).
+        from .chat_approvals import resolve
+        if data.get('action','resolve')!='resolve':
+            raise PolicyError('Unknown approvals action')
+        return resolve(self.store,data.get('kind'),data.get('id'),bool(data.get('allow')),
+                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')))
+
+    def _approvals_list(self,conversation):
+        from .chat_approvals import items
+        return {'items':items(self.store,conversation or 'main')}
 
     def _vetting_action(self,data):
         # Design Vetting Sessions. One ingestion service serves chat answers, panel actions,
@@ -910,6 +920,8 @@ def serve(root,port=0):
                         else:
                             rows=service.store.lineage(query['job'][0])
                         self.reply(200,{'versions':rows});return
+                    if parsed.path=='/api/approvals':
+                        self.reply(200,service._approvals_list(query.get('conversation',['main'])[0]));return
                     self.reply(404,{'error':'Not found'})
                 except Exception as exc:self.reply(400,{'error':str(exc)})
                 return

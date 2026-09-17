@@ -309,8 +309,8 @@ class Authorizer:
         try:
             created = self.autonomy.request_expansion(
                 lease['lease_id'], scope, str(value),
-                what=str(meta.get('what') or 'Access outside the current permission'),
-                why=str(meta.get('why') or 'The worker needs this to continue the reviewed plan'),
+                what=str(meta.get('what') or 'work outside the folder Kel is allowed to use'),
+                why=str(meta.get('why') or 'this task needs it to keep going'),
                 benefit=str(meta.get('benefit') or ''), fallback=str(meta.get('fallback') or ''),
                 risk=str(meta.get('risk') or ''))
         except PolicyError as exc:
@@ -423,12 +423,15 @@ def block_job(store, job_id, milestone_id, decision):
         unchanged = job.get('authz') == marker
         if unchanged and (active or job['state'] == 'AWAITING_USER'):
             return False  # already announced for this exact block; never repeat the message
-        message = 'Kel paused this work for authorization: ' + str(
-            decision.get('reason') or decision.get('rule') or 'permission required')
-        if decision.get('boundary_request_id'):
-            message += (' Approve or deny the request on the Autonomy page (request ' +
-                        str(decision['boundary_request_id'])[:8] + '); Kel continues automatically '
-                        'after approval.')
+        from .chat_approvals import plain_block_reason, record_announcement
+        plain = plain_block_reason(decision)
+        if decision.get('outcome') == 'REQUIRES_BOUNDARY_EXPANSION':
+            message = ('Kel needs your permission to continue: ' + plain +
+                       ' You can decide right in this chat.')
+        elif decision.get('outcome') == 'REQUIRES_USER_APPROVAL':
+            message = 'Kel needs your approval before it continues: ' + plain
+        else:
+            message = 'Kel cannot continue this step: ' + plain
         m = (job.get('milestones') or {}).get(milestone_id)
         if m is not None and m.get('state') != 'RUNNING':
             m['error'] = message
@@ -439,8 +442,13 @@ def block_job(store, job_id, milestone_id, decision):
                     {'outcome': decision.get('outcome'), 'rule': decision.get('rule'),
                      'request': decision.get('boundary_request_id')})
         if not unchanged:
-            db.execute('INSERT INTO messages(conversation_id,role,text,job_id,at) VALUES(?,?,?,?,?)',
-                       (job['conversation'], 'assistant', message, job_id, time.time()))
+            cur = db.execute('INSERT INTO messages(conversation_id,role,text,job_id,at) VALUES(?,?,?,?,?)',
+                             (job['conversation'], 'assistant', message, job_id, time.time()))
+            # Chat renders the decision card in place of this message; the link is
+            # written with the message so it can never point at nothing.
+            if decision.get('boundary_request_id'):
+                record_announcement(db, job['conversation'], 'access',
+                                    decision['boundary_request_id'], cur.lastrowid)
         return True
 
 

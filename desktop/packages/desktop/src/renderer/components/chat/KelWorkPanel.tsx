@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import Markdown from '@/renderer/components/Markdown';
 import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
+import type { ApprovalItem as WaitingItem } from '@/renderer/components/kel/KelApprovalCard';
 type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
 type Job = {
   id: string;
@@ -132,6 +133,7 @@ export default function KelWorkPanel() {
     [checks, setChecks] = useState(''),
     [report, setReport] = useState('');
   const [pendingApprovals, setPendingApprovals] = useState(0),
+    [waiting, setWaiting] = useState<WaitingItem[]>([]),
     [extras, setExtras] = useState<WorkExtras>(),
     [preview, setPreview] = useState(''),
     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
@@ -158,11 +160,23 @@ export default function KelWorkPanel() {
       setBusy(false);
     }
   };
+  const loadWaiting = async (conversation: string) => {
+    try {
+      const out = await request<{ items: WaitingItem[] }>(
+        '/api/approvals?conversation=' + conversation
+      );
+      const pending = (out.items || []).filter((item) => item.state === 'pending');
+      setWaiting(pending);
+      setPendingApprovals(pending.length);
+    } catch {
+      /* the badge keeps its last value; chat still shows its own cards */
+    }
+  };
   const refresh = async () => {
     try {
       const data = await request<State>('/api/state?conversation=' + cid);
       setState(data);
-      setPendingApprovals((data.approvals || []).length);
+      await loadWaiting(cid);
       // The drawer follows the conversation the app is actually showing: when the historical
       // hard-coded 'main' is not among the conversations, the newest one becomes the drawer's
       // target, so Work, Knowledge, Map, Recipes and Vetting never point at a conversation
@@ -173,7 +187,7 @@ export default function KelWorkPanel() {
         setCid(active);
         const fresh = await request<State>('/api/state?conversation=' + active);
         setState(fresh);
-        setPendingApprovals((fresh.approvals || []).length);
+        await loadWaiting(active);
       }
       try {
         setExtras(await request<WorkExtras>('/api/work?conversation=' + active));
@@ -204,8 +218,7 @@ export default function KelWorkPanel() {
     const poll = async () => {
       if (visible) return;
       try {
-        const data = await request<State>('/api/state?conversation=' + cid);
-        setPendingApprovals((data.approvals || []).length);
+        await loadWaiting(cid);
       } catch {
         /* engine not ready yet */
       }
@@ -245,6 +258,11 @@ export default function KelWorkPanel() {
     } finally {
       setBusy(false);
     }
+  }
+  async function approvalAct(item: WaitingItem, extra: Record<string, unknown> = {}) {
+    // Same durable resolution the chat card uses; Work simply reflects it right after.
+    const allow = extra.allow !== false;
+    await action('/api/approvals', { kind: item.kind, id: item.id, allow, ...extra });
   }
   async function loadHistory() {
     try {
@@ -394,22 +412,68 @@ export default function KelWorkPanel() {
                 </Space>
               </section>
             ))}
-            {state?.approvals
-              .filter((a) => state.jobs.some((j) => j.id === a.job_id))
-              .map((a) => (
-                <section key={a.id} className='py-16px'>
-                  <Typography.Title heading={6}>{t('common.kel.approval')}</Typography.Title>
-                  <pre className='whitespace-pre-wrap break-all'>{a.action}</pre>
-                  <Space>
-                    <Button onClick={() => action('/api/approval', { id: a.id, allow: true })}>
-                      {t('common.kel.allow')}
-                    </Button>
-                    <Button onClick={() => action('/api/approval', { id: a.id, allow: false })}>
-                      {t('common.kel.deny')}
-                    </Button>
-                  </Space>
-                </section>
-              ))}
+            {waiting.map((item) => (
+              <section key={item.kind + ':' + item.id} className='py-16px' data-testid='kel-work-waiting'>
+                <Typography.Title heading={6}>
+                  {item.kind === 'access' ? 'Access needed' : t('common.kel.approval')}
+                </Typography.Title>
+                <div data-testid='kel-work-waiting-title'>
+                  <Typography.Text bold>{item.title}</Typography.Text>
+                </div>
+                {item.target ? (
+                  <div
+                    className='mt-4px text-12px break-all text-t-secondary'
+                    data-testid='kel-work-waiting-target'
+                  >
+                    {item.target}
+                  </div>
+                ) : null}
+                {item.summary ? <div className='mt-4px text-12px'>It wants to {item.summary}.</div> : null}
+                {item.why ? (
+                  <div className='mt-4px text-12px text-t-secondary' data-testid='kel-work-waiting-why'>
+                    {item.why}
+                  </div>
+                ) : null}
+                <Space className='mt-8px' wrap>
+                  {item.kind === 'access' ? (
+                    <>
+                      <Button
+                        data-testid='kel-work-allow-once'
+                        onClick={() => void approvalAct(item, { grant_kind: 'once' })}
+                      >
+                        Allow once
+                      </Button>
+                      <Button
+                        data-testid='kel-work-allow-project'
+                        onClick={() => void approvalAct(item, { grant_kind: 'project' })}
+                      >
+                        Allow for this project
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button data-testid='kel-work-allow' onClick={() => void approvalAct(item)}>
+                        Approve
+                      </Button>
+                      {item.repeatable ? (
+                        <Button
+                          data-testid='kel-work-remember'
+                          onClick={() => void approvalAct(item, { remember: true })}
+                        >
+                          Always allow
+                        </Button>
+                      ) : null}
+                    </>
+                  )}
+                  <Button
+                    data-testid='kel-work-deny'
+                    onClick={() => void approvalAct(item, { allow: false })}
+                  >
+                    {t('common.kel.deny')}
+                  </Button>
+                </Space>
+              </section>
+            ))}
           </Tabs.TabPane>
           <Tabs.TabPane key='vetting' title='Vetting'>
             {!vetting?.session && (

@@ -987,8 +987,14 @@ export const useMessageLstCache = (key: string) => {
         if (!cid || stopped) return;
         const state = (await window.kelAPI!.request('/api/state?conversation=' + cid)) as {
           jobs: { id: string; state: string; verdict: string }[];
+          messages?: unknown[];
         };
-        const next = JSON.stringify(state.jobs.map((job) => [job.id, job.state, job.verdict]));
+        // The message count joins the fingerprint: a new approval announcement must
+        // surface even when the job state itself did not change since the last poll.
+        const next = JSON.stringify([
+          state.jobs.map((job) => [job.id, job.state, job.verdict]),
+          state.messages?.length ?? 0,
+        ]);
         if (next !== fingerprint && !stopped) {
           fingerprint = next;
           await loadMessages();

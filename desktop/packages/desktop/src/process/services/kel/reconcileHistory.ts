@@ -7,7 +7,8 @@ export type HistoryMessage = {
   position: string;
   conversation_id: string;
   created_at: number;
-  content: { content: string };
+  /** Text rows carry `content.content`; Kel approval anchors carry `{kind, ref_id}`. */
+  content: { content?: string; kind?: 'access' | 'action'; ref_id?: string };
 };
 
 export function recoverHistory(

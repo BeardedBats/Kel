@@ -69,7 +69,8 @@ type TMessageType =
   | 'plan'
   | 'thinking'
   | 'available_commands'
-  | 'acp_terminal_output';
+  | 'acp_terminal_output'
+  | 'kel_approval';
 
 interface IMessage<T extends TMessageType, Content extends Record<string, any>> {
   /**
@@ -211,6 +212,19 @@ export const isErrorTipMessage = (message: IResponseMessage): boolean => {
   const tipData = message.data as { type?: unknown };
   return tipData.type === 'error';
 };
+
+/**
+ * Phase 3 in-chat approvals: an anchor card for a decision Kel is waiting on.
+ * The content only points at the durable record (kind + id); the card reads live
+ * state from the Kel engine, so chat and Work always agree.
+ */
+export type IMessageKelApproval = IMessage<
+  'kel_approval',
+  {
+    kind: 'access' | 'action';
+    ref_id: string;
+  }
+>;
 
 export type IMessageToolCall = IMessage<
   'tool_call',
@@ -430,7 +444,8 @@ export type TMessage =
   | IMessagePlan
   | IMessageThinking
   | IMessageAvailableCommands
-  | IMessageAcpTerminalOutput;
+  | IMessageAcpTerminalOutput
+  | IMessageKelApproval;
 
 // 统一所有需要用户交互的用户类型
 export interface IConfirmation<Option extends any = any> {

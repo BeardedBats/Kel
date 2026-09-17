@@ -245,6 +245,38 @@ export async function initializeKel(port: number): Promise<void> {
     }
     const current = await kelRequest('/api/state?conversation=' + cid);
     history[id] = recoverHistory(id, (history[id] || []) as HistoryMessage[], current.messages, native);
+    // In-chat approvals (V1.6): one card anchored to the message Kel posted, so the
+    // conversation shows the decision where it belongs - pending and settled alike.
+    try {
+      const approvals = (await kelRequest(
+        '/api/approvals?conversation=' + encodeURIComponent(cid)
+      )) as {
+        items?: Array<{
+          id: string;
+          kind: 'access' | 'action';
+          message_seq?: number | null;
+          message_at?: number | null;
+          created?: number | null;
+        }>;
+      };
+      for (const item of approvals?.items || []) {
+        if (!item?.message_seq) continue;
+        const anchorId = 'kel-approval-' + item.kind + '-' + item.id;
+        if (history[id].some((row: HistoryMessage) => row.id === anchorId)) continue;
+        history[id].push({
+          id: anchorId,
+          msg_id: anchorId,
+          type: 'kel_approval',
+          position: 'left',
+          conversation_id: id,
+          created_at: (item.message_at ?? item.created ?? 0) * 1000 + 1,
+          content: { kind: item.kind, ref_id: item.id },
+        });
+      }
+    } catch {
+      // Approvals view unavailable: chat keeps its plain messages; the next
+      // reconcile (or any job-state change) retries automatically.
+    }
     // A disconnected ACP stream cannot update its old progress row. Project
     // the engine's current verdict over that row without changing donor storage.
     for (const row of native) {
@@ -338,7 +370,7 @@ export async function initializeKel(port: number): Promise<void> {
     )
       throw new Error('Unknown Kel window');
     if (
-      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
+      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
         route
       )
     )

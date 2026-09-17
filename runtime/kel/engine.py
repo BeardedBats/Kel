@@ -234,8 +234,8 @@ class Engine:
                                 'action_kind': 'repo',
                                 'target': str(job['contract'].get('root') or ''),
                                 'lease_id': lease_id, 'consume': False,
-                                'metadata': {'what': 'start a coding worker for this project',
-                                             'why': 'the reviewed plan requires repository work'}})
+                                'metadata': {'what': 'start working on this task',
+                                             'why': 'the plan you reviewed is ready to run'}})
                             if decision['outcome'] != 'ALLOW':
                                 failure = decision
                         if failure is not None:

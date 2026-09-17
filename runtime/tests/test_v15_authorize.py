@@ -209,11 +209,17 @@ class WorkerIdentityTests(AuthorizeBase):
         self.assertTrue(blocked)
         job = self.store.get(self.job)
         self.assertEqual(job['state'], 'AWAITING_USER')
-        self.assertIn('authorization', (job['milestones']['code']['error'] or '').lower())
+        # Phase 3 (in-chat approvals): the pause notice is plain language - no 'authorization',
+        # no raw ids - and it is linked to the request so chat shows the decision card in place.
+        self.assertIn('permission', (job['milestones']['code']['error'] or '').lower())
         with contextlib.closing(self.store.connect()) as db:
             messages = db.execute("SELECT COUNT(*) FROM messages WHERE job_id=? AND role='assistant'",
                                   (self.job,)).fetchone()[0]
-        self.assertGreaterEqual(messages, 1)  # the authorization notice is linked to the job
+            announcement = db.execute(
+                "SELECT message_seq FROM approval_announcements WHERE kind='access' AND ref_id=?",
+                (request_id,)).fetchone()
+        self.assertGreaterEqual(messages, 1)  # the permission notice is linked to the job
+        self.assertTrue(announcement)  # ... and to the request the decision card resolves
         Autonomy(self.store).resolve_expansion(request_id, allow=True, grant_kind='project')
         self.assertTrue(resume_after_grant(self.store, request_id))
         job = self.store.get(self.job)
@@ -275,7 +281,8 @@ class EngineGateTests(AuthorizeBase):
             engine.tick()
             job = self.store.get(self.job)
             self.assertEqual(job['state'], 'AWAITING_USER')
-            self.assertIn('revoked', (job['milestones']['code']['error'] or '').lower())
+            # Plain copy: the user reads why the work stopped, not the internal rule id.
+            self.assertIn('no longer active', (job['milestones']['code']['error'] or '').lower())
             with contextlib.closing(self.store.connect()) as db:
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM runs').fetchone()[0], 0)
         finally:
