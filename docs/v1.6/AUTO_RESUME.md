@@ -25,7 +25,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
-| 4 i18n / donor-string cleanup | DONE — restoration restored from stash on `267364e`, completed + committed in this increment | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
+| 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
 | 5–15 | pending | see the program brief; autonomous Main continues per the charter (Workforce OS research packages must be read before Phase 5 implementation) |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -172,8 +172,9 @@ Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and
   and applied onto clean `267364e` with **zero file overlap** with the P1/CAP2 remediation; the
   restored file set matched the stash exactly, the restored `SettingsCreateMenu.tsx` hash matched the
   artifact copy (`2838b3c3…`), and `git diff HEAD -- runtime packaging` stayed empty (no CAP fix was
-  overwritten). The stash was kept until restoration was proven, then dropped after this increment
-  committed.
+  overwritten). The stash was kept until restoration was proven, then dropped after `fd04c00`
+  committed (stash object `992ab31c…`; the recovery artifact remains at
+  `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\`).
 - **Completion**: the remaining reachable donor literals were finished (About modal donor
   links replaced with the product repository, boot-dialog/update links → Kel releases, donor wiki
   guide links removed from Model/Tools/channels, DingTalk credential links → `open.dingtalk.com`,
