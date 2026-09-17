@@ -28,7 +28,7 @@ def apply_checked(store,job_id,actor='kel'):
     from .authorize import authorize
     decision=authorize(store,{'actor':actor,'job':job_id,'action_kind':'write','target':str(root),
         'capability':'files',
-        'metadata':{'what':'the project source files','why':'apply the verified change set',
+        'metadata':{'what':'update the project files','why':'apply the changes you approved',
                     'fallback':'leave the project unchanged and report'}})
     if decision['outcome']!='ALLOW':
         raise PolicyError('Application is not authorized: '+

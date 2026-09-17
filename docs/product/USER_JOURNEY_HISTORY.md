@@ -419,6 +419,31 @@ Rules added: **JR-50**, **JR-51**.
   probe `ux-audit/run-lineage-probe.sh` on `package-final15` (modal + version list + older-version
   view + reveal `{ok:true}`; probe JSON in `ux-audit/runs/lin/out/`).
 
+### H27 - Approval decisions forced the user out of the conversation (2026-09-17)
+- **Problem:** when Kel needed access to a folder outside the repository it was trusted with, or a
+  command it wanted to run, the conversation only said "Kel paused this work for authorization" and
+  pointed at the Autonomy page with a raw request id; the user had to leave the chat, read
+  lease/scope machinery, and come back - and a denied request left the conversation without a plain
+  explanation of what just happened.
+- **Fix:** in-chat approvals (V1.6 Phase 3): the conversation itself carries the decision card with
+  plain words - "Allow once" / "Allow for this project" / "Deny" (or "Approve" / "Always allow")
+  plus Details (what for, why, if you say no) - acting on the SAME durable records the Work surfaces
+  show, announced by the engine's own pause message and anchored to it so the card lives where Kel
+  paused and stays in history as a sentence once settled ("Allowed once - Kel is continuing."), not
+  as dead buttons. Stale asks read "Expired" and refuse approval; denial writes one plain sentence
+  ("Kel will not ask again, and nothing was changed") and the engine refuses the identical re-ask;
+  the Work drawer lists the same waiting items and resolves them through the same paths.
+- **Lesson:** a decision the user can make in the conversation belongs in the conversation; the
+  durable record stays the one source of truth, and settled questions must read as history, not as
+  abandoned controls.
+- **Rule:** JR-55 (created).
+- **Evidence:** engine `runtime/tests/test_v16_approvals.py` (18 tests, full suite 592 passed);
+  packaged journey `ux-audit/run-approvals.sh` on `package-final16` (4 anchored cards, double-submit
+  resolved once - single `lease_scope` row, allow-once resumes the paused job, Work drawer resolves
+  and chat follows, expired card has no active buttons and refuses, restart keeps the pending card
+  intact, deny settles durably with no re-ask; probe + DB JSON in `ux-audit/runs/appr/out/`); lineage
+  probe re-run on `package-final16` all-green as a mirror-pipeline regression.
+
 ## Process (permanent)
 
 1. Run the journey harness (packaged build, fresh + seeded roots) before tagging any release.

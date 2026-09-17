@@ -46,6 +46,7 @@ import MessageCronTrigger from './components/MessageCronTrigger';
 import MessageSkillSuggest from './components/MessageSkillSuggest';
 import MessageText from './components/MessageText';
 import MessageThinking from './components/MessageThinking';
+import KelApprovalCard from '@renderer/components/kel/KelApprovalCard';
 import type { WriteFileResult } from './types';
 import { useAutoScroll } from './useAutoScroll';
 import SelectionReplyButton from './components/SelectionReplyButton';
@@ -302,6 +303,16 @@ const MessageItem: React.FC<{
           return <MessageAcpTerminalOutput message={message}></MessageAcpTerminalOutput>;
         case 'thinking':
           return <MessageThinking message={message}></MessageThinking>;
+        case 'kel_approval':
+          // In-chat approvals (V1.6): the decision card the engine anchored to its
+          // announcement message; it reads live state, so it settles in place.
+          return (
+            <KelApprovalCard
+              kind={message.content.kind}
+              refId={message.content.ref_id}
+              conversationId={message.conversation_id}
+            />
+          );
         // Both are filtered out of `processedList` above and never reach this
         // switch. These arms exist only to keep the `default` branch's
         // exhaustiveness check (`getUnhandledMessageType`) satisfied — a plan

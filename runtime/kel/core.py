@@ -154,6 +154,11 @@ class Store:
                 turn_ref TEXT NOT NULL DEFAULT '', supersedes TEXT, superseded_by TEXT);
             CREATE INDEX IF NOT EXISTS lineage_by_job ON artifact_lineage(job_id, milestone_id, created);
             CREATE INDEX IF NOT EXISTS lineage_by_project ON artifact_lineage(project_id, created);
+            CREATE TABLE IF NOT EXISTS approval_announcements(
+                conversation_id TEXT NOT NULL, kind TEXT NOT NULL, ref_id TEXT NOT NULL,
+                message_seq INTEGER NOT NULL, created REAL NOT NULL, PRIMARY KEY(kind, ref_id));
+            CREATE INDEX IF NOT EXISTS approval_announcements_conversation
+                ON approval_announcements(conversation_id, created);
             CREATE TABLE IF NOT EXISTS inbox(id TEXT PRIMARY KEY, run_id TEXT, epoch TEXT,
                 payload TEXT, handled INTEGER DEFAULT 0);
             CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY, job_id TEXT, run_id TEXT,
@@ -981,7 +986,8 @@ def explain_approval(summary):
         'Kel needs your permission to continue: ' + (summary or 'a requested action') + '.',
         'This step is gated behind your explicit consent, so Kel paused the job instead of running it automatically.',
         'Kel paused the job at this gate and is holding the gated step; it has not run yet.',
-        'Open \u201cWork context\u201d in the sidebar and allow or deny there. The job stays paused until you decide.')
+        'Decide on the request card in this chat \u2014 or open \u201cWork context\u201d in the sidebar. '
+        'The job stays paused until you decide.')
 
 
 _WORKER_NAMES = {'claude': 'Claude Code', 'claude-code': 'Claude Code',

@@ -138,6 +138,9 @@ class CodingAdapter:
         else:
             aid=self.store.request_approval(job['id'],run['id'],action,seconds=300)
             with self.store.transaction() as db:db.execute('INSERT INTO approval_actions VALUES(?,?)',(aid,encode(action)))
+            # The conversation shows a decision card for this ask (in-chat approvals, V1.6).
+            from .chat_approvals import announce_approval
+            announce_approval(self.store, aid, job, action)
         while not (cancel and cancel.is_set()):
             with contextlib.closing(self.store.connect()) as db:
                 row=db.execute('SELECT * FROM approvals WHERE id=?',(aid,)).fetchone()
@@ -167,7 +170,8 @@ class CodingAdapter:
                 'role_tool_policy':(role_info or {}).get('tool_policy'),
                 'capability':capability_for_tool(tool),
                 'action_kind':'repo','tool':tool,'target':str(contract.get('root') or ''),
-                'metadata':{'what':'the isolated repository workspace','why':'run the reviewed coding turn',
+                'metadata':{'what':'make the planned changes in a safe copy of the project',
+                            'why':'the task needs repository changes',
                             'fallback':'stop before any change and report'}})
             if decision['outcome']!='ALLOW':
                 return {'outcome':'BLOCKED','error':'Kel paused this work before any change: '+
