@@ -596,7 +596,9 @@ async function scenarioVoiceVetting() {
   const bodyText = () => page.evaluate(() => document.body.innerText || '');
   const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
   const send = async (value) => {
-    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    const composer = page
+      .locator('[data-testid="guid-input"]:visible, [data-testid="sendbox-input"]:visible, textarea:visible')
+      .first();
     await composer.click({ timeout: 15000 });
     await composer.fill('');
     await composer.type(value, { delay: 6 });
@@ -629,10 +631,10 @@ async function scenarioVoiceVetting() {
     await page.waitForTimeout(4600);
     await page.locator('[data-testid="kel-mic-toggle"]').first().click();
     results.dictationText = await waitFor(async () => {
-      const value = (await page.locator('textarea').first().inputValue()).trim();
+      const value = (await page.locator('textarea:visible').first().inputValue()).trim();
       return value.length > 10 ? value.slice(0, 50) : null;
     }, 30000, 'dictation-text');
-    await page.locator('textarea').first().fill('1: C, matchup visually dominant');
+    await page.locator('textarea:visible').first().fill('1: C, matchup visually dominant');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(2600);
     const panel = await page.evaluate(async () => {
@@ -759,7 +761,9 @@ async function scenarioRecheckProbe() {
     await dismissOnboarding(page);
     await page.evaluate(() => { location.hash = '/guid'; });
     await page.waitForTimeout(2000);
-    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    const composer = page
+      .locator('[data-testid="guid-input"]:visible, [data-testid="sendbox-input"]:visible, textarea:visible')
+      .first();
     await composer.click({ timeout: 15000 });
     await composer.fill('start design vetting: recheck probe');
     await page.keyboard.press('Enter');
@@ -789,6 +793,1015 @@ async function scenarioRecheckProbe() {
   }
   await closeApp(app, null, results);
   save('ux-recheck-probe', results);
+  return results;
+}
+
+async function scenarioSweepSeed() {
+  // Creates three chats through the real UI (New Chat), records engine cid mappings, closes.
+  const results = { schema: 1, scenario: 'sweep-seed', desktopIds: [], engineCids: [], errors: [] };
+  const { app, page, kelwork } = await launchApp();
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    results.buttonInventory = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('button, a[href], [role="button"]'))
+        .filter((n) => n.offsetParent !== null)
+        .map((n) => ({
+          text: (n.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30),
+          aria: n.getAttribute('aria-label'),
+          testid: n.getAttribute('data-testid'),
+          tag: n.tagName,
+        }))
+        .filter((entry) => entry.text || entry.aria || entry.testid)
+        .slice(0, 60));
+    const strategies = [
+      ['role', () => page.getByRole('button', { name: /new chat/i }).first()],
+      ['aria', () => page.locator('[aria-label*="New Chat" i], [aria-label*="new chat" i]').first()],
+      ['testid', () => page.locator('[data-testid*="new-chat"], [data-testid*="newChat"], [data-testid*="create"]').first()],
+    ];
+    for (let i = 0; i < 3; i += 1) {
+      let used = null;
+      for (const [name, make] of strategies) {
+        const locator = make();
+        const count = await locator.count().catch(() => 0);
+        if (!count) continue;
+        await locator.click({ timeout: 4000 }).catch(() => {});
+        await page.waitForTimeout(1800);
+        used = name;
+        break;
+      }
+      // A conversation materializes on its first message, so send one through the composer.
+      const composer = page.locator('[data-testid="sendbox-input"], textarea').first();
+      await composer.click({ timeout: 8000 }).catch(() => {});
+      await page.keyboard.type('Seeding audit chat ' + (i + 1) + ' for the sweep battery.');
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(5200);
+      const hash = await page.evaluate(() => location.hash);
+      const match = String(hash).match(/conversation[\/]([A-Za-z0-9_-]+)/);
+      const desktopId = match ? match[1] : null;
+      results.desktopIds.push(desktopId);
+      results.strategiesUsed = results.strategiesUsed || [];
+      results.strategiesUsed.push(used);
+      const cid = desktopId
+        ? await page.evaluate(async (id) => {
+            const api = window.kelAPI;
+            if (!api || !api.conversation) return null;
+            try {
+              return await api.conversation(id);
+            } catch (error) {
+              return null;
+            }
+          }, desktopId).catch(() => null)
+        : null;
+      results.engineCids.push(cid);
+    }
+    results.done = true;
+    await page.waitForTimeout(1200);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep-seed', results);
+  return results;
+}
+
+async function scenarioSweepA() {
+  const results = { schema: 1, scenario: 'sweep-a', scrollMatrix: [], steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const routeProbe = async (route) => {
+    await page.evaluate((r) => { location.hash = r; }, route);
+    await page.waitForTimeout(1900);
+    return await page.evaluate(() => {
+      const scrollers = [];
+      for (const el of Array.from(document.querySelectorAll('*'))) {
+        const style = getComputedStyle(el);
+        if ((style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+            el.scrollHeight > el.clientHeight + 24 && el.clientHeight > 160) {
+          scrollers.push(el);
+        }
+      }
+      const main = scrollers.sort((a, b) => b.clientHeight - a.clientHeight)[0] || null;
+      const nodes = Array.from(document.querySelectorAll(
+        'main button, main a[href], main input, main textarea, main select, main [role="button"], main [tabindex]:not([tabindex="-1"]), button, a[href], input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])'
+      ));
+      const visible = nodes.filter((n) => n.offsetParent !== null && n.offsetWidth > 0);
+      const lastInteractive = visible[visible.length - 1] || null;
+      let reachable = null;
+      if (lastInteractive) {
+        lastInteractive.focus();
+        reachable = document.activeElement === lastInteractive;
+      }
+      let bottomReached = null;
+      if (main) {
+        main.scrollTop = main.scrollHeight;
+        bottomReached = main.scrollTop + main.clientHeight >= main.scrollHeight - 4;
+      }
+      return {
+        scrollable: Boolean(main),
+        scrollHeight: main ? main.scrollHeight : null,
+        clientHeight: main ? main.clientHeight : null,
+        moreThanViewport: main ? main.scrollHeight > main.clientHeight + 24 : null,
+        lastControlFocusable: reachable,
+        lastControlLabel: lastInteractive
+          ? (lastInteractive.getAttribute('aria-label') || lastInteractive.textContent || '').trim().slice(0, 40)
+          : null,
+        horizontalOverflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth,
+        scrolledToBottom: bottomReached,
+      };
+    });
+  };
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    for (const route of [
+      '/guid', '/work', '/projects/knowledge', '/projects/map', '/providers', '/autonomy',
+      '/settings/model', '/settings/agent', '/settings/skills', '/settings/tools', '/settings/appearance',
+      '/settings/webui', '/settings/system', '/settings/archived', '/settings/about', '/transcription',
+    ]) {
+      results.scrollMatrix.push({ route, ...(await routeProbe(route)) });
+    }
+    await shot('sweep-a-01-scroll-matrix');
+
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    const richRow = page.getByText('Rich rendering chat', { exact: false }).first();
+    results.richRowFound = await richRow.count();
+    if (results.richRowFound) {
+      await richRow.click();
+      await page.waitForTimeout(2400);
+    }
+    results.richProbe = await page.evaluate(() => ({
+      tables: document.querySelectorAll('table').length,
+      codeBlocks: document.querySelectorAll('pre').length,
+      inlineCode: document.querySelectorAll('code').length,
+      links: document.querySelectorAll('a[href^="http"]').length,
+      headings: document.querySelectorAll('h1,h2,h3').length,
+      copyButtons: Array.from(document.querySelectorAll('button')).filter((b) => /copy/i.test((b.getAttribute('aria-label') || b.textContent || ''))).length,
+      scrollToLatest: Array.from(document.querySelectorAll('button')).filter((b) => /scroll|latest|bottom|newest/i.test(b.getAttribute('aria-label') || '')).length,
+      messageNodes: document.querySelectorAll('[class*="message"], [data-message-id], [class*="Message"]').length,
+    }));
+    await shot('sweep-a-02-rich');
+
+    await page.locator('[data-testid="sendbox-input"], textarea').first().click();
+    results.composerFocused = await page.evaluate(() => {
+      const a = document.activeElement;
+      return Boolean(a && (a.tagName === 'TEXTAREA' || a.getAttribute('role') === 'textbox'));
+    });
+    await page.keyboard.type('draft line one');
+    await page.keyboard.press('Shift+Enter');
+    await page.keyboard.type('draft line two');
+    results.shiftEnterNewline = await page.evaluate(() => {
+      const t = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      return Boolean(t && t.value && t.value.includes('\n'));
+    });
+    await page.keyboard.press('Enter');
+    results.sendingStateSeen = await waitFor(
+      () => page.locator('button[aria-label*="Stop"], [data-testid*="stop"]').count(),
+      6000,
+      'stop-visible'
+    );
+    results.sendOutcome = await waitFor(async () => {
+      const body = await bodyText();
+      return /fail|error|could not|unavailable|no usable|add a|set up|provider|connect/i.test(body) ? body.slice(-300) : null;
+    }, 25000, 'failure-surface');
+    results.composerAfterFailure = await page.evaluate(() => {
+      const t = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      return t ? t.value.slice(0, 120) : null;
+    });
+    // ---- conversation management ----
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(1900);
+    results.listRowCount = await page.locator('text=/Rich rendering chat|Second chat|Third chat/').count();
+
+    const searchBtn = page.locator('button[aria-label*="earch"], [data-testid*="search"]').first();
+    results.searchControlFound = await searchBtn.count();
+    if (results.searchControlFound) {
+      await searchBtn.click().catch(() => {});
+      await page.waitForTimeout(900);
+      const searchInput = page.locator('input[placeholder*="earch"], input[type="search"], [role="combobox"] input').first();
+      await searchInput.fill('Rich').catch(() => {});
+      await page.waitForTimeout(900);
+      results.searchPartialHit = /Rich rendering chat|Second chat|Third chat/.test(await bodyText());
+      await searchInput.fill('zzzz').catch(() => {});
+      await page.waitForTimeout(900);
+      results.searchNoResult = /no result|nothing|not found|empty|no match/i.test(await bodyText());
+      await searchInput.fill('').catch(() => {});
+      await page.waitForTimeout(500);
+      await page.keyboard.press('Escape');
+    }
+
+    await page.keyboard.press('Control+k');
+    await page.waitForTimeout(1000);
+    const paletteProbe = async (needle, label) => {
+      await page.locator('#kel-palette-input').fill(needle).catch(() => {});
+      await page.waitForTimeout(650);
+      const txt = await page.locator('#kel-palette-list').innerText().catch(() => '');
+      results.steps.push({ label, ms: 0 });
+      return txt.slice(0, 300) || '(empty)';
+    };
+    results.paletteNew = await paletteProbe('new', 'palette-new');
+    results.paletteSearch = await paletteProbe('search', 'palette-search');
+    results.paletteTheme = await paletteProbe('theme', 'palette-theme');
+    results.paletteModel = await paletteProbe('model', 'palette-model');
+    results.paletteWork = await paletteProbe('work', 'palette-work');
+    results.paletteVetting = await paletteProbe('vetting', 'palette-vetting');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+
+    const rowMenu = async (title) => {
+      const row = page.getByText(title, { exact: false }).first();
+      await row.hover().catch(() => {});
+      await page.waitForTimeout(500);
+      const menuBtn = page.locator('button[aria-label*="ore"], [data-testid*="menu"], button[aria-label*="ption"]').first();
+      if (await menuBtn.count()) {
+        await menuBtn.click().catch(() => {});
+        await page.waitForTimeout(500);
+        return true;
+      }
+      return false;
+    };
+    results.renameMenuOpened = await rowMenu('Second chat');
+    if (results.renameMenuOpened) {
+      const renameItem = page.getByText(/^Rename$/).first();
+      if (await renameItem.count()) {
+        await renameItem.click().catch(() => {});
+        await page.waitForTimeout(700);
+        await page.locator('.arco-modal input, [role="dialog"] input').first().fill('Renamed chat').catch(() => {});
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(1300);
+      }
+      results.renameWorked = /Renamed chat/.test(await bodyText());
+    }
+    results.deleteMenuOpened = await rowMenu('Third chat');
+    if (results.deleteMenuOpened) {
+      const delItem = page.getByText(/^Delete$/).first();
+      if (await delItem.count()) {
+        await delItem.click().catch(() => {});
+        await page.waitForTimeout(900);
+        results.deleteConfirmShown = /delete/i.test(await bodyText());
+        const cancel = page.getByText(/cancel|keep/i).first();
+        results.deleteConfirmHasCancel = await cancel.count();
+        await cancel.click().catch(() => {});
+        await page.waitForTimeout(700);
+        results.deleteCancelledKeepsRow = /Third chat/.test(await bodyText());
+      }
+    }
+
+    // ---- attachments via mentions ----
+    await page.locator('[data-testid="sendbox-input"], textarea').first().click();
+    await page.keyboard.type('@');
+    await page.waitForTimeout(1300);
+    results.mentionPopup = await page.evaluate(() => {
+      const list = document.querySelector('[class*="mention"], [role="listbox"]');
+      return list ? (list.textContent || '').slice(0, 200) : null;
+    });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      if (el) {
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+        setter.call(el, '');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    // ---- drafts across conversation switches + restart ----
+    const openChat = async (title) => {
+      await page.getByText(title, { exact: false }).first().click().catch(() => {});
+      await page.waitForTimeout(1700);
+    };
+    await openChat('Second chat');
+    await page.locator('[data-testid="sendbox-input"], textarea').first().click();
+    await page.keyboard.type('IMPORTANT DRAFT TEXT 42');
+    await openChat('Rich rendering chat');
+    results.draftOtherConversation = await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      return el ? el.value.slice(0, 80) : null;
+    });
+    await openChat('Second chat');
+    results.draftRestoredOnReturn = await waitFor(async () => {
+      const value = await page.evaluate(() => {
+        const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+        return el ? el.value : '';
+      });
+      return value && value.includes('42') ? value.slice(0, 60) : null;
+    }, 6000, 'draft-return');
+
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2300);
+    results.conversationsSurviveRestart = (await page.getByText('Second chat', { exact: false }).count()) > 0;
+    await page.getByText('Second chat', { exact: false }).first().click().catch(() => {});
+    await page.waitForTimeout(1900);
+    results.draftAfterRestart = await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      return el ? el.value.slice(0, 80) : null;
+    });
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('sweep-a-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep-a', results);
+  return results;
+}
+
+async function scenarioSweepB() {
+  const results = { schema: 1, scenario: 'sweep-b', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) {
+          results.steps.push({ label, ms: Date.now() - start });
+          return value;
+        }
+      } catch (error) {
+        /* retry */
+      }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+
+    await page.evaluate(() => { location.hash = '/settings/appearance'; });
+    await page.waitForTimeout(2600);
+    results.themeCards = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[data-testid^="theme-card-"]')).map((n) => n.getAttribute('data-testid')));
+    await page.locator('[data-testid="theme-card-light"]').first().dispatchEvent('click').catch(() => {});
+    results.lightApplied = await waitFor(
+      async () => ((await page.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'light' ? true : null),
+      6000, 'light-applied');
+    results.semanticColorControls = await page.evaluate(() => ({
+      colorInputs: document.querySelectorAll('input[type="color"]').length,
+      themeColorsLabel: /theme colors/i.test(document.body.innerText),
+      hexFields: document.querySelectorAll('input[placeholder*="#"]').length,
+    }));
+    await page.locator('[data-testid="theme-card-dark"]').first().dispatchEvent('click').catch(() => {});
+    results.darkRestored = await waitFor(
+      async () => ((await page.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'dark' ? true : null),
+      6000, 'dark-restored');
+    await shot('sweep-b-01-theme');
+
+    await page.evaluate(() => { location.hash = '/settings/model'; });
+    await page.waitForTimeout(2600);
+    results.modelPageTail = (await bodyText()).slice(-800);
+    results.providerNamesSeen = ['Claude', 'Codex', 'DeepSeek', 'Anthropic']
+      .filter((name) => results.modelPageTail.includes(name));
+    results.defaultModelControl = await page.evaluate(() => /default model/i.test(document.body.innerText));
+    await shot('sweep-b-02-model');
+
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2300);
+    await page.getByText('Rich rendering chat', { exact: false }).first().click().catch(() => {});
+    await page.waitForTimeout(2100);
+    results.runtimeControl = await page.evaluate(() => {
+      const el = Array.from(document.querySelectorAll('button, [role="button"]'))
+        .find((n) => /Automatic|Runtime|Claude Code|Codex/i.test((n.textContent || '').trim()));
+      return el ? { text: (el.textContent || '').trim().slice(0, 60), aria: el.getAttribute('aria-label') } : null;
+    });
+    if (results.runtimeControl) {
+      await page.locator('button', { hasText: /Automatic|Runtime/i }).first().click().catch(() => {});
+      await page.waitForTimeout(1000);
+      results.runtimeOptionsTail = (await bodyText()).slice(-450);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(500);
+    }
+
+    await page.locator('[data-testid="sendbox-input"], textarea').first().click();
+    await page.keyboard.type('RECOVERY DRAFT 7');
+    const { execSync } = require('child_process');
+    try {
+      execSync('taskkill /IM KelEngine.exe /F', { stdio: 'ignore' });
+      results.engineKilledByHarness = true;
+    } catch (error) {
+      results.engineKilledByHarness = false;
+    }
+    await page.waitForTimeout(5000);
+    results.engineKillReaction = (await bodyText()).slice(-320);
+    await shot('sweep-b-03-engine-killed');
+
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2300);
+    await page.getByText('Rich rendering chat', { exact: false }).first().click().catch(() => {});
+    await page.waitForTimeout(1900);
+    results.draftAfterCrash = await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
+      return el ? el.value.slice(0, 80) : null;
+    });
+    await page.evaluate(() => { location.hash = '/work'; });
+    await page.waitForTimeout(2400);
+    results.workPageTail = (await bodyText()).slice(-400);
+    results.phantomWorkSeen = /running|in progress|working|queued/i.test(results.workPageTail);
+    await shot('sweep-b-04-work-after-crash');
+
+    await page.evaluate(() => { location.hash = '/settings/about'; });
+    await page.waitForTimeout(2400);
+    results.aboutVersion = await page.evaluate(() => (document.body.innerText.match(/\d+\.\d+\.\d+/) || [null])[0]);
+    const checkBtn = page.getByText(/check for updates/i).first();
+    results.updateButtonFound = await checkBtn.count();
+    if (results.updateButtonFound) {
+      await checkBtn.click().catch(() => {});
+      await page.waitForTimeout(6000);
+      results.updateCheckResult = (await bodyText()).slice(-300);
+      await shot('sweep-b-05-update');
+    }
+    results.dataFolderAction = await page.evaluate(() => /data folder|open folder|copy path/i.test(document.body.innerText));
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('sweep-b-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep-b', results);
+  return results;
+}
+
+async function scenarioSweep2() {
+  const results = { schema: 1, scenario: 'sweep2', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) { results.steps.push({ label, ms: Date.now() - start }); return value; }
+      } catch (error) { /* retry */ }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const composer = () =>
+    page.locator('[data-testid="sendbox-input"]:visible, [data-testid="guid-input"]:visible, textarea:visible').first();
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    results.richRowInList = await page.getByText('Rich rendering chat', { exact: false }).count();
+    await page.getByText('Rich rendering chat', { exact: false }).first().click().catch(() => {});
+    await page.waitForTimeout(2400);
+    results.openedRichChat = await page.evaluate(() => /conversation/.test(location.hash));
+
+    // The seeded rich reply is the newest message in a long chat; a virtualized list mounts only
+    // what is near the viewport, so scroll to the end first — otherwise the probe reports "absent"
+    // for content that is simply not mounted yet.
+    await page.evaluate(() => {
+      const scrollers = Array.from(document.querySelectorAll('*')).filter((node) => {
+        const style = getComputedStyle(node);
+        return /auto|scroll/.test(style.overflowY) && node.scrollHeight > node.clientHeight + 40;
+      });
+      for (const node of scrollers) node.scrollTop = node.scrollHeight;
+    }).catch(() => {});
+    await page.waitForTimeout(1400);
+
+    results.markdownProbe = await page.evaluate(() => {
+      // Assistant replies render through MarkdownView, which mounts its body inside a shadow root
+      // (components/Markdown/ShadowView). innerText and querySelectorAll on the light DOM cannot
+      // see that content, so walk shadow roots the way a reader's eyes do.
+      const walk = (root, selector) => {
+        const hits = Array.from(root.querySelectorAll(selector));
+        for (const el of root.querySelectorAll('*')) if (el.shadowRoot) hits.push(...walk(el.shadowRoot, selector));
+        return hits;
+      };
+      const textOf = (node) => {
+        let text = node.innerText || '';
+        for (const el of node.querySelectorAll('*')) if (el.shadowRoot) text += '\n' + (el.shadowRoot.textContent || '');
+        return text;
+      };
+      const messageRoots = Array.from(document.querySelectorAll('[data-testid^="message-text-"]'));
+      const host = messageRoots.find((node) => textOf(node).includes('Layout review summary')) || null;
+      const scope = host || document.body;
+      return {
+        textFound: Boolean(host),
+        hostHtmlSample: host ? host.innerHTML.slice(0, 260) : null,
+        tables: walk(scope, 'table').length,
+        pre: walk(scope, 'pre').length,
+        code: walk(scope, 'code').length,
+        links: walk(scope, 'a[href^="http"]').length,
+        copyButtons: Array.from(document.querySelectorAll('button')).filter((b) => /copy/i.test((b.getAttribute('aria-label') || b.textContent || ''))).length,
+        retryButtons: Array.from(document.querySelectorAll('button')).filter((b) => /retry|try again/i.test((b.getAttribute('aria-label') || b.textContent || ''))).length,
+        scrollToLatest: Array.from(document.querySelectorAll('button')).filter((b) => /scroll|latest|bottom|newest/i.test(b.getAttribute('aria-label') || '')).length,
+      };
+    });
+    // The copy affordance is an icon button (no text/aria-label), so count it by its icon class and
+    // prove the feedback toast appears rather than trusting a text match.
+    const copyIcon = page.locator('[class*="i-icon-copy"]').first();
+    results.copyAffordance = await copyIcon.count();
+    if (results.copyAffordance) {
+      const toastsBefore = await page.locator('.arco-message').count();
+      await copyIcon.hover().catch(() => {});
+      await copyIcon.click({ timeout: 8000 }).catch(() => {});
+      results.copyToastSeen = await waitFor(
+        async () => ((await page.locator('.arco-message').count()) > toastsBefore ? true : null),
+        6000, 'copy-toast');
+    }
+    await shot('sweep2-01-markdown');
+
+    await composer().click({ timeout: 8000 });
+    results.composerFocused = await page.evaluate(() => {
+      const a = document.activeElement;
+      return Boolean(a && a.tagName === 'TEXTAREA');
+    });
+    await page.keyboard.type('retry probe message');
+    await page.keyboard.press('Enter');
+    // Assistant text (including failure copy) lives inside a shadow root, so read it the same way.
+    const deepText = () =>
+      page.evaluate(() => {
+        const walk = (root) => {
+          let text = root.innerText || '';
+          for (const el of root.querySelectorAll('*')) if (el.shadowRoot) text += '\n' + walk(el.shadowRoot);
+          return text;
+        };
+        return walk(document.body);
+      });
+    results.failureSeen = await waitFor(async () => {
+      const body = await deepText();
+      // Plain human states count: the shipped copy says Kel is waiting for a model to continue.
+      return /waiting_for_resource|WAITING_RESOURCE|FAILED|failed|could not|waiting for a model|is waiting/i.test(body) ? body.slice(-260) : null;
+    }, 20000, 'failure-surface');
+    results.retryAfterFailure = await waitFor(async () => {
+      const btn = page.locator('button').filter({ hasText: /retry|try again/i }).first();
+      if (!(await btn.count())) return null;
+      await btn.click().catch(() => {});
+      await page.waitForTimeout(2500);
+      return (await bodyText()).slice(-200);
+    }, 8000, 'retry-clicked');
+    await shot('sweep2-02-retry');
+
+    const rowMenu = async (title) => {
+      const row = page.getByText(title, { exact: false }).first();
+      await row.scrollIntoViewIfNeeded().catch(() => {});
+      await row.hover().catch(() => {});
+      await page.waitForTimeout(700);
+      // The row menu is a span revealed by row hover (other rows keep theirs hidden), so target
+      // the visible one instead of the first match in the DOM.
+      const menuBtn = page.locator('[data-testid^="conversation-row-menu-"]:visible').first();
+      if (!(await menuBtn.count())) return null;
+      await menuBtn.click({ timeout: 6000 }).catch(() => {});
+      await page.waitForTimeout(900);
+      return (await bodyText()).slice(-400);
+    };
+    results.secondChatMenu = await rowMenu('Second chat');
+    const renameItem = page.getByText(/^rename/i).first();
+    results.renameAffordance = await renameItem.count();
+    if (results.renameAffordance) {
+      await renameItem.click().catch(() => {});
+      await page.waitForTimeout(800);
+      await page.locator('.arco-modal input, [role="dialog"] input').first().fill('Renamed chat').catch(() => {});
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(1400);
+      results.renameWorked = /Renamed chat/.test(await bodyText());
+    }
+    results.thirdChatMenu = await rowMenu('Third chat');
+    const deleteItem = page.getByText(/^delete/i).first();
+    results.deleteAffordance = await deleteItem.count();
+    if (results.deleteAffordance) {
+      await deleteItem.click().catch(() => {});
+      await page.waitForTimeout(900);
+      results.deleteConfirmShown = /delete/i.test(await bodyText());
+      await page.getByText(/cancel|keep/i).first().click().catch(() => {});
+      await page.waitForTimeout(700);
+      results.deleteCancelledKeepsRow = /Third chat/.test(await bodyText());
+    }
+    await shot('sweep2-03-menus');
+
+    results.mentionPopup = await waitFor(async () => {
+      await composer().click({ timeout: 8000 });
+      await page.keyboard.type('@');
+      await page.waitForTimeout(1200);
+      return page.evaluate(() => {
+        const list = document.querySelector('[class*="mention"], [role="listbox"]');
+        return list ? (list.textContent || '').slice(0, 180) : null;
+      });
+    }, 10000, 'mention-popup');
+    await page.keyboard.press('Escape');
+    await composer().fill('').catch(() => {});
+
+    const openChat = async (title) => {
+      await page.getByText(title, { exact: false }).first().click().catch(() => {});
+      await page.waitForTimeout(1800);
+    };
+    await openChat(/Renamed chat|Second chat/);
+    await composer().click({ timeout: 8000 });
+    await page.keyboard.type('IMPORTANT DRAFT TEXT 42');
+    await openChat('Rich rendering chat');
+    results.draftOtherConversation = await composer().inputValue().catch(() => null);
+    await openChat(/Renamed chat|Second chat/);
+    results.draftRestoredOnReturn = await waitFor(async () => {
+      const value = await composer().inputValue().catch(() => '');
+      return value.includes('42') ? value.slice(0, 60) : null;
+    }, 6000, 'draft-return');
+
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2300);
+    results.conversationsSurviveRestart = (await page.getByText(/Renamed chat|Second chat/).count()) > 0;
+    await page.getByText(/Renamed chat|Second chat/).first().click().catch(() => {});
+    await page.waitForTimeout(2000);
+    results.draftAfterRestart = await composer().inputValue().catch(() => null);
+    await shot('sweep2-04-draft-restart');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('sweep2-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep2', results);
+  return results;
+}
+
+async function scenarioSweep3() {
+  const results = { schema: 1, scenario: 'sweep3', steps: [], errors: [] };
+  const fs = require('fs');
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) { results.steps.push({ label, ms: Date.now() - start }); return value; }
+      } catch (error) { /* retry */ }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const paletteQuery = async (needle, label) => {
+    await page.keyboard.press('Control+k');
+    await page.waitForTimeout(900);
+    await page.locator('#kel-palette-input').fill(needle).catch(() => {});
+    await page.waitForTimeout(700);
+    const txt = await page.locator('#kel-palette-list').innerText().catch(() => '');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    results.steps.push({ label, ms: 0 });
+    return txt.slice(0, 220) || '(empty)';
+  };
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2000);
+
+    results.paletteNewChat = await paletteQuery('new chat', 'palette-new-chat');
+    results.paletteTranscription = await paletteQuery('transcription', 'palette-transcription');
+    results.paletteTheme = await paletteQuery('theme', 'palette-theme');
+    results.paletteVetting = await paletteQuery('vetting', 'palette-vetting');
+    results.paletteSystem = await paletteQuery('system', 'palette-system');
+
+    await page.evaluate(() => { location.hash = '/settings/appearance'; });
+    await page.waitForTimeout(2600);
+    results.themeColorsSection = (await page.locator('[data-testid="theme-colors-section"]').count()) > 0;
+    results.themeColorInputs = await page.evaluate(
+      () => document.querySelectorAll('[data-testid^="theme-color-"]').length);
+    const accentBefore = await page.evaluate(
+      () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim());
+    await page.locator('[data-testid="theme-hex-primary"]').first().fill('#ff5533').catch(() => {});
+    await page.keyboard.press('Enter').catch(() => {});
+    await page.waitForTimeout(1400);
+    const accentAfter = await page.evaluate(
+      () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim());
+    results.accentOverrideApplied = accentBefore !== accentAfter;
+    const backgroundForContrast = await page.evaluate(
+      () => getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim());
+    // Primary text set to the background colour is 1:1 contrast in whatever theme is active, so the
+    // warning is expected either way (the old probe assumed a dark theme and could not see it).
+    await page.locator('[data-testid="theme-hex-text-primary"]').first()
+      .fill(backgroundForContrast || '#ffffff').catch(() => {});
+    await page.keyboard.press('Enter').catch(() => {});
+    await page.waitForTimeout(1400);
+    results.contrastProbe = { textPrimaryFilledWith: backgroundForContrast };
+    results.contrastWarningShown = (await page.locator('[data-testid="theme-color-warnings"]').count()) > 0;
+    await shot('sweep3-01-theme-colors');
+    await page.locator('[data-testid="theme-colors-restore"]').first().click().catch(() => {});
+    await page.waitForTimeout(1500);
+    results.restoreAllWorked = await waitFor(async () => {
+      const accent = await page.evaluate(
+        () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim());
+      return accent !== accentAfter ? true : null;
+    }, 9000, 'restore-defaults');
+    if (!results.restoreAllWorked) {
+      await page.locator('[data-testid="theme-colors-restore"]').first().click().catch(() => {});
+      await page.waitForTimeout(1500);
+      results.restoreAllWorked = await page.evaluate(
+        () => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()) !== accentAfter;
+    }
+
+    await page.evaluate(() => { location.hash = '/settings/model'; });
+    await page.waitForTimeout(2600);
+    results.defaultModelCard = await waitFor(
+      () => page.locator('[data-testid="kel-default-model-card"]').count(), 12000, 'default-card');
+    results.modelCardText = (await bodyText()).slice(-500);
+
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    await page.getByText(/Renamed chat|Second chat|Rich rendering chat/).first().click().catch(() => {});
+    await page.waitForTimeout(2200);
+    results.headerButtonInventory = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('button')).filter((b) => b.offsetParent !== null)
+        .map((b) => ((b.getAttribute('data-testid') || '') + '|' + (b.textContent || '').trim().slice(0, 24))).slice(0, 24));
+    const pill = page.locator('[data-testid="kel-model-pill"], button:has-text("Kel model")').first();
+    results.modelPillFound = await pill.count();
+    if (results.modelPillFound) {
+      await pill.click().catch(() => {});
+      await page.waitForTimeout(900);
+      results.modelPillMenu = (await bodyText()).slice(-400);
+      const option = page.getByText(/DeepSeek Reasoner|Claude Sonnet|DeepSeek Chat|Claude \(built-in\)/).first();
+      if (await option.count()) {
+        await option.click().catch(() => {});
+        await page.waitForTimeout(1200);
+      }
+      results.modelChoicePersisted = await page.evaluate(async () => {
+        const api = window.kelAPI;
+        if (!api) return null;
+        try {
+          const state = await api.request('/api/model', { action: 'get' });
+          return JSON.stringify(state).slice(0, 220);
+        } catch (error) {
+          return 'error: ' + String(error);
+        }
+      });
+      await shot('sweep3-02-model-pill');
+    }
+
+    const backupDir = `${outDir}/backup-target`;
+    fs.mkdirSync(backupDir, { recursive: true });
+    await page.evaluate(() => { location.hash = '/settings/system'; });
+    await page.waitForTimeout(2600);
+    results.dataPathShown = await waitFor(async () => {
+      const txt = await page.locator('[data-testid="data-folder-path"]').first().innerText().catch(() => '');
+      return txt && txt !== 'Loading…' ? txt.slice(0, 120) : null;
+    }, 8000, 'data-path');
+    await page.locator('[data-testid="copy-data-path"]').first().click().catch(() => {});
+    await page.waitForTimeout(800);
+    results.copyPathToast = /copied/i.test(await bodyText());
+    await page.evaluate((target) => { window.__kelBackupTarget = target; }, backupDir);
+    await page.locator('[data-testid="backup-target"]').first().fill(backupDir);
+    await page.locator('[data-testid="backup-now"]').first().click();
+    results.backupCreated = await waitFor(
+      async () => /Backup created/i.test(await bodyText()) ? true : null, 30000, 'backup-created');
+    if (!results.backupCreated) {
+      results.backupError = await page.evaluate(async () => {
+        const api = window.kelAPI;
+        if (!api) return 'no-bridge';
+        try {
+          const res = await api.request('/api/backup', { action: 'create', target: window.__kelBackupTarget });
+          return 'direct-ok: ' + JSON.stringify(res).slice(0, 120);
+        } catch (error) {
+          return 'direct-error: ' + String(error).slice(0, 160);
+        }
+      });
+    }
+    results.backupFolders = fs.readdirSync(backupDir);
+    if (results.backupFolders.length) {
+      const backupPath = `${backupDir}/${results.backupFolders[0]}`;
+      await page.locator('[data-testid="restore-source"]').first().fill(backupPath);
+      await page.locator('[data-testid="restore-inspect"]').first().click();
+      results.restoreConfirm = await waitFor(
+        async () => /Restore this backup\?/i.test(await bodyText()) ? true : null, 12000, 'restore-confirm');
+      await page.getByText(/Keep current data/i).first().click().catch(() => {});
+      await page.waitForTimeout(700);
+      results.restoreCancelled = !/Ready to restore/i.test(await bodyText());
+    }
+    await shot('sweep3-03-backup');
+
+    // Text size and Ctrl +/- both drive Electron's zoom factor (useFontScale -> app.set-zoom-factor),
+    // so the honest measurement is the window's actual zoom factor, not a CSS font size. Start from
+    // a known factor: the harness pins the viewport to 1440x900, which normalises the displayed
+    // zoom, so both measurements begin with a Ctrl+0 reset.
+    const zoomFactor = () =>
+      app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].webContents.getZoomFactor());
+    const sendZoomKey = (keyCode) =>
+      app.evaluate(({ BrowserWindow }, code) => {
+        const contents = BrowserWindow.getAllWindows()[0].webContents;
+        contents.sendInputEvent({ type: 'keyDown', keyCode: code, modifiers: ['control'] });
+        contents.sendInputEvent({ type: 'keyUp', keyCode: code, modifiers: ['control'] });
+      }, keyCode);
+    await page.evaluate(() => { location.hash = '/settings/appearance'; });
+    await page.waitForTimeout(2200);
+    await sendZoomKey('0');
+    await page.waitForTimeout(900);
+    const beforeText = await zoomFactor();
+    await page.locator('[data-testid="text-larger"]').first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(1200);
+    const afterLarger = await zoomFactor();
+    await page.locator('[data-testid="text-smaller"]').first().click({ timeout: 6000 }).catch(() => {});
+    await page.waitForTimeout(1200);
+    results.textScale = { before: beforeText, afterLarger, afterSmaller: await zoomFactor() };
+    results.textScaleWorks = afterLarger > beforeText;
+    const beforeZoom = await zoomFactor();
+    await sendZoomKey('=');
+    await page.waitForTimeout(1000);
+    const afterZoomIn = await zoomFactor();
+    await sendZoomKey('0');
+    await page.waitForTimeout(1000);
+    const afterReset = await zoomFactor();
+    results.zoomKeys = { before: beforeZoom, afterIn: afterZoomIn, afterReset };
+    results.zoomKeysWork = afterZoomIn > beforeZoom && Math.abs(afterReset - 0.95) < 0.0001;
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('sweep3-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep3', results);
+  return results;
+}
+
+async function scenarioSweep4() {
+  const results = { schema: 1, scenario: 'sweep4', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const waitFor = async (fn, timeout = 12000, label = '') => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      try {
+        const value = await fn();
+        if (value) { results.steps.push({ label, ms: Date.now() - start }); return value; }
+      } catch (error) { /* retry */ }
+      await page.waitForTimeout(400);
+    }
+    results.steps.push({ label, ms: -1, timedOut: true });
+    return null;
+  };
+  const bodyText = () => page.evaluate(() => document.body.innerText || '');
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/settings/model'; });
+    await page.waitForTimeout(2600);
+    results.modelPageButtons = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('button')).filter((b) => b.offsetParent !== null)
+        .map((b) => (b.textContent || '').trim().slice(0, 24)).slice(0, 24));
+    // The provider credential field below the fold (the user-reported DeepSeek case class).
+    const credentialBtn = page.getByText(/set credential metadata/i).first();
+    results.credentialAffordance = await credentialBtn.count();
+    if (results.credentialAffordance) {
+      await credentialBtn.click().catch(() => {});
+      await page.waitForTimeout(1500);
+      results.formText = await waitFor(async () => {
+        const body = await bodyText();
+        return /credential|api key|value/i.test(body) ? body.slice(-420) : null;
+      }, 8000, 'provider-form');
+      await shot('sweep4-01-provider-form');
+      const keyInput = page
+        .locator('.arco-modal input, [role="dialog"] input, input[type="password"], input[placeholder*="key" i], input[placeholder*="value" i]')
+        .first();
+      results.keyFieldFound = await waitFor(async () => ((await keyInput.count()) ? true : null), 8000, 'key-field');
+      if (results.keyFieldFound) {
+        await keyInput.scrollIntoViewIfNeeded().catch(() => {});
+        await page.waitForTimeout(400);
+        results.keyFieldVisibleAfterScroll = await keyInput.isVisible().catch(() => false);
+        await keyInput.click({ timeout: 6000 }).catch(() => {});
+        await keyInput.fill('test-key-scroll-case').catch(() => {});
+        results.keyFieldTyped = (await keyInput.inputValue().catch(() => '')) === 'test-key-scroll-case';
+        results.keyFieldFocused = await page.evaluate(() => {
+          const a = document.activeElement;
+          return Boolean(a && a.tagName === 'INPUT');
+        });
+      }
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(600);
+      await shot('sweep4-02-key-typed');
+    }
+    // ---- backup / restore / restart recovery ----
+    const fs = require('fs');
+    const backupDir = `${outDir}/backup-target`;
+    fs.mkdirSync(backupDir, { recursive: true });
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2400);
+    for (let i = 0; i < 2; i += 1) {
+      await page.locator('[data-testid="record-button"]').first().click();
+      await waitFor(() => page.locator('[data-testid="recording-bar"]').count(), 20000, 'rec-bar');
+      await page.waitForTimeout(3200);
+      await page.locator('[data-testid="stop-button"]').first().click();
+      await page.waitForTimeout(1800);
+    }
+    results.rowsBeforeBackup = await waitFor(
+      async () => ((await page.locator('[data-testid="transcript-row"]').count()) >= 2 ? 2 : null),
+      30000, 'rows-before-backup');
+    await page.evaluate(() => { location.hash = '/settings/system'; });
+    await page.waitForTimeout(2600);
+    results.dataFolderShown = await waitFor(
+      async () => ((await page.locator('[data-testid="data-folder-path"]').innerText().catch(() => '')).length > 3 ? true : null),
+      8000, 'data-folder');
+    await page.locator('[data-testid="backup-target"]').first().fill(backupDir.replace(/\\/g, '\\'));
+    await page.locator('[data-testid="backup-now"]').first().click();
+    results.backupCreated = await waitFor(async () => {
+      const toast = /backup created/i.test(await bodyText());
+      const folders = fs.readdirSync(backupDir).filter((name) => name.startsWith('Kel-Backup-'));
+      return toast || folders.length > 0 ? true : null;
+    }, 40000, 'backup-created');
+    await shot('sweep4-03-backup');
+    // delete one transcript through the UI
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2400);
+    await page.locator('[data-testid="transcript-row"]').first().click();
+    await page.waitForTimeout(700);
+    await page.locator('[data-testid="delete-transcript"]').first().click();
+    await page.waitForTimeout(1000);
+    results.deleteDialogSeen = await page.locator('.arco-modal').count();
+    await page.locator('.arco-modal button:has-text("Delete")').last().click().catch(() => {});
+    await page.waitForTimeout(1800);
+    results.rowsAfterDelete = await page.locator('[data-testid="transcript-row"]').count();
+    // restore from the backup, then restart
+    await page.evaluate(() => { location.hash = '/settings/system'; });
+    await page.waitForTimeout(2400);
+    const backups = fs.readdirSync(backupDir).filter((name) => name.startsWith('Kel-Backup-'));
+    results.backupFolders = backups.length;
+    await waitFor(() => page.locator('[data-testid="restore-source"]').count(), 10000, 'restore-card');
+    await page.locator('[data-testid="restore-source"]').first().fill(`${backupDir}/${backups[0]}`);
+    await page.locator('[data-testid="restore-inspect"]').first().click({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(1200);
+    results.restoreConfirm = await waitFor(async () => {
+      const body = await bodyText();
+      return /restore this backup/i.test(body) ? body.slice(-300) : null;
+    }, 12000, 'restore-confirm');
+    await shot('sweep4-04-restore-confirm');
+    // Scope to the dialog: the card title "Restore" also matches /^restore$/i and comes first in
+    // the DOM, so an unscoped click confirmed nothing and the restore was never staged.
+    await page.locator('.arco-modal button:has-text("Restore")').last().click({ timeout: 8000 }).catch(() => {});
+    results.restoreStaged = await waitFor(async () => /close and reopen kel/i.test(await bodyText()), 15000, 'restore-staged');
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/transcription'; });
+    await page.waitForTimeout(2600);
+    results.rowsAfterRestore = await page.locator('[data-testid="transcript-row"]').count();
+    results.restoreRecovered = results.rowsAfterRestore >= 2;
+    await shot('sweep4-05-restored');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 500));
+    await shot('sweep4-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sweep4', results);
   return results;
 }
 
@@ -1319,7 +2332,9 @@ async function scenarioVetting() {
   const results = { schema: 1, scenario: 'vetting', steps: [], errors: [] };
   const { app, page, kelwork, consoleErrors } = await launchApp();
   const send = async (text, label) => {
-    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    const composer = page
+      .locator('[data-testid="guid-input"]:visible, [data-testid="sendbox-input"]:visible, textarea:visible')
+      .first();
     await composer.click({ timeout: 15000 });
     await composer.fill('');
     await composer.type(text, { delay: 8 });
@@ -1458,7 +2473,9 @@ async function scenarioVettingLive() {
   const results = { schema: 1, scenario: 'vetting-live', steps: [], errors: [] };
   const { app, page, kelwork, consoleErrors } = await launchApp();
   const send = async (text, label) => {
-    const composer = page.locator('[data-testid="guid-input"], [data-testid="sendbox-input"], textarea').first();
+    const composer = page
+      .locator('[data-testid="guid-input"]:visible, [data-testid="sendbox-input"]:visible, textarea:visible')
+      .first();
     await composer.click({ timeout: 15000 });
     await composer.fill('');
     await composer.type(text, { delay: 6 });
@@ -1950,6 +2967,12 @@ async function scenarioMaintext() {
     transcription: scenarioTranscription,
     hardening: scenarioHardening,
     'voice-vetting': scenarioVoiceVetting,
+    'sweep-seed': scenarioSweepSeed,
+    'sweep-a': scenarioSweepA,
+    'sweep-b': scenarioSweepB,
+    'sweep2': scenarioSweep2,
+    'sweep3': scenarioSweep3,
+    'sweep4': scenarioSweep4,
     'recheck-probe': scenarioRecheckProbe,
     sider: scenarioSider,
     maintext: scenarioMaintext,

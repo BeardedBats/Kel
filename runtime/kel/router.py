@@ -26,7 +26,7 @@ class Candidate:
     privacy: str = 'cloud'
 
 
-def select(candidates, required=None, explicit=None, quality_floor=None, local_only=False):
+def select(candidates, required=None, explicit=None, quality_floor=None, local_only=False, prefer=None):
     required = required or {'text'}
     eligible, excluded = [], {}
     for c in candidates:
@@ -43,7 +43,8 @@ def select(candidates, required=None, explicit=None, quality_floor=None, local_o
         else: eligible.append(c)
     if not eligible:
         raise PolicyError('No eligible route: '+str(excluded))
-    eligible.sort(key=lambda c: (c.cost is None, c.cost if c.cost is not None else 0,
+    eligible.sort(key=lambda c: (0 if (prefer and c.name == prefer) else 1,
+                    c.cost is None, c.cost if c.cost is not None else 0,
                     c.latency is None, c.latency if c.latency is not None else 0,
                     -(c.quota if c.quota is not None else -1), c.name))
     return {'selected': eligible[0].name, 'fallbacks': [c.name for c in eligible[1:]],

@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scenario": "sweep4",
+  "steps": [
+    {
+      "label": "rec-bar",
+      "ms": 2
+    },
+    {
+      "label": "rec-bar",
+      "ms": 2
+    },
+    {
+      "label": "rows-before-backup",
+      "ms": 1
+    },
+    {
+      "label": "data-folder",
+      "ms": 3
+    },
+    {
+      "label": "backup-created",
+      "ms": 1
+    },
+    {
+      "label": "restore-card",
+      "ms": 2
+    },
+    {
+      "label": "restore-confirm",
+      "ms": 2
+    },
+    {
+      "label": "restore-staged",
+      "ms": 2452
+    }
+  ],
+  "errors": [],
+  "modelPageButtons": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Work & context",
+    "Automatic — Kel picks wh",
+    "Claude (built-in)ClaudeA",
+    "Codex (built-in)CodexAva",
+    "Claude Sonnet 4.6Anthrop",
+    "DeepSeek ChatDeepSeekNee",
+    "DeepSeek ReasonerDeepSee",
+    "Clear status",
+    "Add Model"
+  ],
+  "credentialAffordance": 0,
+  "rowsBeforeBackup": 2,
+  "dataFolderShown": true,
+  "backupCreated": true,
+  "deleteDialogSeen": 1,
+  "rowsAfterDelete": 1,
+  "backupFolders": 1,
+  "restoreConfirm": "th the backup from C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\runs\\f3-c\\out\\backup-target\\Kel-Backup-20260916-212302.\n\nYour current data is kept beside the data folder as .pre-restore-… and Kel must be restarted to finish. Credentials are not part of backups — reconnect them after.\n\nKeep current dataRestore",
+  "restoreStaged": true,
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "rowsAfterRestore": 2,
+  "restoreRecovered": true,
+  "consoleErrors": []
+}

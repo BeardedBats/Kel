@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "scenario": "sider",
+  "probes": [],
+  "errors": [],
+  "hash": "#/guid",
+  "siderText": "K\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "rows": [
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Second chat"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Rich rendering chat"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Third chat"
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Seeding audit chat 3 for the sweep battery."
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    },
+    {
+      "cls": "chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-",
+      "text": "Seeding audit chat 2 for the sweep battery."
+    },
+    {
+      "cls": "flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20",
+      "text": ""
+    }
+  ],
+  "bodyText": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\n\nHi, what's your plan for today?\n\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nKel\nAutomatic\nWork in a project\nTry these instructions\nExplain this project in plain words.\nReview this project and suggest the next useful change.",
+  "palette": [
+    "ActionsSwitch to Dark themeappearance",
+    "ActionsStart design vettingprefills the chat",
+    "Go toNew Chatstart a conversation",
+    "Go toWorkjobs and what needs you",
+    "Go toTranscriptionrecord, upload, transcripts",
+    "Go toSettingsmodels, appearance, system",
+    "Go toSettings · Appearancetheme and colors",
+    "Go toSettings · Systemdata, backup, updates",
+    "Go toTeam · Officewho is working",
+    "Go toTeam · Rosterspecialists",
+    "Go toTeam · Studioedit a specialist",
+    "Go toProjects · Knowledgewhat Kel learned",
+    "Go toProjects · Mapproject map",
+    "Go toProjects · Recipesready-made tasks",
+    "Go toProvidersconnect a model",
+    "Go toPermissionswhat Kel can access",
+    "RecipesAudit and Repairdry run from Projects · Recipes",
+    "RecipesContinue Workdry run from Projects · Recipes",
+    "RecipesFix Bugdry run from Projects · Recipes",
+    "RecipesResearch Then Implementdry run from Projects · Recipes",
+    "RecipesShip Releasedry run from Projects · Recipes"
+  ],
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "scenario": "sweep2",
+  "steps": [
+    {
+      "label": "copy-toast",
+      "ms": -1,
+      "timedOut": true
+    },
+    {
+      "label": "failure-surface",
+      "ms": -1,
+      "timedOut": true
+    },
+    {
+      "label": "retry-clicked",
+      "ms": -1,
+      "timedOut": true
+    },
+    {
+      "label": "mention-popup",
+      "ms": 1252
+    },
+    {
+      "label": "draft-return",
+      "ms": 3
+    }
+  ],
+  "errors": [],
+  "richRowInList": 1,
+  "openedRichChat": true,
+  "markdownProbe": {
+    "textFound": true,
+    "hostHtmlSample": "<div class=\"min-w-0 flex flex-col group items-start\"><div class=\"min-w-0 [&amp;>p:first-child]:mt-0px [&amp;>p:last-child]:mb-0px w-full\"><div data-testid=\"message-text-content\"><div class=\"relative w-full\"><div class=\"markdown-shadow\" style=\"width: 100%; flex",
+    "tables": 1,
+    "pre": 1,
+    "code": 2,
+    "links": 1,
+    "copyButtons": 0,
+    "retryButtons": 0,
+    "scrollToLatest": 0
+  },
+  "copyAffordance": 1,
+  "copyToastSeen": null,
+  "composerFocused": true,
+  "failureSeen": null,
+  "retryAfterFailure": null,
+  "secondChatMenu": "hboard once more and list every spot where the rows feel cramped. Please audit the dashboard once more and list every spot where the rows feel cramped.\n20:39\n20:39\nRound 6 question: keep the density tight and readable.\n20:39\n20:40\nSeeding audit chat 1 for the sweep battery.\n21:37\nretry probe message\n21:41\n21:41\nFiles\nChanges\nacp-temp-f57d1df9\nPin\nMark as unread\nRename\nCreate scheduled task\nArchive",
+  "renameAffordance": 1,
+  "renameWorked": true,
+  "thirdChatMenu": "list every spot where the rows feel cramped. Please audit the dashboard once more and list every spot where the rows feel cramped.\n20:39\n20:39\nRound 6 question: keep the density tight and readable.\n20:39\n20:40\nSeeding audit chat 1 for the sweep battery.\n21:37\nretry probe message\n21:41\n21:41\nFiles\nChanges\nacp-temp-f57d1df9\nRenamed successfully\nPin\nMark as unread\nRename\nCreate scheduled task\nArchive",
+  "deleteAffordance": 0,
+  "mentionPopup": "Type to search for files",
+  "draftOtherConversation": "",
+  "draftRestoredOnReturn": "IMPORTANT DRAFT TEXT 42",
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "conversationsSurviveRestart": true,
+  "draftAfterRestart": "IMPORTANT DRAFT TEXT 42",
+  "consoleErrors": []
+}

@@ -64,11 +64,59 @@ function applyAppearanceAttributes(root: Document, appearance: Theme['appearance
   );
 }
 
+type ThemeOverrides = Record<string, Record<string, string>>;
+
+/** Semantic color overrides the user saved for one theme (built-in defaults are untouched). */
+export function themeOverrides(themeId: string): Record<string, string> {
+  const all = (configService.get('theme.overrides') as ThemeOverrides | undefined) ?? {};
+  return all[themeId] ?? {};
+}
+
 /** Apply a resolved theme to a document. Used by every app-chrome surface. */
 export function applyTheme(theme: Theme, root: Document = document): void {
   applyAppearanceAttributes(root, theme.appearance);
-  upsertStyle(TOKENS_STYLE_ID, tokensToCss(theme.tokens), root);
+  const overrides = themeOverrides(theme.id);
+  const hasOverrides = Object.keys(overrides).length > 0;
+  const tokens = hasOverrides ? { ...(theme.tokens ?? {}), ...overrides } : theme.tokens;
+  upsertStyle(TOKENS_STYLE_ID, tokensToCss(tokens as Theme['tokens']), root);
   upsertStyle(DECORATION_STYLE_ID, theme.css ? processCustomCss(theme.css) : null, root);
+}
+
+async function reapplyIfActive(themeId: string): Promise<Theme> {
+  const userThemes = (configService.get('theme.userThemes') as Theme[] | undefined) ?? [];
+  const activeId = (configService.get('theme.activeId') as string | undefined) ?? 'light';
+  const resolved = resolveActiveTheme(activeId, [...BUILTIN_THEMES, ...userThemes], getSystemPrefersDark());
+  if (resolved.id === themeId) {
+    applyTheme(resolved);
+    await publishThemeToElectron(resolved);
+  }
+  return resolved;
+}
+
+/** Set or remove one semantic color override for a theme; applies live when that theme is active. */
+export async function setThemeOverride(themeId: string, token: string, value: string | null): Promise<void> {
+  const all = { ...((configService.get('theme.overrides') as ThemeOverrides | undefined) ?? {}) };
+  const current = { ...(all[themeId] ?? {}) };
+  if (value) {
+    current[token] = value;
+  } else {
+    delete current[token];
+  }
+  if (Object.keys(current).length > 0) {
+    all[themeId] = current;
+  } else {
+    delete all[themeId];
+  }
+  await configService.set('theme.overrides', all);
+  await reapplyIfActive(themeId);
+}
+
+/** Restore every saved color for one theme. */
+export async function clearThemeOverrides(themeId: string): Promise<void> {
+  const all = { ...((configService.get('theme.overrides') as ThemeOverrides | undefined) ?? {}) };
+  delete all[themeId];
+  await configService.set('theme.overrides', all);
+  await reapplyIfActive(themeId);
 }
 
 /** Resolve `activeId` locally, apply, persist, and publish to Electron for cross-window broadcast. */

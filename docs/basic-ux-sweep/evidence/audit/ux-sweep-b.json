@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "scenario": "sweep-b",
+  "steps": [
+    {
+      "label": "light-applied",
+      "ms": 1
+    },
+    {
+      "label": "dark-restored",
+      "ms": 6
+    }
+  ],
+  "errors": [],
+  "themeCards": [
+    "theme-card-light",
+    "theme-card-dark",
+    "theme-card-system"
+  ],
+  "lightApplied": true,
+  "semanticColorControls": {
+    "colorInputs": 0,
+    "themeColorsLabel": false,
+    "hexFields": 0
+  },
+  "darkRestored": true,
+  "modelPageTail": "al (OS-backed)\n\nThe value is encrypted by the desktop main process with Windows DPAPI (Electron safeStorage ) and never reaches the engine's database, which keeps only the field names and a reference. No IPC returns the value to this window. Stored values are injected into provider runs from OS-backed storage at engine start — never into logs, exports, or the engine database. New values apply the next time Kel starts its engine.\n\nClaude (Claude Code)\nCodex\nAnthropic API\nDeepSeek API\nStore credential\n\nOS-backed storage available · stored: nothing yet\n\nCredential metadata (values are never stored here)\nNo Kel-owned credential metadata yet.\nThe engine stores the provider, the field names, and a reference — the value itself lives in the OS-backed store.\nApplied theme: Light\nApplied theme: Dark",
+  "providerNamesSeen": [
+    "Claude",
+    "Codex",
+    "DeepSeek",
+    "Anthropic"
+  ],
+  "defaultModelControl": false,
+  "runtimeControl": {
+    "text": "AutomaticAutomaticAutomaticAutomatic",
+    "aria": null
+  },
+  "runtimeOptionsTail": "e and list every spot where the rows feel cramped. Please audit the dashboard once more and list every spot where the rows feel cramped. Please audit the dashboard once more and list every spot where the rows feel cramped.\n15:54\n15:54\nRound 6 question: keep the density tight and readable.\n15:54\n15:54\nSeeding audit chat 1 for the sweep battery.\n16:52\ndraft line one\ndraft line two\n16:53\nView Steps · 1\n16:54\nFiles\nChanges\nacp-temp-2408cb5f\nAutomatic",
+  "engineKilledByHarness": true,
+  "engineKillReaction": "ws feel cramped. Please audit the dashboard once more and list every spot where the rows feel cramped.\n15:54\n15:54\nRound 6 question: keep the density tight and readable.\n15:54\n15:54\nSeeding audit chat 1 for the sweep battery.\n16:52\ndraft line one\ndraft line two\n16:53\nView Steps · 1\n16:54\nFiles\nChanges\nacp-temp-2408cb5f",
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "draftAfterCrash": "",
+  "workPageTail": "here as soon as Kel accepts a task, and they stay until they are verified or cancelled.\nWaiting to continue\nNothing waiting to continue.\nWhen a job pauses, is interrupted, or waits on you, it appears here with the exact reason.\nTeam assignments\nSpecialist\tRole version\tState\tProvider\tBudget\tUpdated\nDocumentation Specialist\tv1 · b34f34de\t\nFailed — see cause\tcodex / default\t\n4 of 8 steps used\n\t2m ago",
+  "phantomWorkSeen": false,
+  "aboutVersion": "1.5.0",
+  "updateButtonFound": 1,
+  "updateCheckResult": "System\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nKel\nOne desktop. Your AI work engine.\nv1.5.0\nCheck for updates\nInclude prerelease/dev builds\nHelp Documentation\nUpdate Log\nReport Issue\nContact Me\nOfficial Website\nUpdate Ready\n1.5.0 → 2.2.2\nRelease Log\nLater\nDownload Now",
+  "dataFolderAction": false,
+  "consoleErrors": []
+}

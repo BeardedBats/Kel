@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "scenario": "sweep-a",
+  "scrollMatrix": [
+    {
+      "route": "/guid",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/work",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/projects/knowledge",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/projects/map",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/providers",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/autonomy",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/model",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/agent",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/skills",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/tools",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/appearance",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/webui",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/system",
+      "scrollable": true,
+      "scrollHeight": 1333,
+      "clientHeight": 857,
+      "moreThanViewport": true,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": true
+    },
+    {
+      "route": "/settings/archived",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/settings/about",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    },
+    {
+      "route": "/transcription",
+      "scrollable": false,
+      "scrollHeight": null,
+      "clientHeight": null,
+      "moreThanViewport": null,
+      "lastControlFocusable": false,
+      "lastControlLabel": "",
+      "horizontalOverflow": 0,
+      "scrolledToBottom": null
+    }
+  ],
+  "steps": [
+    {
+      "label": "stop-visible",
+      "ms": -1,
+      "timedOut": true
+    },
+    {
+      "label": "failure-surface",
+      "ms": 6098
+    },
+    {
+      "label": "palette-new",
+      "ms": 0
+    },
+    {
+      "label": "palette-search",
+      "ms": 0
+    },
+    {
+      "label": "palette-theme",
+      "ms": 0
+    },
+    {
+      "label": "palette-model",
+      "ms": 0
+    },
+    {
+      "label": "palette-work",
+      "ms": 0
+    },
+    {
+      "label": "palette-vetting",
+      "ms": 0
+    }
+  ],
+  "errors": [
+    "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"sendbox-input\"], textarea').first()\u001b[22m\n\u001b[2m    - locator resolved to <textarea></textarea>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      "
+  ],
+  "richRowFound": 1,
+  "richProbe": {
+    "tables": 0,
+    "codeBlocks": 0,
+    "inlineCode": 0,
+    "links": 0,
+    "headings": 0,
+    "copyButtons": 0,
+    "scrollToLatest": 0,
+    "messageNodes": 15
+  },
+  "composerFocused": true,
+  "shiftEnterNewline": true,
+  "sendingStateSeen": null,
+  "sendOutcome": "every spot where the rows feel cramped.\n15:54\n15:54\nRound 6 question: keep the density tight and readable.\n15:54\n15:54\nSeeding audit chat 1 for the sweep battery.\n16:52\ndraft line one\ndraft line two\n16:53\nView Steps · 1\nKel work: WAITING_RESOURCE / FAILEDexecute\n16:53\nFiles\nChanges\nacp-temp-2408cb5f",
+  "composerAfterFailure": "",
+  "listRowCount": 3,
+  "searchControlFound": 1,
+  "searchPartialHit": true,
+  "searchNoResult": true,
+  "paletteNew": "Nothing matches “new”. Try a job, a knowledge topic, a recipe or a role.",
+  "paletteSearch": "Recipes\nResearch Then Implement\ndry run from Projects · Recipes\nRoles\nResearch Specialist\nProduct · v1",
+  "paletteTheme": "Nothing matches “theme”. Try a job, a knowledge topic, a recipe or a role.",
+  "paletteModel": "Go to\nProviders\nconnect a model",
+  "paletteWork": "Go to\nWork\njobs and what needs you\nGo to\nTeam · Office\nwho is working\nRecipes\nContinue Work\ndry run from Projects · Recipes",
+  "paletteVetting": "Nothing matches “vetting”. Try a job, a knowledge topic, a recipe or a role.",
+  "renameMenuOpened": true,
+  "renameWorked": false,
+  "deleteMenuOpened": true,
+  "closeOutcome": "closed",
+  "engineKilled": true
+}

@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "scenario": "voice-vetting",
+  "steps": [
+    {
+      "label": "session-started",
+      "ms": 13
+    },
+    {
+      "label": "dictation-recording",
+      "ms": 411
+    },
+    {
+      "label": "dictation-text",
+      "ms": 5
+    },
+    {
+      "label": "after-interrupt",
+      "ms": 11
+    },
+    {
+      "label": "record-bar",
+      "ms": 2
+    },
+    {
+      "label": "transcript-row",
+      "ms": 414
+    },
+    {
+      "label": "think-modal",
+      "ms": 2
+    },
+    {
+      "label": "think-buckets",
+      "ms": 415
+    },
+    {
+      "label": "review-modal",
+      "ms": 1
+    },
+    {
+      "label": "multi-preview",
+      "ms": 407
+    },
+    {
+      "label": "accept-all",
+      "ms": 418
+    },
+    {
+      "label": "review-modal-2",
+      "ms": 1
+    },
+    {
+      "label": "process-batch",
+      "ms": 1
+    },
+    {
+      "label": "rows-after-restart",
+      "ms": 14
+    },
+    {
+      "label": "session-after-restart",
+      "ms": 2
+    }
+  ],
+  "errors": [],
+  "sessionStarted": true,
+  "dictationRecording": true,
+  "dictationText": "This is a local practice transcript so the recordi",
+  "panelAfterDictation": "{\"batches\":[{\"ordinal\":1,\"question_ids\":\"[\\\"Q1\\\", \\\"Q2\\\", \\\"Q3\\\", \\\"Q4\\\", \\\"Q5\\\", \\\"Q6\\\", \\\"Q7\\\", \\\"Q8\\\", \\\"Q9\\\", \\\"Q10\\\", \\\"Q11\\\", \\\"Q12\\\"]\"}],\"conflicts\":[],\"cross_conversation\":true,\"decisions\":[{\"created\":1789608419.1914487,\"id\":\"55ddf6d9-e097-444a-9a97-59",
+  "oneAnswerRecorded": true,
+  "interruptedThen": true,
+  "recordBar": 1,
+  "transcriptRow": 1,
+  "thinkModal": 1,
+  "thinkBuckets": true,
+  "reviewModal": 1,
+  "multiPreview": 3,
+  "acceptAll": true,
+  "processBatch": true,
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "rowsAfterRestart": 1,
+  "audioAfterRestart": true,
+  "sessionAfterRestart": 1,
+  "consoleErrors": []
+}

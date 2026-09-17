@@ -7,6 +7,8 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { configService } from '@/common/config/configService';
+import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
 import { kelState, kelTeam, kelWork } from '@renderer/components/kel/kelApi';
 
 type PaletteItem = {
@@ -18,7 +20,12 @@ type PaletteItem = {
 };
 
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
+  { id: 'nav-new-chat', label: 'New Chat', hint: 'start a conversation', path: '/guid' },
   { id: 'nav-work', label: 'Work', hint: 'jobs and what needs you', path: '/work' },
+  { id: 'nav-transcription', label: 'Transcription', hint: 'record, upload, transcripts', path: '/transcription' },
+  { id: 'nav-settings', label: 'Settings', hint: 'models, appearance, system', path: '/settings/model' },
+  { id: 'nav-settings-appearance', label: 'Settings · Appearance', hint: 'theme and colors', path: '/settings/appearance' },
+  { id: 'nav-settings-system', label: 'Settings · System', hint: 'data, backup, updates', path: '/settings/system' },
   { id: 'nav-office', label: 'Team · Office', hint: 'who is working', path: '/team/office' },
   { id: 'nav-roster', label: 'Team · Roster', hint: 'specialists', path: '/team/roster' },
   { id: 'nav-studio', label: 'Team · Studio', hint: 'edit a specialist', path: '/team/studio' },
@@ -56,6 +63,7 @@ const KelCommandPalette: React.FC = () => {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const [dynamic, setDynamic] = useState<PaletteItem[]>([]);
+  const [found, setFound] = useState<PaletteItem[]>([]);
   const [loading, setLoading] = useState(false);
   const loadedOnce = useRef(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -149,6 +157,50 @@ const KelCommandPalette: React.FC = () => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  useEffect(() => {
+    const needle = query.trim();
+    if (!open || needle.length < 2) {
+      setFound([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      const bridge = (window as unknown as { kelAPI?: { request: (route: string, payload?: unknown) => Promise<{
+        transcripts?: Array<{ id: string; title: string; snippet: string }>;
+        vetting?: Array<{ id: string; title: string; snippet: string }>;
+        conversations?: Array<{ id: string; title: string; snippet: string }>;
+      }> } }).kelAPI;
+      if (!bridge) return;
+      bridge
+        .request('/api/search', { q: needle })
+        .then((data) => {
+          if (cancelled) return;
+          const items: PaletteItem[] = [];
+          (data.transcripts ?? []).forEach((row) => items.push({
+            id: `found-transcript-${row.id}`, group: 'Transcripts',
+            label: row.title, hint: row.snippet || 'open Transcription',
+            run: () => navigate('/transcription'),
+          }));
+          (data.vetting ?? []).forEach((row) => items.push({
+            id: `found-vetting-${row.id}`, group: 'Vetting',
+            label: row.title, hint: row.snippet || 'open the chat; Vetting lives in the Work panel',
+            run: () => navigate('/guid'),
+          }));
+          (data.conversations ?? []).forEach((row) => items.push({
+            id: `found-chat-${row.id}`, group: 'Chats',
+            label: row.title, hint: row.snippet || 'open the chat list',
+            run: () => navigate('/guid'),
+          }));
+          setFound(items);
+        })
+        .catch(() => setFound([]));
+    }, 260);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [navigate, open, query]);
+
   const items = useMemo(() => {
     const navigation: PaletteItem[] = NAVIGATION.map((entry) => ({
       id: entry.id,
@@ -157,7 +209,36 @@ const KelCommandPalette: React.FC = () => {
       hint: entry.hint,
       run: () => navigate(entry.path),
     }));
-    const all = mode === 'command' ? [...navigation, ...dynamic] : dynamic;
+    // Actions are real, verified behaviours: theme switch and a composer handoff that prefills
+    // a vetting start. Anything that cannot actually run never appears here.
+    const activeThemeId = (configService.get('theme.activeId') as string | undefined) ?? 'light';
+    const otherTheme = activeThemeId === 'dark' ? 'Light' : 'Dark';
+    const actions: PaletteItem[] = [
+      {
+        id: 'action-theme',
+        group: 'Actions',
+        label: `Switch to ${otherTheme} theme`,
+        hint: 'appearance',
+        run: () => {
+          void setActiveTheme(otherTheme.toLowerCase());
+        },
+      },
+      {
+        id: 'action-vetting',
+        group: 'Actions',
+        label: 'Start design vetting',
+        hint: 'prefills the chat',
+        run: () => {
+          try {
+            window.sessionStorage.setItem('kel.transcription.draft', 'start design vetting: ');
+          } catch {
+            /* the chat still opens without the prefill */
+          }
+          navigate('/guid');
+        },
+      },
+    ];
+    const all = mode === 'command' ? [...actions, ...navigation, ...dynamic, ...found] : [...found, ...dynamic];
     const needle = query.trim().toLowerCase();
     if (!needle) return all.slice(0, 24);
     return all
@@ -252,7 +333,7 @@ const KelCommandPalette: React.FC = () => {
           )}
           {!loading && items.length === 0 && (
             <li className='kel-meta' style={{ padding: '8px 10px' }}>
-              Nothing matches “{query}”. Try a job, a knowledge topic, a recipe or a role.
+              Nothing matches “{query}”. Try a job, a topic, a recipe, a role — or an action like “new chat”.
             </li>
           )}
           {items.map((item, index) => (

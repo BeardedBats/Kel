@@ -7,6 +7,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import SystemModalContent from '@/renderer/components/settings/SettingsModal/contents/SystemModalContent';
+import { KelDataCard } from '@/renderer/components/kel/KelDataCard';
 import AboutModalContent from '@/renderer/components/settings/SettingsModal/contents/AboutModalContent';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
 
@@ -16,7 +17,14 @@ const SystemSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper contentClassName={isAboutPage ? 'max-w-640px' : undefined}>
-      {isAboutPage ? <AboutModalContent /> : <SystemModalContent />}
+      {isAboutPage ? (
+        <AboutModalContent />
+      ) : (
+        <>
+          <KelDataCard />
+          <SystemModalContent />
+        </>
+      )}
     </SettingsPageWrapper>
   );
 };

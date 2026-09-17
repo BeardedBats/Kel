@@ -1,0 +1,7 @@
+# Suite log — 2026-09-16T21:13:22Z
+
+$ runtime: python -m pytest tests -q
+521 passed, 10 subtests passed in 130.37s (0:02:10)
+
+$ desktop: tsc --noEmit -p tsconfig.json
+0 errors
