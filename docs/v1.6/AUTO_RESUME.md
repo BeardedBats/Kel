@@ -27,7 +27,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
-| 5.1 Agent-to-model assignment | DONE — commit `9d6ed55` (audit requested for `cc909b9..9d6ed55`) | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 689 (+31); registry v2 + modes + grants + reservations (migration 17); no live consumers |
+| 5.1 Agent-to-model assignment | DONE + audit-accepted — commit `9d6ed55` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 689 (+31); audit 10 CONTINUE (minors N1-N7 → follow-up patch) |
 | 5.2–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -235,8 +235,11 @@ freeze mode/binding/grants/reservation/flags via `create_assignment(extra=)`; th
 validator now accepts versioned registry ceilings. Nothing live calls the new API (explicit
 path only) and `workforce.enabled` defaults off — B-config parity by construction. Evidence:
 `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine `689 passed (+31)` on Windows; same-role
-demo across all three modes snapshotted. Next after audit CONTINUE: publish the accumulated
-checkpoint; then Phase 5.2 — D1 single-specialist delegation (`test_workforce_d1.py`).
+demo across all three modes snapshotted. **Audit: increment 10 CONTINUE — Phase 5.1 accepted
+for `cc909b9..9d6ed55`; minors N1-N7 recorded (latent FIXED model-check gap, reservation
+milestone/atomicity, record fidelity, cross-mode arguments, extras sanitization, per-project
+ceilings).** Next: a small follow-up patch closing N1/N2/N6 (+N3-N5) with a delta re-audit,
+then Phase 5.2 — D1 single-specialist delegation (`test_workforce_d1.py`).
 
 ## Verify quickly (any resume)
 
