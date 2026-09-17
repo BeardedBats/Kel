@@ -281,12 +281,13 @@ harness on classes 2/6/8 — **gates green: escaped_C < escaped_A on every class
 real-worker path. Evidence: `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine
 `765 passed (+41)` on Windows. **Audit: increment 14 CONTINUE — Phase 5.3 accepted for
 `f9cf3ea..48dacb3`; F14-1/F14-2/N14-1 queued for the opening follow-up patch; F4 remains open
-for the real-worker increment.** Next: publish, then the small 5.3 follow-up patch, then Phase
-5.4 — assurance army + Sentinel + Oracle (`test_workforce_assurance.py`).
+for the real-worker increment.** The follow-up patch landed as `5747567` (focused 43; full 767);
+its delta re-audit (increment 15) is pending. Then Phase 5.4 — assurance army + Sentinel +
+Oracle (`test_workforce_assurance.py`).
 
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 765 passed (+10 subtests; +152 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 767 passed (+10 subtests; +154 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
