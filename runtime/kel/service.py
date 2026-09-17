@@ -100,11 +100,13 @@ class Service:
         from .projectmap import ProjectMap
         from .recipes import RecipeLibrary
         from .workforce import ensure_schema as ensure_workforce_schema
+        from .assignment import ensure_schema as ensure_assignment_schema
         Memory(self.store)
         ProjectMap(self.store)
         Continuation(self.store)
         RecipeLibrary(self.store).install_builtins()
         ensure_workforce_schema(self.store)
+        ensure_assignment_schema(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():

@@ -350,6 +350,13 @@ class PacketSchemaTests(Base):
         bad['reviewer_requirements_met']['lenses_run'] = []
         with self.assertRaises(PolicyError):
             validate_completion_packet(bad)
+        # Partial coverage (2 required, 1 run) is refused too: the set difference, not
+        # just the empty case (audit increment 8 follow-up).
+        partial = packet()
+        partial['required_reviewer'] = {'lenses': ['security', 'functional-testing'],
+                                        'independence': 'any_but_executor', 'oracle': False}
+        with self.assertRaises(PolicyError):
+            validate_completion_packet(partial)
         ok = packet()
         ok['required_reviewer'] = {'lenses': ['security', 'functional-testing'],
                                    'independence': 'any_but_executor', 'oracle': False}
