@@ -22,7 +22,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 1 Memory proposal surface | DONE — commit `a8c3511` | `docs/memory-proposals/` (engine 568 then, packaged `memoryprops` green, review CONTINUE) |
 | 2 Artifact lineage | DONE — commit `ffeef73` | `docs/artifact-lineage/` (engine 574, packaged lineage probe green on `package-final15`) |
 | 3 In-chat approvals | DONE — commit `85e99fb` | `docs/in-chat-approvals/` (engine 592, packaged approvals journey all-green + lineage probe re-run on `package-final16`) |
-| 3.5 P1 capability remediation | DONE — commit hash recorded by the follow-up state commit on this branch | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
+| 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
 | 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
 | 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
 
@@ -37,9 +37,8 @@ Independent Audit 1.6 returned REVISE with three P1 findings (CAP-01/02/03) agai
 capability system. Remediation implemented and verified before Phase 4 continues.
 
 - **Starting HEAD**: `70d68e4` (Phase 4 recon; Phase 3 = `85e99fb`).
-- **Remediation commit**: HEAD of `ux/v15-journeys` after the remediation commit — its exact hash is
-  recorded by the follow-up state commit that updates this file (same pattern as `70d68e4` for
-  Phase 3). Phase 4 WIP is NOT part of it.
+- **Remediation commit**: `75d1f68` ("fix(capabilities): the real web effect and explicit commands honour
+  the conversation controls"), on top of `70d68e4`. Phase 4 WIP is NOT part of it.
 - **Files changed**: `runtime/kel/capabilities.py` (strict explicit commands; `directive_clauses`;
   Drive/Connected apps removed from the control; `_conversation_for_job` falls back to the job's own
   conversation), `runtime/kel/research.py` (the real web effect passes the conversation capability
@@ -73,10 +72,11 @@ capability system. Remediation implemented and verified before Phase 4 continues
   Full diff, untracked copy, and the Phase 4 audit/report scripts are preserved in
   `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` (README.txt explains the
   restore procedure). The stash has NOT been dropped and has NOT been restored — Phase 4 is paused.
-- **Current HEAD** (at this writing): the follow-up state commit that records this file's update.
-- **Next Audit 1.6 range**: `ffeef73..CURRENT_REMEDIATION_STATE_HEAD` — this includes `85e99fb`
-  (Phase 3), `70d68e4` (Phase 4 recon), the P1 remediation commit, and the state commit. The stashed
-  Phase 4 work is NOT part of that range.
+- **Current HEAD** (at this writing): the state commit that records this file's update on top of
+  `75d1f68` (see `git log --oneline -3`: `75d1f68` remediation → this docs/state commit).
+- **Next Audit 1.6 range**: `ffeef73..CURRENT_REMEDIATION_STATE_HEAD` — `ffeef73..75d1f68` covers
+  `85e99fb` (Phase 3), `70d68e4` (Phase 4 recon) and the P1 remediation; the state commit on top adds
+  only this AUTO_RESUME update. The stashed Phase 4 work is NOT part of that range.
 
 ## Verify quickly (any resume)
 
