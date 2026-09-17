@@ -110,16 +110,50 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(send['text'], question)  # the real request is preserved
 
     def test_explicit_clause_inside_a_request_applies_and_forwards_the_rest(self):
-        text = 'terminal: off — and also summarize the release notes'
+        text = 'Please summarize the release notes. [terminal: off]'
         result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
                                                        'prompt': [{'type': 'text', 'text': text}]})
         self.assertEqual(result['stopReason'], 'end_turn')
         clauses = [body for path, body in self.requests if path == '/api/capabilities']
         self.assertEqual(len(clauses), 1)
-        self.assertEqual(clauses[0]['text'], 'terminal: off')
+        self.assertEqual(clauses[0]['text'], 'terminal: off')  # canonical inner form for the engine
         send = [body for path, body in self.requests if path == '/api/send'][0]
-        self.assertIn('summarize the release notes', send['text'])  # the real request still goes through
-        self.assertNotIn('terminal: off', send['text'])  # the clause is not echoed as message text
+        self.assertEqual(send['text'], 'Please summarize the release notes.')  # exact removal
+        self.assertNotIn('terminal: off', send['text'])
+
+    def test_leading_and_multiple_clauses_apply_and_forward_the_rest(self):
+        leading = '[web: use default] Please research this topic.'
+        self.host.dispatch('session/prompt', {'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': leading}]})
+        bodies = [body['text'] for path, body in self.requests if path == '/api/capabilities']
+        self.assertEqual(bodies, ['web: default'])
+        self.assertEqual([body['text'] for path, body in self.requests if path == '/api/send'],
+                         ['Please research this topic.'])
+        self.requests.clear()
+        both = '[web: off] [terminal: default] summarize the notes'
+        self.host.dispatch('session/prompt', {'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': both}]})
+        bodies = [body['text'] for path, body in self.requests if path == '/api/capabilities']
+        self.assertEqual(bodies, ['web: off', 'terminal: default'])
+        self.assertEqual([body['text'] for path, body in self.requests if path == '/api/send'],
+                         ['summarize the notes'])
+
+    def test_ordinary_prose_is_forwarded_byte_identical_without_state_changes(self):
+        corpus = ('the shell: off limits, so please use python instead',
+                  'the terminal: disabled by the admin policy here',
+                  'Browser: off-topic question, but what does this error mean?',
+                  'he said "web: off" in the meeting yesterday',
+                  "Someone wrote 'terminal: off' in the docs.",
+                  'The string web: off appears in this error.',
+                  'Please search for the phrase web: off.',
+                  'Use `terminal: off` in the script.',
+                  'Run ```\nterminal: off\n``` in the shell.')
+        for text in corpus:
+            self.requests.clear()
+            self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
+                                                  'prompt': [{'type': 'text', 'text': text}]})
+            self.assertNotIn('/api/capabilities', [path for path, _ in self.requests], text)
+            sent = [body for path, body in self.requests if path == '/api/send']
+            self.assertEqual(len(sent), 1, text)
+            self.assertEqual(sent[0]['text'], text, text)  # byte-identical, nothing removed
 
     def test_auth_error_is_explicit_and_token_not_exposed(self):
         self.descriptor['token'] = 'incorrect'

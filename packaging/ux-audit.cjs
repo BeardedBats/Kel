@@ -3132,6 +3132,30 @@ async function scenarioSessionTools() {
     results.ordinaryTalkWebOverride = rowOf(await rowsFor(chatA), 'web')?.override;
     await shot('sessiontools-04-ordinary-talk');
 
+    // CAP2-CLAUSE: an explicit embedded control is the bracketed form; only the bracket token is
+    // consumed and the request is forwarded without it (the workspace wrapper verifies the exact
+    // forwarded text against the engine database afterwards).
+    await composer.fill('Please summarize the release notes. [terminal: off]');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(7000);
+    results.embeddedClauseTerminalOverride = rowOf(await rowsFor(chatA), 'terminal')?.override;
+
+    // Ordinary prose that merely CONTAINS control-shaped text must not mutate state or alter the
+    // message: plain substring, quoted, and inline-code variants all leave GitHub as it was (on).
+    await composer.fill('The string github: off appears in this error.');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(5000);
+    results.proseGithubOverridePlain = rowOf(await rowsFor(chatA), 'github')?.override;
+    await composer.fill('he said "github: off" in the meeting yesterday');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(5000);
+    results.proseGithubOverrideQuoted = rowOf(await rowsFor(chatA), 'github')?.override;
+    await composer.fill('Use `github: off` in the script.');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(5000);
+    results.proseGithubOverrideCode = rowOf(await rowsFor(chatA), 'github')?.override;
+    await shot('sessiontools-05-clause-safety');
+
     // Restart: both conversations keep their own state.
     await closeApp(app, kelwork, results);
     ctx = await launchApp();

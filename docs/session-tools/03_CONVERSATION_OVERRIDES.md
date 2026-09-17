@@ -39,10 +39,14 @@ identity rules.
   grant is spent by that real effect. Same decision function the authorization boundary uses — no
   second policy.
 - **Explicit commands only.** A whole message may be one command (`web: use default`, `terminal: off`,
-  "don't use the browser here", "use GitHub for this conversation"). An explicit `capability: state`
-  clause inside a larger request is applied while the rest of the message continues as the request.
-  Ordinary sentences that merely mention a tool ("Can you use the web here?") never change state:
-  permissive conversational guessing is deliberately not supported.
+  "don't use the browser here", "use GitHub for this conversation"). Inside a larger request, only
+  the deliberately explicit bracketed form counts (`[terminal: off]`, `[web: use default]`): the
+  setting is applied and the rest of the message continues as the request, with only the bracketed
+  token removed. Ordinary prose never mutates state and is never altered — text containing "web: off",
+  quoted commands, inline/fenced code, URLs or malformed brackets is forwarded byte-identical, and
+  anything ambiguous (unpaired quote, unclosed fence) matches nothing. (CAP2-CLAUSE remediation,
+  2026-09-17: the earlier substring-scan form was removed after the independent audit reproduced
+  false positives such as `the shell: off limits, so please use python instead`.)
 - **Google Drive and Connected apps are not offered.** No production effect path in this release can
   honour them, so they are not shown as switches that could not be kept; a stale caller is refused
   plainly and their chat aliases are ordinary text.
