@@ -44,28 +44,56 @@ def _plain_state(status):
 
 
 def _without_clauses(text, clauses):
-    """The user's request with the applied [capability: state] clauses removed.
+    """The user's request with the applied reserved [kel:…] directives removed.
 
-    Only the exact bracketed token travels away, together with the whitespace around it and at most
-    one adjacent separator (so "Do X. [web: off]" reads as "Do X." instead of leaving a gap).
-    Quoted or ordinary prose is never touched: those spans were never matched in the first place.
+    Only the exact reserved token travels away, with the whitespace around it and at most one
+    adjacent separator per side; an empty delimiter pair left behind by the token ("A ([kel:web=off]) B")
+    is removed with it. A pair of list separators ("A,[kel:web=off],B") keeps one comma instead of
+    deleting both. Words are never joined, and nothing beyond the token and its immediate seam is
+    ever deleted.
     """
     out = text
     for clause in sorted(clauses, key=lambda item: item['start'], reverse=True):
         start, end = clause['start'], clause['end']
-        while start > 0 and out[start - 1] in ' \t':
-            start -= 1
-        if start > 0 and out[start - 1] in ',;\u2014\u2013-':
-            start -= 1
+        left = start
+        while left > 0 and out[left - 1] in ' \t':
+            left -= 1
+        right = end
+        while right < len(out) and out[right] in ' \t':
+            right += 1
+        if left > 0 and right < len(out) and out[left - 1] == '(' and out[right] == ')':
+            # The token was the only content of a parenthesised aside: take the empty pair too.
+            start, end = left - 1, right + 1
             while start > 0 and out[start - 1] in ' \t':
                 start -= 1
-        while end < len(out) and out[end] in ' \t':
-            end += 1
-        if end < len(out) and out[end] in ',;\u2014\u2013-':
-            end += 1
             while end < len(out) and out[end] in ' \t':
                 end += 1
-        if start > 0 and end < len(out) and out[start - 1] not in ' \t' and out[end] not in ' \t':
+        else:
+            separators = ',;'
+            dashes = '\u2014\u2013-'
+            left_sep = out[left - 1] if left > 0 and out[left - 1] in separators else ''
+            right_sep = out[right] if right < len(out) and out[right] in separators else ''
+            left_dash = left > 0 and out[left - 1] in dashes
+            right_dash = right < len(out) and out[right] in dashes
+            if left_sep and right_sep:
+                start, end = left - 1, right          # keep the right comma: "A,[kel:x=off],B" -> "A,B"
+            elif left_sep or left_dash:
+                start = left - 1
+                end = right
+            elif right_sep or right_dash:
+                start = left
+                end = right + 1
+                while end < len(out) and out[end] in ' \t':
+                    end += 1
+            else:
+                start, end = left, right
+            if left_dash and right_dash:
+                start, end = left - 1, right + 1
+                while start > 0 and out[start - 1] in ' \t':
+                    start -= 1
+                while end < len(out) and out[end] in ' \t':
+                    end += 1
+        if start > 0 and end < len(out) and out[start - 1].isalnum() and out[end].isalnum():
             out = out[:start] + ' ' + out[end:]    # never join two words that were separated
         else:
             out = out[:start] + out[end:]
@@ -305,10 +333,10 @@ class ACPHost:
             # vetting does - one policy, two ways to reach it.
             if not attachments:
                 # Strict, explicit commands only: a whole message that is one command answers inline;
-                # a deliberately explicit bracketed control ("[terminal: off]") inside a larger
-                # request is applied while the rest of the message continues as the user's request.
-                # Ordinary prose, quoted commands and code samples never change state and are never
-                # altered. The policy itself stays engine-side.
+                # a deliberately explicit reserved Kel directive ("[kel:terminal=off]") inside a
+                # larger request is applied while the rest of the message continues as the user's
+                # request. Ordinary prose, technical strings, quoted commands and code samples never
+                # change state and are never altered. The policy itself stays engine-side.
                 from .capabilities import directive, directive_clauses
                 if directive(text):
                     confirmation = self._capability_directive(cid, text)

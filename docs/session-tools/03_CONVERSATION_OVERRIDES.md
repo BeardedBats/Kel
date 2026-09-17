@@ -40,13 +40,15 @@ identity rules.
   second policy.
 - **Explicit commands only.** A whole message may be one command (`web: use default`, `terminal: off`,
   "don't use the browser here", "use GitHub for this conversation"). Inside a larger request, only
-  the deliberately explicit bracketed form counts (`[terminal: off]`, `[web: use default]`): the
-  setting is applied and the rest of the message continues as the request, with only the bracketed
-  token removed. Ordinary prose never mutates state and is never altered — text containing "web: off",
-  quoted commands, inline/fenced code, URLs or malformed brackets is forwarded byte-identical, and
-  anything ambiguous (unpaired quote, unclosed fence) matches nothing. (CAP2-CLAUSE remediation,
-  2026-09-17: the earlier substring-scan form was removed after the independent audit reproduced
-  false positives such as `the shell: off limits, so please use python instead`.)
+  the reserved Kel namespace counts (`[kel:terminal=off]`, `[kel:web=default]`, `[kel:github=on]`):
+  canonical capability names and canonical states only, applied in source order, with only the
+  reserved token removed from the forwarded request. Ordinary and technical content never mutates
+  state and is never altered — generic brackets (`[web: off]`, also in paths, logs or nested
+  `[[web: off]]`), quoted or code text, URLs, unknown names/states and malformed tokens are forwarded
+  byte-identical, and anything ambiguous (unpaired quote, unclosed fence) matches nothing.
+  (CAP2-CLAUSE remediation 2026-09-17 removed the substring scan; CAP2-RESIDUAL 2026-09-17 replaced
+  the generic bracket form with the reserved namespace after the audit reproduced technical-string
+  false positives such as `Use C:/projects/[web: off] as the path.`)
 - **Google Drive and Connected apps are not offered.** No production effect path in this release can
   honour them, so they are not shown as switches that could not be kept; a stale caller is refused
   plainly and their chat aliases are ordinary text.

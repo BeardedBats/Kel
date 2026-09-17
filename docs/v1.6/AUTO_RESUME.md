@@ -24,10 +24,12 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3 In-chat approvals | DONE — commit `85e99fb` | `docs/in-chat-approvals/` (engine 592, packaged approvals journey all-green + lineage probe re-run on `package-final16`) |
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
+| 3.7 CAP2-RESIDUAL remediation | DONE — commit hash recorded by the follow-up state commit | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
 | 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
 
-Latest verified candidate: `dist/package-p1cap2/win-unpacked` (CAP2-CLAUSE evidence).
+Latest verified candidate: `dist/package-p1cap3/win-unpacked` (CAP2-RESIDUAL evidence).
+`dist/package-p1cap2/win-unpacked` remains the CAP2-CLAUSE evidence artifact;
 `dist/package-p1cap/win-unpacked` remains the P1 evidence artifact; `dist/package-final16` remains the
 Phase 3 evidence artifact; `package-final13`/`final15` are the memory/lineage evidence artifacts;
 `package-final12` is a superseded intermediate (UI bug); never cite it.
@@ -70,8 +72,11 @@ capability system. Remediation implemented and verified before Phase 4 continues
   repo `package.json` / `.ps1` / `.sh` — only ad-hoc invocation is described in docs — so DEAD-06
   remains OPEN; an earlier claim in this file that it was resolved was inaccurate. It is used as the
   gate harness by the scratch wrappers in `ux-audit/` (outside the repo), which does not resolve the
-  finding. **DEAD-07**: the unreachable trailing `return 'unavailable'` in `availability()` was
-  removed in the CAP2-CLAUSE commit (dead code; every defined probe returns in its own branch).
+  finding. **DEAD-07 / DEAD-08**: the trailing fallback in `availability()` is back as an explicit
+  fail-closed branch (the CAP2-CLAUSE removal left totality accidental; DEAD-08 asked for an explicit
+  fail-closed return or exhaustive assertion). It is regression-tested with a synthetic unknown probe
+  (`test_unknown_probe_fails_closed_not_open`): the capability reads as unavailable and `resolve()`
+  denies it — never silently available, and no longer dead code.
 - **Phase 4 preservation**: 123 tracked files + 1 untracked file stashed as
   `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (`git stash list`; `stash@{0}` at capture).
   Full diff, untracked copy, and the Phase 4 audit/report scripts are preserved in
@@ -118,16 +123,55 @@ from the message (`he said "web: off"…` reached the model as `he said ""…`).
   commit; the state commit on top adds only this AUTO_RESUME update. CAP-02 must receive independent
   CONTINUE before Phase 4 resumes; CAP-01/CAP-03 closure stands (regression-checked here).
 
+## CAP2-RESIDUAL remediation (2026-09-17)
+
+Independent Audit 1.6 closed the original CAP2-CLAUSE defect but returned REVISE on a residual: the
+`[capability: state]` embedded form still plausibly matched technical strings (`Use C:/projects/[web: off]
+as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
+
+- **Starting HEAD**: `85cf0f1`. **Remediation commit**: recorded by the follow-up state commit.
+  Phase 4 WIP is NOT part of it.
+- **Embedded grammar now**: the RESERVED Kel namespace, canonical only —
+  `[kel:web=off]`, `[kel:web=on]`, `[kel:web=default]`, `[kel:terminal=off]`, `[kel:github=on]`,
+  `[kel:files=default]` (capabilities web/files/terminal/github; states on/off/default; case-
+  insensitive, e.g. `[Kel:Web=OFF]`). No aliases, no whitespace variants, no extra fields. The old
+  generic bracket forms (`[web: off]`, `[Web: OFF]`) are ordinary text now — an intentional
+  compatibility break inside an unreleased feature. Standalone whole-message grammar is unchanged
+  (11-item corpus incl. `web=off`, `Web: OFF`, `web: reset`, `set web back to default`).
+- **Boundary rules**: quoted/code spans excluded (incl. unpaired-opener fail-safe); nested brackets
+  inert (`[[kel:web=off]]`, `[ [kel:web=off] ]`); word-embedded inert (`prefix[kel:web=off]suffix`);
+  URL segments inert; malformed/unknown inert (`[kel:web]`, `[kel:web=sideways]`, `[kel:unknown=off]`,
+  `[kel:web=off:now]`, `[kel::web=off]`, `[kel:web==off]`, unclosed); exact forwarding byte-for-byte
+  whenever no valid directive is recognized — no normalization of any kind.
+- **Exact removal**: the reserved token plus adjacent whitespace and at most one adjacent separator
+  per side; `A,[kel:web=off],B` keeps one comma (`A,B`); `A ([kel:web=off]) B` drops the empty paren
+  pair (`A B`); words are never joined; nothing else is deleted. Multiple directives apply in source
+  order; a repeated capability ends on its last value.
+- **Tests**: residual corpus (9 mandated strings) + reserved boundary corpus + prior prose/quote/
+  code/malformed/URL corpora, all with byte-identity asserts; a NEGATIVE CONTROL that executes the
+  actual 85cf0f1 parser from git (`git show 85cf0f1:runtime/kel/capabilities.py` in an isolated module)
+  and proves it recognized the residual technical cases and rewrote the text (`Use C:/projects/as the
+  path.`, `log: GET /api/v1/HTTP/1.1`, `[]`) while the new grammar recognizes none; ACP end-to-end
+  cases A–G incl. byte-identical forwarding with zero capability calls; DEAD-08 regression. Full
+  runtime suite: **613 passed (+10 subtests)**.
+- **Packaged evidence**: `ux-audit/run-cap2-residual.sh` on `package-p1cap3` — sessiontools journey
+  with the reserved-directive step (Terminal off) and residual steps (path, nested), transcript
+  probe, residual forwarded-text probe against the engine database (reserved token never forwarded;
+  residual lines and prose byte-identical) and the packaged engine probe as the CAP-01 regression.
+- **Next Audit 1.6 range**: `85cf0f1..NEW_MAIN_HEAD` (this remediation commit plus the state commit).
+  CAP-02/CAP2-RESIDUAL must receive independent CONTINUE before Phase 4 resumes.
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 610 passed (+10 subtests).
+1. `cd runtime && python -m pytest tests -q` → 613 passed (+10 subtests).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
-   `bash ux-audit/run-cap2-clause.sh` (needs `package-p1cap2`; sessiontools + CAP2 clause probes +
-   engine regression), `bash ux-audit/run-p1-capabilities.sh` (needs `package-p1cap`;
-   sessiontools + packaged engine capability probe), `bash ux-audit/run-approvals.sh` (needs final16),
-   `bash ux-audit/run-lineage-probe.sh` (now final16), `bash ux-audit/run-memoryprops.sh`
-   (needs final13).
+   `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
+   steps, residual db probe, engine regression), `bash ux-audit/run-cap2-clause.sh` (needs
+   `package-p1cap2`; sessiontools + CAP2 clause probes + engine regression), `bash
+   ux-audit/run-p1-capabilities.sh` (needs `package-p1cap`; sessiontools + packaged engine capability
+   probe), `bash ux-audit/run-approvals.sh` (needs final16), `bash ux-audit/run-lineage-probe.sh`
+   (now final16), `bash ux-audit/run-memoryprops.sh` (needs final13).
 
 ## Sharp edges learned so far
 
@@ -153,8 +197,9 @@ from the message (`he said "web: off"…` reached the model as `he said ""…`).
   resolution must always delegate to `Autonomy.resolve_expansion` / `Store.resolve_approval`.
 - The repo's `better-sqlite3` binary is Electron-ABI; system Node cannot load it — keep journey DB
   assertions in Python (`ux-audit/verify-approvals.py`), not in Playwright probes.
-- Conversation capability commands: standalone (`web: use default`, "don't use the browser here") or
-  the explicit bracketed embedded form (`[terminal: off]`, `[web: use default]`) inside a longer
-  message — the clause applies and the rest of the message is forwarded without only the bracket
-  token. Ordinary prose, quoted commands, code samples, URLs and malformed brackets never change
-  state and are forwarded byte-identical.
+- Conversation capability commands: standalone human-friendly forms (`web: use default`,
+  "don't use the browser here") or the RESERVED embedded namespace `[kel:<capability>=<state>]`
+  (`[kel:terminal=off]`, `[kel:web=default]`) — canonical names and states only, the clause applies
+  and the rest of the message is forwarded without only the reserved token. Generic brackets
+  (`[web: off]`), quoted commands, code samples, URLs, nested brackets and malformed tokens never
+  change state and are forwarded byte-identical; exact forwarding when no directive is recognized.

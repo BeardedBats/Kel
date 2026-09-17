@@ -110,7 +110,7 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(send['text'], question)  # the real request is preserved
 
     def test_explicit_clause_inside_a_request_applies_and_forwards_the_rest(self):
-        text = 'Please summarize the release notes. [terminal: off]'
+        text = 'Please summarize the release notes. [kel:terminal=off]'
         result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
                                                        'prompt': [{'type': 'text', 'text': text}]})
         self.assertEqual(result['stopReason'], 'end_turn')
@@ -119,22 +119,43 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(clauses[0]['text'], 'terminal: off')  # canonical inner form for the engine
         send = [body for path, body in self.requests if path == '/api/send'][0]
         self.assertEqual(send['text'], 'Please summarize the release notes.')  # exact removal
-        self.assertNotIn('terminal: off', send['text'])
+        self.assertNotIn('[kel:terminal=off]', send['text'])
 
-    def test_leading_and_multiple_clauses_apply_and_forward_the_rest(self):
-        leading = '[web: use default] Please research this topic.'
+    def test_leading_and_multiple_reserved_directives_apply_and_forward_the_rest(self):
+        leading = '[kel:web=default] Please research this topic.'
         self.host.dispatch('session/prompt', {'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': leading}]})
         bodies = [body['text'] for path, body in self.requests if path == '/api/capabilities']
         self.assertEqual(bodies, ['web: default'])
         self.assertEqual([body['text'] for path, body in self.requests if path == '/api/send'],
                          ['Please research this topic.'])
         self.requests.clear()
-        both = '[web: off] [terminal: default] summarize the notes'
+        both = '[kel:web=off] [kel:terminal=default] summarize the notes'
         self.host.dispatch('session/prompt', {'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': both}]})
         bodies = [body['text'] for path, body in self.requests if path == '/api/capabilities']
-        self.assertEqual(bodies, ['web: off', 'terminal: default'])
+        self.assertEqual(bodies, ['web: off', 'terminal: default'])  # deterministic source order
         self.assertEqual([body['text'] for path, body in self.requests if path == '/api/send'],
                          ['summarize the notes'])
+
+    def test_residual_technical_content_never_reaches_the_capability_layer(self):
+        # CAP2-RESIDUAL end-to-end: Windows path, API/log lines, nested generic brackets, quoted and
+        # malformed reserved tokens — no capability call, byte-identical forwarding.
+        corpus = ('Use C:/projects/[web: off] as the path.',
+                  'log: GET /api/v1/[terminal: off] HTTP/1.1',
+                  '2026-09-17 [terminal: off] connection closed',
+                  '[[web: off]]',
+                  '[[kel:web=off]]',
+                  '[kel:web=sideways]',
+                  '"[kel:web=off]"',
+                  '`[kel:web=off]`')
+        for text in corpus:
+            self.requests.clear()
+            self.events.clear()
+            self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
+                                                  'prompt': [{'type': 'text', 'text': text}]})
+            self.assertNotIn('/api/capabilities', [path for path, _ in self.requests], text)
+            sent = [body for path, body in self.requests if path == '/api/send']
+            self.assertEqual(len(sent), 1, text)
+            self.assertEqual(sent[0]['text'], text, text)  # byte-identical
 
     def test_ordinary_prose_is_forwarded_byte_identical_without_state_changes(self):
         corpus = ('the shell: off limits, so please use python instead',
