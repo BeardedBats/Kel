@@ -29,7 +29,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
 | 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
-| 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 765 (+41); audit 14 CONTINUE (F14-1/F14-2/N14-1 → follow-up patch) |
+| 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
 | 5.4–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -281,9 +281,10 @@ harness on classes 2/6/8 — **gates green: escaped_C < escaped_A on every class
 real-worker path. Evidence: `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine
 `765 passed (+41)` on Windows. **Audit: increment 14 CONTINUE — Phase 5.3 accepted for
 `f9cf3ea..48dacb3`; F14-1/F14-2/N14-1 queued for the opening follow-up patch; F4 remains open
-for the real-worker increment.** The follow-up patch landed as `5747567` (focused 43; full 767);
-its delta re-audit (increment 15) is pending. Then Phase 5.4 — assurance army + Sentinel +
-Oracle (`test_workforce_assurance.py`).
+for the real-worker increment.** The follow-up patch landed as `5747567` (focused 43; full 767)
+and its delta re-audit (increment 15) returned **CONTINUE** (all closures verified; two low
+suggestions carried). Next: publish, then Phase 5.4 — assurance army + Sentinel + Oracle
+(`test_workforce_assurance.py`).
 
 ## Verify quickly (any resume)
 
