@@ -1,6 +1,6 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T02:10:00Z
+updated_utc: 2026-09-18T02:25:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
@@ -37,12 +37,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: 30aba20519095c6dc059a5376cd7c137cd96f34d
+github_remote_integration: 0fcd9ed493f03c7e6d87f54a44124a0992d7b68b
 github_publication_current: true
 
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 30aba20..NEW; includes 4bbf316 + 5747567 + d82f3ac + acceptance docs). Then implement Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: audit-15 suggestions (export the escalation tuple from messages into pods; enumerate the three escalation types + refuse HANDOFF at cap in the boundary test); F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+next_autonomous_action: Implement Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: audit-15 suggestions (export the escalation tuple from messages into pods; enumerate the three escalation types + refuse HANDOFF at cap in the boundary test); F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
 external_dependency: NONE
 stop_reason: NONE
