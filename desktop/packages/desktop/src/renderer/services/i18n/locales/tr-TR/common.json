@@ -65,10 +65,10 @@
   "more": "Daha Fazla",
   "refresh": "Yenile",
   "readOnly": "Salt okunur",
-  "tray.showWindow": "AionUi'yi Göster",
+  "tray.showWindow": "Kel'yi Göster",
   "tray.newChat": "Yeni Sohbet",
   "tray.closeToTray": "Tepsiye Gizle",
-  "tray.about": "AionUi Hakkında",
+  "tray.about": "Kel Hakkında",
   "tray.restart": "Uygulamayı Yeniden Başlat",
   "tray.quit": "Çıkış",
   "tray.runningTasks": "Çalışan Görevler",
@@ -79,39 +79,39 @@
   "backendStartup": {
     "incompatibleRuntime": {
       "title": "Bu sistem paketlenmiş backend tarafından desteklenmiyor",
-      "description": "AionUi açıldı, ancak yerel AionCore backend bu Linux sürümünde çalışamaz. Desteklenen bir Linux dağıtımına yükseltip AionUi'yi yeniden başlatın.",
+      "description": "Kel açıldı, ancak yerel Kel Engine backend bu Linux sürümünde çalışamaz. Desteklenen bir Linux dağıtımına yükseltip Kel'yi yeniden başlatın.",
       "requiredVersions": "Gerekli çalışma zamanı sembolleri: {{versions}}"
     },
     "incompleteInstallation": {
-      "title": "AionUi kurulumu eksik",
-      "description": "Bu kurulumda gerekli yerel kaynaklar eksik, bu yüzden AionCore başlatılamıyor. Lütfen en son AionUi sürümünü indirip yeniden kurun. Yeniden kurulumdan sonra sorun tekrarlarsa güvenlik veya antivirüs yazılımının AionCore'u karantinaya alıp almadığını kontrol edin.",
+      "title": "Kel kurulumu eksik",
+      "description": "Bu kurulumda gerekli yerel kaynaklar eksik, bu yüzden Kel Engine başlatılamıyor. Lütfen en son Kel sürümünü indirip yeniden kurun. Yeniden kurulumdan sonra sorun tekrarlarsa güvenlik veya antivirüs yazılımının Kel Engine'u karantinaya alıp almadığını kontrol edin.",
       "downloadLatest": "Son sürümü indir",
       "sendDiagnostics": "Tanı raporu gönder",
       "diagnosticsSent": "Tanı raporu gönderildi",
       "diagnosticsReportSuccess": "Tanı raporu gönderildi",
       "diagnosticsReportFailed": "Tanı raporu gönderilemedi",
-      "runtimeComponentDescription": "Bu kurulumda gerekli yerleşik çalışma zamanı bileşenleri eksik olduğu için {{resource}} başlatılamıyor. En son AionUi paketini yeniden yükleyin. Yeniden yükledikten sonra da devam ederse güvenlik veya antivirüs yazılımının AionUi bileşenlerini karantinaya alıp almadığını kontrol edin."
+      "runtimeComponentDescription": "Bu kurulumda gerekli yerleşik çalışma zamanı bileşenleri eksik olduğu için {{resource}} başlatılamıyor. En son Kel paketini yeniden yükleyin. Yeniden yükledikten sonra da devam ederse güvenlik veya antivirüs yazılımının Kel bileşenlerini karantinaya alıp almadığını kontrol edin."
     },
     "packageArchitectureMismatch": {
-      "title": "AionUi package architecture mismatch",
-      "description": "This AionUi package is for {{packageArch}}, but this Mac is {{deviceArch}}. You may have downloaded the wrong package. Please download and install the {{expectedArch}} package."
+      "title": "Kel package architecture mismatch",
+      "description": "This Kel package is for {{packageArch}}, but this Mac is {{deviceArch}}. You may have downloaded the wrong package. Please download and install the {{expectedArch}} package."
     },
     "dataMigration": {
       "title": "Local data migration failed",
-      "description": "AionUi opened, but AionCore stopped while initializing local data. Reinstalling AionUi may not fix this. Send a diagnostics report or contact support so the local database migration can be inspected.",
+      "description": "Kel opened, but Kel Engine stopped while initializing local data. Reinstalling Kel may not fix this. Send a diagnostics report or contact support so the local database migration can be inspected.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
       "diagnosticsReportFailed": "Failed to send diagnostics report"
     },
     "databaseNewerThanApp": {
-      "title": "Daha yeni bir AionUi sürümü gerekli",
-      "description": "Yerel verileriniz AionUi'nin daha yeni bir sürümü tarafından oluşturuldu ve bu sürüm bunları açamıyor. Devam etmek için AionUi'yi en son sürüme güncelleyin; verileriniz sağlam, yeniden yükleme veya sıfırlama gerekmez.",
-      "descriptionWithVersion": "Yerel verileriniz şu an yüklü olandan (v{{currentVersion}}) daha yeni bir AionUi sürümü tarafından oluşturuldu; bu sürüm bunları açamıyor. Devam etmek için AionUi'yi en son sürüme güncelleyin; verileriniz sağlam, yeniden yükleme veya sıfırlama gerekmez."
+      "title": "Daha yeni bir Kel sürümü gerekli",
+      "description": "Yerel verileriniz Kel'nin daha yeni bir sürümü tarafından oluşturuldu ve bu sürüm bunları açamıyor. Devam etmek için Kel'yi en son sürüme güncelleyin; verileriniz sağlam, yeniden yükleme veya sıfırlama gerekmez.",
+      "descriptionWithVersion": "Yerel verileriniz şu an yüklü olandan (v{{currentVersion}}) daha yeni bir Kel sürümü tarafından oluşturuldu; bu sürüm bunları açamıyor. Devam etmek için Kel'yi en son sürüme güncelleyin; verileriniz sağlam, yeniden yükleme veya sıfırlama gerekmez."
     },
     "localDataRepair": {
       "title": "Local data repair failed",
-      "description": "AionUi açıldı, ancak AionCore assistant veya agent kayıtları gibi yerel başlangıç verilerini hazırlarken durdu. AionUi'yi yeniden yüklemek bu sorunu çözmeyebilir. Yerel veritabanının incelenebilmesi için tanılama raporu gönderin veya destek ekibiyle iletişime geçin.",
+      "description": "Kel açıldı, ancak Kel Engine assistant veya agent kayıtları gibi yerel başlangıç verilerini hazırlarken durdu. Kel'yi yeniden yüklemek bu sorunu çözmeyebilir. Yerel veritabanının incelenebilmesi için tanılama raporu gönderin veya destek ekibiyle iletişime geçin.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
@@ -119,7 +119,7 @@
     },
     "startupDirectory": {
       "title": "Startup directory is unavailable",
-      "description": "AionUi opened, but AionCore could not start because the configured work or log directory is missing, unavailable, or blocked by permissions. Check that the configured directories exist and are writable, then restart AionUi.",
+      "description": "Kel opened, but Kel Engine could not start because the configured work or log directory is missing, unavailable, or blocked by permissions. Check that the configured directories exist and are writable, then restart Kel.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
@@ -127,7 +127,7 @@
     },
     "recoverableDatabaseCorruption": {
       "title": "Yerel veriler bozulmuş",
-      "description": "AionUi yerel veritabanının bozulduğunu algıladı ve başlatmaya devam edemiyor. Onaydan sonra eski veritabanı yedeklenecek ve başlatmaya devam etmek için yeni bir yerel veritabanı oluşturulacak. Geçmiş sohbetler artık gösterilmeyecek ve eski veritabanı yedek dosyası olarak saklanacak.",
+      "description": "Kel yerel veritabanının bozulduğunu algıladı ve başlatmaya devam edemiyor. Onaydan sonra eski veritabanı yedeklenecek ve başlatmaya devam etmek için yeni bir yerel veritabanı oluşturulacak. Geçmiş sohbetler artık gösterilmeyecek ve eski veritabanı yedek dosyası olarak saklanacak.",
       "confirmRebuild": "Eski DB'yi yedekle ve yeni DB oluştur",
       "sendDiagnostics": "Tanılama gönder",
       "diagnosticsHint": "Tanılama göndermek yerel veritabanını değiştirmez.",
@@ -143,8 +143,8 @@
       }
     },
     "transientConcurrentStartup": {
-      "title": "AionUi başlatılıyor",
-      "description": "Bu pencere açıldığında başka bir AionUi başlatma işlemi yerel verileri hâlâ kullanıyordu. Bu geçicidir ve verileriniz güvende — yeniden yükleme gerekmez. Lütfen biraz bekleyip tekrar deneyin veya AionUi'yi yeniden başlatın.",
+      "title": "Kel başlatılıyor",
+      "description": "Bu pencere açıldığında başka bir Kel başlatma işlemi yerel verileri hâlâ kullanıyordu. Bu geçicidir ve verileriniz güvende — yeniden yükleme gerekmez. Lütfen biraz bekleyip tekrar deneyin veya Kel'yi yeniden başlatın.",
       "sendDiagnostics": "Send diagnostics",
       "diagnosticsSent": "Diagnostics sent",
       "diagnosticsReportSuccess": "Diagnostics report sent",
@@ -153,11 +153,11 @@
     },
     "pendingSlow": {
       "title": "Başlatılıyor",
-      "description": "AionCore başlatılıyor, lütfen bekleyin. Bir süre yanıt vermezse uygulamadan çıkıp yeniden açabilirsiniz."
+      "description": "Kel Engine başlatılıyor, lütfen bekleyin. Bir süre yanıt vermezse uygulamadan çıkıp yeniden açabilirsiniz."
     },
     "exited": {
       "title": "Başlatma tamamlanmadı",
-      "description": "AionCore başlatmayı tamamlayamadı ve kapandı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
+      "description": "Kel Engine başlatmayı tamamlayamadı ve kapandı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
       "sendDiagnostics": "Tanılama gönder",
       "diagnosticsSent": "Tanılama gönderildi",
       "diagnosticsReportSuccess": "Tanılama bildirildi",
@@ -165,7 +165,7 @@
     },
     "portReportTimeout": {
       "title": "Başlatma zaman aşımına uğradı",
-      "description": "AionCore beklenen süre içinde başlatmayı tamamlayamadı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
+      "description": "Kel Engine beklenen süre içinde başlatmayı tamamlayamadı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
       "sendDiagnostics": "Tanılama gönder",
       "diagnosticsSent": "Tanılama gönderildi",
       "diagnosticsReportSuccess": "Tanılama bildirildi",
@@ -173,7 +173,7 @@
     },
     "startupFailed": {
       "title": "Başlatma başarısız oldu",
-      "description": "AionCore başlatılamadı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
+      "description": "Kel Engine başlatılamadı. Lütfen uygulamayı yeniden başlatın; sorun devam ederse tanılama gönderin.",
       "sendDiagnostics": "Tanılama gönder",
       "diagnosticsSent": "Tanılama gönderildi",
       "diagnosticsReportSuccess": "Tanılama bildirildi",

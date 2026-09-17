@@ -64,7 +64,7 @@ interface DingTalkConfigFormProps {
   onStatusChange: (status: IChannelPluginStatus | null) => void;
 }
 
-const DINGTALK_DEV_DOCS_URL = 'https://github.com/iOfficeAI/AionUi/wiki/DingTalk-Bot-Setup-Guide';
+const DINGTALK_DEV_CONSOLE_URL = 'https://open.dingtalk.com/';
 
 const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, modelSelection, onStatusChange }) => {
   const { t, i18n } = useTranslation();
@@ -325,10 +325,10 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
           <span>
             <a
               className='text-primary hover:underline cursor-pointer text-12px'
-              href={DINGTALK_DEV_DOCS_URL}
+              href={DINGTALK_DEV_CONSOLE_URL}
               onClick={(e) => {
                 e.preventDefault();
-                openExternalUrl(DINGTALK_DEV_DOCS_URL).catch(console.error);
+                openExternalUrl(DINGTALK_DEV_CONSOLE_URL).catch(console.error);
               }}
             >
               {t('settings.dingtalk.devConsoleLink', 'DingTalk Open Platform')}
@@ -383,10 +383,10 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
           <span>
             <a
               className='text-primary hover:underline cursor-pointer text-12px'
-              href={DINGTALK_DEV_DOCS_URL}
+              href={DINGTALK_DEV_CONSOLE_URL}
               onClick={(e) => {
                 e.preventDefault();
-                openExternalUrl(DINGTALK_DEV_DOCS_URL).catch(console.error);
+                openExternalUrl(DINGTALK_DEV_CONSOLE_URL).catch(console.error);
               }}
             >
               {t('settings.dingtalk.devConsoleLink', 'DingTalk Open Platform')}

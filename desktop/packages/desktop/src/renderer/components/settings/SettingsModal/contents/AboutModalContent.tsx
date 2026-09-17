@@ -111,28 +111,13 @@ const AboutModalContent: React.FC = () => {
 
   const linkItems: LinkItem[] = [
     {
-      title: t('settings.helpDocumentation'),
-      url: 'https://github.com/iOfficeAI/AionUi/wiki',
-      icon: <Right theme='outline' size='16' className='rtl-mirror' />,
-    },
-    {
       title: t('settings.updateLog'),
-      url: 'https://github.com/iOfficeAI/AionUi/releases',
+      url: 'https://github.com/BeardedBats/Kel/releases',
       icon: <Right theme='outline' size='16' className='rtl-mirror' />,
     },
     {
       title: t('settings.bugReport'),
       onClick: () => setShowFeedbackModal(true),
-      icon: <Right theme='outline' size='16' className='rtl-mirror' />,
-    },
-    {
-      title: t('settings.contactMe'),
-      url: 'https://x.com/WailiVery',
-      icon: <Right theme='outline' size='16' className='rtl-mirror' />,
-    },
-    {
-      title: t('settings.officialWebsite'),
-      url: 'https://www.aionui.com',
       icon: <Right theme='outline' size='16' className='rtl-mirror' />,
     },
   ];
@@ -162,7 +147,7 @@ const AboutModalContent: React.FC = () => {
               <div
                 className='text-t-primary cursor-pointer hover:text-t-secondary transition-colors p-4px'
                 onClick={() =>
-                  openLink('https://github.com/iOfficeAI/AionUi').catch((error) =>
+                  openLink('https://github.com/BeardedBats/Kel').catch((error) =>
                     console.error('Failed to open link:', error)
                   )
                 }

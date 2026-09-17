@@ -85,7 +85,7 @@
       "outsideSandbox": "این فایل خارج از سندباکس پروژه فعلی است."
     },
     "serverInstall": {
-      "hint": "AionUi روی سرور اجرا می‌شود. مؤلفه پیش‌نمایش را روی همان سرور نصب کنید، سپس دوباره تلاش کنید:",
+      "hint": "Kel روی سرور اجرا می‌شود. مؤلفه پیش‌نمایش را روی همان سرور نصب کنید، سپس دوباره تلاش کنید:",
       "icuNote": "اگر همچنان شروع نشد، کتابخانه ICU را روی سرور نصب کنید (Debian/Ubuntu: apt-get install -y libicu-dev)."
     }
   },
@@ -144,7 +144,7 @@
     "loading": "در حال شروع پیش‌نمایش PPT...",
     "installing": "در حال نصب مؤلفه پیش‌نمایش...",
     "startFailed": "شروع پیش‌نمایش PPT ناموفق بود",
-    "installHint": "OfficeCLI را از صفحه انتشارات رسمی iOfficeAI/OfficeCli نصب کنید"
+    "installHint": "OfficeCLI را از صفحه انتشارات رسمی OfficeCLI نصب کنید"
   },
   "browser": {
     "newTab": "زبانه جدید",
