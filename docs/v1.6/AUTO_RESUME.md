@@ -166,6 +166,11 @@ as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
 ## Phase 4 completion (autonomous Main increment, 2026-09-17)
 
 Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and completed.
+**Independent Audit 1.6 accepted it (increment 7: CONTINUE for `267364e..fd04c00`, no production
+writes, Main worktree untouched).** Dependency-watch cadence for autonomous Main is documented in
+`docs/v1.6/AUTONOMOUS_OPERATION.md` (30-second re-read of the authoritative status file when blocked
+on another thread, stop immediately on change, never hot-loop, commit truth over status prose).
+The Visual checkpoint for the Visual thread is pinned at `60b2322`.
 
 - **Safe restoration**: stash `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (base `70d68e4`,
   object `992ab31c…`, 123 tracked files + 1 untracked) was inspected against the recovery artifact
