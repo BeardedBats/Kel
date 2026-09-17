@@ -128,10 +128,13 @@ class DispatchTests(Base):
 
     def test_sentinel_security_lens_is_mandatory(self):
         runner, _ = self._runner()
-        with self.assertRaises(PolicyError):
+        with self.assertRaises(PolicyError) as caught:
             dispatch_assurance(self.store, task_id=TASK, mission_id=MISSION, artifact='art_x', runner=runner,
                                tier='D2', flags=('security_boundary',),
                                lenses=['functional-testing'])
+        # The refusal must name the lens the security boundary mandates, so the Sentinel rule
+        # cannot be dropped (or its trigger mapping deleted) without failing here (audit 17 F17-3).
+        self.assertIn('security', str(caught.exception))
         # With the security lens present the same dispatch passes.
         dispatch_assurance(self.store, task_id=TASK, mission_id=MISSION, artifact='art_x', runner=runner,
                            tier='D2', flags=('security_boundary',),
@@ -431,6 +434,50 @@ class CarryTests(unittest.TestCase):
         self.assertIs(messages_module.ESCALATION_TYPES, pods_module.INTERRUPTION_TYPES)
         self.assertEqual(messages_module.ESCALATION_TYPES,
                          ('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST'))
+
+
+class Reaudit17Tests(Base):
+    """Audit 17 — the doors found still open in the increment-16 remediation."""
+
+    def test_corroboration_cannot_clear_a_blocker(self):
+        # F17-1: multi-lens confirmation must strengthen a finding, never retire it.
+        first = record_finding(self.store, finding(lens='security', fingerprint='fp-shared',
+                                                   severity='blocker'), now=1000.0)
+        corroborated = record_finding(self.store, finding(lens='maintainability',
+                                                          fingerprint='fp-shared',
+                                                          severity='blocker'), now=1001.0)
+        self.assertEqual(corroborated['status'], 'confirmed')
+        self.assertTrue(corroborated['confirmed_by_multi'])
+        result = gate(self.store, task_id=TASK)
+        self.assertTrue(result['blocked'])
+        self.assertIn(first['id'], result['never_gate_hits'])
+        # A corroborated never-gate blocker is still only acceptable by the user.
+        with self.assertRaises(PolicyError):
+            waive_gate(self.store, task_id=TASK, authority='kel', rationale='kel moves on')
+        waive_gate(self.store, task_id=TASK, authority='user', rationale='user accepts the risk')
+        self.assertFalse(gate(self.store, task_id=TASK)['blocked'])
+
+    def test_findings_enter_the_ledger_open_only(self):
+        # F17-1 (insert door): a caller cannot record a finding already resolved.
+        for status in ('fixed', 'dismissed', 'confirmed'):
+            item = dict(finding(lens='maintainability', fingerprint='fp-%s' % status),
+                        status=status)
+            if status == 'dismissed':
+                item['dismissal_reason'] = 'carried over from elsewhere'
+            with self.assertRaises(PolicyError):
+                record_finding(self.store, item, now=1000.0)
+
+    def test_plain_dismissal_cannot_impersonate_an_acceptance(self):
+        # F17-2: the acceptance markers are written by the guarded paths, not by the caller.
+        record = record_finding(self.store, finding(lens='maintainability',
+                                                   fingerprint='fp-spoof',
+                                                   severity='critical'), now=1000.0)
+        resolve_finding(self.store, record['id'], resolution='dismissed',
+                        rationale='risk-accepted: forged by the caller')
+        stats = lens_stats(self.store)
+        self.assertEqual(stats['maintainability']['false_positive'], 1)
+        self.assertEqual(stats['maintainability']['accepted'], 0)
+        self.assertEqual(stats['maintainability']['fp_rate'], 1.0)
 
 
 if __name__ == '__main__':
