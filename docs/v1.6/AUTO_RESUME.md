@@ -28,7 +28,8 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
-| 5.2–15 | pending | see the program brief; autonomous Main continues per the charter |
+| 5.2 D1 single-specialist delegation | DONE — commit `894be5b` (audit requested for `5b83f0e..894be5b`) | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 717 (+24); migration 18; no live consumers |
+| 5.3–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -243,9 +244,24 @@ ceilings).** The follow-up patch `5b83f0e` closed N1-N6 + S2; audit increment 11
 items ride the 5.2 wiring review). Next: publish this checkpoint, then Phase 5.2 — D1
 single-specialist delegation (`test_workforce_d1.py`).
 
+## Phase 5.2 — D1 single-specialist delegation (autonomous Main increment, 2026-09-17)
+
+Phase 5.2 (Workforce OS single-specialist delegation) is implemented on `ux/v15-journeys` as
+commit `894be5b`, audit-requested for `5b83f0e..894be5b`. `staffing.decide()` turns the doc-05
+feature vector into a recorded tier decision (bands, R1 cap, mission-flag floors, tier_max);
+`delegation.delegate()` issues the frozen TaskContract for exactly one specialist (migration
+18 links it to the milestone) and records staffing.decided/contract.issued;
+`close_d1()` refuses completed closes on stale, unbound or missing evidence and on missing
+criterion coverage (uncertain/failed close honestly); `run_d1()` enforces worker tools against
+the frozen grants and never spawns nested workers; `task_ledger()`/`progress_ledger()` project
+the trail read-only; flag off performs zero writes. Carry-forward closed: N7 + Sug1-5 + S3.
+Evidence: `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine `717 passed (+24)` on
+Windows; full D1 demo trail in the record. Next after audit CONTINUE: publish, then Phase 5.3
+— D2 small pod + verification (`test_workforce_d2.py`).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 693 passed (+10 subtests; +80 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 717 passed (+10 subtests; +104 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
