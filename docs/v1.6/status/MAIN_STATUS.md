@@ -1,23 +1,23 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T03:00:00Z
+updated_utc: 2026-09-17T21:56:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: 932db33 (plus docs/state commits on top; see `git log --oneline -4`)
+head: 27e3720 (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
 state: WAITING_FOR_AUDIT
 
-current_increment: Phase 5.4 COMPLETE — assurance army + Sentinel + Oracle shipped as commit 932db33 (deterministic gating with reasoned skips, anti-anchored dispatch, deterministic gate, never-gate user-only waivers, Oracle harness, FP stats; carries from audit 15 closed). Audit 1.6 coverage requested for `5747567..932db33`. Next after CONTINUE: publish (0fcd9ed..NEW); then Phase 5.5 (parallel mission teams)
-current_phase: Phase 5 — 5.4 DONE (audit pending); 5.5 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE), the Phase 5.2 follow-up patch (commit f9cf3ea, audit CONTINUE), Phase 5.3 D2 pods (commit 48dacb3, audit CONTINUE), the Phase 5.3 follow-up patch (commit 5747567, audit CONTINUE), and Phase 5.4 assurance army (commit 932db33, audit pending)
+current_increment: Phase 5.4 REMEDIATED — assurance army + Sentinel + Oracle (commit 932db33) was reviewed by Audit 1.6 increment 16 with verdict **REVISE**; the remediation commit 27e3720 closes F16-1 (never-gate authority holds on every door out of `open`), F16-4 (the gating plan is no longer replaceable through `lenses=`), F16-2/F16-5 (the Oracle same-family fallback and every accepted coverage statement are now durable evidence rows), F16-6 (acceptances are not reviewer false positives; insurance lenses are not learnable), F16-7 (`irreversible` dispatches the data-integrity lens) and F16-8 (skip reasons name the triggering flag). Delta re-audit requested for `932db33..27e3720`. Next after CONTINUE: publish (0fcd9ed..NEW); then Phase 5.5 (parallel mission teams)
+current_phase: Phase 5 — 5.4 remediated (delta re-audit pending); 5.5 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE), the Phase 5.2 follow-up patch (commit f9cf3ea, audit CONTINUE), Phase 5.3 D2 pods (commit 48dacb3, audit CONTINUE), the Phase 5.3 follow-up patch (commit 5747567, audit CONTINUE), Phase 5.4 assurance army (commit 932db33, audit 16 REVISE), and the Phase 5.4 remediation (commit 27e3720, delta re-audit pending)
 
-audit_requested_from: 5747567
-audit_requested_through: 932db33
+audit_requested_from: 932db33
+audit_requested_through: 27e3720
 audit_required: true
-audit_last_seen_head: 5747567
-audit_last_seen_verdict: CONTINUE (increment 15; 5.3 follow-up accepted)
+audit_last_seen_head: 932db33
+audit_last_seen_verdict: REVISE (increment 16; F16-1..F16-8 — remediated in 27e3720, delta re-audit requested)
 
 visual_state: READY_FOR_VISUAL
 visual_clean_head: 60b2322
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Awaiting Audit 1.6 increment 16 for `5747567..932db33`. On CONTINUE: publish (0fcd9ed..NEW); then implement Phase 5.5 — Parallel mission teams (staffing tiers D3/D4 execution, parallel streams, integration merges, budget reservations at scale) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.5. Carry-forward: F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
-external_dependency: AUDIT 1.6 (5747567..932db33)
+next_autonomous_action: Awaiting Audit 1.6 increment 17 — the delta re-audit of the Phase 5.4 remediation (`932db33..27e3720`), review package at `kel-v16-code-audit/docs/code-audit/increment-17/`. On CONTINUE: publish (0fcd9ed..NEW); then implement Phase 5.5 — Parallel mission teams (staffing tiers D3/D4 execution, parallel streams, integration merges, budget reservations at scale) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.5. Carry-forward: F4 real-artifact binding at the real-worker increment; F16-3 (no production caller — the Sentinel/never-gate guarantees stay engine-level until the wiring increment); packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+external_dependency: AUDIT 1.6 (932db33..27e3720)
 stop_reason: NONE
