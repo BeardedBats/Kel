@@ -17,6 +17,7 @@ user confirmation; conflicts are recorded, never silently overwritten; history i
 preserved through supersession; nothing is hard-deleted except `forget` content purges.
 """
 import contextlib
+import hashlib
 import json
 import re
 import sqlite3
@@ -26,6 +27,10 @@ from .core import PolicyError, uid
 
 MIGRATION_VERSION = 1
 MIGRATION_NAME = 'v13-memory'
+PROPOSALS_VERSION = 15
+PROPOSALS_NAME = 'v16-memory-proposals'
+PROPOSAL_KINDS = ('user_change', 'vetting', 'repo_state', 'stale', 'correction', 'conflict')
+PROPOSAL_STATES = ('pending', 'accepted', 'rejected', 'deferred', 'superseded')
 
 TYPES = ('fact', 'decision', 'convention', 'preference', 'command', 'path', 'component',
          'relationship', 'limitation', 'workflow', 'question', 'observation')
@@ -105,6 +110,59 @@ CREATE INDEX IF NOT EXISTS conflicts_open ON memory_conflicts(project_id, state)
 """
 
 FTS_DDL = "CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(topic, summary, value, mid UNINDEXED)"
+
+# The memory review surface (v1.6): a durable queue of changes Kel believes the project's saved
+# knowledge needs, each waiting for explicit user judgment before any record is touched.
+PROPOSALS_DDL = """
+CREATE TABLE IF NOT EXISTS memory_proposals(
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    type TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    value TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    why TEXT NOT NULL,
+    current_id TEXT,
+    current_snapshot TEXT,
+    evidence TEXT,
+    dedupe_key TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    source_ref TEXT NOT NULL DEFAULT '',
+    created REAL NOT NULL,
+    updated REAL NOT NULL,
+    decided_at REAL,
+    decided_by TEXT,
+    note TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS proposals_by_project ON memory_proposals(project_id, state, updated);
+CREATE INDEX IF NOT EXISTS proposals_by_key ON memory_proposals(dedupe_key, state);
+"""
+
+
+def _has_version(store, version):
+    with contextlib.closing(store.connect()) as db:
+        return bool(_table(db, 'schema_migrations')) and bool(
+            db.execute('SELECT 1 FROM schema_migrations WHERE version=?', (version,)).fetchone())
+
+
+def ensure_proposals(store, v13_in_same_init=False):
+    """Create the proposal table (additive, idempotent; one backup before the first use).
+
+    v13_in_same_init: the V1.3 memory migration just ran in the same constructor call and made the
+    upgrade backup for this store; the proposals step then rides along without a second backup.
+    """
+    with contextlib.closing(store.connect()) as db:
+        if _table(db, 'schema_migrations') and db.execute(
+                'SELECT 1 FROM schema_migrations WHERE version=?', (PROPOSALS_VERSION,)).fetchone():
+            return
+        if not _table(db, 'schema_migrations'):
+            db.executescript(DDL.split('CREATE TABLE IF NOT EXISTS memories(')[0])
+        if (not _table(db, 'memory_proposals') and not _is_fresh_database(db)
+                and not v13_in_same_init):
+            _backup(store, db)  # one backup before the first proposals mutation of existing data
+        db.executescript(PROPOSALS_DDL)
+        db.execute('INSERT OR IGNORE INTO schema_migrations VALUES(?,?,?,?)',
+                   (PROPOSALS_VERSION, PROPOSALS_NAME, time.time(), ''))
 
 
 def scan_secret(text):
@@ -192,7 +250,9 @@ class Memory:
 
     def __init__(self, store, use_fts=None):
         self.store = store
+        v13_before = _has_version(store, MIGRATION_VERSION)
         probe = ensure_schema(store)
+        ensure_proposals(store, v13_in_same_init=not v13_before)
         if use_fts is None:
             self.fts = probe
         elif use_fts:
@@ -333,12 +393,27 @@ class Memory:
             if conflict:
                 resolution, peer_id = conflict
                 is_open = resolution == 'open'
+                conflict_id = uid()
                 db.execute('INSERT INTO memory_conflicts VALUES(?,?,?,?,?,?,?,?,?)',
-                           (uid(), project_id, peer_id, memory_id,
+                           (conflict_id, project_id, peer_id, memory_id,
                             'open' if is_open else 'resolved',
                             None if is_open else resolution,
                             None if is_open else 'kel',
                             now, None if is_open else now))
+                if is_open:
+                    # A durable disagreement only the user can settle: queue it on the review surface.
+                    # The evidence signature is content-based, so the same pair of statements never
+                    # asks again after a rejection; a genuinely different value gets a new key.
+                    peer_row = db.execute('SELECT value FROM memories WHERE id=?', (peer_id,)).fetchone()
+                    pair_sig = hashlib.sha256(
+                        ((peer_row['value'] if peer_row else '') + '|' + raw).encode('utf-8')).hexdigest()
+                    self._propose_db(db, project_id, kind='conflict', type=type, topic=topic,
+                                     value=json.loads(raw), summary=summary,
+                                     why='Two saved choices disagree — pick the one that should stand.',
+                                     current_id=peer_id,
+                                     evidence={'conflict_id': conflict_id, 'peer': peer_id,
+                                               'proposed': memory_id, 'sig': pair_sig},
+                                     source_ref='conflict:' + conflict_id)
             self._event(db, project_id, memory_id, 'created', actor,
                         {'type': type, 'trust': trust, 'source': source_type})
         return memory_id
@@ -466,6 +541,322 @@ class Memory:
             self._event(db, c['project_id'], loser, 'superseded', actor,
                         {'conflict': conflict_id, 'winner': winner})
         return 'user_choice'
+
+    # ---- memory proposals (v1.6 review surface) --------------------------
+
+    def _proposal_key(self, kind, type, topic, value_json, evidence_sig):
+        raw = '|'.join((kind, type, topic, value_json, str(evidence_sig or '')))
+        return hashlib.sha256(raw.encode('utf-8')).hexdigest()
+
+    def _propose_db(self, db, project_id, *, kind, type, topic, value, summary, why,
+                    current_id=None, evidence=None, source_ref='', actor='kel'):
+        """Queue a proposed change (runs inside the caller's transaction).
+
+        The dedupe key covers the exact proposed change plus an evidence signature, so a rejected
+        proposal never re-appears from identical, unchanged evidence; when the evidence changes
+        (a new digest, a new statement) the key changes and a fresh proposal is allowed.
+        """
+        now = time.time()
+        value_json = json.dumps(value, ensure_ascii=False, sort_keys=True)
+        evidence = evidence or {}
+        key = self._proposal_key(kind, type, topic, value_json, evidence.get('sig'))
+        existing = db.execute('SELECT * FROM memory_proposals WHERE dedupe_key=?'
+                              ' ORDER BY updated DESC LIMIT 1', (key,)).fetchone()
+        if existing is not None:
+            if existing['state'] in ('pending', 'deferred', 'accepted', 'rejected'):
+                return {'id': existing['id'], 'state': existing['state'],
+                        'suppressed': existing['state'] == 'rejected'}
+        snapshot = None
+        if current_id:
+            row = db.execute('SELECT * FROM memories WHERE id=? AND project_id=?',
+                             (current_id, project_id)).fetchone()
+            if row is None:
+                raise PolicyError('Proposal target is not in this project')
+            if row['status'] not in ('active', 'stale'):
+                return {'id': None, 'state': 'no_target'}
+            if kind not in ('stale', 'conflict') and row['value'] == value_json:
+                return {'id': None, 'state': 'no_change'}
+            snapshot = json.dumps({'summary': row['summary'], 'value': row['value'],
+                                   'status': row['status'], 'updated': row['updated']}, sort_keys=True)
+        db.execute("UPDATE memory_proposals SET state='superseded', updated=?,"
+                   " note='a newer proposal replaced this one'"
+                   ' WHERE project_id=? AND type=? AND topic=? AND state IN (?,?) AND dedupe_key<>?',
+                   (now, project_id, type, topic, 'pending', 'deferred', key))
+        proposal_id = uid()
+        db.execute('INSERT INTO memory_proposals(id,project_id,kind,type,topic,value,summary,why,'
+                   'current_id,current_snapshot,evidence,dedupe_key,state,source_ref,created,updated,'
+                   'decided_at,decided_by,note) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                   (proposal_id, project_id, kind, type, topic, value_json, summary, why,
+                    current_id, snapshot, json.dumps(evidence, sort_keys=True), key, 'pending',
+                    source_ref, now, now, None, None, ''))
+        self._event(db, project_id, proposal_id, 'proposed', actor,
+                    {'kind': kind, 'topic': topic, 'why': why[:300]})
+        return {'id': proposal_id, 'state': 'pending', 'suppressed': False}
+
+    def propose_change(self, project_id, *, kind, type, topic, value, summary, why,
+                       current_id=None, evidence=None, source_ref='', actor='kel'):
+        """Queue a change for the user's review; nothing is applied until it is accepted."""
+        if kind not in PROPOSAL_KINDS:
+            raise PolicyError('Unknown proposal kind')
+        if type not in TYPES:
+            raise PolicyError('Unknown memory type')
+        if not isinstance(topic, str) or not topic.strip() or len(topic) > 200:
+            raise PolicyError('Topic must be 1 to 200 characters')
+        if not isinstance(summary, str) or not summary.strip() or len(summary) > 2000:
+            raise PolicyError('Summary must be 1 to 2000 characters')
+        if not isinstance(why, str) or not why.strip() or len(why) > 500:
+            raise PolicyError('A proposal needs a plain-language reason (up to 500 characters)')
+        if not isinstance(source_ref, str) or len(source_ref) > 2000:
+            raise PolicyError('Source reference must be a string up to 2000 characters')
+        evidence = evidence or {}
+        if not isinstance(evidence, dict):
+            raise PolicyError('Proposal evidence must be a JSON object')
+        try:
+            raw = json.dumps(value, ensure_ascii=False, sort_keys=True)
+        except (TypeError, ValueError):
+            raise PolicyError('Memory value must be JSON-serializable')
+        if len(raw.encode('utf-8')) > 20000:
+            raise PolicyError('Memory value is too large')
+        if len(json.dumps(evidence, sort_keys=True).encode('utf-8')) > 4000:
+            raise PolicyError('Proposal evidence is too large')
+        for text in (raw, summary, topic, why):
+            scan = scan_secret(text)
+            if scan:
+                self._refuse(project_id, actor, scan)
+        with self.store.transaction() as db:
+            self._require_project(db, project_id)
+            return self._propose_db(db, project_id, kind=kind, type=type, topic=topic,
+                                    value=value, summary=summary, why=why,
+                                    current_id=current_id, evidence=evidence,
+                                    source_ref=source_ref, actor=actor)
+
+    def _proposal_dict(self, row):
+        item = dict(row)
+        item['evidence'] = json.loads(row['evidence']) if row['evidence'] else {}
+        item['current'] = json.loads(row['current_snapshot']) if row['current_snapshot'] else None
+        item['value'] = json.loads(row['value']) if row['value'] else None
+        return item
+
+    def proposal(self, proposal_id):
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT * FROM memory_proposals WHERE id=?',
+                             (proposal_id,)).fetchone()
+        if not row:
+            raise PolicyError('Proposal not found')
+        return self._proposal_dict(row)
+
+    def _sync_proposals(self, project_id):
+        """Deferred/pending proposals whose target no longer applies become superseded."""
+        now = time.time()
+        with self.store.transaction() as db:
+            rows = db.execute("SELECT * FROM memory_proposals WHERE project_id=?"
+                              " AND state IN (?,?)", (project_id, 'pending', 'deferred')).fetchall()
+            for row in rows:
+                reason = None
+                evidence = json.loads(row['evidence']) if row['evidence'] else {}
+                if row['kind'] == 'conflict':
+                    c = db.execute('SELECT state FROM memory_conflicts WHERE id=?',
+                                   (evidence.get('conflict_id'),)).fetchone()
+                    if not c or c['state'] != 'open':
+                        reason = 'the disagreement was already settled'
+                if row['current_id']:
+                    cur = db.execute('SELECT * FROM memories WHERE id=?',
+                                     (row['current_id'],)).fetchone()
+                    if not cur or cur['status'] not in ('active', 'stale'):
+                        reason = 'the record it referred to is no longer current'
+                    elif row['current_snapshot']:
+                        old = json.loads(row['current_snapshot'])
+                        if (str(cur['summary']) != str(old.get('summary'))
+                                or str(cur['value']) != str(old.get('value'))):
+                            reason = 'the record changed after this proposal was made'
+                if reason:
+                    db.execute("UPDATE memory_proposals SET state='superseded', updated=?,"
+                               ' note=? WHERE id=?', (now, reason, row['id']))
+
+    def proposals(self, project_id, *, state=None, limit=200):
+        """The review queue for one project (newest first). `state='open'` = pending + deferred."""
+        if not isinstance(limit, int) or not 1 <= limit <= 1000:
+            raise PolicyError('Limit must be 1 to 1000')
+        self._sync_proposals(project_id)
+        with contextlib.closing(self.store.connect()) as db:
+            sql = 'SELECT * FROM memory_proposals WHERE project_id=?'
+            args = [project_id]
+            if state == 'open':
+                sql += ' AND state IN (?,?)'
+                args += ['pending', 'deferred']
+            elif state:
+                sql += ' AND state=?'
+                args.append(state)
+            sql += ' ORDER BY updated DESC, id ASC LIMIT ?'
+            args.append(limit)
+            return [self._proposal_dict(r) for r in db.execute(sql, args)]
+
+    def _reconfirm(self, memory_id, evidence, actor='user'):
+        """Accept a 'still true' judgment for a stale record: a refreshed record supersedes it."""
+        now = time.time()
+        with contextlib.closing(self.store.connect()) as db:
+            old = self._get(db, memory_id)
+            if old['status'] not in ('active', 'stale'):
+                raise PolicyError('Only an active or stale memory can be re-confirmed')
+        digest = str((evidence or {}).get('digest') or '')[:128] or old['source_digest']
+        new_id = uid()
+        with self.store.transaction() as db:
+            db.execute('INSERT INTO memories VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                       (new_id, old['project_id'], old['type'], old['topic'], old['value'],
+                        old['summary'], 'user_confirmation', old['source_ref'], actor, 2, None, 1,
+                        'active', old['id'], None, digest, now, now, None))
+            db.execute("UPDATE memories SET status='superseded', superseded_by=?, updated=?"
+                       ' WHERE id=?', (new_id, now, memory_id))
+            if self.fts:
+                db.execute('INSERT INTO memories_fts(topic,summary,value,mid) VALUES(?,?,?,?)',
+                           (old['topic'], old['summary'], old['value'], new_id))
+            self._event(db, old['project_id'], old['id'], 'revalidated', actor,
+                        {'state': 'confirmed'})
+            self._event(db, old['project_id'], new_id, 'created', actor, {'reconfirms': memory_id})
+        return new_id
+
+    def accept_proposal(self, proposal_id, actor='user', note=''):
+        """Apply a proposed change through the normal trust model; preserves the previous value."""
+        row = self.proposal(proposal_id)
+        if row['state'] not in ('pending', 'deferred'):
+            raise PolicyError('This proposal is already %s' % row['state'])
+        project_id = row['project_id']
+        self._sync_proposals(project_id)
+        row = self.proposal(proposal_id)
+        if row['state'] not in ('pending', 'deferred'):
+            return {'state': row['state'], 'note': row['note']}
+        kind = row['kind']
+        evidence = row['evidence'] or {}
+        if kind == 'conflict':
+            try:
+                resolution = self.resolve_conflict(evidence.get('conflict_id'), 'b', actor=actor)
+            except PolicyError:
+                self._sync_proposals(project_id)
+                return {'state': 'superseded'}
+            decision = {'state': 'accepted', 'kind': kind, 'resolution': resolution}
+        else:
+            target = row['current_id']
+            if target:
+                with contextlib.closing(self.store.connect()) as db:
+                    cur = db.execute('SELECT * FROM memories WHERE id=?', (target,)).fetchone()
+                if not cur or cur['status'] not in ('active', 'stale'):
+                    self._sync_proposals(project_id)
+                    return {'state': 'superseded'}
+                if kind == 'stale':
+                    new_id = self._reconfirm(target, evidence, actor)
+                elif cur['status'] != 'active':
+                    with self.store.transaction() as db:
+                        db.execute("UPDATE memory_proposals SET state='superseded', updated=?,"
+                                   " note='the record needs re-checking first' WHERE id=?",
+                                   (time.time(), proposal_id))
+                    return {'state': 'superseded'}
+                elif cur['value'] == json.dumps(row['value'], ensure_ascii=False, sort_keys=True):
+                    new_id = target  # the record already says exactly this; nothing to change
+                else:
+                    new_id = self.correct(target, value=row['value'], summary=row['summary'],
+                                          actor=actor)
+            else:
+                new_id = self.record(project_id, row['type'], row['topic'], row['value'],
+                                     row['summary'], source_type='user_confirmation', actor=actor,
+                                     user_confirmed=1, source_ref=row['source_ref'])
+            decision = {'state': 'accepted', 'kind': kind, 'memory': new_id}
+        now = time.time()
+        with self.store.transaction() as db:
+            db.execute("UPDATE memory_proposals SET state='accepted', updated=?, decided_at=?,"
+                       ' decided_by=?, note=? WHERE id=? AND state IN (?,?)',
+                       (now, now, actor, note or '', proposal_id, 'pending', 'deferred'))
+            self._event(db, project_id, proposal_id, 'proposal_accepted', actor,
+                        {'kind': kind, 'topic': row['topic'],
+                         'memory': decision.get('memory') or decision.get('resolution')})
+        return decision
+
+    def reject_proposal(self, proposal_id, actor='user', reason=''):
+        """Turn a change down. The same evidence will not ask again until it changes."""
+        row = self.proposal(proposal_id)
+        if row['state'] not in ('pending', 'deferred'):
+            raise PolicyError('This proposal is already %s' % row['state'])
+        if row['kind'] == 'conflict':
+            # "Keep both as they are": settle the disagreement as dismissed; memory is unchanged.
+            try:
+                self.resolve_conflict((row['evidence'] or {}).get('conflict_id'), 'dismiss', actor=actor)
+            except PolicyError:
+                pass  # it was settled elsewhere in the meantime
+        now = time.time()
+        with self.store.transaction() as db:
+            db.execute("UPDATE memory_proposals SET state='rejected', updated=?, decided_at=?,"
+                       ' decided_by=?, note=? WHERE id=?',
+                       (now, now, actor, str(reason)[:500], proposal_id))
+            self._event(db, row['project_id'], proposal_id, 'proposal_rejected', actor,
+                        {'kind': row['kind'], 'topic': row['topic']})
+        return proposal_id
+
+    def defer_proposal(self, proposal_id, actor='user', note=''):
+        row = self.proposal(proposal_id)
+        if row['state'] not in ('pending', 'deferred'):
+            raise PolicyError('This proposal is already %s' % row['state'])
+        now = time.time()
+        with self.store.transaction() as db:
+            db.execute("UPDATE memory_proposals SET state='deferred', updated=?, note=? WHERE id=?",
+                       (now, str(note)[:500], proposal_id))
+            self._event(db, row['project_id'], proposal_id, 'proposal_deferred', actor,
+                        {'kind': row['kind'], 'topic': row['topic']})
+        return proposal_id
+
+    def history_view(self, project_id, *, limit=50):
+        """Plain-language project timeline: what changed in Kel's understanding of this project."""
+        if not isinstance(limit, int) or not 1 <= limit <= 200:
+            raise PolicyError('Limit must be 1 to 200')
+        summaries = {}
+
+        def summarize(mid):
+            if mid not in summaries:
+                with contextlib.closing(self.store.connect()) as db:
+                    found = db.execute('SELECT summary FROM memories WHERE id=?', (mid,)).fetchone()
+                summaries[mid] = found['summary'] if found else 'a record'
+            return summaries[mid]
+
+        def proposal_summary(pid):
+            with contextlib.closing(self.store.connect()) as db:
+                found = db.execute('SELECT summary FROM memory_proposals WHERE id=?', (pid,)).fetchone()
+            return found['summary'] if found else 'a change'
+
+        with contextlib.closing(self.store.connect()) as db:
+            rows = db.execute('SELECT * FROM memory_events WHERE project_id=? ORDER BY seq DESC LIMIT 400',
+                              (project_id,)).fetchall()
+        entries = []
+        for e in rows:
+            if len(entries) >= limit:
+                break
+            action = e['action']
+            detail = json.loads(e['detail']) if e['detail'] else {}
+            text = None
+            if action == 'created':
+                if detail.get('reconfirms'):
+                    text = 'You re-confirmed “%s”' % summarize(e['memory_id'])
+                elif not detail.get('corrects'):
+                    text = 'Added “%s”' % summarize(e['memory_id'])
+            elif action == 'confirmed':
+                text = 'You confirmed “%s”' % summarize(e['memory_id'])
+            elif action == 'corrected':
+                text = 'You changed “%s” to “%s”' % (summarize(e['memory_id']),
+                                                     summarize(detail.get('superseded_by', '')))
+            elif action == 'superseded':
+                text = 'Replaced “%s” with “%s”' % (summarize(e['memory_id']),
+                                                    summarize(detail.get('superseded_by', '')))
+            elif action == 'retracted':
+                text = 'Marked as wrong: “%s”' % summarize(e['memory_id'])
+            elif action == 'forgotten':
+                text = 'Forgotten a record (content removed)'
+            elif action == 'stale':
+                text = 'Out of date: “%s”' % summarize(e['memory_id'])
+            elif action == 'proposal_accepted':
+                text = 'You accepted the change: “%s”' % proposal_summary(e['memory_id'])
+            elif action == 'proposal_rejected':
+                text = 'You turned the change down: “%s”' % proposal_summary(e['memory_id'])
+            if text:
+                entries.append({'at': e['at'], 'text': text, 'action': action,
+                                'memory_id': e['memory_id']})
+        return entries
     def revalidate(self, project_id, digest_map):
         """Compare stored source digests to current digests; mark changed records stale."""
         if not isinstance(digest_map, dict):
@@ -490,6 +881,15 @@ class Memory:
                                 {'reason': 'source changed',
                                  'was': str(row['source_digest'])[:16],
                                  'now': str(current)[:16]})
+                    self._propose_db(db, project_id, kind='stale', type=row['type'],
+                                     topic=row['topic'], value=json.loads(row['value']),
+                                     summary=row['summary'],
+                                     why='The source behind this knowledge changed — confirm it is still true.',
+                                     current_id=row['id'],
+                                     evidence={'digest': str(current)[:128],
+                                               'source_ref': row['source_ref'],
+                                               'sig': str(current)[:128]},
+                                     source_ref=row['source_ref'])
                     stale.append(row['id'])
         return stale
 

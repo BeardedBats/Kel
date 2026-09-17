@@ -4,6 +4,7 @@ import { Badge, Button, Drawer, Select, Input, Form, Alert, Space, Typography, T
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import Markdown from '@/renderer/components/Markdown';
+import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
 type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
 type Job = {
   id: string;
@@ -59,7 +60,7 @@ type VettingPanelData = {
 };
 type WorkExtras = {
   project_id: string;
-  memory: { records: MemoryRecord[]; conflicts: MemoryConflict[] };
+  memory: { records: MemoryRecord[]; conflicts: MemoryConflict[]; proposals?: MemoryProposal[] };
   map: MapInfo | null;
   recipes: { entries: RecipeEntry[] };
 };
@@ -121,6 +122,7 @@ export default function KelWorkPanel() {
     [extras, setExtras] = useState<WorkExtras>(),
     [preview, setPreview] = useState(''),
     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
+  const [history, setHistory] = useState<{ at: number; text: string }[] | null>(null);
   const [vetting, setVetting] = useState<VettingPanelData>(),
     [vettingTopic, setVettingTopic] = useState(''),
     [vettingSpec, setVettingSpec] = useState(''),
@@ -224,6 +226,41 @@ export default function KelWorkPanel() {
       await request(route, body);
       await refresh();
       Message.success(t('common.kel.saved'));
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function loadHistory() {
+    try {
+      const out = await request<{ entries: { at: number; text: string }[] }>('/api/memory', {
+        action: 'history',
+        conversation: cid,
+      });
+      setHistory(out.entries || []);
+    } catch {
+      setHistory([]);
+    }
+  }
+  useEffect(() => {
+    if (!visible) return;
+    void loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, cid]);
+  async function memoryAct(p: MemoryProposal, act: 'accept' | 'reject' | 'defer') {
+    setBusy(true);
+    try {
+      await request('/api/memory', { action: act + '_proposal', conversation: cid, id: p.id });
+      await refresh();
+      void loadHistory();
+      Message.success(
+        act === 'accept'
+          ? 'Saved knowledge updated.'
+          : act === 'reject'
+            ? 'Kept what was saved.'
+            : 'Postponed — Kel will wait.'
+      );
     } catch (e) {
       setError(String(e));
     } finally {
@@ -586,6 +623,17 @@ export default function KelWorkPanel() {
             ))}
           </Tabs.TabPane>
           <Tabs.TabPane key='knowledge' title={t('common.kel.knowledge')}>
+            {(extras?.memory.proposals || [])
+              .filter((p) => p.state === 'pending' || p.state === 'deferred')
+              .map((p) => (
+                <section
+                  key={p.id}
+                  className='py-12px border-b border-solid border-[var(--color-border-2)]'
+                  data-testid='kel-work-proposal'
+                >
+                  <MemoryProposalReview proposal={p} busy={busy} onAct={(act) => void memoryAct(p, act)} />
+                </section>
+              ))}
             {(extras?.memory.conflicts || []).map((c) => (
               <section key={c.id} className='py-12px border-b border-solid border-[var(--color-border-2)]'>
                 <Typography.Title heading={6}>{t('common.kel.conflicts')}</Typography.Title>
@@ -658,6 +706,20 @@ export default function KelWorkPanel() {
                 )}
               </section>
             ))}
+            <Typography.Title heading={6} style={{ marginTop: 16 }}>
+              {'What changed'}
+            </Typography.Title>
+            {(history || []).length === 0 ? (
+              <Typography.Paragraph type='secondary' data-testid='kel-memory-history-empty'>
+                {'Nothing has changed in what Kel knows about this project yet.'}
+              </Typography.Paragraph>
+            ) : (
+              (history || []).map((h, i) => (
+                <Typography.Paragraph key={`${h.at}-${i}`} type='secondary' data-testid='kel-memory-history-entry'>
+                  {new Date(h.at * 1000).toLocaleDateString()} — {h.text}
+                </Typography.Paragraph>
+              ))
+            )}
           </Tabs.TabPane>
           <Tabs.TabPane key='map' title={t('common.kel.projectMap')}>
             <Space>

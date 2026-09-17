@@ -382,6 +382,26 @@ Journey defects found and fixed while building it:
 
 Rules added: **JR-50**, **JR-51**.
 
+### H25 - Kel-detected knowledge changes had no review path (2026-09-17)
+- **Problem:** the memory engine could resolve conflicts and mark records stale, and Design Vetting
+  decisions could contradict saved rules - but every reconciliation surfaced only as raw rows (a
+  conflicts list) or nothing at all. Nothing asked the user before durable knowledge moved, and a
+  repeated identical disagreement could re-surface endlessly.
+- **Fix:** the memory proposal surface (migration 15 `v16-memory-proposals`): Kel-detected changes
+  (vetting decision vs stored rule, open conflicts, stale sources) queue as reviews with Current /
+  Proposed / Why and Accept / Reject / Defer / Details; acceptance applies through the existing trust
+  model and preserves the previous value; rejections suppress identical unchanged evidence; a newer
+  proposal supersedes older pending ones; everything is project-scoped. Chat gets a quiet Review pill
+  (pending only, beside the model/tools pills); the Work panel's Project knowledge tab hosts the full
+  queue and a plain-language "What changed" history.
+- **Lesson:** when Kel believes saved knowledge changed, the change is a question to the user, not a
+  write; and a settled question must not re-ask on the same unchanged evidence.
+- **Rule:** JR-52 (created), JR-53 (created).
+- **Evidence:** engine `runtime/tests/test_v16_proposals.py` (23 tests, full suite 568 passed);
+  packaged journey `memoryprops` (ux-audit run `mp`: proposal queued from a vetting answer, card shown,
+  accept updates with the previous value kept, reject never re-asks, defer survives restart, cross-
+  project rule untouched - DB probe `ux-memoryprops-db.json`).
+
 ## Process (permanent)
 
 1. Run the journey harness (packaged build, fresh + seeded roots) before tagging any release.

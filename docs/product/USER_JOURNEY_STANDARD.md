@@ -126,6 +126,10 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-51 - Capability controls express intent; machinery stays behind Details.** A user-facing capability control names what the user wants to do (Web, GitHub, Files, Terminal), never what Kel uses to do it (tool ids, connected-server names, runtimes, leases); an unavailable capability is stated in plain words with the action that makes it available, and cannot be switched on to look ready. Verify: read every string the control and its menu can show - no internal name appears - and switch on an unavailable capability to confirm it stays unusable with a plain reason.
 
+**JR-52 - Saved knowledge changes only through the user's judgment.** When Kel believes saved project knowledge changed - a Design Vetting decision disagrees with a stored rule, two confirmed choices conflict, or a source behind a record changed - the change appears as a review with Current, Proposed and a plain reason plus Accept, Reject, Defer and Details. Nothing is overwritten until the user accepts; the previous value is preserved in the record's history; the same unchanged evidence never asks again after a rejection; the queue is scoped to the project it belongs to (no cross-project leakage). Verify: drive a disagreeing Design Vetting answer in the packaged app, accept one proposal (old value kept as superseded, new record user-confirmed), reject another and repeat the identical answer (no re-ask), defer a third and restart (state kept), and probe that another project's same-topic rule is untouched.
+
+**JR-53 - "What changed" answers in plain words, not logs.** A project's knowledge history says what changed in Kel's understanding of this project in plain sentences with previous values (Added / You changed "old" to "new" / You accepted the change / You turned the change down / Out of date / Forgotten a record). No raw event or database dumps, no internal ids. Verify: in the packaged app, accept and reject proposals, then read the Work panel's Project knowledge tab and confirm the entries are plain sentences; the engine history formatter is pinned by test.
+
 
 ## Rule maintenance
 
