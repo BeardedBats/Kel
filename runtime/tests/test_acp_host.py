@@ -35,6 +35,12 @@ class ACPHostTests(unittest.TestCase):
                     # 'none' and the prompt proceeds down the normal submission path.
                     self.reply({'kind': 'none'})
                     return
+                if self.path == '/api/capabilities':
+                    # The engine records the capability command and returns the plain confirmation.
+                    owner.requests.append((self.path, body))
+                    self.reply({'applied': True,
+                                'reply': 'Okay - %s follows your choice in this conversation.' % body.get('capability', 'it')})
+                    return
                 owner.requests.append((self.path, body))
                 if self.path == '/api/send':
                     # Keep one row per submission id; concurrent prompts share the engine.
@@ -80,6 +86,40 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(result['stopReason'], 'end_turn')
         self.assertTrue(self.requests[0][1]['id'].startswith('acp-'))
         self.assertIn('Real HTTP reply', self.events[0]['params']['update']['content']['text'])
+
+    def test_capability_command_answers_inline_without_a_submission(self):
+        result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
+                                                       'prompt': [{'type': 'text', 'text': 'web: use default'}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        paths = [path for path, _ in self.requests]
+        self.assertIn('/api/capabilities', paths)
+        self.assertNotIn('/api/send', paths)  # a standalone command sends no message
+        sent = [body for path, body in self.requests if path == '/api/capabilities'][0]
+        self.assertEqual(sent, {'action': 'directive', 'conversation': 'c1', 'text': 'web: use default'})
+        texts = [e['params']['update']['content']['text'] for e in self.events
+                 if e.get('params', {}).get('update', {}).get('sessionUpdate') == 'agent_message_chunk']
+        self.assertTrue(any('follows your choice' in text for text in texts))
+
+    def test_ordinary_tool_talk_is_sent_untouched_and_mutates_nothing(self):
+        question = 'Can you use the web here?'
+        result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
+                                                       'prompt': [{'type': 'text', 'text': question}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        self.assertNotIn('/api/capabilities', [path for path, _ in self.requests])  # no state change
+        send = [body for path, body in self.requests if path == '/api/send'][0]
+        self.assertEqual(send['text'], question)  # the real request is preserved
+
+    def test_explicit_clause_inside_a_request_applies_and_forwards_the_rest(self):
+        text = 'terminal: off — and also summarize the release notes'
+        result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1',
+                                                       'prompt': [{'type': 'text', 'text': text}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        clauses = [body for path, body in self.requests if path == '/api/capabilities']
+        self.assertEqual(len(clauses), 1)
+        self.assertEqual(clauses[0]['text'], 'terminal: off')
+        send = [body for path, body in self.requests if path == '/api/send'][0]
+        self.assertIn('summarize the release notes', send['text'])  # the real request still goes through
+        self.assertNotIn('terminal: off', send['text'])  # the clause is not echoed as message text
 
     def test_auth_error_is_explicit_and_token_not_exposed(self):
         self.descriptor['token'] = 'incorrect'

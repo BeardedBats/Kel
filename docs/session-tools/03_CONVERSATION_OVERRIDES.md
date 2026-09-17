@@ -26,8 +26,26 @@ a third value, so a conversation can never carry a stale opinion after the user 
 
 The engine identifies a conversation by its Kel conversation id. The renderer holds the desktop id,
 so the control resolves it the same way the model pill does (`window.kelAPI.conversation(desktopId)`),
-and execution paths that only know a job resolve it through `submissions.conversation_id`
-(`_conversation_for_job`) — one mapping, no duplicated identity rules.
+and execution paths that only know a job resolve it through `submissions.conversation_id` with a
+fallback to the job's own conversation (`_conversation_for_job`) — one mapping, no duplicated
+identity rules.
+
+## V1.6 P1 remediation (2026-09-17)
+
+- **The real web effect is gated.** `kel.research.ResearchAdapter.execute` passes the conversation's
+  capability decision (`capabilities.resolve(..., consume=True)`) before the external request is
+  sent: Web = Disabled for a conversation stops research with the plain reason ("Kel paused this
+  research before any external request: Web is disabled for this conversation"), and an "Allow once"
+  grant is spent by that real effect. Same decision function the authorization boundary uses — no
+  second policy.
+- **Explicit commands only.** A whole message may be one command (`web: use default`, `terminal: off`,
+  "don't use the browser here", "use GitHub for this conversation"). An explicit `capability: state`
+  clause inside a larger request is applied while the rest of the message continues as the request.
+  Ordinary sentences that merely mention a tool ("Can you use the web here?") never change state:
+  permissive conversational guessing is deliberately not supported.
+- **Google Drive and Connected apps are not offered.** No production effect path in this release can
+  honour them, so they are not shown as switches that could not be kept; a stale caller is refused
+  plainly and their chat aliases are ordinary text.
 
 ## Failure behaviour
 

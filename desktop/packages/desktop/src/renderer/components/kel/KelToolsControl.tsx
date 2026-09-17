@@ -1,10 +1,10 @@
 /**
  * Kel tools — what Kel may use in THIS conversation, in plain words.
  *
- * A compact control beside the model pill. Each capability is one plain word (Web, GitHub, Files,
- * Terminal, Google Drive, Connected apps); the menu offers Use default / Enabled for this chat /
- * Disabled for this chat, plus Enable once for a single request. Availability is stated in plain
- * words and an unavailable capability can never be switched on — the engine refuses it.
+ * A compact control beside the model pill. Each capability is one plain word (Web, Files, Terminal,
+ * GitHub); the menu offers Use default / Enabled for this chat / Disabled for this chat, plus Enable
+ * once for a single request. Availability is stated in plain words and an unavailable capability can
+ * never be switched on — the engine refuses it.
  */
 import { Dropdown, Menu, Message } from '@arco-design/web-react';
 import { Down } from '@icon-park/react';

@@ -43,6 +43,17 @@ def _plain_state(status):
     return PLAIN_STATES.get(str(status), 'Kel is working on it')
 
 
+def _without_clauses(text, clauses):
+    """The user's request with the applied capability clauses removed."""
+    out = text
+    for clause in sorted(clauses, key=lambda item: item['start'], reverse=True):
+        start, end = clause['start'], clause['end']
+        while start > 0 and out[start - 1] in ' \t,;:-\u2014':
+            start -= 1
+        out = out[:start] + out[end:]
+    return out.strip()
+
+
 class ServiceClient:
     def __init__(self, data):
         self.data = Path(data)
@@ -271,18 +282,33 @@ class ACPHost:
                     if vetting.get('message'):
                         self.text(session, vetting['message'] + '\n\n')
                     return {'stopReason': 'end_turn'}
-            # Conversation capability preferences ("use GitHub here", "don't browse the web in this
+            # Conversation capability commands ("web: use default", "don't browse the web in this
             # chat") write exactly the state the Tools control writes, and answer inline the same way
             # vetting does - one policy, two ways to reach it.
             if not attachments:
-                # Cheap local prefilter: only directive-shaped text asks the engine; ordinary
-                # messages keep taking exactly one round-trip. The policy itself stays engine-side.
-                from .capabilities import directive
+                # Strict, explicit commands only: a whole message that is one command answers inline;
+                # an explicit "capability: state" clause inside a larger request is applied while the
+                # rest of the message continues as the user's request. Ordinary sentences that merely
+                # mention a tool never change state. The policy itself stays engine-side.
+                from .capabilities import directive, directive_clauses
                 if directive(text):
                     confirmation = self._capability_directive(cid, text)
                     if confirmation:
                         self.text(session, confirmation + '\n\n')
                         return {'stopReason': 'end_turn'}
+                else:
+                    clauses = directive_clauses(text)
+                    if clauses:
+                        replies = []
+                        for clause in clauses:
+                            reply = self._capability_directive(cid, clause['text'])
+                            if reply:
+                                replies.append(reply)
+                        if replies:
+                            self.text(session, '\n\n'.join(replies) + '\n\n')
+                        text = _without_clauses(text, clauses)
+                        if not text.strip():
+                            return {'stopReason': 'end_turn'}
             sid = 'acp-' + uuid.uuid4().hex
             self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments})
             seen = {m['seq'] for m in baseline['messages']}

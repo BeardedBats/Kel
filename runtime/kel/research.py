@@ -49,6 +49,21 @@ class ResearchAdapter:
     def execute(self,prompt,run_id=None,session_id=None,cancel=None):
         if cancel and cancel.is_set():return {'outcome':'CANCELLED'}
         if len(prompt)>40000:return {'outcome':'FAILED','error':'Research context exceeds its input budget'}
+        # The real web effect passes the conversation-scoped capability decision (the same
+        # kel.capabilities.resolve the authorization boundary uses): Web = Disabled for this
+        # conversation stops the external request before it is sent, and a one-shot grant is spent
+        # here exactly once. Runs initiated by the engine carry their real run id; a caller that
+        # bypasses the engine (tests) has no conversation to consult and is left to its caller.
+        if run_id:
+            with contextlib.closing(self.store.connect()) as db:
+                run=db.execute('SELECT * FROM runs WHERE id=?',(run_id,)).fetchone()
+            if run:
+                from .capabilities import capability_for_tool, resolve
+                control=resolve(self.store,capability_for_tool('research'),job=run['job_id'],consume=True)
+                if not control.get('allowed'):
+                    return {'outcome':'BLOCKED','authorization':control.get('rule'),
+                            'error':'Kel paused this research before any external request: '+
+                                    str(control.get('reason') or 'Web is not allowed in this conversation.')}
         try:
             response=self.model.transport({'model':self.model.model,'max_tokens':4096,
                 'system':'Today is '+time.strftime('%Y-%m-%d',time.gmtime())+'. You are a bounded research worker. Search the public web for the source request. '

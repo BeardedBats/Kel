@@ -1,8 +1,8 @@
 """Conversation-scoped capability controls.
 
-One plain word the user recognises - Web, Files, Terminal, GitHub, Drive, Connected apps - resolved
-by Kel to whatever tool it owns for the runtime in play. Two layers decide a capability, and each
-layer only narrows the one above it:
+One plain word the user recognises - Web, Files, Terminal, GitHub - resolved by Kel to whatever tool
+it owns for the runtime in play. Two layers decide a capability, and each layer only narrows the one
+above it:
 
   1. hard guardrails          kel.guardrails / BLOCKED_KINDS      (always win)
   2. global availability      what is actually configured         (nothing to enable when absent)
@@ -13,8 +13,8 @@ layer only narrows the one above it:
 A conversation override may disable anything, may enable a capability that is available and not
 globally denied by policy, and may grant exactly one action ("Enable once") which expires when it is
 consumed or after a short window. It can never bypass a guardrail, invent credentials, widen a scope
-or replace an approval. Natural language ("don't use the terminal here") writes the same state as the
-control, so there is one policy and two doors to it.
+or replace an approval. Explicit chat commands ("web: use default", "don't use the terminal here")
+write the same state as the control, so there is one policy and two doors to it.
 """
 import contextlib
 import re
@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS capability_grants(
 """
 
 # Plain names only; the tools behind them stay hidden (they differ per runtime and are Kel's problem).
+# Google Drive and Connected apps are deliberately absent: this release has no production effect path
+# that could honour them, so they are not offered as switches that could not be kept.
 CAPABILITIES = (
     {'id': 'web', 'label': 'Web', 'description': 'Look things up and browse the web',
      'tools': ('browser', 'web', 'research'), 'probe': 'engine'},
@@ -48,10 +50,6 @@ CAPABILITIES = (
      'tools': ('shell', 'run_tests', 'run_command'), 'probe': 'runtime'},
     {'id': 'github', 'label': 'GitHub', 'description': 'Work with repositories and their history',
      'tools': ('git', 'repo'), 'probe': 'runtime'},
-    {'id': 'drive', 'label': 'Google Drive', 'description': 'Use documents kept in Google Drive',
-     'tools': ('drive',), 'probe': 'connector'},
-    {'id': 'apps', 'label': 'Connected apps', 'description': 'Use the other apps you have connected',
-     'tools': ('mcp',), 'probe': 'connector'},
 )
 BY_ID = {entry['id']: entry for entry in CAPABILITIES}
 STATES = ('default', 'on', 'off')
@@ -122,7 +120,7 @@ def availability(store, capability):
         if _runtime_available(store):
             return 'available', 'A coding assistant is ready on this computer'
         return 'needs_setup', 'Connect a coding assistant to use this here'
-    return 'needs_setup', 'Connect it in Settings · Tools first'
+    return 'unavailable', '%s is not available on this computer.' % BY_ID[capability]['label']
 
 
 def global_state(store, capability):
@@ -219,14 +217,22 @@ def _take_grant(store, conversation, capability):
 
 
 def _conversation_for_job(store, job_id):
-    """The conversation a job belongs to; execution paths know the job, not the chat."""
+    """The conversation a job belongs to; execution paths know the job, not the chat.
+
+    Prefers the submission that produced the job and falls back to the job's own conversation, so
+    every durable job (chat, scheduled or engine-submitted) resolves to the chat it belongs to.
+    """
     try:
         with contextlib.closing(store.connect()) as db:
-            if not _table(db, 'submissions'):
-                return ''
-            row = db.execute('SELECT conversation_id FROM submissions WHERE job_id=? LIMIT 1',
-                             (str(job_id or ''),)).fetchone()
-        return str((row['conversation_id'] if row else '') or '')
+            if _table(db, 'submissions'):
+                row = db.execute('SELECT conversation_id FROM submissions WHERE job_id=? LIMIT 1',
+                                 (str(job_id or ''),)).fetchone()
+                if row and row['conversation_id']:
+                    return str(row['conversation_id'])
+    except Exception:
+        pass
+    try:
+        return str((store.get(str(job_id or '')) or {}).get('conversation') or '')
     except Exception:
         return ''
 
@@ -287,48 +293,83 @@ def snapshot(store, conversation):
     return rows
 
 
-# -- natural language -------------------------------------------------------------------------
-# "use github for this conversation", "don't use the terminal here", "stop using the browser in
-# this chat", "web: use default". One directive writes one override; nothing else is parsed.
-_OFF = r"(?:don'?t|do not|never|stop using|no)\s+"
-_ON = r"(?:use|enable|allow|turn on)\s+"
-_SCOPE = r"(?:in this (?:chat|conversation)|for this (?:chat|conversation|thread)|here)"
+# -- explicit commands ------------------------------------------------------------------------
+# Strict, unambiguous commands only. A whole message may be one command:
+#
+#   "web: use default"   "terminal: off"   "don't use the browser here"   "use GitHub for this
+#   conversation"
+#
+# and an explicit "capability: state" clause may appear inside a larger request, where the setting is
+# applied and the rest of the message continues as the user's request. Ordinary sentences that merely
+# mention a tool ("Can you use the web here?") change nothing: permissive conversational guessing is
+# deliberately not supported.
+_SCOPE = r'(?:in this (?:chat|conversation)|for this (?:chat|conversation|thread)|here)'
+_SCOPE_RX = r'(?:,?\s*' + _SCOPE + r')?'
+_ARTICLE = r'(?:the\s+|my\s+|our\s+)?'
+_VERB = r'(?:use|using|browse|browsing|access|accessing|touch|touching|run|running|call|calling|open|opening)'
 _WORD = {
-    'web': ('web', 'the web', 'browsing', 'browser'),
+    'web': ('web', 'browsing', 'browser'),
     'files': ('files', 'file access', 'local files', 'my files'),
-    'terminal': ('terminal', 'terminal commands', 'shell', 'shell commands', 'command line'),
-    'github': ('github', 'repositories', 'repos', 'the repository'),
-    'drive': ('google drive', 'drive'),
-    'apps': ('connected apps', 'other apps', 'connected tools'),
+    'terminal': ('terminal', 'shell', 'shell commands', 'terminal commands', 'command line'),
+    'github': ('github', 'repositories', 'repos', 'repository'),
 }
 _ALIASES = {alias: capability for capability, aliases in _WORD.items() for alias in aliases}
 _ALIAS_PATTERN = '|'.join(sorted((re.escape(alias) for alias in _ALIASES), key=len, reverse=True))
+_STATES = {'use default': 'default', 'default': 'default', 'reset': 'default',
+           'on': 'on', 'enable': 'on', 'enabled': 'on',
+           'off': 'off', 'disable': 'off', 'disabled': 'off'}
+_STATE_PATTERN = '|'.join(sorted((re.escape(state) for state in _STATES), key=len, reverse=True))
+_COLON_RX = re.compile(r'^' + _ARTICLE + r'(?P<cap>' + _ALIAS_PATTERN + r')\s*[:=]\s*'
+                       r'(?P<state>' + _STATE_PATTERN + r')[.!]?$', re.I)
+_OFF_RX = re.compile(r'^(?:please\s+)?(?:don.?t|do\s+not|never|stop\s+using|no)\s+(?:to\s+)?'
+                     r'(?:' + _VERB + r'\s+)?' + _ARTICLE + r'(?P<cap>' + _ALIAS_PATTERN + r')'
+                     + _SCOPE_RX + r'[.!]?$', re.I)
+_ON_RX = re.compile(r'^(?:please\s+)?(?:use|enable|allow|turn\s+on)\s+' + _ARTICLE +
+                    r'(?P<cap>' + _ALIAS_PATTERN + r')' + _SCOPE_RX + r'[.!]?$', re.I)
+_DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:use|back\s+to|go\s+back\s+to|set\s+to|reset\s+to)\s+'
+                         r'(?:the\s+)?default\s+(?:for\s+)?' + _ARTICLE +
+                         r'(?P<cap>' + _ALIAS_PATTERN + r')' + _SCOPE_RX + r'[.!]?$', re.I)
+_TO_DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:set|reset|switch|put|change)\s+' + _ARTICLE +
+                            r'(?P<cap>' + _ALIAS_PATTERN + r')\s+(?:back\s+)?to\s+(?:the\s+)?default'
+                            + _SCOPE_RX + r'[.!]?$', re.I)
+_CLAUSE_RX = re.compile(r'(?<!\w)' + _ARTICLE + r'(?P<cap>' + _ALIAS_PATTERN + r')\s*[:=]\s*'
+                        r'(?P<state>' + _STATE_PATTERN + r')(?!\w)', re.I)
 
 
 def directive(text):
-    """Parse one capability instruction. Returns (capability, state) or None."""
-    lowered = str(text or '').strip().lower().rstrip('.!')
-    if not lowered or len(lowered) > 200:
+    """Parse a whole message that is one capability command. Returns (capability, state) or None."""
+    stripped = str(text or '').strip()
+    if not stripped or len(stripped) > 200:
         return None
-    scope = re.search(_SCOPE, lowered)
-    if not scope:
-        return None
-    target = re.search(r'\b(' + _ALIAS_PATTERN + r')\b', lowered)
-    if not target:
-        return None
-    capability = _ALIASES[target.group(1)]
-    before = lowered[:target.start()]
-    # "use the default for the web here" / "back to default for github in this chat"
-    if re.search(r'\b(?:use|back to|set to|go back to)\s+(?:the\s+)?default\b', lowered) \
-            or re.search(r'(?:default|as usual|like everywhere else)\s*$', before):
-        return capability, 'default'
-    # Polarity comes from the words before the capability, so natural phrasings work:
-    # "don't browse the web in this chat", "no terminal commands here", "stop using drive here".
-    if re.search(r"\b(?:don'?t|do not|never|no|without|stop|avoid|disable|disabled|off|block)\b", before):
-        return capability, 'off'
-    if re.search(r'\b(?:use|using|enable|enabled|allow|allowed|turn on|with|on)\b', before):
-        return capability, 'on'
+    for pattern, fixed_state in ((_COLON_RX, None), (_DEFAULT_RX, 'default'),
+                                 (_TO_DEFAULT_RX, 'default'), (_OFF_RX, 'off'), (_ON_RX, 'on')):
+        match = pattern.fullmatch(stripped)
+        if not match:
+            continue
+        capability = _ALIASES.get(match.group('cap').lower())
+        if not capability:
+            continue
+        return capability, fixed_state or _STATES[match.group('state').lower()]
     return None
+
+
+def directive_clauses(text):
+    """Explicit `capability: state` clauses anywhere in a larger message; [] when there are none.
+
+    Each clause is unambiguous on its own ("web: off"), so it is applied while the remaining text
+    continues as the user's request. Ordinary sentences never match: there is no guessing here.
+    """
+    text = str(text or '')
+    if not text or len(text) > 2000:
+        return []
+    found = []
+    for match in _CLAUSE_RX.finditer(text):
+        capability = _ALIASES.get(match.group('cap').lower())
+        if not capability:
+            continue
+        found.append({'capability': capability, 'state': _STATES[match.group('state').lower()],
+                      'text': match.group(0), 'start': match.start(), 'end': match.end()})
+    return found
 
 
 def apply_directive(store, conversation, text):

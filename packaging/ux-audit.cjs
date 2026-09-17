@@ -3059,6 +3059,7 @@ async function scenarioSessionTools() {
     results.menuText = menu.replace(/\s+/g, ' ').slice(0, 320);
     results.menuPlain = /Web/.test(menu) && /GitHub/.test(menu) && /Files/.test(menu);
     results.menuHidesMachinery = !/mcp|server|tool id|runtime/i.test(menu);
+    results.menuOffersRemoved = !/Google Drive|Connected apps/i.test(menu);
     await shot('sessiontools-01-menu');
     await page.keyboard.press('Escape').catch(() => {});
 
@@ -3087,12 +3088,14 @@ async function scenarioSessionTools() {
     results.chatBWebEnabledUsable = rowOf(bAfter, 'web')?.usable;
     results.chatBWebEffective = rowOf(bAfter, 'web')?.effective;
 
-    // Unavailable capability: plain "needs setup" and it stays unusable even when switched on.
-    await ask({ action: 'set', conversation: chatB, capability: 'drive', state: 'on' });
-    const driveRow = rowOf(await rowsFor(chatB), 'drive');
-    results.driveAvailability = driveRow?.availability;
-    results.driveStaysUnusable = driveRow?.usable === false;
-    results.driveReason = String(driveRow?.availability_reason || '').slice(0, 90);
+    // Removed capabilities (CAP-01 / V1.6): Google Drive and Connected apps have no production
+    // effect path in this release, so the control no longer offers them and a stale caller is
+    // refused plainly instead of being shown a switch that could not be kept.
+    const bRowsBeforeRemoved = await rowsFor(chatB);
+    results.offeredCapabilityIds = (Array.isArray(bRowsBeforeRemoved) ? bRowsBeforeRemoved.map((row) => row.id) : []).join(',');
+    const driveAsk = await ask({ action: 'set', conversation: chatB, capability: 'drive', state: 'on' });
+    results.removedDriveRefused = !!driveAsk && driveAsk.error !== undefined && driveAsk.error !== null;
+    results.removedDriveAbsent = rowOf(await rowsFor(chatB), 'drive') === undefined;
 
     // Natural language: the chat instruction writes the same state as the menu.
     await openChat('Rich rendering chat');
@@ -3120,6 +3123,14 @@ async function scenarioSessionTools() {
     await shot('sessiontools-03-natural-language');
     const aRows = await rowsFor(chatA);
     results.chatAGithubOverride = rowOf(aRows, 'github')?.override;
+
+    // Ordinary talk about a tool must not change capability state (CAP-02 regression): the web
+    // override set through the control earlier stays exactly as it was.
+    await composer.fill('Can you use the web here?');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(6000);
+    results.ordinaryTalkWebOverride = rowOf(await rowsFor(chatA), 'web')?.override;
+    await shot('sessiontools-04-ordinary-talk');
 
     // Restart: both conversations keep their own state.
     await closeApp(app, kelwork, results);
