@@ -106,3 +106,97 @@ def rule(rule_id):
         if item['id'] == rule_id:
             return item
     raise PolicyError('Unknown staffing rule: %s' % rule_id)
+
+
+# ---- decision function v1 (Phase 5.2) ------------------------------------------------------
+
+# The scored subset of the feature vector (budget_class is a label, not a score input).
+SCORED_SCALES = {'complexity': 3, 'decomposability': 3, 'sequentiality': 3, 'uncertainty': 3,
+                 'novelty': 3, 'risk': 3, 'domain_breadth': 3, 'tool_requirements': 3,
+                 'consequence_of_failure': 3, 'user_facing': 1, 'release_proximity': 2}
+
+# Mission flags that trip hard rules; the second element is the minimum tier the rule forces
+# (None = recording only). Flags are conservative inputs, not scored features.
+FLAG_RULES = {'security_boundary': ('R3', 'D2'), 'release': ('R4', 'D2'),
+              'irreversible': ('R5', 'D2'), 'data_migration': ('R6', 'D2'),
+              'new_dependency': ('R7', None)}
+
+BAND_CEILINGS = (('D0', 2.0), ('D1', 5.0), ('D2', 9.0), ('D3', 14.0), ('D4', float('inf')))
+TIER_ORDER = ('D0', 'D1', 'D2', 'D3', 'D4')
+
+
+def _tier_index(tier):
+    if tier not in TIER_ORDER:
+        raise PolicyError('Unknown tier: %s' % tier)
+    return TIER_ORDER.index(tier)
+
+
+def score(features):
+    """Deterministic weighted score over the feature vector (doc 05 section 4).
+
+    Every scored feature is required and must sit inside its declared scale; unknown keys
+    are refused so a feature-vector change can never slip through silently.
+    """
+    if not isinstance(features, dict):
+        raise PolicyError('Staffing features must be an object')
+    unknown = sorted(set(features) - set(SCORED_SCALES) - {'budget_class'})
+    if unknown:
+        raise PolicyError('Unknown staffing feature(s): %s' % ', '.join(unknown))
+    total = 0.0
+    for name, scale in SCORED_SCALES.items():
+        value = features.get(name)
+        if type(value) is not int or not 0 <= value <= scale:
+            raise PolicyError('Feature %s must be an integer 0..%d' % (name, scale))
+        total += WEIGHTS[name] * value
+    return total
+
+
+def decide(features, *, flags=(), tier_max=None, budget_class=None):
+    """Decide the staffing tier from mission features (doc 05; deterministic, recorded reasons).
+
+    Returns the tier, the score, the rules that fired and the reasons behind every cap or
+    raise. D0/D1 are the supported outcomes of this increment; higher tiers are returned so
+    the caller can refuse them explicitly (pods arrive in 5.3+).
+    """
+    total = score(features)
+    reasons = ['score %.1f over the feature vector' % total]
+    rules_fired = []
+    tier = 'D4'
+    for band_tier, ceiling in BAND_CEILINGS:
+        if total <= ceiling:
+            tier = band_tier
+            break
+    reasons.append('band %s' % tier)
+    if tier in ('D3', 'D4') and not (features.get('decomposability', 0) >= 2
+                                     and features.get('sequentiality', 0) <= 1):
+        rules_fired.append({'id': 'R1', 'effect': 'cap D2 (sequential or undecomposable work stays a pod)'})
+        reasons.append('R1 fired: D3+ requires decomposability >= 2 and sequentiality <= 1; capped at D2')
+        tier = 'D2'
+    for flag in flags:
+        if flag not in FLAG_RULES:
+            raise PolicyError('Unknown mission flag: %s' % flag)
+        rule_id, minimum = FLAG_RULES[flag]
+        if minimum is None:
+            rules_fired.append({'id': rule_id, 'effect': 'recorded for the packet'})
+            reasons.append('%s noted (%s)' % (rule_id, flag))
+            continue
+        if _tier_index(tier) < _tier_index(minimum):
+            rules_fired.append({'id': rule_id, 'effect': 'raise to %s' % minimum})
+            reasons.append('%s fired: %s raises the tier to %s' % (rule_id, flag, minimum))
+            tier = minimum
+        else:
+            rules_fired.append({'id': rule_id, 'effect': 'satisfied at %s' % tier})
+            reasons.append('%s fired: %s already above %s' % (rule_id, flag, minimum))
+    if tier_max is not None:
+        if _tier_index(tier_max) < _tier_index(tier):
+            reasons.append('tier_max %s applied' % tier_max)
+            tier = tier_max
+    chosen_budget = budget_class or features.get('budget_class') or 'standard'
+    class_ids = tuple(item['id'] for item in BUDGET_CLASSES)
+    if chosen_budget not in class_ids:
+        raise PolicyError('Budget class is one of %s' % ', '.join(class_ids))
+    workers = {'D0': 0, 'D1': 1}.get(tier)
+    return {'tier': tier, 'score': round(total, 2), 'rules_fired': rules_fired,
+            'reasons': reasons, 'budget_class': chosen_budget,
+            'workers': workers if workers is not None else None,
+            'supported': tier in ('D0', 'D1')}

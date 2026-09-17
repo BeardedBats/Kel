@@ -26,24 +26,7 @@ from kel.router import Candidate
 from kel.team import TOOLS, Team
 
 
-def job_contract():
-    return {'request': 'Do the work',
-            'milestones': [{'id': 'm1', 'objective': 'Draft the thing', 'filename': 'out.md',
-                            'depends_on': [], 'checks': [{'kind': 'min_chars', 'value': 40}]}]}
-
-
-def candidates():
-    """Deterministic registry-known candidates with controlled eligibility and cost."""
-    return [
-        Candidate(name='claude-code', capabilities={'text', 'tools', 'edit', 'shell'},
-                  installed=True, authenticated=True, cost=5.0),
-        Candidate(name='codex', capabilities={'text', 'tools', 'edit', 'shell'},
-                  installed=True, authenticated=True, cost=1.0),
-        Candidate(name='internal', capabilities={'text', 'vision', 'tools'},
-                  installed=True, authenticated=True, cost=3.0),
-        Candidate(name='deepseek', capabilities={'text', 'tools'},
-                  installed=True, authenticated=True, cost=2.0),
-    ]
+from workforce_fixtures import candidates, job_contract
 
 
 def v2_fields(**overrides):
@@ -374,7 +357,7 @@ class FlagsTests(unittest.TestCase):
 
 class CeilingTests(Base):
     def test_ceilings_table_flows_from_the_registry(self):
-        from test_workforce_schemas import contract as task_contract
+        from workforce_fixtures import contract as task_contract
         ensure_archetypes(self.store)
         ceilings = registry_ceilings(self.store)
         widened = task_contract(role='verifier',
