@@ -150,8 +150,10 @@ def record_finding(store, finding, *, now=None):
     """Persist one review finding with doc-08 dedup + multi-lens confirmation (v1).
 
     Same fingerprint + same lens is refused as a duplicate (nothing silently dropped); the
-    same fingerprint from a different lens upgrades the existing row (confirmations +
-    confidence cap 10, tagged `confirmed_by_multi`).
+    same fingerprint from a different lens corroborates the existing row (confirmations +
+    confidence cap 10) and **leaves its status untouched** — corroboration is evidence for the
+    finding, so it must not be able to retire it (audits 17/18). `confirmed_by_multi` is derived
+    from the stored confirmations, so the corroboration state is always reconstructable.
     """
     finding = dict(finding)
     finding.setdefault('id', 'find_' + uid())
@@ -176,15 +178,14 @@ def record_finding(store, finding, *, now=None):
             confidence = max(int(record['confidence']), int(finding['confidence']))
             if confidence < 10:
                 confidence += 1  # multi-specialist confirmed (doc 08 §5), capped at 10
-            # `confirmed` stays live: corroboration is evidence *for* the finding, so it can
-            # never be the reason a blocker leaves the gate (audit 17, F17-1).
-            db.execute('UPDATE findings SET confirmations=?, confidence=?, updated=?, status=?'
-                       ' WHERE id=?',
-                       (json.dumps(confirmations), confidence, stamp, 'confirmed',
-                        record['id']))
+            # Corroboration strengthens the finding and never touches its status: the only writes
+            # to `status` are the insert (always `open`) and the guarded resolutions, so a blocker
+            # cannot leave the gate by being agreed with (audits 17 and 18, F17-1/N18-1).
+            db.execute('UPDATE findings SET confirmations=?, confidence=?, updated=? WHERE id=?',
+                       (json.dumps(confirmations), confidence, stamp, record['id']))
             updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
                                       (record['id'],)).fetchone())
-            updated['confirmed_by_multi'] = True
+            updated['confirmed_by_multi'] = bool(json.loads(updated['confirmations'] or '[]'))
             return updated
         db.execute('INSERT INTO findings(id,schema_version,mission_id,task_id,lens,severity,'
                    'confidence,artifact,location,summary,evidence,fix,fingerprint,status,'
@@ -364,14 +365,15 @@ def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id, fl
     unknown = sorted(set(selected) - set(LENS_NAMES) - set(DOMAIN_LENSES))
     if unknown:
         raise PolicyError('Unknown lens(es): %s' % ', '.join(unknown))
+    if 'security_boundary' in flags and 'security' not in selected:
+        raise PolicyError('The security lens is mandatory for security boundaries (Sentinel); '
+                          'it cannot be skipped, so a security_boundary mission can never run '
+                          'without the security lens')
     missing = [name for name in plan['lenses'] if name not in selected]
     if missing:
         raise PolicyError('The gating plan for tier %s + flags %s mandates %s; `lenses` may '
                           'add lenses but never drop a mandated one (doc 08 §2-3, §6)'
                           % (tier, list(flags), ', '.join(missing)))
-    if 'security_boundary' in flags and 'security' not in selected:
-        raise PolicyError('The security lens is mandatory for security boundaries (Sentinel); '
-                          'it cannot be skipped')
     require_text(mission_id, 'mission_id (coverage statements are recorded)')
     stamp = time.time() if now is None else now
     results, records = {}, []
@@ -396,7 +398,7 @@ def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id, fl
     unique = {item['id']: item for item in records}
     quality = quality_score(
         criticals=sum(1 for item in unique.values()
-                      if item['severity'] == 'critical' and item['status'] == 'open'),
+                      if item['severity'] == 'critical' and item['status'] in LIVE_STATUSES),
         infos=sum(1 for item in unique.values() if item['severity'] == 'info'))
     return {'tier': tier, 'flags': list(flags), 'dispatched': selected, 'results': results,
             'findings': list(unique.values()), 'quality_score': quality, 'plan': plan}

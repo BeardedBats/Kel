@@ -135,6 +135,7 @@ class DispatchTests(Base):
         # The refusal must name the lens the security boundary mandates, so the Sentinel rule
         # cannot be dropped (or its trigger mapping deleted) without failing here (audit 17 F17-3).
         self.assertIn('security', str(caught.exception))
+        self.assertIn('mandatory', str(caught.exception))
         # With the security lens present the same dispatch passes.
         dispatch_assurance(self.store, task_id=TASK, mission_id=MISSION, artifact='art_x', runner=runner,
                            tier='D2', flags=('security_boundary',),
@@ -446,7 +447,8 @@ class Reaudit17Tests(Base):
         corroborated = record_finding(self.store, finding(lens='maintainability',
                                                           fingerprint='fp-shared',
                                                           severity='blocker'), now=1001.0)
-        self.assertEqual(corroborated['status'], 'confirmed')
+        self.assertEqual(corroborated['status'], 'open')  # N18-1: no status write on corroboration
+        self.assertIn('maintainability', corroborated['confirmations'])
         self.assertTrue(corroborated['confirmed_by_multi'])
         result = gate(self.store, task_id=TASK)
         self.assertTrue(result['blocked'])
@@ -478,6 +480,21 @@ class Reaudit17Tests(Base):
         self.assertEqual(stats['maintainability']['false_positive'], 1)
         self.assertEqual(stats['maintainability']['accepted'], 0)
         self.assertEqual(stats['maintainability']['fp_rate'], 1.0)
+
+    def test_dispatch_scoring_agrees_with_the_gate(self):
+        # N18-2: the advisory score counted only 'open', so a corroborated critical was scored as
+        # retired while the gate still blocked. Both must count live findings the same way.
+        def runner(lens_name, payload):
+            if lens_name in ('functional-testing', 'maintainability'):
+                return {'coverage_statement': 'ok',
+                        'findings': [finding(lens=lens_name, fingerprint='fp-q',
+                                             severity='critical')]}
+            return {'coverage_statement': 'ok', 'findings': []}
+
+        result = dispatch_assurance(self.store, task_id=TASK, mission_id=MISSION,
+                                    artifact='art_x', runner=runner, tier='D2', now=1000.0)
+        self.assertEqual(result['quality_score'],
+                         gate(self.store, task_id=TASK)['quality_score'])
 
 
 if __name__ == '__main__':

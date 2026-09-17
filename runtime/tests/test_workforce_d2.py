@@ -216,7 +216,7 @@ class FindingPipelineTests(Base):
                 'assignment': 'asn_' + 'e' * 8}), now=1001.0)
         self.assertEqual(upgraded['confidence'], 9)  # max(8, 7) + 1
         self.assertIn('maintainability', upgraded['confirmations'])
-        self.assertEqual(upgraded['status'], 'confirmed')
+        self.assertEqual(upgraded['status'], 'open')  # corroboration never retires a finding
         self.assertTrue(upgraded.get('confirmed_by_multi'))
 
     def test_confidence_is_capped_at_ten(self):
