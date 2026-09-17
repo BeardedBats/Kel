@@ -1,0 +1,157 @@
+{
+  "schema": 1,
+  "scenario": "sweep-seed",
+  "desktopIds": [
+    "2408cb5f",
+    "bfd7331f",
+    "0d2563d1"
+  ],
+  "engineCids": [
+    "ec1ed6d7-78d9-47b2-bef1-352561e06bb6",
+    "80bd2258-f3e9-4875-a7b8-eafd14e6f632",
+    "c84423a6-0880-4a44-9c49-54e1284b3257"
+  ],
+  "errors": [],
+  "buttonInventory": [
+    {
+      "text": "",
+      "aria": "Collapse",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Search messages",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Back",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Forward",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Minimize",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Maximize",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Close",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "New Chat",
+      "aria": null,
+      "testid": null,
+      "tag": "DIV"
+    },
+    {
+      "text": "Work",
+      "aria": "Work",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Projects",
+      "aria": "Projects",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Permissions",
+      "aria": "Permissions",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Transcription",
+      "aria": "Transcription",
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Work & context",
+      "aria": null,
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Settings",
+      "aria": null,
+      "testid": null,
+      "tag": "DIV"
+    },
+    {
+      "text": "Open Providers",
+      "aria": null,
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Kel",
+      "aria": null,
+      "testid": "preset-pill-kel",
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": null,
+      "testid": "file-upload-btn",
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": "Record a message",
+      "testid": "kel-mic-toggle",
+      "tag": "BUTTON"
+    },
+    {
+      "text": "",
+      "aria": null,
+      "testid": "guid-send-btn",
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Work in a project",
+      "aria": null,
+      "testid": "workspace-selector-btn",
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Explain this project in plain ",
+      "aria": null,
+      "testid": null,
+      "tag": "BUTTON"
+    },
+    {
+      "text": "Review this project and sugges",
+      "aria": null,
+      "testid": null,
+      "tag": "BUTTON"
+    }
+  ],
+  "strategiesUsed": [
+    "role",
+    "role",
+    "role"
+  ],
+  "done": true,
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

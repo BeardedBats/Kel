@@ -25,6 +25,7 @@ import AcpChat from '../platforms/acp/AcpChat';
 import ChatLayout from './ChatLayout';
 import ChatSlider from './ChatSlider.tsx';
 import AcpModelSelector from '@/renderer/components/agent/AcpModelSelector';
+import { KelModelPill } from '@/renderer/components/kel/KelModelControl';
 import AcpRuntimeRestartButton from '@/renderer/components/agent/AcpRuntimeRestartButton';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
@@ -375,6 +376,27 @@ const ChatConversation: React.FC<{
     // the disabled selector below.
     if (conversation.type === 'acp' || conversation.type === 'antigravity') {
       const extra = conversation.extra as { current_model_id?: string };
+      // Kel conversations use the Kel model control: Automatic (Kel routing) plus an optional
+      // per-chat model choice, both in plain language. Other assistants keep the ACP selector.
+      if (acpAssistantId === 'kel' || !acpAssistantId) {
+        // The donor selector stays mounted (invisible): its warmup drives the sendbox/mic
+        // readiness. The Kel pill replaces it visually so the choice reads in plain language.
+        return (
+          <>
+            <span style={{ display: 'none' }} aria-hidden='true'>
+              <AcpModelSelector
+                conversation_id={conversation.id}
+                readonlyLabel={t('common.kel.automatic')}
+                backend={resolvedConversationBackend}
+                initialModelId={extra.current_model_id}
+                onRuntimeReadyChange={handleRuntimeReadyChange}
+                waitForWarmup
+              />
+            </span>
+            <KelModelPill conversationId={conversation.id} />
+          </>
+        );
+      }
       return (
         <AcpModelSelector
           conversation_id={conversation.id}

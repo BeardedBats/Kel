@@ -21,6 +21,8 @@ export type ConfigKeyMap = {
   'webui.desktop.port': number | undefined;
   'theme.activeId': string;
   'theme.userThemes': Theme[];
+  /** Per-theme semantic color overrides: { themeId: { '--token': '#rrggbb' } }. Builtins are never mutated. */
+  'theme.overrides': Record<string, Record<string, string>>;
   'workspace.pasteConfirm': boolean | undefined;
   'guid.lastAssistantId': string | undefined;
   /** User-defined order for the enabled assistant picker surfaces. */

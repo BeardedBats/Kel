@@ -105,7 +105,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           />
           <Route
             path='/settings/model'
-            element={<Navigate to='/providers' replace />}
+            element={<ModeSettings />}
           />
           <Route
             path='/assistants'

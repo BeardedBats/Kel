@@ -37,6 +37,47 @@ const store: SendBoxDraftStore = {
   aionrs: new Map(),
 };
 
+// Drafts survive a restart: the in-memory maps stay the source of truth and are mirrored into
+// localStorage on every change. Keyed per conversation so switching chats never mixes drafts.
+const DRAFT_STORAGE_KEY = 'kel.sendbox.drafts.v1';
+const DRAFT_PERSIST_LIMIT = 20000;
+
+const persistDrafts = () => {
+  try {
+    const snapshot: Record<string, Record<string, unknown>> = {};
+    for (const type of Object.keys(store) as DraftConversationType[]) {
+      const entries: Record<string, unknown> = {};
+      for (const [id, draft] of store[type].entries()) {
+        const payload = JSON.stringify(draft);
+        if (payload.length <= DRAFT_PERSIST_LIMIT) entries[id] = draft;
+      }
+      snapshot[type] = entries;
+    }
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
+  } catch {
+    /* drafts are best-effort and must never break the composer */
+  }
+};
+
+const hydrateDrafts = () => {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
+    for (const type of Object.keys(store) as DraftConversationType[]) {
+      const entries = parsed[type];
+      if (!entries || typeof entries !== 'object') continue;
+      for (const [id, draft] of Object.entries(entries)) {
+        store[type].set(id, draft as never);
+      }
+    }
+  } catch {
+    /* ignore corrupt or stale drafts */
+  }
+};
+
+hydrateDrafts();
+
 export type ConversationSendBoxPrefill = {
   requestId: number;
   prompt: string;
@@ -146,6 +187,7 @@ const setDraft = <K extends DraftConversationType>(
     default:
       break;
   }
+  persistDrafts();
 };
 
 const getDraft = <K extends DraftConversationType>(

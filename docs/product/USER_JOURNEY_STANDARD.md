@@ -104,6 +104,20 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-40 - Superseded donor controls are removed everywhere.** When a Kel-native control replaces a donor control, every mount point of the donor control is swapped in the same change: no second path to the same capability, no hidden global shortcut left behind. Verify: grep the donor component's mount points; only the native control remains mounted.
 
+**JR-41 - Every vertically growing surface has one scroll owner.** Each main-content surface must own exactly one vertical scroll container; a fixed frame, a draw over, and the page body never compete. Content that exists in the DOM is not proof of usability: verify with more than one viewport of content, scroll physically to the bottom, and confirm the last interactive control is visible, focusable and usable at small laptop heights and after resizing. No per-screen magic heights when the cause is the shared shell.
+
+**JR-42 - The model Kel uses is a plain, explicit choice.** The user can choose Kel's normal conversational model (Auto, or a specific available model) and, per conversation, fall back to that default or pick their own. Availability is stated in plain words ("Available" / "Needs setup"); switching back to Auto restores routing completely; choices persist; provider and routing machinery stay out of the surface. An unavailable choice is a preference, never a dead end: Kel falls back and says so.
+
+**JR-43 - Substantial unsent text survives.** A draft belongs to its conversation and survives navigation, switching and restart; only sending (or explicitly clearing) removes it. Recovery flows that restart the app must not be the first time a user learns their draft was in memory only.
+
+**JR-44 - Theme foundation colors are the user's, per theme.** The selected theme exposes semantic color controls (background, surfaces, text, accent, border, success/warning/error) with picker, hex entry and per-token reset plus "restore defaults". Changes apply live, stay scoped to that theme, never mutate built-in defaults, and warn - without blocking or silently rewriting - when a combination becomes hard to read.
+
+**JR-45 - Backups describe themselves before they overwrite.** A local backup is a folder with a human-readable description (what it covers, when, how much), credentials are excluded and that is stated. A restore validates the backup first, shows what will be replaced, keeps the current data beside it, and only completes after a restart so a failed copy can never half-replace the user's data.
+
+**JR-46 - Search reaches the user's own content.** One search experience covers at least chats, transcripts and guided sessions with human partial terms and snippets, never internal ids; anything not yet covered is documented instead of implied. Every command surface (palette) lists only actions that actually run.
+
+**JR-47 - An unexpected payload degrades in place; the shell never blanks.** Every surface that renders engine data must survive an absent, empty or differently-shaped field: the affected control says in plain words what is unavailable and the rest of the app - navigation, the current route's frame, other surfaces - stays usable. An uncaught render error that unmounts the whole application is a release blocker, not a cosmetic defect. Verify: load each engine-backed surface against a payload missing its optional fields (or force the failure) and confirm the shell and navigation remain usable.
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

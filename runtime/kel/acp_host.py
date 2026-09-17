@@ -26,6 +26,23 @@ else:
     from .core import explain_approval, explain_failure
 
 
+PLAIN_STATES = {
+    'QUEUED': 'Kel is queued',
+    'READY': 'Kel is ready to start',
+    'RUNNING': 'Kel is working',
+    'WAITING_RESOURCE': 'Kel is waiting for a model to continue',
+    'AWAITING_USER': 'Kel is waiting for you',
+    'PAUSED': 'Kel is paused',
+    'BLOCKED': 'Kel is blocked by a safety rule',
+    'CLOSED': 'Kel finished',
+    'CANCELLED': 'Kel cancelled this',
+}
+
+
+def _plain_state(status):
+    return PLAIN_STATES.get(str(status), 'Kel is working on it')
+
+
 class ServiceClient:
     def __init__(self, data):
         self.data = Path(data)
@@ -278,7 +295,7 @@ class ACPHost:
                     status = job['state']
                     if status != last_status:
                         self.update(session, {'sessionUpdate': 'tool_call' if last_status is None else 'tool_call_update',
-                                              'toolCallId': job_id, 'title': 'Kel work: ' + status.lower().replace('_', ' '),
+                                              'toolCallId': job_id, 'title': _plain_state(status),
                                               'kind': 'other', 'status': 'in_progress'})
                         last_status = status
                     if status in ('CLOSED', 'CANCELLED', 'PAUSED', 'AWAITING_USER', 'WAITING_RESOURCE'):
@@ -290,7 +307,7 @@ class ACPHost:
                         terminal = status in ('CLOSED', 'CANCELLED')
                         self.update(session, {'sessionUpdate': 'tool_call_update', 'toolCallId': job_id,
                                               'status': 'completed' if status == 'CLOSED' and verdict == 'VERIFIED' else ('failed' if terminal else 'pending'),
-                                              'title': 'Kel work: ' + status + ' / ' + verdict})
+                                              'title': _plain_state(status) + ' (' + str(verdict).lower() + ')'})
                         if status == 'AWAITING_USER':
                             approvals = state.get('approvals') or []
                             pending = [a for a in approvals if a.get('job_id') == job_id]

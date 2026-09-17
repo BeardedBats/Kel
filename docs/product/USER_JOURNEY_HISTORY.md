@@ -306,6 +306,33 @@ were fixed, the package was rebuilt, and the affected journeys were re-run (evid
 | Preview/apply opposition scans duplicated (drift risk) | P3 | one shared `chosen_labels` + `opposition_pairs` | - |
 | Drag-assign and delete confirmations had silent failure paths | P3 | one plain error sentence each | JR-9 |
 
+
+## H22 — Basic UX expectations sweep (2026-09-16)
+
+Audited the packaged release candidate by exercising it (`sweep-seed`/`sweep-a`/`sweep-b`), classified
+every checklist area (`docs/basic-ux-sweep/01_EXPECTATION_MATRIX.md`), then implemented the
+high-value missing basics and re-verified in the packaged app (`sweep2`/`sweep3`/`sweep4`).
+
+| Finding | Class | Fix | Rule |
+|---|---|---|---|
+| Unsent drafts lived in memory only and died on restart | UX-P1 | drafts mirrored per conversation to `localStorage` in `useSendBoxDraft` | JR-43 |
+| No explicit default model for normal chat | UX-P1 | engine `model_prefs` (migration 13) + `/api/model` + Settings · Model "Default Kel model" card | JR-42 |
+| Kel chats had no per-conversation model choice | UX-P1 | "Kel model" pill in the chat header (Use global default / Automatic / models, Details) | JR-42 |
+| No semantic theme colors without editing CSS | UX-P1 | per-theme `theme.overrides` + "Theme colors" section (picker/hex/reset/restore, live, warnings) | JR-44 |
+| Palette missed core actions | UX-P2 | Go-to entries + verified Actions (theme switch, Start design vetting prefill) | JR-46 |
+| Search covered chats only | UX-P2 | engine `/api/search` (transcripts, vetting, chats) surfaced in the palette; remainder documented | JR-46 |
+| No data location or backup for normal users | UX-P2 | Settings · System "Data folder" + local backup/restore (validated, staged, secret-excluded) | JR-45 |
+| Scroll matrix on empty surfaces proved nothing | process | matrix + seeded-content runs; providers key-field case re-proven (`sweep4`) | JR-41 |
+| **The whole app could blank**: Settings · Model and any Kel chat unmounted the entire page — `action=get` answered without `providers` and the Kel model control crashed on `state.providers.map(...)` | UX-P0 (regression, found by as-built verification) | `get` and `list` answer one payload (stored choice + provider listing) and the control paints a plain unavailable state instead of assuming the list exists | JR-47 |
+| Backup failed while the engine held the database (`WinError 33` copying the live `-shm` sidecar) | UX-P2 | live SQLite sidecar files are skipped by name, the database is copied through SQLite's own backup API, copies are retried, and a failed copy never leaves a partial backup folder | JR-45 |
+
+Round 2 (as-built verification) re-ran the sweep scenarios and the standing battery against a rebuild
+that carries these fixes; the exact commands, results and evidence paths are recorded in
+`docs/basic-ux-sweep/15_FINAL_VERDICT.md`.
+
+Provider-dependent behaviours (stop/streaming/retry live, notifications) are classified honestly as
+unverifiable in this environment instead of being claimed.
+
 ---
 
 ## Process (permanent)

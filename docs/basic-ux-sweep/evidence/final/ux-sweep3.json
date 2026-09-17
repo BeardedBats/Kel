@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "scenario": "sweep3",
+  "steps": [
+    {
+      "label": "palette-new-chat",
+      "ms": 0
+    },
+    {
+      "label": "palette-transcription",
+      "ms": 0
+    },
+    {
+      "label": "palette-theme",
+      "ms": 0
+    },
+    {
+      "label": "palette-vetting",
+      "ms": 0
+    },
+    {
+      "label": "palette-system",
+      "ms": 0
+    },
+    {
+      "label": "restore-defaults",
+      "ms": 1
+    },
+    {
+      "label": "default-card",
+      "ms": 2
+    },
+    {
+      "label": "data-path",
+      "ms": 2
+    },
+    {
+      "label": "backup-created",
+      "ms": 2438
+    },
+    {
+      "label": "restore-confirm",
+      "ms": 411
+    }
+  ],
+  "errors": [],
+  "paletteNewChat": "Go to\nNew Chat\nstart a conversation",
+  "paletteTranscription": "Go to\nTranscription\nrecord, upload, transcripts",
+  "paletteTheme": "Actions\nSwitch to Dark theme\nappearance\nGo to\nSettings · Appearance\ntheme and colors",
+  "paletteVetting": "Actions\nStart design vetting\nprefills the chat",
+  "paletteSystem": "Go to\nSettings\nmodels, appearance, system\nGo to\nSettings · System\ndata, backup, updates",
+  "themeColorsSection": true,
+  "themeColorInputs": 10,
+  "accentOverrideApplied": true,
+  "contrastProbe": {
+    "textPrimaryFilledWith": "#ffffff"
+  },
+  "contrastWarningShown": true,
+  "restoreAllWorked": true,
+  "defaultModelCard": 1,
+  "modelCardText": "-in)Claude\nAvailable\nCodex (built-in)Codex\nAvailable\nClaude Sonnet 4.6Anthropic\nNeeds setup\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\n\nSaved immediately. Switching back to Automatic restores Kel's normal routing.\n\nModel\nClear status\nAdd Model\n\nConfigure LLM providers and API keys for use across all assistants. Only Aion CLI supports custom models; other agents use their own built-in models.\n\nNo configured models\n\nNeed help? Check out the detailedconfiguration guide.",
+  "headerButtonInventory": [
+    "|",
+    "|",
+    "|",
+    "|",
+    "|",
+    "|",
+    "|",
+    "|",
+    "|Work",
+    "|Projects",
+    "|Permissions",
+    "|Transcription",
+    "|Work & context",
+    "kel-model-pill|Kel model: Automatic",
+    "|",
+    "message-anchor-rail-search|",
+    "aionrs-attach-folder-btn|",
+    "sendbox-add-to-draft-btn|",
+    "kel-mic-toggle|",
+    "sendbox-send-btn|",
+    "|Files",
+    "|Changes",
+    "|",
+    "|"
+  ],
+  "modelPillFound": 1,
+  "modelPillMenu": "ropic\nNeeds setup\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\nDefault for new chats\nAutomatic — Kel picks what is available\nCurrent\nClaude (built-in)Claude\nAvailable\nCodex (built-in)Codex\nAvailable\nClaude Sonnet 4.6Anthropic\nNeeds setup\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\nDetails: answering with Automatic (default)\nOpen model settings",
+  "modelChoicePersisted": "{\"auto_label\":\"Auto\",\"conversation\":null,\"default\":null,\"providers\":[{\"available\":true,\"id\":\"claude-code\",\"label\":\"Claude\",\"options\":[{\"available\":true,\"id\":\"claude-native\",\"label\":\"Claude (built-in)\"}]},{\"available\":tru",
+  "dataPathShown": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-b\\kelwork",
+  "copyPathToast": true,
+  "backupCreated": true,
+  "backupFolders": [
+    "Kel-Backup-20260916-212210"
+  ],
+  "restoreConfirm": true,
+  "restoreCancelled": true,
+  "textScale": {
+    "before": 0.95,
+    "afterLarger": 1,
+    "afterSmaller": 0.95
+  },
+  "textScaleWorks": true,
+  "zoomKeys": {
+    "before": 0.95,
+    "afterIn": 1,
+    "afterReset": 0.95
+  },
+  "zoomKeysWork": true,
+  "consoleErrors": [
+    "Error: Open a conversation before choosing its model."
+  ],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

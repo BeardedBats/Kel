@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "scenario": "hardening",
+  "steps": [
+    {
+      "label": "page",
+      "ms": 17
+    },
+    {
+      "label": "empty-state",
+      "ms": 2
+    },
+    {
+      "label": "keyboard-record",
+      "ms": 1
+    },
+    {
+      "label": "keyboard-escape",
+      "ms": 2
+    },
+    {
+      "label": "key-connected",
+      "ms": 362
+    },
+    {
+      "label": "bogus-key-error",
+      "ms": 362
+    },
+    {
+      "label": "key-cleared",
+      "ms": 362
+    },
+    {
+      "label": "palette-transcription",
+      "ms": 1
+    },
+    {
+      "label": "folders",
+      "ms": 2
+    },
+    {
+      "label": "dense-bar",
+      "ms": 2
+    },
+    {
+      "label": "dense-bar",
+      "ms": 1
+    },
+    {
+      "label": "dense-bar",
+      "ms": 2
+    },
+    {
+      "label": "dense-rows",
+      "ms": 2
+    },
+    {
+      "label": "light-readable",
+      "ms": 1
+    }
+  ],
+  "errors": [],
+  "pageShown": 1,
+  "emptyState": true,
+  "narrowOverflow": {
+    "transcription": 0,
+    "guid": 0
+  },
+  "narrowNoScroll": true,
+  "jargonOffenders": [],
+  "keyboardRecord": 1,
+  "keyboardEscape": true,
+  "keyConnected": true,
+  "bogusKeyError": "Everything is saved automatically.\nUpload audio\nMuse is connected. New recordings and uploads use it.\nThe Meta API key was not accepted. Replace it in Settings.",
+  "keyCleared": true,
+  "paletteTranscript": true,
+  "folders": 3,
+  "denseRows": true,
+  "denseNoOverflow": true,
+  "lightThemeToggled": true,
+  "lightModeReadable": true,
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

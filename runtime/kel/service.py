@@ -32,7 +32,15 @@ class Service:
     def __init__(self,root):
         started=time.time()
         self.lifecycle_lock=threading.RLock();self.draining=False
-        self.store=Store(root);self.context=Context(self.store)
+        self.store=Store(root)
+        # A staged restore (chosen by the user in Settings) applies before anything opens
+        # the databases; the previous data is kept beside it as .pre-restore-*.
+        try:
+            from .backup import apply_pending_restore
+            apply_pending_restore(self.store)
+        except Exception:
+            pass
+        self.context=Context(self.store)
         CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
         self.model=InternalAdapter() if os.environ.get('ANTHROPIC_API_KEY') else None
         # The independent reviewer must not depend on a separate API key when real
@@ -617,6 +625,12 @@ class Service:
             return Diagnostics(self.store,ENGINE_VERSION).apply(data)
         if path=='/api/vetting':return self._vetting_action(data)
         if path=='/api/transcription':return self._transcription_action(data)
+        if path=='/api/model':return self._model_action(data)
+        if path=='/api/data-path':return {'root':str(self.store.root),'database':str(self.store.db_path)}
+        if path=='/api/backup':return self._backup_action(data)
+        if path=='/api/search':
+            from .search import Search
+            return Search(self.store).run(data.get('q',''))
         raise PolicyError('Unknown action')
 
     def _vetting_action(self,data):
@@ -688,6 +702,65 @@ class Service:
                 accept_all=bool(data.get('accept_all',False)),
                 then_process=bool(data.get('then_process',False))))
         raise PolicyError('Unknown vetting action')
+
+    def _backup_action(self,data):
+        # Local backup/restore of the engine data. Credentials never leave the machine and are
+        # stripped from the copied database; restore stages files and applies on the next start.
+        from .backup import Backup
+        action=data.get('action')
+        backup=Backup(self.store)
+        if action=='create':
+            return backup.create(data.get('target'))
+        if action=='inspect':
+            return backup.inspect(data.get('source'))
+        if action=='restore':
+            return backup.stage_restore(data.get('source'))
+        raise PolicyError('Unknown backup action')
+
+    def _model_action(self,data):
+        # Default Kel model + per-conversation override. Plain labels only; routing keeps its
+        # fallbacks (the preference is a soft ordering hint, never an exclusion).
+        from .providers import DEFINITIONS, Providers
+        from .model_prefs import ModelPrefs, provider_label, model_label
+        action=data.get('action')
+        prefs=ModelPrefs(self.store)
+        if action in ('get','list'):
+            # Both actions carry the provider listing: the Kel model control reads the choice
+            # and the choices from one payload, and a missing list is what made the settings
+            # card and the chat pill fail to render.
+            snapshot=prefs.snapshot(data.get('conversation'))
+            providers=Providers(self.store)
+            listing=[]
+            for item in DEFINITIONS:
+                status=providers.status(item['id'])
+                usable=status['status'] in ('healthy','quota','quota_not_reported')
+                listing.append({
+                    'id':item['id'],
+                    'label':provider_label(item['id']),
+                    'available':usable,
+                    'options':[{'id':model.get('id'),
+                                'label':model_label(model.get('id')) or model.get('id'),
+                                'available':usable} for model in item.get('models',())],
+                })
+            snapshot['providers']=listing
+            snapshot['auto_label']='Auto'
+            return snapshot
+        if action in ('set_default','set_conversation','clear_conversation'):
+            choice=data.get('choice') or None
+            if action=='set_default':
+                if choice and choice.get('provider'):
+                    prefs.set_default(choice.get('provider'),choice.get('model'))
+                else:
+                    prefs.clear('default')
+            elif action=='set_conversation':
+                if choice and choice.get('provider'):
+                    prefs.set_conversation(data.get('conversation'),choice.get('provider'),choice.get('model'))
+                else:
+                    prefs.clear_conversation(data.get('conversation'))
+            else:
+                prefs.clear_conversation(data.get('conversation'))
+            return prefs.snapshot(data.get('conversation'))
+        raise PolicyError('Unknown model action')
 
     def _transcription_action(self,data):
         # Unexpected failures still answer in one plain sentence; PolicyError keeps its own copy.

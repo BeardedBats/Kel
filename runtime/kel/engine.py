@@ -251,15 +251,21 @@ class Engine:
                     candidates=[c for c in candidates if required.issubset(c.capabilities)]
                     if m['attempts']>=2 and not (spec.get('provider') or job['contract'].get('provider')) and len(candidates)>1:
                         candidates=[c for c in candidates if c.name!=m['provider']]
+                    pref = None
                     try:
-                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'))
+                        from .model_prefs import ModelPrefs
+                        pref = ModelPrefs.resolve_for_job(self.store, job['id'])
+                    except Exception:
+                        pref = None
+                    try:
+                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=(pref or {}).get('provider') or None)
                     except PolicyError as exc:
                         self.store.wait_for_route(job['id'],str(exc))
                         continue
                     try:
                         self.store.controller_lease(self.owner)
                         adapter=self.adapters[route['selected']]
-                        model=getattr(adapter,'options',{}).get('model')
+                        model=((pref or {}).get('model') if (pref and route['selected'] == (pref or {}).get('provider')) else None) or getattr(adapter,'options',{}).get('model')
                         run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model)
                     except PolicyError:
                         continue

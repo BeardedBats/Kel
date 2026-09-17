@@ -103,8 +103,8 @@ export const KelTabs: React.FC<{
 
 export const KelCard: React.FC<
   React.PropsWithChildren<{ title?: string; chip?: React.ReactNode; actions?: React.ReactNode; className?: string }>
-> = ({ title, chip, actions, className, children }) => (
-  <section className={`kel-card${className ? ` ${className}` : ''}`}>
+> = ({ title, chip, actions, className, children, ...rest }) => (
+  <section className={`kel-card${className ? ` ${className}` : ''}`} {...(rest as Record<string, unknown>)}>
     {(title || chip || actions) && (
       <div className="kel-row">
         {title && <h2 className="kel-h2">{title}</h2>}

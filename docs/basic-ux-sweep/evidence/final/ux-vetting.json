@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "scenario": "vetting",
+  "steps": [
+    {
+      "label": "start",
+      "text": "start design vetting: Basketball matchup dashboard",
+      "tail": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "batch-1-in-panel",
+      "ms": 20
+    },
+    {
+      "label": "answer-1: C",
+      "text": "1: C",
+      "tail": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-2: A",
+      "text": "2: A",
+      "tail": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-3: B",
+      "text": "3: B",
+      "tail": "content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-4: D",
+      "text": "4: D",
+      "tail": " Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-5: B",
+      "text": "5: B",
+      "tail": "ts\nPermissions\nTranscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-6: A",
+      "text": "6: A",
+      "tail": "anscription\nConversations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-7: A",
+      "text": "7: A",
+      "tail": "rsations\nstart design vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-8: C",
+      "text": "8: C",
+      "tail": "sign vetting: Basketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-9: D",
+      "text": "9: D",
+      "tail": "ketball matchup dashboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "answer-10: B",
+      "text": "10: B",
+      "tail": "shboard\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "ten-answers-recorded",
+      "ms": 21
+    },
+    {
+      "label": "process",
+      "text": "process answers",
+      "tail": "dering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nprocess answers\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "batch-2-in-panel",
+      "ms": 20
+    },
+    {
+      "label": "answer-19",
+      "text": "19: B",
+      "tail": "chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nprocess answers\n21:28\n21:28\n19: B\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "view-decisions",
+      "text": "view decisions",
+      "tail": "or the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nprocess answers\n21:28\n21:28\n19: B\n21:28\n21:28\nview decisions\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "decisions-in-panel",
+      "ms": 49
+    },
+    {
+      "label": "greyboxes",
+      "text": "show greyboxes 19",
+      "tail": "audit chat 2 for the sweep battery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nprocess answers\n21:28\n21:28\n19: B\n21:28\n21:28\nview decisions\n21:28\n21:28\nshow greyboxes 19\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "greyboxes-in-panel",
+      "ms": 30
+    },
+    {
+      "label": "finish",
+      "text": "finish spec now",
+      "tail": "attery.\nWork & context\nSettings\nstart design vetting: Basketball matchup dashboard\nKel model: Automatic\nstart design vetting: Basketball matchup dashboard\n21:27\n21:28\n1: C\n21:28\n21:28\n2: A\n21:28\n21:28\n3: B\n21:28\n21:28\n4: D\n21:28\n21:28\n5: B\n21:28\n21:28\n6: A\n21:28\n21:28\n7: A\n21:28\n21:28\n8: C\n21:28\n21:28\n9: D\n21:28\n21:28\n10: B\n21:28\n21:28\nprocess answers\n21:28\n21:28\n19: B\n21:28\n21:28\nview decisions\n21:28\n21:28\nshow greyboxes 19\n21:28\n21:28\nfinish spec now\n21:28\n21:28\nFiles\nChanges\nacp-temp-da84a06f"
+    },
+    {
+      "label": "spec-preview",
+      "ms": 24
+    }
+  ],
+  "errors": [],
+  "onboardingAtBoot": {
+    "present": false,
+    "steps": 0,
+    "method": null
+  },
+  "batchShown": true,
+  "lastAnswerSawProgress": false,
+  "allAnswersRecorded": true,
+  "answerProgressCount": {
+    "answered": 10
+  },
+  "batch2Shown": true,
+  "decisionsSeen": true,
+  "greyboxesSeen": true,
+  "specSaved": true,
+  "panelTab": 1,
+  "panelShowsTopic": true,
+  "panelShowsProgress": true,
+  "panelShowsDecisions": true,
+  "panelSpecPreview": false,
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

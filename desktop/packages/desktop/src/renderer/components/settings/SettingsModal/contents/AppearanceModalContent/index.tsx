@@ -12,6 +12,7 @@ import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import { FONT_SIZE_KEYS, FONT_SIZE_SPECS, FONT_SIZE_STEP, type FontSizeKey } from '@/common/config/fontSizes';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { useSettingsViewMode } from '../../settingsViewContext';
+import ThemeColorsSection from '@renderer/components/kel/ThemeColorsSection';
 import FontSizeStepper from './FontSizeStepper';
 import FontFamilySelect from './FontFamilySelect';
 import FontWeightSelect from './FontWeightSelect';
@@ -73,6 +74,9 @@ const AppearanceModalContent: React.FC = () => {
             <div className='text-14px text-t-primary leading-22px mb-12px'>{t('settings.theme')}</div>
             <CssThemeSettings />
           </div>
+
+          {/* 主题语义色 / Theme foundation colors */}
+          <ThemeColorsSection />
 
           {/* 字体（字族 + 字号）/ Fonts (family + size) */}
           <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px'>

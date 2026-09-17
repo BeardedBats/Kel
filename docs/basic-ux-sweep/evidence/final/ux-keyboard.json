@@ -1,0 +1,496 @@
+{
+  "schema": 1,
+  "scenario": "keyboard",
+  "stops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Permissions",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Transcription",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Second chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 318,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Rich rendering chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 354,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Third chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 390,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Seeding audit chat 3 for the sweep battery.",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 426,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Seeding audit chat 2 for the sweep battery.",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 462,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work & context",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px",
+      "rect": {
+        "x": 8,
+        "y": 817,
+        "w": 244,
+        "h": 32
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Settings",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 858,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Open Providers",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1070,
+        "y": 287,
+        "w": 140,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Kel",
+      "outline": "solid 1px rgb(14, 124, 90)",
+      "boxShadow": "rgba(201, 205, 212, 1) 0px 0px 0px 1.99921px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, ",
+      "rect": {
+        "x": 816,
+        "y": 377,
+        "w": 70,
+        "h": 36
+      }
+    },
+    {
+      "tag": "textarea",
+      "name": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "rgb(190, 218, 255) 0px 0px 0px 0px",
+      "rect": {
+        "x": 480,
+        "y": 449,
+        "w": 742,
+        "h": 44
+      }
+    },
+    {
+      "tag": "button",
+      "name": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "rgb(201, 205, 212) 0px 0px 0px 2px",
+      "rect": {
+        "x": 480,
+        "y": 505,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Record a message",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1149,
+        "y": 505,
+        "w": 35,
+        "h": 32
+      }
+    },
+    {
+      "tag": "button",
+      "name": "",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "rgb(148, 191, 255) 0px 0px 0px 2px",
+      "rect": {
+        "x": 1190,
+        "y": 505,
+        "w": 32,
+        "h": 32
+      }
+    }
+  ],
+  "workStops": [
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 154,
+        "h": 40
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Reload",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1331,
+        "y": 125,
+        "w": 77,
+        "h": 34
+      }
+    },
+    {
+      "tag": "a",
+      "name": "Skip to main content",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 10,
+        "w": 162,
+        "h": 39
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Collapse",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 16,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Search messages",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 52,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Back",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 88,
+        "y": 3,
+        "w": 36,
+        "h": 36
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Minimize",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1312,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Maximize",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1352,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Close",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 1392,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "tag": "div",
+      "name": "New Chat",
+      "outline": "solid 1px rgb(14, 122, 89)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 91,
+        "w": 208,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Work",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 127,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Projects",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 163,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Permissions",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 199,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "button",
+      "name": "Transcription",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 235,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Second chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 318,
+        "w": 244,
+        "h": 34
+      }
+    },
+    {
+      "tag": "div",
+      "name": "Rich rendering chat",
+      "outline": "solid 2px rgb(14, 124, 90)",
+      "boxShadow": "none",
+      "rect": {
+        "x": 8,
+        "y": 354,
+        "w": 244,
+        "h": 34
+      }
+    }
+  ],
+  "errors": [],
+  "afterSkipEnter": {
+    "active": "BUTTON",
+    "hash": "#/guid"
+  },
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}

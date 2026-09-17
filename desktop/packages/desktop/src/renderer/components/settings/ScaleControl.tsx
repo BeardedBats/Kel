@@ -100,6 +100,8 @@ const ScaleControl: React.FC = () => {
             size='mini'
             type='secondary'
             shape='circle'
+            aria-label='Smaller text'
+            data-testid='text-smaller'
             className='w-28px h-28px !min-w-28px flex items-center justify-center p-0'
             onClick={() => handleStep(-FONT_SCALE_STEP)}
             disabled={fontScale <= FONT_SCALE_MIN + EPSILON}
@@ -122,6 +124,8 @@ const ScaleControl: React.FC = () => {
             size='mini'
             type='secondary'
             shape='circle'
+            aria-label='Larger text'
+            data-testid='text-larger'
             className='w-28px h-28px !min-w-28px flex items-center justify-center p-0'
             onClick={() => handleStep(FONT_SCALE_STEP)}
             disabled={fontScale >= FONT_SCALE_MAX - EPSILON}

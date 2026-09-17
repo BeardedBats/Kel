@@ -1,0 +1,703 @@
+{
+  "schema": 1,
+  "scenario": "readability",
+  "pages": {
+    "guid": {
+      "histogram": {
+        "12": 9,
+        "13": 116,
+        "14": 256,
+        "16": 94,
+        "21": 31,
+        "48": 1
+      },
+      "offenders": [],
+      "tiny": [
+        {
+          "text": "Automatic",
+          "px": 12,
+          "contrast": 8.47,
+          "need": 4.5,
+          "color": "rgb(69, 77, 95)",
+          "cls": "text-12px text-t-secondary",
+          "trail": [
+            "span.text-12px text-t-secondary",
+            "div._actionConfigGroup_17llb_71",
+            "div._actionSubmit_17llb_80",
+            "div._actionRow_17llb_46"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    "work": {
+      "histogram": {
+        "14": 251,
+        "16": 438,
+        "24": 35,
+        "32": 4,
+        "48": 1
+      },
+      "offenders": [],
+      "tiny": []
+    },
+    "projects-knowledge": {
+      "histogram": {
+        "12": 42,
+        "14": 270,
+        "16": 168,
+        "24": 18,
+        "32": 8,
+        "48": 1
+      },
+      "offenders": [],
+      "tiny": [
+        {
+          "text": "No conflicting knowledge for this project.",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "div.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    "providers": {
+      "histogram": {
+        "12": 280,
+        "14": 573,
+        "16": 878,
+        "24": 158,
+        "32": 9,
+        "48": 1
+      },
+      "offenders": [],
+      "tiny": [
+        {
+          "text": "CLI present",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "section.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "text · tools · edit · shell",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "td.",
+            "tr.",
+            "tbody."
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "CLI session present",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "section.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "text · tools · edit · shell",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "td.",
+            "tr.",
+            "tbody."
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "API key needed",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "section.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "text · vision · tools",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "td.",
+            "tr.",
+            "tbody."
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "API key needed",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "section.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "Model",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Capabilities",
+          "px": 12,
+          "contrast": 5.54,
+          "need": 4.5,
+          "color": "rgb(90, 98, 112)",
+          "cls": "",
+          "trail": [
+            "th.",
+            "tr.",
+            "thead.",
+            "table.kel-table"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "text · tools",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "td.",
+            "tr.",
+            "tbody."
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "text · tools",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "td.",
+            "tr.",
+            "tbody."
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "prefer",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "span.kel-meta",
+            "div.kel-row",
+            "section.kel-card",
+            "main.kel-page"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        },
+        {
+          "text": "OS-backed storage available · stored: nothing yet",
+          "px": 12,
+          "contrast": 4.83,
+          "need": 4.5,
+          "color": "rgb(107, 114, 128)",
+          "cls": "kel-meta",
+          "trail": [
+            "p.kel-meta",
+            "div.kel-card",
+            "main.kel-page",
+            "div.kel-scope"
+          ],
+          "bg": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    "settings-appearance": {
+      "histogram": {
+        "12": 177,
+        "13": 128,
+        "14": 386,
+        "16": 3,
+        "48": 1
+      },
+      "offenders": [
+        {
+          "text": "Light",
+          "px": 13,
+          "contrast": 1.06,
+          "need": 4.5,
+          "color": "rgb(255, 255, 255)",
+          "cls": "text-13px text-white truncate flex-1",
+          "trail": [
+            "span.text-13px text-white truncate flex-1",
+            "div.absolute bottom-0 start-0 end-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-8px",
+            "div.relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px w-200px flex-shrink-0 border-[var(--color-primary)]",
+            "div.flex flex-wrap gap-12px"
+          ],
+          "bg": "rgb(247, 248, 250)"
+        },
+        {
+          "text": "Dark",
+          "px": 13,
+          "contrast": 1.06,
+          "need": 4.5,
+          "color": "rgb(255, 255, 255)",
+          "cls": "text-13px text-white truncate flex-1",
+          "trail": [
+            "span.text-13px text-white truncate flex-1",
+            "div.absolute bottom-0 start-0 end-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-8px",
+            "div.relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px w-200px flex-shrink-0 border-transparent hover:border-border-2",
+            "div.flex flex-wrap gap-12px"
+          ],
+          "bg": "rgb(247, 248, 250)"
+        },
+        {
+          "text": "Follow System",
+          "px": 13,
+          "contrast": 1.06,
+          "need": 4.5,
+          "color": "rgb(255, 255, 255)",
+          "cls": "text-13px text-white truncate flex-1",
+          "trail": [
+            "span.text-13px text-white truncate flex-1",
+            "div.absolute bottom-0 start-0 end-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-8px",
+            "div.relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px w-200px flex-shrink-0 border-transparent hover:border-border-2",
+            "div.flex flex-wrap gap-12px"
+          ],
+          "bg": "rgb(247, 248, 250)"
+        },
+        {
+          "text": "Reset",
+          "px": 14,
+          "contrast": 1.7,
+          "need": 4.5,
+          "color": "rgb(148, 191, 255)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabled px-4px h-28px",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Reset",
+          "px": 14,
+          "contrast": 1.7,
+          "need": 4.5,
+          "color": "rgb(148, 191, 255)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabled px-4px h-28px",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Reset",
+          "px": 14,
+          "contrast": 1.7,
+          "need": 4.5,
+          "color": "rgb(148, 191, 255)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabled px-4px h-28px",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Reset",
+          "px": 14,
+          "contrast": 1.7,
+          "need": 4.5,
+          "color": "rgb(148, 191, 255)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-text arco-btn-size-small arco-btn-shape-square arco-btn-disabled px-4px h-28px",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        }
+      ],
+      "tiny": [
+        {
+          "text": "Adjust the foundation colors of the selected theme (",
+          "px": 12,
+          "contrast": 7.63,
+          "need": 4.5,
+          "color": "rgb(69, 77, 95)",
+          "cls": "text-12px text-t-secondary mb-10px",
+          "trail": [
+            "div.text-12px text-t-secondary mb-10px",
+            "div.px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px",
+            "div.space-y-16px",
+            "div.overflow-visible flex-1 min-h-0 pb-16px"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "Light",
+          "px": 12,
+          "contrast": 7.63,
+          "need": 4.5,
+          "color": "rgb(69, 77, 95)",
+          "cls": "text-12px text-t-secondary mb-10px",
+          "trail": [
+            "div.text-12px text-t-secondary mb-10px",
+            "div.px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px",
+            "div.space-y-16px",
+            "div.overflow-visible flex-1 min-h-0 pb-16px"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "). Changes apply immediately and are saved to this theme only — other ",
+          "px": 12,
+          "contrast": 7.63,
+          "need": 4.5,
+          "color": "rgb(69, 77, 95)",
+          "cls": "text-12px text-t-secondary mb-10px",
+          "trail": [
+            "div.text-12px text-t-secondary mb-10px",
+            "div.px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px",
+            "div.space-y-16px",
+            "div.overflow-visible flex-1 min-h-0 pb-16px"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "More colors (20)",
+          "px": 12,
+          "contrast": 7.63,
+          "need": 4.5,
+          "color": "rgb(69, 77, 95)",
+          "cls": "mt-8px text-12px text-t-secondary hover:text-t-primary cursor-pointer bg-transparent border-none p-0",
+          "trail": [
+            "button.mt-8px text-12px text-t-secondary hover:text-t-primary cursor-pointer bg-transparent border-none p-0",
+            "div.px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px",
+            "div.space-y-16px",
+            "div.overflow-visible flex-1 min-h-0 pb-16px"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "-",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "+",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "-",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "+",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "-",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "+",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "-",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "+",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-10px ms-auto",
+            "div.flex items-center gap-12px flex-wrap justify-end"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "-",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-8px flex-1 min-w-240px",
+            "div.flex items-center flex-wrap gap-x-12px gap-y-10px w-full"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        },
+        {
+          "text": "+",
+          "px": 12,
+          "contrast": 6.4,
+          "need": 4.5,
+          "color": "rgb(78, 89, 105)",
+          "cls": "",
+          "trail": [
+            "span.",
+            "button.arco-btn arco-btn-secondary arco-btn-size-mini arco-btn-shape-circle w-28px h-28px !min-w-28px flex items-center justify-center p-0",
+            "div.flex items-center gap-8px flex-1 min-w-240px",
+            "div.flex items-center flex-wrap gap-x-12px gap-y-10px w-full"
+          ],
+          "bg": "rgb(242, 243, 245)"
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "consoleErrors": [],
+  "closeOutcome": "closed",
+  "engineKilled": false
+}
