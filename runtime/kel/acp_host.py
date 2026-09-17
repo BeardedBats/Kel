@@ -119,6 +119,15 @@ class ACPHost:
             return None
         return result if isinstance(result, dict) and result.get('kind') not in (None, 'none') else None
 
+    def _capability_directive(self, cid, text):
+        """A conversation capability instruction, answered inline. Returns the reply or None."""
+        try:
+            result = self.client.call('/api/capabilities',
+                                      {'action': 'directive', 'conversation': cid, 'text': text})
+        except Exception:
+            return None
+        return result.get('reply') if isinstance(result, dict) and result.get('applied') else None
+
     def _resurface(self, session, cid):
         """After an interruption, bring the active vetting prompts back into view."""
         try:
@@ -262,6 +271,18 @@ class ACPHost:
                     if vetting.get('message'):
                         self.text(session, vetting['message'] + '\n\n')
                     return {'stopReason': 'end_turn'}
+            # Conversation capability preferences ("use GitHub here", "don't browse the web in this
+            # chat") write exactly the state the Tools control writes, and answer inline the same way
+            # vetting does - one policy, two ways to reach it.
+            if not attachments:
+                # Cheap local prefilter: only directive-shaped text asks the engine; ordinary
+                # messages keep taking exactly one round-trip. The policy itself stays engine-side.
+                from .capabilities import directive
+                if directive(text):
+                    confirmation = self._capability_directive(cid, text)
+                    if confirmation:
+                        self.text(session, confirmation + '\n\n')
+                        return {'stopReason': 'end_turn'}
             sid = 'acp-' + uuid.uuid4().hex
             self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments})
             seen = {m['seq'] for m in baseline['messages']}

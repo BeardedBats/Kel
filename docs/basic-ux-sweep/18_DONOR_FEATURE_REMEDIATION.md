@@ -96,7 +96,15 @@ configuration — each with its code path, UI location and packaged evidence in
 
 ## 6. Release docket (after this pass)
 
-1. Session-scoped tool controls — engine contract + chat surface.
+1. ~~Session-scoped tool controls — engine contract + chat surface.~~ **DELIVERED 2026-09-17** — see
+   `docs/session-tools/` (10 documents) and the packaged journey `ux-sessiontools.json` on
+   `dist/package-final9`: per-conversation capability overrides in the engine
+   (`runtime/kel/capabilities.py`, migration 14), enforced at the central authorization boundary
+   (`kel.authorize` layer 3c), surfaced as one plain-word control beside the model pill, reachable in
+   words through the chat itself, isolated per conversation, surviving restart, resettable to the
+   global default, and unable to enable an unavailable capability or widen any scope. Journey rules
+   JR-50/JR-51 and history H24 recorded. Independent review of this workstream: see
+   `docs/session-tools/00_STATUS.md`.
 2. Memory change proposals — review surface over the existing engine records.
 3. Artifact lineage — "Where did this come from?" on the preview surface.
 4. In-chat approval cards — Work prompts moved beside the transcript.

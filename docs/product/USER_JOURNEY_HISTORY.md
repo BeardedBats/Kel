@@ -355,6 +355,29 @@ Provider-dependent behaviours remain unverifiable in this environment, as record
 
 ---
 
+### H24 - Conversation-scoped tool controls (2026-09-17)
+
+Workstream: let a user enable/disable a capability for the current conversation only, in words and in
+the UI, without touching global configuration.
+
+Journey defects found and fixed while building it:
+
+- The first engine draft created its tables lazily on *some* paths: the UI write path hit
+  `no such table` on a fresh database. Fixed by creating the schema on every entry point that writes
+  (and by creating `schema_migrations` itself when absent). Found by the new engine tests before any
+  build was cut.
+- The natural-language parser rejected the phrasing the user journey actually uses
+  ("Don't browse the web in this chat"): it expected the negation immediately before the capability
+  word. Polarity now reads the words before the capability, and the scope phrase is still required so
+  ordinary prose is never mistaken for a preference.
+- The chat hook was first written against the engine store in a class that only owns an HTTP client;
+  it now uses the same client route as Vetting answers, with a cheap local prefilter so ordinary
+  messages still take exactly one round-trip.
+- The conversation control reports availability in the menu and refuses to look ready for something
+  that needs setup; the packaged scenario asserts the menu contains no machinery words.
+
+Rules added: **JR-50**, **JR-51**.
+
 ## Process (permanent)
 
 1. Run the journey harness (packaged build, fresh + seeded roots) before tagging any release.

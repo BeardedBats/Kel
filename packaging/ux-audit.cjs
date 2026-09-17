@@ -3007,12 +3007,153 @@ async function scenarioKeepAwake() {
   return results;
 }
 
+async function scenarioSessionTools() {
+  // Conversation-scoped tool controls as a user journey: isolation between chats, restart, reset,
+  // narrowing, enabling a configured capability, an unavailable one, and the natural-language path.
+  const results = { schema: 1, scenario: 'sessiontools', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const ask = (body) =>
+    page.evaluate(async (payload) => {
+      const api = window.kelAPI;
+      if (!api) return null;
+      try {
+        return await api.request('/api/capabilities', payload);
+      } catch (error) {
+        return { error: String(error) };
+      }
+    }, body);
+  const rowsFor = (conversation) => ask({ action: 'get', conversation });
+  const rowOf = (rows, id) => (Array.isArray(rows) ? rows.find((row) => row.id === id) : null);
+  const openChat = async (title) => {
+    await page.evaluate(() => { location.hash = '/guid'; });
+    await page.waitForTimeout(2200);
+    await page.getByText(title, { exact: false }).first().click().catch(() => {});
+    await page.waitForTimeout(2400);
+  };
+  const engineId = () =>
+    page.evaluate(async () => {
+      const api = window.kelAPI;
+      const hash = String(location.hash);
+      const match = hash.match(/conversation[\/]([A-Za-z0-9_-]+)/);
+      if (!api || !match) return null;
+      try {
+        return await api.conversation(match[1]);
+      } catch {
+        return null;
+      }
+    });
+  try {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await openChat('Rich rendering chat');
+    results.pillPresent = await page.locator('[data-testid="kel-tools-pill"]').count();
+    const chatA = await engineId();
+    results.chatA = chatA;
+
+    // The menu speaks plain words: capability labels, availability, and no raw tool/runtime ids.
+    await page.locator('[data-testid="kel-tools-pill"]').first().click();
+    await page.waitForTimeout(900);
+    const menu = await page.locator('[data-testid="kel-tools-menu"]').first().innerText().catch(() => '');
+    results.menuText = menu.replace(/\s+/g, ' ').slice(0, 320);
+    results.menuPlain = /Web/.test(menu) && /GitHub/.test(menu) && /Files/.test(menu);
+    results.menuHidesMachinery = !/mcp|server|tool id|runtime/i.test(menu);
+    await shot('sessiontools-01-menu');
+    await page.keyboard.press('Escape').catch(() => {});
+
+    // Narrowing: Web off for this chat only.
+    await ask({ action: 'set', conversation: chatA, capability: 'web', state: 'off' });
+    const aAfter = await rowsFor(chatA);
+    results.chatAWebOverride = rowOf(aAfter, 'web')?.override;
+    results.chatAWebUsable = rowOf(aAfter, 'web')?.usable;
+
+    // Isolation: a second conversation keeps its own (default) state, and can differ the other way.
+    await openChat('Second chat');
+    const chatB = await engineId();
+    results.chatB = chatB;
+    const bRows = await rowsFor(chatB);
+    results.chatBWebOverride = rowOf(bRows, 'web')?.override;
+    results.chatBWebUsable = rowOf(bRows, 'web')?.usable;
+    await ask({ action: 'set', conversation: chatB, capability: 'web', state: 'on' });
+
+    // Enable: an already-available capability is genuinely usable here.
+    const bAfter = await rowsFor(chatB);
+    results.chatBWebEnabledUsable = rowOf(bAfter, 'web')?.usable;
+    results.chatBWebEffective = rowOf(bAfter, 'web')?.effective;
+
+    // Unavailable capability: plain "needs setup" and it stays unusable even when switched on.
+    await ask({ action: 'set', conversation: chatB, capability: 'drive', state: 'on' });
+    const driveRow = rowOf(await rowsFor(chatB), 'drive');
+    results.driveAvailability = driveRow?.availability;
+    results.driveStaysUnusable = driveRow?.usable === false;
+    results.driveReason = String(driveRow?.availability_reason || '').slice(0, 90);
+
+    // Natural language: the chat instruction writes the same state as the menu.
+    await openChat('Rich rendering chat');
+    const composer = page.locator('[data-testid="sendbox-input"]:visible, textarea:visible').first();
+    await composer.click({ timeout: 8000 }).catch(() => {});
+    await composer.fill('Use GitHub for this conversation.');
+    await page.keyboard.press('Enter');
+    let nlSeen = false;
+    let nlBody = '';
+    for (let i = 0; i < 12 && !nlSeen; i += 1) {
+      await page.waitForTimeout(2500);
+      nlBody = await page.evaluate(() => document.body.innerText || '');
+      nlSeen = /I can use GitHub in this conversation/i.test(nlBody);
+    }
+    results.naturalLanguageReplySeen = nlSeen;
+    if (!nlSeen) {
+      // The transcript is virtualized: nudge it to the newest message and read again.
+      await page.mouse.wheel(0, 4000).catch(() => {});
+      await page.waitForTimeout(1500);
+      nlBody = await page.evaluate(() => document.body.innerText || '');
+      nlSeen = /I can use GitHub in this conversation/i.test(nlBody);
+      results.naturalLanguageReplySeen = nlSeen;
+    }
+    results.naturalLanguageBodyTail = nlBody.slice(-160).replace(/\s+/g, ' ');
+    await shot('sessiontools-03-natural-language');
+    const aRows = await rowsFor(chatA);
+    results.chatAGithubOverride = rowOf(aRows, 'github')?.override;
+
+    // Restart: both conversations keep their own state.
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    const aRestart = await rowsFor(chatA);
+    const bRestart = await rowsFor(chatB);
+    results.afterRestartChatAWeb = rowOf(aRestart, 'web')?.override;
+    results.afterRestartChatAGithub = rowOf(aRestart, 'github')?.override;
+    results.afterRestartChatBWeb = rowOf(bRestart, 'web')?.override;
+
+    // Reset: chat A follows the global default again.
+    await ask({ action: 'reset', conversation: chatA });
+    const aReset = await rowsFor(chatA);
+    results.afterResetChatAWeb = rowOf(aReset, 'web')?.override;
+    results.afterResetChatAUsable = rowOf(aReset, 'web')?.usable;
+    results.afterResetChatBUntouched = rowOf(await rowsFor(chatB), 'web')?.override;
+    await shot('sessiontools-02-after-reset');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+    await shot('sessiontools-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-sessiontools', results);
+  return results;
+}
+
 (async () => {
   const run = {
     'first-run': scenarioFirstRun,
     tour: scenarioTour,
     settings: scenarioSettings,
     palette: scenarioPalette,
+    sessiontools: scenarioSessionTools,
     keepawake: scenarioKeepAwake,
     keyboard: scenarioKeyboard,
     readability: scenarioReadability,
