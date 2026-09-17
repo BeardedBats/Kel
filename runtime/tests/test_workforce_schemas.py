@@ -345,6 +345,32 @@ class PacketSchemaTests(Base):
         with self.assertRaises(PolicyError):
             validate_completion_packet(bad)
 
+    def test_completed_packet_missing_a_required_lens_is_refused(self):
+        bad = packet()
+        bad['reviewer_requirements_met']['lenses_run'] = []
+        with self.assertRaises(PolicyError):
+            validate_completion_packet(bad)
+        ok = packet()
+        ok['required_reviewer'] = {'lenses': ['security', 'functional-testing'],
+                                   'independence': 'any_but_executor', 'oracle': False}
+        ok['reviewer_requirements_met']['lenses_run'].append(
+            {'lens': 'security', 'verdict': 'pass', 'coverage_statement': 'route auth checked'})
+        validate_completion_packet(ok)
+
+    def test_evidence_binds_to_at_least_one_digest(self):
+        bad = packet()
+        item = dict(EVIDENCE_ITEM)
+        item.pop('command')
+        item['class'] = 'research_source'
+        item['output_digest'] = None
+        item['artifact_digest'] = None
+        bad['evidence'] = [item]
+        with self.assertRaises(PolicyError):
+            validate_completion_packet(bad)
+        good = packet()
+        good['evidence'] = [dict(item, output_digest='sha256:aa11')]
+        validate_completion_packet(good)
+
 
 class MessageSchemaTests(Base):
     def test_valid_message_passes(self):
@@ -470,8 +496,9 @@ class EvidenceWriterTests(Base):
                            evidence_class='test_run', label='x', produced_by='run_1')
         review = write_evidence(self.store, mission_id='mis_' + 'a' * 12,
                                 task_id='tsk_' + 'b' * 12, evidence_class='review_record',
-                                label='review', produced_by='run_2')
+                                label='review', produced_by='run_2', output='reviewed')
         self.assertIsNone(review['command'])
+        self.assertTrue(review['output_digest'].startswith('sha256:'))
 
     def test_freshness_and_content_binding(self):
         record = write_evidence(self.store, mission_id='mis_' + 'a' * 12,
@@ -482,10 +509,21 @@ class EvidenceWriterTests(Base):
         self.assertFalse(freshness(record, now=1000.0 + 601))
         self.assertTrue(content_bound(record, 'sha256:77bb'))
         self.assertFalse(content_bound(record, 'sha256:other'))
+        # The real read path returns sqlite3.Row (no .get); the helpers must accept it.
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT * FROM evidence_records WHERE id=?',
+                             (record['id'],)).fetchone()
+        self.assertFalse(hasattr(row, 'get'))
+        self.assertTrue(freshness(row, now=1000.0 + 599))
+        self.assertFalse(freshness(row, now=1000.0 + 601))
+        self.assertTrue(content_bound(row, 'sha256:77bb'))
 
     def test_malformed_records_are_refused(self):
         with self.assertRaises(PolicyError):
             validate_evidence({'schema_version': 1})
+        with self.assertRaises(PolicyError):
+            write_evidence(self.store, mission_id='mis_' + 'a' * 12, task_id='tsk_' + 'b' * 12,
+                           evidence_class='review_record', label='no binding', produced_by='run_3')
 
 
 class ImmutabilityTests(Base):
@@ -519,7 +557,8 @@ class ImmutabilityTests(Base):
             with self.assertRaises(sqlite3.IntegrityError):
                 db.execute("DELETE FROM workforce_messages WHERE id='msg_1'")
         record = write_evidence(self.store, mission_id='mis_1', task_id='tsk_1',
-                                evidence_class='review_record', label='r', produced_by='run_1')
+                                evidence_class='review_record', label='r', produced_by='run_1',
+                                output='ok')
         with contextlib.closing(self.store.connect()) as db:
             with self.assertRaises(sqlite3.IntegrityError):
                 db.execute('DELETE FROM evidence_records WHERE id=?', (record['id'],))

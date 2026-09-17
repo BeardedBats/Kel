@@ -3,7 +3,9 @@
 Design: `ux-audit/workforce-os/07_INTER_AGENT_PROTOCOL.md`. Messages are action-requiring
 deltas only — no STATUS chatter, no acknowledgements, no findings (those live in the
 findings store; a message only points at them). They carry the same prohibitions as
-team_events: no hidden reasoning, no prompts, no secrets.
+team_events: no hidden reasoning, no prompts, no secrets. The Commander sends as
+`from: cmd` (it is Kel itself, never an assignment); all other senders and recipients are
+assignment or pod ids.
 
 Dispatch-time enforcement (pair/task message caps, receiver-state checks, duplicate
 fingerprints) arrives with the pod increments; this module owns the schema contract.

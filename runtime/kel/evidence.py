@@ -4,8 +4,9 @@ Docs 06/07: evidence is produced during work, bound to the exact command and the
 artifact digest; a green exit is never enough on its own and evidence is never authored
 after the fact. Freshness = inside the declared window; content-binding = the artifact
 digest still matches what was tested. This module writes append-only rows into
-`evidence_records` and answers those two questions. Claim wiring arrives with the D1
-increment.
+`evidence_records` and answers those two questions, accepting both plain dicts and the
+store's sqlite3.Row read-back. Every record binds to at least one digest (output or
+artifact). Claim wiring arrives with the D1 increment.
 """
 import contextlib
 import time
@@ -49,6 +50,9 @@ def validate_evidence(record):
     for field in ('output_digest', 'artifact_digest'):
         if record.get(field) is not None:
             require_text(record[field], 'evidence ' + field)
+    if record.get('output_digest') is None and record.get('artifact_digest') is None:
+        raise PolicyError('Evidence must bind to something: output_digest or artifact_digest '
+                          'is required')
     require_number(record.get('ran_at'), 'evidence ran_at')
     require_integer(record.get('freshness_window'), 'evidence freshness_window', lo=1)
     require_text(record.get('produced_by'), 'evidence produced_by (never blank)')
@@ -89,8 +93,16 @@ def write_evidence(store, *, mission_id, task_id, evidence_class, label, produce
     return record
 
 
+def _as_record(record):
+    """Accept plain dicts and the store's sqlite3.Row (which has keys() but no .get)."""
+    if isinstance(record, dict):
+        return record
+    return {key: record[key] for key in record.keys()}
+
+
 def freshness(record, *, now=None):
     """True while the record is inside its declared freshness window (minutes)."""
+    record = _as_record(record)
     ran_at = record.get('ran_at')
     window = require_integer(record.get('freshness_window'), 'evidence freshness_window', lo=1)
     require_number(ran_at, 'evidence ran_at')
@@ -100,4 +112,4 @@ def freshness(record, *, now=None):
 def content_bound(record, artifact_digest):
     """True when the record's artifact digest matches the artifact content at hand."""
     require_text(artifact_digest, 'artifact digest')
-    return record.get('artifact_digest') == artifact_digest
+    return _as_record(record).get('artifact_digest') == artifact_digest

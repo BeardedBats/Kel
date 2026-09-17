@@ -280,8 +280,15 @@ def validate_completion_packet(packet):
             require_text(item['command'], 'evidence command')
         if item.get('exit_code') is not None:
             require_integer(item['exit_code'], 'evidence exit_code')
-        require_text(item.get('output_digest'), 'evidence output_digest')
-        require_text(item.get('artifact_digest'), 'evidence artifact_digest')
+        output_digest = item.get('output_digest')
+        artifact_digest = item.get('artifact_digest')
+        if output_digest is not None:
+            require_text(output_digest, 'evidence output_digest')
+        if artifact_digest is not None:
+            require_text(artifact_digest, 'evidence artifact_digest')
+        if output_digest is None and artifact_digest is None:
+            raise PolicyError('Evidence must bind to something: output_digest or '
+                              'artifact_digest is required')
         require_number(item.get('ran_at'), 'evidence ran_at')
         if not isinstance(item.get('freshness_ok'), bool):
             raise PolicyError('evidence freshness_ok must be a boolean')
@@ -377,6 +384,11 @@ def validate_completion_packet(packet):
                 raise PolicyError('A completed task cannot carry a %s claim' % claim.get('status'))
         if not met.get('coverage_complete'):
             raise PolicyError('A completed task needs complete reviewer coverage')
+        covered = {item.get('lens') for item in met.get('lenses_run', [])}
+        missing = [name for name in required_reviewer.get('lenses', []) if name not in covered]
+        if missing:
+            raise PolicyError('A completed packet is missing required reviewer coverage: %s'
+                              % ', '.join(missing))
         if required_reviewer.get('oracle') and not oracle.get('ran'):
             raise PolicyError('This packet requires an Oracle review that did not run')
 

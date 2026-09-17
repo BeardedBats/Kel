@@ -14,6 +14,9 @@ Design notes for this increment (schemas and registries only; no behavior change
   DELETE so the storage layer itself cannot rewrite history; corrections are new rows.
 - `findings` carries workflow state (open/confirmed/dismissed/fixed) and stays mutable;
   `skill_packs` is a version catalog where an existing (name, version) pair is immutable.
+- Ids use the design's ref prefixes (mis_/tsk_/ctr_/asn_/stf_/ev_/find_/msg_/pod_) with
+  uuid4 bodies (this repository's uid convention) rather than ULIDs; DDL column names
+  sender/recipient/reporter map to the doc 07/08 fields from/to/by.
 - No consumer reads these tables yet: rollback is dropping them (or reverting this commit).
 """
 import contextlib
