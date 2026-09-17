@@ -141,11 +141,31 @@ class MessageDispatchTests(Base):
                                      type='BLOCKER', required_action='Unblock step 3.'))
 
     def test_task_budget(self):
-        for index in range(TASK_MESSAGE_BUDGET):
-            send_message(self.store, msg(id='msg_t%d' % index,
+        # F14-2: non-escalation traffic counts toward the pair cap, so span two pairs to
+        # reach the task-wide cap of 12.
+        for index in range(PAIR_MESSAGE_BUDGET):
+            send_message(self.store, msg(id='msg_t%d' % index, to='asn_' + 'c' * 8,
+                                         required_action='Task step %d.' % index))
+        for index in range(PAIR_MESSAGE_BUDGET, TASK_MESSAGE_BUDGET):
+            send_message(self.store, msg(id='msg_t%d' % index, to='asn_' + 'e' * 8,
                                          required_action='Task step %d.' % index))
         with self.assertRaises(PolicyError):
-            send_message(self.store, msg(id='msg_tx', required_action='One too many.'))
+            send_message(self.store, msg(id='msg_tx', to='asn_' + 'f' * 8,
+                                         required_action='One too many.'))
+
+    def test_cmd_escalation_boundary(self):
+        # Non-escalation traffic to cmd counts toward the pair; escalation types stay exempt.
+        for index in range(PAIR_MESSAGE_BUDGET):
+            send_message(self.store, msg(id='msg_c%d' % index, to='asn_' + 'c' * 8,
+                                         required_action='Chatter %d.' % index))
+        with self.assertRaises(PolicyError):
+            send_message(self.store, msg(id='msg_cx', to='asn_' + 'c' * 8,
+                                         required_action='More chatter.'))
+        send_message(self.store, msg(id='msg_cb', **{'from': 'asn_' + 'c' * 8, 'to': 'cmd'},
+                                     type='DECISION_PROPOSAL', required_action='Decide X.'))
+        with self.assertRaises(PolicyError):
+            send_message(self.store, msg(id='msg_ch', **{'from': 'asn_' + 'c' * 8, 'to': 'cmd'},
+                                         required_action='Hand it over.'))
 
     def test_cancelled_receiver_is_refused(self):
         prepared = delegate(self.store, self.job_id, 'm1', {'objective': 'Draft'},
@@ -558,3 +578,13 @@ class PilotHarnessTests(unittest.TestCase):
         second = rerun['per_class']['8']
         self.assertEqual(first['escaped_C'], second['escaped_C'])
         self.assertEqual(first['escaped_A'], second['escaped_A'])
+
+
+class StallClampTests(Base):
+    def test_negative_idle_is_clamped(self):
+        created = self.team.create_assignment(self.job_id, 'm1', 'builder')
+        self.team.set_state(created['assignment_id'], 'ACTIVE')
+        probe = check_stall(self.store, created['assignment_id'],
+                            now=time.time() - 3600, threshold_minutes=30)
+        self.assertFalse(probe['stalled'])
+        self.assertEqual(probe['idle_minutes'], 0.0)

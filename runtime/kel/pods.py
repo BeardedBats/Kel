@@ -72,7 +72,7 @@ def check_stall(store, assignment_id, *, now=None, threshold_minutes=STALL_THRES
         return {'stalled': False, 'reason': 'not active (%s)' % state, 'last_activity': last}
     if last is None:
         return {'stalled': True, 'reason': 'no recorded activity', 'last_activity': None}
-    idle = (stamp - float(last)) / 60.0
+    idle = max(0.0, (stamp - float(last)) / 60.0)  # N14-1: clamp future stamps
     if idle > threshold_minutes:
         return {'stalled': True,
                 'reason': 'no activity for %.0f minutes (threshold %d)'

@@ -118,9 +118,10 @@ def send_message(store, message, *, now=None):
         if task_count >= TASK_MESSAGE_BUDGET:
             raise PolicyError('Task message budget exhausted (%d); the task needs Commander '
                               'review before more messages' % TASK_MESSAGE_BUDGET)
-        if 'cmd' not in (sender, recipient):
-            # Worker-pair budget only; reaching cmd is the sanctioned escalation channel
-            # (the task-wide cap below still bounds it).
+        escalation = message['type'] in ('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST')
+        if not (escalation and 'cmd' in (sender, recipient)):
+            # F14-2 (audit 14): only escalation traffic to/from cmd bypasses the worker-pair
+            # budget (doc 07's sanctioned channel); all other traffic counts toward the pair.
             pair_count = db.execute(
                 'SELECT count(*) FROM workforce_messages WHERE task_id=? AND ((sender=? AND '
                 'recipient=?) OR (sender=? AND recipient=?))',
