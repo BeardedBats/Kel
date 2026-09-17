@@ -1,6 +1,6 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T01:00:00Z
+updated_utc: 2026-09-18T01:30:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
@@ -37,12 +37,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: 4472db8b2144f6250fb1009e37d72652476415cc
+github_remote_integration: 30aba20519095c6dc059a5376cd7c137cd96f34d
 github_publication_current: true
 
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 4472db8..NEW; includes 59de2a6 + 48dacb3 + 112dea9 + acceptance docs). Then: (1) small 5.3 follow-up patch (F14-1 record wording; F14-2 restrict the pair-budget cmd exemption to escalation types BLOCKER/DECISION_PROPOSAL/REPLAN_REQUEST; N14-1 clamp idle at 0; +2 tests: exemption boundary, negative idle) with a delta re-audit; (2) Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+next_autonomous_action: Implement the small 5.3 follow-up patch (F14-1 record wording; F14-2 restrict the pair-budget cmd exemption to escalation types BLOCKER/DECISION_PROPOSAL/REPLAN_REQUEST; N14-1 clamp idle at 0; +2 tests: exemption boundary, negative idle) with a delta re-audit; then Phase 5.4 — Assurance army + Sentinel + Oracle (full lens catalog dispatch, deterministic gating + never-gate, Sentinel mandatory rules, Oracle harness, quality score, FP stats) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.4. Carry-forward: F4 real-artifact binding at the real-worker increment; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
 external_dependency: NONE
 stop_reason: NONE
