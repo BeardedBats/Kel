@@ -1,21 +1,21 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T21:20:00Z
+updated_utc: 2026-09-17T21:45:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: 5b83f0e (plus docs/state commits on top; see `git log --oneline -4`)
+head: 894be5b (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
-state: IMPLEMENTING
+state: WAITING_FOR_AUDIT
 
-current_increment: Phase 5.1 follow-up CLOSED — audit increment 11 CONTINUE accepted `9d6ed55..5b83f0e` (N1-N6 + S2 closed; new suggestions ride the 5.2 wiring review). Next: publish this cycle; then Phase 5.2 (single-specialist delegation, D1)
-current_phase: Phase 5 — 5.1 DONE + audit-accepted (through 5b83f0e, follow-up included); 5.2 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), and the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE)
+current_increment: Phase 5.2 COMPLETE — D1 single-specialist delegation shipped as commit 894be5b (staffing decisions, contracts, evidence-bound close, ledgers; migration 18; no live consumers). Audit 1.6 coverage requested for `5b83f0e..894be5b`. Next increment after CONTINUE = Phase 5.3 (D2 small pod + verification)
+current_phase: Phase 5 — 5.2 DONE (audit pending); 5.3 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), and Phase 5.2 D1 delegation (commit 894be5b, audit pending)
 
-audit_requested_from: NONE
-audit_requested_through: NONE
-audit_required: false
+audit_requested_from: 5b83f0e
+audit_requested_through: 894be5b
+audit_required: true
 audit_last_seen_head: 5b83f0e
 audit_last_seen_verdict: CONTINUE (increment 11; Phase 5.1 follow-up accepted)
 
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Implement Phase 5.2 — Single-specialist delegation (D1): staffing decisions for one specialist, contract issuance, evidence-bound completion, ledger projections, read-only data for views, tests/test_workforce_d1.py per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.2. Carry-forward into 5.2: N7 (per-project ceilings) + audit-11 suggestions (fallback model filtering, link_reservation conditional update, local_only override precedence, falsy extras) + S3/S5/S6; provider 'web'/context tokens when evidence-backed; per-project flag storage at first consumer; packaged battery adds schema_migrations 16+17 assertions. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
-external_dependency: NONE
+next_autonomous_action: Awaiting Audit 1.6 increment 12 for `5b83f0e..894be5b`. On CONTINUE: publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range d3131db..NEW; includes 7b4bf3f + 5.2 + state commits); then implement Phase 5.3 — D2 small pod + verification (Builder→Verifier hands-off flow; testing + maintainability lenses; messages v1; arbitration v1; stall v1; evaluation-harness pilot) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.3. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+external_dependency: AUDIT 1.6 (5b83f0e..894be5b)
 stop_reason: NONE
