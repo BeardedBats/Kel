@@ -343,6 +343,7 @@ class Service:
                                     'source_type':r['source_type'],'source_ref':r['source_ref'],
                                     'confidence':r['confidence'],'updated':r['updated']}
                                    for r in memory.records(project_id,limit=100)],
+                        'proposals':memory.proposals(project_id,state='open'),
                         'conflicts':memory.conflicts(project_id)},
               'map':None,
               'recipes':{'entries':RecipeLibrary(self.store).entries(project_id=project_id)}}
@@ -396,6 +397,26 @@ class Service:
             if not row or row['project_id']!=project_id:
                 raise PolicyError('Conflict belongs to another project')
             return {'resolution':memory.resolve_conflict(memory_id,data.get('choice'))}
+        if action=='proposals':
+            wanted=data.get('state') or 'open'
+            return {'proposals':memory.proposals(project_id,state=None if wanted=='all' else wanted,
+                                                 limit=data.get('limit') or 100)}
+        if action=='proposal':
+            item=memory.proposal(memory_id)
+            if item['project_id']!=project_id:
+                raise PolicyError('Proposal belongs to another project')
+            return item
+        if action in ('accept_proposal','reject_proposal','defer_proposal'):
+            item=memory.proposal(memory_id)
+            if item['project_id']!=project_id:
+                raise PolicyError('Proposal belongs to another project')
+            if action=='accept_proposal':
+                return memory.accept_proposal(memory_id,note=data.get('note',''))
+            if action=='reject_proposal':
+                return {'ok':True,'id':memory.reject_proposal(memory_id,reason=data.get('reason',''))}
+            return {'ok':True,'id':memory.defer_proposal(memory_id,note=data.get('note',''))}
+        if action=='history':
+            return {'entries':memory.history_view(project_id,limit=data.get('limit') or 50)}
         raise PolicyError('Unknown memory action')
 
     def _map_action(self,data):
@@ -640,6 +661,15 @@ class Service:
         # out-of-band messages (panel-driven start/process/finish) as conversation content.
         from .vetting_session import Vetting
         vetting=Vetting(self.store)
+        result=self._vetting_route(vetting,data)
+        # Confirmed decisions are compared against saved project knowledge once the session
+        # transaction has committed; a disagreeing stored rule queues on the review surface.
+        created=vetting.flush_memory_checks()
+        if created and isinstance(result,dict):
+            result['memory_proposals']=created
+        return result
+
+    def _vetting_route(self,vetting,data):
         action=data.get('action')
         conversation=data.get('conversation') or 'main'
         if action=='start':

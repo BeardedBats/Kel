@@ -3152,6 +3152,220 @@ async function scenarioSessionTools() {
   return results;
 }
 
+async function scenarioMemoryProps() {
+  // The memory proposal surface as a user journey: a Design Vetting answer that disagrees with a
+  // saved rule queues a review on the chat pill; Accept updates knowledge (the previous value is
+  // kept), Reject never re-asks for the same answer, Defer persists across restart, and the extra
+  // project's same-topic rule is untouched. The driver seeds the stored rules before this runs
+  // (seed-memory-prop.py), and probes the database after it (memoryprops-db-probe.py).
+  const results = { schema: 1, scenario: 'memoryprops', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const mem = (payload) =>
+    page.evaluate(async (body) => {
+      const api = window.kelAPI;
+      return api ? await api.request('/api/memory', body) : null;
+    }, payload);
+  const vet = (payload) =>
+    page.evaluate(async (body) => {
+      const api = window.kelAPI;
+      return api ? await api.request('/api/vetting', body) : null;
+    }, payload);
+  const send = async (text, label) => {
+    const composer = page
+      .locator('[data-testid="guid-input"]:visible, [data-testid="sendbox-input"]:visible, textarea:visible')
+      .first();
+    await composer.click({ timeout: 15000 });
+    await composer.fill('');
+    await composer.type(text, { delay: 8 });
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1500);
+    results.steps.push({ label, text });
+  };
+  const waitText = async (needle, timeoutMs, label) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const body = await page.evaluate(() => document.body.innerText || '');
+      if (body.includes(needle)) {
+        results.steps.push({ label, found: needle, ms: Date.now() - start });
+        return true;
+      }
+      await page.waitForTimeout(500);
+    }
+    results.steps.push({ label, found: needle, ms: -1, timedOut: true });
+    return false;
+  };
+  const waitVet = async (needle, timeoutMs, label) => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const dump = JSON.stringify((await vet({ action: 'panel' })) || {});
+        if (dump.includes(needle)) {
+          results.steps.push({ label, found: needle, ms: Date.now() - start });
+          return true;
+        }
+      } catch {
+        /* retry */
+      }
+      await page.waitForTimeout(500);
+    }
+    results.steps.push({ label, found: needle, ms: -1, timedOut: true });
+    return false;
+  };
+  const remount = async () => {
+    await page.reload();
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.waitForTimeout(1500);
+  };
+  try {
+    await page.waitForTimeout(9000);
+    results.onboardingAtBoot = await dismissOnboarding(page);
+    await page.evaluate(() => {
+      location.hash = '/guid';
+    });
+    await page.waitForTimeout(2000);
+
+    // 1) A Design Vetting answer that disagrees with the saved Q6 rule queues a pending proposal.
+    await send('start design vetting: Memory review check', 'start');
+    results.batchShown = await waitVet('Q1', 25000, 'vetting-batch-shown');
+    await send('6: A', 'answer-6A');
+    await page.waitForTimeout(2500);
+    const list1 = await mem({ action: 'proposals', state: 'open' });
+    const q6 = (list1?.proposals || []).find((p) => p.topic === 'vetting.Q6');
+    results.proposalQueued = Boolean(q6 && q6.state === 'pending');
+    results.proposalKind = q6?.kind || null;
+    results.proposalCurrent = q6?.current?.summary || null;
+
+    // 2) The chat offers the review; the card shows current, proposed and why in plain words.
+    // The header pills live on a conversation page, so open the chat the vetting message created
+    // (this is engine conversation 'main', the same chat the session is bound to).
+    await page.evaluate(() => {
+      location.hash = '/guid';
+    });
+    await page.waitForTimeout(2500);
+    await page
+      .getByText('start design vetting: Memory review check', { exact: false })
+      .first()
+      .click();
+    await page.waitForTimeout(4000);
+    results.onConversationPage = await page.evaluate(() => location.hash.startsWith('#/conversation/'));
+    results.pillShown = await waitText('Review ·', 15000, 'review-pill-visible');
+    await page.locator('[data-testid="kel-memory-pill"]').click();
+    await page.waitForTimeout(900);
+    results.cardShown = await waitText(
+      'Kel thinks this project decision changed',
+      5000,
+      'card-headline'
+    );
+    results.currentShown = await waitText(
+      'Top-level navigation stays a single flat bar.',
+      5000,
+      'card-current'
+    );
+    results.whyShown = await waitText(
+      'Your latest Design Vetting decisions conflict with the stored project rule',
+      5000,
+      'card-why'
+    );
+    await shot(page, 'memoryprops-01-card');
+
+    // 3) Accept: the saved rule updates through the review; the queue clears.
+    await page.locator('[data-testid="kel-memory-accept"]').click();
+    await page.waitForTimeout(3500);
+    const list2 = await mem({ action: 'proposals', state: 'open' });
+    results.acceptedClearsQueue = (list2?.proposals || []).length === 0;
+    const all2 = await mem({ action: 'proposals', state: 'all' });
+    results.q6Accepted = (all2?.proposals || []).some(
+      (p) => p.topic === 'vetting.Q6' && p.state === 'accepted'
+    );
+
+    // 4) Reject: a new disagreement asks once, the rejection settles it, the same answer never re-asks.
+    await send('7: A', 'answer-7A');
+    await page.waitForTimeout(2500);
+    const list3 = await mem({ action: 'proposals', state: 'open' });
+    results.q7Queued = (list3?.proposals || []).some(
+      (p) => p.topic === 'vetting.Q7' && p.state === 'pending'
+    );
+    await remount();
+    await page.locator('[data-testid="kel-memory-pill"]').click();
+    await page.waitForTimeout(900);
+    await page.locator('[data-testid="kel-memory-reject"]').click();
+    await page.waitForTimeout(3500);
+    const all4 = await mem({ action: 'proposals', state: 'all' });
+    results.q7Rejected = (all4?.proposals || []).some(
+      (p) => p.topic === 'vetting.Q7' && p.state === 'rejected'
+    );
+    await send('7: A', 'answer-7A-again');
+    await page.waitForTimeout(2500);
+    const list5 = await mem({ action: 'proposals', state: 'open' });
+    results.rejectedNotReAsked = !(list5?.proposals || []).some((p) => p.topic === 'vetting.Q7');
+    await remount();
+    const bodyAfterReject = await page.evaluate(() => document.body.innerText || '');
+    results.pillHiddenAfterReject = !bodyAfterReject.includes('Review ·');
+
+    // 5) Defer: it leaves the chat but stays queued for Work.
+    await send('8: C', 'answer-8C');
+    await page.waitForTimeout(2500);
+    await remount();
+    await page.locator('[data-testid="kel-memory-pill"]').click();
+    await page.waitForTimeout(900);
+    await page.locator('[data-testid="kel-memory-defer"]').click();
+    await page.waitForTimeout(3500);
+    const list6 = await mem({ action: 'proposals', state: 'open' });
+    results.q8Deferred = (list6?.proposals || []).some(
+      (p) => p.topic === 'vetting.Q8' && p.state === 'deferred'
+    );
+    await remount();
+    const bodyAfterDefer = await page.evaluate(() => document.body.innerText || '');
+    results.deferredHiddenFromChat = !bodyAfterDefer.includes('Review ·');
+
+    // 6) The Work panel hosts the same queue on its Project knowledge tab.
+    try {
+      await page.locator('.kel-work-context-btn').first().click({ timeout: 8000 });
+      await page.waitForTimeout(1500);
+      await page.locator('text=Project knowledge').first().click({ timeout: 8000 });
+      await page.waitForTimeout(1500);
+      results.workPanelProposals = await page.evaluate(
+        () => document.querySelectorAll('[data-testid="kel-work-proposal"]').length
+      );
+      results.workPanelHistory = await page.evaluate(() =>
+        (document.body.innerText || '').includes('What changed')
+      );
+      await shot(page, 'memoryprops-02-work');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(800);
+    } catch (error) {
+      results.steps.push({ label: 'work-panel-probe', error: String(error).slice(0, 240) });
+    }
+
+    // 7) Restart: every decision survives.
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    const afterRestart = await mem({ action: 'proposals', state: 'all' });
+    const states = Object.fromEntries(
+      (afterRestart?.proposals || []).map((p) => [p.topic, p.state])
+    );
+    results.afterRestartStates = states;
+    results.restartKeepsStates =
+      states['vetting.Q6'] === 'accepted' &&
+      states['vetting.Q7'] === 'rejected' &&
+      states['vetting.Q8'] === 'deferred';
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+    await shot(page, 'memoryprops-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-memoryprops', results);
+  return results;
+}
+
 (async () => {
   const run = {
     'first-run': scenarioFirstRun,
@@ -3159,6 +3373,7 @@ async function scenarioSessionTools() {
     settings: scenarioSettings,
     palette: scenarioPalette,
     sessiontools: scenarioSessionTools,
+    memoryprops: scenarioMemoryProps,
     keepawake: scenarioKeepAwake,
     keyboard: scenarioKeyboard,
     readability: scenarioReadability,

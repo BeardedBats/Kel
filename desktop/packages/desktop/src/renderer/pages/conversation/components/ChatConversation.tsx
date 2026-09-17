@@ -27,6 +27,7 @@ import ChatSlider from './ChatSlider.tsx';
 import AcpModelSelector from '@/renderer/components/agent/AcpModelSelector';
 import { KelModelPill } from '@/renderer/components/kel/KelModelControl';
 import { KelToolsControl } from '@/renderer/components/kel/KelToolsControl';
+import { KelMemoryProposalControl } from '@/renderer/components/kel/KelMemoryProposal';
 import AcpRuntimeRestartButton from '@/renderer/components/agent/AcpRuntimeRestartButton';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
@@ -396,6 +397,7 @@ const ChatConversation: React.FC<{
             </span>
             <KelModelPill conversationId={conversation.id} />
             <KelToolsControl conversationId={conversation.id} />
+            <KelMemoryProposalControl conversationId={conversation.id} />
           </>
         );
       }

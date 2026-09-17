@@ -228,7 +228,9 @@ class MemoryCase(unittest.TestCase):
             self.assertEqual(receipt['integrity'], 'ok')
             with contextlib.closing(store.connect()) as db:
                 rows = db.execute('SELECT version, name FROM schema_migrations').fetchall()
-                self.assertEqual([(r['version'], r['name']) for r in rows], [(1, 'v13-memory')])
+                # Memory now also applies the additive v1.6 proposals step in the same open.
+                self.assertEqual([(r['version'], r['name']) for r in rows],
+                                 [(1, 'v13-memory'), (15, 'v16-memory-proposals')])
                 self.assertGreaterEqual(
                     db.execute('SELECT count(*) FROM messages').fetchone()[0], 1)
             Memory(store)
@@ -252,7 +254,7 @@ class MemoryCase(unittest.TestCase):
             Memory(store)
             with contextlib.closing(store.connect()) as db:
                 self.assertEqual(
-                    db.execute('SELECT count(*) FROM schema_migrations').fetchone()[0], 1)
+                    db.execute('SELECT count(*) FROM schema_migrations').fetchone()[0], 2)
 
     def test_mem14_partial_migration_recovers(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -266,7 +268,7 @@ class MemoryCase(unittest.TestCase):
             Memory(store)
             with contextlib.closing(store.connect()) as db:
                 self.assertEqual(
-                    db.execute('SELECT count(*) FROM schema_migrations').fetchone()[0], 1)
+                    db.execute('SELECT count(*) FROM schema_migrations').fetchone()[0], 2)
                 self.assertEqual(db.execute('SELECT count(*) FROM memories').fetchone()[0], 0)
             backups = list((Path(tmp) / 'backups').glob('pre-v13-*.sqlite3'))
             self.assertEqual(len(backups), 1)

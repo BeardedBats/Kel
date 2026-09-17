@@ -12,6 +12,7 @@ content, controls are conversational, and machinery words (batch ids, revision r
 stay out of the primary copy.
 """
 import contextlib
+import hashlib
 import json
 import re
 import time
@@ -91,6 +92,7 @@ class Vetting:
         self.store = store
         ensure_schema(store)
         self._bank_cache = None
+        self._memory_check_queue = []
 
     # ---- sessions ---------------------------------------------------------------------------
 
@@ -801,6 +803,51 @@ class Vetting:
             else 'Left as-is; nothing was applied.'
         return {'applied': applied.get('applied', []), 'message': message}
 
+    def flush_memory_checks(self):
+        """Compare just-confirmed decisions to saved project knowledge; queue proposals.
+
+        Must run after the session transaction has committed. Idempotent at the memory layer:
+        the proposal dedupe key suppresses repeats and previously rejected identical evidence.
+        """
+        queue, self._memory_check_queue = self._memory_check_queue, []
+        if not queue:
+            return []
+        from .memory import Memory
+        memory = Memory(self.store)
+        created = []
+        for item in queue:
+            try:
+                with contextlib.closing(self.store.connect()) as db:
+                    decision = db.execute(
+                        "SELECT * FROM vetting_decisions WHERE session_id=? AND question_id=?"
+                        " AND status='CONFIRMED' ORDER BY updated DESC LIMIT 1",
+                        (item['session_id'], item['question_id'])).fetchone()
+                if not decision:
+                    continue
+                statement = decision['statement']
+                value = {'statement': statement}
+                topic = 'vetting.' + str(item['question_id'])
+                sig = hashlib.sha256(('%s|%s' % (item['question_id'], statement))
+                                     .encode('utf-8')).hexdigest()
+                for rec in memory.records(item['project_id'], status='active'):
+                    if rec['topic'] != topic:
+                        continue
+                    if rec['value'] == json.dumps(value, ensure_ascii=False, sort_keys=True):
+                        continue
+                    result = memory.propose_change(
+                        item['project_id'], kind='vetting', type='decision', topic=topic,
+                        value=value, summary=statement[:2000],
+                        why='Your latest Design Vetting decisions conflict with the stored project rule.',
+                        current_id=rec['id'],
+                        evidence={'decision': decision['id'], 'statement': statement[:400], 'sig': sig},
+                        source_ref='vetting:%s:%s' % (item['session_id'], item['question_id']))
+                    if result.get('id') and result.get('state') == 'pending' \
+                            and not result.get('suppressed'):
+                        created.append(result['id'])
+            except PolicyError as exc:
+                created.append({'error': str(exc), 'question_id': item['question_id']})
+        return created
+
     def _pending(self, session_id):
         with contextlib.closing(self.store.connect()) as db:
             row = db.execute("SELECT detail FROM vetting_events WHERE session_id=? AND action='proposals_pending'"
@@ -874,9 +921,15 @@ class Vetting:
         db.execute("UPDATE vetting_decisions SET status='SUPERSEDED', updated=?"
                    " WHERE question_id=? AND session_id=? AND status='CONFIRMED'",
                    (now, question['id'], session['id']))
+        decision_id = uid()
         db.execute('INSERT INTO vetting_decisions(id,session_id,question_id,statement,rationale,status,created,'
                    'updated) VALUES(?,?,?,?,?,?,?,?)',
-                   (uid(), session['id'], question['id'], statement, rationale, 'CONFIRMED', now, now))
+                   (decision_id, session['id'], question['id'], statement, rationale, 'CONFIRMED', now, now))
+        # A confirmed decision is compared against saved project knowledge after this transaction
+        # commits (see flush_memory_checks): a disagreeing stored rule queues as a proposal.
+        self._memory_check_queue.append({'project_id': session['project_id'],
+                                         'session_id': session['id'],
+                                         'question_id': question['id']})
 
     def _conflict_check(self, db, session):
         """Surface contradictions between philosophy-level choices. Never overwrite silently."""

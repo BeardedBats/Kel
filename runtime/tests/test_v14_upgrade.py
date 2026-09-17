@@ -1,9 +1,10 @@
 """V1.4 Gate 10: the V1.3 -> V1.4 data upgrade path (UPG-*).
 
 A "V1.3 store" is exactly what the V1.3 module set produces: `Store` + `Context` + `Memory` +
-`ProjectMap` + `Recipes` + `Continuation`, i.e. schema_migrations 1-4 and none of the V1.4 tables.
-Opening that store with the V1.4 modules must add tables additively, keep every existing row, and leave
-a backup + schema record behind — never rewrite or drop anything.
+`ProjectMap` + `Recipes` + `Continuation`, i.e. schema_migrations 1-4 — plus, since the v1.6 memory
+proposal surface shipped inside `Memory`, the additive proposals step (15). None of the V1.4 tables
+exist. Opening that store with the V1.4 modules must add tables additively, keep every existing row,
+and leave a backup + schema record behind — never rewrite or drop anything.
 """
 import contextlib
 import json
@@ -76,7 +77,9 @@ class UpgradeTests(unittest.TestCase):
         self.assertNotIn('team_assignments', tables)
         self.assertNotIn('capability_leases', tables)
         self.assertNotIn('health_observations', tables)
-        self.assertEqual(self.versions(), [1, 2, 3, 4])
+        # The v1.6 proposals step rides with the memory module (additive table, own version row).
+        self.assertIn('memory_proposals', tables)
+        self.assertEqual(self.versions(), [1, 2, 3, 4, 15])
 
     def test_opening_it_with_v14_modules_upgrades_additively_and_keeps_the_data(self):
         before_job = self.store.get(self.legacy_job)
@@ -93,7 +96,7 @@ class UpgradeTests(unittest.TestCase):
         tables = self.tables()
         missing = [table for table in V14_TABLES if table not in tables]
         self.assertEqual(missing, [])
-        self.assertEqual(self.versions(), [1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(self.versions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 15])
 
         # Nothing pre-existing moved or disappeared.
         self.assertEqual(self.store.get(self.legacy_job)['id'], before_job['id'])
@@ -126,7 +129,7 @@ class UpgradeTests(unittest.TestCase):
             rows = list(db.execute('SELECT version, name FROM schema_migrations ORDER BY version'))
         names = {row['name'] for row in rows if row['version'] >= 5}
         self.assertEqual(names, {'v14-solution', 'v14-team', 'v14-providers', 'v14-autonomy',
-                                 'v14-diagnostics'})
+                                 'v14-diagnostics', 'v16-memory-proposals'})
 
     def test_v14_features_work_on_upgraded_data(self):
         team = Team(self.store)
