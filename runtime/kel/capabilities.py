@@ -120,7 +120,6 @@ def availability(store, capability):
         if _runtime_available(store):
             return 'available', 'A coding assistant is ready on this computer'
         return 'needs_setup', 'Connect a coding assistant to use this here'
-    return 'unavailable', '%s is not available on this computer.' % BY_ID[capability]['label']
 
 
 def global_state(store, capability):
@@ -294,15 +293,20 @@ def snapshot(store, conversation):
 
 
 # -- explicit commands ------------------------------------------------------------------------
-# Strict, unambiguous commands only. A whole message may be one command:
+# Strict, unambiguous commands only. A whole message may be one command because `fullmatch` proves
+# the whole message is intended as a control:
 #
 #   "web: use default"   "terminal: off"   "don't use the browser here"   "use GitHub for this
 #   conversation"
 #
-# and an explicit "capability: state" clause may appear inside a larger request, where the setting is
-# applied and the rest of the message continues as the user's request. Ordinary sentences that merely
-# mention a tool ("Can you use the web here?") change nothing: permissive conversational guessing is
-# deliberately not supported.
+# Inside a larger substantive request, only the deliberately explicit bracketed control form counts:
+#
+#   "Please refactor parser.py. [terminal: off]"   "[web: use default] Please research this topic."
+#
+# Ordinary prose never mutates state and is never altered: text containing "web: off" (colons, tool
+# words, quoted commands, code samples, URLs, malformed brackets) passes through byte-identical.
+# Anything ambiguous — an unpaired quote, an unclosed code fence, uncertain syntax — matches
+# nothing and the message is sent unchanged.
 _SCOPE = r'(?:in this (?:chat|conversation)|for this (?:chat|conversation|thread)|here)'
 _SCOPE_RX = r'(?:,?\s*' + _SCOPE + r')?'
 _ARTICLE = r'(?:the\s+|my\s+|our\s+)?'
@@ -332,8 +336,47 @@ _DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:use|back\s+to|go\s+back\s+to|set\s+
 _TO_DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:set|reset|switch|put|change)\s+' + _ARTICLE +
                             r'(?P<cap>' + _ALIAS_PATTERN + r')\s+(?:back\s+)?to\s+(?:the\s+)?default'
                             + _SCOPE_RX + r'[.!]?$', re.I)
-_CLAUSE_RX = re.compile(r'(?<!\w)' + _ARTICLE + r'(?P<cap>' + _ALIAS_PATTERN + r')\s*[:=]\s*'
-                        r'(?P<state>' + _STATE_PATTERN + r')(?!\w)', re.I)
+# The embedded control clause is bracketed on purpose: ordinary prose cannot accidentally match it,
+# and quoted or code text is excluded by _excluded_spans() before any clause is considered.
+_CLAUSE_RX = re.compile(r'(?<!\w)\[\s*(?P<cap>' + _ALIAS_PATTERN + r')\s*[:=]\s*'
+                        r'(?P<state>' + _STATE_PATTERN + r')\s*\](?!\w)', re.I)
+
+
+def _excluded_spans(text):
+    """Spans where an embedded clause never counts: code (fenced/inline) and quoted text.
+
+    Fail-safe by construction: an unpaired double quote, curly quote or backtick excludes everything
+    after it, so ambiguous text is never treated as a control.
+    """
+    spans = []
+    fences = [m.start() for m in re.finditer('```', text)]
+    for index in range(0, len(fences) - 1, 2):
+        spans.append((fences[index], fences[index + 1] + 3))
+    if len(fences) % 2:
+        spans.append((fences[-1], len(text)))
+
+    def add(pattern):
+        for match in re.finditer(pattern, text):
+            spans.append((match.start(), match.end()))
+
+    add(r'`[^`\n]*`')            # inline code
+    add(r'"[^"\n]*"')            # double quotes
+    add(r'“[^”\n]*”')            # curly double quotes
+    add(r"(?<![A-Za-z])'[^'\n]*'(?![A-Za-z])")    # single quotes (apostrophes do not pair)
+    add(r'(?<![A-Za-z])‘[^’\n]*’(?![A-Za-z])')    # curly single quotes
+
+    def uncovered(marker):
+        for match in re.finditer(re.escape(marker), text):
+            position = match.start()
+            if not any(left <= position < right for left, right in spans):
+                return position
+        return None
+
+    for marker in ('"', '`', '“'):
+        position = uncovered(marker)
+        if position is not None:
+            spans.append((position, len(text)))    # an unpaired opener: nothing after it is a control
+    return spans
 
 
 def directive(text):
@@ -354,21 +397,36 @@ def directive(text):
 
 
 def directive_clauses(text):
-    """Explicit `capability: state` clauses anywhere in a larger message; [] when there are none.
+    """Explicit `[capability: state]` clauses (outside quotes and code); [] when there are none.
 
-    Each clause is unambiguous on its own ("web: off"), so it is applied while the remaining text
-    continues as the user's request. Ordinary sentences never match: there is no guessing here.
+    Used for a larger message where the user deliberately included a bracketed control. A quoted
+    command stays literal text; an unclosed code fence, an unpaired quote or a malformed bracket
+    matches nothing and the message is forwarded unchanged. Multiple clauses are supported; only the
+    exact bracketed token is removed from the forwarded request.
     """
     text = str(text or '')
     if not text or len(text) > 2000:
         return []
+    spans = _excluded_spans(text)
+
+    def excluded(start, end):
+        return any(left < end and start < right for left, right in spans)
+
     found = []
     for match in _CLAUSE_RX.finditer(text):
+        if excluded(match.start(), match.end()):
+            continue
+        # A URL or technical token containing the bracket is not a control either.
+        segment_start = max(text.rfind(' ', 0, match.start()), text.rfind('\n', 0, match.start())) + 1
+        if '://' in text[segment_start:match.start()]:
+            continue
         capability = _ALIASES.get(match.group('cap').lower())
         if not capability:
             continue
-        found.append({'capability': capability, 'state': _STATES[match.group('state').lower()],
-                      'text': match.group(0), 'start': match.start(), 'end': match.end()})
+        state = _STATES[match.group('state').lower()]
+        found.append({'capability': capability, 'state': state,
+                      'text': match.group(0), 'inner': '%s: %s' % (capability, state),
+                      'start': match.start(), 'end': match.end()})
     return found
 
 

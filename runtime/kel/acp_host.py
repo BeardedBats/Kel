@@ -44,13 +44,31 @@ def _plain_state(status):
 
 
 def _without_clauses(text, clauses):
-    """The user's request with the applied capability clauses removed."""
+    """The user's request with the applied [capability: state] clauses removed.
+
+    Only the exact bracketed token travels away, together with the whitespace around it and at most
+    one adjacent separator (so "Do X. [web: off]" reads as "Do X." instead of leaving a gap).
+    Quoted or ordinary prose is never touched: those spans were never matched in the first place.
+    """
     out = text
     for clause in sorted(clauses, key=lambda item: item['start'], reverse=True):
         start, end = clause['start'], clause['end']
-        while start > 0 and out[start - 1] in ' \t,;:-\u2014':
+        while start > 0 and out[start - 1] in ' \t':
             start -= 1
-        out = out[:start] + out[end:]
+        if start > 0 and out[start - 1] in ',;\u2014\u2013-':
+            start -= 1
+            while start > 0 and out[start - 1] in ' \t':
+                start -= 1
+        while end < len(out) and out[end] in ' \t':
+            end += 1
+        if end < len(out) and out[end] in ',;\u2014\u2013-':
+            end += 1
+            while end < len(out) and out[end] in ' \t':
+                end += 1
+        if start > 0 and end < len(out) and out[start - 1] not in ' \t' and out[end] not in ' \t':
+            out = out[:start] + ' ' + out[end:]    # never join two words that were separated
+        else:
+            out = out[:start] + out[end:]
     return out.strip()
 
 
@@ -287,9 +305,10 @@ class ACPHost:
             # vetting does - one policy, two ways to reach it.
             if not attachments:
                 # Strict, explicit commands only: a whole message that is one command answers inline;
-                # an explicit "capability: state" clause inside a larger request is applied while the
-                # rest of the message continues as the user's request. Ordinary sentences that merely
-                # mention a tool never change state. The policy itself stays engine-side.
+                # a deliberately explicit bracketed control ("[terminal: off]") inside a larger
+                # request is applied while the rest of the message continues as the user's request.
+                # Ordinary prose, quoted commands and code samples never change state and are never
+                # altered. The policy itself stays engine-side.
                 from .capabilities import directive, directive_clauses
                 if directive(text):
                     confirmation = self._capability_directive(cid, text)
@@ -301,7 +320,7 @@ class ACPHost:
                     if clauses:
                         replies = []
                         for clause in clauses:
-                            reply = self._capability_directive(cid, clause['text'])
+                            reply = self._capability_directive(cid, clause['inner'])
                             if reply:
                                 replies.append(reply)
                         if replies:

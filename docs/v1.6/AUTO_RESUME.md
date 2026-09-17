@@ -23,11 +23,12 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 2 Artifact lineage | DONE — commit `ffeef73` | `docs/artifact-lineage/` (engine 574, packaged lineage probe green on `package-final15`) |
 | 3 In-chat approvals | DONE — commit `85e99fb` | `docs/in-chat-approvals/` (engine 592, packaged approvals journey all-green + lineage probe re-run on `package-final16`) |
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
+| 3.6 CAP2-CLAUSE remediation | DONE — commit hash recorded by the follow-up state commit | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
 | 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
 
-Latest verified candidate: `dist/package-p1cap/win-unpacked` (P1 capability remediation evidence;
-packaged engine hash matches the fresh `dist/runtime` build). `dist/package-final16` remains the
+Latest verified candidate: `dist/package-p1cap2/win-unpacked` (CAP2-CLAUSE evidence).
+`dist/package-p1cap/win-unpacked` remains the P1 evidence artifact; `dist/package-final16` remains the
 Phase 3 evidence artifact; `package-final13`/`final15` are the memory/lineage evidence artifacts;
 `package-final12` is a superseded intermediate (UI bug); never cite it.
 
@@ -64,9 +65,13 @@ capability system. Remediation implemented and verified before Phase 4 continues
 - **SEC-01 (P2)**: vetting `process`/`finish` look up a session by id without the conversation /
   project-ownership comparison `_memory_action` and `panel()` use. Local loopback + single-actor
   threat model; fixed NOT in this commit — recorded for later audit remediation with the other P2/P3
-  items (PER-02, PER-03, stale `_OFF`/`_ON` — now replaced by the strict command patterns as a side
-  effect, sender-frame validation, `KEL_DATA_DIR` backup credentials edge, `packaging/ux-audit.cjs`
-  (now actively used as the gate harness)).
+  items (PER-02, PER-03, sender-frame validation, `KEL_DATA_DIR` backup credentials edge).
+  **DEAD-06 correction (per the CAP2 audit)**: `packaging/ux-audit.cjs` is still referenced by no
+  repo `package.json` / `.ps1` / `.sh` — only ad-hoc invocation is described in docs — so DEAD-06
+  remains OPEN; an earlier claim in this file that it was resolved was inaccurate. It is used as the
+  gate harness by the scratch wrappers in `ux-audit/` (outside the repo), which does not resolve the
+  finding. **DEAD-07**: the unreachable trailing `return 'unavailable'` in `availability()` was
+  removed in the CAP2-CLAUSE commit (dead code; every defined probe returns in its own branch).
 - **Phase 4 preservation**: 123 tracked files + 1 untracked file stashed as
   `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (`git stash list`; `stash@{0}` at capture).
   Full diff, untracked copy, and the Phase 4 audit/report scripts are preserved in
@@ -78,14 +83,50 @@ capability system. Remediation implemented and verified before Phase 4 continues
   `85e99fb` (Phase 3), `70d68e4` (Phase 4 recon) and the P1 remediation; the state commit on top adds
   only this AUTO_RESUME update. The stashed Phase 4 work is NOT part of that range.
 
+## CAP2-CLAUSE remediation (2026-09-17)
+
+Independent Audit 1.6 closed CAP-01 and CAP-03 but returned REVISE on CAP-02: the embedded-clause
+parser performed a substring scan, so ordinary prose mutated capability state and text was stripped
+from the message (`he said "web: off"…` reached the model as `he said ""…`).
+
+- **Starting HEAD**: `4f6535a`. **Remediation commit**: recorded by the follow-up state commit
+  (same two-step pattern as `75d1f68` → `4f6535a`). Phase 4 WIP is NOT part of it.
+- **Parser behavior now**: standalone whole-message commands are unchanged (fullmatch grammar:
+  `web: off`, `web=off`, `Web: OFF`, `web: reset`, `web: use default`, `use default for the web here`,
+  `set web back to default`, `reset terminal to default`, `don't use the terminal here`,
+  `no terminal commands here`, `stop using the browser in this chat`). Embedded controls require the
+  deliberately explicit bracketed form: `[terminal: off]`, `[web: use default]`, `[github: on]` — one
+  or more, outside quotes and code. Only the exact bracketed token (plus adjacent whitespace and at
+  most one adjacent separator) is removed from the forwarded request.
+- **Fail-safe**: ordinary prose, quoted commands, inline code, fenced code, URLs and malformed
+  brackets never mutate state and are forwarded byte-identical; an unpaired double quote, unclosed
+  fence or ambiguous syntax matches nothing. The audit's full mandatory corpus (10 sentences) plus
+  case/whitespace/punctuation/multi-colon/URL/code/malformed extras is a direct regression
+  (`ORDINARY_PROSE` in `runtime/tests/test_capabilities.py`) with a negative-control test proving the
+  4f6535a substring rule would have matched every one of them.
+- **Tests**: `test_capabilities.py` (parser corpus, standalone corpus, removal exactness, negative
+  control), `test_acp_host.py` (standalone inline, embedded apply+forward, leading/multiple clauses,
+  byte-identical prose forwarding through the fake service); full runtime suite **610 passed
+  (+10 subtests)**. Renderer unchanged.
+- **Packaged evidence**: `ux-audit/run-cap2-clause.sh` on `package-p1cap2` — sessiontools journey
+  with the new bracket-clause steps (terminal override after `[terminal: off]`, plain/quoted/inline
+  prose leave GitHub untouched), transcript probe, CAP2 forwarded-text probe against the engine
+  database (request forwarded exactly without the clause; prose byte-identical), and the packaged
+  engine capability probe as the CAP-01 regression check.
+- **Next Audit 1.6 range**: `4f6535a..NEW_MAIN_HEAD` (the CAP2 remediation commit plus the state
+  commit that records this file). CAP-02 must receive independent CONTINUE before Phase 4 resumes;
+  CAP-01/CAP-03 closure stands (regression-checked here).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 604 passed (+10 subtests).
+1. `cd runtime && python -m pytest tests -q` → 610 passed (+10 subtests).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
-   `bash ux-audit/run-p1-capabilities.sh` (needs `package-p1cap`; sessiontools + packaged engine
-   capability probe), `bash ux-audit/run-approvals.sh` (needs final16), `bash
-   ux-audit/run-lineage-probe.sh` (now final16), `bash ux-audit/run-memoryprops.sh` (needs final13).
+   `bash ux-audit/run-cap2-clause.sh` (needs `package-p1cap2`; sessiontools + CAP2 clause probes +
+   engine regression), `bash ux-audit/run-p1-capabilities.sh` (needs `package-p1cap`;
+   sessiontools + packaged engine capability probe), `bash ux-audit/run-approvals.sh` (needs final16),
+   `bash ux-audit/run-lineage-probe.sh` (now final16), `bash ux-audit/run-memoryprops.sh`
+   (needs final13).
 
 ## Sharp edges learned so far
 
@@ -111,6 +152,8 @@ capability system. Remediation implemented and verified before Phase 4 continues
   resolution must always delegate to `Autonomy.resolve_expansion` / `Store.resolve_approval`.
 - The repo's `better-sqlite3` binary is Electron-ABI; system Node cannot load it — keep journey DB
   assertions in Python (`ux-audit/verify-approvals.py`), not in Playwright probes.
-- Conversation capability commands are strict and explicit (`web: use default`, "don't use the
-  browser here"); an explicit `capability: state` clause inside a longer message applies and the rest
-  of the message is forwarded. Ordinary sentences never change capability state.
+- Conversation capability commands: standalone (`web: use default`, "don't use the browser here") or
+  the explicit bracketed embedded form (`[terminal: off]`, `[web: use default]`) inside a longer
+  message — the clause applies and the rest of the message is forwarded without only the bracket
+  token. Ordinary prose, quoted commands, code samples, URLs and malformed brackets never change
+  state and are forwarded byte-identical.

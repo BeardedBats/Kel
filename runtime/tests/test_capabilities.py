@@ -4,11 +4,13 @@ Precedence under test: hard guardrails and real availability always win; a conve
 disable what runs there, may enable an available capability, is spent once when granted for one
 action, and never leaks into another conversation or mutates the global default.
 """
+import re
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+from kel.acp_host import _without_clauses
 from kel.authorize import authorize
 from kel.capabilities import (CAPABILITIES, apply_directive, availability, capability_for_tool,
                               directive, directive_clauses, grant_once, reset, resolve, set_global,
@@ -164,12 +166,93 @@ class DirectiveTests(CapabilityBase):
             self.assertEqual(row['override'], 'default')
 
     def test_explicit_clause_inside_a_request_is_found(self):
-        text = 'web: off — and also summarize the latest news for me'
+        text = 'Please refactor parser.py. [terminal: off]'
         clauses = directive_clauses(text)
-        self.assertEqual([(c['capability'], c['state']) for c in clauses], [('web', 'off')])
-        remainder = text[:clauses[0]['start']] + text[clauses[0]['end']:]
-        self.assertIn('summarize the latest news', remainder)
-        self.assertEqual(directive_clauses('Can you use the web here?'), [])
+        self.assertEqual([(c['capability'], c['state']) for c in clauses], [('terminal', 'off')])
+        self.assertEqual(clauses[0]['inner'], 'terminal: off')
+        self.assertEqual(clauses[0]['text'], '[terminal: off]')
+        leading = '[web: use default] Please research this topic.'
+        self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(leading)],
+                         [('web', 'default')])
+        both = '[web: off] [terminal: default] summarize X'
+        self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(both)],
+                         [('web', 'off'), ('terminal', 'default')])
+        mixed = '[Web: OFF] Mixed case clause'
+        self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(mixed)],
+                         [('web', 'off')])
+
+    def test_standalone_command_corpus_is_healthy(self):
+        corpus = {
+            'web: off': ('web', 'off'), 'web=off': ('web', 'off'), 'Web: OFF': ('web', 'off'),
+            'web: reset': ('web', 'default'), 'web: use default': ('web', 'default'),
+            'use default for the web here': ('web', 'default'),
+            'set web back to default': ('web', 'default'),
+            'reset terminal to default': ('terminal', 'default'),
+            "don't use the terminal here": ('terminal', 'off'),
+            'no terminal commands here': ('terminal', 'off'),
+            'stop using the browser in this chat': ('web', 'off'),
+        }
+        for text, want in corpus.items():
+            self.assertEqual(directive(text), want, text)
+            self.assertTrue(apply_directive(self.store, 'chat-corpus', text), text)
+
+    # The audit's mandatory false-positive corpus: ordinary prose containing control-shaped text.
+    # Against 4f6535a's substring parser every one of these mutated state and stripped text from the
+    # message; the bracket-only grammar must leave all of them untouched.
+    ORDINARY_PROSE = (
+        'the shell: off limits, so please use python instead',
+        'the terminal: disabled by the admin policy here',
+        'Browser: off-topic question, but what does this error mean?',
+        'he said "web: off" in the meeting yesterday',
+        "Someone wrote 'terminal: off' in the docs.",
+        'The string web: off appears in this error.',
+        'Why does terminal: disabled appear here?',
+        'Explain what "web: use default" means.',
+        'Please search for the phrase web: off.',
+        'In this config, terminal: off means something else.',
+        'THE TERMINAL: OFF LIMITS, try again',
+        'web:  off is a string in the docs',
+        'Hmm, terminal: disabled? Interesting.',
+        'Note: web: off: that means something here.',
+        'See https://example.com/web:off for details.',
+        'See https://example.com/page?x=[web: off] more text',
+        'malformed [web off] and [terminal: sideways] and [github: on',
+        'Use `terminal: off` in the script.',
+        'Run ```\nterminal: off\n``` in the shell.',
+    )
+
+    @staticmethod
+    def _legacy_substring_rule(text):
+        # The 4f6535a matcher, kept ONLY so the regression proves it discriminates. It matched every
+        # sentence in ORDINARY_PROSE; the bracket grammar matches none of them.
+        return bool(re.search(r'(?i)(?:the\s+)?(?:web|terminal|github|files|browser|shell)\s*[:=]\s*'
+                              r'(?:use default|default|on|off|enabled|disabled|enable|disable)', text))
+
+    def test_ordinary_prose_never_mutates_or_alters_the_message(self):
+        for text in self.ORDINARY_PROSE:
+            self.assertIsNone(directive(text), text)
+            self.assertEqual(directive_clauses(text), [], text)
+            self.assertIsNone(apply_directive(self.store, 'chat-a', text), text)
+            self.assertEqual(_without_clauses(text, []), text, text)    # byte-identical
+        for row in snapshot(self.store, 'chat-a'):
+            self.assertEqual(row['override'], 'default', row['id'])
+
+    def test_negative_control_the_old_substring_parser_would_have_matched(self):
+        matched = [text for text in self.ORDINARY_PROSE if self._legacy_substring_rule(text)]
+        self.assertEqual(len(matched), len(self.ORDINARY_PROSE))
+        for text in matched:
+            self.assertEqual(directive_clauses(text), [])
+            self.assertIsNone(apply_directive(self.store, 'chat-a', text))
+
+    def test_clause_removal_preserves_surrounding_text(self):
+        cases = [
+            ('Please refactor parser.py. [terminal: off]', 'Please refactor parser.py.'),
+            ('[web: use default] Please research this topic.', 'Please research this topic.'),
+            ('Do X \u2014 [web: off] \u2014 then Y', 'Do X then Y'),
+            ('he said "web: off" in the meeting yesterday', 'he said "web: off" in the meeting yesterday'),
+        ]
+        for text, want in cases:
+            self.assertEqual(_without_clauses(text, directive_clauses(text)), want, text)
 
     def test_ordinary_text_is_not_a_command(self):
         self.assertIsNone(directive('Write a short note about the weather tomorrow.'))
