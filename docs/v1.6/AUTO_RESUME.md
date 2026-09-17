@@ -258,8 +258,10 @@ the trail read-only; flag off performs zero writes. Carry-forward closed: N7 + S
 Evidence: `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine `717 passed (+24)` on
 Windows; full D1 demo trail in the record. **Audit: increment 12 CONTINUE — Phase 5.2 accepted
 for `5b83f0e..894be5b`; findings F1-F8 recorded (F4 rides the 5.3 real-worker wiring).** The
-follow-up patch landed as `f9cf3ea` (focused 31; full 724); its delta re-audit (increment 13)
-is pending. Then Phase 5.3 — D2 small pod + verification (`test_workforce_d2.py`).
+follow-up patch landed as `f9cf3ea` (focused 31; full 724) and its delta re-audit
+(increment 13) returned **CONTINUE** — F1-F8 closed or correctly open (F4 remains for 5.3;
+N1 hardening noted for the 5.3 wiring). Next: publish, then Phase 5.3 — D2 small pod +
+verification (`test_workforce_d2.py`).
 
 ## Verify quickly (any resume)
 

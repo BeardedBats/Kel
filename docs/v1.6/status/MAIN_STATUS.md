@@ -1,23 +1,23 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T22:35:00Z
+updated_utc: 2026-09-17T22:55:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
 head: f9cf3ea (plus docs/state commits on top; see `git log --oneline -4`)
 worktree_clean: true
 
-state: WAITING_FOR_AUDIT
+state: IMPLEMENTING
 
-current_increment: Phase 5.2 follow-up patch applied (f9cf3ea: F1/F2/F5/F6/F7 fixed, F3 guard, F8 test; focused 31; full 724). Audit 1.6 delta re-audit requested for `894be5b..f9cf3ea`. Next after CONTINUE: publish (9e69fc7..NEW); then Phase 5.3 (D2 small pod + verification)
-current_phase: Phase 5 — 5.2 follow-up done (delta audit pending); 5.3 next
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), and Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE)
+current_increment: Phase 5.2 follow-up CLOSED — audit increment 13 CONTINUE accepted `894be5b..f9cf3ea` (F1-F8 closed/open; F4 open for 5.3; N1 hardening input). Next: publish (9e69fc7..NEW); then Phase 5.3 (D2 small pod + verification)
+current_phase: Phase 5 — 5.2 follow-up audit-accepted (through f9cf3ea); 5.3 next
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (commit 9d6ed55, audit CONTINUE), the Phase 5.1 follow-up patch (commit 5b83f0e, audit CONTINUE), Phase 5.2 D1 delegation (commit 894be5b, audit CONTINUE), and the Phase 5.2 follow-up patch (commit f9cf3ea, audit CONTINUE)
 
-audit_requested_from: 894be5b
-audit_requested_through: f9cf3ea
-audit_required: true
-audit_last_seen_head: 894be5b
-audit_last_seen_verdict: CONTINUE (increment 12; Phase 5.2 accepted; F1-F8 carried)
+audit_requested_from: NONE
+audit_requested_through: NONE
+audit_required: false
+audit_last_seen_head: f9cf3ea
+audit_last_seen_verdict: CONTINUE (increment 13; 5.2 follow-up accepted)
 
 visual_state: READY_FOR_VISUAL
 visual_clean_head: 60b2322
@@ -43,6 +43,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Awaiting Audit 1.6 increment 13 for `894be5b..f9cf3ea` (F1/F2/F3/F5/F6/F7/F8 delta). On CONTINUE: publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 9e69fc7..NEW; includes 8123fe4 + f9cf3ea + acceptance docs); then implement Phase 5.3 — D2 small pod + verification (Builder→Verifier hands-off flow; testing + maintainability lenses; messages v1; arbitration v1; stall v1; evaluation-harness pilot; F4 real-artifact binding) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.3. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
-external_dependency: AUDIT 1.6 (894be5b..f9cf3ea)
+next_autonomous_action: Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 9e69fc7..NEW; includes 8123fe4 + f9cf3ea + acceptance docs). Then implement Phase 5.3 — D2 small pod + verification (Builder→Verifier hands-off flow; testing + maintainability lenses; messages v1; arbitration v1; stall v1; evaluation-harness pilot; F4 real-artifact binding + N1 producer-check hardening) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.3. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+external_dependency: NONE
 stop_reason: NONE
