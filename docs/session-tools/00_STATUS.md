@@ -9,14 +9,14 @@ configuration, in plain words, through the same authorization boundary everythin
 |---|---|
 | Capability model + availability | done — `runtime/kel/capabilities.py` (Web, Files, Terminal, GitHub, Google Drive, Connected apps) |
 | Conversation overrides + persistence | done — `conversation_capabilities` / `capability_global` / `capability_grants` (migration 14) |
-| Authorization integration | done — layer 3c in `kel.authorize` (after guardrails, before role policy and leases) |
+| Authorization integration | done — layer 3c in `kel.authorize` (after guardrails, before role policy and leases); the effect spends a one-shot grant exactly once |
 | Conversation UI | done — `KelToolsControl` beside the model pill |
 | Natural-language control | done — same state, answered inline by the ACP host |
-| Engine tests | done — `runtime/tests/test_capabilities.py` (15), full engine suite 544 passed |
-| Packaged journey | done — harness scenario `sessiontools` on `dist/package-final9`; all ten required checks pass (see 06) |
+| Engine tests | done — `runtime/tests/test_capabilities.py` (16), full engine suite 545 passed |
+| Packaged journey | done — harness scenario `sessiontools` on `dist/package-final10`; all required checks pass, including Allow once (see 06) |
 | Independent review | see `docs/basic-ux-sweep/15_FINAL_VERDICT.md` (session-tools continuation entry) |
 
-Evidence artifacts (scratch, not shipped): `ux-audit/runs/final9-sessiontools/ux-sessiontools.json`,
+Evidence artifacts (scratch, not shipped): `ux-audit/runs/final10-sessiontools/ux-sessiontools.json`,
 `ux-sessiontools-db.json`, screenshots `sessiontools-01-menu.png`, `sessiontools-03-natural-language.png`.
 
 ## Files

@@ -17,9 +17,11 @@ Recorded honestly; each is either an environment limit or a deliberate next incr
 4. **Availability probing is deliberately coarse.** Terminal/GitHub availability is "a usable coding
    runtime exists on this machine". Finer per-tool probing (e.g. git present but claude not) would
    leak machinery into the surface and is out of scope.
-5. **Enable once TTL.** A one-shot grant lives 15 minutes and is consumed by the first authorized
-   effect of that capability in that conversation; if the user never acts it simply expires. It is
-   *not* a policy bypass: the lease/approval gates still run after it.
+5. **Enable once TTL.** A one-shot grant is consumed by the first authorized effect of that
+   capability in that conversation and expires unused after 15 minutes. It is *not* a policy bypass:
+   the lease/approval gates still run after it. (The first implementation only *checked* the grant at
+   the boundary and never spent it, which made it fifteen minutes of standing consent; independent
+   review caught it and `kel.authorize` now spends it, with a regression test.)
 6. **Localisation.** The control is Kel-native and uses plain English strings, like the other Kel
    cards; it is not wired into the 13 donor locale bundles.
 7. **Assistant-level tool lists.** Per-assistant tool configuration (donor surface) is unchanged and

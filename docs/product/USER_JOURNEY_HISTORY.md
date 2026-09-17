@@ -375,6 +375,10 @@ Journey defects found and fixed while building it:
   messages still take exactly one round-trip.
 - The conversation control reports availability in the menu and refuses to look ready for something
   that needs setup; the packaged scenario asserts the menu contains no machinery words.
+- Independent review found "Allow once" was checked at the authorization boundary but never spent, so
+  one tap of "next request only" bought fifteen minutes of standing consent for that capability. The
+  boundary now spends the grant on the effect itself and a regression test drives `authorize()`
+  rather than the policy function, so the wired path is what the test exercises.
 
 Rules added: **JR-50**, **JR-51**.
 
