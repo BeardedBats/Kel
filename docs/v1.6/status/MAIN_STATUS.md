@@ -1,6 +1,6 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T18:57:00Z
+updated_utc: 2026-09-17T19:03:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
@@ -37,8 +37,8 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: 2ff9f9e885b58a86c0f0bb1300cd347687dc32bb (9085335 publish pending)
-github_publication_current: false
+github_remote_integration: 3bd93c400eac6bf62a894852179c9e171ce83d00
+github_publication_current: true
 
 frozen_pre1_verified: true
 older_freezes_verified: true
