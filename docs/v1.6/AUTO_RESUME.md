@@ -30,7 +30,8 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
 | 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
 | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
-| 5.4–15 | pending | see the program brief; autonomous Main continues per the charter |
+| 5.4 Assurance army + Sentinel + Oracle | DONE — commit `932db33` (audit requested for `5747567..932db33`) | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 (+24); never-gate user-only waivers; carries closed |
+| 5.5–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -286,9 +287,23 @@ and its delta re-audit (increment 15) returned **CONTINUE** (all closures verifi
 suggestions carried). Next: publish, then Phase 5.4 — assurance army + Sentinel + Oracle
 (`test_workforce_assurance.py`).
 
+## Phase 5.4 — assurance army + Sentinel + Oracle (autonomous Main increment, 2026-09-17)
+
+Phase 5.4 is implemented on `ux/v15-journeys` as commit `932db33`, audit-requested for
+`5747567..932db33`. `kel/assurance.py` gained deterministic scope gating (`lenses_for`: tier
+floors + flag triggers + never-gate at D4; every skipped lens reasoned), anti-anchored
+`dispatch_assurance` (artifact + lens + requirement payloads only; coverage statements
+required; the Sentinel security-lens rule), the deterministic `gate` (blockers always;
+criticals while open; never-gate findings unwaivable by Kel), `waive_gate` (user-only for
+never-gate, recorded), the `oracle_check` harness (family-diverse, coverage-required) and
+`lens_stats` (FP rates). Audit-15 suggestions closed: `messages.ESCALATION_TYPES` is the
+single source; the boundary test enumerates the three escalation types and refuses HANDOFF at
+cap. Evidence: `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine `791 passed (+24)` on
+Windows. Next after audit CONTINUE: publish, then Phase 5.5 — parallel mission teams.
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 767 passed (+10 subtests; +154 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 791 passed (+10 subtests; +178 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
