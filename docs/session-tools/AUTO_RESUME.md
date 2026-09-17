@@ -7,7 +7,7 @@
   capability wiring in `coding.py`, inline directives in `acp_host.py`.
 - Desktop: `KelToolsControl` beside the model pill; bridge whitelist updated.
 - Tests: `runtime/tests/test_capabilities.py` (15 passing); harness scenario `sessiontools`.
-- Artifact: `dist/package-final10/win-unpacked` (see `docs/basic-ux-sweep/15_FINAL_VERDICT.md`).
+- Artifact: `dist/package-final11/win-unpacked` (see `docs/basic-ux-sweep/15_FINAL_VERDICT.md`).
 
 ## If work resumes here
 

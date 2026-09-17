@@ -1,9 +1,9 @@
 # Test matrix — session-scoped tool controls
 
-Artifact: `dist/package-final10/win-unpacked` (branch `ux/v15-journeys`, commit `1744e13`+fix).
+Artifact: `dist/package-final11/win-unpacked` (branch `ux/v15-journeys`, commit `1744e13`+fix).
 Engine tests: `runtime && python -m pytest tests -q` → **545 passed** (16 of them
 `tests/test_capabilities.py`).
-Packaged journey: `node packaging/ux-audit.cjs <package-final10/win-unpacked> <root> <out> sessiontools`
+Packaged journey: `node packaging/ux-audit.cjs <package-final11/win-unpacked> <root> <out> sessiontools`
 → evidence `ux-sessiontools.json`, plus the transcript probe `ux-sessiontools-db.json`.
 
 | # | Required check | How it was proven | Evidence |

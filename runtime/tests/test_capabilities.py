@@ -109,8 +109,12 @@ class OnceTests(CapabilityBase):
         self.assertFalse(resolve(self.store, 'web', conversation='chat-a', consume=True)['allowed'])
         # A grant belongs to its conversation only: chat-b follows its own default and stays on.
         grant_once(self.store, 'chat-a', 'web')
-        self.assertFalse(resolve(self.store, 'web', conversation='chat-a', consume=True)['allowed'] is False and False)
+        self.assertEqual(resolve(self.store, 'web', conversation='chat-a', consume=True)['rule'],
+                         'capability-once')
         self.assertTrue(resolve(self.store, 'web', conversation='chat-b')['allowed'])
+        # ... and a second grant brings the capability back for exactly one more action.
+        self.assertEqual(resolve(self.store, 'web', conversation='chat-a', consume=True)['rule'],
+                         'capability-conversation-off')
 
 
 class DirectiveTests(CapabilityBase):
