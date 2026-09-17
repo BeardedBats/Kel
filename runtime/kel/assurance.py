@@ -13,6 +13,7 @@ import json
 import time
 
 from .core import PolicyError, uid
+from .evidence import write_evidence
 from .workforce import assert_safe, require_integer, require_number, require_text
 
 SCHEMA_VERSION = 1
@@ -193,16 +194,24 @@ def record_finding(store, finding, *, now=None):
 
 
 def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_ref=None,
-                    now=None):
+                    authority=None, now=None):
     """Arbitration ladder v1 (doc 07 §7 / doc 08 §5): a lower rung never overrides a higher
     one without new evidence.
 
-    - `fixed`: requires a recorded evidence row; status `fixed`.
+    - `fixed`: requires a recorded evidence row; status `fixed`. This is remediation, not
+      acceptance, so it stays available to Kel — bound to recorded evidence.
     - `accepted`: risk-accepted; requires rationale; blockers additionally need evidence.
     - `dismissed`: false positive; requires rationale; blockers additionally need evidence.
+
+    Constitutional constant (doc 09 §10, doc 08 §6): a never-gate finding — security, privacy,
+    data-integrity, release-integrity, adversarial — can only be **accepted or dismissed by the
+    user**. `authority='kel'`, and the default `None` (Kel acting), is refused for those lenses,
+    so `waive_gate` is not the only guarded door out of `open`.
     """
     if resolution not in ('fixed', 'accepted', 'dismissed'):
         raise PolicyError('Resolutions are fixed, accepted or dismissed')
+    if authority is not None and authority not in ('user', 'kel'):
+        raise PolicyError('Authority is user or kel')
     stamp = time.time() if now is None else now
     with contextlib.closing(store.connect()) as db:
         row = db.execute('SELECT * FROM findings WHERE id=?', (finding_id,)).fetchone()
@@ -211,6 +220,11 @@ def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_r
         record = dict(row)
         if record['status'] in ('fixed', 'dismissed'):
             raise PolicyError('Finding is already %s' % record['status'])
+        if resolution != 'fixed' and record['lens'] in NEVER_GATE and authority != 'user':
+            raise PolicyError('Never-gate findings (%s) can only be accepted by the user '
+                              '(doc 09 §10); %s resolution of %s by %s authority is refused'
+                              % (record['lens'], resolution, finding_id,
+                                 authority or 'kel (default)'))
 
         def _require_recorded_evidence(what):
             require_text(evidence_ref, 'evidence_ref (%s needs recorded evidence)' % what)
@@ -285,7 +299,9 @@ GATE_TRIGGERS = {
     'api_change': ('api-contract',),
     'performance': ('performance',),
     'journey': ('user-journey',),
-    'irreversible': (),
+    # doc 08 §2 (fail-safe): a positive signal may never dispatch nothing. Destructive /
+    # irreversible change is a data-integrity concern, and that lens is never-gate (doc 08 §3).
+    'irreversible': ('data-integrity',),
     'new_dependency': ('security',),
 }
 
@@ -313,12 +329,14 @@ def lenses_for(tier, flags=()):
     for item in LENSES:
         name = item['name']
         if name not in selected:
-            skipped[name] = 'not triggered at %s (no matching flag)' % tier
+            triggers = [flag for flag, mapped in GATE_TRIGGERS.items() if name in mapped]
+            skipped[name] = ('not triggered at %s (would run for: %s)'
+                             % (tier, ', '.join(triggers) if triggers else 'tier floor only'))
     return {'tier': tier, 'flags': list(flags), 'lenses': selected, 'reasons': reasons,
             'skipped': skipped}
 
 
-def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id=None, flags=(),
+def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id, flags=(),
                        lenses=None, now=None):
     """Run the selected lenses as fresh-context reviews of the artifact.
 
@@ -326,17 +344,25 @@ def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id=Non
     findings land through the standard pipeline (fingerprint dedupe + multi-lens confirmation).
     The payload carries ONLY the artifact reference, the lens name and the rubric requirement —
     never the builder's packet or claims (anti-anchoring, doc 08 §4). Sentinel rule: a
-    security boundary cannot skip the security lens. Every dispatched lens must state its
-    coverage explicitly.
+    security boundary cannot skip the security lens. `lenses` may *add* lenses (domain
+    extensions) but may never drop one the tier floor or a flag mandates (doc 08 §2-3, §6).
+    Every dispatched lens must state its coverage explicitly, and each accepted statement is
+    written to the evidence ledger so coverage stays auditable after the call (docs 06/07).
     """
     plan = lenses_for(tier, flags)
     selected = list(lenses if lenses is not None else plan['lenses'])
     unknown = sorted(set(selected) - set(LENS_NAMES) - set(DOMAIN_LENSES))
     if unknown:
         raise PolicyError('Unknown lens(es): %s' % ', '.join(unknown))
+    missing = [name for name in plan['lenses'] if name not in selected]
+    if missing:
+        raise PolicyError('The gating plan for tier %s + flags %s mandates %s; `lenses` may '
+                          'add lenses but never drop a mandated one (doc 08 §2-3, §6)'
+                          % (tier, list(flags), ', '.join(missing)))
     if 'security_boundary' in flags and 'security' not in selected:
         raise PolicyError('The security lens is mandatory for security boundaries (Sentinel); '
                           'it cannot be skipped')
+    require_text(mission_id, 'mission_id (coverage statements are recorded)')
     stamp = time.time() if now is None else now
     results, records = {}, []
     for lens_name in selected:
@@ -345,12 +371,17 @@ def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id=Non
         outcome = runner(lens_name, payload)
         coverage = outcome.get('coverage_statement')
         require_text(coverage, 'coverage statement for lens %s' % lens_name)
+        recorded = write_evidence(store, mission_id=mission_id, task_id=task_id,
+                                  evidence_class='review_record',
+                                  label='lens coverage: %s' % lens_name,
+                                  produced_by=lens_name, output=coverage, ran_at=stamp)
         lens_findings = []
         for item in outcome.get('findings', []):
             record = record_finding(store, item, now=stamp)
             lens_findings.append(record)
             records.append(record)
         results[lens_name] = {'coverage_statement': coverage,
+                              'coverage_evidence': recorded['id'],
                               'findings': [item['id'] for item in lens_findings]}
     unique = {item['id']: item for item in records}
     quality = quality_score(
@@ -410,12 +441,14 @@ def waive_gate(store, *, task_id, authority, rationale, now=None):
 
 
 def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_provider,
-                mission_id=None, now=None, allow_same_family=False):
+                mission_id, now=None, allow_same_family=False):
     """Run the adversarial (Oracle) lens under family independence (doc 08 §8).
 
-    The oracle must be a different provider family than the producer unless the fallback is
-    explicitly recorded (`allow_same_family=True`). Findings land through the standard
-    pipeline; the coverage statement is required (parity with dispatched lenses).
+    The oracle must be a different provider family than the producer; the same-family fallback
+    is allowed only with `allow_same_family=True`, is reported in `family_diversity`, and is
+    **written to the evidence ledger** so it stays visible to a later auditor. Findings land
+    through the standard pipeline; the coverage statement is required (parity with dispatched
+    lenses) and recorded the same way.
     """
     from .pods import family_of  # local import: pods imports this module (no load-time cycle)
     producer_family = family_of(producer_provider)
@@ -424,28 +457,67 @@ def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_
         raise PolicyError('The Oracle must be a different model family than the producer '
                           '(got %s for both); pass allow_same_family=True to record the '
                           'fallback' % producer_family)
+    require_text(mission_id, 'mission_id (review records are recorded)')
     payload = {'lens': ORACLE_LENS, 'artifact': artifact,
                'requirement': 'attack the artifact and state your coverage explicitly'}
     outcome = runner(ORACLE_LENS, payload)
     coverage = outcome.get('coverage_statement')
     require_text(coverage, 'coverage statement for the Oracle')
     stamp = time.time() if now is None else now
+    fallback = None
+    if oracle_family == producer_family:
+        fallback = write_evidence(store, mission_id=mission_id, task_id=task_id,
+                                  evidence_class='review_record',
+                                  label='oracle same-family fallback',
+                                  produced_by=oracle_provider,
+                                  output='producer family %s == oracle family %s '
+                                         '(allow_same_family=True)' % (producer_family,
+                                                                       oracle_family),
+                                  ran_at=stamp)['id']
+    coverage_evidence = write_evidence(store, mission_id=mission_id, task_id=task_id,
+                                       evidence_class='review_record',
+                                       label='lens coverage: %s' % ORACLE_LENS,
+                                       produced_by=oracle_provider, output=coverage,
+                                       ran_at=stamp)['id']
     records = [record_finding(store, item, now=stamp) for item in outcome.get('findings', [])]
-    return {'lens': ORACLE_LENS, 'coverage_statement': coverage, 'findings': records,
+    return {'lens': ORACLE_LENS, 'coverage_statement': coverage,
+            'coverage_evidence': coverage_evidence, 'findings': records,
             'family_diversity': ('different' if oracle_family != producer_family
                                  else 'unavailable (recorded fallback)'),
+            'fallback_evidence': fallback,
             'oracle_provider': oracle_provider, 'producer_provider': producer_provider}
 
 
+ACCEPTANCE_REASON_PREFIXES = ('risk-accepted:', 'gate-waived')
+
+
+def _is_acceptance(reason):
+    """True when a dismissal records accepted risk (a waiver or a risk acceptance)."""
+    return bool(reason) and str(reason).startswith(ACCEPTANCE_REASON_PREFIXES)
+
+
 def lens_stats(store):
-    """Per-lens review statistics for the learning loop (doc 08 §9, read-only)."""
+    """Per-lens review statistics for the learning loop (doc 08 §9, read-only).
+
+    A risk acceptance or a waived finding is not a reviewer false positive, and the never-gate
+    insurance lenses never earn gating credit from a false-positive rate (doc 08 §3/§7): their
+    `fp_rate` stays None and `learnable` is False.
+    """
     stats = {}
     for item in findings(store):
         entry = stats.setdefault(item['lens'], {'total': 0, 'open': 0, 'confirmed': 0,
-                                                'fixed': 0, 'dismissed': 0})
+                                                'fixed': 0, 'dismissed': 0, 'accepted': 0,
+                                                'false_positive': 0})
         entry['total'] += 1
         entry[item['status']] = entry.get(item['status'], 0) + 1
-    for entry in stats.values():
+        if item['status'] == 'dismissed':
+            if _is_acceptance(item.get('dismissal_reason')):
+                entry['accepted'] += 1
+            else:
+                entry['false_positive'] += 1
+    for name, entry in stats.items():
         closed = entry['fixed'] + entry['dismissed']
-        entry['fp_rate'] = round(entry['dismissed'] / closed, 2) if closed else None
+        entry['learnable'] = name not in NEVER_GATE
+        entry['fp_rate'] = (round(entry['false_positive'] / closed, 2)
+                            if closed and entry['learnable'] else None)
     return stats
