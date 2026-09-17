@@ -26,8 +26,9 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
-| 5.0 Workforce schemas & registries | DONE — commit `9085335` (audit requested for `fd04c00..9085335`) | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 656 (+43); schemas + registries only, no consumers |
-| 5.1–15 | pending | see the program brief; autonomous Main continues per the charter |
+| 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
+| 5.1 Agent-to-model assignment | DONE — commit `9d6ed55` (audit requested for `cc909b9..9d6ed55`) | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 689 (+31); registry v2 + modes + grants + reservations (migration 17); no live consumers |
+| 5.2–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -221,9 +222,25 @@ REVISE → remediation `cc909b9` → increment 9 CONTINUE (F1-F3 closed); accept
 reconciliation for D1/D2. Next: Phase 5.1 — agent-to-model assignment
 (`test_workforce_assignment.py`).
 
+## Phase 5.1 — agent-to-model assignment (autonomous Main increment, 2026-09-17)
+
+Phase 5.1 (Workforce OS agent-to-model assignment) is implemented on `ux/v15-journeys` as
+commit `9d6ed55`, audit-requested for `cc909b9..9d6ed55`. `kel/assignment.py` seeds the
+8-archetype registry v2 (7 spawnable templates; Commander never a template) into the existing
+V1.4 role storage with the doc-03 §7 fields; AUTO/PREFERRED/FIXED resolution binds roles to
+(provider, model, runtime) over the existing deterministic router with per-role requirement
+profiles; capability grants are fail-closed against the authority ceiling; migration 17 adds
+`budget_reservations`; overlays v1 ship as a graceful no-op registry; assignment snapshots
+freeze mode/binding/grants/reservation/flags via `create_assignment(extra=)`; the contract
+validator now accepts versioned registry ceilings. Nothing live calls the new API (explicit
+path only) and `workforce.enabled` defaults off — B-config parity by construction. Evidence:
+`docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine `689 passed (+31)` on Windows; same-role
+demo across all three modes snapshotted. Next after audit CONTINUE: publish the accumulated
+checkpoint; then Phase 5.2 — D1 single-specialist delegation (`test_workforce_d1.py`).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 658 passed (+10 subtests; +45 workforce-schemas tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 689 passed (+10 subtests; +76 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
