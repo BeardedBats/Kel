@@ -1412,8 +1412,13 @@
     },
     "/settings/system": {
       "finalHash": "#/settings/system",
-      "headings": [],
-      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nData folder\nWhere Kel keeps your chats, projects, transcripts and settings on this computer.\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std\\kelwork\nCopy path\nShow in folder\nBackup\nSaves a copy of everything above to a folder you choose. Credentials are never included.\nBack up now\nRestore\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\nRestore from this backup\nLanguage\nEnglish\nStart on Boot\nLaunch Kel automatically when you sign in to macOS or Windows.\nClose to Tray\nHardware Acceleration\nUse the GPU to render the UI. Disable if the app crashes on launch or graphics flicker.\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nKill idle agent processes after this duration to free memory\nmin\nPreview Size Limit (MB)\nText files larger than this open with a notice instead of content. Applies to newly opened tabs only.\nMB\nSave Uploads to Project Folder\nCross-conversation messages\nLet agents send messages to your other conversations. Turning this off also disables the @@ conversation mention in the input box.\nNotifications\nScheduled Task Completion\nWork Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std\\kelwork\\host\\aionui\nLog Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std\\kelwork\\host\\logs\nSpeech to Text\nConfigure the voice input provider used by the chat box on desktop and WebUI.\nIn-app browser\nLet the agent use the in-app browser\nWhen on, the agent can open pages, click and fill in forms in the in-app browser for you — for example to look something up or complete a flow on a website. It can only drive that one browser view: it cannot reach the AionUi interface itself, and it never opens a separate Chrome window. When off, the browser still works for you; only the agent loses access.\nClear browsing data\nSigns out of every site the browser is logged into and clears its cache. Open browser tabs take effect after a reload.\nClear",
+      "headings": [
+        {
+          "tag": "h2",
+          "text": "Keep this computer awake"
+        }
+      ],
+      "text": "Skip to main content\nK\nKel\nModel\nAI Core\nAgents\nSkills\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nData folder\nWhere Kel keeps your chats, projects, transcripts and settings on this computer.\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std2\\kelwork\nCopy path\nShow in folder\nBackup\nSaves a copy of everything above to a folder you choose. Credentials are never included.\nBack up now\nRestore\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\nRestore from this backup\nKeep this computer awake\n\nLong jobs and scheduled work keep running instead of waiting for the computer to wake up. Kel prevents sleep only — your screen can still dim. This applies to this computer, and it stops when Kel closes.\n\nOff — the computer sleeps normally.\n\nLanguage\nEnglish\nStart on Boot\nLaunch Kel automatically when you sign in to macOS or Windows.\nClose to Tray\nHardware Acceleration\nUse the GPU to render the UI. Disable if the app crashes on launch or graphics flicker.\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nKill idle agent processes after this duration to free memory\nmin\nPreview Size Limit (MB)\nText files larger than this open with a notice instead of content. Applies to newly opened tabs only.\nMB\nSave Uploads to Project Folder\nCross-conversation messages\nLet agents send messages to your other conversations. Turning this off also disables the @@ conversation mention in the input box.\nNotifications\nScheduled Task Completion\nWork Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std2\\kelwork\\host\\aionui\nLog Directory\nC:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std2\\kelwork\\host\\logs\nSpeech to Text\nConfigure the voice input provider used by the chat box on desktop and WebUI.\nIn-app browser\nLet the agent use the in-app browser\nWhen on, the agent can open pages, click and fill in forms in the in-app browser for you — for example to look something up or complete a flow on a website. It can only drive that one browser view: it cannot reach the AionUi interface itself, and it never opens a separate Chrome window. When off, the browser still works for you; only the agent los",
       "interactives": [
         {
           "tag": "a",
@@ -1629,7 +1634,7 @@
           "tabIndex": 0,
           "fontSize": "14px",
           "rect": {
-            "x": 734,
+            "x": 741,
             "y": 143,
             "w": 100,
             "h": 28
@@ -1646,7 +1651,7 @@
           "tabIndex": 0,
           "fontSize": "14px",
           "rect": {
-            "x": 842,
+            "x": 849,
             "y": 143,
             "w": 126,
             "h": 28
@@ -1722,6 +1727,23 @@
           "cls": "arco-btn arco-btn-secondary arco-btn-size-small arco-btn-shape-square arco-btn-d"
         },
         {
+          "tag": "button",
+          "role": "switch",
+          "type": "button",
+          "name": "",
+          "disabled": false,
+          "checked": "false",
+          "tabIndex": 0,
+          "fontSize": "13.3333px",
+          "rect": {
+            "x": 1307,
+            "y": 475,
+            "w": 28,
+            "h": 16
+          },
+          "cls": "arco-switch arco-switch-small arco-switch-type-circle"
+        },
+        {
           "tag": "div",
           "role": "combobox",
           "type": "",
@@ -1732,7 +1754,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1168,
-            "y": 447,
+            "y": 638,
             "w": 160,
             "h": 32
           },
@@ -1749,7 +1771,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1180,
-            "y": 455,
+            "y": 646,
             "w": 120,
             "h": 16
           },
@@ -1766,7 +1788,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 514,
+            "y": 704,
             "w": 40,
             "h": 24
           },
@@ -1783,7 +1805,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 572,
+            "y": 763,
             "w": 40,
             "h": 24
           },
@@ -1800,7 +1822,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 631,
+            "y": 821,
             "w": 40,
             "h": 24
           },
@@ -1817,7 +1839,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1221,
-            "y": 690,
+            "y": 881,
             "w": 87,
             "h": 30
           },
@@ -1834,7 +1856,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1221,
-            "y": 753,
+            "y": 943,
             "w": 70,
             "h": 30
           },
@@ -1851,7 +1873,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1221,
-            "y": 821,
+            "y": 1011,
             "w": 73,
             "h": 30
           },
@@ -1868,7 +1890,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 882,
+            "y": 1073,
             "w": 40,
             "h": 24
           },
@@ -1885,7 +1907,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 941,
+            "y": 1131,
             "w": 40,
             "h": 24
           },
@@ -1902,7 +1924,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 368,
-            "y": 998,
+            "y": 1189,
             "w": 960,
             "h": 40
           },
@@ -1919,7 +1941,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 1006,
+            "y": 1197,
             "w": 40,
             "h": 24
           },
@@ -1936,7 +1958,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 1058,
+            "y": 1249,
             "w": 40,
             "h": 24
           },
@@ -1946,14 +1968,14 @@
           "tag": "div",
           "role": "",
           "type": "",
-          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std\\kelwork\\host\\aionui",
+          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std2\\kelwork\\host\\aionui",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
           "fontSize": "14px",
           "rect": {
             "x": 368,
-            "y": 1156,
+            "y": 1347,
             "w": 960,
             "h": 34
           },
@@ -1970,7 +1992,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1295,
-            "y": 1157,
+            "y": 1348,
             "w": 32,
             "h": 32
           },
@@ -1980,14 +2002,14 @@
           "tag": "div",
           "role": "",
           "type": "",
-          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std\\kelwork\\host\\logs",
+          "name": "C:\\Users\\Nick\\Desktop\\Kel\\ux-audit\\roots\\f3-std2\\kelwork\\host\\logs",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
           "fontSize": "14px",
           "rect": {
             "x": 368,
-            "y": 1256,
+            "y": 1447,
             "w": 960,
             "h": 34
           },
@@ -2004,7 +2026,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1295,
-            "y": 1257,
+            "y": 1448,
             "w": 32,
             "h": 32
           },
@@ -2021,7 +2043,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1287,
-            "y": 1358,
+            "y": 1548,
             "w": 40,
             "h": 24
           },
@@ -2038,7 +2060,7 @@
           "fontSize": "13.3333px",
           "rect": {
             "x": 1288,
-            "y": 1525,
+            "y": 1716,
             "w": 40,
             "h": 24
           },
@@ -2055,7 +2077,7 @@
           "fontSize": "14px",
           "rect": {
             "x": 1261,
-            "y": 1608,
+            "y": 1799,
             "w": 67,
             "h": 28
           },
@@ -2066,9 +2088,9 @@
       "scroll": [
         {
           "cls": "settings-page-wrapper w-full min-h-full box-border overflow-y-auto px-",
-          "scrollHeight": 1677,
+          "scrollHeight": 1868,
           "clientHeight": 857,
-          "delta": 820
+          "delta": 1011
         }
       ]
     },
@@ -3299,7 +3321,7 @@
           "text": "Roster"
         }
       ],
-      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n0 roles\nNo roles yet.\nKel needs a roster before it can staff any step.\nSeed the default roster",
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nRich rendering chat\nThird chat\nSecond chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n0 roles\nNo roles yet.\nKel needs a roster before it can staff any step.\nSeed the default roster",
       "interactives": [
         {
           "tag": "a",
@@ -3526,7 +3548,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Second chat",
+          "name": "Rich rendering chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -3543,7 +3565,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Rich rendering chat",
+          "name": "Third chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -3560,7 +3582,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Third chat",
+          "name": "Second chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -3755,7 +3777,7 @@
           "text": "Roster"
         }
       ],
-      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n0 roles\nNo roles yet.\nKel needs a roster before it can staff any step.\nSeed the default roster",
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nRich rendering chat\nThird chat\nSecond chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nTeam\n\n0 assignments · 0 waiting on you\n\nOffice\nRoster\nStudio\nRoster\n0 roles\nNo roles yet.\nKel needs a roster before it can staff any step.\nSeed the default roster",
       "interactives": [
         {
           "tag": "a",
@@ -3982,7 +4004,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Second chat",
+          "name": "Rich rendering chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -3999,7 +4021,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Rich rendering chat",
+          "name": "Third chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -4016,7 +4038,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Third chat",
+          "name": "Second chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -4223,7 +4245,7 @@
           "text": "Locked guardrails · digest e666e7c59873"
         }
       ],
-      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nSecond chat\nRich rendering chat\nThird chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nPermissions\n\n0 active permissions · 0 waiting on you\n\nReload\nEmergency stop\n\nEmergency stop revokes every active lease and pauses all active or queued work; workers stop at their next cancellation check. It does not undo completed effects.\n\nCapability leases\nNo lease has been issued in this project.\nA lease is created only after a reviewed plan is approved and records the scope you granted. Kel enforces that scope on the worker execution path: a worker cannot start, and a change cannot be applied, outside it — anything else comes back to you as one boundary request.\nBoundary requests\nNothing needs a wider scope.\nKel asks here when work genuinely crosses outside the reviewed lease — once per scope, never per command.\nAsk the engine about a scope\n\nThe policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same boundary runs at the effect points that exist today — repository work, file application, and project creation — so this checker's verdict is what stops execution before anything runs.\n\nwrite\nrepo\nbrowser\ntool\ndestructive\nAsk the engine\n\nIssue a lease first; the check needs a scope to test against.\n\nLocked guardrails · digest e666e7c59873\n\nThese rules are locked against roles, projects, repositories, and web content; the engine detects runtime modification of the rule set and refuses new work. Worker actions are checked against these rules on the execution path: locked action kinds, frozen releases, and system locations are denied before anything runs, and every decision is recorded.\n\nRule\tWhat it means\tCovered by test\nno-registry-write\tWindows Registry writes are refused; read-only inspection only when diagnosing.\tAUTO-BLOCK-REG\nno-screen-takeover\tAgents never move the mouse, type into the active desktop, or steal focus.\tAUTO-BLOCK-SYSTEM\nno-os-critical-write\tWindows, boot,",
+      "text": "Skip to main content\nK\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nConversations\nRich rendering chat\nThird chat\nSecond chat\nSeeding audit chat 3 for the sweep battery.\nSeeding audit chat 2 for the sweep battery.\nWork & context\nSettings\nSkip to main content\nPermissions\n\n0 active permissions · 0 waiting on you\n\nReload\nEmergency stop\n\nEmergency stop revokes every active lease and pauses all active or queued work; workers stop at their next cancellation check. It does not undo completed effects.\n\nCapability leases\nNo lease has been issued in this project.\nA lease is created only after a reviewed plan is approved and records the scope you granted. Kel enforces that scope on the worker execution path: a worker cannot start, and a change cannot be applied, outside it — anything else comes back to you as one boundary request.\nBoundary requests\nNothing needs a wider scope.\nKel asks here when work genuinely crosses outside the reviewed lease — once per scope, never per command.\nAsk the engine about a scope\n\nThe policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same boundary runs at the effect points that exist today — repository work, file application, and project creation — so this checker's verdict is what stops execution before anything runs.\n\nwrite\nrepo\nbrowser\ntool\ndestructive\nAsk the engine\n\nIssue a lease first; the check needs a scope to test against.\n\nLocked guardrails · digest e666e7c59873\n\nThese rules are locked against roles, projects, repositories, and web content; the engine detects runtime modification of the rule set and refuses new work. Worker actions are checked against these rules on the execution path: locked action kinds, frozen releases, and system locations are denied before anything runs, and every decision is recorded.\n\nRule\tWhat it means\tCovered by test\nno-registry-write\tWindows Registry writes are refused; read-only inspection only when diagnosing.\tAUTO-BLOCK-REG\nno-screen-takeover\tAgents never move the mouse, type into the active desktop, or steal focus.\tAUTO-BLOCK-SYSTEM\nno-os-critical-write\tWindows, boot,",
       "interactives": [
         {
           "tag": "a",
@@ -4450,7 +4472,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Second chat",
+          "name": "Rich rendering chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -4467,7 +4489,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Rich rendering chat",
+          "name": "Third chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
@@ -4484,7 +4506,7 @@
           "tag": "div",
           "role": "button",
           "type": "",
-          "name": "Third chat",
+          "name": "Second chat",
           "disabled": false,
           "checked": null,
           "tabIndex": 0,
