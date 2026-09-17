@@ -385,24 +385,34 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
         raise PolicyError('Routing mode is one of %s' % ', '.join(ROUTING_MODES))
     if mode == 'AUTO' and (preferred or fixed):
         raise PolicyError('AUTO takes no preferred or fixed binding')
-    if mode == 'PREFERRED' and not preferred:
-        raise PolicyError('PREFERRED needs an ordered candidate list')
-    if mode == 'FIXED' and not fixed:
-        raise PolicyError('FIXED needs a pinned provider (and optional model)')
+    if mode == 'PREFERRED':
+        if not preferred:
+            raise PolicyError('PREFERRED needs an ordered candidate list')
+        if fixed:
+            raise PolicyError('PREFERRED takes no fixed binding')
+    if mode == 'FIXED':
+        if not fixed:
+            raise PolicyError('FIXED needs a pinned provider (and optional model)')
+        if preferred:
+            raise PolicyError('FIXED takes no preferred list')
     requirements = tuple(requirements)
     unknown = [req for req in requirements if req not in REQUIREMENTS]
     if unknown:
         raise PolicyError('Unknown requirement(s): %s' % ', '.join(unknown))
     caps, advisory = set(), []
+    privacy_enforced = 'local_only' in requirements
     for req in requirements:
+        if req == 'local_only':
+            continue  # enforced through the privacy filter (recorded under privacy_enforced)
         tokens = REQUIREMENT_CAPABILITIES[req]
         if tokens:
             caps.update(tokens)
         else:
             advisory.append(req)
-    enforced = [req for req in requirements if REQUIREMENT_CAPABILITIES[req]]
+    enforced = [req for req in requirements
+                if req != 'local_only' and REQUIREMENT_CAPABILITIES[req]]
     if local_only is None:
-        local_only = 'local_only' in requirements
+        local_only = privacy_enforced
     required = set(caps) | {'text'}
     runtimes = runtimes or {}
 
@@ -426,7 +436,7 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
         order = ranked + [name for name in eligible if name not in ranked]
         chosen = order[0]
         note = ('Preferred order honored' if chosen == preferred[0]
-                else 'First preferred entry is not eligible; fell back inside the preferred order')
+                else 'First preferred entry is not eligible; next preferred entry used')
     else:  # FIXED
         name = fixed.get('provider')
         pinned = [c for c in candidates if c.name == name]
@@ -437,9 +447,12 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
         except PolicyError as exc:
             raise PolicyError('Fixed binding is not eligible: %s' % exc)
         pinned_model = fixed.get('model')
-        if pinned_model is not None:
+        if pinned_model is not None and caps:
             allowed = _model_ids(name, caps)
-            if allowed and pinned_model not in allowed:
+            if not allowed:
+                raise PolicyError('Provider %s has no model declaring the required capabilities: %s'
+                                  % (name, ', '.join(sorted(caps))))
+            if pinned_model not in allowed:
                 raise PolicyError(
                     'Fixed model %s does not declare the required capabilities' % pinned_model)
         result = select(candidates, required=required, local_only=local_only,
@@ -452,14 +465,21 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
                 'model': (fixed.get('model') if mode == 'FIXED' and fixed.get('model')
                           else model_for(chosen, caps)),
                 'runtime': runtime_of(chosen)}
+    if not selected['model'] and caps:
+        raise PolicyError('No model of %s declares the required capabilities: %s'
+                          % (chosen, ', '.join(sorted(caps))))
     return {
         'mode': mode,
         'selected': selected,
         'fallbacks': [{'provider': n, 'model': model_for(n, caps), 'runtime': runtime_of(n)}
                       for n in order[1:]],
+        'fallback_basis': {'AUTO': 'eligible-cost-order',
+                           'PREFERRED': 'preferred-order-then-cost',
+                           'FIXED': 'eligible-cost-order-excluding-pin'}[mode],
         'excluded': dict(result['excluded']),
         'requirements': {'enforced': enforced, 'advisory': advisory,
-                         'capabilities': sorted(caps)},
+                         'capabilities': sorted(caps),
+                         'privacy_enforced': ['local_only'] if privacy_enforced else []},
         'local_only': bool(local_only),
         'policy': {'AUTO': 'eligible-cost-v1', 'PREFERRED': 'preferred-order-v1',
                    'FIXED': 'fixed-pin-v1'}[mode],
@@ -572,6 +592,8 @@ def release_budget(store, reservation_id, *, consumed=False, now=None):
 
 
 def reservations(store, *, job_id=None, state=None):
+    if state is not None and state not in RESERVATION_STATES:
+        raise PolicyError('Reservation states are %s' % ', '.join(RESERVATION_STATES))
     query = 'SELECT * FROM budget_reservations'
     clauses, args = [], []
     if job_id:
@@ -614,6 +636,8 @@ def assign_worker(store, job_id, milestone_id, template_id, *, mode='AUTO', pref
         reservation_row = get_reservation(store, reservation)
         if reservation_row['job_id'] != job_id:
             raise PolicyError('Reservation belongs to a different job')
+        if reservation_row['milestone_id'] and reservation_row['milestone_id'] != milestone_id:
+            raise PolicyError('Reservation belongs to a different milestone')
         if reservation_row['state'] != 'reserved':
             raise PolicyError('Reservation is already %s' % reservation_row['state'])
     extra = {'workforce': {
@@ -627,6 +651,12 @@ def assign_worker(store, job_id, milestone_id, template_id, *, mode='AUTO', pref
                                      provider=binding['selected']['provider'],
                                      model=binding['selected']['model'], extra=extra)
     if reservation_row is not None:
-        link_reservation(store, reservation_row['reservation_id'], created['assignment_id'])
+        try:
+            link_reservation(store, reservation_row['reservation_id'], created['assignment_id'])
+        except PolicyError as exc:
+            raise PolicyError('Assignment %s was created, but its reservation %s could not be '
+                              'linked (%s); release or repair the reservation explicitly'
+                              % (created['assignment_id'], reservation_row['reservation_id'],
+                                 exc))
     return {'assignment_id': created['assignment_id'], 'binding': binding, 'grants': grants,
             'reservation': reservation_row}
