@@ -17,7 +17,7 @@ performs zero writes.
 import contextlib
 import time
 
-from .assurance import record_finding
+from .assurance import LIVE_STATUSES, record_finding
 from .assignment import (assign_worker, candidates_from_providers, flags_snapshot, reserve_budget,
                          validate_role_fields_v2)
 from .commander import PROVIDER_FAMILIES
@@ -293,7 +293,8 @@ def run_d2(store, job_id, milestone_id, request, builder_worker, verifier_worker
     if verdict not in VERDICTS:
         raise PolicyError('Verification verdicts are %s' % ', '.join(VERDICTS))
     open_serious = [item for item in findings_records
-                    if item['severity'] in ('blocker', 'critical') and item['status'] == 'open']
+                    if item['severity'] in ('blocker', 'critical')
+                    and item['status'] in LIVE_STATUSES]
     if verdict == 'VERIFIED' and open_serious:
         raise PolicyError('Verdict contradicts findings: %d open blocker/critical finding(s)'
                           % len(open_serious))

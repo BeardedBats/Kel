@@ -59,6 +59,9 @@ DOMAIN_LENSES = ('documentation', 'i18n/l10n', 'licensing', 'dev-experience', 'd
                  'model-quality', 'business-rules')
 SEVERITIES = ('blocker', 'critical', 'info')
 FINDING_STATUSES = ('open', 'confirmed', 'dismissed', 'fixed')
+# A finding is *live* (and therefore blocking-eligible) until a guarded resolution moves it to
+# fixed/dismissed. Corroboration strengthens a finding; it must never clear it (audit 17, F17-1).
+LIVE_STATUSES = ('open', 'confirmed')
 CONFIDENCE_GATES = ((2, 'suppressed'), (4, 'appendix'), (6, 'caveat'), (10, 'normal'))
 FINDING_FIELDS = ('id', 'schema_version', 'mission_id', 'task_id', 'lens', 'severity',
                   'confidence', 'artifact', 'location', 'summary', 'evidence', 'fix',
@@ -156,6 +159,9 @@ def record_finding(store, finding, *, now=None):
     finding.setdefault('created', stamp)
     finding['updated'] = stamp
     validate_finding(finding)
+    if finding['status'] != 'open':
+        raise PolicyError('Findings enter the ledger open; a resolution goes through '
+                          'resolve_finding or waive_gate (got status=%s)' % finding['status'])
     with contextlib.closing(store.connect()) as db:
         existing = db.execute('SELECT * FROM findings WHERE fingerprint=?',
                               (finding['fingerprint'],)).fetchone()
@@ -170,6 +176,8 @@ def record_finding(store, finding, *, now=None):
             confidence = max(int(record['confidence']), int(finding['confidence']))
             if confidence < 10:
                 confidence += 1  # multi-specialist confirmed (doc 08 §5), capped at 10
+            # `confirmed` stays live: corroboration is evidence *for* the finding, so it can
+            # never be the reason a blocker leaves the gate (audit 17, F17-1).
             db.execute('UPDATE findings SET confirmations=?, confidence=?, updated=?, status=?'
                        ' WHERE id=?',
                        (json.dumps(confirmations), confidence, stamp, 'confirmed',
@@ -244,7 +252,9 @@ def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_r
             require_text(rationale, 'rationale (dismissals are recorded)')
             if record['severity'] == 'blocker':
                 _require_recorded_evidence('dismissing a blocker')
-            status, reason = 'dismissed', rationale
+            # The resolution marker is written by this path, so a caller-supplied rationale
+            # cannot impersonate an acceptance (audit 17, F17-2).
+            status, reason = 'dismissed', 'dismissed: %s' % rationale
         db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE id=?',
                    (status, reason, stamp, finding_id))
         updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
@@ -395,16 +405,17 @@ def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id, fl
 def gate(store, *, task_id):
     """Deterministic gate over recorded findings (doc 08 §3; doc 09 §10).
 
-    Blockers block, always; criticals block while open; findings from the never-gate class can
-    never be waived by Kel — only an explicit user decision can accept them. The quality score
-    is advisory only.
+    Blockers block, always; criticals block while live (open or multi-lens confirmed); findings
+    from the never-gate class can never be waived by Kel — only an explicit user decision can
+    accept them. The quality score is advisory only.
     """
     rows = findings(store, task_id=task_id)
-    open_items = [item for item in rows if item['status'] == 'open']
-    blockers = [item for item in open_items if item['severity'] == 'blocker']
-    criticals = [item for item in open_items if item['severity'] == 'critical']
-    never_gate_hits = [item for item in open_items if item['lens'] in NEVER_GATE]
-    reasons = ['%s finding %s open (%s)' % (item['severity'], item['id'], item['lens'])
+    live_items = [item for item in rows if item['status'] in LIVE_STATUSES]
+    blockers = [item for item in live_items if item['severity'] == 'blocker']
+    criticals = [item for item in live_items if item['severity'] == 'critical']
+    never_gate_hits = [item for item in live_items if item['lens'] in NEVER_GATE]
+    reasons = ['%s finding %s %s (%s)' % (item['severity'], item['id'], item['status'],
+                                          item['lens'])
                for item in blockers + criticals]
     blocked = bool(blockers or criticals)
     return {'blocked': blocked, 'waivable': bool(blocked) and not never_gate_hits,
@@ -412,7 +423,7 @@ def gate(store, *, task_id):
             'never_gate_hits': [item['id'] for item in never_gate_hits],
             'quality_score': quality_score(
                 criticals=len(criticals),
-                infos=len([item for item in open_items if item['severity'] == 'info']))}
+                infos=len([item for item in live_items if item['severity'] == 'info']))}
 
 
 def waive_gate(store, *, task_id, authority, rationale, now=None):
@@ -433,9 +444,9 @@ def waive_gate(store, *, task_id, authority, rationale, now=None):
     stamp = time.time() if now is None else now
     with contextlib.closing(store.connect()) as db:
         db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE task_id=? '
-                   'AND status=? AND severity IN (?, ?)',
+                   'AND status IN (?, ?) AND severity IN (?, ?)',
                    ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), stamp,
-                    task_id, 'open', 'blocker', 'critical'))
+                    task_id) + LIVE_STATUSES + ('blocker', 'critical'))
     return {'waived': True, 'authority': authority, 'task_id': task_id,
             'accepted': result['reasons']}
 
@@ -492,7 +503,11 @@ ACCEPTANCE_REASON_PREFIXES = ('risk-accepted:', 'gate-waived')
 
 
 def _is_acceptance(reason):
-    """True when a dismissal records accepted risk (a waiver or a risk acceptance)."""
+    """True when a dismissal records accepted risk (a waiver or a risk acceptance).
+
+    Both markers are written by the guarded paths, so a caller-supplied rationale cannot
+    impersonate an acceptance (audit 17, F17-2).
+    """
     return bool(reason) and str(reason).startswith(ACCEPTANCE_REASON_PREFIXES)
 
 
