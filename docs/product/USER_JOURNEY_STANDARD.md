@@ -122,6 +122,11 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-49 - Presence is proven by the journey, not by the primitive.** A capability counts as present only when the packaged app completes its user journey; an engine route, a mounted component, a persisted config key, or a control that does nothing counts as missing. A donor-derived capability is classified from the packaged build, never from the fact that a related primitive exists or that the feature has been discussed. Verify: run the journey in the packaged build and keep the resulting artifact with the classification.
 
+**JR-50 - Conversation-scoped preferences state their scope, never leak, and never rewrite the global.** A preference that applies to one conversation must say so where it is set and where it applies, must be stored with that conversation, must survive navigation and restart, must not change any other conversation's setting, and must return to the shared default when reset. Verify: set it in one conversation, confirm a second conversation is untouched, restart, confirm both, reset the first, confirm it follows the global again.
+
+**JR-51 - Capability controls express intent; machinery stays behind Details.** A user-facing capability control names what the user wants to do (Web, GitHub, Files, Terminal), never what Kel uses to do it (tool ids, connected-server names, runtimes, leases); an unavailable capability is stated in plain words with the action that makes it available, and cannot be switched on to look ready. Verify: read every string the control and its menu can show - no internal name appears - and switch on an unavailable capability to confirm it stays unusable with a plain reason.
+
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

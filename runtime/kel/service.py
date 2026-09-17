@@ -626,6 +626,7 @@ class Service:
         if path=='/api/vetting':return self._vetting_action(data)
         if path=='/api/transcription':return self._transcription_action(data)
         if path=='/api/model':return self._model_action(data)
+        if path=='/api/capabilities':return self._capabilities_action(data)
         if path=='/api/data-path':return {'root':str(self.store.root),'database':str(self.store.db_path)}
         if path=='/api/backup':return self._backup_action(data)
         if path=='/api/search':
@@ -716,6 +717,29 @@ class Service:
         if action=='restore':
             return backup.stage_restore(data.get('source'))
         raise PolicyError('Unknown backup action')
+
+    def _capabilities_action(self,data):
+        # Conversation-scoped tool controls. One plain capability name (Web, Files, Terminal,
+        # GitHub, Drive, Connected apps) with one state per conversation; the UI control and the
+        # natural-language directives both write this same state. Design: docs/session-tools/.
+        from .capabilities import (apply_directive, grant_once, reset, set_override,
+                                   set_global, snapshot)
+        action=data.get('action')
+        conversation=data.get('conversation')
+        if action in ('get','list'):
+            return snapshot(self.store,conversation)
+        if action=='set':
+            return set_override(self.store,conversation,data.get('capability'),data.get('state'))
+        if action=='set_global':
+            return set_global(self.store,data.get('capability'),data.get('state'))
+        if action=='reset':
+            return reset(self.store,conversation)
+        if action=='allow_once':
+            return grant_once(self.store,conversation,data.get('capability'))
+        if action=='directive':
+            reply=apply_directive(self.store,conversation,data.get('text') or '')
+            return {'applied':bool(reply),'reply':reply}
+        raise PolicyError('Unknown capabilities action')
 
     def _model_action(self,data):
         # Default Kel model + per-conversation override. Plain labels only; routing keeps its

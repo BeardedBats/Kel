@@ -159,11 +159,13 @@ class CodingAdapter:
         # V1.5: the real effect point. A worker cannot start repository work or run the configured
         # test command without a valid lease and role policy; a revoked lease stops it here.
         from .authorize import authorize,role_for
+        from .capabilities import capability_for_tool
         role_info=role_for(self.store,run['job_id'],run['milestone_id'])
         for tool in ('git','run_tests','write'):
             decision=authorize(self.store,{'actor':'worker','worker':run_id,'job':run['job_id'],
                 'milestone':run['milestone_id'],'role':(role_info or {}).get('template_id'),
                 'role_tool_policy':(role_info or {}).get('tool_policy'),
+                'capability':capability_for_tool(tool),
                 'action_kind':'repo','tool':tool,'target':str(contract.get('root') or ''),
                 'metadata':{'what':'the isolated repository workspace','why':'run the reviewed coding turn',
                             'fallback':'stop before any change and report'}})

@@ -191,6 +191,17 @@ class Authorizer:
                                'New projects are created only under the Kel Projects folder')
             return _result('ALLOW', 'user-project-create',
                            'An explicit user request creates a new project folder')
+        # 3c. Conversation capability controls (docs/session-tools/): this conversation may narrow
+        #     what runs here, and may enable a capability that is available and not globally denied.
+        #     It never overrides the locked guardrails above, never invents availability, and never
+        #     replaces the lease or approval gates below.
+        capability = str(intent.get('capability') or '')
+        if capability and kind in EFFECT_KINDS:
+            from .capabilities import resolve
+            control = resolve(self.store, capability,
+                              conversation=intent.get('conversation'), job=intent.get('job'))
+            if not control.get('allowed'):
+                return _result('DENY', control.get('rule') or 'capability-off', control.get('reason') or '')
         # 4. Role tool policy narrows; it can never broaden the lease or the guardrails.
         role = intent.get('role')
         if role and tool:
