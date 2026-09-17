@@ -2,9 +2,11 @@
 
 Design: `ux-audit/workforce-os/08_ASSURANCE_ARMY.md`. Fifteen constitution-level lenses
 with deterministic gating classes; security, privacy, data-integrity, release-integrity
-and the Oracle are never-gate insurance and are never learned away. Dispatch, dedupe,
-confirmation and score machinery arrives with the assurance increments; this module owns
-the catalog and the v1 finding schema.
+and the Oracle are never-gate insurance and are never learned away. Lens names are stable
+identifiers (doc-08 spellings; `visual-design` stores the catalog's conservative `info`
+floor — escalations are handled downstream). Dispatch, dedupe, confirmation and score
+machinery arrives with the assurance increments; this module owns the catalog and the v1
+finding schema.
 """
 from .core import PolicyError
 from .workforce import assert_safe, require_integer, require_number, require_text
@@ -48,7 +50,7 @@ LENS_NAMES = tuple(item['name'] for item in LENSES)
 NEVER_GATE = ('security', 'privacy', 'data-integrity', 'release-integrity', 'adversarial')
 ORACLE_LENS = 'adversarial'
 TIER_FLOORS = {'D2': ('functional-testing', 'maintainability')}
-DOMAIN_LENSES = ('documentation', 'i18n-l10n', 'licensing', 'dev-experience', 'data-quality',
+DOMAIN_LENSES = ('documentation', 'i18n/l10n', 'licensing', 'dev-experience', 'data-quality',
                  'model-quality', 'business-rules')
 SEVERITIES = ('blocker', 'critical', 'info')
 FINDING_STATUSES = ('open', 'confirmed', 'dismissed', 'fixed')
