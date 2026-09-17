@@ -28,7 +28,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
-| 5.2 D1 single-specialist delegation | DONE — commit `894be5b` (audit requested for `5b83f0e..894be5b`) | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 717 (+24); migration 18; no live consumers |
+| 5.2 D1 single-specialist delegation | DONE + audit-accepted — commit `894be5b` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 717 (+24); audit 12 CONTINUE (F1-F8 → follow-up patch) |
 | 5.3–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -256,8 +256,10 @@ criterion coverage (uncertain/failed close honestly); `run_d1()` enforces worker
 the frozen grants and never spawns nested workers; `task_ledger()`/`progress_ledger()` project
 the trail read-only; flag off performs zero writes. Carry-forward closed: N7 + Sug1-5 + S3.
 Evidence: `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine `717 passed (+24)` on
-Windows; full D1 demo trail in the record. Next after audit CONTINUE: publish, then Phase 5.3
-— D2 small pod + verification (`test_workforce_d2.py`).
+Windows; full D1 demo trail in the record. **Audit: increment 12 CONTINUE — Phase 5.2 accepted
+for `5b83f0e..894be5b`; findings F1-F8 recorded (F4 rides the 5.3 real-worker wiring).** Next: a
+small follow-up patch (F1/F2/F5/F6/F7 + F3 guard + F8 test) with a delta re-audit, then Phase
+5.3 — D2 small pod + verification (`test_workforce_d2.py`).
 
 ## Verify quickly (any resume)
 
