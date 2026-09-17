@@ -8,7 +8,11 @@ floor — escalations are handled downstream). Dispatch, dedupe, confirmation an
 machinery arrives with the assurance increments; this module owns the catalog and the v1
 finding schema.
 """
-from .core import PolicyError
+import contextlib
+import json
+import time
+
+from .core import PolicyError, uid
 from .workforce import assert_safe, require_integer, require_number, require_text
 
 SCHEMA_VERSION = 1
@@ -136,3 +140,124 @@ def quality_score(*, criticals=0, infos=0):
     never shown as a standalone user-facing judgment.
     """
     return max(0, 10 - (criticals * 2 + infos * 0.5))
+
+
+def record_finding(store, finding, *, now=None):
+    """Persist one review finding with doc-08 dedup + multi-lens confirmation (v1).
+
+    Same fingerprint + same lens is refused as a duplicate (nothing silently dropped); the
+    same fingerprint from a different lens upgrades the existing row (confirmations +
+    confidence cap 10, tagged `confirmed_by_multi`).
+    """
+    finding = dict(finding)
+    finding.setdefault('id', 'find_' + uid())
+    stamp = time.time() if now is None else now
+    finding.setdefault('created', stamp)
+    finding['updated'] = stamp
+    validate_finding(finding)
+    with contextlib.closing(store.connect()) as db:
+        existing = db.execute('SELECT * FROM findings WHERE fingerprint=?',
+                              (finding['fingerprint'],)).fetchone()
+        if existing is not None:
+            record = dict(existing)
+            if record['lens'] == finding['lens']:
+                raise PolicyError('Duplicate finding rejected (same fingerprint and lens: %s)'
+                                  % record['id'])
+            confirmations = json.loads(record['confirmations'] or '[]')
+            if finding['lens'] not in confirmations:
+                confirmations.append(finding['lens'])
+            confidence = max(int(record['confidence']), int(finding['confidence']))
+            if confidence < 10:
+                confidence += 1  # multi-specialist confirmed (doc 08 §5), capped at 10
+            db.execute('UPDATE findings SET confirmations=?, confidence=?, updated=?, status=?'
+                       ' WHERE id=?',
+                       (json.dumps(confirmations), confidence, stamp, 'confirmed',
+                        record['id']))
+            updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
+                                      (record['id'],)).fetchone())
+            updated['confirmed_by_multi'] = True
+            return updated
+        db.execute('INSERT INTO findings(id,schema_version,mission_id,task_id,lens,severity,'
+                   'confidence,artifact,location,summary,evidence,fix,fingerprint,status,'
+                   'advisory,reporter,confirmations,dismissal_reason,created,updated) '
+                   'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                   (finding['id'], finding['schema_version'], finding['mission_id'],
+                    finding['task_id'], finding['lens'], finding['severity'],
+                    finding['confidence'], finding.get('artifact'), finding.get('location'),
+                    finding['summary'], finding.get('evidence'), finding.get('fix'),
+                    finding['fingerprint'], finding['status'],
+                    1 if finding.get('advisory') else 0,
+                    json.dumps(finding['by']), json.dumps(finding.get('confirmations') or []),
+                    finding.get('dismissal_reason'), finding['created'], finding['updated']))
+    return finding
+
+
+def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_ref=None,
+                    now=None):
+    """Arbitration ladder v1 (doc 07 §7 / doc 08 §5): a lower rung never overrides a higher
+    one without new evidence.
+
+    - `fixed`: requires a recorded evidence row; status `fixed`.
+    - `accepted`: risk-accepted; requires rationale; blockers additionally need evidence.
+    - `dismissed`: false positive; requires rationale; blockers additionally need evidence.
+    """
+    if resolution not in ('fixed', 'accepted', 'dismissed'):
+        raise PolicyError('Resolutions are fixed, accepted or dismissed')
+    stamp = time.time() if now is None else now
+    with contextlib.closing(store.connect()) as db:
+        row = db.execute('SELECT * FROM findings WHERE id=?', (finding_id,)).fetchone()
+        if row is None:
+            raise PolicyError('Unknown finding: %s' % finding_id)
+        record = dict(row)
+        if record['status'] in ('fixed', 'dismissed'):
+            raise PolicyError('Finding is already %s' % record['status'])
+
+        def _require_recorded_evidence(what):
+            require_text(evidence_ref, 'evidence_ref (%s needs recorded evidence)' % what)
+            if db.execute('SELECT 1 FROM evidence_records WHERE id=?',
+                          (evidence_ref,)).fetchone() is None:
+                raise PolicyError('Evidence %s is not in the ledger' % evidence_ref)
+
+        if resolution == 'fixed':
+            _require_recorded_evidence('a fix')
+            status, reason = 'fixed', None
+        elif resolution == 'accepted':
+            require_text(rationale, 'rationale (risk acceptance is recorded)')
+            if record['severity'] == 'blocker':
+                _require_recorded_evidence('accepting a blocker')
+            status, reason = 'dismissed', 'risk-accepted: %s' % rationale
+        else:
+            require_text(rationale, 'rationale (dismissals are recorded)')
+            if record['severity'] == 'blocker':
+                _require_recorded_evidence('dismissing a blocker')
+            status, reason = 'dismissed', rationale
+        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE id=?',
+                   (status, reason, stamp, finding_id))
+        updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
+                                  (finding_id,)).fetchone())
+    return updated
+
+
+def findings(store, *, task_id=None, mission_id=None, status=None):
+    """Read-only findings ledger (decoded reporters/confirmations)."""
+    query = 'SELECT * FROM findings'
+    clauses, args = [], []
+    if task_id:
+        clauses.append('task_id=?')
+        args.append(task_id)
+    if mission_id:
+        clauses.append('mission_id=?')
+        args.append(mission_id)
+    if status:
+        clauses.append('status=?')
+        args.append(status)
+    if clauses:
+        query += ' WHERE ' + ' AND '.join(clauses)
+    query += ' ORDER BY created'
+    with contextlib.closing(store.connect()) as db:
+        rows = [dict(row) for row in db.execute(query, tuple(args))]
+    for row in rows:
+        row['by'] = json.loads(row['reporter']) if row.get('reporter') else None
+        row['confirmations'] = json.loads(row['confirmations'] or '[]')
+        row['advisory'] = bool(row['advisory'])
+    return rows
