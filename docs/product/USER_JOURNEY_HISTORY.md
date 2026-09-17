@@ -402,6 +402,23 @@ Rules added: **JR-50**, **JR-51**.
   accept updates with the previous value kept, reject never re-asks, defer survives restart, cross-
   project rule untouched - DB probe `ux-memoryprops-db.json`).
 
+### H26 - Generated files could not say where they came from (2026-09-17)
+- **Problem:** when Kel produced a file for a task, the Work surface showed only a filename; nothing
+  recorded which conversation, task or request it came from, earlier versions of a replaced artifact
+  were silently orphaned on disk, and there was no way to open an older version or find the file in
+  the folder without guessing.
+- **Fix:** artifact lineage: every produced version gets a durable row (project, conversation, job,
+  milestone, run, filename, digest, time, originating user message) written in the same transaction as
+  the artifact itself; replacement chains the previous version instead of losing it; a **Where from?**
+  view in the Work panel lists the request and every version with Open (current or older), Show in
+  folder and Copy path actions (main-process reveal; no internal ids shown).
+- **Lesson:** anything Kel produces must be able to answer "where did this come from?" after the fact,
+  including its own earlier versions.
+- **Rule:** JR-54 (created).
+- **Evidence:** engine `runtime/tests/test_v16_lineage.py` (6 tests, full suite 574 passed); packaged
+  probe `ux-audit/run-lineage-probe.sh` on `package-final15` (modal + version list + older-version
+  view + reveal `{ok:true}`; probe JSON in `ux-audit/runs/lin/out/`).
+
 ## Process (permanent)
 
 1. Run the journey harness (packaged build, fresh + seeded roots) before tagging any release.

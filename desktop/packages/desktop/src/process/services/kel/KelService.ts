@@ -1,5 +1,5 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -338,12 +338,24 @@ export async function initializeKel(port: number): Promise<void> {
     )
       throw new Error('Unknown Kel window');
     if (
-      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|retry|apply|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+)$/.test(
+      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
         route
       )
     )
       throw new Error('Unknown Kel action');
     return kelRequest(route, body);
+  });
+  // Artifact lineage: reveal a produced artifact in the OS file manager. The renderer sends the
+  // store-relative path; main resolves it against the engine root and refuses anything that
+  // escapes - the renderer never builds an absolute path.
+  ipcMain.removeHandler('kel:artifact-reveal');
+  ipcMain.handle('kel:artifact-reveal', (_event, relpath: string) => {
+    if (typeof relpath !== 'string' || !relpath) throw new Error('Missing artifact path');
+    const root = path.resolve(dataRoot());
+    const target = path.resolve(root, relpath);
+    if (!target.startsWith(root + path.sep)) throw new Error('That path is not inside Kel data');
+    shell.showItemInFolder(target);
+    return { ok: true };
   });
   // OS-backed credential custody (V1.4 Gate 6): values are encrypted with safeStorage (DPAPI on
   // Windows) in the main process; the engine only ever receives metadata, and no IPC returns a value.

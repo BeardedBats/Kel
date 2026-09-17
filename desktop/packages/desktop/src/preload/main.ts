@@ -110,6 +110,8 @@ contextBridge.exposeInMainWorld('kelAPI', {
   history: (id: string) => ipcRenderer.invoke('kel:history', id),
   conversation: (id: string) => ipcRenderer.invoke('kel:conversation', id),
   historySearch: (query: string) => ipcRenderer.invoke('kel:history-search', query),
+  // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
+  revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
   // Credential custody: store, list field names, delete. Deliberately no value getter, so a secret
   // cannot reach the renderer even by mistake.
   credentials: {

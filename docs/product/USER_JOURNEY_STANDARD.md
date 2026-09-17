@@ -130,6 +130,8 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-53 - "What changed" answers in plain words, not logs.** A project's knowledge history says what changed in Kel's understanding of this project in plain sentences with previous values (Added / You changed "old" to "new" / You accepted the change / You turned the change down / Out of date / Forgotten a record). No raw event or database dumps, no internal ids. Verify: in the packaged app, accept and reject proposals, then read the Work panel's Project knowledge tab and confirm the entries are plain sentences; the engine history formatter is pinned by test.
 
+**JR-54 - A generated file can always say where it came from.** Every produced work artifact records its project, conversation, task, originating user request and time, together with its version chain; the Work surface offers a plain "Where from?" view with the earlier versions and the actions Open (any version), Show in folder and Copy path. Earlier versions stay readable after replacement (including renames) and a changed file on disk is refused instead of shown; provenance survives reopens (engine-pinned). No internal ids appear in the view. Verify: run a two-version job in the packaged app, open Where from?, view the older version, and reveal the file; the engine suite pins chain/rename/tamper behavior.
+
 
 ## Rule maintenance
 
