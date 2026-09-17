@@ -37,7 +37,7 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: f25a4bf56422c5719a0a868e749483473b5ce110
+github_remote_integration: e4ffc2aa38ceae2efa553278a0e341dc944751c6
 github_publication_current: true
 
 frozen_pre1_verified: true
