@@ -205,22 +205,25 @@ complete (coverage recorded in `docs/v1.6/phase5/READING_RECORD.md`: 17/17 `work
 
 ## Phase 5.0 — workforce schemas & registries (autonomous Main increment, 2026-09-17)
 
-Phase 5.0 (Workforce OS schemas & registries) is implemented on `ux/v15-journeys` as commit
-`9085335` and audit-requested for `fd04c00..9085335`. Migration 16 (`v16-workforce-schemas`,
+Phase 5.0 (Workforce OS schemas & registries) is implemented on `ux/v15-journeys` (commit `9085335`, remediated `cc909b9`) and
+audit-accepted through `cc909b9` (increment 8 REVISE → increment 9 CONTINUE). Migration 16 (`v16-workforce-schemas`,
 applied at Service startup) creates `task_contracts`, `workforce_messages`, `findings`,
 `evidence_records` and `skill_packs` — append-only triggers on the three ledgers. The
 TaskContract/CompletionPacket/message/finding v1 validators, the evidence writer, the 15-lens
 registry and the R1–R10 staffing rule table ship as pure modules with no consumers yet.
 Documented deviations: `task_contracts` named distinctly from the core `contracts` table;
 interim static role→authority ceilings until role registry v2 (5.1); first append-only SQLite
-triggers in the repo. Evidence: `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine
-`656 passed (+43)` on Windows; packaged verification deferred to the next packaged battery
-(assert `schema_migrations` 16 on a packaged boot). Next after audit CONTINUE: Phase 5.1 —
-agent-to-model assignment (`test_workforce_assignment.py`).
+triggers in the repo. Evidence: `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md` (+ audit
+addendum); engine `658 passed (+45)` on Windows; packaged verification deferred to the next
+packaged battery (assert `schema_migrations` 16 on a packaged boot). **Audit: increment 8
+REVISE → remediation `cc909b9` → increment 9 CONTINUE (F1-F3 closed); accepted through
+`cc909b9`.** Carry-forward: partial-coverage test for the lens check; echo-vs-issued-contract
+reconciliation for D1/D2. Next: Phase 5.1 — agent-to-model assignment
+(`test_workforce_assignment.py`).
 
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 656 passed (+10 subtests; +43 workforce-schemas tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 658 passed (+10 subtests; +45 workforce-schemas tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
