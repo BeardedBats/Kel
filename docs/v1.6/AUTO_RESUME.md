@@ -26,7 +26,8 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
-| 5–15 | pending | see the program brief; autonomous Main continues per the charter (Workforce OS research packages must be read before Phase 5 implementation) |
+| 5.0 Workforce schemas & registries | DONE — commit `9085335` (audit requested for `fd04c00..9085335`) | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 656 (+43); schemas + registries only, no consumers |
+| 5.1–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -202,9 +203,24 @@ complete (coverage recorded in `docs/v1.6/phase5/READING_RECORD.md`: 17/17 `work
 - **Next Audit 1.6 range**: `267364e..NEW_MAIN_HEAD` (this Phase 4 increment plus the state commit
   that records it).
 
+## Phase 5.0 — workforce schemas & registries (autonomous Main increment, 2026-09-17)
+
+Phase 5.0 (Workforce OS schemas & registries) is implemented on `ux/v15-journeys` as commit
+`9085335` and audit-requested for `fd04c00..9085335`. Migration 16 (`v16-workforce-schemas`,
+applied at Service startup) creates `task_contracts`, `workforce_messages`, `findings`,
+`evidence_records` and `skill_packs` — append-only triggers on the three ledgers. The
+TaskContract/CompletionPacket/message/finding v1 validators, the evidence writer, the 15-lens
+registry and the R1–R10 staffing rule table ship as pure modules with no consumers yet.
+Documented deviations: `task_contracts` named distinctly from the core `contracts` table;
+interim static role→authority ceilings until role registry v2 (5.1); first append-only SQLite
+triggers in the repo. Evidence: `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine
+`656 passed (+43)` on Windows; packaged verification deferred to the next packaged battery
+(assert `schema_migrations` 16 on a packaged boot). Next after audit CONTINUE: Phase 5.1 —
+agent-to-model assignment (`test_workforce_assignment.py`).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 613 passed (+10 subtests).
+1. `cd runtime && python -m pytest tests -q` → 656 passed (+10 subtests; +43 workforce-schemas tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
