@@ -257,13 +257,13 @@ the frozen grants and never spawns nested workers; `task_ledger()`/`progress_led
 the trail read-only; flag off performs zero writes. Carry-forward closed: N7 + Sug1-5 + S3.
 Evidence: `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine `717 passed (+24)` on
 Windows; full D1 demo trail in the record. **Audit: increment 12 CONTINUE — Phase 5.2 accepted
-for `5b83f0e..894be5b`; findings F1-F8 recorded (F4 rides the 5.3 real-worker wiring).** Next: a
-small follow-up patch (F1/F2/F5/F6/F7 + F3 guard + F8 test) with a delta re-audit, then Phase
-5.3 — D2 small pod + verification (`test_workforce_d2.py`).
+for `5b83f0e..894be5b`; findings F1-F8 recorded (F4 rides the 5.3 real-worker wiring).** The
+follow-up patch landed as `f9cf3ea` (focused 31; full 724); its delta re-audit (increment 13)
+is pending. Then Phase 5.3 — D2 small pod + verification (`test_workforce_d2.py`).
 
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 717 passed (+10 subtests; +104 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → 724 passed (+10 subtests; +111 workforce tests since 5.0).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
