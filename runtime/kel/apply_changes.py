@@ -27,6 +27,7 @@ def apply_checked(store,job_id,actor='kel'):
     if actor not in ('user','kel'):raise PolicyError('Unknown actor for change application')
     from .authorize import authorize
     decision=authorize(store,{'actor':actor,'job':job_id,'action_kind':'write','target':str(root),
+        'capability':'files',
         'metadata':{'what':'the project source files','why':'apply the verified change set',
                     'fallback':'leave the project unchanged and report'}})
     if decision['outcome']!='ALLOW':

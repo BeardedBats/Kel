@@ -156,6 +156,24 @@ class AuthorizationTests(CapabilityBase):
         self.assertIn(decision['outcome'], ('DENY', 'REQUIRES_USER_APPROVAL',
                                             'REQUIRES_BOUNDARY_EXPANSION', 'EXPIRED_LEASE'))
 
+    def test_allow_once_is_spent_by_the_authorization_path(self):
+        # "Allow once (next request only)" must be one action, not a wall-clock window: the grant is
+        # spent by the effect-time authorization itself, and the gates below still govern that action.
+        set_override(self.store, 'chat-a', 'web', 'off')
+        grant_once(self.store, 'chat-a', 'web')
+        intent = {'actor': 'user', 'conversation': 'chat-a', 'capability': 'web',
+                  'action_kind': 'browser', 'target': 'https://example.com'}
+        # A pre-flight check (consume=False) sees the grant and leaves it live.
+        preflight = authorize(self.store, dict(intent, consume=False))
+        self.assertNotEqual(preflight['rule'], 'capability-conversation-off')
+        # The effect spends it: the capability layer passes, and the lease gate below is unchanged.
+        first = authorize(self.store, intent)
+        self.assertEqual(first['rule'], 'lease-required')
+        # The next request is refused again - no standing consent.
+        second = authorize(self.store, intent)
+        self.assertEqual(second['outcome'], 'DENY')
+        self.assertEqual(second['rule'], 'capability-conversation-off')
+
     def test_tool_mapping_is_plain(self):
         self.assertEqual(capability_for_tool('git'), 'github')
         self.assertEqual(capability_for_tool('run_tests'), 'terminal')

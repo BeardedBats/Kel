@@ -22,9 +22,12 @@ which is the single entry point every effect-capable path already used. The impl
 - **An unavailable capability cannot be switched on**: `resolve` returns
   `allowed: false, rule: capability-unavailable | capability-needs-setup` with a plain reason, even
   when the override says `on`. The UI shows the row as "Needs setup" and offers Connect instead.
-- **Enable once** writes a `capability_grants` row (single use, 15-minute TTL). A pre-flight check
-  (`consume=False`) sees it without spending it; a real effect (`consume=True`) spends it; the next
-  request is refused again.
+- **Enable once** writes a `capability_grants` row (single use, 15-minute TTL). The effect-time
+  authorization spends it (`kel.authorize` passes `consume=bool(intent.consume, default True)`), so
+  the grant covers exactly one effect; a pre-flight check that passes `consume=False` sees the same
+  grant without spending it. Regression test:
+  `test_allow_once_is_spent_by_the_authorization_path` (pre-flight passes, the effect spends it, the
+  next request is refused again) - found by independent review, fixed before the artifact was cut.
 - **Only narrowing on the effect side**: the capability layer can only *remove* permission before the
   role policy and the lease run. It never grants a lease, never satisfies an approval, never widens a
   scope — it sits above those gates so they still decide.

@@ -198,8 +198,11 @@ class Authorizer:
         capability = str(intent.get('capability') or '')
         if capability and kind in EFFECT_KINDS:
             from .capabilities import resolve
+            # An effect spends a one-shot grant exactly once; a pre-flight check (consume=False)
+            # sees the same grant without spending it.
             control = resolve(self.store, capability,
-                              conversation=intent.get('conversation'), job=intent.get('job'))
+                              conversation=intent.get('conversation'), job=intent.get('job'),
+                              consume=bool(intent.get('consume', True)))
             if not control.get('allowed'):
                 return _result('DENY', control.get('rule') or 'capability-off', control.get('reason') or '')
         # 4. Role tool policy narrows; it can never broaden the lease or the guardrails.

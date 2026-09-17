@@ -3068,6 +3068,11 @@ async function scenarioSessionTools() {
     results.chatAWebOverride = rowOf(aAfter, 'web')?.override;
     results.chatAWebUsable = rowOf(aAfter, 'web')?.usable;
 
+    // Allow once: the same control grants a single action, and the engine reports the capability as
+    // usable while that grant is live (the single-use spend is engine-tested).
+    await ask({ action: 'allow_once', conversation: chatA, capability: 'web' });
+    results.chatAAllowOnceUsable = rowOf(await rowsFor(chatA), 'web')?.usable;
+
     // Isolation: a second conversation keeps its own (default) state, and can differ the other way.
     await openChat('Second chat');
     const chatB = await engineId();
