@@ -29,7 +29,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
 | 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
-| 5.3 D2 small pod + verification | DONE — commit `48dacb3` (audit requested for `f9cf3ea..48dacb3`) | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 765 (+41); pilot gates green (escaped below A on 2/6/8) |
+| 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 765 (+41); audit 14 CONTINUE (F14-1/F14-2/N14-1 → follow-up patch) |
 | 5.4–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
@@ -279,8 +279,10 @@ fingerprint dedupe, receiver-state guard); `kel/assurance.py` gained the finding
 harness on classes 2/6/8 — **gates green: escaped_C < escaped_A on every class; interruptions
 0 ≤ budget**. No new migration; flag off performs zero writes; F4/N1 wiring landed with the
 real-worker path. Evidence: `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine
-`765 passed (+41)` on Windows. Next after audit CONTINUE: publish, then Phase 5.4 — assurance
-army + Sentinel + Oracle (`test_workforce_assurance.py`).
+`765 passed (+41)` on Windows. **Audit: increment 14 CONTINUE — Phase 5.3 accepted for
+`f9cf3ea..48dacb3`; F14-1/F14-2/N14-1 queued for the opening follow-up patch; F4 remains open
+for the real-worker increment.** Next: publish, then the small 5.3 follow-up patch, then Phase
+5.4 — assurance army + Sentinel + Oracle (`test_workforce_assurance.py`).
 
 ## Verify quickly (any resume)
 
