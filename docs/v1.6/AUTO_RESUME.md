@@ -61,3 +61,50 @@ attribution required by licenses (legal/about/license surfaces) while removing a
 product identity; no raw keys, no obsolete menu/settings entries. Verify in the packaged app;
 commit/review if material. Follow the Phase 1/2 playbook: design → relay review → implement →
 packaged verification → docs → JR rule + history → commit → relay review.
+
+### Phase 4 recon already done (Phase 3 thread — do not rediscover)
+
+Locales (12): de-DE, en-US, es-ES, fa-IR, fr-FR, ja-JP, ko-KR, pt-BR, ru-RU, tr-TR, uk-UA, zh-CN,
+zh-TW under `desktop/packages/desktop/src/renderer/services/i18n/locales/<lang>/` (~20 JSON files
+per locale; `i18n-keys.d.ts` is the generated typed-key list; `index.ts` has the loader + static
+imports — check `fallbackLng` before touching missing keys).
+
+Donor-token inventory (classify VALUES vs INTERNAL; do not rename blindly):
+
+- **User-facing values to fix** (token swap in the localized VALUE; the name is a proper noun so
+  grammar survives):
+  - `settings.json` MCP error strings: `mcpErrorBunCommandNotFound`, `mcpErrorUvCommandNotFound`,
+    `mcpErrorPythonCommandNotFound`, `mcpErrorDenoCommandNotFound`,
+    `mcpErrorCommandPermissionDenied`, `mcpErrorCommandStartFailed`, `mcpErrorConnectionFailed`,
+    `mcpErrorProtocol` ("restart AionUI", "AionUI cannot execute …") — ~8 strings × ~10 locales.
+  - `common.json` boot-failure dialogs (~10+ strings per locale) mention **AionUi** and **AionCore**
+    (e.g. "AionUi opened, but AionCore stopped while initializing local data…"). Suggest
+    AionUi→Kel, AionCore→Kel engine, per-locale token swap.
+  - `cron.json` `aionrsModelRequired` mentions "Aion CLI" (check reachability first — schedules may
+    be outside the shipped UI).
+- **INTERNAL — keep** (not rendered): `ConversationSource='aionui'` + DB CHECK constraints and
+  migrations (`process/services/database/migrations.ts`), `AgentErrorOwnership='aionui'`, the
+  platform-service name, and the `conversation.agentError.codes.AIONUI_*` KEY names (data values
+  emitted by the bridge; only their title/body VALUES are user-facing).
+- **Donor UI feature — needs a decision + relay review**: the **Butler** ("Ask the Butler" error
+  chips; "Solve with the Butler" in Model/Tools/Skills/Assistants/Cron settings) resolves the
+  backend built-in assistant `aionui-assistant`, display-named **"AionUi Butler"** — confirmed
+  baked into `bundled-aioncore/win32-x64/aioncore.exe` (no backend source in-repo, so the name
+  cannot be rebuilt here). `third_party/AIONUI-PROVENANCE.md` says "Kel's single-assistant scope"
+  and "Agent catalogs, teams, schedules, pets, remote-service settings and donor support links are
+  outside this release" — so the likely correct fix is REMOVAL of the Butler entry points, not a
+  rename. Mount points (~12): `components/base/ButlerDiagnoseButton.tsx` + `TalkToButlerButton.tsx`;
+  `Messages/components/MessageAgentStatus.tsx`, `MessageTips.tsx` (×3), `MessageToolGroup.tsx`;
+  `settings/SettingsModal/contents/ModelModalContent.tsx`, `ToolsModalContent.tsx`;
+  `pages/cron/ScheduledTasksPage/index.tsx`, `pages/settings/AgentSettings/LocalAgents.tsx`,
+  `AssistantSettings/AssistantListPanel.tsx`, `AssistantSettings/home/AssistantHomeTabs.tsx`,
+  `SkillsSettings/SkillsHubSettings.tsx`; hook `hooks/assistant/useTalkToButler.ts` (auto-enables
+  the donor assistant on click). Also decide what happens to `settings.talkToButler.*` +
+  `settings.webui.letButlerSetup` keys once unmounted.
+- **Keep as legal attribution**: `third_party/AIONUI-PROVENANCE.md`, `AIONUI-LICENSE.txt`,
+  `AionCore-LICENSE.txt` + `AionUI-LICENSE.txt` in packaged resources, and license/about surfaces.
+
+Suggested slicing: (4a) donor app-name value cleanup across locales; (4b) Butler decision + removal;
+(4c) jargon/raw-key/obsolete-entry sweep + packaged verification. Commit each slice only when its
+evidence is fresh; re-run `run-approvals.sh` + `run-lineage-probe.sh` on the final packaged build
+plus a rendered check of the changed surfaces.
