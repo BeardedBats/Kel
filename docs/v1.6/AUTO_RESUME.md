@@ -30,7 +30,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
 | 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
 | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
-| 5.4 Assurance army + Sentinel + Oracle | DONE + remediation — commit `932db33` + remediation `27e3720` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 then 801 (+24, +10 remediation tests); audit 16 **REVISE** → all 8 findings remediated (delta re-audit requested for `932db33..27e3720`) |
+| 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
 | 5.5–15 | pending | see the program brief; autonomous Main continues per the charter |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
