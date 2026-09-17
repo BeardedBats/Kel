@@ -15,7 +15,7 @@ import time
 import unittest
 from pathlib import Path
 
-from kel.assignment import ensure_archetypes
+from kel.assignment import ensure_archetypes, registry_ceilings
 from kel.assignment import ensure_schema as ensure_assignment_schema
 from kel.context import Context
 from kel.core import PolicyError, Store
@@ -369,6 +369,98 @@ class LedgerTests(Base):
         self.assertEqual((len(self.contract_rows()), len(self.assignments())), before)
         with self.assertRaises(PolicyError):
             progress_ledger(self.store, job_id='job_missing')
+
+
+class FollowUpF1F2Tests(unittest.TestCase):
+    def test_sequential_work_ignores_decomposability(self):
+        base = small_features(sequentiality=2, decomposability=1)
+        other = small_features(sequentiality=2, decomposability=0)
+        self.assertEqual(score(base), score(other))
+
+    def test_r1_is_the_exact_doc_conjunction(self):
+        capped = decide(small_features(complexity=3, decomposability=1, sequentiality=2,
+                                       uncertainty=3, novelty=2, risk=2, domain_breadth=1,
+                                       tool_requirements=2, consequence_of_failure=1))
+        self.assertEqual(capped['tier'], 'D2')
+        self.assertIn('R1', [item['id'] for item in capped['rules_fired']])
+        band_capped = decide(small_features(complexity=3, decomposability=0, sequentiality=1,
+                                            uncertainty=3, novelty=2, risk=2,
+                                            domain_breadth=1, tool_requirements=2,
+                                            consequence_of_failure=1))
+        self.assertEqual(band_capped['tier'], 'D2')
+        self.assertNotIn('R1', [item['id'] for item in band_capped['rules_fired']])
+
+
+class FollowUpF3Tests(Base):
+    def test_failed_assignment_names_the_orphan_contract(self):
+        with self.assertRaises(PolicyError) as ctx:
+            delegate(self.store, self.job_id, 'm1', {}, features=small_features(),
+                     enabled=True, candidates=candidates(), mode='FIXED',
+                     fixed={'provider': 'nope'})
+        self.assertIn('issued', str(ctx.exception))
+        rows = self.contract_rows()
+        self.assertEqual(len(rows), 1)
+        entries = task_ledger(self.store, job_id=self.job_id)
+        self.assertEqual(len(entries), 1)
+        self.assertIsNone(entries[0]['assignment'])
+
+
+class FollowUpF5F6Tests(Base):
+    def _delegated(self):
+        return delegate(self.store, self.job_id, 'm1', {'objective': 'Draft'},
+                        features=small_features(), enabled=True, candidates=candidates())
+
+    def test_close_rejects_a_packet_for_another_task(self):
+        prepared = self._delegated()
+        body = packet(task_id='tsk_somewhere_else')
+        with self.assertRaises(PolicyError):
+            close_d1(self.store, prepared['task_id'], body, now=time.time())
+
+    def test_evidence_from_another_producer_is_refused(self):
+        prepared = self._delegated()
+        now = time.time()
+        record = write_evidence(self.store, mission_id=self.job_id,
+                                task_id=prepared['task_id'], evidence_class='check_result',
+                                label='foreign', command='kel check m1', exit_code=0,
+                                output='ok', artifact_digest='sha256:77bb', ran_at=now,
+                                produced_by='intruder')
+        body = packet(task_id=prepared['task_id'],
+                      evidence=[{'id': record['id'], 'class': 'check_result',
+                                 'command': 'kel check m1', 'exit_code': 0,
+                                 'output_digest': record['output_digest'],
+                                 'artifact_digest': 'sha256:77bb', 'ran_at': now,
+                                 'freshness_ok': True, 'produced_by': 'intruder'}],
+                      completion_claims=[
+                          {'claim_id': 'c1', 'status': 'verified',
+                           'evidence_refs': [record['id']]},
+                          {'claim_id': 'artifact', 'status': 'verified',
+                           'evidence_refs': [record['id']]}])
+        with self.assertRaises(PolicyError):
+            close_d1(self.store, prepared['task_id'], body, now=now)
+
+    def test_worker_refusal_text_is_screened(self):
+        def worker(prepared):
+            raise PolicyError('oops: token AKIAIOSFODNN7EXAMPLE leaked')
+
+        result = run_d1(self.store, self.job_id, 'm1', {'objective': 'Draft'}, worker,
+                        enabled=True, features=small_features(), candidates=candidates())
+        self.assertEqual(result['outcome'], 'failed')
+        self.assertNotIn('AKIA', result['error'])
+        with contextlib.closing(self.store.connect()) as db:
+            detail = db.execute("SELECT detail FROM team_events WHERE kind='task.closed'"
+                                ).fetchone()['detail']
+        self.assertNotIn('AKIA', detail)
+        self.assertIn('withheld', detail)
+
+
+class FollowUpF8Tests(Base):
+    def test_registry_ceilings_honor_overrides(self):
+        self.assertEqual(registry_ceilings(self.store).get('builder'), 'leased-write')
+        self.team.set_override('builder', 'project', {'authority_max': 'workspace-write'},
+                               project_id='proj-x')
+        self.assertEqual(registry_ceilings(self.store, project_id='proj-x').get('builder'),
+                         'workspace-write')
+        self.assertEqual(registry_ceilings(self.store).get('builder'), 'leased-write')
 
 
 if __name__ == '__main__':

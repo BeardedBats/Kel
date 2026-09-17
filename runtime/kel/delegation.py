@@ -43,7 +43,11 @@ def _table_columns(db, table):
 
 
 def ensure_schema(store):
-    """Migration 18: link task contracts to milestones (additive; idempotent)."""
+    """Migration 18: link task contracts to milestones (additive; idempotent).
+
+    Pure schema addition (ALTER ADD COLUMN + index): there is no data backfill, so the
+    repository's pre-mutation backup convention is deliberately not invoked (F7 note).
+    """
     with contextlib.closing(store.connect()) as db:
         db.execute('CREATE TABLE IF NOT EXISTS schema_migrations('
                    'version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied REAL NOT NULL,'
@@ -203,11 +207,17 @@ def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO
                                          wallclock=budget_estimate['wallclock'],
                                          cost=budget_estimate['cost'],
                                          milestone_id=milestone_id, now=now)
-    assigned = assign_worker(store, job_id, milestone_id, role_id, mode=mode,
-                             preferred=preferred, fixed=fixed, project_id=project_id,
-                             task_id=task_id, candidates=candidates, runtimes=runtimes,
-                             reservation=reservation_row['reservation_id'] if reservation_row
-                             else None)
+    try:
+        assigned = assign_worker(store, job_id, milestone_id, role_id, mode=mode,
+                                 preferred=preferred, fixed=fixed, project_id=project_id,
+                                 task_id=task_id, candidates=candidates, runtimes=runtimes,
+                                 reservation=reservation_row['reservation_id'] if reservation_row
+                                 else None)
+    except PolicyError as exc:
+        # F3 (audit 12): the contract is append-only, so a failed assignment cannot be rolled
+        # back; name the orphan explicitly and leave it queryable via the task ledger.
+        raise PolicyError('Contract %s was issued, but no worker could be assigned (%s); the '
+                          'contract remains as an audit record' % (contract_id, exc))
     team.record_activity(assigned['assignment_id'], 'staffing.decided',
                          {'staffing_id': staffing_id, 'tier': decision['tier'],
                           'score': decision['score'],
@@ -255,8 +265,8 @@ def _already_closed(store, assignment_id):
     return row is not None
 
 
-def _evidence_violations(store, contract, packet, *, now=None):
-    """Every stale, unbound or missing evidence reference behind the packet's claims."""
+def _evidence_violations(store, contract, packet, *, assignment_id=None, now=None):
+    """Every stale, unbound or foreign evidence reference behind the packet's claims."""
     requirements = contract.get('evidence_requirements', {})
     contract_window = requirements.get('fresh_within', 24 * 60)
     stamp = time.time() if now is None else now
@@ -277,6 +287,10 @@ def _evidence_violations(store, contract, packet, *, now=None):
                 if age > window:
                     violations.append('claim %s: evidence %s is stale (%.0f min old, window '
                                       '%d min)' % (claim.get('claim_id'), ref, age, window))
+                if assignment_id is not None and record.get('produced_by') != assignment_id:
+                    violations.append('claim %s: evidence %s was produced by %r, not the '
+                                      'assigned worker' % (claim.get('claim_id'), ref,
+                                                           record.get('produced_by')))
                 if requirements.get('content_bound'):
                     artifact_digest = record.get('artifact_digest')
                     if not artifact_digest:
@@ -297,10 +311,14 @@ def close_d1(store, task_id, packet, *, now=None):
     contract_row = _contract_row(store, task_id)
     contract = json.loads(contract_row['data'])
     validate_completion_packet(packet)
+    if packet.get('task_id') != task_id:
+        raise PolicyError('Packet task_id %r does not match the task being closed (%s)'
+                          % (packet.get('task_id'), task_id))
     assignment = _assignment_for_task(store, task_id)
     if _already_closed(store, assignment['assignment_id']):
         raise PolicyError('Task %s is already closed' % task_id)
-    violations = _evidence_violations(store, contract, packet, now=now)
+    violations = _evidence_violations(store, contract, packet,
+                                      assignment_id=assignment['assignment_id'], now=now)
     outcome = packet['outcome']
     if outcome == 'completed':
         verified = {claim['claim_id'] for claim in packet['completion_claims']
@@ -322,6 +340,16 @@ def close_d1(store, task_id, packet, *, now=None):
     return {'closed': True, 'task_id': task_id, 'outcome': outcome,
             'violations': violations, 'assignment_state': state,
             'contract_id': contract_row['contract_id']}
+
+
+def _safe_error_text(exc):
+    """Worker-failure text for durable records: truncated and scanned (F6, audit 12)."""
+    detail = str(exc)[:160]
+    # Function-scope import: kel.workforce imports kel.team at load time.
+    from .workforce import find_unsafe
+    if find_unsafe(detail, path='worker error'):
+        return '(message withheld by the no-secret screen)'
+    return detail
 
 
 def run_d1(store, job_id, milestone_id, request, worker, *, worker_tools=(), enabled=None,
@@ -351,12 +379,13 @@ def run_d1(store, job_id, milestone_id, request, worker, *, worker_tools=(), ena
     try:
         packet = worker(prepared)
     except PolicyError as exc:
+        message = _safe_error_text(exc)
         team.record_activity(assignment_id, 'task.closed',
                              {'task_id': prepared['task_id'], 'outcome': 'failed',
-                              'violations': ['worker refused: %s' % str(exc)[:160]]})
+                              'violations': ['worker refused: %s' % message]})
         team.set_state(assignment_id, 'FAILED')
         return {'delegated': True, 'closed': True, 'outcome': 'failed',
-                'error': str(exc)[:160], 'task_id': prepared['task_id'],
+                'error': message, 'task_id': prepared['task_id'],
                 'assignment_id': assignment_id}
     except Exception as exc:  # worker failures close the task honestly
         team.record_activity(assignment_id, 'task.closed',

@@ -135,7 +135,8 @@ def score(features):
     """Deterministic weighted score over the feature vector (doc 05 section 4).
 
     Every scored feature is required and must sit inside its declared scale; unknown keys
-    are refused so a feature-vector change can never slip through silently.
+    are refused so a feature-vector change can never slip through silently. Decomposability
+    contributes only when sequentiality <= 1 (doc 05 §4 — F1).
     """
     if not isinstance(features, dict):
         raise PolicyError('Staffing features must be an object')
@@ -143,10 +144,14 @@ def score(features):
     if unknown:
         raise PolicyError('Unknown staffing feature(s): %s' % ', '.join(unknown))
     total = 0.0
+    sequential = features.get('sequentiality')
     for name, scale in SCORED_SCALES.items():
         value = features.get(name)
         if type(value) is not int or not 0 <= value <= scale:
             raise PolicyError('Feature %s must be an integer 0..%d' % (name, scale))
+        if name == 'decomposability' and sequential > 1:
+            # Doc 05 section 4: decomposability only counts when work is not sequential (F1).
+            continue
         total += WEIGHTS[name] * value
     return total
 
@@ -167,10 +172,15 @@ def decide(features, *, flags=(), tier_max=None, budget_class=None):
             tier = band_tier
             break
     reasons.append('band %s' % tier)
+    if features.get('sequentiality', 0) >= 2 and features.get('decomposability', 0) <= 1:
+        # Doc 05 R1 verbatim: sequentiality >= 2 with decomposability <= 1 caps the tier at D2.
+        rules_fired.append({'id': 'R1', 'effect': 'cap D2 (sequential work with low decomposition)'})
+        reasons.append('R1 fired (sequentiality >= 2 and decomposability <= 1); capped at D2')
+        if _tier_index(tier) > _tier_index('D2'):
+            tier = 'D2'
     if tier in ('D3', 'D4') and not (features.get('decomposability', 0) >= 2
                                      and features.get('sequentiality', 0) <= 1):
-        rules_fired.append({'id': 'R1', 'effect': 'cap D2 (sequential or undecomposable work stays a pod)'})
-        reasons.append('R1 fired: D3+ requires decomposability >= 2 and sequentiality <= 1; capped at D2')
+        reasons.append('D3+ band needs decomposability >= 2 and sequentiality <= 1; capped at D2')
         tier = 'D2'
     for flag in flags:
         if flag not in FLAG_RULES:
