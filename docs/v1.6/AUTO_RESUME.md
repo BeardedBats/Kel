@@ -23,7 +23,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 2 Artifact lineage | DONE — commit `ffeef73` | `docs/artifact-lineage/` (engine 574, packaged lineage probe green on `package-final15`) |
 | 3 In-chat approvals | DONE — commit `85e99fb` | `docs/in-chat-approvals/` (engine 592, packaged approvals journey all-green + lineage probe re-run on `package-final16`) |
 | 3.5 P1 capability remediation | DONE — commit `75d1f68` | engine 604 (+10 subtests), packaged `sessiontools` on `package-p1cap` + packaged-engine capability probe all green (`ux-audit/run-p1-capabilities.sh`) |
-| 3.6 CAP2-CLAUSE remediation | DONE — commit hash recorded by the follow-up state commit | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
+| 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 4 i18n / donor-string cleanup | **PAUSED — WIP preserved in git stash** `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (do not drop) | recovery artifact `C:\Users\Nick\Desktop\Kel\ux-audit\PHASE4_WIP_BEFORE_P1_REMEDIATION\` |
 | 4–15 | pending | see the program brief (Phase 4 resumes only on explicit instruction; the stashed WIP must be restored first) |
 
@@ -89,8 +89,9 @@ Independent Audit 1.6 closed CAP-01 and CAP-03 but returned REVISE on CAP-02: th
 parser performed a substring scan, so ordinary prose mutated capability state and text was stripped
 from the message (`he said "web: off"…` reached the model as `he said ""…`).
 
-- **Starting HEAD**: `4f6535a`. **Remediation commit**: recorded by the follow-up state commit
-  (same two-step pattern as `75d1f68` → `4f6535a`). Phase 4 WIP is NOT part of it.
+- **Starting HEAD**: `4f6535a`. **Remediation commit**: `327e5b2` ("fix(capabilities): embedded commands
+  require the explicit bracketed clause; prose is never touched"). The state commit on top records
+  this file. Phase 4 WIP is NOT part of either.
 - **Parser behavior now**: standalone whole-message commands are unchanged (fullmatch grammar:
   `web: off`, `web=off`, `Web: OFF`, `web: reset`, `web: use default`, `use default for the web here`,
   `set web back to default`, `reset terminal to default`, `don't use the terminal here`,
@@ -113,9 +114,9 @@ from the message (`he said "web: off"…` reached the model as `he said ""…`).
   prose leave GitHub untouched), transcript probe, CAP2 forwarded-text probe against the engine
   database (request forwarded exactly without the clause; prose byte-identical), and the packaged
   engine capability probe as the CAP-01 regression check.
-- **Next Audit 1.6 range**: `4f6535a..NEW_MAIN_HEAD` (the CAP2 remediation commit plus the state
-  commit that records this file). CAP-02 must receive independent CONTINUE before Phase 4 resumes;
-  CAP-01/CAP-03 closure stands (regression-checked here).
+- **Next Audit 1.6 range**: `4f6535a..NEW_MAIN_HEAD` — `4f6535a..327e5b2` is the CAP2 remediation
+  commit; the state commit on top adds only this AUTO_RESUME update. CAP-02 must receive independent
+  CONTINUE before Phase 4 resumes; CAP-01/CAP-03 closure stands (regression-checked here).
 
 ## Verify quickly (any resume)
 
