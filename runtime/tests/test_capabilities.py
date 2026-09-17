@@ -4,7 +4,6 @@ Precedence under test: hard guardrails and real availability always win; a conve
 disable what runs there, may enable an available capability, is spent once when granted for one
 action, and never leaks into another conversation or mutates the global default.
 """
-import re
 import sys
 import tempfile
 import unittest
@@ -165,19 +164,19 @@ class DirectiveTests(CapabilityBase):
         for row in snapshot(self.store, 'chat-a'):
             self.assertEqual(row['override'], 'default')
 
-    def test_explicit_clause_inside_a_request_is_found(self):
-        text = 'Please refactor parser.py. [terminal: off]'
+    def test_reserved_embedded_directive_inside_a_request_is_found(self):
+        text = 'Please refactor parser.py. [kel:terminal=off]'
         clauses = directive_clauses(text)
         self.assertEqual([(c['capability'], c['state']) for c in clauses], [('terminal', 'off')])
         self.assertEqual(clauses[0]['inner'], 'terminal: off')
-        self.assertEqual(clauses[0]['text'], '[terminal: off]')
-        leading = '[web: use default] Please research this topic.'
+        self.assertEqual(clauses[0]['text'], '[kel:terminal=off]')
+        leading = '[kel:web=default] Please research this topic.'
         self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(leading)],
                          [('web', 'default')])
-        both = '[web: off] [terminal: default] summarize X'
+        both = '[kel:web=off] [kel:terminal=default] summarize the notes'
         self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(both)],
-                         [('web', 'off'), ('terminal', 'default')])
-        mixed = '[Web: OFF] Mixed case clause'
+                         [('web', 'off'), ('terminal', 'default')])    # deterministic source order
+        mixed = '[Kel:Web=OFF] Mixed case directive'
         self.assertEqual([(c['capability'], c['state']) for c in directive_clauses(mixed)],
                          [('web', 'off')])
 
@@ -196,9 +195,33 @@ class DirectiveTests(CapabilityBase):
             self.assertEqual(directive(text), want, text)
             self.assertTrue(apply_directive(self.store, 'chat-corpus', text), text)
 
-    # The audit's mandatory false-positive corpus: ordinary prose containing control-shaped text.
-    # Against 4f6535a's substring parser every one of these mutated state and stripped text from the
-    # message; the bracket-only grammar must leave all of them untouched.
+    # The audit's mandatory residual corpus: technical or ordinary content that CONTAINS generic
+    # bracket syntax. Generic `[capability: state]` is no longer executable syntax, so every one of
+    # these must produce zero mutation, zero capability call and byte-identical forwarding.
+    RESIDUAL_TECHNICAL = (
+        'Use C:/projects/[web: off] as the path.',
+        'log: GET /api/v1/[terminal: off] HTTP/1.1',
+        '2026-09-17 [terminal: off] connection closed',
+        '[[web: off]]',
+        'See https://example.com/[web: off]',
+        'The string [web: off] appears in this document.',
+        'Please search for "[terminal: off]".',
+        'The API returned [github: on].',
+        'Store [files: default] in the fixture.',
+    )
+
+    # Reserved-syntax boundary cases: malformed, nested, embedded in words, quoted, code, URLs.
+    RESERVED_BOUNDARY_INERT = (
+        '[[kel:web=off]]', '[kel:web]', '[kel:web=sideways]', '[kel:unknown=off]',
+        '[kel:web=off:now]', '[kel::web=off]', '[kel:web==off]', '[kel:web=off', 'kel:web=off]',
+        '"[kel:web=off]"', "'[kel:terminal=off]'", '`[kel:web=off]`', 'prefix[kel:web=off]suffix',
+        '[ [kel:web=off] ]', 'Run ```\n[kel:web=off]\n``` in the shell.',
+        'See https://x.dev/[kel:web=off] now',
+    )
+
+    # The mandatory false-positive corpus from the earlier CAP2 round: ordinary prose containing
+    # control-shaped text. (Against 4f6535a's substring parser these mutated state and stripped
+    # text; the reserved grammar must leave all of them untouched.)
     ORDINARY_PROSE = (
         'the shell: off limits, so please use python instead',
         'the terminal: disabled by the admin policy here',
@@ -221,15 +244,8 @@ class DirectiveTests(CapabilityBase):
         'Run ```\nterminal: off\n``` in the shell.',
     )
 
-    @staticmethod
-    def _legacy_substring_rule(text):
-        # The 4f6535a matcher, kept ONLY so the regression proves it discriminates. It matched every
-        # sentence in ORDINARY_PROSE; the bracket grammar matches none of them.
-        return bool(re.search(r'(?i)(?:the\s+)?(?:web|terminal|github|files|browser|shell)\s*[:=]\s*'
-                              r'(?:use default|default|on|off|enabled|disabled|enable|disable)', text))
-
-    def test_ordinary_prose_never_mutates_or_alters_the_message(self):
-        for text in self.ORDINARY_PROSE:
+    def test_inert_content_never_mutates_or_alters_the_message(self):
+        for text in self.ORDINARY_PROSE + self.RESIDUAL_TECHNICAL + self.RESERVED_BOUNDARY_INERT:
             self.assertIsNone(directive(text), text)
             self.assertEqual(directive_clauses(text), [], text)
             self.assertIsNone(apply_directive(self.store, 'chat-a', text), text)
@@ -237,19 +253,78 @@ class DirectiveTests(CapabilityBase):
         for row in snapshot(self.store, 'chat-a'):
             self.assertEqual(row['override'], 'default', row['id'])
 
-    def test_negative_control_the_old_substring_parser_would_have_matched(self):
-        matched = [text for text in self.ORDINARY_PROSE if self._legacy_substring_rule(text)]
-        self.assertEqual(len(matched), len(self.ORDINARY_PROSE))
-        for text in matched:
+    def test_old_generic_bracket_syntax_is_now_inert(self):
+        # The intentional V1.6 compatibility break: [web: off] / [terminal: default] / [github: on]
+        # / [Web: OFF] are ordinary text now and can never reach the capability layer.
+        for text in ('[web: off]', '[terminal: default]', '[github: on]', '[Web: OFF]',
+                     'Please refactor parser.py. [terminal: off]'):
+            self.assertEqual(directive_clauses(text), [], text)
+            self.assertIsNone(apply_directive(self.store, 'chat-a', text), text)
+            self.assertEqual(_without_clauses(text, []), text, text)
+
+    def test_negative_control_executes_the_actual_85cf0f1_parser(self):
+        # Executes the real old parser from git history (not a copied regex): it recognized the
+        # residual technical cases and rewrote the user's text; the current parser recognizes none
+        # and forwards every one of them byte-identically.
+        import subprocess
+        import types
+        root = Path(__file__).resolve().parents[2]
+        shown = subprocess.run(['git', 'show', '85cf0f1:runtime/kel/capabilities.py'],
+                               cwd=str(root), capture_output=True)
+        if shown.returncode != 0:
+            self.skipTest('commit 85cf0f1 is not available in this checkout')
+        old_source = shown.stdout.decode('utf-8', errors='replace')
+        package = types.ModuleType('oldcap')
+        package.__path__ = []
+        core = types.ModuleType('oldcap.core')
+        from kel.core import PolicyError
+        core.PolicyError = PolicyError
+        sys.modules['oldcap'] = package
+        sys.modules['oldcap.core'] = core
+        old = types.ModuleType('oldcap.capabilities')
+        old.__package__ = 'oldcap'
+        exec(compile(old_source, 'old_capabilities.py', 'exec'), old.__dict__)
+        matched_by_old = 0
+        for text in self.RESIDUAL_TECHNICAL:
+            old_clauses = old.directive_clauses(text)
+            if old_clauses:
+                matched_by_old += 1
+                self.assertNotEqual(_without_clauses(text, old_clauses), text,
+                                    'old parser no longer rewrites: ' + text)
             self.assertEqual(directive_clauses(text), [])
-            self.assertIsNone(apply_directive(self.store, 'chat-a', text))
+            self.assertEqual(_without_clauses(text, []), text)
+        # The path, log line, timestamp and nested-bracket cases were all executable controls in
+        # 85cf0f1; the reserved grammar makes every one of them ordinary text.
+        self.assertGreaterEqual(matched_by_old, 4)
+
+    def test_unknown_probe_fails_closed_not_open(self):
+        # DEAD-08: a capability whose probe has no branch must read as unavailable and be denied —
+        # never silently treated as available.
+        import kel.capabilities as caps
+        saved = dict(caps.BY_ID)
+        try:
+            caps.BY_ID['probe-test'] = {'id': 'probe-test', 'label': 'Probe test',
+                                        'description': '', 'tools': (), 'probe': 'quantum'}
+            state, why = availability(self.store, 'probe-test')
+            self.assertEqual(state, 'unavailable')
+            self.assertTrue(why)
+            decision = resolve(self.store, 'probe-test', conversation='chat-a')
+            self.assertFalse(decision['allowed'])
+            self.assertEqual(decision['rule'], 'capability-unavailable')
+        finally:
+            caps.BY_ID.clear()
+            caps.BY_ID.update(saved)
 
     def test_clause_removal_preserves_surrounding_text(self):
         cases = [
-            ('Please refactor parser.py. [terminal: off]', 'Please refactor parser.py.'),
-            ('[web: use default] Please research this topic.', 'Please research this topic.'),
-            ('Do X \u2014 [web: off] \u2014 then Y', 'Do X then Y'),
+            ('Please refactor parser.py. [kel:terminal=off]', 'Please refactor parser.py.'),
+            ('[kel:web=default] Please research this topic.', 'Please research this topic.'),
+            ('Do X \u2014 [kel:web=off] \u2014 then Y', 'Do X then Y'),
+            ('A,[kel:web=off],B', 'A,B'),
+            ('A [kel:web=off] B', 'A B'),
+            ('A ([kel:web=off]) B', 'A B'),
             ('he said "web: off" in the meeting yesterday', 'he said "web: off" in the meeting yesterday'),
+            ('Use C:/projects/[web: off] as the path.', 'Use C:/projects/[web: off] as the path.'),
         ]
         for text, want in cases:
             self.assertEqual(_without_clauses(text, directive_clauses(text)), want, text)

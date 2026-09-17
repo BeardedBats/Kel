@@ -3132,13 +3132,24 @@ async function scenarioSessionTools() {
     results.ordinaryTalkWebOverride = rowOf(await rowsFor(chatA), 'web')?.override;
     await shot('sessiontools-04-ordinary-talk');
 
-    // CAP2-CLAUSE: an explicit embedded control is the bracketed form; only the bracket token is
-    // consumed and the request is forwarded without it (the workspace wrapper verifies the exact
-    // forwarded text against the engine database afterwards).
-    await composer.fill('Please summarize the release notes. [terminal: off]');
+    // CAP2-RESIDUAL: an embedded control is the reserved Kel namespace `[kel:web=off]`; only that
+    // token is consumed and the request is forwarded without it (the workspace wrapper verifies the
+    // exact forwarded text against the engine database afterwards).
+    await composer.fill('Please summarize the release notes. [kel:terminal=off]');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(7000);
     results.embeddedClauseTerminalOverride = rowOf(await rowsFor(chatA), 'terminal')?.override;
+
+    // Residual technical content that CONTAINS old generic bracket syntax must not mutate state or
+    // alter the message; the database probe verifies byte-identical forwarding of both lines.
+    await composer.fill('Use C:/projects/[web: off] as the path.');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(5000);
+    results.residualPathWebOverride = rowOf(await rowsFor(chatA), 'web')?.override;
+    await composer.fill('[[web: off]]');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(5000);
+    results.residualNestedWebOverride = rowOf(await rowsFor(chatA), 'web')?.override;
 
     // Ordinary prose that merely CONTAINS control-shaped text must not mutate state or alter the
     // message: plain substring, quoted, and inline-code variants all leave GitHub as it was (on).

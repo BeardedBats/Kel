@@ -120,6 +120,9 @@ def availability(store, capability):
         if _runtime_available(store):
             return 'available', 'A coding assistant is ready on this computer'
         return 'needs_setup', 'Connect a coding assistant to use this here'
+    # DEAD-08: an explicit fail-closed total fallback. A probe value without its own branch must
+    # never be assumed available; the capability reads as unavailable and resolve() denies it.
+    return 'unavailable', '%s is not available on this computer.' % BY_ID[capability]['label']
 
 
 def global_state(store, capability):
@@ -336,10 +339,14 @@ _DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:use|back\s+to|go\s+back\s+to|set\s+
 _TO_DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:set|reset|switch|put|change)\s+' + _ARTICLE +
                             r'(?P<cap>' + _ALIAS_PATTERN + r')\s+(?:back\s+)?to\s+(?:the\s+)?default'
                             + _SCOPE_RX + r'[.!]?$', re.I)
-# The embedded control clause is bracketed on purpose: ordinary prose cannot accidentally match it,
-# and quoted or code text is excluded by _excluded_spans() before any clause is considered.
-_CLAUSE_RX = re.compile(r'(?<!\w)\[\s*(?P<cap>' + _ALIAS_PATTERN + r')\s*[:=]\s*'
-                        r'(?P<state>' + _STATE_PATTERN + r')\s*\](?!\w)', re.I)
+# The embedded control is a RESERVED, machine-like Kel namespace, on purpose: `[kel:web=off]`.
+# Ordinary or technical content — `[web: off]`, path segments, log lines, nested brackets — cannot
+# accidentally match it, and quoted or code text is excluded by _excluded_spans() before any clause
+# is considered. Only canonical capability names (web, files, terminal, github) and canonical states
+# (on, off, default) are valid inside the embedded form; human-friendly aliases stay exclusive to the
+# standalone whole-message grammar.
+_KEL_CLAUSE_RX = re.compile(r'(?<![\w\[])\[kel:(?P<cap>web|files|terminal|github)='
+                            r'(?P<state>on|off|default)\](?![\w\]])', re.I)
 
 
 def _excluded_spans(text):
@@ -396,13 +403,27 @@ def directive(text):
     return None
 
 
-def directive_clauses(text):
-    """Explicit `[capability: state]` clauses (outside quotes and code); [] when there are none.
+def _nested_in_brackets(text, start, end):
+    """True when the token sits inside another bracket expression, even across whitespace."""
+    left = start
+    while left > 0 and text[left - 1] in ' \t':
+        left -= 1
+    if left > 0 and text[left - 1] == '[':
+        return True
+    right = end
+    while right < len(text) and text[right] in ' \t':
+        right += 1
+    return right < len(text) and text[right] == ']'
 
-    Used for a larger message where the user deliberately included a bracketed control. A quoted
-    command stays literal text; an unclosed code fence, an unpaired quote or a malformed bracket
-    matches nothing and the message is forwarded unchanged. Multiple clauses are supported; only the
-    exact bracketed token is removed from the forwarded request.
+
+def directive_clauses(text):
+    """Reserved `[kel:<capability>=<state>]` directives (outside quotes and code); [] otherwise.
+
+    Only the canonical names and states match; a generic bracket such as `[web: off]`, a malformed
+    token, an unknown capability or state, a nested bracket, a quoted or code sample and a URL
+    segment all match nothing — the message is forwarded byte-for-byte unchanged. Multiple reserved
+    directives are supported and applied in source order (a repeated capability ends on its last
+    value). Only the exact reserved token is removed from the forwarded request.
     """
     text = str(text or '')
     if not text or len(text) > 2000:
@@ -413,17 +434,17 @@ def directive_clauses(text):
         return any(left < end and start < right for left, right in spans)
 
     found = []
-    for match in _CLAUSE_RX.finditer(text):
+    for match in _KEL_CLAUSE_RX.finditer(text):
         if excluded(match.start(), match.end()):
             continue
-        # A URL or technical token containing the bracket is not a control either.
+        if _nested_in_brackets(text, match.start(), match.end()):
+            continue
+        # A URL or technical token that literally contains the namespace is not a control either.
         segment_start = max(text.rfind(' ', 0, match.start()), text.rfind('\n', 0, match.start())) + 1
         if '://' in text[segment_start:match.start()]:
             continue
-        capability = _ALIASES.get(match.group('cap').lower())
-        if not capability:
-            continue
-        state = _STATES[match.group('state').lower()]
+        capability = match.group('cap').lower()
+        state = match.group('state').lower()
         found.append({'capability': capability, 'state': state,
                       'text': match.group(0), 'inner': '%s: %s' % (capability, state),
                       'start': match.start(), 'end': match.end()})
