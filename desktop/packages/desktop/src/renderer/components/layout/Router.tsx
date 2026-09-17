@@ -132,10 +132,10 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             path='/settings/skills/detail/:skillName'
             element={<Navigate to='/team/roster' replace />}
           />
-          <Route
-            path='/settings/tools'
-            element={<Navigate to='/autonomy' replace />}
-          />
+          {/* Kel V1.6 visual fix (finding S1-1): a real Tools settings page exists and was already
+              imported here, so redirecting away to /autonomy only ejected the user from the Settings
+              shell. Render the page the label promises instead. */}
+          <Route path='/settings/tools' element={withRouteFallback(ToolsSettings)} />
           <Route path='/settings/capabilities' element={<Navigate to='/team/roster' replace />} />
           <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/team/roster' replace />} />
           <Route path='/settings/skills-hub' element={<Navigate to='/team/roster' replace />} />
