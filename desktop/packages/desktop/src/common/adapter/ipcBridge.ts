@@ -1515,8 +1515,13 @@ export const systemSettings = {
   setCronNotificationEnabled: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
     cronNotificationEnabled: p.enabled,
   })),
-  getKeepAwake: httpGetClientSetting<boolean>('keepAwake'),
-  setKeepAwake: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({ keepAwake: p.enabled })),
+  // The keep-awake switch must actually hold a power-save inhibition, so it is a real main-process
+  // provider rather than a plain client setting: it reports both the stored choice and whether the
+  // inhibition is active right now.
+  getKeepAwake: bridge.buildProvider<{ enabled: boolean; active: boolean }, void>('system-settings:get-keep-awake'),
+  setKeepAwake: bridge.buildProvider<{ enabled: boolean; active: boolean }, { enabled: boolean }>(
+    'system-settings:set-keep-awake'
+  ),
   changeLanguage: httpPatch<void, { language: string }>('/api/settings', (p) => ({ language: p.language })),
   // Cross-session messaging master switch. NOTE the channel differs from the
   // sibling switches above: this one is a TYPED COLUMN on `system_settings`

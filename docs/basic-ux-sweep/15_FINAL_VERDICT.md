@@ -71,3 +71,47 @@ committed as `612c325` (the artifact was built from this working tree).
 | `evidence/final/ux-*.json` | feature + standing battery on the shipped artifact |
 | `evidence/final/*.png` | the screenshots the runs captured |
 | `C:\Users\Nick\Desktop\Kel\ux-audit\runs\f3-*` | raw run directories (JSON + screenshots) behind `evidence/` |
+
+---
+
+# Continuation — donor-derived pass (2026-09-17)
+
+A second, donor-focused pass (task: *add donor-derived user-journey features*) on top of the sweep
+verdict above. Audit: `16_DONOR_PATTERN_MATRIX.md` (pattern sources) and
+`17_DONOR_FEATURE_FINDINGS.md` (the 22 candidates, each with its packaged evidence).
+
+**Artifact: `dist/package-final8/win-unpacked`** + installer `Kel-1.5.0-win-x64.exe`
+
+| File | sha256 |
+|---|---|
+| `win-unpacked/Kel.exe` | `2a45e85d5a33c44495b7c6270b107a55ed62d9f14ffe2173d6e6237d2b758372` |
+| `win-unpacked/resources/app.asar` | `e03f76acf6f0cee7f85029940f5155b7b5bc605e7bc6c2d9dd951b7be5d102eb` |
+| `win-unpacked/resources/kel-engine/KelEngine.exe` | `a7801e78fae5830b1407896fe2a67bab47fe7b7f957989ef8ecc25b5e9528eac` |
+| `Kel-1.5.0-win-x64.exe` | `c9bcd9b3c7e8c0aa3aed09d10d84a0fe8021845abdbbbc1d7efde970d3330031` |
+
+Build: engine + `bun run package` + `electron-builder --config kel-builder.json --win --x64` with an
+output override, all exit 0. Source: branch `ux/v15-journeys` (commit recorded in the history ledger).
+
+## What changed
+
+| Change | Class | Packaged proof |
+|---|---|---|
+| **Keep this computer awake** is now real: a main-process `prevent-app-suspension` inhibition applied at startup from the stored choice, reported live as `{enabled, active}`, one Kel control in Settings · System; the inert donor-page switch is removed (JR-40) | item 6 (PBF → built) | scenario `keepawake` on `final8` — off → enable → Active → restart → still Active → disable → Off, `consoleErrors: []` (`evidence/final/ux-keepawake.json`) |
+| Nothing else required a change: queue-while-working, prompt history, find-in-conversation, jump rail, preview rail, compact tool activity, work inspector, diagnostics, cross-runtime knowledge, checkpoints, runtime detection and unified MCP configuration are already present | D1–D22 | `17_DONOR_FEATURE_FINDINGS.md` + `01_EXPECTATION_MATRIX.md` donor rows |
+| Long-conversation stress (item 11) | verified, no change | 314 messages: 304 ms to first node, 100 mounted nodes, 51 MB heap, find-in-conversation works, 0 console errors (`evidence/final/longchat-stress.txt`) |
+
+New permanent rules from this pass: **JR-48** (a control that promises a system effect must deliver
+it, report the live state, persist per computer, and release on close) and **JR-49** (presence is
+proven by the packaged journey, never by a primitive or a mounted control). History entry: **H23**.
+
+## Deliberately deferred (release docket)
+
+1. Session-scoped tool controls — needs an engine-side per-conversation capability contract.
+2. Memory change proposals — a review surface over the engine's existing, already-safe records.
+3. Artifact lineage — "Where did this come from?" on the preview surface.
+4. In-chat approval cards — Work prompts moved beside the transcript.
+5. i18n cleanup — the unused donor `keepAwake*` strings across locales.
+6. Freeze/release decision for this branch.
+
+Everything above was classified from the packaged build first; nothing was duplicated from a donor,
+and no donor terminology or visual identity was copied.

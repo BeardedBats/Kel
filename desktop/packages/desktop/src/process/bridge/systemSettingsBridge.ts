@@ -18,6 +18,12 @@ import { changeLanguage } from '@process/services/i18n';
 import type { PetSize } from '@process/pet/petTypes';
 import { createOrUpdateTray, destroyTray, setCloseToTrayEnabled } from '@process/utils/tray';
 import { readCloseToTraySetting, writeCloseToTraySetting } from '@process/utils/closeToTraySetting';
+import {
+  applyKeepAwake,
+  isKeepAwakeActive,
+  readKeepAwakeSetting,
+  writeKeepAwakeSetting,
+} from '@process/utils/keepAwake';
 
 type LanguageChangeListener = () => void;
 let _languageChangeListener: LanguageChangeListener | null = null;
@@ -41,6 +47,18 @@ export function initSystemSettingsBridge(): void {
     } else {
       destroyTray();
     }
+  });
+
+  // Keep the computer awake: the stored choice and the live inhibition travel together, so the
+  // surface can say "active" truthfully instead of guessing from the switch position.
+  ipcBridge.systemSettings.getKeepAwake.provider(async () => ({
+    enabled: await readKeepAwakeSetting(),
+    active: isKeepAwakeActive(),
+  }));
+
+  ipcBridge.systemSettings.setKeepAwake.provider(async ({ enabled }) => {
+    await writeKeepAwakeSetting(enabled);
+    return { enabled, active: applyKeepAwake(enabled) };
   });
 
   // 语言变更通知，同步主进程 i18n 并通知托盘重建

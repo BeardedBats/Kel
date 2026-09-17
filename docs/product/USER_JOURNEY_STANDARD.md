@@ -118,6 +118,10 @@ Pass = no JR-* violation in the JSON evidence; screenshots archived under `docs/
 
 **JR-47 - An unexpected payload degrades in place; the shell never blanks.** Every surface that renders engine data must survive an absent, empty or differently-shaped field: the affected control says in plain words what is unavailable and the rest of the app - navigation, the current route's frame, other surfaces - stays usable. An uncaught render error that unmounts the whole application is a release blocker, not a cosmetic defect. Verify: load each engine-backed surface against a payload missing its optional fields (or force the failure) and confirm the shell and navigation remain usable.
 
+**JR-48 - A control that promises a system effect must deliver it, and say so.** Any user-facing control that claims an effect on the machine or on the work (keep this computer awake, prevent sleep, block a capability, notify when done) must actually perform it, report the live state in plain words instead of mirroring the switch, persist where the promise is per computer, and release the effect when the app closes or the setting is switched off. Nothing on disk may keep the effect alive after Kel is gone. Verify: toggle it, read the reported state, restart the app, confirm the stored choice is re-applied, switch it off, and confirm the effect is released.
+
+**JR-49 - Presence is proven by the journey, not by the primitive.** A capability counts as present only when the packaged app completes its user journey; an engine route, a mounted component, a persisted config key, or a control that does nothing counts as missing. A donor-derived capability is classified from the packaged build, never from the fact that a related primitive exists or that the feature has been discussed. Verify: run the journey in the packaged build and keep the resulting artifact with the classification.
+
 ## Rule maintenance
 
 - Adding a rule: give it the next `JR-n` id, one statement, one verification.

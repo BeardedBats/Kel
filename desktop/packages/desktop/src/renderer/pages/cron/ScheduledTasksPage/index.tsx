@@ -5,15 +5,14 @@
  */
 
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Empty, Message, Spin, Switch, Tooltip } from '@arco-design/web-react';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { useAllCronJobs } from '@renderer/pages/cron/useCronJobs';
 import { formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
-import { systemSettings, type ICronJob } from '@/common/adapter/ipcBridge';
-import { configService } from '@/common/config/configService';
+import { type ICronJob } from '@/common/adapter/ipcBridge';
 import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
 import CronStatusTag from './CronStatusTag';
 import CreateTaskDialog from './CreateTaskDialog';
@@ -34,24 +33,10 @@ const ScheduledTasksPage: React.FC = () => {
   const { presetAssistants } = useConversationAssistants();
   const logos = useAgentLogos();
   const [createDialogVisible, setCreateDialogVisible] = useState(false);
-  const [keepAwake, setKeepAwake] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    setKeepAwake(configService.get('system.keepAwake') ?? false);
-  }, []);
-
-  const handleKeepAwakeChange = useCallback(async (enabled: boolean) => {
-    setKeepAwake(enabled);
-    configService.setLocal('system.keepAwake', enabled);
-    try {
-      await systemSettings.setKeepAwake.invoke({ enabled });
-    } catch (err) {
-      setKeepAwake(!enabled);
-      configService.setLocal('system.keepAwake', !enabled);
-      Message.error(String(err));
-    }
-  }, []);
+  // The keep-awake switch is a Kel system setting (Settings · System) - one control, one home - so
+  // this page only states the fact in its banner.
 
   const handleGoToDetail = useCallback(
     (job: ICronJob) => {
@@ -166,7 +151,7 @@ const ScheduledTasksPage: React.FC = () => {
             isMobile ? 'gap-14px' : 'gap-16px'
           )}
         >
-          <div className='grid w-full box-border grid-cols-[minmax(0,1fr)_auto] items-center gap-x-12px gap-y-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px sm:rounded-14px sm:px-16px max-[520px]:grid-cols-1'>
+          <div className='grid w-full box-border grid-cols-[minmax(0,1fr)] items-center gap-x-12px gap-y-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px sm:rounded-14px sm:px-16px max-[520px]:grid-cols-1'>
             <span
               className={classNames(
                 'min-w-0 text-t-primary',
@@ -175,14 +160,6 @@ const ScheduledTasksPage: React.FC = () => {
             >
               {t('cron.page.awakeBanner')}
             </span>
-            <div className='justify-self-end max-[520px]:justify-self-start'>
-              <Tooltip content={t('cron.page.keepAwakeTooltip')}>
-                <div className='flex items-center gap-8px text-t-secondary text-12px leading-18px sm:text-13px'>
-                  <span>{t('cron.page.keepAwake')}</span>
-                  <Switch size='small' checked={keepAwake} onChange={handleKeepAwakeChange} />
-                </div>
-              </Tooltip>
-            </div>
           </div>
 
           {loading ? (

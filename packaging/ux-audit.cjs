@@ -2951,12 +2951,69 @@ async function scenarioMaintext() {
   return results;
 }
 
+async function scenarioKeepAwake() {
+  // Keep-awake as a user journey: off by default, enable -> active, survives restart and re-applies
+  // at startup, disable -> released. The card reports the app's live inhibition state, not the switch
+  // position, so this proves the setting actually holds something.
+  const results = { schema: 1, scenario: 'keepawake', steps: [], errors: [] };
+  let ctx = await launchApp();
+  let { app, page, kelwork } = ctx;
+  const shot = (name) => page.screenshot({ path: `${outDir}/${name}.png` }).catch(() => {});
+  const stateText = () => page.locator('[data-testid="kel-keep-awake-state"]').first().innerText().catch(() => '');
+  const switchOn = async () =>
+    (await page.locator('[data-testid="kel-keep-awake-switch"] .arco-switch-checked').count()) > 0;
+  const openSystem = async () => {
+    await page.waitForTimeout(9000);
+    await dismissOnboarding(page);
+    await page.evaluate(() => { location.hash = '/settings/system'; });
+    await page.waitForTimeout(2600);
+  };
+  try {
+    await openSystem();
+    results.cardPresent = await page.locator('[data-testid="kel-keep-awake-card"]').count();
+    results.initialState = (await stateText()).slice(0, 90);
+    results.initiallyOff = (await switchOn()) === false;
+
+    await page.locator('[data-testid="kel-keep-awake-switch"]').first().click({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(1600);
+    results.stateAfterEnable = (await stateText()).slice(0, 90);
+    results.activeAfterEnable = /Active/.test(results.stateAfterEnable);
+    results.toastAfterEnable = /keep this computer awake/i.test(await page.evaluate(() => document.body.innerText || ''));
+    await shot('keepawake-01-enabled');
+
+    // Restart: the choice is per computer and must come back applied, not just remembered.
+    await closeApp(app, kelwork, results);
+    ctx = await launchApp();
+    app = ctx.app;
+    page = ctx.page;
+    kelwork = ctx.kelwork;
+    await openSystem();
+    results.stateAfterRestart = (await stateText()).slice(0, 90);
+    results.stillOnAfterRestart = await switchOn();
+    results.activeAfterRestart = /Active/.test(results.stateAfterRestart);
+
+    await page.locator('[data-testid="kel-keep-awake-switch"]').first().click({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(1600);
+    results.stateAfterDisable = (await stateText()).slice(0, 90);
+    results.inactiveAfterDisable = /Off/.test(results.stateAfterDisable);
+    await shot('keepawake-02-disabled');
+    results.consoleErrors = (ctx.consoleErrors || []).slice(0, 12);
+  } catch (error) {
+    results.errors.push(String(error).slice(0, 400));
+    await shot('keepawake-error');
+  }
+  await closeApp(app, kelwork, results);
+  save('ux-keepawake', results);
+  return results;
+}
+
 (async () => {
   const run = {
     'first-run': scenarioFirstRun,
     tour: scenarioTour,
     settings: scenarioSettings,
     palette: scenarioPalette,
+    keepawake: scenarioKeepAwake,
     keyboard: scenarioKeyboard,
     readability: scenarioReadability,
     compose: scenarioCompose,

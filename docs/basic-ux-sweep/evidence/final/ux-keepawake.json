@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "scenario": "keepawake",
+  "steps": [],
+  "errors": [],
+  "cardPresent": 1,
+  "initialState": "Off — the computer sleeps normally.",
+  "initiallyOff": true,
+  "stateAfterEnable": "Active — this computer will not sleep while Kel is open.",
+  "activeAfterEnable": true,
+  "toastAfterEnable": true,
+  "closeOutcome": "closed",
+  "engineKilled": false,
+  "stateAfterRestart": "Active — this computer will not sleep while Kel is open.",
+  "stillOnAfterRestart": true,
+  "activeAfterRestart": true,
+  "stateAfterDisable": "Off — the computer sleeps normally.",
+  "inactiveAfterDisable": true,
+  "consoleErrors": []
+}
