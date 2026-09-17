@@ -54,7 +54,9 @@ REQUIRED_ROLE_FIELDS = ('goal', 'outputs', 'quality_bar', 'tool_policy', 'budget
 ASSIGNMENT_STATES = ('QUEUED', 'ACTIVE', 'WAITING', 'BLOCKED', 'DONE', 'UNCERTAIN', 'FAILED')
 EVENT_KINDS = ('assignment.created', 'assignment.started', 'step.started', 'step.finished',
                'artifact.produced', 'evidence.recorded', 'decision.made', 'approval.requested',
-               'blocked', 'assignment.finished')
+               'blocked', 'assignment.finished',
+               # Workforce kinds (Phase 5.2; additive; the same detail prohibitions apply).
+               'staffing.decided', 'contract.issued', 'task.closed')
 FORBIDDEN_DETAIL_KEYS = ('reasoning', 'chain_of_thought', 'thoughts', 'prompt', 'hidden_reasoning')
 TOOLS = ('read', 'write', 'run_tests', 'install', 'browser', 'git', 'external_api', 'shell')
 EVIDENCE_CLASSES = ('artifact', 'test', 'review', 'research', 'screenshot', 'receipt')
@@ -292,13 +294,14 @@ class Team:
                     'tool_policy': fields.get('tool_policy', {}),
                     'model_preference': fields.get('model_preference'),
                     'budget': budget if budget is not None else fields.get('budget')}
-        if extra:
+        if extra is not None:
             if not isinstance(extra, dict):
                 raise PolicyError('Assignment snapshot extras must be an object')
             collisions = sorted(set(extra) & set(snapshot))
             if collisions:
                 raise PolicyError('Extras may not override snapshot keys: %s'
                                   % ', '.join(collisions))
+            # Function-scope import: kel.workforce imports this module at load time.
             from .workforce import find_unsafe
             unsafe = find_unsafe(extra, path='snapshot extras')
             if unsafe:

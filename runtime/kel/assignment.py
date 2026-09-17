@@ -295,13 +295,18 @@ def ensure_archetypes(store, author='kel'):
     return created
 
 
-def registry_ceilings(store):
-    """Authority ceilings declared by the seeded archetype registry (latest versions)."""
+def registry_ceilings(store, project_id='', task_id=''):
+    """Authority ceilings declared by the seeded archetype registry.
+
+    Resolved through `Team.resolve_role` for the given project/task so overrides are honored
+    (N7, audit increment 11); with the default empty scope this equals the global latest
+    versions.
+    """
     team = Team(store)
     out = {}
     for template_id, _name, _department, _fields in ARCHETYPES:
         try:
-            _version, fields = team.current_version(template_id)
+            fields = team.resolve_role(template_id, project_id, task_id)['fields']
         except PolicyError:
             continue
         if fields.get('authority_max') in AUTHORITY_CLASSES:
@@ -322,7 +327,12 @@ def provider_runtime(provider):
 
 
 def candidates_from_providers(store):
-    """Runtime candidates from the provider registry; cost/quality stay unknown here."""
+    """Runtime candidates from the provider registry; cost/quality stay unknown here.
+
+    Privacy stays 'cloud' for registry providers (mirrors the engine's live semantics), so
+    `local_only` requirements fail closed against these candidates until a local provider
+    exists (S5, audit 11 — intentional).
+    """
     from .providers import Providers
     out = []
     for status in Providers(store).all_status():
@@ -413,6 +423,8 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
                 if req != 'local_only' and REQUIREMENT_CAPABILITIES[req]]
     if local_only is None:
         local_only = privacy_enforced
+    elif local_only is False and privacy_enforced:
+        raise PolicyError('local_only is a requirement here; it cannot be overridden off')
     required = set(caps) | {'text'}
     runtimes = runtimes or {}
 
@@ -468,11 +480,16 @@ def resolve_binding(candidates, *, mode='AUTO', requirements=(), preferred=None,
     if not selected['model'] and caps:
         raise PolicyError('No model of %s declares the required capabilities: %s'
                           % (chosen, ', '.join(sorted(caps))))
+    fallbacks = [{'provider': n, 'model': model_for(n, caps), 'runtime': runtime_of(n)}
+                 for n in order[1:]]
+    if caps:
+        # Sug1 (audit 11): an enforced requirement set means a reroute target must have a
+        # model we can verify; entries without one are not usable as fallbacks.
+        fallbacks = [item for item in fallbacks if item['model']]
     return {
         'mode': mode,
         'selected': selected,
-        'fallbacks': [{'provider': n, 'model': model_for(n, caps), 'runtime': runtime_of(n)}
-                      for n in order[1:]],
+        'fallbacks': fallbacks,
         'fallback_basis': {'AUTO': 'eligible-cost-order',
                            'PREFERRED': 'preferred-order-then-cost',
                            'FIXED': 'eligible-cost-order-excluding-pin'}[mode],
@@ -573,9 +590,15 @@ def link_reservation(store, reservation_id, assignment_id):
     row = get_reservation(store, reservation_id)
     if row['state'] != 'reserved':
         raise PolicyError('Reservation is already %s' % row['state'])
+    if row['assignment_id'] is not None:
+        raise PolicyError('Reservation is already linked to %s' % row['assignment_id'])
     with contextlib.closing(store.connect()) as db:
-        db.execute('UPDATE budget_reservations SET assignment_id=?, updated=?'
-                   ' WHERE reservation_id=?', (assignment_id, time.time(), reservation_id))
+        # Conditional update (Sug2, audit 11): a second concurrent link cannot re-point it.
+        cursor = db.execute('UPDATE budget_reservations SET assignment_id=?, updated=?'
+                            ' WHERE reservation_id=? AND assignment_id IS NULL',
+                            (assignment_id, time.time(), reservation_id))
+        if cursor.rowcount != 1:
+            raise PolicyError('Reservation was linked concurrently; refusing to re-point it')
     return get_reservation(store, reservation_id)
 
 
