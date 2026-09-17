@@ -1,6 +1,6 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-17T22:55:00Z
+updated_utc: 2026-09-17T23:10:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
@@ -37,12 +37,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: 9e69fc7ddddffe067f6dd8810daedd877b50d197
+github_remote_integration: 4472db8b2144f6250fb1009e37d72652476415cc
 github_publication_current: true
 
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Publish the accumulated checkpoint per GITHUB_SYNC_POLICY (range 9e69fc7..NEW; includes 8123fe4 + f9cf3ea + acceptance docs). Then implement Phase 5.3 — D2 small pod + verification (Builder→Verifier hands-off flow; testing + maintainability lenses; messages v1; arbitration v1; stall v1; evaluation-harness pilot; F4 real-artifact binding + N1 producer-check hardening) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.3. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
+next_autonomous_action: Implement Phase 5.3 — D2 small pod + verification (Builder→Verifier hands-off flow; testing + maintainability lenses; messages v1; arbitration v1; stall v1; evaluation-harness pilot; F4 real-artifact binding + N1 producer-check hardening) per `15_PHASE5_IMPLEMENTATION_SPEC.md` §5.3. Carry-forward: packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Visual thread: `visual_state: READY_FOR_VISUAL` unchanged (visual_clean_head 60b2322; verified ancestor + remote-contained); Visual's next candidate = BATCH 5 sidebar-rows pre-flight.
 external_dependency: NONE
 stop_reason: NONE
