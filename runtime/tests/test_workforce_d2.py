@@ -161,8 +161,10 @@ class MessageDispatchTests(Base):
         with self.assertRaises(PolicyError):
             send_message(self.store, msg(id='msg_cx', to='asn_' + 'c' * 8,
                                          required_action='More chatter.'))
-        send_message(self.store, msg(id='msg_cb', **{'from': 'asn_' + 'c' * 8, 'to': 'cmd'},
-                                     type='DECISION_PROPOSAL', required_action='Decide X.'))
+        for index, kind in enumerate(('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST')):
+            send_message(self.store, msg(id='msg_cb%d' % index,
+                                         **{'from': 'asn_' + 'c' * 8, 'to': 'cmd'},
+                                         type=kind, required_action='Escalate %s.' % kind))
         with self.assertRaises(PolicyError):
             send_message(self.store, msg(id='msg_ch', **{'from': 'asn_' + 'c' * 8, 'to': 'cmd'},
                                          required_action='Hand it over.'))

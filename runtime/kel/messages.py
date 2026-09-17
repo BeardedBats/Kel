@@ -25,6 +25,7 @@ SUMMARY_MAX = 400
 DETAILS_MAX = 2000
 PAIR_MESSAGE_BUDGET = 6   # per task pair; beyond that the conversation becomes a ledger escalation
 TASK_MESSAGE_BUDGET = 12  # per task overall; beyond that the task goes to mandatory Commander review
+ESCALATION_TYPES = ('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST')  # the cmd-exempt class
 MESSAGE_FIELDS = ('id', 'schema_version', 'mission_id', 'task_id', 'from', 'to', 'type',
                   'summary', 'refs', 'required_action', 'deadline', 'budget_impact', 'details',
                   'supersedes', 'at')
@@ -118,7 +119,7 @@ def send_message(store, message, *, now=None):
         if task_count >= TASK_MESSAGE_BUDGET:
             raise PolicyError('Task message budget exhausted (%d); the task needs Commander '
                               'review before more messages' % TASK_MESSAGE_BUDGET)
-        escalation = message['type'] in ('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST')
+        escalation = message['type'] in ESCALATION_TYPES
         if not (escalation and 'cmd' in (sender, recipient)):
             # F14-2 (audit 14): only escalation traffic to/from cmd bypasses the worker-pair
             # budget (doc 07's sanctioned channel); all other traffic counts toward the pair.

@@ -23,12 +23,12 @@ from .assignment import (assign_worker, candidates_from_providers, flags_snapsho
 from .commander import PROVIDER_FAMILIES
 from .core import PolicyError, uid
 from .delegation import close_d1, issue_task_contract
-from .messages import messages, send_message
+from .messages import ESCALATION_TYPES, messages, send_message
 from .staffing import decide
 from .team import Team
 
 VERIFICATION_LENSES = ('functional-testing', 'maintainability')
-INTERRUPTION_TYPES = ('BLOCKER', 'DECISION_PROPOSAL', 'REPLAN_REQUEST')
+INTERRUPTION_TYPES = ESCALATION_TYPES  # single source (audit-15 suggestion 1)
 STALL_THRESHOLD_MINUTES = 30
 VERDICTS = ('VERIFIED', 'FAILED', 'UNCERTAIN')
 

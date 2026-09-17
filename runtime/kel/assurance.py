@@ -261,3 +261,191 @@ def findings(store, *, task_id=None, mission_id=None, status=None):
         row['confirmations'] = json.loads(row['confirmations'] or '[]')
         row['advisory'] = bool(row['advisory'])
     return rows
+
+
+# ---- assurance army: dispatch, deterministic gating, Sentinel rules, Oracle (Phase 5.4) ----
+
+# Deterministic scope gating (doc 08 §2-3): the tier selects the floors; mission flags trigger
+# the rest; the never-gate class runs at D4. Every catalog lens not selected is returned with
+# its skip reason (exit criterion: no silently skipped lens).
+GATING_FLOORS = {
+    'D0': (),
+    'D1': ('functional-testing',),
+    'D2': ('functional-testing', 'maintainability'),
+    'D3': ('functional-testing', 'maintainability'),
+    'D4': ('functional-testing', 'maintainability') + NEVER_GATE,
+}
+
+GATE_TRIGGERS = {
+    'security_boundary': ('security', 'adversarial'),
+    'privacy': ('privacy',),
+    'data_migration': ('data-integrity',),
+    'release': ('release-integrity',),
+    'user_facing': ('ux', 'accessibility', 'visual-design'),
+    'api_change': ('api-contract',),
+    'performance': ('performance',),
+    'journey': ('user-journey',),
+    'irreversible': (),
+    'new_dependency': ('security',),
+}
+
+
+def lenses_for(tier, flags=()):
+    """The deterministic lens set for a mission (doc 08 §2-3).
+
+    Floors by tier + flag-triggered lenses + the never-gate class at D4; every non-selected
+    catalog lens comes back with its skip reason, and unknown flags/tiers are refused.
+    """
+    if tier not in GATING_FLOORS:
+        raise PolicyError('Gating tiers are %s' % ', '.join(GATING_FLOORS))
+    selected, reasons = [], {}
+    for lens_name in GATING_FLOORS[tier]:
+        selected.append(lens_name)
+        reasons[lens_name] = 'tier floor (%s)' % tier
+    for flag in flags:
+        if flag not in GATE_TRIGGERS:
+            raise PolicyError('Unknown gating flag: %s' % flag)
+        for lens_name in GATE_TRIGGERS[flag]:
+            if lens_name not in selected:
+                selected.append(lens_name)
+            reasons[lens_name] = 'triggered by %s' % flag
+    skipped = {}
+    for item in LENSES:
+        name = item['name']
+        if name not in selected:
+            skipped[name] = 'not triggered at %s (no matching flag)' % tier
+    return {'tier': tier, 'flags': list(flags), 'lenses': selected, 'reasons': reasons,
+            'skipped': skipped}
+
+
+def dispatch_assurance(store, *, task_id, artifact, runner, tier, mission_id=None, flags=(),
+                       lenses=None, now=None):
+    """Run the selected lenses as fresh-context reviews of the artifact.
+
+    `runner(lens_name, payload)` returns `{'findings': [...], 'coverage_statement': str}`;
+    findings land through the standard pipeline (fingerprint dedupe + multi-lens confirmation).
+    The payload carries ONLY the artifact reference, the lens name and the rubric requirement —
+    never the builder's packet or claims (anti-anchoring, doc 08 §4). Sentinel rule: a
+    security boundary cannot skip the security lens. Every dispatched lens must state its
+    coverage explicitly.
+    """
+    plan = lenses_for(tier, flags)
+    selected = list(lenses if lenses is not None else plan['lenses'])
+    unknown = sorted(set(selected) - set(LENS_NAMES) - set(DOMAIN_LENSES))
+    if unknown:
+        raise PolicyError('Unknown lens(es): %s' % ', '.join(unknown))
+    if 'security_boundary' in flags and 'security' not in selected:
+        raise PolicyError('The security lens is mandatory for security boundaries (Sentinel); '
+                          'it cannot be skipped')
+    stamp = time.time() if now is None else now
+    results, records = {}, []
+    for lens_name in selected:
+        payload = {'lens': lens_name, 'artifact': artifact,
+                   'requirement': 'review the artifact and state your coverage explicitly'}
+        outcome = runner(lens_name, payload)
+        coverage = outcome.get('coverage_statement')
+        require_text(coverage, 'coverage statement for lens %s' % lens_name)
+        lens_findings = []
+        for item in outcome.get('findings', []):
+            record = record_finding(store, item, now=stamp)
+            lens_findings.append(record)
+            records.append(record)
+        results[lens_name] = {'coverage_statement': coverage,
+                              'findings': [item['id'] for item in lens_findings]}
+    unique = {item['id']: item for item in records}
+    quality = quality_score(
+        criticals=sum(1 for item in unique.values()
+                      if item['severity'] == 'critical' and item['status'] == 'open'),
+        infos=sum(1 for item in unique.values() if item['severity'] == 'info'))
+    return {'tier': tier, 'flags': list(flags), 'dispatched': selected, 'results': results,
+            'findings': list(unique.values()), 'quality_score': quality, 'plan': plan}
+
+
+def gate(store, *, task_id):
+    """Deterministic gate over recorded findings (doc 08 §3; doc 09 §10).
+
+    Blockers block, always; criticals block while open; findings from the never-gate class can
+    never be waived by Kel — only an explicit user decision can accept them. The quality score
+    is advisory only.
+    """
+    rows = findings(store, task_id=task_id)
+    open_items = [item for item in rows if item['status'] == 'open']
+    blockers = [item for item in open_items if item['severity'] == 'blocker']
+    criticals = [item for item in open_items if item['severity'] == 'critical']
+    never_gate_hits = [item for item in open_items if item['lens'] in NEVER_GATE]
+    reasons = ['%s finding %s open (%s)' % (item['severity'], item['id'], item['lens'])
+               for item in blockers + criticals]
+    blocked = bool(blockers or criticals)
+    return {'blocked': blocked, 'waivable': bool(blocked) and not never_gate_hits,
+            'reasons': reasons,
+            'never_gate_hits': [item['id'] for item in never_gate_hits],
+            'quality_score': quality_score(
+                criticals=len(criticals),
+                infos=len([item for item in open_items if item['severity'] == 'info']))}
+
+
+def waive_gate(store, *, task_id, authority, rationale, now=None):
+    """Accept open blocker/critical findings (constitutional constants, doc 09 §2/§10).
+
+    The user is the only authority that can accept never-gate findings; Kel's own waiver is
+    refused when they are open. The waiver is recorded on each accepted finding.
+    """
+    result = gate(store, task_id=task_id)
+    if not result['blocked']:
+        raise PolicyError('The gate is not blocked; nothing to waive')
+    require_text(rationale, 'waiver rationale')
+    if authority not in ('user', 'kel'):
+        raise PolicyError('Waiver authority is user or kel')
+    if result['never_gate_hits'] and authority != 'user':
+        raise PolicyError('Never-gate findings can only be accepted by the user '
+                          '(open: %s)' % ', '.join(result['never_gate_hits']))
+    stamp = time.time() if now is None else now
+    with contextlib.closing(store.connect()) as db:
+        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE task_id=? '
+                   'AND status=? AND severity IN (?, ?)',
+                   ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), stamp,
+                    task_id, 'open', 'blocker', 'critical'))
+    return {'waived': True, 'authority': authority, 'task_id': task_id,
+            'accepted': result['reasons']}
+
+
+def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_provider,
+                mission_id=None, now=None, allow_same_family=False):
+    """Run the adversarial (Oracle) lens under family independence (doc 08 §8).
+
+    The oracle must be a different provider family than the producer unless the fallback is
+    explicitly recorded (`allow_same_family=True`). Findings land through the standard
+    pipeline; the coverage statement is required (parity with dispatched lenses).
+    """
+    from .pods import family_of  # local import: pods imports this module (no load-time cycle)
+    producer_family = family_of(producer_provider)
+    oracle_family = family_of(oracle_provider)
+    if oracle_family == producer_family and not allow_same_family:
+        raise PolicyError('The Oracle must be a different model family than the producer '
+                          '(got %s for both); pass allow_same_family=True to record the '
+                          'fallback' % producer_family)
+    payload = {'lens': ORACLE_LENS, 'artifact': artifact,
+               'requirement': 'attack the artifact and state your coverage explicitly'}
+    outcome = runner(ORACLE_LENS, payload)
+    coverage = outcome.get('coverage_statement')
+    require_text(coverage, 'coverage statement for the Oracle')
+    stamp = time.time() if now is None else now
+    records = [record_finding(store, item, now=stamp) for item in outcome.get('findings', [])]
+    return {'lens': ORACLE_LENS, 'coverage_statement': coverage, 'findings': records,
+            'family_diversity': ('different' if oracle_family != producer_family
+                                 else 'unavailable (recorded fallback)'),
+            'oracle_provider': oracle_provider, 'producer_provider': producer_provider}
+
+
+def lens_stats(store):
+    """Per-lens review statistics for the learning loop (doc 08 §9, read-only)."""
+    stats = {}
+    for item in findings(store):
+        entry = stats.setdefault(item['lens'], {'total': 0, 'open': 0, 'confirmed': 0,
+                                                'fixed': 0, 'dismissed': 0})
+        entry['total'] += 1
+        entry[item['status']] = entry.get(item['status'], 0) + 1
+    for entry in stats.values():
+        closed = entry['fixed'] + entry['dismissed']
+        entry['fp_rate'] = round(entry['dismissed'] / closed, 2) if closed else None
+    return stats
