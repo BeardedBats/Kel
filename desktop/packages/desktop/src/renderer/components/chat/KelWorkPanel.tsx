@@ -1,6 +1,6 @@
 /** Kel work controls, using AionUI's Arco components and theme tokens. */
 import React, { useEffect, useState } from 'react';
-import { Badge, Button, Drawer, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
+import { Badge, Button, Drawer, Modal, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import Markdown from '@/renderer/components/Markdown';
@@ -34,6 +34,19 @@ type MemoryRecord = {
   updated: number;
 };
 type MemoryConflict = { id: string; memory_a: string; memory_b: string; state: string };
+type LineageVersion = {
+  id: string;
+  filename: string;
+  relpath: string;
+  bytes: number | null;
+  created: number;
+  conversation_id: string;
+  project_id: string;
+  run_id: string;
+  turn_ref: string;
+  supersedes: string | null;
+  superseded_by: string | null;
+};
 type MapSection = { name: string; trust: string; stale: boolean; sources: string[] };
 type MapInfo = { version: number; fingerprint: string; note?: string; sections: MapSection[] };
 type RecipeEntry = { recipe_id: string; name: string; version: string; scope: string; kind: string };
@@ -123,6 +136,7 @@ export default function KelWorkPanel() {
     [preview, setPreview] = useState(''),
     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
   const [history, setHistory] = useState<{ at: number; text: string }[] | null>(null);
+  const [lineage, setLineage] = useState<{ request: string; versions: LineageVersion[] } | null>(null);
   const [vetting, setVetting] = useState<VettingPanelData>(),
     [vettingTopic, setVettingTopic] = useState(''),
     [vettingSpec, setVettingSpec] = useState(''),
@@ -267,6 +281,34 @@ export default function KelWorkPanel() {
       setBusy(false);
     }
   }
+  async function openLineage(job: Job, m: { id: string; filename: string }) {
+    try {
+      const out = await request<{ versions: LineageVersion[] }>(
+        '/api/lineage?job=' + job.id + '&milestone=' + m.id
+      );
+      setLineage({ request: job.contract.request, versions: out.versions || [] });
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+  async function revealArtifact(relpath: string) {
+    try {
+      const api = (window as unknown as { kelAPI?: { revealArtifact?: (p: string) => Promise<unknown> } }).kelAPI;
+      await api?.revealArtifact?.(relpath);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+  async function copyArtifactPath(relpath: string) {
+    try {
+      await navigator.clipboard.writeText(relpath);
+      Message.success('Path copied.');
+    } catch {
+      setError('Could not copy the path.');
+    }
+  }
+  const conversationName = (id: string) => state?.conversations.find((c) => c.id === id)?.title || '';
+  const projectName = (id: string) => state?.projects.find((p) => p.id === id)?.name || '';
   return (
     <>
       <Badge count={pendingApprovals} maxCount={9} offset={[10, -4]}>
@@ -328,18 +370,26 @@ export default function KelWorkPanel() {
                   {job.contract.milestones
                     .filter((m) => job.milestones[m.id]?.state === 'ACCEPTED')
                     .map((m) => (
-                      <Button
-                        key={m.id}
-                        onClick={async () => {
-                          try {
-                            setReport(await request<string>('/api/artifact?job=' + job.id + '&milestone=' + m.id));
-                          } catch (e) {
-                            setError(String(e));
-                          }
-                        }}
-                      >
-                        {m.filename}
-                      </Button>
+                      <React.Fragment key={m.id}>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              setReport(await request<string>('/api/artifact?job=' + job.id + '&milestone=' + m.id));
+                            } catch (e) {
+                              setError(String(e));
+                            }
+                          }}
+                        >
+                          {m.filename}
+                        </Button>
+                        <Button
+                          size='small'
+                          onClick={() => void openLineage(job, m)}
+                          data-testid='kel-lineage-open'
+                        >
+                          {'Where from?'}
+                        </Button>
+                      </React.Fragment>
                     ))}
                 </Space>
               </section>
@@ -804,6 +854,63 @@ export default function KelWorkPanel() {
       >
         <Markdown>{report}</Markdown>
       </Drawer>
+      <Modal
+        title='Where this file came from'
+        visible={Boolean(lineage)}
+        footer={null}
+        onCancel={() => setLineage(null)}
+        autoFocus={false}
+        style={{ width: 520 }}
+        unmountOnExit
+      >
+        {lineage ? (
+          <div className='text-12px leading-20px' data-testid='kel-lineage-body'>
+            <Typography.Paragraph type='secondary'>
+              {'You asked: '}
+              {lineage.request}
+            </Typography.Paragraph>
+            {lineage.versions.map((v, i) => (
+              <section key={v.id} className='py-8px border-b border-solid border-[var(--color-border-2)]'>
+                <Typography.Paragraph>
+                  <Typography.Text bold>{v.filename}</Typography.Text>
+                  {i === 0 ? <Typography.Text type='secondary'>{' · current version'}</Typography.Text> : null}
+                </Typography.Paragraph>
+                <Typography.Paragraph type='secondary'>
+                  {(conversationName(v.conversation_id) || 'This work') +
+                    (projectName(v.project_id) ? ' · ' + projectName(v.project_id) : '') +
+                    ' · ' +
+                    new Date(v.created * 1000).toLocaleString() +
+                    (v.bytes ? ' · ' + Math.round(v.bytes / 102.4) / 10 + ' KB' : '')}
+                </Typography.Paragraph>
+                <Space wrap size={6}>
+                  <Button
+                    size='small'
+                    onClick={async () => {
+                      try {
+                        setReport(await request<string>('/api/artifact?lineage=' + v.id));
+                        setLineage(null);
+                      } catch (e) {
+                        setError(String(e));
+                      }
+                    }}
+                  >
+                    {i === 0 ? 'Open' : 'Open this version'}
+                  </Button>
+                  <Button size='small' onClick={() => void revealArtifact(v.relpath)}>
+                    {'Show in folder'}
+                  </Button>
+                  <Button size='small' onClick={() => void copyArtifactPath(v.relpath)}>
+                    {'Copy path'}
+                  </Button>
+                </Space>
+              </section>
+            ))}
+            <Typography.Paragraph type='secondary'>
+              {'Kel produced this file while working on the task above; every earlier version stays readable here.'}
+            </Typography.Paragraph>
+          </div>
+        ) : null}
+      </Modal>
     </>
   );
 }

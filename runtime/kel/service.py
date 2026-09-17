@@ -898,9 +898,18 @@ def serve(root,port=0):
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/artifact':
+                        if 'lineage' in query:
+                            out=service.store.lineage_artifact(query['lineage'][0])
+                            self.reply(200,out['text'].encode(),'text/markdown; charset=utf-8');return
                         job=service.store.get(query['job'][0]);mid=query['milestone'][0];m=job['milestones'][mid]
                         if m['state']!='ACCEPTED':raise PolicyError('Artifact has not passed its checks')
                         self.reply(200,service.store.artifact_text(m['artifact']).encode(),'text/markdown; charset=utf-8');return
+                    if parsed.path=='/api/lineage':
+                        if 'milestone' in query:
+                            rows=service.store.lineage(query['job'][0],query['milestone'][0])
+                        else:
+                            rows=service.store.lineage(query['job'][0])
+                        self.reply(200,{'versions':rows});return
                     self.reply(404,{'error':'Not found'})
                 except Exception as exc:self.reply(400,{'error':str(exc)})
                 return

@@ -147,6 +147,13 @@ class Store:
                 native_session TEXT, provider TEXT, model TEXT);
             CREATE UNIQUE INDEX IF NOT EXISTS one_active_milestone ON runs(job_id,milestone_id)
                 WHERE state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED');
+            CREATE TABLE IF NOT EXISTS artifact_lineage(id TEXT PRIMARY KEY, project_id TEXT NOT NULL,
+                conversation_id TEXT NOT NULL, job_id TEXT NOT NULL, milestone_id TEXT NOT NULL,
+                run_id TEXT NOT NULL, filename TEXT NOT NULL, relpath TEXT NOT NULL, sha256 TEXT,
+                bytes INTEGER, media_type TEXT NOT NULL DEFAULT 'text/markdown', created REAL NOT NULL,
+                turn_ref TEXT NOT NULL DEFAULT '', supersedes TEXT, superseded_by TEXT);
+            CREATE INDEX IF NOT EXISTS lineage_by_job ON artifact_lineage(job_id, milestone_id, created);
+            CREATE INDEX IF NOT EXISTS lineage_by_project ON artifact_lineage(project_id, created);
             CREATE TABLE IF NOT EXISTS inbox(id TEXT PRIMARY KEY, run_id TEXT, epoch TEXT,
                 payload TEXT, handled INTEGER DEFAULT 0);
             CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY, job_id TEXT, run_id TEXT,
@@ -322,6 +329,42 @@ class Store:
         return dict(path=str(relative), sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw),
                     job_id=job_id, milestone_id=milestone_id, run_id=run_id, captured=time.time())
 
+    def _record_lineage(self, db, job, milestone_id, info):
+        """Durable provenance for one produced artifact version; older versions stay linked.
+
+        Called inside the consume transaction right after the artifact lands, so a lineage row and
+        its artifact commit together. Replacing a milestone artifact (a new run) chains the previous
+        version through supersedes/superseded_by instead of losing it.
+        """
+        conversation = str(job.get('conversation', 'main'))
+        # Bare stores (the engine tests' world) have no conversations table; provenance falls back
+        # to the default project there and resolves normally in full app stores.
+        project = 'default'
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='conversations'").fetchone():
+            row = db.execute('SELECT project_id FROM conversations WHERE id=?', (conversation,)).fetchone()
+            if row:
+                project = row['project_id']
+        turn = db.execute("SELECT seq FROM messages WHERE job_id=? AND role='user' ORDER BY seq LIMIT 1",
+                          (job['id'],)).fetchone()
+        if not turn:
+            turn = db.execute("SELECT seq FROM messages WHERE conversation_id=? AND role='user' AND text=?"
+                              ' ORDER BY seq DESC LIMIT 1',
+                              (conversation, job.get('contract', {}).get('request', ''))).fetchone()
+        previous = db.execute('SELECT id FROM artifact_lineage WHERE job_id=? AND milestone_id=?'
+                              ' ORDER BY created DESC LIMIT 1', (job['id'], milestone_id)).fetchone()
+        lineage_id = uid()
+        db.execute('INSERT INTO artifact_lineage(id,project_id,conversation_id,job_id,milestone_id,run_id,'
+                   'filename,relpath,sha256,bytes,media_type,created,turn_ref,supersedes,superseded_by)'
+                   ' VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)',
+                   (lineage_id, project, conversation, job['id'], milestone_id, info['run_id'],
+                    Path(info['path']).name, info['path'], info.get('sha256'), info.get('bytes'),
+                    'text/markdown', time.time(),
+                    ('message:%s' % turn['seq']) if turn else '',
+                    previous['id'] if previous else None))
+        if previous:
+            db.execute('UPDATE artifact_lineage SET superseded_by=? WHERE id=?', (lineage_id, previous['id']))
+        return lineage_id
+
     def consume(self):
         """Idempotent inbox reduction. Worker claims never assign a verdict."""
         count = 0
@@ -364,6 +407,7 @@ class Store:
                 if outcome in ('SUCCESS', 'PARTIAL') and isinstance(result.get('text'), str):
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
+                    m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
                     m.update(state='CHECKING', error=None)
                 else:
                     m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'))
@@ -386,6 +430,26 @@ class Store:
         if hashlib.sha256(raw).hexdigest() != artifact['sha256']:
             raise PolicyError("Artifact changed after capture")
         return raw.decode('utf-8')
+
+    def lineage(self, job_id, milestone_id=None):
+        """All artifact versions for a job (newest first); optionally just one milestone."""
+        with contextlib.closing(self.connect()) as db:
+            if milestone_id:
+                rows = db.execute('SELECT * FROM artifact_lineage WHERE job_id=? AND milestone_id=?'
+                                  ' ORDER BY created DESC', (job_id, milestone_id)).fetchall()
+            else:
+                rows = db.execute('SELECT * FROM artifact_lineage WHERE job_id=? ORDER BY created DESC',
+                                  (job_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def lineage_artifact(self, lineage_id):
+        """The text of one artifact version (any version), integrity-checked like the current one."""
+        with contextlib.closing(self.connect()) as db:
+            row = db.execute('SELECT * FROM artifact_lineage WHERE id=?', (lineage_id,)).fetchone()
+        if not row:
+            raise PolicyError('Artifact version not found')
+        text = self.artifact_text({'path': row['relpath'], 'sha256': row['sha256']})
+        return {'text': text, 'version': dict(row)}
 
     def verify(self, job_id, milestone_id):
         with self.transaction() as db:
