@@ -1,9 +1,17 @@
-/* KEL V1.4 design tokens — Direction "Desk" (docs/v1.4/KEL_V1.4_DESIGN_SYSTEM.md).
-   Single source of truth for color, type, space, radius, shadow, focus, and density.
-   Components must not hard-code values; they consume these variables. */
+/* KEL V1.6 design tokens — Direction: dim navy / bluer slate-navy foundation, slightly off-white primary
+   text, restrained pale semantic accents, compact controls, ~8px radii.
+   Source of truth: docs/v1.6-visual-ux/02_VISUAL_SYSTEM.md (audit) — components must not hard-code values.
+
+   V1.6 changes vs V1.4 ("Desk"):
+     · dark surfaces moved from neutral charcoal to slate-navy; primary text is off-white, not pure #fff
+     · accent moved from saturated green to a restrained sky/slate blue; status colours desaturated
+     · type scale and spacing compacted for a desktop shell (h1 32→24, h2 24→16, body 16→15, 4px ladder)
+     · one radius for controls and surfaces (8px); card padding 24→16; page gutter 32→24
+   Unchanged on purpose: the AA-clean light palette values, the global focus ring, the skip link, the
+   reduced-motion fallback, and the donor muted-text overrides. */
 
 :root {
-  /* surfaces + borders (light default) */
+  /* surfaces + borders (light) */
   --kel-surface-0: #fafafb;
   --kel-surface-1: #ffffff;
   --kel-surface-2: #f2f3f5;
@@ -11,57 +19,63 @@
   --kel-border-strong: #d1d5db;
   --kel-scrim: rgba(20, 22, 26, 0.32);
 
-  /* text */
+  /* text (light) */
   --kel-text-1: #14161a;
   --kel-text-2: #5a6270;
   --kel-text-3: #6b7280;
   --kel-text-inverse: #ffffff;
 
-  /* accent */
-  --kel-accent: #0e7c5a;
-  --kel-accent-hover: #0b6849;
-  --kel-accent-soft: #e8f5ef;
-  /* Text colour that sits ON the accent. Light accent is dark enough for white; the dark accent is
-     lighter, so white measured only 3.16:1 there — this token keeps primary buttons AA in both themes. */
+  /* accent — restrained slate-sky. Dark enough to carry white text (5.4:1). */
+  --kel-accent: #2f6f9f;
+  --kel-accent-hover: #275c85;
+  --kel-accent-soft: #eaf2f8;
+  /* Text colour that sits ON the accent. The light accent carries white; the dark accent is pale, so it
+     carries the dark foundation colour instead — this token keeps primary buttons AA in BOTH themes. */
   --kel-accent-ink: #ffffff;
 
-  /* semantic status (fill / border / text) */
-  --kel-run-bg: #e8f5ef;
-  --kel-run-fg: #0b6849;
-  --kel-wait-bg: #fef3c7;
-  --kel-wait-fg: #7a4a00;
-  --kel-wait-border: #f0d9a8;
+  /* semantic status (fill / text / border) — pale, restrained, one signal each */
+  --kel-run-bg: #e8f1f9;
+  --kel-run-fg: #1f5c86;
+  --kel-wait-bg: #fdf0e3;
+  --kel-wait-fg: #8a4b12;
+  --kel-wait-border: #eccfa9;
   --kel-ok-bg: #e7f6ec;
   --kel-ok-fg: #14532d;
-  --kel-uncertain-bg: #fff7e0;
-  --kel-uncertain-fg: #5a4200;
-  --kel-uncertain-border: #b07700;
+  --kel-uncertain-bg: #fdeef3;
+  --kel-uncertain-fg: #8d2f52;
+  --kel-uncertain-border: #c98aa5;
   --kel-failed-bg: #fef3f2;
   --kel-failed-fg: #b42318;
-  --kel-blocked-border: #b42318;
+  --kel-blocked-bg: #f3eefc;
+  --kel-blocked-fg: #5b3a99;
+  --kel-blocked-border: #7c5cc4;
 
-  /* type scale */
-  --kel-type-h1: 32px;
-  --kel-type-h2: 24px;
-  --kel-type-h3: 18px;
-  --kel-type-body: 16px;
+  /* type scale — desktop-app scale, not marketing scale */
+  --kel-type-h1: 24px;
+  --kel-type-h2: 16px;
+  --kel-type-h3: 16px;
+  --kel-type-body: 15px;
   --kel-type-label: 14px;
   --kel-type-meta: 12px;
   --kel-font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   --kel-font-mono: "Cascadia Code", Consolas, monospace;
 
-  /* spacing (6px base), radius, elevation */
-  --kel-space-1: 6px;
-  --kel-space-2: 12px;
-  --kel-space-3: 18px;
-  --kel-space-4: 24px;
-  --kel-space-5: 32px;
-  --kel-space-6: 48px;
-  --kel-gutter: 32px;
-  --kel-radius-card: 10px;
+  /* spacing — one 4px-based ladder, applied rhythmically */
+  --kel-space-1: 4px;
+  --kel-space-2: 8px;
+  --kel-space-3: 12px;
+  --kel-space-4: 16px;
+  --kel-space-5: 24px;
+  --kel-space-6: 32px;
+  --kel-gutter: 24px;
+
+  /* radius — one radius for controls and surfaces */
+  --kel-radius-card: 8px;
   --kel-radius-control: 8px;
   --kel-radius-chip: 999px;
-  --kel-shadow-card: 0 1px 2px rgba(20, 22, 26, 0.05);
+
+  /* elevation — flat surfaces carry borders, not shadows; only floating layers get a shadow */
+  --kel-shadow-card: 0 1px 2px rgba(20, 22, 26, 0.04);
   --kel-shadow-sheet: 0 12px 32px rgba(20, 22, 26, 0.16);
 
   /* motion */
@@ -69,24 +83,22 @@
   --kel-dur-state: 120ms;
   --kel-dur-enter: 160ms;
 
-  /* density: comfortable default */
-  --kel-row-height: 44px;
+  /* density: compact default for a desktop shell */
+  --kel-row-height: 36px;
   --kel-card-pad: var(--kel-space-4);
   --kel-gap: var(--kel-space-4);
 }
 
-/* Compact density — same components, tokens only. */
+/* Denser variant for table-first views (Work Center, diagnostics) past ten rows. */
 [data-density='compact'] {
-  --kel-row-height: 36px;
-  --kel-card-pad: var(--kel-space-2);
-  --kel-gap: var(--kel-space-2);
+  --kel-row-height: 32px;
+  --kel-card-pad: var(--kel-space-3);
+  --kel-gap: var(--kel-space-3);
 }
-/* Compact mode has to be visible in the data surfaces, not just in tokens: tighter row and card
-   padding on the table-first views (Work Center, diagnostics) when more than ten rows render. */
 [data-density='compact'] .kel-table th,
 [data-density='compact'] .kel-table td {
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 [data-density='compact'] .kel-card {
   padding: var(--kel-card-pad);
@@ -95,38 +107,39 @@
 /* Dark token set — a swap, never a component branch. */
 [data-theme='dark'],
 .dark {
-  --kel-surface-0: #101418;
-  --kel-surface-1: #161b22;
-  --kel-surface-2: #1c232c;
-  --kel-border: #263040;
-  --kel-border-strong: #37455c;
+  --kel-surface-0: #0f1620;
+  --kel-surface-1: #16202c;
+  --kel-surface-2: #1d2a38;
+  --kel-border: #26374a;
+  --kel-border-strong: #35485f;
   --kel-scrim: rgba(0, 0, 0, 0.5);
-  --kel-text-1: #e6edf3;
-  --kel-text-2: #a9b6c6;
-  --kel-text-3: #7d8b9e;
-  --kel-accent: #2fa37c;
-  --kel-accent-hover: #37b98c;
-  --kel-accent-soft: #16281f;
-  --kel-accent-ink: #101418;
-  --kel-run-bg: #16281f;
-  /* Kel V1.4: the donor's muted-text tokens are corrected per theme too — the light value measures
-     2.13:1 on these dark surfaces, and these are the labels a user scans most (sider sections, hints,
-     outline buttons). */
+  --kel-text-1: #e9eef5;
+  --kel-text-2: #a7b6c8;
+  --kel-text-3: #7f8fa3;
+  --kel-accent: #6ea8d8;
+  --kel-accent-hover: #86bbe4;
+  --kel-accent-soft: #16283a;
+  --kel-accent-ink: #0f1620;
+  --kel-run-bg: #16283a;
+  --kel-run-fg: #9ec9ea;
+  /* The donor's muted-text tokens are corrected per theme too — the light value measures 2.13:1 on these
+     dark surfaces, and these are the labels a user scans most (sider sections, hints, outline buttons). */
   --bg-5: #8b95a3;
   --bg-6: #9aa4b2;
   --color-bg-6: #9aa4b2;
-  --kel-run-fg: #7fd6ae;
   --kel-wait-bg: #2a2113;
-  --kel-wait-fg: #f2c879;
+  --kel-wait-fg: #f0c878;
   --kel-wait-border: #4a3a1c;
   --kel-ok-bg: #16281f;
   --kel-ok-fg: #7fd6ae;
-  --kel-uncertain-bg: #2a2416;
-  --kel-uncertain-fg: #e8d08a;
-  --kel-uncertain-border: #6b5a2a;
+  --kel-uncertain-bg: #2a1b24;
+  --kel-uncertain-fg: #eba7c4;
+  --kel-uncertain-border: #6b4a5c;
   --kel-failed-bg: #2a1615;
   --kel-failed-fg: #f3a09a;
-  --kel-blocked-border: #f3a09a;
+  --kel-blocked-bg: #241b33;
+  --kel-blocked-fg: #c3aee8;
+  --kel-blocked-border: #a98fd6;
   --kel-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
   --kel-shadow-sheet: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
@@ -157,8 +170,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Kel V1.4: global, not scoped to Kel surfaces — donor transitions (toasts, workspace tree) must
-     degrade too, and the V1.3 shell had no reduced-motion fallback at all. */
+  /* Global, not scoped to Kel surfaces — donor transitions (toasts, workspace tree) must degrade too. */
   * {
     transition: none !important;
     animation: none !important;
@@ -170,7 +182,7 @@
   color: var(--kel-text-1);
   font-family: var(--kel-font);
   font-size: var(--kel-type-body);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .kel-page {
@@ -193,9 +205,11 @@
   font-weight: 650;
   letter-spacing: -0.2px;
 }
+/* Section/card headings read as labels over content, not as headlines. */
 .kel-h2 {
   font-size: var(--kel-type-h2);
   font-weight: 620;
+  letter-spacing: 0.01em;
 }
 .kel-sub {
   color: var(--kel-text-2);
@@ -234,7 +248,7 @@
   align-items: center;
   gap: 6px;
   border-radius: var(--kel-radius-chip);
-  padding: 3px 10px;
+  padding: 2px 10px;
   font-size: var(--kel-type-label);
   font-weight: 600;
   white-space: nowrap;
@@ -267,15 +281,15 @@
   color: var(--kel-failed-fg);
 }
 .kel-chip--blocked {
-  background: var(--kel-surface-1);
-  color: var(--kel-text-1);
+  background: var(--kel-blocked-bg);
+  color: var(--kel-blocked-fg);
   border: 1px solid var(--kel-blocked-border);
 }
 
 .kel-btn {
   border-radius: var(--kel-radius-control);
   border: 1px solid transparent;
-  padding: 8px 16px;
+  padding: 6px 12px;
   font-size: var(--kel-type-label);
   font-weight: 600;
   cursor: pointer;
@@ -317,8 +331,9 @@
   margin-bottom: 4px;
 }
 
+/* Budget meter — narrow enough to sit in a table column without dominating it. */
 .kel-meter {
-  width: 180px;
+  width: 132px;
   height: 6px;
   border-radius: 999px;
   background: var(--kel-surface-2);
@@ -342,7 +357,7 @@
   font-weight: 500;
   font-size: var(--kel-type-meta);
   letter-spacing: 0;
-  padding: 10px var(--kel-space-2);
+  padding: 8px 10px;
   border-bottom: 1px solid var(--kel-border);
   background: var(--kel-surface-2);
 }
@@ -358,19 +373,19 @@
   background: var(--kel-surface-1);
   border: 1px solid var(--kel-border);
   border-radius: var(--kel-radius-control);
-  padding: 6px 10px;
-  min-height: 32px;
+  padding: 5px 10px;
+  min-height: 30px;
 }
 .kel-input:focus-visible {
   outline: 2px solid var(--kel-accent);
   outline-offset: 2px;
 }
-/* Kel V1.4: the chat's Work & context trigger is an Arco text button whose own colour rules are
-   important, so the Kel muted token needs the same weight to win in both themes. */
+/* The chat's Work & context trigger is an Arco text button whose own colour rules are important, so the
+   Kel muted token needs the same weight to win in both themes. */
 .kel-work-context-btn {
   color: var(--kel-text-2) !important;
 }
-/* Kel V1.4 shell focus ring: the V1.3 audit measured 0 of 30 tab stops with a detectable ring.
+/* Shell focus ring: the V1.3 audit measured 0 of 30 tab stops with a detectable ring.
    `:where()` keeps specificity at zero; `!important` is required to beat the donor's outline reset. */
 :where(a, button, [role='button'], input, select, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
   outline: 2px solid var(--kel-accent) !important;
@@ -382,7 +397,7 @@
   }
 }
 .kel-table td {
-  padding: 10px var(--kel-space-2);
+  padding: 8px 10px;
   border-bottom: 1px solid var(--kel-border);
   color: var(--kel-text-2);
   height: var(--kel-row-height);
@@ -402,7 +417,7 @@
   background: var(--kel-surface-0);
   border: 1px solid var(--kel-border);
   border-radius: var(--kel-radius-control);
-  padding: 10px 12px;
+  padding: 8px 10px;
   white-space: pre-wrap;
 }
 
@@ -415,15 +430,15 @@
   background: var(--kel-surface-1);
   color: var(--kel-text-2);
   border-radius: var(--kel-radius-chip);
-  padding: 6px 14px;
+  padding: 5px 12px;
   font-size: var(--kel-type-label);
   font-weight: 600;
   cursor: pointer;
 }
 .kel-tab[aria-selected='true'] {
   background: var(--kel-accent);
-  /* Kel V1.4: the selected tab fills with the accent, so its text must use the accent ink — in dark
-     mode the inherited near-white measured 3.16:1 on the lighter accent. */
+  /* The selected tab fills with the accent, so its text must use the accent ink — in dark mode the
+     inherited near-white measured 3.16:1 on the lighter accent. */
   color: var(--kel-accent-ink);
   border-color: var(--kel-accent);
 }

@@ -38,11 +38,11 @@
   --text-disabled: #c9cdd4; /* 禁用文字 */
 
   /* Semantic Colors - Light Mode */
-  --primary: #165dff;
+  --primary: #2f6f9f; /* Kel V1.6: restrained slate-sky accent (white text on it measures 5.4:1) */
   --success: #00b42a;
   --warning: #ff7d00;
   --danger: #f53f3f;
-  --info: #165dff;
+  --info: #2f6f9f;
 
   /* Border Colors - Light Mode */
   --border-base: #e5e6eb; /* 基础边框 */
@@ -88,12 +88,12 @@
   --aou-9: #e5e7f0;
   --aou-10: #eff0f6;
 
-  /* Background Colors - Dark Mode */
-  --bg-base: #0e0e0e; /* 主背景 */
-  --bg-1: #1a1a1a; /* 次级背景 */
-  --bg-2: #262626; /* 三级背景 */
-  --bg-3: #333333; /* 边框/分隔 */
-  --bg-4: #404040;
+  /* Background Colors - Dark Mode — Kel V1.6: dim navy / bluer slate-navy, not neutral grey */
+  --bg-base: #0f1620; /* 主背景 */
+  --bg-1: #16202c; /* 次级背景 */
+  --bg-2: #1d2a38; /* 三级背景 */
+  --bg-3: #26374a; /* 边框/分隔 */
+  --bg-4: #35485f;
   --bg-5: #8b95a3;
   --bg-6: #9aa4b2; /* 禁用/次要文字 - Kel V1.4: the donor's #5a5a5a measured 2.53:1 on #262626 */
   --bg-8: #737373;
@@ -101,25 +101,27 @@
   --bg-10: #d9d9d9;
 
   /* Interactive State Colors - Dark Mode */
-  --bg-hover: #1f1f1f; /* 悬停背景 */
-  --bg-active: #2d2d2d; /* 激活/按下背景 */
+  --bg-hover: #1b2634; /* 悬停背景 */
+  --bg-active: #223043; /* 激活/按下背景 */
 
   /* Text Colors - Dark Mode */
-  --text-primary: #ffffff; /* 主要文字 */
-  --color-text-1: #ffffff; /* Arco 主文字 — 与 --text-primary 对齐 */
-  --text-secondary: #ced3da; /* 次要文字 — 提亮至 ~11:1 对比度 */
-  --text-disabled: #737373; /* 禁用文字 */
+  --text-primary: #e9eef5; /* 主要文字 — Kel V1.6: slightly off-white, never pure #fff */
+  --color-text-1: #e9eef5; /* Arco 主文字 — 与 --text-primary 对齐 */
+  --text-secondary: #a7b6c8; /* 次要文字 — cool slate (~8:1 on the new surfaces) */
+  --text-disabled: #6d7d91; /* 禁用文字 */
 
-  /* Semantic Colors - Dark Mode */
-  --primary: #4d9fff;
-  --success: #23c343;
-  --warning: #ff9a2e;
-  --danger: #f76560;
-  --info: #4d9fff;
+  /* Semantic Colors - Dark Mode — Kel V1.6: desaturated. --primary deliberately stays dark enough for
+     the donor's white on-primary text (4.65:1); the pale sky highlight lives in kel-tokens.css as
+     --kel-accent, where the ink token is explicit. */
+  --primary: #3f7aa8;
+  --success: #2f9e63;
+  --warning: #d08a3c;
+  --danger: #e06b66;
+  --info: #3f7aa8;
 
   /* Border Colors - Dark Mode */
-  --border-base: #333333; /* 基础边框 */
-  --border-light: #262626; /* 浅色边框 */
+  --border-base: #26374a; /* 基础边框 */
+  --border-light: #1d2a38; /* 浅色边框 */
 
   /* Brand Colors - Dark Mode */
   --brand: #a1aacb; /* 品牌色 */
@@ -129,18 +131,18 @@
   /* Message & UI Component Colors - Dark Mode */
   --message-user-bg: #1e2a3a; /* 用户消息背景（深蓝灰） */
   --message-tips-bg: #1a2333; /* 提示信息背景（深蓝灰） */
-  --workspace-btn-bg: #1f1f1f; /* 工作区按钮背景 */
-  --thought-gradient: linear-gradient(135deg, #464767 0%, #323232 100%); /* 思考面板背景渐变 */
+  --workspace-btn-bg: #1b2634; /* 工作区按钮背景 */
+  --thought-gradient: linear-gradient(135deg, #2b3d52 0%, #1d2a38 100%); /* 思考面板背景渐变 — Kel V1.6: slate, no purple */
 
   /* Special Colors - Dark Mode */
-  --fill: #1a1a1a; /* 填充色 */
+  --fill: #16202c; /* 填充色 */
   --inverse: #ffffff; /* 反色（黑白切换）*/
 
   /* Custom Colors - Dark Mode */
-  --dialog-fill-0: #333333; /* 对话框填充色 */
+  --dialog-fill-0: #1d2a38; /* 对话框填充色 */
   --text-0: #ffffff; /* 纯黑文字色（暗色模式下为白色） */
   --text-white: #ffffff; /* 纯白文字色 */
   --fill-0: rgba(255, 255, 255, 0.08); /* 填充色 0 - 暗色模式下为半透明白色 */
   --fill-white-to-black: #000000; /* 白到黑填充色（暗色模式下为黑色） */
-  --border-special: #60677e; /* 特殊边框色 */
+  --border-special: #3d5271; /* 特殊边框色 */
 }
