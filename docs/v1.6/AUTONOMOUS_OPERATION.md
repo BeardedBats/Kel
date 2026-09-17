@@ -70,6 +70,43 @@ there. Visual worktrees are never written by Main. If `visual_state` is `READY_F
 - A gate result is accepted only when its status file matches the requested range/HEAD, states an
   explicit verdict, and reports no production writes and no writes to the Main worktree.
 
+## Disk-backed review handoffs (adopted 2026-09-17, permanent)
+
+A large reviewer brief, artifact bundle, diff dump, test transcript or evidence corpus is **never**
+emitted inline in one model message. The chat transcript is control-plane communication, not
+durable evidence storage: large state lives on disk and is referenced by path.
+
+Before each independent review, a package is written under the audit worktree
+(`kel-v16-code-audit/docs/code-audit/increment-NN/`):
+
+```
+review-manifest.md   increment id, base/target commits, requested range, requirement refs,
+                     changed files, status files, artifact paths, carry-forward findings,
+                     explicit reviewer questions, verdict schema
+requirements.md      verbatim requirement extracts (never a paraphrase by the implementer)
+changed-files.txt
+diff-01-core.patch   split by semantic section, never by arbitrary token chunk
+diff-02-tests.patch
+test-focused.txt  test-full.txt  collect-results.txt  demo-evidence.txt
+carry-forward.md
+```
+
+Rules:
+
+1. The reviewer receives only the manifest path, the exact commits/range, and the instruction to
+   read the referenced artifacts from disk. Artifact contents are never duplicated into the prompt.
+2. Reviewer output is bounded: verdict, confidence per axis, findings (blockers/majors first) with
+   exact evidence references, a closure table, and explicit "not verified" limitations. Detailed
+   analysis goes to the audit record on disk (`NN_..._AUDIT_DETAIL.md`), not into the conversation.
+3. An artifact that is itself too large is split into bounded files by semantic section.
+4. When the reviewer child cannot write (read-only tool policy), the Program Director persists the
+   reviewer's returned schema to the disk detail file so the review still lands in the record.
+5. A model **output-length limit is not a human stop condition**: stop expanding prose, persist the
+   remaining material to disk, continue execution from those artifacts, and do not terminate the
+   autonomous program because a response would be long.
+6. Recovery: if a reviewer child completed while the parent response truncated, recover its result
+   from disk or child state instead of re-running it.
+
 ## Preserved rules
 
 All existing ownership rules, worktree isolation, frozen-release immutability, stop conditions and
