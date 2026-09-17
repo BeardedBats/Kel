@@ -91,7 +91,8 @@ def _authority_for(role_fields, scope):
 
 
 def _build_contract(job, milestone, request, *, role, task_id, staffing_id, staffing_result,
-                    role_fields, budget, now):
+                    role_fields, budget, now, criteria=None, reviewer_lenses=None,
+                    depends_on_tasks=None):
     scope = request.get('scope') or [milestone.get('filename')]
     if isinstance(scope, str):
         scope = [scope]
@@ -120,11 +121,12 @@ def _build_contract(job, milestone, request, *, role, task_id, staffing_id, staf
         'authority': _authority_for(role_fields, scope),
         'allowed_tools': list(role_fields['tool_policy'].get('allow') or []),
         'write_boundaries': list(scope),
-        'dependencies': {'tasks': [], 'artifacts': []},
-        'acceptance_criteria': _criteria_for(milestone),
+        'dependencies': {'tasks': list(depends_on_tasks or []), 'artifacts': []},
+        'acceptance_criteria': list(criteria) if criteria else _criteria_for(milestone),
         'evidence_requirements': {'fresh_within': int(request.get('fresh_within') or 24 * 60),
                                   'command_bound': True, 'content_bound': True},
-        'required_reviewer': {'lenses': [], 'independence': 'any_but_executor', 'oracle': False},
+        'required_reviewer': {'lenses': list(reviewer_lenses or []),
+                              'independence': 'any_but_executor', 'oracle': False},
         'budget': dict(budget or D1_BUDGET_DEFAULTS),
         'deadline': None,
         'stop_conditions': ['budget_exhausted', 'blocker_unresolvable',
@@ -149,6 +151,25 @@ def _issue_contract(store, contract, milestone_id):
                     contract['parent_task'], digest(contract), encode(contract),
                     contract['created_at'], milestone_id))
     return contract_id
+
+
+def issue_task_contract(store, job, spec, request, *, role, task_id, staffing_id,
+                        staffing_result, role_fields, budget=None, now=None, project_id='',
+                        criteria=None, reviewer_lenses=None, depends_on_tasks=None):
+    """Build, validate (registry ceilings), and append one frozen task contract.
+
+    Public since Phase 5.3: pod orchestration issues multiple contracts per mission
+    (builder + verifier tasks). Delegated tasks from `delegate()` keep their own path.
+    """
+    contract = _build_contract(job, spec, request, role=role, task_id=task_id,
+                               staffing_id=staffing_id, staffing_result=staffing_result,
+                               role_fields=role_fields, budget=budget, now=now,
+                               criteria=criteria, reviewer_lenses=reviewer_lenses,
+                               depends_on_tasks=depends_on_tasks)
+    validate_task_contract(contract,
+                           ceilings=registry_ceilings(store, project_id, task_id) or None)
+    contract_id = _issue_contract(store, contract, spec.get('id'))
+    return contract, contract_id
 
 
 def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO',
@@ -354,7 +375,7 @@ def _safe_error_text(exc):
 
 def run_d1(store, job_id, milestone_id, request, worker, *, worker_tools=(), enabled=None,
            candidates=None, features=None, flags=(), role=None, mode='AUTO',
-           budget_estimate=None, budget_class=None, project_id='', now=None):
+           budget_estimate=None, budget_class=None, project_id='', tier_max=None, now=None):
     """Prepare, run exactly one worker, and close with evidence-bound checks.
 
     `worker` receives the delegation record and must return a CompletionPacket. When it
@@ -364,7 +385,7 @@ def run_d1(store, job_id, milestone_id, request, worker, *, worker_tools=(), ena
     packet (the assignment stays open until a valid close).
     """
     prepared = delegate(store, job_id, milestone_id, request, role=role, mode=mode,
-                        features=features, mission_flags=flags,
+                        features=features, mission_flags=flags, tier_max=tier_max,
                         budget_estimate=budget_estimate, budget_class=budget_class,
                         project_id=project_id, candidates=candidates, enabled=enabled, now=now)
     if not prepared.get('delegated'):
