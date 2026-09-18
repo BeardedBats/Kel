@@ -1,0 +1,19 @@
+# DEFERRED_ITEMS — deliberate deferments with rationale
+
+updated: 2026-09-18T16:05Z
+rule: no vague "later". Every item records why, release impact, required future evidence, whether
+it blocks V1.6, owner, and the revisit condition.
+
+| ID | Item | Why deferred | Release impact | Required future evidence | Blocks V1.6? | Owner | Revisit condition |
+|---|---|---|---|---|---|---|---|
+| DEF-001 | Phase 5.7 — adaptive staffing enablement | Entry conditions unmet: no doc-13 full campaign window, no user sign-off; enabling would fabricate readiness | None (shadow learning stays on) | doc-13 campaign (classes 3/5/9 + baseline-B conflict rate) + pre-registered H1–H5 outcomes + explicit user sign-off | NO | user (sign-off) + Main | Campaign results + user sign-off |
+| DEF-002 | Phase 5.8 / Phase 8 — Advanced Worker View | No product decision; North Star is ONE assistant; endpoints exist for a future decision; implementing panels now would be UI-first | None for V1.6 (hidden orchestration stays) | Product decision (is it V1.6 scope?) + usability review with zero-visit default preserved | NO | product/Nick | The Phase 8 decision record (Campaign A) — currently: deferred |
+| DEF-003 | Phase 12 — Rust migration | Rust audit verdict NO_MIGRATION_NEEDED_NOW at `9c1e7d0` | None | Re-verify freshness in Phase 11; if evidence still negative, close Phase 12 explicitly | NO | Main | Phase 11 recheck |
+| DEF-004 | doc-13 full evaluation campaign | Pilot (classes 2/6/8) succeeded; full matrix is a validation vehicle, not a release behavior | None (nothing reads it to gate) | Campaign run over 10 classes × 3 configs × ≥3 seeds | NO | Main/user | Before any adaptive-enablement re-entry |
+| DEF-005 | Optional provider validation (providers without available credentials) | No credentials available in this environment | Documented limitation, not a blocker | Real call evidence when access exists | NO | Main/user | When credentials become available |
+| DEF-006 | Per-project flag storage (workforce flags) | Current single-flag scope is sufficient for shadow behavior | None | Design + migration when per-project control is needed | NO | Main | First real multi-project flag need |
+| DEF-007 | Overlay content at calibration | Overlays v1 ship as a graceful no-op registry until real role overlays are authored | None | Authored overlay content + calibration results | NO | Main | When role overlays are content-authored |
+| DEF-008 | Provider 'web'/context tokens in evidence | Only evidence-backed tokens allowed; no evidence yet | None | Evidence from real provider runs | NO | Main | Phase 10 creates evidence (or not) |
+| DEF-009 | F16-3 — workforce guarantees stay engine-level (no production caller) | Wiring into live product flows is a product decision; guarantees hold engine-level | Documented limitation | A wiring increment decision | NO | Main | Sprint §30 "provider/Workforce real wiring" item — re-decide in Campaign A |
+| DEF-010 | Human pixel review | Requires a human; no image perception in agent threads (honest limitation) | Release gate remains open by design | Human review of `packaged-visual5`/later captures via SCREENSHOT_REVIEW_INDEX | YES for release (not for RC) | Nick | At the pre-release human gate |
+| DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |

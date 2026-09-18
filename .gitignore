@@ -56,3 +56,7 @@ credentials.json
 # --- intermediate archives ---
 *.rar
 *.zip
+
+# --- local session tooling scratch (never publish) ---
+.kunsdd/
+.tmp-image/

@@ -1,0 +1,63 @@
+# REQUIREMENTS_TRACEABILITY — requirement → implementation → evidence
+
+updated: 2026-09-18T16:05Z
+purpose: let Campaign B ask BOTH directions — "which requirement has no implementation?" and
+"which implementation has no requirement?" — across the whole V1.6 surface.
+
+Requirement sources live in: `docs/v1.6/` (program records), `docs/session-tools/`,
+`docs/memory-proposals/`, `docs/artifact-lineage/`, `docs/in-chat-approvals/`,
+`docs/i18n-cleanup/`, `docs/release-hardening/`, `docs/product/`, `docs/basic-ux-sweep/`,
+`docs/transcription/`, `docs/vetting/`, `docs/v1.6-visual-ux/` (in the visual worktrees), and the
+Workforce OS library at `C:\Users\Nick\Desktop\Kel\ux-audit\workforce-os\` (00–15 + role charters
+at `ux-audit\workforce-role-charters`). Campaign A work follows the sprint directive dated
+2026-09-18 (KEL V1.6 FULL-SPEED IMPLEMENTATION SPRINT).
+
+Audit status column: `covered` = inside an independent audit increment; `pending` = in the
+unaudited range; `deferred` = explicitly deferred with a decision record.
+
+## Delivered arcs (audited coverage through `8a2b25d`)
+
+| Req ID | Source | Section | Status | Commit(s) | Primary code | Tests | Evidence | Limitations | Audit |
+|---|---|---|---|---|---|---|---|---|---|
+| REQ-ST-1 | docs/session-tools | closure plan | implemented | (pre-1.6 arc) | `runtime/kel/*` session tools | fresh 545-suite + packaged sessiontools 24/24 | docs/session-tools/ | — | covered |
+| REQ-MEMP-1 | docs/memory-proposals (01–07) | all | implemented | `a8c3511` | `memory.py` proposals; `KelMemoryProposal.tsx` | `test_v16_proposals.py`; packaged memoryprops | docs/memory-proposals/ | — | covered |
+| REQ-LIN-1 | docs/artifact-lineage | all | implemented | `ffeef73` | lineage store + `/api/lineage` | engine 574; packaged lineage probe | docs/artifact-lineage/ | F4 binding open | covered |
+| REQ-APR-1 | docs/in-chat-approvals | all | implemented | `85e99fb` | `chat_approvals.py`, anchors | engine 592; packaged approvals journey | docs/in-chat-approvals/ | APR-01..03 P2 open | covered |
+| REQ-CAP-1 | audit 1.6 CAP-01/02/03 | remediation | implemented | `75d1f68`, `327e5b2`, `631881a` | `capabilities.py`, `research.py`, `acp_host.py` | engine 604→613 (+10 subtests each); packaged probes | docs/session-tools/03; ux-audit/run-cap2-residual.sh | CAP2-LONGTEXT P3 | covered |
+| REQ-I18N-1 | docs/i18n-cleanup | 00_STATUS | implemented | `fd04c00` | desktop locales (12 translated + en-US) | tsc 0; 76/76; copy-scan probe | docs/i18n-cleanup/00_STATUS.md | dormant boundaries kept | covered |
+| REQ-WF-5.0 | workforce-os 15 §5.0; docs 03/06/07/08 | — | implemented | `9085335`, `cc909b9` | `workforce.py` (migration 16) | +45; audits 8/9 | docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md | lens partial-coverage carry | covered |
+| REQ-WF-5.1 | 15 §5.1; doc 10 | — | implemented | `9d6ed55`, `5b83f0e` | `assignment.py` (migration 17) | +31; audits 10/11 | 5.1_IMPLEMENTATION_RECORD.md | N7 etc. recorded | covered |
+| REQ-WF-5.2 | 15 §5.2; doc 05 | — | implemented | `894be5b`, `f9cf3ea` | `staffing.py`, `delegation.py` (migration 18) | +24; audits 12/13 | 5.2_IMPLEMENTATION_RECORD.md | F4 open | covered |
+| REQ-WF-5.3 | 15 §5.3; docs 05/08 | — | implemented | `48dacb3`, `5747567` | `pods.py`, `messages.py`, `assurance.py` | +41; audits 14/15 | 5.3_IMPLEMENTATION_RECORD.md | F4 open | covered |
+| REQ-WF-5.4 | 15 §5.4; doc 08 | — | implemented | `932db33` + 3 patches `f25a4bf` | `assurance.py` (gating/Sentinel/Oracle) | +24; audits 16–19 | 5.4_IMPLEMENTATION_RECORD.md | — | covered |
+| REQ-WF-5.5 | 15 §5.5 | — | implemented | `5f77f42`, `b1141c4`, `2a12b77`, `d8880f3` | `parallel.py` (migration 19) | 842→853; audits 20–22 | 5.5_IMPLEMENTATION_RECORD.md | F20-6/F20-14/N21-5/R22-3 | covered |
+| REQ-WF-5.6 | 15 §5.6; doc 11 | — | implemented | `ba52869`, `8a2b25d` | `learning.py`; memory/team/assignment hooks | 853→878; audits 23/24 | 5.6_IMPLEMENTATION_RECORD.md | 5.6 limitation set | covered |
+| REQ-WF-5.7 | 15 §5.7; doc 11 §5 | deferral | deferred (decision) | — | — | — | 5.7_DECISION_DEFERRED.md | entry unmet | deferred |
+| REQ-WF-5.8 | 15 §5.8; doc 12 | deferral | deferred (decision) | — | — | — | 5.8_DECISION_DEFERRED.md | awaits Phase 8 decision | deferred |
+| REQ-VIS-1..5 | visual plan set (worktrees) | batches 1–5 | implemented on visual branch | `8dd21f9`, `3d9202c`, `83af16f`, `ac85eb3` | renderer surfaces | tsc 0; 76→79; packaged visual5 probes | VISUAL_EVIDENCE_INDEX.md | human gate open | pending (never audited) |
+
+## Campaign A arcs (unaudited range; updated as increments land)
+
+| Req ID | Source | Section | Status | Commit(s) | Tests | Evidence | Audit |
+|---|---|---|---|---|---|---|---|
+| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | IN PROGRESS | — | — | docs/v1.6/phase6/ (to be created) | pending |
+| REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | PENDING | — | — | — | pending |
+| REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
+| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
+| REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
+| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
+| REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
+| REQ-RK | audit carry-forward | resolution-kind semantics | PENDING | — | — | — | pending |
+| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
+| REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+| REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+| REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+| REQ-PKG-ASSERT | carry-forward | packaged battery assertions 16–19 | PENDING | — | — | PACKAGED_EVIDENCE_INDEX.md | pending |
+| REQ-RC | sprint directive §45/§46 | pre-audit regression + RC | PENDING | — | — | docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md | pending |
+
+## Maintenance rules
+
+- Every increment record must add/adjust its rows here; no implementation without a requirement
+  row, and no requirement row left without a disposition.
+- When Campaign B finds "implementation without requirement", the row is added with
+  `source: UNDECLARED` so Campaign C can decide scope.

@@ -1,5 +1,9 @@
 # Kel v1.6 program — auto-resume (continuation state)
 
+> NOTE (2026-09-18): sections are chronological. The authoritative current state is
+> `docs/v1.6/status/MAIN_STATUS.md` plus the NEWEST section in this file (Campaign A, at the end).
+> Older paragraphs below are historical.
+
 State at this writing: pre-program checkpoint frozen; program Phases 0–3 complete, verified, and
 committed on `ux/v15-journeys`. **Phase 4 (i18n / donor-string cleanup) is PAUSED with its work
 preserved in a git stash** — do not resume it until the program says so. A P1 capability remediation
@@ -377,3 +381,30 @@ screenshot-index refresh, then Phase 6 (memory reality audit).
   and the rest of the message is forwarded without only the reserved token. Generic brackets
   (`[web: off]`), quoted commands, code samples, URLs, nested brackets and malformed tokens never
   change state and are forwarded byte-identical; exact forwarding when no directive is recognized.
+
+## CAMPAIGN A — full-speed implementation sprint (2026-09-18)
+
+The operating strategy changed (user directive, 2026-09-18T~15:40Z). From now until a
+PRE-AUDIT V1.6 RELEASE CANDIDATE exists: **implement → self-review → test → package → verify →
+record → commit → integrate → continue.** Independent Audit cycles are **paused** (Campaign B
+consumes the breadcrumb corpus afterwards; Campaign C repairs). Quality control is NOT deferred:
+focused tests, regression, packaged verification, atomic commits and records continue per change.
+
+- **Entry state**: Main `ux/v15-journeys` @ `fd98cc4` (published; clean; frozen refs verified).
+- **Last independently audited production point**: `8a2b25d` (increment 24 CONTINUE). Docs-only
+  commits above it: `c4ae724`, `5127bac`, `fd98cc4`.
+- **First intentionally unaudited production commit**: opens with the first Campaign A production
+  change (recorded in `docs/v1.6/pre-audit/COMMIT_LEDGER.md`).
+- **Breadcrumb corpus**: `docs/v1.6/pre-audit/` — README, AUDIT_SCOPE, ledgers (commit/change/
+  requirement/invariant), evidence indexes (test/packaged/migration/provider/visual), P2/P3
+  disposition, risk register, deferrals, limitations, audit targets, repair hints, final-state
+  matrix, increment records, evidence bundles. Maintained per increment, not at the end.
+- **Audit thread**: parked (`audit_required: false`; `audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC`).
+- **Visual lane**: batches 1–5 are delivered on `ux/v16-visual-fix` (`ac85eb3`) with automated +
+  packaged acceptance; they are NOT independently audited; remaining batches 6–8 and the
+  integration into Main are Campaign A goals.
+- **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+- **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+  `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+- **Next**: Phase 6 — memory reality audit (bootstrap §28); see `MAIN_STATUS.next_autonomous_action`
+  for the full Campaign A queue.
