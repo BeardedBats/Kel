@@ -146,3 +146,13 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     v17 `ALTER TABLE` is lossless on a populated pre-v17 store (rows preserved verbatim).
 54. Learning-loop semantics: `fp_rate`/`learnable` must be unchanged for pre-v17 rows (derived once)
     and correct for new rows; no review surface silently reads reason text.
+
+## Real-artifact binding (2026-09-18 additions)
+
+55. Real-artifact binding: confirm no path can close a content-bound contract on an artifact that
+    `assignment_artifacts` does not record for that assignment; confirm the recorder cannot
+    double-write or bind an artifact to the wrong assignment (job+milestone lookup), and that a
+    bare store (no team tables) fails safe (refuses rather than invents a binding).
+56. On-disk binding coverage: `close_d1(artifact_root=…)` is exercised only where a caller supplies
+    a root (tests do; `run_d1` does not yet) — verify the live path supplies one before any release
+    claim of on-disk verification, and that a stale/renamed file is refused.
