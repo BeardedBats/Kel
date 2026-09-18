@@ -56,7 +56,9 @@ EVENT_KINDS = ('assignment.created', 'assignment.started', 'step.started', 'step
                'artifact.produced', 'evidence.recorded', 'decision.made', 'approval.requested',
                'blocked', 'assignment.finished',
                # Workforce kinds (Phase 5.2; additive; the same detail prohibitions apply).
-               'staffing.decided', 'contract.issued', 'task.closed')
+               'staffing.decided', 'contract.issued', 'task.closed',
+               # Workforce learning loop (Phase 5.6; additive; mission-scoped records).
+               'learning.recorded', 'retro.drafted', 'staffing.proposed', 'proposal.queued')
 FORBIDDEN_DETAIL_KEYS = ('reasoning', 'chain_of_thought', 'thoughts', 'prompt', 'hidden_reasoning')
 TOOLS = ('read', 'write', 'run_tests', 'install', 'browser', 'git', 'external_api', 'shell')
 EVIDENCE_CLASSES = ('artifact', 'test', 'review', 'research', 'screenshot', 'receipt')
@@ -357,6 +359,20 @@ class Team:
             self._event(db, kind, actor or assignment_id, assignment_id, row['job_id'],
                         row['milestone_id'], row['run_id'], detail, refs)
         return {'ok': True}
+
+    def record_mission_activity(self, kind, detail=None, refs=None, actor='kel'):
+        """Append one mission-scoped event not tied to a single assignment (learning loop).
+
+        Used by the Phase 5.6 shadow loop (doc 11) for learning/retro/proposal records; the
+        same EVENT_KINDS validation and reasoning-key prohibitions as every other activity
+        apply, and the row is append-only exactly like assignment-scoped activities.
+        """
+        if kind not in EVENT_KINDS:
+            raise PolicyError('Unknown activity kind: %s' % kind)
+        with self.store.transaction() as db:
+            self._event(db, kind, actor, None, None, None, None, detail, refs)
+            seq = db.execute('SELECT max(seq) FROM team_events').fetchone()[0]
+        return {'ok': True, 'seq': seq}
 
     def add_artifact(self, assignment_id, artifact_digest, filename, evidence_class):
         if evidence_class not in EVIDENCE_CLASSES:

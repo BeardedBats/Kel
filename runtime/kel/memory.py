@@ -42,6 +42,11 @@ SOURCE_TRUST = {
     'config_inspection': 3,
     'system': 4,
     'worker_evidence': 5,
+    # Workforce learning sources (Phase 5.6, doc 11 §2): observed and cross-model evidence
+    # outrank inference; the learning layer maps its own source vocabulary onto these.
+    'workforce_observed': 5,
+    'workforce_cross_model': 5,
+    'workforce_inferred': 6,
     'model_inference': 6,
     'external_document': 7,
     'web': 7,
