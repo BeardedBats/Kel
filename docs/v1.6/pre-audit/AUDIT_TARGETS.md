@@ -164,3 +164,12 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     failed attempt keeps `restore-pending.json`, and that a renderer surface (REQ-ELOSS) reads the
     existing payload instead of a new endpoint. Also confirm `state()['restore']` cannot report a
     stale outcome after a later clean start (PER-02) and is not confused by PER-03's snapshot path.
+
+## Sweep batch 2 (2026-09-18 additions)
+
+58. Sweep batch 2 verification: (a) the `kel:artifact-reveal` IPC guard has no automated test here
+    (no Electron/IPC harness) — challenge it by reading the handler against its four siblings and by
+    attempting a call from a non-main frame; (b) confirm no multipart parameter can reach the socket
+    unsanitised (`_header_safe` is applied to *every* parameter, not just the filename); (c) confirm
+    `NEVER_BACKUP` is consulted on every backup path, including the hot-database copy, and that the
+    credentials sidecar is reported as skipped rather than silently absent.

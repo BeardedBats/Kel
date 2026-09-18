@@ -544,3 +544,20 @@ that would *show* the outcome belongs to REQ-ELOSS (audit target 57) and was del
 invented here. Sweep status after this increment: **7/27 rows dispositioned** (P2 1/10, P3 6/17).
 Next: continue the sweep (P2 rows need their source records read; A1 and REL-01 remain the
 release-relevant ones).
+
+## Sweep batch 2 — INT-01, SEC-01-multipart, PER-04 fixed (2026-09-18)
+
+**Three audit P3s fixed (`0596211`), each verified live in the tree first, each small enough to fix
+correctly now.** (1) **INT-01** — `kel:artifact-reveal` was the only privileged IPC handler without
+the sender-frame guard its four siblings carry; it now requires the main frame and a `file:` URL
+before touching the OS. (2) **SEC-01-multipart** — `_multipart` interpolated the caller's filename
+raw into `Content-Disposition`; every parameter now passes `_header_safe`, so a crafted name cannot
+start a header line while clean names stay byte-identical. (3) **PER-04** — a `KEL_DATA_DIR`
+override can put `kel-credentials.json` inside the backup root; `Backup.create` now skips and
+reports `NEVER_BACKUP`. Also recorded: **DEAD-05** → `DEFERRED_NON_RELEASE` (internal coupling only),
+and **TR-01** stays OPEN (still module-level `_STREAMS`; the lifecycle review the finding asks for
+has not been done — the row explicitly says it is not cleared). Tests: 5 new + 41 focused passed;
+desktop `tsc` 0; **full engine suite 905 passed** (+10 subtests, was 900). The IPC guard has no
+automated test (no Electron/IPC harness here) — recorded as audit target §58 rather than claimed.
+Sweep status: **11/27 rows dispositioned** (P2 1/10, P3 10/17). Next: the remaining P2s, starting
+with A1 and REL-01.
