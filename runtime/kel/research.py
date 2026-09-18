@@ -58,10 +58,13 @@ class ResearchAdapter:
             with contextlib.closing(self.store.connect()) as db:
                 run=db.execute('SELECT * FROM runs WHERE id=?',(run_id,)).fetchone()
             if run:
-                from .capabilities import capability_for_tool, resolve
-                control=resolve(self.store,capability_for_tool('research'),job=run['job_id'],consume=True)
+                from .capabilities import capability_for_tool, recommendation, resolve
+                capability=capability_for_tool('research')
+                control=resolve(self.store,capability,job=run['job_id'],consume=True)
                 if not control.get('allowed'):
                     return {'outcome':'BLOCKED','authorization':control.get('rule'),
+                            'capability':capability,
+                            'recommendation':recommendation(capability,control),
                             'error':'Kel paused this research before any external request: '+
                                     str(control.get('reason') or 'Web is not allowed in this conversation.')}
         try:

@@ -413,9 +413,10 @@ class Store:
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
-                    m.update(state='CHECKING', error=None)
+                    m.update(state='CHECKING', error=None, recommendation=None)
                 else:
-                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'))
+                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
+                             recommendation=result.get('recommendation'))
                 held = 1 if m['state'] == 'CHECKING' else 0
                 job['reserved'] -= run['reservation'] - held
                 job['spent'] += 1  # The other reserved unit remains available for immediate verification.
