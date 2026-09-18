@@ -27,8 +27,8 @@ from .core import PolicyError, digest, encode
 from .memory import scan_secret
 from .team import FORBIDDEN_DETAIL_KEYS
 
-MIGRATION_VERSION = 16
-MIGRATION_NAME = 'v16-workforce-schemas'
+MIGRATION_VERSION = 17
+MIGRATION_NAME = 'v17-finding-resolution-kind'
 
 TABLES = ('task_contracts', 'workforce_messages', 'findings', 'evidence_records', 'skill_packs')
 
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS findings(
   task_id TEXT NOT NULL, lens TEXT NOT NULL, severity TEXT NOT NULL, confidence INTEGER NOT NULL,
   artifact TEXT, location TEXT, summary TEXT NOT NULL, evidence TEXT, fix TEXT,
   fingerprint TEXT NOT NULL, status TEXT NOT NULL, advisory INTEGER NOT NULL DEFAULT 0,
-  reporter TEXT NOT NULL, confirmations TEXT, dismissal_reason TEXT,
+  reporter TEXT NOT NULL, confirmations TEXT, dismissal_reason TEXT, resolution_kind TEXT,
   created REAL NOT NULL, updated REAL NOT NULL);
 CREATE INDEX IF NOT EXISTS findings_by_fingerprint ON findings(fingerprint);
 CREATE INDEX IF NOT EXISTS findings_by_mission ON findings(mission_id, status);
@@ -172,11 +172,17 @@ def ensure_schema(store):
     """Create the V1.6 workforce tables (additive and idempotent; existing data untouched)."""
     with contextlib.closing(store.connect()) as db:
         db.executescript(DDL)
+        # v17 (additive): `findings.resolution_kind` records *how* a finding was resolved, so the
+        # learning loop never parses free-text reasons (audit F18-5). Databases created before the
+        # column existed get it added in place; no row is rewritten.
+        columns = [row[1] for row in db.execute('PRAGMA table_info(findings)')]
+        if 'resolution_kind' not in columns:
+            db.execute('ALTER TABLE findings ADD COLUMN resolution_kind TEXT')
         if not db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
                           (MIGRATION_VERSION,)).fetchone():
             db.execute('INSERT INTO schema_migrations(version,name,applied,note) VALUES(?,?,?,?)',
                        (MIGRATION_VERSION, MIGRATION_NAME, time.time(),
-                        'tables=5; task_contracts/workforce_messages/evidence_records append-only'))
+                        'tables=5; append-only contracts/messages/evidence; findings.resolution_kind'))
     return True
 
 

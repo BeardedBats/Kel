@@ -62,11 +62,16 @@ FINDING_STATUSES = ('open', 'confirmed', 'dismissed', 'fixed')
 # A finding is *live* (and therefore blocking-eligible) until a guarded resolution moves it to
 # fixed/dismissed. Corroboration strengthens a finding; it must never clear it (audit 17, F17-1).
 LIVE_STATUSES = ('open', 'confirmed')
+# Record-bound resolution kinds (v17). The guarded resolution paths write the kind explicitly, so
+# statistics never parse the human-readable `dismissal_reason` (audit F18-5). Rows written before
+# v17 carry NULL and are derived once from the guarded marker those same paths wrote.
+RESOLUTION_KINDS = ('fixed', 'risk-accepted', 'gate-waived', 'false-positive')
+ACCEPTANCE_KINDS = ('risk-accepted', 'gate-waived')
 CONFIDENCE_GATES = ((2, 'suppressed'), (4, 'appendix'), (6, 'caveat'), (10, 'normal'))
 FINDING_FIELDS = ('id', 'schema_version', 'mission_id', 'task_id', 'lens', 'severity',
                   'confidence', 'artifact', 'location', 'summary', 'evidence', 'fix',
                   'fingerprint', 'status', 'advisory', 'by', 'confirmations',
-                  'dismissal_reason', 'created', 'updated')
+                  'dismissal_reason', 'resolution_kind', 'created', 'updated')
 
 
 def lens(name):
@@ -129,6 +134,9 @@ def validate_finding(finding):
         require_text(finding.get('dismissal_reason'), 'dismissal_reason (required when dismissed)')
     elif finding.get('dismissal_reason') is not None:
         require_text(finding['dismissal_reason'], 'dismissal_reason')
+    kind = finding.get('resolution_kind')
+    if kind is not None and kind not in RESOLUTION_KINDS:
+        raise PolicyError('Resolution kinds are %s' % ', '.join(RESOLUTION_KINDS))
     if finding.get('created') is not None:
         require_number(finding['created'], 'finding created')
     if finding.get('updated') is not None:
@@ -243,21 +251,23 @@ def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_r
 
         if resolution == 'fixed':
             _require_recorded_evidence('a fix')
-            status, reason = 'fixed', None
+            status, reason, kind = 'fixed', None, 'fixed'
         elif resolution == 'accepted':
             require_text(rationale, 'rationale (risk acceptance is recorded)')
             if record['severity'] == 'blocker':
                 _require_recorded_evidence('accepting a blocker')
-            status, reason = 'dismissed', 'risk-accepted: %s' % rationale
+            status, reason, kind = 'dismissed', 'risk-accepted: %s' % rationale, 'risk-accepted'
         else:
             require_text(rationale, 'rationale (dismissals are recorded)')
             if record['severity'] == 'blocker':
                 _require_recorded_evidence('dismissing a blocker')
             # The resolution marker is written by this path, so a caller-supplied rationale
-            # cannot impersonate an acceptance (audit 17, F17-2).
-            status, reason = 'dismissed', 'dismissed: %s' % rationale
-        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE id=?',
-                   (status, reason, stamp, finding_id))
+            # cannot impersonate an acceptance (audit 17, F17-2); the kind is the record-bound
+            # authority the statistics read (audit F18-5).
+            status, reason, kind = 'dismissed', 'dismissed: %s' % rationale, 'false-positive'
+        db.execute('UPDATE findings SET status=?, dismissal_reason=?, resolution_kind=?, '
+                   'updated=? WHERE id=?',
+                   (status, reason, kind, stamp, finding_id))
         updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
                                   (finding_id,)).fetchone())
     return updated
@@ -445,10 +455,11 @@ def waive_gate(store, *, task_id, authority, rationale, now=None):
                           '(open: %s)' % ', '.join(result['never_gate_hits']))
     stamp = time.time() if now is None else now
     with contextlib.closing(store.connect()) as db:
-        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE task_id=? '
+        db.execute('UPDATE findings SET status=?, dismissal_reason=?, resolution_kind=?, '
+                   'updated=? WHERE task_id=? '
                    'AND status IN (?, ?) AND severity IN (?, ?)',
-                   ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), stamp,
-                    task_id) + LIVE_STATUSES + ('blocker', 'critical'))
+                   ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), 'gate-waived',
+                    stamp, task_id) + LIVE_STATUSES + ('blocker', 'critical'))
     return {'waived': True, 'authority': authority, 'task_id': task_id,
             'accepted': result['reasons']}
 
@@ -505,10 +516,14 @@ ACCEPTANCE_REASON_PREFIXES = ('risk-accepted:', 'gate-waived')
 
 
 def _is_acceptance(reason):
-    """True when a dismissal records accepted risk (a waiver or a risk acceptance).
+    """Legacy-only: True when a *pre-v17* dismissal reason carries an acceptance marker.
 
-    Both markers are written by the guarded paths, so a caller-supplied rationale cannot
-    impersonate an acceptance (audit 17, F17-2).
+    The guarded paths still write the human-readable marker, but how a finding was resolved is
+    recorded in the `resolution_kind` column, and that column is what the statistics read
+    (audit F18-5: the previous prefix test was not record-bound). This helper survives only to
+    derive the kind for rows written before that column existed. Both markers are written by the
+    guarded paths, so a caller-supplied rationale cannot impersonate an acceptance (audit 17,
+    F17-2).
     """
     return bool(reason) and str(reason).startswith(ACCEPTANCE_REASON_PREFIXES)
 
@@ -528,7 +543,12 @@ def lens_stats(store):
         entry['total'] += 1
         entry[item['status']] = entry.get(item['status'], 0) + 1
         if item['status'] == 'dismissed':
-            if _is_acceptance(item.get('dismissal_reason')):
+            kind = item.get('resolution_kind')
+            if kind is None:
+                # Pre-v17 row: derive once from the guarded marker; free text is never parsed.
+                kind = ('risk-accepted' if _is_acceptance(item.get('dismissal_reason'))
+                        else 'false-positive')
+            if kind in ACCEPTANCE_KINDS:
                 entry['accepted'] += 1
             else:
                 entry['false_positive'] += 1
