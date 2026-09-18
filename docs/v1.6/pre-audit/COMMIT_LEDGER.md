@@ -28,6 +28,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
 | `16de55f` | `df87903` | 2026-09-18 | Phase 7 | Phase 7 record + corpus updates (docs) | docs only | — | none | no | — | no | no | LOW | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | — |
 | `7b32217` | `16de55f` | 2026-09-18 | Phase 7 | published-tip record + packaged pending item (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/status/MAIN_STATUS.md`; PACKAGED_EVIDENCE_INDEX | — |
 | `006159a` | `7b32217` | 2026-09-18 | Phase 8 | Advanced Worker View decision — deferred beyond V1.6 (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | decision to verify in Campaign B |
+| `fa31618` | `006159a` | 2026-09-18 | Phase 7/8 | commit ledger rows for Phase 7 docs + Phase 8 decision commits (docs) | docs only | — | none | no | — | no | no | LOW | COMMIT_LEDGER.md | — |
+| `6ea68c2` | `fa31618` | 2026-09-18 | Phase 9 | Profiles vs Projects decision — no Profiles concept; Projects remain (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | decision to verify in Campaign B |
+| `fed59dd` | `6ea68c2` | 2026-09-18 | Phases 10-11 | provider validation + Rust freshness recheck; Phase 12 closed (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | real-call evidence recorded (claude PASS; codex env-blocked) |
 
 ## Visual branch commits pending integration (NOT covered by any independent audit)
 
