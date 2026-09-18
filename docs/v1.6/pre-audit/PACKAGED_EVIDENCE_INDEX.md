@@ -29,6 +29,9 @@ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --
   (findings 16/17) — Campaign A closes this behavior (visual batch 6 + engine supervision work).
 - RC package: `package-prea` (name reserved) — full battery + migration assertions + journeys at
   PRE_AUDIT_V1_6_HEAD. Recorded here when built.
+- Phase 7 capability card: seed a blocked milestone carrying a `recommendation` in a packaged app;
+  assert the card renders in the Work panel, the actions hit the engine (`/api/capabilities`), and
+  dismissal works (no provider in this environment — audit target 45; LIM-14).
 
 ## Maintenance rules
 
