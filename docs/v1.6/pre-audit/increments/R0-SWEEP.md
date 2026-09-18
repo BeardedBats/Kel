@@ -93,8 +93,11 @@ Cross-cutting behavior changes:
   tsc + suite + code read; the packaged probes at R8/R12 are the behavioral gate.
 - TR-02 is intentionally not implemented here — Campaign B should verify the binding to R9.A/R10 is
   honored by the time the RC is assembled.
-- The sprint directive cites 27 P2/P3 rows; the in-repo table carries 26 (P2 10, P3 16). Campaign B
-  should reconcile the count from the audit records rather than trusting either number.
+- The sprint directive cites 27 P2/P3 rows; the in-repo table carries 26 (P2 10, P3 16).
+  **Reconciled 2026-09-18 (R9 bookkeeping):** the 27 = P2 10 + P3 17 worklist arithmetic over the
+  increment-1/2 audit material; every original finding ID → canonical row or terminal closed state
+  is enumerated in `P2_P3_DISPOSITION.md` §Denominator reconciliation (verified against the tree;
+  no closed finding reopened; no real gap found). Campaign B verifies the mapping, not a guess.
 - ERR-01 has two source descriptions in the audited corpus (`search.run` bare except = COR-05 vs the
   KeyError family = this fix). Both readings are dispositioned; the alias is recorded in the table.
 - Repair hints: none open from this increment (all FIXED rows carry their commit + test).

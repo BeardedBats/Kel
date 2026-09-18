@@ -1,6 +1,6 @@
 # P2_P3_DISPOSITION — every finding, current disposition
 
-updated: 2026-09-18T17:05Z (R0 sweep complete — **every row carries a final disposition**; sprint §40)
+updated: 2026-09-18 (R9 bookkeeping — denominator reconciliation added; every row carries a final disposition; sprint §40)
 The full historic finding set lives in the audit records (`kel-v16-code-audit/docs/code-audit/`,
 increments 1–24). This file carries the live disposition table and grows to cover every historic
 P2/P3. Campaign B independently re-verifies every disposition; no finding disappears.
@@ -8,11 +8,55 @@ P2/P3. Campaign B independently re-verifies every disposition; no finding disapp
 Allowed final dispositions: **FIXED · STALE · NOT_APPLICABLE · DEFERRED_NON_RELEASE ·
 OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (sweep pending)`.
 
-**R0 completion (2026-09-18):** this table carries 26 rows (P2 10, P3 16) and all 26 are final —
-verified by grepping the file for any remaining `OPEN (sweep pending)` row before commit. The sprint
-directive cites 27 rows; the difference is a bookkeeping discrepancy recorded for Campaign B (no
-row in this file is undispositioned). REL-01 remains `OPEN_RELEASE_BLOCKER` per its own rules and is
-the only row awaiting R8-level package evidence.
+**R0 completion (2026-09-18):** this table carries 26 rows (P2 10, P3 16) and all 26 carry a final
+disposition — verified by grepping the file for any remaining `OPEN (sweep pending)` row before
+commit. REL-01 was the last row to resolve; it is FIXED (`93b99b5`, R8) — see its row.
+
+## Denominator reconciliation — the 27-vs-26 question (R9 bookkeeping, 2026-09-18)
+
+**Determination.** Both **enumerated** slates on disk have always been 26 rows (P2 10, P3 16): this
+table, and the independent audit's own reconciled docket (`kel-v16-code-audit/docs/code-audit/`
+`AUDIT_STATUS.md` → `p2_open` / `p3_open`, corroborated by `increment-16/review-manifest.md`).
+The 27 is **worklist arithmetic**, not an inventory count: **P2 10 + P3 17**. The P3 17 is the
+audit material the sprint directive was written against — the increment-1 P3 slate as the audit's
+own increment-2 ledger counted it (`12_FINAL_VERDICT.md`: "*+ 14 P3 unchanged from increment 1*")
+plus the increment-2 additions `APR-04`/`APR-05`/`APR-06`:
+
+- the 14: `BKP-03, THM-01, MDL-01, SEC-01, SEC-02, ERR-01, ARCH-01, DEAD-01, DEAD-02, DEAD-03,
+  DEAD-04, DOC-01, HAR-01, INT-01` — the 11 P3 rows of `11_FINDINGS.md` plus `DEAD-02`–`DEAD-04`
+  from `08_DEAD_CODE.md`;
+- plus `APR-04`, `APR-05`, `APR-06`.
+
+The frozen 16-row P3 slate = that 17 **minus six** increment-1 entries the audit resolved or
+absorbed before its docket froze, **plus five** entries carried under their own IDs that the
+worklist count did not include (17 − 6 + 5 = 16). No finding disappears; every original ID below
+carries a terminal disposition, re-verified against the tree on 2026-09-18:
+
+| Original ID (as filed) | Terminal state | Evidence (tree-verified 2026-09-18) |
+|---|---|---|
+| `DEAD-01` | RESOLVED during the P1 remediation arc (audit increment 3 records it; "superseded") | `capabilities._OFF`/`_ON` are absent from the module — the parser is the single source of the directive forms |
+| `DEAD-02` | SUPERSEDED by the CAP-01 enforcement rework | `research.py:52-67` passes `capability_for_tool('research')` through `resolve()` before the external request; `EFFECT_KINDS` remains the generic gate's designed vocabulary |
+| `DEAD-03` | SUPERSEDED by the same rework | `_TOOL_MAP` is now derived from the capability registry (`capabilities.py:59-62`), never a stale six-tool literal |
+| `DEAD-04` | DEFERRED_NON_RELEASE — recorded clean-up note, never a docket row; retained as written ("worth a dedicated clean-up pass, not a V1.6 blocker") | the donor-surface `Navigate` redirect block is still present and reachable by URL (`Router.tsx`, 22 `Navigate` references) |
+| `DOC-01` | FIXED within the CAP-02 remediation arc | `directive('web: use default')` is implemented and pinned by the standalone-command corpus (`test_capabilities.py:138,186`) |
+| `INT-01` (increment-1 content: hidden donor selector) | NOT_A_DEFECT — filed as an observation in the audit's own ledger ("not a defect"); its ID was re-used by the modern docket for `SEC-02`'s sender-frame content | `AcpModelSelector` is still intentionally mounted with `waitForWarmup` (`ChatConversation.tsx:389-405`) |
+
+The five carried under their own IDs outside the 14+3 count: `COR-03`, `COR-04`, `COR-05`, `COR-06`
+(increment-1 `03_CORRECTNESS.md` material — `COR-04`/`COR-05` are near-alias pairs of `MDL-01` and
+`ERR-01`, and both IDs are deliberately kept and dispositioned in the table above) and
+`CAP2-LONGTEXT` (increment-5 re-audit). The additions are traceability only — **no closed finding
+was reopened, and no closed row was changed to fit the count.** No repository evidence revealed a
+real gap during this verification.
+
+**Alias map (original ID → canonical row above):** `VET-01`→`SEC-01` · `BKP-01`→`PER-02` ·
+`BKP-02`→`PER-03` · `BKP-03`→`PER-04` · `COR-01`→P1 `CAP-02` · `COR-02`→`PER-02` ·
+`SEC-01`(inc-1 transcription reading)→`SEC-01-multipart` · `SEC-02`→`INT-01` · `ERR-01`(inc-1
+`search.run` reading)→`COR-05` · `ARCH-01`→`DEAD-05` · `HAR-01`→`DEAD-06` · `A1`≡`ENG-01` ·
+`A5`≡`REL-01` · `TEST-01`→P1 `CAP-03`.
+
+**Consequence for Campaign B:** the sweep denominator is 26 canonical rows; the original finding
+inventory is fully enumerated here (original-ID table + alias map) — accounting for 100% of the
+original IDs requires no guessing about which slate a count came from.
 
 ## P2 — open at corpus open
 
@@ -55,7 +99,10 @@ the only row awaiting R8-level package evidence.
 - **CAP-01, CAP-02, CAP-03 (P1)** → FIXED (`75d1f68`, `327e5b2`, `631881a`; audits 3–5 CONTINUE).
 - **CAP2-CLAUSE / CAP2-RESIDUAL (P1-adjacent)** → FIXED (bracketed clause → reserved `[kel:...]`
   namespace; negative-control discrimination recorded).
-- **DEAD-01** superseded; **DEAD-07** superseded; **DEAD-08** FIXED with fail-closed regression.
+- **DEAD-01** superseded; **DEAD-07** superseded; **DEAD-08** FIXED with fail-closed regression;
+  **DOC-01** FIXED (CAP-02 arc), **DEAD-02**/**DEAD-03** superseded by the CAP-01 rework,
+  **DEAD-04** DEFERRED_NON_RELEASE, increment-1 **INT-01** NOT_A_DEFECT — all six with tree-verified
+  evidence in the denominator reconciliation above.
 - **I18N-01** — RETRACTED by the auditor (structurally unobservable; audit 7 self-correction).
 - Per-increment F-findings (F1–F23 arcs): closure tables live in the numbered audit records
   `21`–`37`; none remain open except as carried in the rows above (F4/F16-3/F17-4/F18-5/R22-3 are
