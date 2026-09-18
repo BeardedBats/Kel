@@ -1,10 +1,11 @@
 /** Kel work controls, using AionUI's Arco components and theme tokens. */
 import React, { useEffect, useState } from 'react';
-import { Badge, Button, Drawer, Modal, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
+import { Badge, Button, Drawer, Modal, Popconfirm, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import Markdown from '@/renderer/components/Markdown';
 import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
+import { memoryRecordActions } from '@/renderer/components/kel/memoryRecordActions';
 import type { ApprovalItem as WaitingItem } from '@/renderer/components/kel/KelApprovalCard';
 type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
 type Job = {
@@ -768,7 +769,9 @@ export default function KelWorkPanel() {
             {(extras?.memory.records || []).length === 0 && (
               <Typography.Paragraph>{t('common.kel.knowledgeEmpty')}</Typography.Paragraph>
             )}
-            {(extras?.memory.records || []).map((r) => (
+            {(extras?.memory.records || []).map((r) => {
+              const acts = memoryRecordActions(r);
+              return (
               <section key={r.id} className='py-12px border-b border-solid border-[var(--color-border-2)]'>
                 <Typography.Paragraph>
                   <Typography.Text bold>{r.topic}</Typography.Text> · {r.type} · {t('common.kel.trust')} {r.trust} · {r.status}
@@ -796,30 +799,45 @@ export default function KelWorkPanel() {
                   </>
                 ) : (
                   <>
-                    <Typography.Paragraph>{r.summary}</Typography.Paragraph>
+                    <Typography.Paragraph>{r.summary || 'Content removed.'}</Typography.Paragraph>
                     <Typography.Paragraph type='secondary'>
                       {t('common.kel.source')}: {r.source_type}{r.source_ref ? ' · ' + r.source_ref : ''}
                     </Typography.Paragraph>
                     <Space wrap>
-                      {!r.user_confirmed && r.trust > 2 && r.trust < 7 && (
+                      {acts.confirm && (
                         <Button disabled={busy} onClick={() => action('/api/memory', { action: 'confirm', conversation: cid, id: r.id })}>
                           {t('common.kel.confirmMemory')}
                         </Button>
                       )}
-                      <Button disabled={busy} onClick={() => setDraft({ id: r.id, summary: r.summary })}>
-                        {t('common.kel.editMemory')}
-                      </Button>
-                      <Button disabled={busy} onClick={() => action('/api/memory', { action: 'retract', conversation: cid, id: r.id, reason: 'work context' })}>
-                        {t('common.kel.retractMemory')}
-                      </Button>
-                      <Button disabled={busy} status='danger' onClick={() => action('/api/memory', { action: 'forget', conversation: cid, id: r.id })}>
-                        {t('common.kel.forgetMemory')}
-                      </Button>
+                      {acts.edit && (
+                        <Button disabled={busy} onClick={() => setDraft({ id: r.id, summary: r.summary })}>
+                          {t('common.kel.editMemory')}
+                        </Button>
+                      )}
+                      {acts.retract && (
+                        <Button disabled={busy} onClick={() => action('/api/memory', { action: 'retract', conversation: cid, id: r.id, reason: 'work context' })}>
+                          {t('common.kel.retractMemory')}
+                        </Button>
+                      )}
+                      {acts.forget && (
+                        <Popconfirm
+                          title='Forget this record?'
+                          content='Its saved content is removed and cannot be recovered. A blank placeholder stays in the history.'
+                          okText='Forget'
+                          cancelText='Cancel'
+                          onOk={() => action('/api/memory', { action: 'forget', conversation: cid, id: r.id })}
+                        >
+                          <Button disabled={busy} status='danger'>
+                            {t('common.kel.forgetMemory')}
+                          </Button>
+                        </Popconfirm>
+                      )}
                     </Space>
                   </>
                 )}
               </section>
-            ))}
+              );
+            })}
             <Typography.Title heading={6} style={{ marginTop: 16 }}>
               {'What changed'}
             </Typography.Title>
