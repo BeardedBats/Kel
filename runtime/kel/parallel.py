@@ -29,7 +29,7 @@ import time
 from pathlib import Path, PurePosixPath
 
 from .coding import git, snapshot
-from .core import PolicyError, digest, uid
+from .core import PolicyError, digest
 from .workforce import new_id, require_text
 
 MIGRATION_VERSION = 19
@@ -43,6 +43,8 @@ LEASE_TTL_SECONDS = 900          # 15 minutes without a heartbeat means the owne
 TABLES = ('mission_streams', 'mission_leases', 'stream_announces')
 
 DDL = """
+CREATE TABLE IF NOT EXISTS schema_migrations(
+  version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied REAL NOT NULL, note TEXT);
 CREATE TABLE IF NOT EXISTS mission_streams(
   stream_id TEXT PRIMARY KEY, mission_id TEXT NOT NULL, task_id TEXT NOT NULL, name TEXT NOT NULL,
   workspace TEXT NOT NULL, source_root TEXT NOT NULL, base TEXT NOT NULL,
@@ -104,11 +106,23 @@ def _clean_paths(values, field='write_paths'):
     return sorted(set(cleaned))
 
 
+def _fold(path):
+    """Case-folded comparison key (audit 20, F20-4)."""
+    return str(path).casefold()
+
+
 def _overlap(left, right):
-    """True when two declared path sets could touch the same file (prefix or nesting)."""
+    """The first pair of declared paths that could touch the same file (equal or nested).
+
+    Comparison is case-folded: `Src/alpha` and `src/alpha` are the same file on the hosts these
+    mission copies run on, so they can never be handed to two streams (audit 20, F20-4). The
+    original spellings are returned so the message shows what the caller actually wrote.
+    """
     for one in left:
         for two in right:
-            if one == two or one.startswith(two + '/') or two.startswith(one + '/'):
+            folded_one, folded_two = _fold(one), _fold(two)
+            if (folded_one == folded_two or folded_one.startswith(folded_two + '/')
+                    or folded_two.startswith(folded_one + '/')):
                 return (one, two)
     return None
 
@@ -268,7 +282,12 @@ def acquire_lease(store, *, stream_id, owner, ttl=LEASE_TTL_SECONDS, now=None, n
                 raise PolicyError('Stream %s already holds an active lease (%s)'
                                   % (stream['name'], row['lease_id']))
             if row['expires'] <= stamp:
-                continue  # stale: reclaim_stale_leases() retires it; it cannot block new work
+                # Lapsed: retire it here, in the same transaction that grants the new lease. A
+                # lease nobody heartbeats must not be able to block new work, and it must not be
+                # able to come back either (audit 20, F20-5).
+                db.execute('UPDATE mission_leases SET state=?, updated=?, note=? WHERE lease_id=?',
+                           ('EXPIRED', stamp, 'reclaimed at acquisition', row['lease_id']))
+                continue
             clash = _overlap(paths, row['write_paths'])
             if clash:
                 raise PolicyError('Lease refused: stream "%s" and stream of lease %s overlap on '
@@ -294,6 +313,11 @@ def heartbeat(store, lease_id, *, now=None, ttl=LEASE_TTL_SECONDS):
         if row['state'] != 'ACTIVE':
             raise PolicyError('Lease %s is %s; a retired lease cannot be revived'
                               % (lease_id, row['state']))
+        if row['expires'] <= stamp:
+            # A lapsed lease is reclaimed, never resurrected: reviving it could leave two
+            # unexpired leases over the same territory (audit 20, F20-5).
+            raise PolicyError('Lease %s lapsed at %.3f; reclaim it before any heartbeat'
+                              % (lease_id, row['expires']))
         db.execute('UPDATE mission_leases SET heartbeat=?, expires=?, updated=? WHERE lease_id=?',
                    (stamp, stamp + ttl, stamp, lease_id))
     return {'lease_id': lease_id, 'state': 'ACTIVE', 'heartbeat': stamp, 'expires': stamp + ttl}
@@ -326,7 +350,11 @@ def release_lease(store, lease_id, *, state='RELEASED', note=None, now=None):
         if row['state'] == 'ACTIVE':
             db.execute('UPDATE mission_leases SET state=?, updated=?, note=COALESCE(?,note) '
                        'WHERE lease_id=?', (state, stamp, note, lease_id))
-    return {'lease_id': lease_id, 'state': state}
+        final = db.execute('SELECT state FROM mission_leases WHERE lease_id=?',
+                           (lease_id,)).fetchone()
+    # Report the row's actual state: a lease that was already retired is not silently reported as
+    # freshly released (audit 20, F20-8).
+    return {'lease_id': lease_id, 'state': final['state']}
 
 
 def assert_writable(store, lease_id, paths, *, now=None):
@@ -416,6 +444,19 @@ def announce(store, *, stream_id, lease_id, summary, write_paths, digest_value=N
     require_text(summary, 'announce summary')
     paths = _clean_paths(write_paths)
     stamp = time.time() if now is None else now
+    # The announce must attest the stream's real output: a stream can only announce paths it
+    # actually changed, and the digest is taken over its staged change set rather than over the
+    # prose (audit 20, F20-2).
+    changed = _changed_paths(stream)
+    for path in paths:
+        if not any(_fold(item) == _fold(path)
+                   or _fold(item).startswith(_fold(path) + '/') for item in changed):
+            raise PolicyError('Stream %s did not change %s, so it cannot announce it (changed: %s)'
+                              % (stream['name'], path, ', '.join(changed) or 'nothing'))
+    workspace = Path(stream['workspace'])
+    git(workspace, 'add', '-A')
+    patch = git(workspace, 'diff', '--cached', '--binary', stream['base'])
+    digest_value = digest_value or ('sha256:' + digest(patch.decode('utf-8', 'replace')))
     announce_id = new_id('ann_')
     with store.transaction() as db:
         previous = db.execute('SELECT announce_id FROM stream_announces WHERE mission_id=? '
@@ -486,6 +527,10 @@ def integrate(store, mission_id, *, integrator, target_root=None, now=None):
         raise PolicyError('Mission %s has no streams to integrate' % mission_id)
     finished = [row for row in rows if row['state'] == 'DONE']
     abandoned = [row for row in rows if row['state'] != 'DONE']
+    if not finished:
+        raise PolicyError('Mission %s has no finished stream to integrate (abandoned: %s)'
+                          % (mission_id,
+                             ', '.join(row['stream_id'] for row in abandoned) or 'none'))
     stamp = time.time() if now is None else now
     conflicts, applied = [], []
     for first, second in _pairs(finished):
@@ -497,9 +542,11 @@ def integrate(store, mission_id, *, integrator, target_root=None, now=None):
     root = Path(target_root) if target_root is not None else (
         Path(finished[0]['source_root']).parent / ('.kel-integration-' + mission_id))
     base = snapshot(Path(finished[0]['source_root']), root)
-    if integrator is None:
-        def integrator(integration):
-            return integration['stream']['stream_id']
+    def apply_patch(patch):
+        """The default merge: `git apply` accepts the patch whole or raises (never half-applies)."""
+        git(root, 'apply', '--binary', '-', input=patch)
+        return True
+
     for row in finished:
         # Stage the stream's own copy first: its new files are untracked, and an unstaged diff
         # would report an empty patch and "integrate" successfully with nothing applied.
@@ -508,13 +555,32 @@ def integrate(store, mission_id, *, integrator, target_root=None, now=None):
         if not patch.strip():
             applied.append({'stream_id': row['stream_id'], 'applied': True, 'empty': True})
             continue
-        try:
-            git(root, 'apply', '--binary', '-', input=patch)
+        ok, detail = True, None
+        if integrator is None:
+            try:
+                apply_patch(patch)
+            except PolicyError as exc:
+                ok, detail = False, str(exc)[:200]
+        else:
+            # The caller's merge hook replaces the default apply; a falsy return is a conflict,
+            # never a silent success (audit 20, F20-1).
+            ok = bool(integrator({'stream': row, 'patch': patch, 'root': str(root)}))
+            detail = None if ok else 'integrator refused the patch'
+        if ok:
             applied.append({'stream_id': row['stream_id'], 'applied': True, 'empty': False})
-        except PolicyError as exc:
+        else:
             conflicts.append({'kind': 'patch-refused', 'streams': [row['stream_id']],
-                              'detail': str(exc)[:200]})
+                              'detail': detail})
             applied.append({'stream_id': row['stream_id'], 'applied': False, 'empty': False})
+    # Real changed-path overlaps are conflicts too: a same-file collision that `git apply` happens
+    # to accept (different regions) is still a seam, so `integration_ok` can never be True over it
+    # (audit 20, F20-3).
+    for first, second in _pairs(finished):
+        overlap = _overlap(_changed_paths(first), _changed_paths(second))
+        if overlap:
+            conflicts.append({'kind': 'changed-overlap', 'streams': [first['stream_id'],
+                                                                     second['stream_id']],
+                              'paths': sorted(set(overlap))})
     changed = git(root, 'status', '--porcelain').decode('utf-8', 'replace').strip()
     git(root, 'add', '-A')
     merged = git(root, 'diff', '--cached', '--binary', base).decode('utf-8', 'replace')
@@ -536,7 +602,7 @@ def _changed_paths(row):
     """
     if row['state'] != 'DONE':
         return []
-    listing = git(Path(row['workspace']), 'status', '--porcelain')
+    listing = git(Path(row['workspace']), 'status', '--porcelain', '-uall')
     changed = []
     for line in listing.decode('utf-8', 'replace').splitlines():
         if not line.strip():
@@ -559,6 +625,10 @@ def conflict_metrics(store, mission_id):
     pairs = list(_pairs(rows))
     declared, actual_overlaps = [], []
     changed = {row['stream_id']: _changed_paths(row) for row in rows}
+    undeclared = {row['stream_id']: sorted(
+        path for path in changed[row['stream_id']]
+        if not any(_fold(path) == _fold(item) or _fold(path).startswith(_fold(item) + '/')
+                   for item in row['write_paths'])) for row in rows}
     for first, second in pairs:
         clash = _overlap(first['write_paths'], second['write_paths'])
         if clash:
@@ -572,7 +642,9 @@ def conflict_metrics(store, mission_id):
     conflicts = len(declared) + len(actual_overlaps)
     return {'mission_id': mission_id, 'streams': len(rows), 'pairs': len(pairs),
             'declared_overlaps': declared, 'actual_overlaps': actual_overlaps,
-            'changed_paths': changed, 'conflict_count': conflicts,
+            'changed_paths': changed, 'undeclared_writes': undeclared,
+            'undeclared_count': sum(len(items) for items in undeclared.values()),
+            'conflict_count': conflicts,
             'announced': chain['streams_announced'], 'chain_ok': chain['chain_ok'],
             'conflict_rate': round(conflicts / len(pairs), 2) if pairs else 0.0}
 
@@ -618,7 +690,10 @@ def run_parallel(store, *, mission_id, decomposition, workers, source_root, task
                                   lease_id=lease['lease_id'],
                                   summary=entry['objective'],
                                   write_paths=entry['write_paths'], now=now)
-        except PolicyError:
+        except BaseException:
+            # Any failure - a PolicyError, a crash in the worker, a KeyboardInterrupt - must leave
+            # the mission in a state a retry can reason about: the stream abandoned, its lease
+            # revoked (audit 20, F20-9).
             close_stream(store, opened['stream_id'], state='ABANDONED', now=now)
             release_lease(store, lease['lease_id'], state='REVOKED',
                           note='stream abandoned', now=now)
