@@ -32,7 +32,11 @@ from .staffing import BUDGET_CLASSES
 from .team import TOOLS, Team
 from .workforce import AUTHORITY_CLASSES, AUTHORITY_RANK
 
-MIGRATION_VERSION = 17
+# Free number (max in the set is 20 — chat_approvals): 17 was shared with the workforce migration,
+# so the schema_migrations row could not say which module was applied (audit R8.A, fixed
+# 2026-09-18). Existing databases have no 21 row; the next ensure_schema re-runs the idempotent DDL
+# and stamps the accurate row without touching data.
+MIGRATION_VERSION = 21
 MIGRATION_NAME = 'v16-budget-reservations'
 
 DDL = """
