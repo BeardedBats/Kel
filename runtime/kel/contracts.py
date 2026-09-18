@@ -11,8 +11,8 @@ forbidden. Authority may only narrow the role's ceiling, never widen it.
 """
 from .core import PolicyError
 from .evidence import COMMAND_BOUND_CLASSES, EVIDENCE_CLASSES
-from .workforce import (AUTHORITY_CLASSES, AUTHORITY_RANK, assert_safe, require_integer,
-                        require_number, require_text)
+from .workforce import (AUTHORITY_CLASSES, AUTHORITY_RANK, assert_safe, authority_within,
+                        require_integer, require_number, require_text)
 
 SCHEMA_VERSION = 1
 
@@ -118,11 +118,13 @@ def _reviewer(value, what):
     return reviewer
 
 
-def validate_task_contract(contract, *, ceilings=None):
+def validate_task_contract(contract, *, ceilings=None, parent_authority=None):
     """Refuse a malformed TaskContract (workforce-os doc 06, schema v1).
 
     `ceilings` optionally overrides the role→authority ceiling table with the versioned
     registry's values (kel.assignment.registry_ceilings); omitted, the static table applies.
+    `parent_authority` is the delegator's authority envelope: when given, the contract must be
+    contained in it (AUTH-DELEGATION — delegation may narrow authority, never create it).
     """
     contract = _object(contract, 'TaskContract')
     _refuse_unknown(contract, CONTRACT_FIELDS, 'TaskContract')
@@ -184,8 +186,28 @@ def validate_task_contract(contract, *, ceilings=None):
         raise PolicyError('external-effect authority must list its effects')
     if klass != 'external-effect' and effects != 'none':
         raise PolicyError('Only external-effect authority lists external effects')
-    _text_list(contract.get('allowed_tools', []), 'allowed_tools', allow_empty=True)
-    _text_list(contract.get('write_boundaries', []), 'write_boundaries', allow_empty=True)
+    allowed_tools = _text_list(contract.get('allowed_tools', []), 'allowed_tools',
+                               allow_empty=True)
+    write_boundaries = _text_list(contract.get('write_boundaries', []), 'write_boundaries',
+                                  allow_empty=True)
+    if write_boundaries and klass in ('workspace-write', 'leased-write'):
+        # Boundaries are the area a worker may touch; the scope is the files the mission needs.
+        # The scope must lie inside the boundary, or the contract contradicts itself.
+        gap = authority_within({'write_boundaries': list(write_scope)},
+                               {'write_boundaries': write_boundaries})
+        if gap:
+            raise PolicyError('write_scope must stay inside the declared write boundaries (%s)'
+                              % gap)
+    if parent is not None and parent_authority is None:
+        # Future-proofing the ceiling (AUTH-DELEGATION): the day nested spawning exists, a
+        # child contract cannot be issued without naming the authority it stays inside.
+        raise PolicyError('A nested task contract must declare its delegator authority')
+    if parent_authority is not None:
+        gap = authority_within({'class': klass, 'write_scope': write_scope,
+                                'external_effects': effects, 'allowed_tools': allowed_tools,
+                                'write_boundaries': write_boundaries}, parent_authority)
+        if gap:
+            raise PolicyError('Delegation may narrow authority but never create it: %s' % gap)
 
     dependencies = _object(contract.get('dependencies', {}), 'dependencies')
     _text_list(dependencies.get('tasks', []), 'dependencies.tasks', allow_empty=True)

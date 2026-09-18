@@ -36,6 +36,63 @@ TABLES = ('task_contracts', 'workforce_messages', 'findings', 'evidence_records'
 AUTHORITY_CLASSES = ('read-only', 'workspace-write', 'leased-write', 'external-effect')
 AUTHORITY_RANK = {name: index for index, name in enumerate(AUTHORITY_CLASSES)}
 
+
+def _path_within(path, root):
+    """True when `path` names the same place as, or something inside, `root`."""
+    def normalize(value):
+        text = str(value or '').replace('\\', '/').strip()
+        while text.startswith('./'):
+            text = text[2:]
+        return text.rstrip('/') or '.'
+    path, root = normalize(path), normalize(root)
+    if root == '.':
+        return True
+    return path == root or path.startswith(root + '/')
+
+
+def authority_within(child, parent):
+    """None when `child` authority is contained in `parent`, else the offending dimension.
+
+    The executable form of Round 2.5 **AUTH-DELEGATION** (*delegation may narrow authority,
+    never create it*) over exactly the dimensions a TaskContract carries: authority class,
+    write scope, external effects, allowed tools, write boundaries. A dimension the parent
+    omits (`None`) puts no ceiling on that dimension; an empty write scope is a real ceiling
+    (the parent cannot write, so neither may the child). Effects are `'none'` or a list of
+    named effect kinds; tools are compared as sets. Pure function — the issuance path calls it
+    so the invariant is executable rather than documented.
+    """
+    child = dict(child or {})
+    parent = dict(parent or {})
+    child_class, parent_class = child.get('class'), parent.get('class')
+    # Partial child dicts are supported: an absent dimension places no demand, which lets the
+    # caller check one dimension at a time (the issuance path always passes the full block).
+    if parent_class is not None and child_class is not None:
+        if child_class not in AUTHORITY_CLASSES or parent_class not in AUTHORITY_CLASSES:
+            return 'unknown authority class (%s vs %s)' % (child_class, parent_class)
+        if AUTHORITY_RANK[child_class] > AUTHORITY_RANK[parent_class]:
+            return 'authority class %s exceeds %s' % (child_class, parent_class)
+    for key in ('write_scope', 'write_boundaries'):
+        if key not in parent:
+            continue
+        roots = list(parent.get(key) or [])
+        for entry in child.get(key) or []:
+            if not any(_path_within(entry, root) for root in roots):
+                return '%s entry %r escapes the delegator scope %r' % (key, entry, roots)
+    if 'external_effects' in parent:
+        allowed = parent.get('external_effects')
+        allowed = [] if allowed in (None, 'none') else list(allowed)
+        child_effects = child.get('external_effects')
+        child_effects = [] if child_effects in (None, 'none') else list(child_effects)
+        for effect in child_effects:
+            if effect not in allowed:
+                return 'external effect %r is not in the delegator effects %r' % (effect, allowed)
+    if parent.get('allowed_tools') is not None:
+        allowed_tools = set(parent.get('allowed_tools') or [])
+        for tool in child.get('allowed_tools') or []:
+            if tool not in allowed_tools:
+                return 'tool %r is not in the delegator tool grant' % tool
+    return None
+
 # Id prefixes for the workforce ref vocabulary (docs 06/07). Validators never require a
 # prefix; writers use them so cross-references read the way the design documents them.
 ID_PREFIXES = ('mis_', 'tsk_', 'ctr_', 'asn_', 'stf_', 'ev_', 'find_', 'msg_', 'pod_')
