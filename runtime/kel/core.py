@@ -749,6 +749,15 @@ class Store:
             e = db.execute("SELECT * FROM effects WHERE id=?", (operation_id,)).fetchone()
             if not e:
                 raise KeyError(operation_id)
+            stored = json.loads(e['receipt']) if e['receipt'] else None
+            # EVENT-IDEMPOTENCY / EFFECT-REPLAY (Round 2.5 R2): an observation is the evidence of
+            # what an external effect actually did. A second, *different* receipt is a
+            # contradiction the local runtime cannot resolve, so it is refused instead of silently
+            # overwriting the record; re-observing the identical receipt stays a no-op.
+            if e['state'] == 'OBSERVED':
+                if stored is not None and stored != receipt:
+                    raise PolicyError("Effect was already observed with a different receipt")
+                return
             db.execute("UPDATE effects SET state='OBSERVED',receipt=? WHERE id=?", (encode(receipt), operation_id))
             job = self._get(db, e['job_id'])
             self._save(db, job, 'effect.observed', {'operation_id': operation_id})
