@@ -16,6 +16,7 @@ import {
   statusFromDerived,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { NeedsAttention } from '@renderer/components/kel/KelNeedsAttention';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelArtifact,
@@ -140,6 +141,8 @@ const WorkCenter: React.FC = () => {
             Reload
           </KelButton>
         </div>
+
+        <NeedsAttention />
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && jobs === null && <KelLoading rows={4} />}
