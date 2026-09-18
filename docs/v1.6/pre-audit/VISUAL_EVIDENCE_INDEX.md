@@ -34,6 +34,27 @@ authoritative; this index mirrors it for the audit corpus). Implementation branc
   `kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md`.
 - Raw evidence: `ux-audit/visual/runs/visual5-{a,b,c}/`.
 
+## Branding — canonical logo (2026-09-18, Nick directive)
+
+The donor AionUi mark is replaced everywhere by the exact Nick-supplied folded-ribbon K
+(sha256 `7418a42f…`; record `docs/v1.6/branding/CANONICAL_LOGO.md`).
+
+| Surface | Asset (derived from the canonical source) | Automated evidence | Human gate |
+|---|---|---|---|
+| exe / installer / shortcuts | `resources/app.ico` (16–256) | packaged exe icon extraction (PACKAGED_EVIDENCE_INDEX `package-logo`) | 16 px legibility OPEN |
+| tray / notifications | `resources/app.png` (1024 → 32/16) | derivative corners transparent; same-art check | tray legibility OPEN |
+| window/dock (dev) | `app.ico` / `app_dev.png` | tsc 0; boot check | — |
+| favicon / apple-touch / PWA | `public/pwa/icon-180/192/512.png` | `renderer/index.html` + `manifest.webmanifest` reference exactly these files | — |
+| login brand mark | `renderer/assets/logos/brand/app.png` | tsc 0; vitest 90 | placement/density OPEN |
+| About | same asset, new `<img data-testid='kel-about-logo'>` | tsc 0; vitest 90 | placement/density OPEN |
+| linux / macOS | `resources/app.png` / `resources/app.icns` | `kel-builder.json` keys set; ICNS chunk map recorded in the record §2 | macOS untestable here (LIM-9) |
+
+Supersedes the donor mark on the login screen (was AionUi art at the same import path).
+
+Automated render check: `python scripts/verify-brand-render.py <captures>` matches the canonical
+artwork inside the packaged About capture at **0.960** masked NCC (other captures ≤ 0.51 baseline).
+Committed captures + reproduction commands: `docs/v1.6/branding/evidence/`.
+
 ## Open items
 
 - **Two missing baseline captures** for findings 2 and 3 (before those surfaces are touched).

@@ -54,6 +54,11 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
 | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
 | REQ-PKG-ASSERT | carry-forward | packaged battery assertions 16–19 | PENDING | — | — | PACKAGED_EVIDENCE_INDEX.md | pending |
 | REQ-RC | sprint directive §45/§46 | pre-audit regression + RC | PENDING | — | — | docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md | pending |
+| REQ-LOGO-1 | Nick directive 2026-09-18 (canonical logo) | branding surfaces | implemented | branding commit (2026-09-18) | `scripts/make-brand-assets.py`; tsc 0; vitest 90 | `docs/v1.6/branding/CANONICAL_LOGO.md`; `increments/LOGO-CANONICAL.md` | dormant NSIS text + dead donor svg + metadata attribution = audit targets 47–52 | pending |
+
+Stable requirement statement (verbatim): **"The exact Nick-supplied folded-ribbon K is the canonical
+Kel logo and appears consistently across all production-reachable Kel branding surfaces."**
+Canonical source sha256 `7418a42fc06267707c1e1aa4ab0d8822e8d636a687a81f200788a7b3e50ec71f`.
 
 ## Maintenance rules
 

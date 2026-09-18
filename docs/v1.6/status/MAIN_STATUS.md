@@ -1,10 +1,12 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T17:50:00Z
+updated_utc: 2026-09-18T16:56:00Z
+# note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+# wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: df87903 (latest production commit; see `git log --oneline -8`)
+head: 71c78f0 (canonical-logo production commit; docs commit follows — see `git log --oneline -8`)
 worktree_clean: true
 
 state: IMPLEMENTATION_SPRINT
@@ -15,9 +17,9 @@ last_audited_production: 8a2b25d
 first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
 unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
 
-current_increment: Phases 10-11 DONE — provider validation (claude real call PASS; codex CLI-version blocked; internal/deepseek no credentials) and the Rust freshness recheck (verdict upheld; Phase 12 CLOSED). Records: docs/v1.6/phase10/, docs/v1.6/phase11/. Next: F4 real-artifact binding + resolution-kind.
+current_increment: REQ-LOGO-1 DONE — the exact Nick-supplied folded-ribbon K is now the canonical Kel logo on every production-reachable branding surface (commit 71c78f0; record docs/v1.6/branding/; packaged-verified). Prior: Phases 10-11 DONE — provider validation (claude real call PASS; codex CLI-version blocked; internal/deepseek no credentials) and the Rust freshness recheck (verdict upheld; Phase 12 CLOSED). Records: docs/v1.6/phase10/, docs/v1.6/phase11/. Next: F4 real-artifact binding + resolution-kind.
 current_phase: F4 real-artifact binding + resolution-kind semantics (queued; Phases 10-11 done)
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/).
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS).
 
 audit_requested_from: NONE
 audit_requested_through: NONE

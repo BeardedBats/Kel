@@ -19,6 +19,7 @@ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --
 | `package-p1cap2` | `327e5b2` era | fresh | 15 | sessiontools (bracket-clause steps) + CAP2 forwarded-text probe + engine regression | PASS | ux-audit/run-cap2-clause.sh | clause grammar |
 | `package-p1cap3` | `631881a` era | fresh | 15 | sessiontools (reserved/ residual steps) + residual db probe + engine regression | PASS | ux-audit/run-cap2-residual.sh | reserved `[kel:...]` grammar |
 | `package-visual5` | `ac85eb3` (visual branch) | fresh from visual branch | 15 | probe a: shell sweep 21 surfaces (0 console errors; first paint 3.03s; 23 screenshots); probe b: color control/New Chat/engine-loss (reproduces findings 16/17); probe c: populated sidebar (overlapPx −4, gutter 32px, leading marks correct) | PASS | ux-audit/visual/runs/visual5-{a,b,c}/; `kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md` | batches 1–5 acceptance; 35 screenshots indexed |
+| `package-logo` | `edd50de` + canonical-logo change | fresh (`dist/runtime` unchanged; identity recorded in the row's log) | 15 (engine identity untouched — no engine change) | packaged boot + UI capture (`packaging/ux-audit.cjs` `first-run`) with an isolated profile; icon extraction from `Kel.exe` and the NSIS installer | PASS | exe icon = shipped `app.ico` 32 px frame (mean abs diff **0.0**); installer icon = **0.0**; old package was **not** the K (73.2); exe identity `Kel · Kel · AionUi · 1.5.0` (was Electron's own); packaged `resources/pwa/icon-*`+`app.png` byte-identical to the shipped K assets; captures in `dist/logo-evidence/ux-audit/` + committed selection under `docs/v1.6/branding/evidence/`; harness `errors: []` for both scenarios; About capture matches the canonical artwork at **0.960** masked NCC (`scripts/verify-brand-render.py`) | REQ-LOGO-1 | first packaged build whose exe/installer icons are the canonical K |
 
 ## Known pending packaged work (carry-forward)
 
@@ -32,6 +33,8 @@ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --
 - Phase 7 capability card: seed a blocked milestone carrying a `recommendation` in a packaged app;
   assert the card renders in the Work panel, the actions hit the engine (`/api/capabilities`), and
   dismissal works (no provider in this environment — audit target 45; LIM-14).
+- Canonical logo: exe/shortcut/tray icon re-verification on the RC package (16/32/48 legibility and
+  exact transparency — audit target 50), plus a human pixel pass on the About/login placements.
 
 ## Maintenance rules
 
