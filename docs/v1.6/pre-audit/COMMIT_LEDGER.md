@@ -3,6 +3,7 @@
 updated: 2026-09-18T16:05Z
 range opens at: `8a2b25d` (last independently audited production point; increment 24 CONTINUE)
 range ends at: PRE_AUDIT_V1_6_HEAD (TBD; recorded at RC)
+first intentionally unaudited production commit: `22f4a3e` (2026-09-18, Phase 6 bounded fixes)
 rule: EVERY production-affecting commit in this range must appear here. Docs-only commits are
 listed for completeness with `priority: LOW / docs-only`.
 
@@ -21,7 +22,8 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
 
 | SHA | parent | date | phase | intent | production files | tests | migrations | UI? | packaged | sec/priv | persistence | priority | evidence | concerns |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| — | — | — | — | *no production commit yet — the first one opens this table* | | | | | | | | | | |
+| `785df71` | `fd98cc4` | 2026-09-18 | A-entry | pre-audit corpus + IMPLEMENTATION_SPRINT mode (docs/state) | docs only; `.gitignore` scratch ignore | — | none | no | — | no | no | LOW | `increments/INIT-CAMPAIGN-A.md`; corpus README | — |
+| `22f4a3e` | `785df71` | 2026-09-18 | Phase 6 | Work-panel knowledge actions follow record state; forget asks first | `KelWorkPanel.tsx`; `memoryRecordActions.ts` (new) | +7 unit tests (vitest 76→83) | none | yes (renderer) | pending (RC battery) | no | no | MEDIUM | `increments/PHASE6-MEMORY-REALITY.md`; `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md` | MEMR-1/2/3 |
 
 ## Visual branch commits pending integration (NOT covered by any independent audit)
 

@@ -40,7 +40,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
 
 | Req ID | Source | Section | Status | Commit(s) | Tests | Evidence | Audit |
 |---|---|---|---|---|---|---|---|
-| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | IN PROGRESS | — | — | docs/v1.6/phase6/ (to be created) | pending |
+| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
 | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | PENDING | — | — | — | pending |
 | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
 | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |

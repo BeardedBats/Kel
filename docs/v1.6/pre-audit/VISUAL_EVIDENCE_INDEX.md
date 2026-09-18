@@ -40,3 +40,6 @@ authoritative; this index mirrors it for the audit corpus). Implementation branc
 - **Human pixel review**: OPEN — no image perception in agent threads; prepared index stands ready.
 - **Integration**: commit lineage must be preserved on merge (§44); every conflict resolution is
   an audit target (AUDIT_TARGETS §29).
+- **Main edit notice (2026-09-18):** Phase 6 (`22f4a3e`) touched `KelWorkPanel.tsx` (Knowledge tab
+  only) — the HELD visual batches (3, 5-team half) are not affected by this edit; the Visual thread
+  revalidates against current Main before editing per protocol.

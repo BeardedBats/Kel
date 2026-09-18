@@ -76,3 +76,21 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     unlisted commit); every evidence path exists; every count matches the artifact; hunt for
     "empty but plausible" records.
 31. Re-run the critical commands from TEST_EVIDENCE_INDEX on a fresh clone; compare counts.
+
+## Memory reality (Phase 6 additions)
+
+32. Probe cross-project ids on every memory-adjacent endpoint (memory + proposals + conflicts +
+    vetting sessions + model prefs) — assert refusal with no leak and no existence oracle in errors.
+33. Superseded-chain integrity: correct an active record, then attempt confirm/retract/correct on
+    the superseded one via API **and** UI — expect refusals, and the UI must not offer the actions.
+34. Forget a record that is the target of an open conflict/proposal — expect `_sync_proposals`
+    supersede, no dangling references, tombstone stays readable.
+35. Proposal dedupe under rejection: reject with evidence X → suppressed; change evidence → new
+    card; accept twice refused; deferred → accept later works.
+36. Composer packet: open-conflict records labeled, trust≥6 omitted with reasons, cross-project ref
+    boundary asserted (`_pack`); attack the label rendering with unusual values.
+37. Guard drift: map every `Memory.confirm/correct/retract/forget` guard to `memoryRecordActions`
+    and flag any unmirrored difference (CHG-001 audit question).
+38. Knowledge-tab tombstone: forgotten record renders "Content removed.", offers no actions; the
+    forget confirmation cannot be bypassed (keyboard/programmatic paths).
+39. Packaged Knowledge-tab pass (recorded gap): records list, actions, tombstones, forget confirm.

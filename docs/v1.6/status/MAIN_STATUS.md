@@ -1,10 +1,10 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T16:30:00Z
+updated_utc: 2026-09-18T16:45:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: fd98cc4 (the Campaign A entry commit sits on top; see `git log --oneline -5`)
+head: 22f4a3e (latest production commit; see `git log --oneline -6`)
 worktree_clean: true
 
 state: IMPLEMENTATION_SPRINT
@@ -12,11 +12,11 @@ sprint_campaign: CAMPAIGN_A
 audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
 pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
 last_audited_production: 8a2b25d
-first_unaudited_production: TBD (opens with the first Campaign A production commit)
-unaudited_range: 8a2b25d..HEAD (docs-only above 8a2b25d until the first production change)
+first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
 
-current_increment: Campaign A initiated — repository truth reconciled, sole ownership confirmed, pre-audit corpus initialized, baseline 878 green. Next: Phase 6.
-current_phase: Phase 6 — memory reality audit + bounded fixes (bootstrap §28)
+current_increment: Phase 6 DONE — memory reality audit + bounded fixes (22f4a3e; record docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md; increment PHASE6-MEMORY-REALITY). Next: Phase 7.
+current_phase: Phase 7 — smart capability recommendations (queued; Phase 6 complete)
 completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
 
 audit_requested_from: NONE
@@ -49,6 +49,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Phase 6 — memory reality audit (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 6: Phase 7 capability recommendations; Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+next_autonomous_action: Phase 7 — smart capability recommendations (sprint §32: only real capabilities; no no-op UX; capability safety preserved; production effect verified; recorded in CHANGE_LEDGER / REQUIREMENTS_TRACEABILITY / INVARIANT_LEDGER / AUDIT_TARGETS). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 7: Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
 external_dependency: NONE
 stop_reason: NONE

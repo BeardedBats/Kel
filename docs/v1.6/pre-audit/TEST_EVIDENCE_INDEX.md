@@ -11,11 +11,11 @@ Category column: `parent-executed` (run by the implementing thread — most rows
 | # | Suite | Command | Commit | Date | Result | Count | Reqs | Invariants | Evidence | Category |
 |---|---|---|---|---|---|---|---|---|---|---|
 | A-1 | engine full suite | `cd runtime && python -m pytest tests -q` (Python 3.14.3) | `fd98cc4` | 2026-09-18 | PASS | **878 passed, 10 subtests passed** (251.55s) | all engine reqs | INV-CAP/MEM/WF | `evidence/campaign-a-baseline/engine-suite-20260918.txt` | parent-executed |
-| A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `fd98cc4` (code = `ac85eb3` visual for renderer files? NO — main tree is fd98cc4) | TBD in Campaign A | pending | — | desktop reqs | — | — | parent-executed |
+| A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `22f4a3e` | 2026-09-18 | PASS | tsc 0 errors; **83 passed / 6 files** (was 76; +7 Phase-6 gating tests) | desktop reqs; REQ-MEM-6 | — | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
+| A-3 | engine focused memory suites | `cd runtime && python -m pytest tests/test_v13_memory.py tests/test_v15_memory_packets.py tests/test_v16_proposals.py tests/test_workforce_learning.py -q` | `22f4a3e` (engine unchanged since `fd98cc4`) | 2026-09-18 | PASS | **68 passed** | REQ-MEM-1/6; INV-MEM-001..003 | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
 
-Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). The desktop
-typecheck/unit run for the Main line is scheduled in the Campaign A regression sweep; the last
-recorded desktop numbers belong to the visual branch (`ac85eb3`: tsc 0, **79/79**).
+Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+`22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
 
 ## Historical runs in the audited range (from AUTO_RESUME.md / phase records)
 
