@@ -9,7 +9,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kel.backup import Backup, NEVER_BACKUP
+import kel.backup as backup
+from kel.backup import Backup, MARKER, NEVER_BACKUP, STAGING, apply_pending_restore
+from kel.core import PolicyError
+from kel.service import Service
 from kel.transcription import _header_safe, _multipart
 
 
@@ -57,6 +60,73 @@ class BackupCredentialTests(unittest.TestCase):
 
     def test_the_guard_is_named_for_the_credentials_file(self):
         self.assertIn('kel-credentials.json', NEVER_BACKUP)
+
+
+class SnapshotRetentionTests(unittest.TestCase):
+    """PER-03: pre-restore snapshots must not accumulate without bound."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name) / 'data'
+        self.root.mkdir()
+        for stamp in ('20260101-000000', '20260102-000000', '20260103-000000'):
+            snapshot = self.root.parent / ('data.pre-restore-' + stamp)
+            snapshot.mkdir()
+            (snapshot / 'old.txt').write_text(stamp, encoding='utf-8')
+
+    def _snapshots(self):
+        return sorted(entry.name for entry in self.root.parent.glob('data.pre-restore-*'))
+
+    def test_an_applied_restore_keeps_only_the_newest_two_snapshots(self):
+        (self.root / STAGING).mkdir(mode=0o700)
+        (self.root / MARKER).write_text('{}', encoding='utf-8')
+        self.assertTrue(apply_pending_restore(_Store(self.root)))
+        names = self._snapshots()
+        self.assertEqual(len(names), 2, names)
+        self.assertIn('data.pre-restore-20260103-000000', names)
+        self.assertNotIn('data.pre-restore-20260101-000000', names)
+        self.assertTrue((self.root.parent / 'data.pre-restore-20260103-000000' / 'old.txt').exists())
+
+    def test_a_failed_restore_still_prunes_and_keeps_its_own_snapshot(self):
+        (self.root / STAGING).mkdir(mode=0o700)
+        (self.root / 'notes.txt').write_text('live', encoding='utf-8')
+        (self.root / STAGING / 'notes.txt').write_text('staged', encoding='utf-8')
+        (self.root / MARKER).write_text('{}', encoding='utf-8')
+        original = backup._restore_entry
+
+        def explode(source, destination):
+            raise OSError('no space left on device')
+
+        backup._restore_entry = explode
+        self.addCleanup(setattr, backup, '_restore_entry', original)
+        self.assertFalse(apply_pending_restore(_Store(self.root)))
+        names = self._snapshots()
+        self.assertEqual(len(names), 2, names)
+        self.assertTrue((self.root / MARKER).exists(), 'the restore is still pending')
+        newest = self.root.parent / names[-1]
+        self.assertTrue((newest / 'notes.txt').read_text(encoding='utf-8') == 'live')
+
+
+class ApprovalActorGuardTests(unittest.TestCase):
+    """APR-01: actor identity comes from the session, never from the payload — pinned by a test."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.service = Service(str(Path(self.tmp.name) / 'data'))
+        self.addCleanup(self.service.shutdown)
+
+    def test_the_approval_route_refuses_a_payload_actor(self):
+        with self.assertRaises(PolicyError) as caught:
+            self.service._action('/api/approval',
+                                 {'id': 'apr_missing', 'allow': True, 'actor': 'user'})
+        self.assertIn('authenticated Kel session', str(caught.exception))
+
+    def test_the_same_guard_covers_the_other_action_families(self):
+        for path, payload in (('/api/memory', {'action': 'list'}), ('/api/map', {'action': 'list'})):
+            with self.assertRaises(PolicyError):
+                self.service._action(path, dict(payload, actor='system'))
 
 
 class _Store:
