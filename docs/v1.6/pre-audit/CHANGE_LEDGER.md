@@ -86,12 +86,43 @@ ID: CHG-002 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
 - **Audit questions:** verify no bypass path purges without confirmation; verify copy truthfulness.
 - **Repair hints:** `KelWorkPanel.tsx` forget button.
 
+### CHG-003 — Capability recommendations (real capabilities, real actions, no nagging)
+
+ID: CHG-003 · Phase: 7 · Commit: `df87903` · Date: 2026-09-18
+
+- **User-visible impact:** when Kel is blocked because a capability is off here, the Work panel
+  shows a card: what was paused, why, and Allow once / Enable for this chat / Keep it off. Keeping
+  it off changes nothing and dismisses (no re-nag).
+- **Internal impact:** new `capabilities.recommendation()` vocabulary; research + coding blocked
+  outcomes carry `capability` + `recommendation`; `core` records it on the job milestone (cleared on
+  success); `/api/state` carries it to the shell; `KelCapabilityCard` + helpers render/act.
+- **Previous behavior:** refusals were a plain sentence; the three actions existed only in the
+  Tools control.
+- **New behavior:** refusals from the two real effect paths carry the structured recommendation; the
+  card renders exactly the engine's actions and nothing else.
+- **Primary files:** `runtime/kel/capabilities.py`, `research.py`, `coding.py`, `core.py`;
+  `desktop/.../kel/capabilityRecommendation.ts`, `KelCapabilityCard.tsx`, `chat/KelWorkPanel.tsx`.
+- **Primary symbols:** `recommendation()`, `capabilityCardActions`, `capabilityActionRequest`.
+- **Data/schema changes:** none.
+- **Failure paths:** unknown action ids drop; failed API call shows one plain sentence; unavailable
+  capabilities produce no card; a live grant suppresses the recommendation.
+- **Security/privacy implications:** none added — no state change without the user's action; the
+  session-tools gates are unchanged.
+- **Persistence implications:** recommendations are milestone data only; nothing new at the policy layer.
+- **Expected invariants:** INV-CAPREC-001 (new); INV-CAP-001/002 preserved.
+- **Tests:** engine focused 83; engine full 885 (+10 subtests, was 878); tsc 0; vitest 90 (was 83).
+- **Packaged evidence:** — deferred (no provider in this environment; LIM-14; audit target 45).
+- **Known concerns:** coding-path attachment lacks a dedicated blocked-run test (audit target 44).
+- **Audit questions:** can a forged recommendation create a fake action? Does dismissal persist? Does
+  the card ever change state without a click?
+- **Repair hints:** guard drift vs `capabilities.recommendation`; card request wiring.
+
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
 |---|---|---|
 | 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
-| 7 — smart capability recommendations | CHG-0xx | PENDING |
+| 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
 | 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
 | 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
 | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |

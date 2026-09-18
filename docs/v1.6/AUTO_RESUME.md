@@ -406,8 +406,8 @@ focused tests, regression, packaged verification, atomic commits and records con
 - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
 - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
-- **Phase 6** completed 2026-09-18 (see below). **Next**: Phase 7 — smart capability
-  recommendations; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
+- **Phase 7** completed 2026-09-18 (see below). **Next**: Phase 8/5.8 — Advanced Worker View
+  decision; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
 
 ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
 
@@ -425,3 +425,16 @@ tsc 0; vitest 83 (76→83).
 Reports: `docs/v1.6/pre-audit/` corpus updated (COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
 TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS,
 P2_P3_DISPOSITION, REPAIR_HINTS, VISUAL_EVIDENCE_INDEX).
+
+## Phase 7 — capability recommendations (2026-09-18)
+
+Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`;
+record: `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`). The engine now emits a structured,
+real-only recommendation when a capability refusal happens (`capabilities.recommendation`;
+research + coding blocked outcomes; retained on the job milestone so `/api/state` carries it), and
+the desktop renders it in the Work panel (`KelCapabilityCard`: Allow once / Enable for this chat /
+Keep it off — fail-closed rendering, real endpoints, dismissal without state change). Invariant
+INV-CAPREC-001 added; audit targets 40–45 added. Tests: engine focused 83; **full 885 passed**
+(+10 subtests; was 878); tsc 0; vitest **90** (was 83). Packaged card evidence deferred — no
+provider in this environment (LIM-14); transcript-inline placement = DEF-014. Next: Phase 8/5.8
+decision.
