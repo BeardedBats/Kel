@@ -182,6 +182,39 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-008 — Sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups
+
+ID: CHG-008 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
+
+- **User-visible impact:** none intended (three hardening fixes).
+- **Internal impact:** the `kel:artifact-reveal` IPC handler now carries the same sender-frame guard
+  as its four siblings (INT-01); `_multipart` sanitises every header parameter through a new
+  `_header_safe` (SEC-01-multipart); `Backup.create` skips and reports
+  `NEVER_BACKUP = ('kel-credentials.json',)` so a `KEL_DATA_DIR` override can no longer put an
+  encrypted credentials file inside a backup (PER-04).
+- **Previous behavior:** one privileged handler accepted any frame; a crafted upload filename could
+  close the header early; the credentials sidecar travelled in backups under the override layout.
+- **New behavior:** uniform IPC surface, injection-proof headers, credentials never in a backup
+  (reported in `skipped`/`notes`).
+- **Primary files:** `desktop/packages/desktop/src/process/services/kel/KelService.ts`,
+  `runtime/kel/transcription.py`, `runtime/kel/backup.py`,
+  `runtime/tests/test_v16_sweep_fixes.py`.
+- **Primary symbols:** listed in the increment record.
+- **Data/schema changes:** none.
+- **Failure paths:** unchanged (the IPC rejection keeps the `Unknown Kel window` shape).
+- **Security/privacy implications:** three fail-closed hardenings; the backup note already promised
+  credentials are excluded, and now the sidecar gap is closed too.
+- **Persistence implications:** a backup contains one fewer file and says so.
+- **Expected invariants:** INV-SWEEP2-001 (a sanitised header parameter can never start a header
+  line; no backup contains the credentials sidecar).
+- **Tests:** `tests/test_v16_sweep_fixes.py` (5 new) + desktop `tsc` 0 + full suite (A-16).
+- **Packaged evidence:** n/a.
+- **Known concerns:** the IPC guard has no automated test (no Electron/IPC harness in this repo) —
+  verified by typecheck and parity with four sibling guards (AUDIT_TARGETS §58).
+- **Audit questions:** can any header parameter reach the socket unsanitised? Is `NEVER_BACKUP`
+  consulted on every backup path (including the hot-database copy)?
+- **Repair hints:** `_header_safe` for headers, `NEVER_BACKUP` for backup exclusions.
+
 ### CHG-007 — A failed or partial restore is recorded and surfaced (audit PER-02)
 
 ID: CHG-007 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
