@@ -678,8 +678,34 @@ transcription 31 / sweep-fixes 15; desktop tsc 0 + vitest 93; TEST_EVIDENCE_INDE
 `increments/R0-SWEEP.md`; CHG-012…017; REQ-P2P3/OWNERSHIP-PARITY/POLL-CHEAP/TRUTHFUL-SURFACES/
 ERROR-SENTENCES/THEME-HYGIENE/TR02-BINDING.
 
-Next: **R1 — delegation authority ceiling** (`effective_child ⊆ delegator`, existing primitives only),
-then R2 idempotency matrix → R3 retry durability → R4 approval binding → R5 persistence → R6
+Next: **R2 idempotency matrix** → R3 retry durability → R4 approval binding → R5 persistence → R6
 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs
 Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression →
 PRE_AUDIT_V1_6_HEAD. REL-01 stays `OPEN_RELEASE_BLOCKER` until R8 evidence exists.
+
+## R1 COMPLETE — the delegation authority ceiling is executable (2026-09-18, marathon run)
+
+Commit `dc65fbc` (parent `4440a90`). Round 2.5 **AUTH-DELEGATION**: *delegation may narrow
+authority, never create it* — implemented with existing primitives only (no RBAC, no second ACL).
+
+- **R1.A audit found the real gaps**: only the role→class ceiling was enforced; write
+  scope/boundaries/effects/tools had no delegator dimension; a contract could contradict itself
+  (`write_scope` outside `write_boundaries`); `reserve_budget` never compared against the job
+  envelope. `parent_task` is None everywhere by design (no nesting) — preserved.
+- **Primitive**: `workforce.authority_within(child, parent)` over class rank, write scope, write
+  boundaries (path containment), external effects, tool grants; absent parent dimension = no
+  ceiling; empty delegator scope = a real ceiling.
+- **Enforcement**: `contracts.validate_task_contract(..., parent_authority=…)` refuses a child
+  outside the envelope ('Delegation may narrow authority but never create it: <dimension>'),
+  refuses a self-contradictory scope/boundaries pair, and refuses a nested contract with no
+  delegator. `delegate()`/`issue_task_contract()` pass the envelope; `pods.run_d2` issues the
+  verifier inside the builder's frozen envelope; `assignment.reserve_budget` refuses a reservation
+  beyond the remaining job budget.
+
+Evidence: `tests/test_v16_r1_authority.py` 21 new; workforce family 269 together; full engine
+**952 passed + 10 subtests** (was 931); record `increments/R1-AUTHORITY-CEILING.md`; CHG-018;
+INV-AUTH-DELEGATION; REQ-R25-R1 implemented; TEST_EVIDENCE_INDEX A-21.
+
+Next: **R2 — logical-work/idempotency matrix** (`EVENT-IDEMPOTENCY` + `EFFECT-REPLAY`): classify
+every autonomous event family, prove what is already safe, repair only demonstrated
+duplicate-execution gaps, hostile duplicate tests across restart where possible.
