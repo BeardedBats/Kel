@@ -4,6 +4,9 @@ status: CAMPAIGN_A_IN_PROGRESS
 opened: 2026-09-18T16:05Z, at Main HEAD `fd98cc4`
 owner: autonomous Main / Program Director (single writer; see AUTONOMOUS_OPERATION.md)
 scope: the whole V1.6 declared surface, emphasized on the post-audit range
+forward_roadmap: `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` — adopted 2026-09-18; governs R0–R12
+  (Round 2.5 hardening + the remaining Campaign A critical path). Historical phase docs stay as
+  evidence; the roadmap governs what happens next.
 
 ## Purpose
 

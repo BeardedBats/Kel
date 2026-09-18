@@ -599,3 +599,28 @@ the finding asks for; TR-02 rides with the visual batches. Tests: 4 new; focused
 **full engine suite 909 passed** (+10 subtests, was 905). Sweep status: **16/27 rows carry a final
 disposition** (P2 6/10, P3 10/17); 11 remain undecided. Next: APR-02, SEC-01, TR-01/TR-02 and the
 remaining P3s.
+
+## Round 2.5 canonical roadmap adopted (2026-09-18)
+
+**`docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` is now the forward execution authority for V1.6**
+(historical phase docs are untouched evidence). The Round 2.5 reconciliation concluded: the
+architecture is sound — no pivot, no rewrite, no duplicate authority/memory/workflow/recovery/
+evidence/orchestration systems. Its value is converting several distributed safety behaviors into
+explicit constitutional invariants with adversarial coverage before V1.6 freezes.
+
+New Campaign A critical path: **R0** finish the P2/P3 sweep → **R1** delegation authority ceiling
+(`child_effective_authority ⊆ delegator_effective_authority`) → **R2** logical-work/idempotency
+contract → **R3** durable retry/recovery budgets → **R4** canonical approval binding (absorbs
+APR-02) → **R5** persistence integrity contract → **R6** truthful state + liveness → **R7**
+credential/network boundary confirmation → **R8** packaged/migration assertions (+ REL-01) →
+**R9** Visual batches 6–8 + Needs Your Attention (derived-only) → **R10** engine-loss/recovery UX →
+**R11** Visual → Main integration → **R12** final Campaign A regression →
+**PRE_AUDIT_V1_6_HEAD**, then STOP. Explicitly rejected for V1.6: nested spawning, new RBAC/workflow
+engines, HMAC-everything receipts, second memory platforms/knowledge graphs, an OS network
+firewall, public A2A, one giant runtime enum, a new Advanced Worker View, adaptive staffing,
+Profiles, speculative Rust migration, agent-cockpit UI. Eleven new invariants are seeded in
+INVARIANT_LEDGER (AUTH-DELEGATION, EVENT-IDEMPOTENCY, EFFECT-REPLAY, RETRY-DURABLE,
+APPROVAL-EXACT, PERSIST-CANONICAL, COMPLETION-TRUTH, LIVENESS-SEPARATION,
+RECOVERY-CLASSIFICATION, CREDENTIAL-CONTAINMENT, LIVE-AUTHORITY) and the Round 2.5 hostile-test
+list is in AUDIT_TARGETS §61–80. Independent audit stays paused; nothing new here is audited or
+claimed as accepted.
