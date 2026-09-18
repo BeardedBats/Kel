@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import CssThemeModal from './CssThemeModal.tsx';
 import { BUILTIN_THEMES, DEFAULT_THEME_ID } from './presets.ts';
 import { BACKGROUND_BLOCK_START, injectBackgroundCssBlock } from './backgroundUtils.ts';
+import { clearThemeOverrides } from '@renderer/utils/theme/applyTheme';
 import { resolveExtensionAssetUrl } from '@renderer/utils/platform.ts';
 import { LIGHT_THEME_ID, SYSTEM_THEME_ID } from '@/common/theme/constants';
 
@@ -415,6 +416,9 @@ const CssThemeSettings: React.FC = () => {
             const updatedThemes = themes.filter((t) => t.id !== themeId);
             const userThemes = updatedThemes.filter((t) => !t.builtin);
             await configService.set('theme.userThemes', userThemes);
+            // Audit THM-01: the theme's saved colour overrides are dropped in the same operation, so
+            // a later theme reusing this id cannot silently inherit the old colours.
+            await clearThemeOverrides(themeId);
 
             // 如果删除的是当前激活主题，回退到 Light / If deleting active theme, fall back to Light
             if (activeThemeId === themeId) {

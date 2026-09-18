@@ -8,6 +8,7 @@
   "linux": {
     "maintainer": "Kel",
     "vendor": "Kel",
+    "icon": "resources/app.png",
     "desktop": {
       "entry": {
         "Name": "Kel",
@@ -37,7 +38,17 @@
     "target": [
       "dir"
     ],
-    "signAndEditExecutable": false
+    "icon": "resources/app.ico",
+    "signAndEditExecutable": true
+  },
+  "nsis": {
+    "installerIcon": "resources/app.ico",
+    "uninstallerIcon": "resources/app.ico",
+    "installerHeaderIcon": "resources/app.ico",
+    "shortcutName": "Kel"
+  },
+  "mac": {
+    "icon": "resources/app.icns"
   },
   "extraResources": [
     {

@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { recoverHistory, type HistoryMessage } from './reconcileHistory';
+import { engineVersionAccepted } from './engineVersion';
 import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
@@ -41,10 +42,20 @@ export async function initializeKel(port: number): Promise<void> {
       });
   });
   const descriptorPath = path.join(root, 'desktop-session.json');
+  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
+  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
+  // version must not be reused. A packaged build knows its own version; an unpackaged dev run
+  // reports Electron's through `app.getVersion()`, so it passes an empty expectation and the check
+  // is not enforced there.
+  const expectedEngineVersion = process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
+  const expectedEngineAnswered = async () => {
+    const state = (await kelRequest('/api/state')) as { engine_version?: string } | undefined;
+    return engineVersionAccepted(state?.engine_version, expectedEngineVersion);
+  };
   let connected = false;
   try {
     descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
-    await kelRequest('/api/state');
+    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
     connected = true;
     console.log('[KEL-BOOT] initializeKel reused running engine');
   } catch {
@@ -110,7 +121,9 @@ export async function initializeKel(port: number): Promise<void> {
     while (Date.now() < deadline) {
       try {
         descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
-        await kelRequest('/api/state');
+        // The descriptor file is shared with any leftover engine: keep waiting until the engine
+        // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
+        if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
         connected = true;
         break;
       } catch {
@@ -381,7 +394,12 @@ export async function initializeKel(port: number): Promise<void> {
   // store-relative path; main resolves it against the engine root and refuses anything that
   // escapes - the renderer never builds an absolute path.
   ipcMain.removeHandler('kel:artifact-reveal');
-  ipcMain.handle('kel:artifact-reveal', (_event, relpath: string) => {
+  ipcMain.handle('kel:artifact-reveal', (event, relpath: string) => {
+    // Same frame guard as the other privileged handlers: only the app's own main frame may ask the
+    // OS to reveal a path (audit INT-01 - this handler was the one that skipped the check).
+    const url = event.senderFrame?.url || '';
+    if (event.senderFrame !== event.sender.mainFrame || !url.startsWith('file:'))
+      throw new Error('Unknown Kel window');
     if (typeof relpath !== 'string' || !relpath) throw new Error('Missing artifact path');
     const root = path.resolve(dataRoot());
     const target = path.resolve(root, relpath);

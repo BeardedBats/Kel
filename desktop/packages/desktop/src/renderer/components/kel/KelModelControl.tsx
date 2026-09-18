@@ -88,12 +88,20 @@ export const useKelModelState = (conversationId?: string) => {
   const setConversation = useCallback(
     async (choice: Choice | null) => {
       if (!conversationId) return;
-      if (!choice || !choice.provider) {
-        await request({ action: 'clear_conversation', conversation: cid ?? undefined });
-        Message.success('This chat follows the default model again.');
-      } else {
-        await request({ action: 'set_conversation', conversation: cid ?? undefined, choice });
-        Message.success('Saved. This chat will use that model.');
+      try {
+        if (!choice || !choice.provider) {
+          await request({ action: 'clear_conversation', conversation: cid ?? undefined });
+          Message.success('This chat follows the default model again.');
+        } else {
+          await request({ action: 'set_conversation', conversation: cid ?? undefined, choice });
+          Message.success('Saved. This chat will use that model.');
+        }
+      } catch (error) {
+        // Audit COR-03: the engine's own sentence (e.g. 'Open a conversation before choosing its
+        // model.') is the honest message; a transport failure gets a plain fallback instead of an
+        // unhandled rejection with no feedback.
+        const detail = String((error as Error)?.message || '').trim();
+        Message.error(detail || 'Kel could not change the model just now.');
       }
       await refresh();
     },

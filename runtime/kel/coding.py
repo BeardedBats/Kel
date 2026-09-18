@@ -162,7 +162,7 @@ class CodingAdapter:
         # V1.5: the real effect point. A worker cannot start repository work or run the configured
         # test command without a valid lease and role policy; a revoked lease stops it here.
         from .authorize import authorize,role_for
-        from .capabilities import capability_for_tool
+        from .capabilities import capability_for_tool, recommendation
         role_info=role_for(self.store,run['job_id'],run['milestone_id'])
         for tool in ('git','run_tests','write'):
             decision=authorize(self.store,{'actor':'worker','worker':run_id,'job':run['job_id'],
@@ -174,9 +174,13 @@ class CodingAdapter:
                             'why':'the task needs repository changes',
                             'fallback':'stop before any change and report'}})
             if decision['outcome']!='ALLOW':
+                tool_capability=capability_for_tool(tool)
                 return {'outcome':'BLOCKED','error':'Kel paused this work before any change: '+
                         str(decision.get('reason') or decision.get('rule') or 'authorization required'),
-                        'authorization':decision.get('outcome')}
+                        'authorization':decision.get('outcome'),
+                        'capability':tool_capability,
+                        'recommendation':recommendation(tool_capability,{'allowed':False,
+                            'rule':decision.get('rule'),'reason':decision.get('reason')})}
         if row:
             workspace=Path(row['path']);base=row['base'];baseline=json.loads(row['manifest'])
         else:
@@ -233,7 +237,7 @@ class CodingAdapter:
             tests=connection.call('command/exec',{'command':contract['test_command'],'cwd':str(workspace),
                 'timeoutMs':90000,'sandboxPolicy':{'type':'workspaceWrite',
                 'writableRoots':[str(workspace)],'networkAccess':False},
-                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None}},timeout=100)
+                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None,'DEEPSEEK_API_KEY':None}},timeout=100)
             after=file_manifest(workspace)
             stable=before==after
             git(workspace,'add','-A')

@@ -1,0 +1,24 @@
+# Remote refs captured at Campaign A entry (ls-remote origin, 2026-09-18T16:05Z)
+
+```
+5e76b21071a28601a7fb4de508cb3cf349c77db8	HEAD
+5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/heads/main
+fd98cc402b98acf9a230fb160e4766f7f5f931f3	refs/heads/ux/v15-journeys
+dd67ef42e5c6b52f6d0e298650499abf6771e099	refs/heads/v1.3-dev
+36456722f4370fbedb2a9d48861db4ec0e5ea11f	refs/heads/v1.4-dev
+dd67ef42e5c6b52f6d0e298650499abf6771e099	refs/pull/1/head
+ab4aef0fd3c08cb780a2df12613d62fd519da5b8	refs/pull/2/head
+507220ffe362761a916e3f9279c7a6cd17b8e1c9	refs/pull/3/head
+7d69288f34e786dc5abb748838809184f63c08bb	refs/tags/v1.2.0
+a520b670ef57e3918738e4e8007476f91a693625	refs/tags/v1.2.0^{}
+05b0687e381ca3de76e55bb07dfe85d5a97a105c	refs/tags/v1.3.0
+b3c7c2466349c607bc7ebfe648b4a11ebf0fa635	refs/tags/v1.3.0^{}
+ee5b907af90cef46b81afaa80eaeb9d72573aa5a	refs/tags/v1.4.0
+0a4fd2102bc9ddd2a2d1eb59386491a16fee4d74	refs/tags/v1.4.0^{}
+a6e6d922a791f8066731fe8eebcb50cb72391c8f	refs/tags/v1.4.1
+725c90501dc9639b89f72d83219a017a55f5577c	refs/tags/v1.4.1^{}
+068cd267ff8bdccdffe5f13eb080eafc65f5a0b9	refs/tags/v1.5.0
+5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/tags/v1.5.0^{}
+ceac727ef2d04efdf96c4062a3d891825aefa176	refs/tags/v1.6.0-pre1
+f24d9c28b09b30d7222691cdb1aafbe21d412672	refs/tags/v1.6.0-pre1^{}
+```
