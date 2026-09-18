@@ -679,13 +679,12 @@ def run_parallel(store, *, mission_id, decomposition, workers, source_root, task
     missing = sorted(set(by_name) - set(workers))
     if missing:
         raise PolicyError('Every planned stream needs a worker; missing: %s' % ', '.join(missing))
-    results, opens = [], []
+    results = []
     for entry in plan['streams']:
         opened = open_stream(store, mission_id=mission_id, task_id=entry.get('task_id', task_id),
                              name=entry['name'], source_root=source_root,
                              write_paths=entry['write_paths'], streams_root=streams_root,
                              now=now)
-        opens.append(opened)
         lease = acquire_lease(store, stream_id=opened['stream_id'], owner='stream:%s'
                               % entry['name'], ttl=lease_ttl, now=now)
         try:
@@ -698,20 +697,24 @@ def run_parallel(store, *, mission_id, decomposition, workers, source_root, task
                                   write_paths=entry['write_paths'], now=now)
         except BaseException as exc:
             # Any failure - a PolicyError, a crash in the worker, a KeyboardInterrupt - must leave
-            # the mission in a state a retry can reason about, and cleanup must never replace the
-            # causal error (audit 21, N21-1). The lease is the one resource a retry cannot
-            # re-derive, so it is revoked first and unconditionally; the stream is abandoned only
-            # while it is still open, because a failure raised by announce leaves it DONE - a
-            # valid terminal state that must not be transitioned a second time.
+            # the mission in a state a retry can reason about, and **no cleanup failure can replace
+            # the causal error** (audits 21/22, N21-1/R22-1): both steps are attempted, and an
+            # API refusal or a database error inside either of them is swallowed rather than
+            # propagated, so the caller always sees what actually failed. The lease is revoked
+            # first because it is the one resource a retry cannot re-derive; the stream is
+            # abandoned only while it is still open, because a failure raised by announce leaves it
+            # DONE - a valid terminal state that must not be transitioned a second time. If the
+            # revoke itself fails at the database layer the lease stays ACTIVE until its TTL and
+            # `reclaim_stale_leases` retire it.
             try:
                 release_lease(store, lease['lease_id'], state='REVOKED',
                               note='abandoned after %s' % type(exc).__name__, now=now)
-            except PolicyError:
-                pass  # already retired; the causal error still wins
+            except Exception:  # noqa: BLE001 - the causal error wins
+                pass
             try:
                 if _stream_row(store, opened['stream_id'])['state'] in ('OPEN', 'RUN'):
                     close_stream(store, opened['stream_id'], state='ABANDONED', now=now)
-            except PolicyError:
+            except Exception:  # noqa: BLE001 - the causal error wins
                 pass
             raise
         release_lease(store, lease['lease_id'], now=now)
