@@ -152,7 +152,11 @@ class Service:
             except Exception as exc:self.error=type(exc).__name__+': '+str(exc)
 
     def submit(self,data):
-        sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','').strip()
+        sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','')
+        if not isinstance(text,str):
+            # PERSIST-CANONICAL (Round 2.5 R5): a malformed request answers in a plain sentence.
+            raise PolicyError('Request must be 1 to 20000 characters')
+        text=text.strip()
         if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
         attachments=data.get('attachments',[])
         if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
