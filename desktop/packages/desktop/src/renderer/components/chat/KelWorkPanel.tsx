@@ -265,8 +265,9 @@ export default function KelWorkPanel() {
   }
   async function approvalAct(item: WaitingItem, extra: Record<string, unknown> = {}) {
     // Same durable resolution the chat card uses; Work simply reflects it right after.
+    // The declared conversation scopes the resolution exactly like the read path (APR-02).
     const allow = extra.allow !== false;
-    await action('/api/approvals', { kind: item.kind, id: item.id, allow, ...extra });
+    await action('/api/approvals', { kind: item.kind, id: item.id, allow, conversation: cid, ...extra });
   }
   async function loadHistory() {
     try {
