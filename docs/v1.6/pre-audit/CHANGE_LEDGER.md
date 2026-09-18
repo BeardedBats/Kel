@@ -182,6 +182,34 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-009 — Detached-engine reuse validates `engine_version` (audit A1 / ENG-01)
+
+ID: CHG-009 · Phase: Campaign A — P2/P3 sweep · Commit: `101d8c3` · Date: 2026-09-18
+
+- **User-visible impact:** indirect — after an upgrade the app no longer talks to a leftover engine
+  of the previous version; it spawns the engine it shipped and waits for that one.
+- **Internal impact:** new `engineVersionAccepted(live, expected)` (pure, unit-tested) and the check
+  applied at **both** trust sites in `initializeKel` (the descriptor reuse path and the spawn-wait
+  loop, which previously connected to whatever answered first).
+- **Previous behavior:** `desktop-session.json` + any `/api/state` answer = reused engine.
+- **New behavior:** the live `engine_version` must equal the version this build shipped
+  (`app.getVersion()` when packaged; `KEL_ENGINE_VERSION` overrides); an unpackaged dev run passes
+  an empty expectation and is deliberately not enforced (its `app.getVersion()` is Electron's).
+- **Primary files:** `desktop/packages/desktop/src/process/services/kel/engineVersion.ts` (new),
+  `KelService.ts`, `desktop/tests/unit/kelEngineVersion.test.ts` (new).
+- **Primary symbols:** `engineVersionAccepted`, `initializeKel`.
+- **Data/schema changes:** none. **Failure paths:** a stale engine is simply not reused; port
+  handling is untouched (each engine picks its own port), so nothing is stranded.
+- **Security/privacy implications:** none. **Persistence implications:** none.
+- **Expected invariants:** INV-A1-001 (a reused engine is the engine this build shipped).
+- **Tests:** 3 desktop unit tests + `tsc` 0 + vitest 93 (A-17).
+- **Packaged evidence:** n/a (the RC packaged battery starts the app, which exercises the path).
+- **Known concerns:** the end-to-end spawn fallback has no Electron harness here — the decision is
+  unit-tested, the wiring typecheck-verified (audit target §59).
+- **Audit questions:** can any path still connect to an engine whose version was not checked? Does a
+  stale engine keep holding the descriptor file (the loop re-reads it every 250 ms)?
+- **Repair hints:** `engineVersionAccepted` is the single decision point.
+
 ### CHG-008 — Sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups
 
 ID: CHG-008 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
