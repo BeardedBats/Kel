@@ -251,6 +251,134 @@ OPEN_GAP (known open finding attacks it).
   surface; confirm no false success.
 - Status: OPEN_GAP (to close in Campaign A).
 
+## INV-AUTH-001 — Delegated authority is never greater than the delegator's (R2.5: AUTH-DELEGATION)
+- Definition: when a child TaskContract is created, its effective authority is the intersection of
+  the delegator's effective authority, the task grant, the role ceiling, runtime/profile
+  limitations, tool policy, write scope, external-effect scope and the budget envelope. Delegation
+  may narrow; it must never create authority. No second permission system may be introduced.
+- Owner: assignment/delegation (existing `AUTHORITY_CLASSES`/`AUTHORITY_RANK`, role `authority_max`,
+  TaskContract `authority`/`allowed_tools`/`write_boundaries`, capability leases, assignment grants).
+- Code paths: `kel/assignment.py`, `kel/contracts.py`, `kel/delegation.py`, `kel/pods.py` (R1).
+- Tests: discriminating widening attempts (authority class, tools, write paths, external effects,
+  provider/runtime class, budget) + property-style coverage (R1).
+- Edge cases: Commander-mediated D1–D3 today (no nested spawning); revocation must still narrow.
+- Audit target: AUDIT_TARGETS §61–§66 (child requests what the parent lacks).
+- Status: PLANNED (R1).
+
+## INV-IDEM-001 — One logical event, at most one authoritative execution (R2.5: EVENT-IDEMPOTENCY)
+- Definition: a logical event may cause no more than one authoritative execution unless an explicit
+  new attempt identity is created; duplicate delivery, replay and restart must not multiply effects.
+- Owner: the existing identity primitives (event ids/dedupe, aggregate revisions, `job_intakes`, run
+  epochs, inbox ids, one-active-milestone, effect/assessment/publication/announcement ids).
+- Code paths: `kel/core.py`, `kel/engine.py`, `kel/router.py`, `kel/chat_approvals.py`; matrix in the
+  R2 increment record (R2).
+- Tests: duplicate injection across restart boundaries for every event family in the matrix (R2).
+- Edge cases: native RPC retries vs duplicates; permission replies; boundary grants.
+- Audit target: AUDIT_TARGETS §67–§70.
+- Status: PLANNED (R2).
+
+## INV-EFFECT-001 — Unresolved external effects are reconciled, never blindly replayed (R2.5: EFFECT-REPLAY)
+- Definition: an external side effect with an unknown outcome is reconciled against its recorded
+  operation identity before any retry; blind replay is forbidden.
+- Owner: effects + native hosts + coding transport.
+- Code paths: `kel/effects.py`, `kel/host_runtime.py`, `kel/coding_transport.py` (R2/R3).
+- Tests: restart after PREPARED with unknown outcome must reconcile first (R2/R3).
+- Audit target: AUDIT_TARGETS §71–§72.
+- Status: PLANNED (R2).
+
+## INV-RETRY-001 — Automatic retry history survives restart (R2.5: RETRY-DURABLE)
+- Definition: restarting the app, runtime, worker, broker or machine never resets an automatic retry
+  budget; explicit user retry is a new, separately identified attempt.
+- Owner: every autonomous retry domain (milestone execution, reviewer recovery, provider fallback,
+  route retry, planning retries, broker restart, coding-check recovery, mission/stream recovery,
+  tool retries), persisted on its authoritative entity — no global retry table.
+- Code paths: `kel/engine.py`, `kel/assignment.py`, `kel/review.py`, `kel/router.py`,
+  `kel/continuation.py`, `kel/transcription.py` (R3).
+- Tests: crash/restart between attempts and prove remaining budget does not reset (R3).
+- Audit target: AUDIT_TARGETS §71.
+- Status: PLANNED (R3).
+
+## INV-APPROVE-002 — Approval authorizes one exact canonical runtime action (R2.5: APPROVAL-EXACT)
+- Definition: an approval authorizes the exact normalized runtime action (operation, canonical
+  target/resource, normalized arguments, relevant content digest, job, run/requester, authority
+  scope, expiration, destructive preconditions) and is revalidated immediately before execution; any
+  material change, target re-normalization, preconditions or scope mismatch invalidates it.
+- Owner: existing approval records (id, job, run, action digest, expiry, actor, wait state).
+- Code paths: `kel/service.py` (`/api/approval`), `kel/authorize.py`, `kel/effects.py`;
+  **absorbs APR-02** (conversation/project/job scoping) rather than creating a second system (R4).
+- Tests: mutate the action/target/scope between approval and execution; cross-scope ids (R4).
+- Audit target: AUDIT_TARGETS §73–§75.
+- Status: PLANNED (R4) — the `INV-APPROVE-001` resolver discipline stays as-is.
+
+## INV-PERSIST-001 — Only validated, serializable, reconstructable state is durably committed (R2.5: PERSIST-CANONICAL)
+- Definition: nothing externally influenced reaches durable storage without validation before
+  commit, deterministic serializability, size limits, enum/unknown-field discipline, transaction
+  rollback on failure, and no half-valid projections. SQLite/storage is not rewritten to achieve it.
+- Owner: persistence writers (`core` transactions, contracts packets, memory, workforce
+  `assert_safe`, artifact writing, recovery records, provider observations, native receipts).
+- Code paths: `kel/core.py`, `kel/contracts.py`, `kel/memory.py`, `kel/workforce.py`,
+  `kel/evidence.py`, `kel/backup.py` (R5).
+- Tests: adversarial payloads (types, enums, sizes, nesting, non-serializable, malformed JSON, tool
+  shapes) + later startup/rebuild (R5).
+- Audit target: AUDIT_TARGETS §76–§77.
+- Status: PLANNED (R5).
+
+## INV-STATE-001 — Waiting/idle/process state never establishes completion (R2.5: COMPLETION-TRUTH)
+- Definition: only the evidence/assessment path establishes completion; `idle != completed`,
+  `waiting != failed`, `no recent event != automatically dead`, `process alive != mission
+  progressing`. Existing job/run/milestone state machines stay as they are (no universal enum).
+- Owner: engine lifecycle + renderer surfaces that report state.
+- Code paths: `kel/engine.py`, `kel/continuation.py`, `KelService.ts`/renderer state surfaces; the
+  restore outcome (`state()['restore']`) follows the same rule (R6).
+- Tests: live process with no progress; dead process with durable RUNNING; long healthy work;
+  provider outage; user-approval wait; interrupted verifier; engine restart (R6).
+- Audit target: AUDIT_TARGETS §78–§79.
+- Status: PLANNED (R6).
+
+## INV-LIVENESS-002 — Process liveness, supervisor liveness and mission progress are separate facts (R2.5: LIVENESS-SEPARATION)
+- Definition: three layers are reported separately and never conflated — OS process alive and
+  identity-matched; durable supervisor (broker/controller/lease/heartbeat) healthy; mission progress
+  according to its own semantics. Derived labels (progressing, legitimately waiting, stalled, lost,
+  recovering/reconciling, blocked on user/resource) never become an authoritative state machine.
+- Owner: Diagnostics + the existing lease/heartbeat/stall machinery.
+- Code paths: `kel/diagnostics.py`, `kel/parallel.py`, `kel/host_runtime.py`, `kel/pods.py` (R6).
+- Audit target: AUDIT_TARGETS §78.
+- Status: PLANNED (R6).
+
+## INV-RECOVERY-002 — Interrupted work resolves to exactly one classification (R2.5: RECOVERY-CLASSIFICATION)
+- Definition: every interrupted unit resolves explicitly to one of: safely resumable; safely
+  retryable; reconcile-first; user-blocked; failed/quarantined. Silence is not a classification.
+- Owner: continuation/recovery + engine-loss UX.
+- Code paths: `kel/continuation.py`, `kel/engine.py`, `kel/review.py`; renderer recovery surfaces (R6/R10).
+- Audit target: AUDIT_TARGETS §80.
+- Status: PLANNED (R6/R10).
+
+## INV-CRED-001 — Raw credentials never become arbitrary worker/tool data (R2.5: CREDENTIAL-CONTAINMENT)
+- Definition: capability to use a provider/service never implies access to its raw credential. A
+  trusted provider process may receive the credential it requires; that is different from exposing
+  it to worker code, prompts, artifacts, logs, other providers or arbitrary test subprocesses.
+- Owner: credential custody (existing OS-backed storage; engine stores references only).
+- Code paths: `kelCredentials.ts`, engine provider metadata, native adapter child environments,
+  `kel/host_runtime.py`, `kel/evidence.py` (R7 verification).
+- Tests: credential-leak probes across prompt/artifact/log/subprocess/other-provider surfaces (R7).
+- Audit target: AUDIT_TARGETS §81–§83.
+- Status: PARTIAL (V1.5 designed the boundary; R7 proves it or records the honest gap).
+
+## INV-AUTH-002 — Runtime/config changes cannot silently widen running work (R2.5: LIVE-AUTHORITY)
+- Definition: configuration or capability changes never silently widen authority of already-running
+  work (contracts/grants/snapshots stay the authority); user revocation may narrow existing work
+  immediately, and must never be blocked by over-frozen authority.
+- Owner: capability/authority snapshots + revocation paths.
+- Code paths: `kel/authorize.py`, `kel/assignment.py`, `kel/capabilities.py`; boundary exercised by
+  R1/R4 (R1/R4).
+- Audit target: AUDIT_TARGETS §66.
+- Status: PLANNED (R1/R4 boundary).
+
+Mapping to invariants that already exist (Round 2.5 names them; no duplicates are created):
+VERIFIER-INDEPENDENCE → `INV-WF-002`; MEMORY-PROVENANCE → `INV-MEM-001`/`INV-MEM-003`;
+PACKAGE-IDENTITY → `INV-PACKAGE-001` (strengthened in R8/REL-01); FREEZE-IMMUTABLE →
+`INV-FREEZE-001` (re-verified at R12).
+
 ---
 
 ## Maintenance

@@ -194,3 +194,54 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     APR-02 and SEC-01 remain OPEN: their fixes must add an ownership/scope parameter to the
     session/approval lookups — verify the fix actually refuses a cross-scope id rather than only
     documenting the intent.
+
+## Round 2.5 hardening (2026-09-18 additions — Campaign B hostile tests)
+
+61. Authority widening — authority class: a child TaskContract requests a higher class than the
+    delegator's effective authority and must be refused (AUTH-DELEGATION).
+62. Authority widening — write paths: a child requests broader `write_boundaries` than the parent
+    holds, including prefix/symlink/case tricks on Windows paths.
+63. Authority widening — tools: a child requests a higher-effect tool outside the parent's grant or
+    the role ceiling.
+64. Authority widening — policy/budget: a child requests a tool policy or budget envelope wider than
+    the delegator's (or a budget class that silently raises authority).
+65. Authority widening — provider/runtime: a child is bound to a provider/runtime class the parent
+    did not hold where that class is authority-relevant.
+66. Live authority: a configuration/capability change after work starts must not widen that work's
+    authority; user revocation must narrow it immediately and must never be blocked.
+67. Duplicate submission/intake id across a restart must not start a second authoritative run.
+68. Duplicate worker result event must not double-apply a milestone/effect transition.
+69. Duplicate native RPC / permission reply must not execute twice or bypass the wait state.
+70. Duplicate approval or boundary grant must not produce a second grant or a second resolution.
+71. Restart between automatic retries (app, runtime, worker, broker, machine) must not reset the
+    remaining automatic retry budget (RETRY-DURABLE); explicit user retry is a new attempt identity.
+72. Restart after a PREPARED external effect with unknown outcome must reconcile against the recorded
+    operation identity first — never blind replay (EFFECT-REPLAY).
+73. Approval target normalized differently at execution time (case, path, URL form) must invalidate
+    the approval (APPROVAL-EXACT).
+74. Approval action mutated after the user approved (arguments, digest, target) must invalidate.
+75. Approval used from the wrong conversation/project/job/run must be refused (absorbs APR-02).
+76. Malformed completion packet / tool output must be refused before commit — nothing half-valid is
+    written durably, and a later startup/rebuild still works (PERSIST-CANONICAL).
+77. Adversarial persistence payloads (wrong types, unknown enums, oversized text, deep nesting,
+    non-serializable values, malformed JSON) are refused at the write boundary, not at read time.
+78. Liveness separation: a live process with no progress; a stale process with a durable RUNNING row;
+    a legitimate long-running task declared stalled — each must land on the truth-telling side of
+    `process_alive != mission_progressing` (LIVENESS-SEPARATION).
+79. Completion truth: `idle != completed`, `waiting != failed`, `no recent event != automatically
+    dead`; only the evidence/assessment path establishes completion (COMPLETION-TRUTH).
+80. Recovery classification: every interrupted unit resolves explicitly to resumable / retryable /
+    reconcile-first / user-blocked / failed-quarantined — silence is a finding.
+81. Credential containment: a provider credential must not appear in a prompt, artifact, log, packet
+    or evidence record (CREDENTIAL-CONTAINMENT).
+82. Credential containment: an arbitrary test subprocess or unrelated provider child must not receive
+    provider keys; a trusted provider process receiving its own credential is expected behaviour.
+83. Native-host boundary: `host_runtime.py` must be documented and treated as a user-authorized,
+    full-access native runtime — not a sandbox; verify no grant implies otherwise.
+
+## Round 2.5 — Needs Your Attention (R9 additions)
+
+84. The attention surface must never display another project's item, invent an action that is not
+    actually available, or mutate state outside the existing action paths behind its buttons.
+85. The attention surface must be provably derived-only: with all durable sources drained, it shows
+    nothing, and it never becomes an authority of its own.

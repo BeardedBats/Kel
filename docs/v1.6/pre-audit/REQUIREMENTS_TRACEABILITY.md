@@ -48,7 +48,19 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
 | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
 | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
 | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 16/27 rows carry a final disposition (P2 6/10: PER-02, A1, APR-01, PER-03 fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 11 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3`; batch 3 `84b5646` | — | P2_P3_DISPOSITION.md | pending |
+| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | in progress — 16/27 rows carry a final disposition (P2 6/10: PER-02, A1, APR-01, PER-03 fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 11 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3`; batch 3 `84b5646` | — | P2_P3_DISPOSITION.md | pending |
+| REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | PENDING | — | — | `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` §R1 | — | pending |
+| REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
+| REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
+| REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | PENDING | — | — | roadmap §R4 | — | pending |
+| REQ-R25-R5 | roadmap R2.5 (Round 2.5 E; PERSIST-CANONICAL) | persistence integrity contract + adversarial tests | PENDING | — | — | roadmap §R5 | — | pending |
+| REQ-R25-R6 | roadmap R2.5 (Round 2.5 F/G; COMPLETION-TRUTH / LIVENESS-SEPARATION / RECOVERY-CLASSIFICATION) | truthful state + liveness separation | PENDING | — | — | roadmap §R6 | — | pending |
+| REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | PENDING | — | — | roadmap §R7 | — | pending |
+| REQ-R25-R8 | roadmap R2.5 §15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | PENDING | — | — | roadmap §R8 | — | pending |
+| REQ-R25-R9 | roadmap R2.5 (Round 2.5 N) | Visual batches 6–8 + Needs Your Attention (derived-only) | PENDING | — | — | roadmap §R9 | — | pending |
+| REQ-R25-R10 | roadmap R2.5 §17 (= REQ-ELOSS) | engine-loss/recovery UX | PENDING | — | — | roadmap §R10 | — | pending |
+| REQ-R25-R11 | roadmap R2.5 §18 | Visual → Main integration | PENDING | — | — | roadmap §R11 | — | pending |
+| REQ-R25-R12 | roadmap R2.5 §19 | final Campaign A regression | PENDING | — | — | roadmap §R12 | — | pending |
 | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
 | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
 | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
