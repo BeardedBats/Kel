@@ -8,6 +8,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import sqlite3
@@ -20,7 +21,18 @@ def uid():
 
 
 def encode(value):
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    """Canonical JSON for durable state (PERSIST-CANONICAL, Round 2.5 R5).
+
+    `allow_nan=False` keeps non-standard tokens out of the database: `NaN`/`Infinity` would be
+    written as bare text that `json.loads` reads back as non-finite floats and that strict JSON
+    consumers (the desktop renderer) cannot parse at all.
+    """
+    try:
+        return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+                          allow_nan=False)
+    except ValueError:
+        raise PolicyError('A value that cannot be stored in canonical JSON (NaN or Infinity) '
+                          'was refused') from None
 
 
 def digest(value):
@@ -889,10 +901,12 @@ class Store:
                 elif state['failures']>=3:
                     state.update(circuit_until=time.time()+60,reason='Repeated provider failure')
             state['observed_at']=time.time()
-            if isinstance(result.get('duration'),(int,float)):
-                state['latency']=result['duration'] if state.get('latency') is None else .7*state['latency']+.3*result['duration']
-            if isinstance(result.get('cost_usd'),(int,float)):
-                state.update(cost=result['cost_usd'] if state.get('cost') is None else .7*state['cost']+.3*result['cost_usd'],cost_basis='recent observed per-run cost',cost_is_estimate=True)
+            duration = result.get('duration')
+            if isinstance(duration,(int,float)) and math.isfinite(duration):
+                state['latency']=duration if state.get('latency') is None else .7*state['latency']+.3*duration
+            reported_cost = result.get('cost_usd')
+            if isinstance(reported_cost,(int,float)) and math.isfinite(reported_cost):
+                state.update(cost=reported_cost if state.get('cost') is None else .7*state['cost']+.3*reported_cost,cost_basis='recent observed per-run cost',cost_is_estimate=True)
             db.execute('INSERT INTO providers VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data',(provider,encode(state)))
 
     def provider_states(self):
