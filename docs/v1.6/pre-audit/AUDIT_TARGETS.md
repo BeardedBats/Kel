@@ -173,3 +173,13 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     unsanitised (`_header_safe` is applied to *every* parameter, not just the filename); (c) confirm
     `NEVER_BACKUP` is consulted on every backup path, including the hot-database copy, and that the
     credentials sidecar is reported as skipped rather than silently absent.
+
+## A1 engine-version binding (2026-09-18 additions)
+
+59. Engine-version binding: the *decision* is unit-tested (`engineVersionAccepted`) but the wiring
+    has no Electron harness — challenge it by reading `initializeKel` and confirming **both** trust
+    sites check the version (the reuse path and the spawn-wait loop) and that no other path can set
+    `connected = true` from an unchecked answer. Also confirm a stale engine that keeps re-writing
+    the shared `desktop-session.json` cannot satisfy the check, and that a packaged build's
+    `app.getVersion()` really equals the engine's `ENGINE_VERSION` in the RC artifact (a mismatch
+    would now block startup instead of silently reusing).

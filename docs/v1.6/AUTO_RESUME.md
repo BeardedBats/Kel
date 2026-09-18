@@ -561,3 +561,19 @@ desktop `tsc` 0; **full engine suite 905 passed** (+10 subtests, was 900). The I
 automated test (no Electron/IPC harness here) — recorded as audit target §58 rather than claimed.
 Sweep status: **11/27 rows dispositioned** (P2 1/10, P3 10/17). Next: the remaining P2s, starting
 with A1 and REL-01.
+
+## A1 / ENG-01 — detached-engine reuse validates `engine_version` (2026-09-18)
+
+**A1 FIXED (`101d8c3`), REL-01 recorded `OPEN_RELEASE_BLOCKER`.** The audit's final verdict listed
+A1 as "Detached-engine reuse does not validate `engine_version` — NEW, verified": the app read
+`desktop-session.json`, called `/api/state`, and reused whatever answered, so an upgrade (which
+replaces `resources/kel-engine`) could leave the new build talking to the old engine. The fix is a
+pure decision (`engineVersionAccepted(live, expected)` — exact match; empty expectation means an
+unpackaged dev run where `app.getVersion()` is Electron's, deliberately not enforced) applied at
+**both** trust sites: the reuse path and the spawn-wait loop, because a leftover engine can keep
+re-writing the shared descriptor. Verification: desktop `tsc` 0; vitest **93 passed** (was 90, +3).
+REL-01 is the same subsystem (which engine a build ships) but its only honest verification is a real
+freeze — outside Campaign A's boundary — so it is flagged as a release blocker with the fix drafted
+in its row rather than being silently deferred. Sweep status: **13/27 rows carry a final
+disposition** (P2 3/10, P3 10/17); 14 remain undecided. Next: the remaining P2s (APR-01/02/03,
+SEC-01, PER-03, TR-01/02) and P3s.
