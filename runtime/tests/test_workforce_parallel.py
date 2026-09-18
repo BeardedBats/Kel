@@ -586,5 +586,41 @@ class Reaudit20Tests(Base):
                          ['REVOKED'])
 
 
+class Reaudit21Tests(Base):
+    """Audit 21 (N21-1..N21-5) — the cleanup-masking and digest-override regressions."""
+
+    def test_announce_failure_keeps_the_causal_error_and_revokes_the_lease(self):
+        # N21-1/N21-3: a worker that changes nothing under its declared paths makes announce
+        # refuse *after* the stream reached DONE. Cleanup must not mask that error with an invalid
+        # DONE -> ABANDONED transition, and must not leave a live lease behind.
+        workers = {'alpha': lambda stream, allowed, lease: {'wrote': 'nothing'},
+                   'beta': lambda stream, allowed, lease: {'wrote': 'nothing'}}
+        with self.assertRaises(PolicyError) as caught:
+            run_parallel(self.store, mission_id=MISSION, decomposition=decomposition(),
+                         workers=workers, source_root=str(self.source), task_id=TASK,
+                         streams_root=self.root / 'streams', tier='D3', now=1000.0)
+        self.assertIn('did not change', str(caught.exception))
+        self.assertNotIn('closed twice', str(caught.exception))
+        self.assertEqual(leases(self.store, mission_id=MISSION, state='ACTIVE'), [])
+        states = {row['name']: row['state'] for row in streams(self.store, mission_id=MISSION)}
+        self.assertEqual(states, {'alpha': 'DONE'})
+
+    def test_the_announce_digest_has_no_caller_override(self):
+        # N21-2: the digest attests the staged change set; no parameter can replace it.
+        stream = self.open()
+        lease = acquire_lease(self.store, stream_id=stream['stream_id'], owner='w', now=1000.0)
+        run_stream(self.store, stream['stream_id'], self.worker(), lease_id=lease['lease_id'],
+                   paths=['src/alpha'], now=1000.5)
+        close_stream(self.store, stream['stream_id'], now=1001.0)
+        with self.assertRaises(TypeError):
+            announce(self.store, stream_id=stream['stream_id'], lease_id=lease['lease_id'],
+                     summary='done', write_paths=['src/alpha'], digest_value='sha256:forged',
+                     now=1002.0)
+        row = announce(self.store, stream_id=stream['stream_id'], lease_id=lease['lease_id'],
+                       summary='done', write_paths=['src/alpha'], now=1003.0)
+        old_scheme = 'sha256:' + digest('%s|%s' % (stream['stream_id'], 'done'))
+        self.assertNotEqual(row['digest'], old_scheme)
+
+
 if __name__ == '__main__':
     unittest.main()

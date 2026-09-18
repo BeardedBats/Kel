@@ -378,7 +378,8 @@ def assert_writable(store, lease_id, paths, *, now=None):
                               % (lease_id, record['expires']))
         allowed = json.loads(record['write_paths'])
         for path in wanted:
-            if not any(path == item or path.startswith(item + '/') for item in allowed):
+            if not any(_fold(path) == _fold(item) or _fold(path).startswith(_fold(item) + '/')
+                       for item in allowed):
                 raise PolicyError('Path %s is outside the lease for stream %s (declared: %s)'
                                   % (path, record['stream_id'], ', '.join(allowed)))
         others = _active_leases(db, mission_id=record['mission_id'], exclude=lease_id)
@@ -434,9 +435,13 @@ def close_stream(store, stream_id, *, state='DONE', now=None):
     return {'stream_id': stream_id, 'state': state}
 
 
-def announce(store, *, stream_id, lease_id, summary, write_paths, digest_value=None, now=None):
+def announce(store, *, stream_id, lease_id, summary, write_paths, now=None):
     """Append one announce row and chain it to the mission's previous announce (doc 07 discipline:
-    a stream states what it changed, with a digest, in order)."""
+    a stream states what it changed, with a digest, in order).
+
+    The digest is taken over the stream's staged change set and there is no caller override: the
+    row must attest the output, not a claim about it (audit 21, N21-2).
+    """
     stream = _stream_row(store, stream_id)
     if stream['state'] != 'DONE':
         raise PolicyError('Stream %s must be DONE before it announces its output' % stream['name'])
@@ -456,7 +461,7 @@ def announce(store, *, stream_id, lease_id, summary, write_paths, digest_value=N
     workspace = Path(stream['workspace'])
     git(workspace, 'add', '-A')
     patch = git(workspace, 'diff', '--cached', '--binary', stream['base'])
-    digest_value = digest_value or ('sha256:' + digest(patch.decode('utf-8', 'replace')))
+    digest_value = 'sha256:' + digest(patch.decode('utf-8', 'replace'))
     announce_id = new_id('ann_')
     with store.transaction() as db:
         previous = db.execute('SELECT announce_id FROM stream_announces WHERE mission_id=? '
@@ -468,12 +473,10 @@ def announce(store, *, stream_id, lease_id, summary, write_paths, digest_value=N
                    'write_paths,digest,summary,created) VALUES(?,?,?,?,?,?,?,?,?)',
                    (announce_id, stream['mission_id'], stream_id, seq,
                     previous['announce_id'] if previous else None, json.dumps(paths),
-                    digest_value or ('sha256:' + digest('%s|%s' % (stream_id, summary))),
-                    str(summary), stamp))
+                    digest_value, str(summary), stamp))
     return {'announce_id': announce_id, 'stream_id': stream_id, 'seq': seq,
             'previous': previous['announce_id'] if previous else None, 'write_paths': paths,
-            'digest': digest_value or ('sha256:' + digest('%s|%s' % (stream_id, summary))),
-            'summary': str(summary), 'created': stamp}
+            'digest': digest_value, 'summary': str(summary), 'created': stamp}
 
 
 def announce_chain(store, mission_id):
@@ -620,6 +623,9 @@ def conflict_metrics(store, mission_id):
     the plan (which `plan_streams` already forbids, so a non-empty value means a plan was
     tampered with), and `actual_overlaps` are overlaps between what the streams *really* changed
     — the integration-seam measurement, including a stream that wrote outside its declared paths.
+    `undeclared_writes` is reported separately and is deliberately **not** part of
+    `conflict_count`/`conflict_rate` or of `integration_ok`: a stream that strayed inside its own
+    copy is a contract deviation, not (yet) an integration conflict (audit 21, N21-5).
     """
     rows = streams(store, mission_id=mission_id)
     pairs = list(_pairs(rows))
@@ -690,13 +696,23 @@ def run_parallel(store, *, mission_id, decomposition, workers, source_root, task
                                   lease_id=lease['lease_id'],
                                   summary=entry['objective'],
                                   write_paths=entry['write_paths'], now=now)
-        except BaseException:
+        except BaseException as exc:
             # Any failure - a PolicyError, a crash in the worker, a KeyboardInterrupt - must leave
-            # the mission in a state a retry can reason about: the stream abandoned, its lease
-            # revoked (audit 20, F20-9).
-            close_stream(store, opened['stream_id'], state='ABANDONED', now=now)
-            release_lease(store, lease['lease_id'], state='REVOKED',
-                          note='stream abandoned', now=now)
+            # the mission in a state a retry can reason about, and cleanup must never replace the
+            # causal error (audit 21, N21-1). The lease is the one resource a retry cannot
+            # re-derive, so it is revoked first and unconditionally; the stream is abandoned only
+            # while it is still open, because a failure raised by announce leaves it DONE - a
+            # valid terminal state that must not be transitioned a second time.
+            try:
+                release_lease(store, lease['lease_id'], state='REVOKED',
+                              note='abandoned after %s' % type(exc).__name__, now=now)
+            except PolicyError:
+                pass  # already retired; the causal error still wins
+            try:
+                if _stream_row(store, opened['stream_id'])['state'] in ('OPEN', 'RUN'):
+                    close_stream(store, opened['stream_id'], state='ABANDONED', now=now)
+            except PolicyError:
+                pass
             raise
         release_lease(store, lease['lease_id'], now=now)
         results.append({'stream': opened, 'lease': lease, 'run': ran, 'announce': announced})
