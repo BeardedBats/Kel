@@ -149,6 +149,41 @@ OPEN_GAP (known open finding attacks it).
   result; check that waiting/idle never reads as complete; verify a legitimately long operation is
   not stalled out.
 
+## INV-CREDENTIAL-CONTAINMENT (R7)
+- Definition: the capability to use a provider does not imply arbitrary worker or tool access to the
+  raw credential; a trusted provider process receives only the credential it needs.
+- Owner: `kel.internal` (`child_env`, `redact`), `kel.appserver`, `kel.coding`, `kel.host_runtime`,
+  `kel.memory` (`scan_secret`), `kel.workforce` (`assert_safe`), `kel.backup`, `kel.diagnostics`.
+- Code paths: `child_env(keep=...)` for the Codex child; the coding test command clears all three
+  provider keys with `networkAccess: False`; `redact`/`scan_secret`/`assert_safe` keep secrets out of
+  durable content; diagnostics excludes env dumps; backups never carry the credentials file.
+- Tests: `tests/test_v16_r7_credentials.py` (5 sentinel cases). Evidence:
+  `increments/R7-CREDENTIAL-BOUNDARY.md`; A-26; commit `b6c4eff`.
+- Edge cases: the engine process and its local helper subprocesses inherit the user environment
+  (documented); `host_runtime.py` is user-authorized native execution, not an OS sandbox.
+- Audit target: attempt to read a provider key from an unrelated child env, a prompt, an artifact, a
+  packet, a log or a diagnostics export.
+
+## INV-PACKAGE-IDENTITY - INV-FREEZE-IMMUTABLE (R8)
+- Definition: packaged Kel executes the runtime artifact the release evidence identifies (the hashed
+  runtime is the loaded runtime and the engine/desktop identities agree); frozen releases stay
+  byte-untouched.
+- Owner: `scripts/build-runtime.ps1`, `freeze-release.ps1`, `verify-release.ps1`,
+  `scripts/validate-freeze.ps1`, `desktop/kel-builder.json` (extraResources -> `resources/kel-engine`),
+  `runtime/kel/__init__.py` + `service.ENGINE_VERSION`, `desktop/package.json` (`app.getVersion()`),
+  the desktop `engineVersionAccepted` guard.
+- Code paths: the load-path directory is re-created from the staged runtime; SHA-256 equality is
+  enforced between staged and load-path runtime and against the package's bundled engine; unique
+  module migration markers; the version identity is asserted by tests on both ends.
+- Tests/evidence: `tests/test_v16_r8_migrations.py` (4), `test_v16_r8_identity.py` (3), desktop
+  `engineVersion.test.ts` (3), `scripts/validate-freeze.ps1` (positive + negative), the packaged boot
+  probe (`engine_version 1.6.0`, 4 providers). Record `increments/R8-PACKAGE-ASSERTIONS.md`; A-27;
+  commits `2468b16`, `93b99b5`. Frozen refs re-verified untouched (`v1.5.0`, `v1.6.0-pre1`).
+- Edge cases: the installer battery and the real-package freeze re-run at R12; `Kel.exe`/`app.asar`
+  are synthetic stubs in the fixture.
+- Audit target: rebuild + refreeze independently and confirm the manifest hash matches the binary the
+  packaged app launches; confirm the version guard refuses a stale engine.
+
 ## INV-AUDIT-001 — Builder cannot independently final-certify production output
 - Definition: the thread that writes production code never counts as its own independent reviewer;
   independence is produced only by a separate fresh-context reviewer with its own record.

@@ -314,6 +314,23 @@ Previous: an APPROVED row authorized its action indefinitely. Primary files: `ke
 Tests: `tests/test_v16_r4_approval_exact.py` (7 new hostile cases). Risk: LOW (strictly narrowing).
 Evidence: `increments/R4-APPROVAL-EXACT.md` (producer/consumer inventory); INV-APPROVAL-EXACT; A-23.
 
+### CHG-023 - REL-01 closed: hashed runtime == loaded runtime; identity 1.6.0 (R8)
+ID: CHG-023 / Phase: Campaign A - roadmap R8 / Commits: `2468b16`, `93b99b5` / Date: 2026-09-18
+New behavior: unique module migration markers (assignment 21); `freeze-release.ps1` lands the staged
+runtime at the load path (no nesting) and refuses a package whose bundled engine differs; engine and
+desktop share the 1.6.0 identity. Previous: the freeze nested the fresh runtime under
+`resources/kel-engine/KelEngine/` while the app loaded the package's stale engine (REL-01 live), and
+the engine self-reported 1.5.0. Tests: `test_v16_r8_migrations.py`, `test_v16_r8_identity.py`,
+`engineVersion.test.ts`; fixture `scripts/validate-freeze.ps1`. Evidence:
+`increments/R8-PACKAGE-ASSERTIONS.md`; A-27.
+
+### CHG-022 - Provider children receive only their own credential (R7 / CREDENTIAL-CONTAINMENT)
+ID: CHG-022 / Phase: Campaign A - roadmap R7 / Commit: `b6c4eff` / Date: 2026-09-18
+New behavior: `internal.child_env(keep=...)`; the Codex child keeps only `OPENAI_API_KEY`; the coding
+test command clears all three provider keys. Previous: the appserver copied the whole environment
+(only Anthropic removed) and the test command missed the DeepSeek key. Tests:
+`tests/test_v16_r7_credentials.py` (5 sentinel cases). Evidence: `increments/R7-CREDENTIAL-BOUNDARY.md`; A-26.
+
 ### CHG-019 — An observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
 ID: CHG-019 · Phase: Campaign A — roadmap R2 · Commit: `fde5bbb` · Date: 2026-09-18
 New behavior: `Store.observe_effect` no longer overwrites a recorded receipt: an `OBSERVED` effect
@@ -547,5 +564,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | R4 approval window (APPROVAL-EXACT) | CHG-020 delivered (`8c899c8`); record `increments/R4-APPROVAL-EXACT.md` | DONE |
 | R5 canonical persistence (PERSIST-CANONICAL) | CHG-021 delivered (`b2ffed1`); record `increments/R5-PERSISTENCE-INTEGRITY.md` | DONE |
 | R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
+| R7 credential containment | CHG-022 delivered (`b6c4eff`); record `increments/R7-CREDENTIAL-BOUNDARY.md` | DONE |
+| R8 migrations + package identity + REL-01 | CHG-023 delivered (`2468b16`, `93b99b5`); record `increments/R8-PACKAGE-ASSERTIONS.md` | DONE |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
 | Engine-loss/recovery behavior | CHG-0xx | PENDING |
