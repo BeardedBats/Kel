@@ -1,6 +1,6 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T17:30:00Z
+updated_utc: 2026-09-18T17:50:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
@@ -15,9 +15,9 @@ last_audited_production: 8a2b25d
 first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
 unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
 
-current_increment: Phase 9 DECIDED — no Profiles concept; Projects remain the single isolation concept (docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md; REQ-PP-9 updated). Next: Phase 10.
-current_phase: Phase 10 — real provider validation (queued; Phase 9 decided)
-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/).
+current_increment: Phases 10-11 DONE — provider validation (claude real call PASS; codex CLI-version blocked; internal/deepseek no credentials) and the Rust freshness recheck (verdict upheld; Phase 12 CLOSED). Records: docs/v1.6/phase10/, docs/v1.6/phase11/. Next: F4 real-artifact binding + resolution-kind.
+current_phase: F4 real-artifact binding + resolution-kind semantics (queued; Phases 10-11 done)
+completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/).
 
 audit_requested_from: NONE
 audit_requested_through: NONE
@@ -32,7 +32,7 @@ visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — pa
 visual_last_seen_verdict: BATCH 5 accepted on the visual branch (automated 79/79 + packaged probes); human pixel gate open by design
 
 rust_verdict: NO_MIGRATION_NEEDED_NOW
-rust_freshness_required: true
+rust_freshness_required: false (Phase 11 recheck 2026-09-18 upheld the verdict; Phase 12 explicitly closed)
 
 phase4_stash_present: false
 phase4_stash_name: MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION
@@ -49,6 +49,6 @@ github_publication_current: true
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Phase 10 — real provider validation (sprint §36: validate every provider path current access allows; real calls where possible; record unavailable paths accurately; never leak credentials into evidence; build PROVIDER_VALIDATION_MATRIX continuously). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 10: Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+next_autonomous_action: F4 real-artifact binding + resolution-kind semantics (audit carry-forwards: close or explicitly disposition; evidence must connect to real delivered artifacts where required). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after F4/resolution-kind: P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
 external_dependency: NONE
 stop_reason: NONE

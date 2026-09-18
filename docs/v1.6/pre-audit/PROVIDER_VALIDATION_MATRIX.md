@@ -1,33 +1,35 @@
 # PROVIDER_VALIDATION_MATRIX — provider/model/runtime validation
 
-updated: 2026-09-18T16:05Z (seed; completed in Phase 10 — sprint §36)
-rule: **mock validation is never real-provider validation.** A row may only read `real: PASS`
-with a recorded call artifact (timestamp, transport, result — never credentials).
+updated: 2026-09-18 (Phase 10 — real calls attempted; see `docs/v1.6/phase10/PROVIDER_VALIDATION.md`)
+rule: **mock validation is never real-provider validation.** A row may only read `real: PASS` with
+a recorded call artifact (date, transport, result — never credentials).
 
-Providers defined in `runtime/kel/providers.py` (`DEFINITIONS`): `claude-code` (native CLI,
-subscription), `codex` (native CLI, subscription), `internal` (Anthropic API, `ANTHROPIC_API_KEY`),
-`deepseek` (API, `DEEPSEEK_API_KEY`). Engine adapters: native, internal, coding, durable/research.
+Providers (`runtime/kel/providers.py` DEFINITIONS): `claude-code` (native CLI, subscription),
+`codex` (native CLI, subscription), `internal` (Anthropic API key), `deepseek` (API key).
+Engine adapters: native, internal, coding, durable/research.
 
 ## Matrix
 
-| Provider | Model | Runtime | AUTO | PREFERRED | FIXED | fallback | Capability grants | Privacy/local-only | Budget | Real call? | Mock only? | Credentials? | Result | Evidence | Known limitation |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| internal (Anthropic API) | claude-sonnet-4-6 | engine adapter | routed via assignment tests | routed | routed | recorded-basis tests (engine) | fail-closed grants tests | privacy-enforced checks in assignment | reservations tested | **wire reached once** — packaged engine probe, HTTP 401 with dummy key (`package-p1cap`) | routing/assignment fixtures | none available in this environment (as of corpus open) | transport real, auth denied; real success NOT yet validated | ux-audit/p1-capability-engine-probe.py; 5.1 record | real-credential run pending Phase 10 |
-| deepseek | deepseek-chat / deepseek-reasoner | engine adapter | same test surface | same | same | same | same | — | same | no | fixtures only | none available | untested real | — | — |
-| claude-code | claude-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | fallback recorded at assignment layer | native tools (text/tools/edit/shell) | subscription auth | n/a | no | fixtures only | unknown in this environment | untested real | — | Phase 10 |
-| codex | codex-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | same | text/tools/edit/shell | subscription auth | n/a | no | fixtures only | unknown | untested real | — | Phase 10 |
+| Provider | Model | Runtime | AUTO | PREFERRED | FIXED | fallback | Capability grants | Privacy/local-only | Budget | Real call (2026-09-18) | Credentials | Result | Evidence | Known limitation |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **claude-code** | claude-native | native CLI | assignment-layer fixtures | same | same | recorded-basis fixtures | fail-closed grants tests | subscription auth | n/a | **PASS** — `claude -p "Reply with exactly: ok"` returned `ok` (exit 0); client `2.1.215` | CLI installed + authenticated | **real CLI call validated** | `docs/v1.6/phase10/PROVIDER_VALIDATION.md` | app's native-adapter spawn path packaged end-to-end not separately proven |
+| **codex** | codex-native | native CLI | assignment-layer fixtures | same | same | same | same | subscription auth | n/a | **FAIL (environment)** — real transport reached; service refused: `'gpt-6-astra' model requires a newer version of Codex` (HTTP 400); client `codex-cli 0.142.5` | CLI installed; auth implied by service response | **not validated (tooling limitation)** | same | upgrade or model fix needed before re-probe; never record as pass |
+| **internal** (Anthropic API) | claude-sonnet-4-6 | engine adapter | routed fixtures | same | same | same | same | privacy-enforced checks | reservations tested | **Unavailable** — no credential exists on this machine (env + app store searched) | none | transport real (historical packaged probe, dummy key, HTTP 401); real success NOT validated | `PROVIDER_VALIDATION.md`; ux-audit/p1-capability-engine-probe.py | provide a key → re-run Phase 10 probe |
+| **deepseek** | deepseek-chat / deepseek-reasoner | engine adapter | routed fixtures | same | same | same | same | — | same | **Unavailable** — no credential exists | none | untested real | same | provide a key → re-run |
 
-## Model routing semantics under test (engine-level, audited through 8a2b25d)
+Fixture refresh (same day): `python -m pytest tests/test_v14_providers.py tests/test_workforce_assignment.py -q` → **55 passed**.
 
-- AUTO / PREFERRED / FIXED resolution with no silent substitution; requirement profiles fail
-  closed; overlays are a graceful no-op registry (Phase 5.1; audits 10–11).
-- Per-mode fallback basis recorded (`fallback_basis`); cross-mode arguments refused.
+## Model routing semantics (engine-level, audited through `8a2b25d`; unchanged since)
+
+- AUTO / PREFERRED / FIXED resolution with no silent substitution; requirement profiles fail closed.
+- Per-mode fallback basis recorded; cross-mode arguments refused.
 - Capability grants fail closed against the authority ceiling.
 
-## Phase 10 completion checklist
+## RC checklist (remainder)
 
-- [ ] Enumerate every provider path reachable in this environment; attempt a real call where a
-      credential exists; record timestamp/result.
-- [ ] Record unavailable paths as `unavailable` — never as pass.
-- [ ] Confirm no credentials appear in any evidence artifact (scan).
-- [ ] Re-run the model-routing fixtures at RC and attach counts.
+- [x] Enumerate reachable provider paths; attempt real calls where a credential exists.
+- [x] Record unavailable paths as `unavailable` — never as pass.
+- [x] Confirm no credentials appear in any evidence artifact (probes printed presence only).
+- [ ] Re-run the model-routing fixtures at RC and attach counts (scheduled).
+- [ ] If credentials appear later: re-run the `internal`/`deepseek` probes; re-try `codex` after
+      a CLI upgrade; record each result here.
