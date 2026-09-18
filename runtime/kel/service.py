@@ -28,6 +28,16 @@ ENGINE_VERSION='1.5.0'
 # separately and never prompts.
 CODING_VERBS=('fix','build','implement','change','add','remove','update','refactor','test')
 
+def _restore_outcome(root):
+    """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
+    path=Path(root)/'restore-outcome.json'
+    try:
+        data=json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        return None
+    return {'ok':bool(data.get('ok')),'detail':data.get('detail') or '','at':data.get('at')}
+
+
 class Service:
     def __init__(self,root):
         started=time.time()
@@ -36,10 +46,12 @@ class Service:
         # A staged restore (chosen by the user in Settings) applies before anything opens
         # the databases; the previous data is kept beside it as .pre-restore-*.
         try:
-            from .backup import apply_pending_restore
+            from .backup import _record_outcome,apply_pending_restore
             apply_pending_restore(self.store)
-        except Exception:
-            pass
+        except Exception as exc:
+            # PER-02 (audit): boot must survive a restore that cannot even start, and the failure
+            # must not be silent — it is recorded beside the data and surfaced in `state()`.
+            _record_outcome(self.store.root,False,type(exc).__name__)
         self.context=Context(self.store)
         CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
         self.model=InternalAdapter() if os.environ.get('ANTHROPIC_API_KEY') else None
@@ -559,7 +571,8 @@ class Service:
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
-                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining}
+                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
+                'restore':_restore_outcome(self.store.root)}
 
     def action(self,path,data):
         with self.lifecycle_lock:

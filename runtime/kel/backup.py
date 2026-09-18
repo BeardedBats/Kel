@@ -20,6 +20,7 @@ from .core import PolicyError
 MARKER = 'restore-pending.json'
 STAGING = '.restore-staging'
 INFO = 'BACKUP-INFO.json'
+OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the data (PER-02)
 SECRET_TABLE = 'transcription_settings'
 SECRET_KEYS = ('meta_api_key',)
 SKIP_ENTRIES = (STAGING, MARKER)
@@ -258,6 +259,21 @@ def _restore_entry(source, destination):
     _copy_with_retries(source, destination)
 
 
+def _record_outcome(root, ok, detail=''):
+    """Durable, database-independent record of the last restore attempt (audit PER-02).
+
+    A restore is what replaces the database, so its outcome cannot live inside it: the record is a
+    sidecar next to the data. `Service` reads it and surfaces a failure in `state()` instead of
+    discarding it. Recording never raises — a failed restore must still return its verdict.
+    """
+    try:
+        (Path(root) / OUTCOME).write_text(
+            json.dumps({'ok': bool(ok), 'detail': str(detail)[:200], 'at': time.time()}),
+            encoding='utf-8')
+    except Exception:
+        pass
+
+
 def apply_pending_restore(store):
     """Called at engine start, before any connection touches the databases.
 
@@ -291,6 +307,11 @@ def apply_pending_restore(store):
             _restore_entry(entry, root / entry.name)
         shutil.rmtree(staging, ignore_errors=True)
         marker.unlink(missing_ok=True)
+        _record_outcome(root, True)
         return True
-    except Exception:
+    except Exception as exc:
+        # Audit PER-02: a failed or partial restore used to vanish into `False` while the marker
+        # stayed behind. The outcome is now recorded (and surfaced by the service) while the
+        # marker keeps its meaning: the restore is still pending.
+        _record_outcome(root, False, type(exc).__name__)
         return False
