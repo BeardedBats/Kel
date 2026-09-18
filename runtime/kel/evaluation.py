@@ -24,6 +24,7 @@ from kel.router import Candidate
 from kel.workforce import ensure_schema as ensure_workforce_schema
 
 INTERRUPTION_BUDGET = 1  # one planning gate per mission; clean fixture runs stay inside
+SEAM_SEED = 's3-integration-seam'  # doc 13 class 3: the integration-seam defect
 
 PILOT_CLASSES = {
     '2': {
@@ -38,6 +39,17 @@ PILOT_CLASSES = {
              'summary': 'The delivered feature does not honor the stated acceptance requirement.'},
             {'id': 's2-perf-trap', 'lens': 'performance', 'severity': 'critical',
              'summary': 'The implementation reads the full dataset per row (performance trap).'}],
+    },
+    '3': {
+        'name': 'large parallel feature',
+        'filename': 'class3_parallel.md',
+        'features': {'complexity': 3, 'decomposability': 2, 'sequentiality': 0,
+                     'uncertainty': 1, 'novelty': 0, 'risk': 1, 'domain_breadth': 1,
+                     'tool_requirements': 1, 'consequence_of_failure': 0, 'user_facing': 0,
+                     'release_proximity': 0, 'budget_class': 'deep'},
+        'seeds': [
+            {'id': SEAM_SEED, 'lens': 'functional-testing', 'severity': 'blocker',
+             'summary': 'The two modules disagree about the shared seam they both write.'}],
     },
     '6': {
         'name': 'migration',
@@ -209,6 +221,8 @@ def _make_store(run_dir):
     ensure_workforce_schema(store)
     ensure_assignment_schema(store)
     ensure_delegation_schema(store)
+    from kel.parallel import ensure_schema as ensure_parallel_schema
+    ensure_parallel_schema(store)
     ensure_archetypes(store)
     return store
 
@@ -230,6 +244,78 @@ def _detected_seeds(store, job_id, seeds):
                if row['location'] in seed_ids)
 
 
+def _make_source_repo(root):
+    """A tiny two-module repository for the class-3 mission (deterministic)."""
+    from kel.coding import git as repo_git
+    root = Path(root)
+    for name in ('alpha', 'beta'):
+        module = root / 'modules' / name
+        module.mkdir(parents=True, exist_ok=True)
+        (module / 'README.md').write_text('# %s module\n' % name, encoding='utf-8')
+    repo_git(root, 'init', '-q')
+    for args in (('add', '-A'), ('commit', '-q', '-m', 'source')):
+        repo_git(root, '-c', 'user.name=kel', '-c', 'user.email=kel@localhost', *args)
+    return root
+
+
+def _run_parallel_class(store, job_id, spec, stamp, run_dir):
+    """Config C for class 3: two disjoint streams plus the integration check.
+
+    The seeded defect is an integration seam (doc 13 class 3): both streams write one shared
+    file. A single agent delivers its artifact and never looks; here the integration check sees
+    the overlap, and the seam is recorded as a finding — which is what `_detected_seeds` counts.
+    """
+    from kel.assurance import record_finding
+    from kel.parallel import run_parallel
+    source = _make_source_repo(Path(run_dir) / 'source')
+    task_id = 'tsk_' + job_id.replace('-', '')[:16]
+    decomposition = {
+        'streams': [
+            {'name': 'module-alpha', 'objective': 'Implement the alpha module.',
+             'task_id': task_id, 'write_paths': ['modules/alpha']},
+            {'name': 'module-beta', 'objective': 'Implement the beta module.',
+             'task_id': task_id, 'write_paths': ['modules/beta']}],
+        'merge_strategy': 'apply each stream patch in stream order, then run the integration check',
+    }
+
+    def make(name):
+        def worker(stream, allowed, lease):
+            work = Path(stream['workspace']) / (allowed[0] + '/impl.txt')
+            work.parent.mkdir(parents=True, exist_ok=True)
+            work.write_text('%s implementation\n' % name, encoding='utf-8')
+            # The seeded seam: both streams also touch one shared file.
+            seam = Path(stream['workspace']) / 'shared' / 'seam.txt'
+            seam.parent.mkdir(parents=True, exist_ok=True)
+            seam.write_text('%s touches the seam\n' % name, encoding='utf-8')
+            return {'wrote': allowed[0]}
+        return worker
+
+    result = run_parallel(store, mission_id=job_id, decomposition=decomposition,
+                          workers={'module-alpha': make('alpha'), 'module-beta': make('beta')},
+                          source_root=str(source), task_id=task_id,
+                          streams_root=Path(run_dir) / 'streams', tier='D3', now=stamp)
+    metrics = result['conflict_metrics']
+    seam = next(seed for seed in spec['seeds'] if seed['id'] == SEAM_SEED)
+    detected = bool(metrics['actual_overlaps']) or not result['integration']['integration_ok']
+    if detected:
+        record_finding(store, {'schema_version': 1, 'mission_id': job_id,
+                               'task_id': task_id, 'lens': seam['lens'],
+                               'severity': seam['severity'], 'confidence': 9,
+                               'artifact': 'integration', 'location': seam['id'],
+                               'summary': seam['summary'],
+                               'evidence': 'integration check: %d conflicting path(s)'
+                                           % metrics['conflict_count'],
+                               'fingerprint': '%s:%s:seam' % (job_id, seam['id']),
+                               'status': 'open',
+                               'by': {'lens': seam['lens'], 'model_family': 'fixture',
+                                      'assignment': 'integration-check'}}, now=stamp)
+    return {'delegated': True, 'closed': True, 'verdict': 'FAILED' if detected else 'VERIFIED',
+            'streams': len(result['streams']), 'conflicts': metrics['conflict_count'],
+            'conflict_rate': metrics['conflict_rate'],
+            'integration_ok': result['integration']['integration_ok'],
+            'interruptions': 0}
+
+
 def _run_config(run_dir, class_id, config, stamp):
     store = _make_store(run_dir)
     spec = PILOT_CLASSES[class_id]
@@ -239,6 +325,9 @@ def _run_config(run_dir, class_id, config, stamp):
         result = run_d1(store, job_id, 'm1', {'objective': spec['name']}, builder,
                         enabled=True, features=dict(spec['features']), tier_max='D1',
                         candidates=_fixture_candidates(), now=stamp)
+    elif class_id == '3':
+        # doc 13 class 3: the D3 parallel mission, verified by its integration check.
+        result = _run_parallel_class(store, job_id, spec, stamp, run_dir)
     else:
         verifier = _make_verifier(store, class_id, spec['seeds'])
         result = run_d2(store, job_id, 'm1', {'objective': spec['name']}, builder, verifier,

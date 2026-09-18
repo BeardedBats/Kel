@@ -102,6 +102,7 @@ class Service:
         from .workforce import ensure_schema as ensure_workforce_schema
         from .assignment import ensure_schema as ensure_assignment_schema
         from .delegation import ensure_schema as ensure_delegation_schema
+        from .parallel import ensure_schema as ensure_parallel_schema
         Memory(self.store)
         ProjectMap(self.store)
         Continuation(self.store)
@@ -109,6 +110,7 @@ class Service:
         ensure_workforce_schema(self.store)
         ensure_assignment_schema(self.store)
         ensure_delegation_schema(self.store)
+        ensure_parallel_schema(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
