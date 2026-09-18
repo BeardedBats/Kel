@@ -92,7 +92,7 @@ class MigrationTests(Base):
         with contextlib.closing(self.store.connect()) as db:
             row = db.execute('SELECT name FROM schema_migrations WHERE version=?',
                              (MIGRATION_VERSION,)).fetchone()
-        self.assertEqual(row['name'], 'v16-workforce-schemas')
+        self.assertEqual(row['name'], 'v17-finding-resolution-kind')
 
     def test_ensure_is_idempotent_across_reopens(self):
         workforce.ensure_schema(self.store)
