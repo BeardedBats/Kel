@@ -370,6 +370,28 @@ class Store:
             db.execute('UPDATE artifact_lineage SET superseded_by=? WHERE id=?', (lineage_id, previous['id']))
         return lineage_id
 
+    def _record_assignment_artifact(self, db, job_id, milestone_id, info):
+        """Bind a produced artifact to the assignment that delivered it (audit F4 / WF-12).
+
+        `assignment_artifacts` is what closure verification reads, so the binding has to happen
+        where the artifact lands rather than being claimed by the closing packet. Bare stores that
+        have no team tables (or no assignment for this milestone) are skipped: the close path then
+        refuses the unbound claim instead of accepting a digest nothing produced.
+        """
+        table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table'"
+                           " AND name='assignment_artifacts'").fetchone()
+        if not table:
+            return None
+        row = db.execute('SELECT assignment_id FROM team_assignments WHERE job_id=?'
+                         ' AND milestone_id=? ORDER BY created DESC LIMIT 1',
+                         (job_id, milestone_id)).fetchone()
+        if row is None:
+            return None
+        db.execute('INSERT OR IGNORE INTO assignment_artifacts VALUES(?,?,?,?,?)',
+                   (row['assignment_id'], 'sha256:%s' % (info.get('sha256') or ''),
+                    Path(info['path']).name, 'artifact', time.time()))
+        return row['assignment_id']
+
     def consume(self):
         """Idempotent inbox reduction. Worker claims never assign a verdict."""
         count = 0
@@ -413,6 +435,7 @@ class Store:
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
+                    self._record_assignment_artifact(db, job['id'], run['milestone_id'], m['artifact'])
                     m.update(state='CHECKING', error=None, recommendation=None)
                 else:
                     m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),

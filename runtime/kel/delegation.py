@@ -17,8 +17,10 @@ Boundaries:
 - Ledger projections are read-only; no new persistence beyond migration 18's column.
 """
 import contextlib
+import hashlib
 import json
 import time
+from pathlib import Path
 
 from .assignment import (assign_worker, flags_snapshot, registry_ceilings,
                          reserve_budget, validate_role_fields_v2)
@@ -286,7 +288,48 @@ def _already_closed(store, assignment_id):
     return row is not None
 
 
-def _evidence_violations(store, contract, packet, *, assignment_id=None, now=None):
+def _normalise_digest(value):
+    """Digests compare as bare lowercase hex: 'sha256:ABC…' and 'ABC…' are the same artifact."""
+    text = str(value or '').strip().lower()
+    return text.split(':', 1)[1] if ':' in text else text
+
+
+def _artifact_violations(store, packet, *, assignment_id, artifact_root=None):
+    """Real-artifact binding (audit F4 / WF-12): a claim must rest on a delivered artifact.
+
+    (a) Ownership: the digest has to be recorded for this assignment (`assignment_artifacts`,
+        written when the artifact lands), so a content-bound close cannot be satisfied by a digest
+        that nothing produced — the packet used to be checked only against its own artifact list.
+    (b) On disk: when the caller supplies `artifact_root` and the artifact declares a path, the file
+        must exist and, for a full-length sha256 claim, hash to the claimed digest.
+    """
+    violations = []
+    with contextlib.closing(store.connect()) as db:
+        rows = db.execute('SELECT digest FROM assignment_artifacts WHERE assignment_id=?',
+                          (assignment_id,)).fetchall()
+    recorded = {_normalise_digest(row['digest']) for row in rows}
+    for item in packet.get('artifacts', []):
+        claimed = _normalise_digest(item.get('digest'))
+        if claimed not in recorded:
+            violations.append('artifact %s (%s) was never recorded as delivered by this assignment'
+                              % (item.get('id'), item.get('digest')))
+            continue
+        path = item.get('path')
+        if artifact_root is None or not path:
+            continue
+        target = Path(artifact_root) / path
+        if not target.is_file():
+            violations.append('artifact %s is not on disk at %s' % (item.get('id'), path))
+            continue
+        actual = hashlib.sha256(target.read_bytes()).hexdigest()
+        if len(claimed) == 64 and actual != claimed:
+            violations.append('artifact %s digest %s does not match sha256:%s on disk'
+                              % (item.get('id'), item.get('digest'), actual))
+    return violations
+
+
+def _evidence_violations(store, contract, packet, *, assignment_id=None, now=None,
+                         artifact_root=None):
     """Every stale, unbound or foreign evidence reference behind the packet's claims."""
     requirements = contract.get('evidence_requirements', {})
     contract_window = requirements.get('fresh_within', 24 * 60)
@@ -324,11 +367,19 @@ def _evidence_violations(store, contract, packet, *, assignment_id=None, now=Non
                 if requirements.get('command_bound') and not record.get('command'):
                     violations.append('claim %s: evidence %s has no command for a '
                                       'command-bound contract' % (claim.get('claim_id'), ref))
+    if assignment_id is not None and requirements.get('content_bound'):
+        violations.extend(_artifact_violations(store, packet, assignment_id=assignment_id,
+                                               artifact_root=artifact_root))
     return violations
 
 
-def close_d1(store, task_id, packet, *, now=None):
-    """Evidence-bound close: a clean close is impossible on any stale or unbound evidence."""
+def close_d1(store, task_id, packet, *, now=None, artifact_root=None):
+    """Evidence-bound close: a clean close is impossible on any stale or unbound evidence.
+
+    `artifact_root` (when supplied) also binds every claimed artifact to a real file on disk;
+    the ownership binding against `assignment_artifacts` is always enforced for content-bound
+    contracts (audit F4 / WF-12).
+    """
     contract_row = _contract_row(store, task_id)
     contract = json.loads(contract_row['data'])
     validate_completion_packet(packet)
@@ -339,7 +390,8 @@ def close_d1(store, task_id, packet, *, now=None):
     if _already_closed(store, assignment['assignment_id']):
         raise PolicyError('Task %s is already closed' % task_id)
     violations = _evidence_violations(store, contract, packet,
-                                      assignment_id=assignment['assignment_id'], now=now)
+                                      assignment_id=assignment['assignment_id'], now=now,
+                                      artifact_root=artifact_root)
     outcome = packet['outcome']
     if outcome == 'completed':
         verified = {claim['claim_id'] for claim in packet['completion_claims']

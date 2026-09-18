@@ -21,6 +21,7 @@ from kel.delegation import run_d1
 from kel.evidence import write_evidence
 from kel.pods import VERIFICATION_LENSES, run_d2
 from kel.router import Candidate
+from kel.team import Team
 from kel.workforce import ensure_schema as ensure_workforce_schema
 
 INTERRUPTION_BUDGET = 1  # one planning gate per mission; clean fixture runs stay inside
@@ -150,6 +151,10 @@ def _make_builder(store, class_id, seeds):
                                 command='kel check %s' % prepared['milestone_id'],
                                 exit_code=0, output='ok', artifact_digest=artifact_digest,
                                 ran_at=stamp, produced_by=prepared['assignment_id'])
+        # F4/WF-12: the fixture builder records what it delivered, exactly as the real worker
+        # wiring does — closure verification reads `assignment_artifacts`, never the packet's claim.
+        Team(store).add_artifact(prepared['assignment_id'], artifact_digest,
+                                 'artifact_%s.md' % class_id, 'artifact')
         return _packet(task_id=prepared['task_id'],
                        artifacts=[{'id': 'art_%s' % class_id, 'digest': artifact_digest,
                                    'kind': 'document'}],
@@ -187,6 +192,8 @@ def _make_verifier(store, class_id, seeds):
                                 produced_by=prepared['assignment_id'],
                                 output='verdict %s' % verdict,
                                 artifact_digest=artifact_digest, ran_at=stamp)
+        Team(store).add_artifact(prepared['assignment_id'], artifact_digest,
+                                 'art_verified_%s.md' % class_id, 'artifact')
         completed = verdict == 'VERIFIED'
         return {'findings': findings, 'verdict': verdict,
                 'packet': _packet(task_id=prepared['task_id'],
