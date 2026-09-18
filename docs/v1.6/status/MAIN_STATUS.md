@@ -1,19 +1,25 @@
 # MAIN_STATUS
 
-updated_utc: 2026-09-18T13:58:00Z
+updated_utc: 2026-09-18T16:30:00Z
 program: Kel V1.6
 worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
 branch: ux/v15-journeys
-head: 8a2b25d (plus docs/state commits on top; see `git log --oneline -5`)
+head: fd98cc4 (the Campaign A entry commit sits on top; see `git log --oneline -5`)
 worktree_clean: true
 
-state: PHASE_5_6_ACCEPTED
+state: IMPLEMENTATION_SPRINT
+sprint_campaign: CAMPAIGN_A
+audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
+pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
+last_audited_production: 8a2b25d
+first_unaudited_production: TBD (opens with the first Campaign A production commit)
+unaudited_range: 8a2b25d..HEAD (docs-only above 8a2b25d until the first production change)
 
-current_increment: Phase 5.6 ACCEPTED — learning loop (shadow). Audit 23 REVISE (F23-1 major: an ungated writer under a false "every write path is gated" claim; F23-2 major: store-wide lens evidence claiming project scope; plus decay/view/tier/hygiene findings) → remediation `8a2b25d` → audit 24 **CONTINUE** (all F23-1..F23-10 closed; 24-N1..N3 informational residuals only). Learned guarantees: learnings are memory records with workforce source types (no second memory system, no new storage surface, no migration); dedup/supersede ride the memory chains and never fork a (type, key) identity; decay is computed from each record's own creation; preferences only from explicit user confirmation; confidence caps + promotion queue (nothing promotes); retros, shadow staffing proposals (with predictions) and performance/validation metrics are recorded/derived with small-sample honesty; every automatic write path is gated by `workforce.learning.shadow` (default off; explicit user corrections are user actions, never gated). Phase 5.7 DEFERRED (entry unmet: no doc-13 campaign window, no user sign-off — `5.7_DECISION_DEFERRED.md`); Phase 5.8 DEFERRED (Phase 8 product decision — `5.8_DECISION_DEFERRED.md`). Next: publish this accepted checkpoint, refresh the Visual screenshot index, then Phase 6 — the memory reality audit.
-current_phase: Phase 5 — CLOSED (5.0-5.6 accepted; 5.7/5.8 deferred decisions recorded); Phase 6 next
+current_increment: Campaign A initiated — repository truth reconciled, sole ownership confirmed, pre-audit corpus initialized, baseline 878 green. Next: Phase 6.
+current_phase: Phase 6 — memory reality audit + bounded fixes (bootstrap §28)
 completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
 
-audit_requested_from: NONE (5.6 accepted through increment 24)
+audit_requested_from: NONE
 audit_requested_through: NONE
 audit_required: false
 audit_last_seen_head: 8a2b25d
@@ -22,7 +28,7 @@ audit_last_seen_verdict: CONTINUE (increment 24 — all F23-1..F23-10 closed; 24
 visual_state: READY_FOR_VISUAL
 visual_clean_head: 60b2322
 visual_required: true
-visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — package-visual5, probe-a/b/c green; see VISUAL_STATUS)
+visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — package-visual5; NOT independently audited; integration into Main pending per Campaign A)
 visual_last_seen_verdict: BATCH 5 accepted on the visual branch (automated 79/79 + packaged probes); human pixel gate open by design
 
 rust_verdict: NO_MIGRATION_NEEDED_NOW
@@ -37,12 +43,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
 known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
 
 github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
-github_remote_integration: 5127bacca293f9a483167665506eb434e8c4f1ca (verified by ls-remote after the Phase 5.6 publication — `ux-audit/github-sync-recon/19_PHASE5_6_PUBLICATION.md`)
+github_remote_integration: fd98cc402b98acf9a230fb160e4766f7f5f931f3 (verified by ls-remote at Campaign A entry 2026-09-18T16:05Z)
 github_publication_current: true
 
 frozen_pre1_verified: true
 older_freezes_verified: true
 
-next_autonomous_action: Publication done (`5127bac`, `ux-audit/github-sync-recon/19_PHASE5_6_PUBLICATION.md`); Visual screenshot index refreshed (`kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md`). Begin **Phase 6 — the memory reality audit** (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed; the memory proposal surface itself was Phase 1, commit a8c3511). Phase 5.7 stays deferred until the doc-13 campaign runs and the user signs off; Phase 5.8 waits on the Phase 8 product decision. Carry-forward: F20-6 (ignored paths are neither integrated nor counted), F20-14 (no conflict-resolution timing), N21-5 (undeclared writes reported but not counted in the conflict rate), R22-3 (evidence-package nits), and the 5.6 limitations (lens-evidence mission scoping without a findings->project link; identical-value re-observation multiplicity — 24-N2 suggests `(created, rowid)` ordering if ever tightened; rate denominator deviation — audit 23 F23-2/F23-8/F23-9) as recorded limitations; F4 real-artifact binding + F17-4/F18-5 evidence-bound review rows + a resolution-kind column (wiring increment); F16-3 (no production caller — workforce guarantees stay engine-level); doc-13 full campaign (classes 3/5/9, baseline-B conflict rate) when the matrix runs; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Review handoffs must stay disk-backed (AUTONOMOUS_OPERATION.md).
+next_autonomous_action: Phase 6 — memory reality audit (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 6: Phase 7 capability recommendations; Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
 external_dependency: NONE
 stop_reason: NONE
