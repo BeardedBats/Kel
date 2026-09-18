@@ -43,7 +43,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
 | REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
 | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
 | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | decided — deferred beyond V1.6 | docs commit (2026-09-18) | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | pending (decision review) |
-| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
+| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | decided — no Profiles concept; Projects remain the single isolation concept | docs commit (2026-09-18) | — | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | pending (decision review) |
 | REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
 | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
 | REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |

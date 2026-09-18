@@ -124,7 +124,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
 | 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
 | 8 — Advanced Worker View decision | none (decision only; FINAL: deferred beyond V1.6 — `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`) | DONE |
-| 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
+| 9 — Profiles vs Projects decision/fixes | none (decision only; FINAL: no Profiles concept — Projects remain; `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`) | DONE |
 | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
 | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
 | F4 real-artifact binding wiring | CHG-0xx | PENDING |

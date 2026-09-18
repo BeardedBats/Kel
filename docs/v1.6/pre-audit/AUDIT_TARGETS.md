@@ -110,3 +110,9 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     milestone carries the same structured recommendation (currently untested end-to-end).
 45. Packaged card rendering (deferred evidence): seed a blocked milestone with a recommendation in a
     packaged app; assert the card renders, actions hit the engine, and dismissal works.
+
+## Profiles / Projects (Phase 9 additions)
+
+46. Donor-dead paths: confirm no Kel conversation can render an `AgentBadge` that navigates to the
+    hidden donor assistant editor (`assistantId` path under `HIDE_DONOR_AGENT_SURFACES`); confirm
+    no `/profiles` route or Profiles terminology is reachable anywhere.
