@@ -182,6 +182,38 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-006 — Real-artifact binding: closure verifies the artifact the assignment delivered
+
+ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) · Commit: implementation commit · Date: 2026-09-18
+
+- **User-visible impact:** none directly (engine closure semantics); a content-bound task can no
+  longer be closed on an artifact nothing delivered.
+- **Internal impact:** `Store._record_assignment_artifact` binds each landed milestone artifact to
+  its assignment in `assignment_artifacts` (the table had a writer and **no reader**);
+  `_artifact_violations` verifies ownership at close and, when an `artifact_root` is supplied,
+  existence + digest on disk; `_evidence_violations`/`close_d1` carry the optional root.
+- **Previous behavior:** the close compared the evidence's artifact digest against the packet's own
+  artifact list, so a self-asserted digest satisfied a content-bound contract.
+- **New behavior:** the digest must be recorded for the assignment (real delivery), and a declared
+  path must exist and hash to the claim when a root is given.
+- **Primary files:** `runtime/kel/core.py`, `runtime/kel/delegation.py`,
+  `runtime/tests/test_workforce_d1.py`.
+- **Primary symbols:** listed above.
+- **Data/schema changes:** none (existing `assignment_artifacts` gains its first reader).
+- **Failure paths:** refusals join the existing `PolicyError('Evidence-bound close refused: …')`.
+- **Security/privacy implications:** none (strictness increases).
+- **Persistence implications:** the binding is written inside the consume transaction
+  (`INSERT OR IGNORE`, idempotent).
+- **Expected invariants:** INV-F4-001 (new: a content-bound close rests on a recorded delivered
+  artifact; on-disk binding when a root is supplied).
+- **Tests:** `tests/test_workforce_d1.py` (4 new) + full suite (A-14).
+- **Packaged evidence:** n/a (engine semantics; the RC battery re-runs the engine suite).
+- **Known concerns:** `run_d1` does not pass an `artifact_root` yet; non-content-bound contracts keep
+  their previous scope.
+- **Audit questions:** can any path write a content-bound close that no delivered artifact backs?
+  Does the recorder double-write on re-landing (it must not)?
+- **Repair hints:** recorder next to `_record_lineage`; verifier next to `_evidence_violations`.
+
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
@@ -193,7 +225,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | Canonical logo (Nick directive 2026-09-18) | CHG-004 delivered (branding commit); record `docs/v1.6/branding/` | DONE |
 | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
 | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
-| F4 real-artifact binding wiring | CHG-0xx | PENDING |
+| F4 real-artifact binding wiring | CHG-006 delivered (implementation commit); record `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | DONE |
 | resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
 | P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |

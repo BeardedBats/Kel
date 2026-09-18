@@ -510,3 +510,20 @@ markers) is preserved. Commit `a547936`; record `increments/REQ-RK-RESOLUTION-KI
 `tests/test_v16_resolution_kind.py` (6); focused 136 passed; **full engine suite 891 passed**
 (+10 subtests, was 885). No desktop change required (no desktop code reads reasons or lens stats).
 Next: **F4 real-artifact binding wiring**.
+
+## REQ-F4 / WF-12 — real-artifact binding (2026-09-18)
+
+**DONE — REQ-F4 / audit carry-forward F4 (audit scope WF-12).** Closure verification compared the
+evidence's artifact digest against the *packet's own* artifact list, and `assignment_artifacts` —
+the table recording what an assignment really delivered — had a writer (`Team.add_artifact`) and no
+reader. Now: `Store._record_assignment_artifact` binds each landed milestone artifact to its
+assignment in the same transaction as `artifact_lineage` (idempotent), and
+`_artifact_violations` refuses a content-bound close whose claimed digest was never recorded for
+that assignment — plus, when a caller supplies `artifact_root`, a missing file or a digest that
+does not match what is on disk. The gate immediately found 8 failures + 5 errors in fixture
+harnesses (D2 builder/verifier workers, pilot specialists) which now record their deliveries the
+way the real worker wiring must. Commit `081a6ef`; record
+`increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; tests `tests/test_workforce_d1.py` (4 new); focused
+126 passed; **full engine suite 895 passed** (+10 subtests, was 891). Residuals: `run_d1` does not
+yet pass an `artifact_root` (audit target 56); non-content-bound contracts keep their previous
+scope. Next: **P2/P3 sweep**.
