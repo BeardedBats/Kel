@@ -129,6 +129,53 @@ class ApprovalActorGuardTests(unittest.TestCase):
                 self.service._action(path, dict(payload, actor='system'))
 
 
+class DispatchRequiredFieldTests(unittest.TestCase):
+    """COR-06/ERR-01: a missing request field answers with a plain sentence, never a raw KeyError."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.service = Service(str(Path(self.tmp.name) / 'kel.sqlite3'))
+        # LIFO: the service shuts down before the temp tree is removed, and a lingering Windows log
+        # handle must not turn a passing assertion into a teardown failure.
+        self.addCleanup(self._cleanup_tmp)
+        self.addCleanup(self.service.shutdown)
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def _refused(self, path, payload, needle):
+        with self.assertRaises(PolicyError) as caught:
+            self.service._action(path, payload)
+        message = str(caught.exception)
+        self.assertIn(needle, message)
+        self.assertNotIn('Error', message)  # never a raw exception string
+        return message
+
+    def test_vetting_actions_without_a_session_answer_in_a_plain_sentence(self):
+        for payload in ({'action': 'process'}, {'action': 'finish'}, {'action': 'preview'},
+                        {'action': 'ingest', 'text': '1: C'}, {'action': 'apply_pending'}):
+            self._refused('/api/vetting', payload, 'Open a design-vetting session first.')
+        self._refused('/api/vetting', {'action': 'help'}, 'Open a design-vetting session first.')
+
+    def test_transcription_actions_without_an_id_answer_in_a_plain_sentence(self):
+        self._refused('/api/transcription', {'action': 'rename'}, 'Pick a recording first.')
+        self._refused('/api/transcription', {'action': 'delete'}, 'Pick a recording first.')
+        self._refused('/api/transcription', {'action': 'export_text'}, 'Pick a recording first.')
+        self._refused('/api/transcription', {'action': 'combine', 'id': 'tr-1'},
+                      'Pick a recording to add first.')
+        self._refused('/api/transcription', {'action': 'stream_chunk'},
+                      'That recording session has ended.')
+
+    def test_the_inline_routes_use_the_same_sentence_contract(self):
+        self._refused('/api/retry', {}, 'Pick a request to retry first.')
+        self._refused('/api/control', {}, 'Pick a request first.')
+        self._refused('/api/apply', {}, 'Kel could not find that change to apply.')
+        self._refused('/api/approval', {'allow': True}, 'Permission request missing')
+
+
 class _Store:
     """Minimal stand-in: the backup path reads `root` and `db_path` only."""
 
