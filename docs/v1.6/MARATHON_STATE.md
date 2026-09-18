@@ -3,7 +3,7 @@
 MARATHON_MODE: ACTIVE
 
 start_head: 756218e (published docs tip; production 8a677d0)
-current_head: `dc65fbc` + R1 docs commit (see `git log --oneline -8`)
+current_head: `b2ffed1` (R5) + R6 tests/breadcrumbs (see `git log --oneline -14`)
 
 completed_this_run:
 - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
@@ -15,12 +15,17 @@ completed_this_run:
   `validate_task_contract(parent_authority=…)` + D1/D2 wiring (verifier inside the mission envelope)
   + `reserve_budget` job-envelope check; 21 new tests; evidence A-21 (**952 passed + 10 subtests**),
   `increments/R1-AUTHORITY-CEILING.md`, INV-AUTH-DELEGATION, REQ-R25-R1 implemented.
-- breadcrumbs kept current for R0 and R1: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
+- **R2–R6 COMPLETE** — R2 idempotency matrix + observed-effect receipt (`fde5bbb`), R3 retry
+  durability inventory + restart tests (`1a9f538`), R4 APPROVAL-EXACT window check (`8c899c8`),
+  R5 canonical persistence (`b2ffed1`), R6 truthful state/liveness (inventory + tests). Evidence:
+  A-22..A-25, `increments/R2…`–`R6…`, CHG-019..021, INV-RETRY-DURABLE / INV-APPROVAL-EXACT /
+  INV-PERSIST-CANONICAL / INV-LIVENESS-SEPARATION / INV-COMPLETION-TRUTH / INV-RECOVERY-CLASSIFICATION.
+- breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
   MAIN_STATUS, AUTO_RESUME
 
-current_phase: R2 — logical-work / idempotency matrix (EVENT-IDEMPOTENCY + EFFECT-REPLAY)
-current_item: R2.A — build the real matrix for every authoritative event family (identity, dedupe, persistence, duplicate/restart/side-effect behavior) before changing anything
+current_phase: R7 — credential / network boundary (CREDENTIAL-CONTAINMENT)
+current_item: R7.A — inventory every place a credential could become prompt text, ambient env, artifact, packet, log or export; then sentinel tests
 
 next_queue:
 1. R2 — matrix + repair only demonstrated duplicate-execution gaps + hostile duplicate tests
@@ -35,13 +40,13 @@ next_queue:
 10. R11 — Visual → Main integration
 11. R12 — final Campaign A regression → PRE_AUDIT_V1_6_HEAD
 
-last_focused_tests: R1 — `test_v16_r1_authority.py` 21; workforce family 269 together
-last_full_engine: **952 passed + 10 subtests** (287.14s) at `dc65fbc` (was 931 at `594b8b4`)
+last_focused_tests: R6 liveness 5; R2–R5 + core 84 together
+last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` (was 974 at `8c899c8`)
 last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`, R0 batch)
 last_desktop_vitest: **93 passed** (8 files, R0 batch)
 last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
 
-last_push: `dc65fbc` → origin/ux/v15-journeys (R1 docs commit follows)
+last_push: `b2ffed1` → origin/ux/v15-journeys (R6 breadcrumbs follow)
 last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
 
 blocker: NONE

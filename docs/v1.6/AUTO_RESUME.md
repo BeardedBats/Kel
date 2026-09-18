@@ -709,3 +709,37 @@ INV-AUTH-DELEGATION; REQ-R25-R1 implemented; TEST_EVIDENCE_INDEX A-21.
 Next: **R2 — logical-work/idempotency matrix** (`EVENT-IDEMPOTENCY` + `EFFECT-REPLAY`): classify
 every autonomous event family, prove what is already safe, repair only demonstrated
 duplicate-execution gaps, hostile duplicate tests across restart where possible.
+
+## R2–R6 COMPLETE — invariants executable, evidence recorded (2026-09-18, marathon run)
+
+Five increments; three production commits plus two inventory+test increments:
+
+- **R2 `fde5bbb`** — the 17-family logical-work/idempotency matrix (`increments/R2-IDEMPOTENCY-MATRIX.md`):
+  submissions, intake, events/revisions, runs, epochs, inbox, native RPC/permission replies, approvals,
+  boundary grants, effects, change application, continuation, broker recovery, publication, workforce
+  messages, parallel announcements. 16 proven safe with code anchors; the one latent gap
+  (`Store.observe_effect` overwrote a recorded receipt) repaired minimally + 10 hostile-duplicate tests.
+- **R3 `1a9f538`** — retry/recovery budget inventory: every automatic family already stores its budget
+  on its owner entity (job row, provider row, review_runs, leases, receipts, restore record); 5
+  restart-durability tests; no production change justified.
+- **R4 `8c899c8`** — APPROVAL-EXACT: producer/consumer inventory + the consumer-side window check in
+  `Authorizer._approval_ok`; 7 hostile cases (exact action, other job, pending, outside window,
+  resolve-after-expiry, double resolution, grant scope/revoke).
+- **R5 `b2ffed1`** — PERSIST-CANONICAL: `encode` refuses NaN/Infinity (canonical JSON for durable state
+  *and* digests), provider metrics guarded, submit type guard; 7 hostile ingress tests.
+- **R6 tests+record** — LIVENESS-SEPARATION / COMPLETION-TRUTH / RECOVERY-CLASSIFICATION verified: an
+  expired run is ORPHANED with a fresh epoch, UNCERTAIN 'requires reconciliation', never auto-retried;
+  waiting ≠ completed/failed; liveness never completes work; 5 tests.
+
+Evidence: full engine **981 passed + 10 subtests** at `b2ffed1` (A-24); focused A-25; CHG-019..021;
+INV-EVENT-IDEMPOTENCY / INV-EFFECT-REPLAY / INV-RETRY-DURABLE / INV-APPROVAL-EXACT /
+INV-PERSIST-CANONICAL / INV-LIVENESS-SEPARATION / INV-COMPLETION-TRUTH / INV-RECOVERY-CLASSIFICATION;
+REQ-R25-R2..R6.
+
+Next: **R7 — credential/network boundary** (CREDENTIAL-CONTAINMENT): audit provider metadata,
+credential references/store, native child env, Claude/Codex env, DeepSeek/internal handling,
+native-host, test-command env, prompts, logs, artifacts, packets, diagnostics and error messages;
+synthetic-sentinel tests; document that `host_runtime.py` is user-authorized native execution, not an
+OS sandbox (no Windows egress filtering in Campaign A). Then R8 packaged/migration assertions +
+REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration →
+R12 final regression → PRE_AUDIT_V1_6_HEAD.
