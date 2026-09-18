@@ -11,10 +11,12 @@ The workforce compounds institutional knowledge without self-modification:
   ledger the team system already maintains.
 * Performance stats and validation metrics are **derived views** (doc 11 §3, doc 13 §4),
   computed from findings, contracts, budgets and mission streams — never fabricated sampling.
-* **Shadow first** (doc 11 §5): every write path is gated by `workforce.learning.shadow`
-  (default off); nothing here applies to live staffing, gating or ceremony. Anything above the
-  auto-approval confidence cap is stored capped and queued for promotion. Preferences are
-  recorded only from explicit user confirmation; everything else stays advisory and inspectable.
+* **Shadow first** (doc 11 §5): every automatic write path is gated by
+  `workforce.learning.shadow` (default off); nothing here applies to live staffing, gating or
+  ceremony. Explicit user corrections are user actions and are never gated — exactly like every
+  other memory correction. Anything above the auto-approval confidence cap is stored capped and
+  queued for promotion. Preferences are recorded only from explicit user confirmation;
+  everything else stays advisory and inspectable.
 
 Learnings carry confidence 1-10 (mirrored into the memory confidence column as 0..1).
 Observed, inferred and cross-model learnings decay one point per 30 days without
@@ -40,8 +42,6 @@ LEARNING_SOURCES = ('observed', 'user-stated', 'inferred', 'cross-model')
 # (type, topic) uniqueness maps exactly to the learning (type, key) identity).
 TYPE_TO_MEMORY = {'pattern': 'convention', 'pitfall': 'limitation', 'preference': 'preference',
                   'architecture': 'component', 'tool': 'workflow'}
-MEMORY_TO_TYPE = {memory_type: learning_type for learning_type, memory_type
-                  in TYPE_TO_MEMORY.items()}
 
 # Learning source -> the workforce memory source_type (doc 11 §2: trust follows source;
 # observed and cross-model outrank inference, and user-stated rides the existing
@@ -55,8 +55,6 @@ DECAY_DAYS = 30           # observed/inferred learnings decay 1 point per 30 day
 KEY_RE = re.compile(r'^[a-z0-9][a-z0-9._-]{1,159}$')
 LEARNING_SCHEMA = 'learning.v1'
 RETRO_SCHEMA = 'retro.v1'
-EVENT_KINDS_USED = ('learning.recorded', 'retro.drafted', 'staffing.proposed',
-                    'proposal.queued')
 
 
 def _off(reason='workforce.learning.shadow is off', snapshot=None):
@@ -84,19 +82,26 @@ def _decode(row, field):
 
 
 def _rows(store, sql, args=()):
-    """Read rows defensively: the shadow loop never fails because an optional table is absent."""
+    """Read rows; only a missing optional table degrades to an empty read.
+
+    A locked or failing database must surface as an error — a retro that silently reads as
+    "nothing went wrong" because the connection failed is exactly the false-honesty this loop
+    must not produce (audit 23, F23-4).
+    """
     with contextlib.closing(store.connect()) as db:
         try:
             return [dict(row) for row in db.execute(sql, args).fetchall()]
-        except sqlite3.OperationalError:
-            return []
+        except sqlite3.OperationalError as exc:
+            if 'no such table' in str(exc).lower():
+                return []
+            raise
 
 
 # ---- learnings: memory records with a workforce source_type (doc 11 §1-2) -------------------
 
 def record_learning(store, *, project_id, key, type, insight, confidence, source,
                     evidence=(), mission_id=None, task_id=None, confirmed_by=None,
-                    flags=None, now=None):
+                    flags=None):
     """Record one learning observation (append-only; the memory store resolves chains).
 
     Same (key, type): the memory ladder decides — stronger trust supersedes, equal trust takes
@@ -158,7 +163,7 @@ def record_learning(store, *, project_id, key, type, insight, confidence, source
                         proposal_kind='learning.promotion', subject=key,
                         requested={'type': type, 'source': source, 'confidence': requested},
                         basis={'cap': AUTO_CONFIDENCE_CAP, 'memory_id': memory_id},
-                        flags=snapshot, now=now)
+                        flags=snapshot)
     return {'recorded': True, 'memory_id': memory_id, 'key': key, 'type': type,
             'source': source, 'stored_confidence': stored, 'cap_applied': queued,
             'seq': event.get('seq')}
@@ -186,16 +191,23 @@ def learnings_view(store, *, project_id, include_stale=False, now=None):
             continue
         if not isinstance(value, dict) or value.get('schema') != LEARNING_SCHEMA:
             continue
-        current[value.get('key') or row['topic']] = (row, value)
+        # Identity is (learning type, key) — two live learnings may share a key across types
+        # (their memory types differ by the 1:1 map), so never collapse by key alone
+        # (audit 23, F23-5).
+        current[(value.get('type') or 'unknown', value.get('key') or row['topic'])] = (row, value)
     items = []
-    for key in sorted(current):
-        row, value = current[key]
+    for _type, key in sorted(current):
+        row, value = current[(_type, key)]
         confidence = int(value.get('confidence') or 1)
         source = value.get('source') or 'observed'
         if source == 'user-stated':
             effective = confidence
         else:
-            months = int(max(0.0, moment - float(row['updated'] or moment)) // (DECAY_DAYS * 86400))
+            # Decay runs from the record's OWN creation: a losing weaker write bumps the
+            # winner's `updated` in the memory store, and that must never reset its decay
+            # clock without a real re-observation (audit 23, F23-3).
+            born = float(row['created'] or row['updated'] or moment)
+            months = int(max(0.0, moment - born) // (DECAY_DAYS * 86400))
             effective = max(0, confidence - months)
         stale = effective < 1
         if stale and not include_stale:
@@ -209,12 +221,13 @@ def learnings_view(store, *, project_id, include_stale=False, now=None):
     return items
 
 
-def correct_learning(store, memory_id, *, insight=None, confidence=None, actor='user',
-                     flags=None):
+def correct_learning(store, memory_id, *, insight=None, confidence=None, actor='user'):
     """Inspectable and correctable (doc 11 §5): a user correction supersedes the record.
 
     The memory store preserves the append-only chain; the corrected record becomes
-    user-stated (trust 2) because the user just restated it.
+    user-stated (trust 2) because the user just restated it. Corrections are explicit user
+    actions and are never gated by the shadow flag — exactly like every other memory
+    correction (audit 23, F23-1).
     """
     if insight is None and confidence is None:
         raise PolicyError('Nothing to correct: pass insight and/or confidence')
@@ -244,7 +257,7 @@ def correct_learning(store, memory_id, *, insight=None, confidence=None, actor='
 # ---- the promotion queue (doc 11 §4.5): recorded, never applied -----------------------------
 
 def queue_promotion(store, *, project_id, proposal_kind, subject, requested, basis=None,
-                    flags=None, now=None):
+                    flags=None):
     """Queue a promotion request (cross-project scope, playbook/role edits, high confidence).
 
     Recorded with the request and its basis; nothing is applied — promotion is gated on the
@@ -284,7 +297,7 @@ def promotion_queue(store, *, project_id=None):
 # ---- shadow staffing proposals (doc 11 §5): recorded with predictions -----------------------
 
 def shadow_proposal(store, *, project_id, mission_id, proposal, prediction, confidence,
-                    basis=(), flags=None, now=None):
+                    basis=(), flags=None):
     """Record one shadow staffing proposal with its prediction. Never applied."""
     snapshot = flags_snapshot() if flags is None else dict(flags)
     if not _shadow(snapshot):
@@ -377,10 +390,17 @@ def _mission_tiers(store):
         try:
             task_to_mission = {row['task_id']: row['mission_id']
                                for row in db.execute('SELECT mission_id, task_id FROM task_contracts')}
-        except sqlite3.OperationalError:
-            return {}
+        except sqlite3.OperationalError as exc:
+            if 'no such table' in str(exc).lower():
+                return {}
+            raise
     issued, assigned = {}, {}
     for row in _mission_events(store, ('contract.issued', 'staffing.decided')):
+        # Only assignment-scoped events join a tier to a task; mission-scoped rows (NULL
+        # assignment ids) would collapse onto one key and could attach a tier to the wrong
+        # mission (audit 23, F23-6).
+        if row['assignment_id'] is None:
+            continue
         detail = _decode(row, 'detail')
         if row['kind'] == 'contract.issued' and detail.get('task_id'):
             issued[row['assignment_id']] = detail['task_id']
@@ -396,11 +416,14 @@ def _mission_tiers(store):
 
 
 def _conflict_summary(store, mission_id):
+    """Mission conflicts, or None when the parallel tables were never created."""
     from .parallel import conflict_metrics
     try:
         return conflict_metrics(store, mission_id)
-    except sqlite3.OperationalError:
-        return None
+    except sqlite3.OperationalError as exc:
+        if 'no such table' in str(exc).lower():
+            return None
+        raise
 
 
 def _derive_shadow_proposal(*, tier, findings, conflicts):
@@ -494,31 +517,35 @@ def retro_for(store, *, mission_id):
 
 # ---- the curator (doc 11 §4): post-mission, bounded, deterministic --------------------------
 
-def curate(store, *, project_id, mission_id, now=None, flags=None):
+def curate(store, *, project_id, mission_id, missions=None, now=None, flags=None):
     """Run the post-mission curator pipeline in shadow mode.
 
     Collect -> dedup -> score -> propose (\"would the system catch this next time?\" is encoded
     as a concrete, testable rule per candidate) -> record within confidence caps; preferences
     only from explicit user confirmation; promotions queued, never applied. With
     `workforce.learning.shadow` off this performs zero writes (B-config parity by
-    construction)."""
+    construction). Lens evidence is scoped by the `missions` the caller attributes to this
+    project (the engine records no findings->project link); without it the insight text says
+    "the recorded evidence" instead of claiming project scope (audit 23, F23-2)."""
     snapshot = flags_snapshot() if flags is None else dict(flags)
     if not _shadow(snapshot):
         return {'applied': False, 'reason': 'workforce.learning.shadow is off', 'flags': snapshot}
     moment = time.time() if now is None else now
+    scope = list(missions) if missions else None
+    scope_label = 'this project' if scope else 'the recorded evidence'
     candidates = []
-    for lens, counts in sorted(_lens_evidence(_finding_rows(store)).items()):
+    for lens, counts in sorted(_lens_evidence(_finding_rows(store, missions=scope)).items()):
         if counts['dismissed'] >= 2:
             candidates.append({'key': 'lens.%s.false-positive' % lens, 'type': 'pitfall',
-                               'insight': 'The %s lens over-fires: %d dismissed findings in '
-                                          'this project.' % (lens, counts['dismissed']),
+                               'insight': 'The %s lens over-fires: %d dismissed findings across '
+                                          '%s.' % (lens, counts['dismissed'], scope_label),
                                'confidence': min(10, 2 + counts['dismissed']),
                                'source': 'observed', 'evidence': counts['ids_dismissed'][:12]})
         if counts['confirmed'] >= 2:
             candidates.append({'key': 'lens.%s.proven' % lens, 'type': 'pattern',
                                'insight': 'The %s lens repeatedly finds real defects: %d '
-                                          'confirmed findings in this project.'
-                                          % (lens, counts['confirmed']),
+                                          'confirmed findings across %s.'
+                                          % (lens, counts['confirmed'], scope_label),
                                'confidence': min(10, 2 + counts['confirmed']),
                                'source': 'observed', 'evidence': counts['ids_confirmed'][:12]})
     for topic, slot in sorted(_correction_evidence(store, project_id).items()):
@@ -557,7 +584,7 @@ def curate(store, *, project_id, mission_id, now=None, flags=None):
             insight=candidate['insight'], confidence=candidate['confidence'],
             source=candidate['source'], evidence=candidate.get('evidence', ()),
             mission_id=mission_id, confirmed_by=candidate.get('confirmed_by'),
-            flags=snapshot, now=moment))
+            flags=snapshot))
     tier = _mission_tiers(store).get(mission_id)
     findings = _finding_rows(store, missions=[mission_id])
     proposal = _derive_shadow_proposal(tier=tier, findings=findings, conflicts=conflicts)
@@ -567,7 +594,7 @@ def curate(store, *, project_id, mission_id, now=None, flags=None):
                                           proposal=proposal['proposal'],
                                           prediction=proposal['prediction'],
                                           confidence=proposal['confidence'],
-                                          basis=proposal['basis'], flags=snapshot, now=moment)
+                                          basis=proposal['basis'], flags=snapshot)
     retro = draft_retro(store, project_id=project_id, mission_id=mission_id,
                         learnings=[item['key'] for item in recorded if item.get('recorded')],
                         proposals=[proposal_result['seq']] if proposal_result
