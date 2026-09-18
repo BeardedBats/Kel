@@ -143,6 +143,16 @@ function broadcastEngineState(force = false): void {
   const key = `${frame.state}:${frame.attempts}`;
   if (!force && key === lastBroadcastState) return;
   lastBroadcastState = key;
+  // Packaged evidence + support: link transitions land beside the engine log (the packaged app
+  // has no console). Best-effort only — logging must never break supervision.
+  try {
+    fs.appendFileSync(
+      path.join(dataRoot(), 'desktop-link.log'),
+      `[KEL-LINK] ${new Date().toISOString()} state=${frame.state} attempts=${frame.attempts}\n`
+    );
+  } catch {
+    // Best effort.
+  }
   for (const window of BrowserWindow.getAllWindows()) {
     try {
       window.webContents.send('kel:engine-state', frame);
