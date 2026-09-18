@@ -22,6 +22,8 @@ from .core import PolicyError
 ACCESS = 'access'
 ACTION = 'action'
 ITEM_LIMIT = 200
+MIGRATION_VERSION = 20
+MIGRATION_NAME = 'chat_approval_announcements'
 
 ANNOUNCE_DDL = """
 CREATE TABLE IF NOT EXISTS approval_announcements(
@@ -42,9 +44,18 @@ _ACCESS_SCOPE_TITLE = {
 
 
 def ensure_schema(store):
-    """Idempotent; every entry point that reads or writes announcements calls this."""
+    """Idempotent; every entry point that reads or writes announcements calls this.
+
+    Verified cheap after the first call (audit APR-05): the read path runs on every UI poll (the
+    approval card refreshes every 3 seconds), so once this module's migration row exists the call
+    returns before any DDL — announcements, leases/requests and the coding tables included. A
+    store written before this marker existed runs the idempotent body once and is then stamped.
+    """
+    from .memory import _table
     with contextlib.closing(store.connect()) as db:
-        db.executescript(ANNOUNCE_DDL)
+        if _table(db, 'schema_migrations') and db.execute(
+                'SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone():
+            return True
     # The view reads leases/requests and conversation links, so it creates those schemas
     # on the same entry point - a fresh store can always answer a chat read.
     from .autonomy import ensure_schema as ensure_autonomy
@@ -53,6 +64,10 @@ def ensure_schema(store):
     ensure_autonomy(store)
     ensure_continuation(store)
     CodingAdapter(store)  # schema only; owns approval_actions
+    with contextlib.closing(store.connect()) as db:
+        db.executescript(ANNOUNCE_DDL)
+        db.execute('INSERT OR IGNORE INTO schema_migrations VALUES(?,?,?,?)',
+                   (MIGRATION_VERSION, MIGRATION_NAME, time.time(), 'tables=2'))
     return True
 
 

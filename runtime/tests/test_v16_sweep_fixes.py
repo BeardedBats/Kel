@@ -5,13 +5,15 @@ Both findings were verified against the tree during the sweep: `_multipart` inte
 caller's filename into `Content-Disposition` unescaped, and a `KEL_DATA_DIR` override can place
 `kel-credentials.json` inside the data root that backups copy.
 """
+import contextlib
 import tempfile
 import unittest
 from pathlib import Path
 
 import kel.backup as backup
 from kel.backup import Backup, MARKER, NEVER_BACKUP, STAGING, apply_pending_restore
-from kel.core import PolicyError
+from kel.chat_approvals import MIGRATION_VERSION, ensure_schema, items
+from kel.core import PolicyError, Store
 from kel.service import Service
 from kel.transcription import _header_safe, _multipart
 
@@ -174,6 +176,68 @@ class DispatchRequiredFieldTests(unittest.TestCase):
         self._refused('/api/control', {}, 'Pick a request first.')
         self._refused('/api/apply', {}, 'Kel could not find that change to apply.')
         self._refused('/api/approval', {'allow': True}, 'Permission request missing')
+
+
+class ApprovalPollDdlTests(unittest.TestCase):
+    """APR-05: the approval card polls `items()` every 3 seconds; a poll must not run DDL."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def _adapter_builds(self, call):
+        """Count `CodingAdapter` constructions inside the call.
+
+        Every DDL statement in `ensure_schema` lives behind that construction (or behind the
+        sibling ensures it precedes), so a zero count proves the early return ran: a poll that
+        returns before the body cannot execute DDL.
+        """
+        import kel.coding as coding
+        builds = []
+        original = coding.CodingAdapter
+
+        class _Spy(original):
+            def __init__(self, store):
+                builds.append(1)
+                super().__init__(store)
+
+        coding.CodingAdapter = _Spy
+        try:
+            call()
+        finally:
+            coding.CodingAdapter = original
+        return len(builds)
+
+    def test_the_first_call_stamps_the_migration_and_creates_the_table(self):
+        ensure_schema(self.store)
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertIsNotNone(db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
+                                            (MIGRATION_VERSION,)).fetchone())
+            self.assertIsNotNone(db.execute("SELECT name FROM sqlite_master WHERE type='table'"
+                                            " AND name='approval_announcements'").fetchone())
+
+    def test_the_poll_path_performs_no_ddl_once_stamped(self):
+        ensure_schema(self.store)
+        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 0)
+        self.assertEqual(self._adapter_builds(lambda: items(self.store, 'main')), 0)
+
+    def test_a_store_from_before_the_marker_is_stamped_on_the_next_call(self):
+        # Simulates an upgrade: the tables exist, the marker does not yet.
+        ensure_schema(self.store)
+        with self.store.transaction() as db:
+            db.execute('DELETE FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,))
+        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 1)
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertIsNotNone(db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
+                                            (MIGRATION_VERSION,)).fetchone())
+        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 0)
 
 
 class _Store:
