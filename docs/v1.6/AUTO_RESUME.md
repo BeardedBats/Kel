@@ -643,3 +643,43 @@ APPROVAL-EXACT completion (target normalization + revalidation immediately befor
 with **R4**. Sweep: **17/27 rows carry a final disposition** (P2 7/10, P3 10/17); 10 remain — SEC-01,
 TR-01, TR-02 and 7 P3 rows. Next: SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle
 review), then the P3 rows; R1 follows R0.
+
+## R0 COMPLETE — the P2/P3 sweep is 100% dispositioned (2026-09-18, marathon run)
+
+**Every row in `pre-audit/P2_P3_DISPOSITION.md` now carries a final disposition** (26 rows in-table:
+P2 10, P3 16 — the sprint directive cites 27; the count difference is recorded for Campaign B rather
+than guessed at). Five production commits: `49e528e` SEC-01, `8ab7699` TR-01, `5950efb`
+COR-06/ERR-01, `dd34ac2` APR-05, `594b8b4` COR-03/APR-06/THM-01.
+
+- **SEC-01** — vetting actions are conversation-scoped: `Vetting(store, conversation=…)` carries the
+  acting scope and `session()` (the single load point every by-id action uses) refuses a foreign row;
+  `apply_pending` checks scope before its early returns; the service builds the instance with the
+  acting conversation. `panel()` stays the marked cross-conversation display surface. 7 new tests.
+- **TR-01** — the `_STREAMS` review found a real leak: a reaped/abandoned stream kept its websocket
+  and reader thread blocked on `_queue.get()` for the life of the process. `_MuseStream.close()`
+  (idempotent, sentinel-based) + `_FixtureStream.close()` + close-on-reap + close-after-finish fix
+  it; optional conversation scope added. 4 new tests.
+- **COR-06/ERR-01** — `Service._required(data, key, sentence)` replaces direct payload indexing in
+  both dispatch families and the inline routes (`/api/retry`, `/api/control`, `/api/apply`,
+  `/api/approval`); the vetting family gained the transcription family's unexpected-failure wrapper.
+  3 new tests.
+- **APR-05** — `chat_approvals` migration **v20**: the poll path (approval card refreshes every 3 s)
+  performs no DDL after the first call; pre-marker stores are stamped once. 3 new tests.
+- **COR-03/APR-06/THM-01** — the model pill reports failures instead of rejecting silently; the
+  approval card no longer claims "already settled" for transport failures (engine sentence when it
+  arrived, explicit "could not reach its engine" otherwise); deleting a theme prunes its saved colour
+  overrides. tsc 0; vitest 93.
+- **TR-02** — `DEFERRED_NON_RELEASE`, explicitly bound to R9.A batch 6 / R10 (the residual is
+  transport-failure *presentation*; the fallback path is already honest and fixing it here would race
+  the Visual lane).
+
+Evidence: **full engine suite 931 passed (+10 subtests)** (was 915); focused vetting 36 /
+transcription 31 / sweep-fixes 15; desktop tsc 0 + vitest 93; TEST_EVIDENCE_INDEX A-20; record
+`increments/R0-SWEEP.md`; CHG-012…017; REQ-P2P3/OWNERSHIP-PARITY/POLL-CHEAP/TRUTHFUL-SURFACES/
+ERROR-SENTENCES/THEME-HYGIENE/TR02-BINDING.
+
+Next: **R1 — delegation authority ceiling** (`effective_child ⊆ delegator`, existing primitives only),
+then R2 idempotency matrix → R3 retry durability → R4 approval binding → R5 persistence → R6
+state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs
+Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression →
+PRE_AUDIT_V1_6_HEAD. REL-01 stays `OPEN_RELEASE_BLOCKER` until R8 evidence exists.

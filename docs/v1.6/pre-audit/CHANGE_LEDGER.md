@@ -182,6 +182,120 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-012 — Vetting session actions are conversation-scoped (R0 / SEC-01)
+
+ID: CHG-012 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `49e528e` · Date: 2026-09-18
+
+- **User-visible impact:** none in the normal flow; a session id from another conversation can no
+  longer be driven from here.
+- **Internal impact:** `Vetting(store, conversation=None)` carries the acting scope; `session()` —
+  the single load point every by-id action funnels through — refuses a foreign row;
+  `apply_pending` checks scope before its early returns; `service._vetting_action` builds the
+  instance with the acting conversation.
+- **Previous behavior:** `session(id)` loaded `WHERE id=?` with no scope; every by-id action accepted
+  a foreign id.
+- **New behavior:** `PolicyError('That vetting session belongs to another conversation')`; direct
+  callers that declare no conversation keep the old behaviour (additive).
+- **Primary files:** `runtime/kel/vetting_session.py`, `runtime/kel/service.py`,
+  `runtime/tests/test_vetting.py`.
+- **Primary symbols:** `Vetting.__init__`, `Vetting.session`, `Vetting.panel`, `Vetting.apply_pending`,
+  `Service._vetting_action`.
+- **Data/schema changes:** none. **Failure paths:** refusal happens before any write; verified by
+  snapshot equality in the tests.
+- **Security/privacy implications:** closes the vetting half of RISK-003 (bare-id addressing).
+- **Expected invariants:** `INV-SWEEP4-001`; extends `INV-APPROVE-002`'s principle to vetting.
+- **Tests:** 7 new (A-20). **Packaged evidence:** n/a.
+- **Audit questions:** does any by-id path bypass `session()` (e.g. direct SQL in another module)?
+  Is `panel`'s cross-conversation read still marked for the caller?
+- **Repair hints:** all 8 by-id call sites go through `session()`; the scope is a constructor
+  context, so a future action added to the class inherits the gate by construction.
+
+### CHG-013 — Transcription stream lifecycle releases sockets (R0 / TR-01)
+
+ID: CHG-013 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8ab7699` · Date: 2026-09-18
+
+- **User-visible impact:** none; abandoned recordings release their connection instead of holding it.
+- **Internal impact:** `_MuseStream.close()` (sentinel + state settle, idempotent), `_FixtureStream.close()`,
+  `_gc_streams()` closes before dropping, `stream_finish` closes after finishing; optional
+  conversation scope threaded through `_stream`/`stream_chunk`/`stream_status`/`stream_finish` and the
+  service route.
+- **Previous behavior:** a reaped/abandoned entry was dropped from `_STREAMS` while its reader thread
+  stayed blocked on `_queue.get()` and its websocket stayed open for the life of the process.
+- **New behavior:** the sentinel unblocks the reader (`endStream` → socket close); a declared
+  conversation that does not own the stream is refused.
+- **Primary files:** `runtime/kel/transcription.py`, `runtime/kel/service.py`,
+  `runtime/tests/test_transcription.py`.
+- **Primary symbols:** `_MuseStream.close`, `_FixtureStream.close`, `Transcription._stream`,
+  `_gc_streams`, `stream_chunk`, `stream_status`, `stream_finish`.
+- **Data/schema changes:** none. **Failure paths:** `close()` never raises and tolerates double calls;
+  the GC path swallows handle errors by design (best-effort reaping).
+- **Security/privacy implications:** audio and text flow unchanged; the scope gate narrows access.
+- **Persistence implications:** none. **Known concern:** the desktop does not declare a conversation on
+  stream calls yet (additive contract keeps it working).
+- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 4 new (A-20). **Packaged evidence:** n/a.
+- **Audit questions:** can a `_MuseStream` object be constructed but never registered (leak on the
+  start path)? Does `finish()` tolerate a stream that already died?
+- **Repair hints:** `_gc_streams` is the only reaper; `close()` is the only releaser.
+
+### CHG-014 — Dispatch layers answer missing fields with plain sentences (R0 / COR-06 + ERR-01)
+
+ID: CHG-014 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `5950efb` · Date: 2026-09-18
+
+- **User-visible impact:** a missing field now yields a sentence a person can act on instead of
+  `'session'`.
+- **Internal impact:** `Service._required(data, key, sentence)`; the vetting family gained the same
+  unexpected-failure wrapper the transcription family had; the inline routes (`/api/retry`,
+  `/api/control`, `/api/apply`, `/api/approval`) moved to the same contract.
+- **Previous behavior:** direct payload indexing → raw exception strings on the shared error path.
+- **New behavior:** `PolicyError(sentence)` for missing fields; one plain sentence for unexpected
+  failures.
+- **Primary files:** `runtime/kel/service.py`, `runtime/tests/test_v16_sweep_fixes.py`.
+- **Primary symbols:** `Service._required`, `_vetting_route`, `_vetting_action`,
+  `_transcription_dispatch`.
+- **Data/schema changes:** none. **Security/privacy implications:** none (message text only).
+- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 3 new (A-20).
+- **Audit questions:** are there remaining direct-index sites on other routes (e.g. `/api/attach`)?
+- **Repair hints:** grep for `data['` in `service.py` — remaining sites are optional-field reads.
+
+### CHG-015 — The approval poll path performs no DDL (R0 / APR-05)
+
+ID: CHG-015 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `dd34ac2` · Date: 2026-09-18
+
+- **User-visible impact:** none; removes avoidable lock pressure behind the 3-second card refresh.
+- **Internal impact:** `chat_approvals.MIGRATION_VERSION = 20`; `ensure_schema` returns before the body
+  once stamped; a pre-marker store runs the idempotent body once and is stamped (`INSERT OR IGNORE`).
+- **Previous behavior:** two unconditional `executescript` batches on every call.
+- **New behavior:** the read path performs no DDL after the first call.
+- **Primary files:** `runtime/kel/chat_approvals.py`, `runtime/tests/test_v16_sweep_fixes.py`.
+- **Data/schema changes:** one additive migration marker row; no table/column change.
+- **Failure paths:** a missing `schema_migrations` (fresh store) still creates everything in the
+  original order (sibling ensures first).
+- **Persistence implications:** the marker is the only new state.
+- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 3 new (A-20).
+- **Audit questions:** does any other frequently-polled read path run DDL? (grep `executescript` for
+  unconditional callers).
+- **Repair hints:** the acceptance criterion is met by the early return; `CodingAdapter`'s own
+  unconditional DDL remains for its direct callers.
+
+### CHG-016 — Failure surfaces tell the truth (R0 / COR-03 + APR-06 + THM-01)
+
+ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b4` · Date: 2026-09-18
+
+- **User-visible impact:** the approval card no longer claims "already settled" for transport
+  failures; the model pill reports failures instead of failing silently; the delete-theme flow leaves
+  no stale colour overrides.
+- **Internal impact:** `KelApprovalCard.act` catch discriminates engine-sentence vs unreachable;
+  `KelModelControl.setConversation` gained try/catch; `CssThemeSettings.handleDeleteTheme` calls
+  `clearThemeOverrides(themeId)`.
+- **Primary files:** `desktop/.../kel/KelApprovalCard.tsx`, `desktop/.../kel/KelModelControl.tsx`,
+  `desktop/.../AppearanceSettings/CssThemeSettings.tsx`.
+- **Data/schema changes:** none (config bucket pruned on delete).
+- **Security/privacy implications:** none. **Known concern:** no renderer component harness (§58).
+- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** tsc 0; vitest 93 (A-20).
+- **Audit questions:** does any other surface assert a state it cannot know on failure?
+- **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
+  it into the engine-loss presentation.
+
 ### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
 
 ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
@@ -373,6 +487,11 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
 | F4 real-artifact binding wiring | CHG-006 delivered (implementation commit); record `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | DONE |
 | resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
-| P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
+| SEC-01 vetting session scope | CHG-012 delivered (`49e528e`); record `increments/R0-SWEEP.md` | DONE |
+| TR-01 transcription stream lifecycle | CHG-013 delivered (`8ab7699`); record `increments/R0-SWEEP.md` | DONE |
+| COR-06/ERR-01 dispatch sentences | CHG-014 delivered (`5950efb`); record `increments/R0-SWEEP.md` | DONE |
+| APR-05 approval poll DDL | CHG-015 delivered (`dd34ac2`); record `increments/R0-SWEEP.md` | DONE |
+| COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
+| TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
 | Engine-loss/recovery behavior | CHG-0xx | PENDING |
