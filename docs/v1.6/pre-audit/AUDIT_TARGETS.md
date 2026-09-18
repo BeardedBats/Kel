@@ -116,3 +116,24 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
 46. Donor-dead paths: confirm no Kel conversation can render an `AgentBadge` that navigates to the
     hidden donor assistant editor (`assistantId` path under `HIDE_DONOR_AGENT_SURFACES`); confirm
     no `/profiles` route or Profiles terminology is reachable anywhere.
+
+## Canonical logo (2026-09-18 additions)
+
+47. Dead donor mark: `renderer/assets/logo.svg` (AionUi) — confirm no importer and no bundler
+    reachability; decide remove vs keep as a dormant boundary.
+48. Installer path: the Kel build produces **both** `win-unpacked` and an NSIS installer (targets
+    merge `nsis` + `dir`). The donor `resources/windows/*.nsh` messages are **not included** by the
+    builder config, so the shipped installer uses electron-builder's stock Kel-named template —
+    confirm that stays true (no `include:`/custom installer script added without rebranding them) and
+    that installer/uninstaller/header icons remain the K.
+49. Shipped exe metadata: **observed on `package-logo`** — `Kel.exe` reports
+    `ProductName=Kel · FileDescription=Kel · CompanyName=AionUi · FileVersion=1.5.0` (before this
+    change it reported Electron's own identity). `CompanyName` comes from `package.json` `author`;
+    decide whether donor company/author metadata is branding to replace or intended attribution, and
+    whether `description` = "Kel with the AionUI interface" should stay.
+50. Icon quality: extract the exe icon and the tray icon and confirm legibility at 16/32/48, exact
+    transparency (no black/opaque background), and no distortion or letterboxing.
+51. Reachability sweep: enumerate every `<img>`/`background-image`/inline svg in the renderer and
+    every packaged resource; assert none shows the donor mark on a reachable surface.
+52. Derivative integrity: re-run `scripts/make-brand-assets.py --check` and confirm the recorded
+    hashes (guards against later asset drift).

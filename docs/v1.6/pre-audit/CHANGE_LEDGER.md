@@ -117,6 +117,40 @@ ID: CHG-003 · Phase: 7 · Commit: `df87903` · Date: 2026-09-18
   the card ever change state without a click?
 - **Repair hints:** guard drift vs `capabilities.recommendation`; card request wiring.
 
+### CHG-004 — Canonical Kel logo across every production-reachable branding surface
+
+ID: CHG-004 · Phase: Campaign A branding requirement (Nick directive 2026-09-18) · Commit: branding commit · Date: 2026-09-18
+
+- **User-visible impact:** every mark the user can see is now the exact Nick-supplied folded-ribbon
+  K: exe/installer/shortcut icon, taskbar/window, tray + notifications, favicon/apple-touch/PWA,
+  login mark, and a new About-screen mark.
+- **Internal impact:** `scripts/make-brand-assets.py` derives all sizes from the canonical source
+  (sha256-guarded); `resources/app.ico|app.png|app_dev.png|icon.png|app.icns` and
+  `public/pwa/icon-180/192/512.png` + the renderer brand mark replace donor art;
+  `kel-builder.json` pins the icon per platform/installer and enables `signAndEditExecutable`
+  (which also patches the exe icon — it previously never reached `Kel.exe`).
+- **Previous behavior:** donor AionUi mark everywhere; the packaged exe carried no patched icon
+  (executable editing was disabled).
+- **New behavior:** the K everywhere; exe icon verified by extraction from the built package.
+- **Primary files:** `scripts/make-brand-assets.py`, `desktop/resources/*` (icons),
+  `desktop/public/pwa/*`, `desktop/packages/desktop/src/renderer/assets/logos/brand/app.png`,
+  `AboutModalContent.tsx`, `desktop/kel-builder.json`.
+- **Primary symbols:** `make-brand-assets.py` (render/write_ico/write_icns); About `brandMark` img.
+- **Data/schema changes:** none.
+- **Failure paths:** generation refuses a source whose sha256 ≠ canonical (no wrong-image output).
+- **Security/privacy implications:** none (static assets).
+- **Persistence implications:** none.
+- **Expected invariants:** INV-BRAND-001 (new).
+- **Tests:** `make-brand-assets.py --check` determinism; tsc 0; vitest 90; packaged exe-icon
+  extraction + boot (PACKAGED_EVIDENCE_INDEX `package-logo`).
+- **Packaged evidence:** `package-logo`.
+- **Known concerns:** dormant NSIS installer text/identifiers and the dead donor `logo.svg` are
+  untouched by policy (audit targets 47–49); `package.json` description/author may be intended
+  attribution (audit target 49).
+- **Audit questions:** any reachable surface still showing the donor mark? Is the 16 px derivative
+  legible? Does the extracted exe icon match the shipped `app.ico` frame exactly?
+- **Repair hints:** regenerate via the script; the surface table in `docs/v1.6/branding/CANONICAL_LOGO.md`.
+
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
@@ -125,6 +159,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
 | 8 — Advanced Worker View decision | none (decision only; FINAL: deferred beyond V1.6 — `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`) | DONE |
 | 9 — Profiles vs Projects decision/fixes | none (decision only; FINAL: no Profiles concept — Projects remain; `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`) | DONE |
+| Canonical logo (Nick directive 2026-09-18) | CHG-004 delivered (branding commit); record `docs/v1.6/branding/` | DONE |
 | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
 | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
 | F4 real-artifact binding wiring | CHG-0xx | PENDING |
