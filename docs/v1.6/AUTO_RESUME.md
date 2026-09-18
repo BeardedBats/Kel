@@ -327,6 +327,11 @@ suite **876 passed (+10 subtests; baseline 853)** on Windows; 876 collected. Nex
 increment 23 (`2236881..ba52869`); on CONTINUE publish, then the Phase 5.7 decision (adaptive
 staffing enablement stays deferred unless the doc-13 campaign metrics and user sign-off exist).
 
+Update (audit 23 → 24): the delta re-audit returned **REVISE** (`36_PHASE5_6_AUDIT.md`;
+F23-1..F23-10 — an ungated writer, store-wide lens scope claiming project scope, decay/hygiene).
+Remediated in `8a2b25d` (focused 25; full 878; zero regressions; see the record's follow-up
+section); delta re-audit requested (`ba52869..8a2b25d`; cumulative `2236881..8a2b25d`).
+
 ## Verify quickly (any resume)
 
 1. `cd runtime && python -m pytest tests -q` → **876 passed** (+10 subtests; zero regressions).
