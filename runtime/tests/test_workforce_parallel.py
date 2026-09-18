@@ -1,9 +1,11 @@
 """Phase 5.5: parallel mission teams — disjoint-write streams, leases, announce chain, integration.
 
 Verification for `kel/parallel.py` (workforce-os docs 05, 13 §4, 15 §5.5): the decomposition
-statement is validated, every stream works in its own isolated snapshot, a lease is the only way
-to write (and a violation is impossible), stale leases are reclaimed by heartbeat expiry, the
-announce chain is ordered and append-only, and integration reports real conflicts.
+statement is validated, every stream works in its own isolated snapshot, this module's own write
+paths are fail-closed behind a live lease (a worker's own filesystem writes are detected and
+reported, never silently accepted), stale leases are reclaimed by heartbeat expiry, the announce
+chain is ordered, append-only and bound to the change set, and integration reports real
+conflicts.
 """
 import contextlib
 import json
@@ -13,7 +15,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kel.core import PolicyError, Store
+from kel.core import PolicyError, Store, digest
 from kel.parallel import (LEASE_TTL_SECONDS, STREAM_LIMIT, TABLES, acquire_lease, announce,
                           announce_chain, assert_writable, close_stream, conflict_metrics,
                           ensure_schema, heartbeat, integrate, leases, open_stream, plan_streams,
@@ -91,6 +93,8 @@ class SchemaTests(Base):
     def test_announce_ledger_is_append_only(self):
         stream = self.open()
         lease = acquire_lease(self.store, stream_id=stream['stream_id'], owner='w', now=1000.0)
+        run_stream(self.store, stream['stream_id'], self.worker(), lease_id=lease['lease_id'],
+                   paths=['src/alpha'], now=1000.5)
         close_stream(self.store, stream['stream_id'], now=1001.0)
         announce(self.store, stream_id=stream['stream_id'], lease_id=lease['lease_id'],
                  summary='done', write_paths=['src/alpha'], now=1002.0)
@@ -454,6 +458,132 @@ class PilotClass3Tests(Base):
         self.assertGreaterEqual(config_c['result']['conflicts'], 1)
         self.assertFalse(config_c['result']['integration_ok'])
         self.assertEqual(config_c['result']['streams'], 2)
+
+
+class Reaudit20Tests(Base):
+    """Audit 20 findings (F20-1 … F20-10) — regressions for the 5.5 follow-up patch."""
+
+    def _done_stream(self, name, paths, now=1000.0):
+        stream = self.open(name, paths)
+        lease = acquire_lease(self.store, stream_id=stream['stream_id'], owner=name, now=now)
+
+        def worker(inner, allowed, info):
+            write(Path(inner['workspace']) / (allowed[0] + '/work.txt'), name + '\n')
+            return {'wrote': allowed[0]}
+
+        run_stream(self.store, stream['stream_id'], worker, lease_id=lease['lease_id'],
+                   paths=list(paths), now=now)
+        close_stream(self.store, stream['stream_id'], now=now)
+        announce(self.store, stream_id=stream['stream_id'], lease_id=lease['lease_id'],
+                 summary='%s done' % name, write_paths=list(paths), now=now + 1)
+        release_lease(self.store, lease['lease_id'], now=now + 1)
+        return stream
+
+    def test_a_stream_cannot_announce_what_it_did_not_change(self):
+        # F20-2: the announce attests the stream's real output, not its intention.
+        stream = self.open()
+        lease = acquire_lease(self.store, stream_id=stream['stream_id'], owner='w', now=1000.0)
+        close_stream(self.store, stream['stream_id'], now=1001.0)
+        with self.assertRaises(PolicyError):
+            announce(self.store, stream_id=stream['stream_id'], lease_id=lease['lease_id'],
+                     summary='nothing done', write_paths=['src/alpha'], now=1002.0)
+
+    def test_the_digest_attests_the_change_set_not_the_summary(self):
+        stream = self._done_stream('alpha', ('src/alpha',))
+        chain = announce_chain(self.store, MISSION)
+        old_scheme = 'sha256:' + digest('%s|%s' % (stream['stream_id'], 'alpha done'))
+        self.assertNotEqual(chain['announces'][0]['digest'], old_scheme)
+
+    def test_a_lone_out_of_bounds_write_is_reported(self):
+        # F20-3: detection must not need a second stream to collide with.
+        stream = self.open()
+        lease = acquire_lease(self.store, stream_id=stream['stream_id'], owner='w1', now=1000.0)
+
+        def stray(inner, allowed, info):
+            write(Path(inner['workspace']) / 'elsewhere' / 'stray.txt', 'stray\n')
+            return {'wrote': 'elsewhere/stray.txt'}
+
+        run_stream(self.store, stream['stream_id'], stray, lease_id=lease['lease_id'],
+                   paths=['src/alpha'], now=1000.0)
+        close_stream(self.store, stream['stream_id'], now=1001.0)
+        metrics = conflict_metrics(self.store, MISSION)
+        self.assertEqual(metrics['undeclared_writes'][stream['stream_id']],
+                         ['elsewhere/stray.txt'])
+        self.assertEqual(metrics['undeclared_count'], 1)
+
+    def test_case_differing_paths_are_not_disjoint(self):
+        # F20-4: `Src/alpha` and `src/alpha` are one directory on a case-insensitive host.
+        body = decomposition()
+        body['streams'][1]['write_paths'] = ['Src/alpha']
+        with self.assertRaises(PolicyError):
+            plan_streams(body)
+        alpha = self.open('alpha', ('src/alpha',))
+        beta = self.open('beta', ('Src/alpha',))
+        acquire_lease(self.store, stream_id=alpha['stream_id'], owner='w1', now=1000.0)
+        with self.assertRaises(PolicyError):
+            acquire_lease(self.store, stream_id=beta['stream_id'], owner='w2', now=1001.0)
+
+    def test_a_lapsed_lease_cannot_be_revived_or_overlapped_live(self):
+        # F20-5: two unexpired overlapping leases must be unreachable.
+        alpha = self.open('alpha', ('src/alpha',))
+        beta = self.open('beta', ('src/alpha/nested',))
+        first = acquire_lease(self.store, stream_id=alpha['stream_id'], owner='w1', ttl=10,
+                              now=1000.0)
+        with self.assertRaises(PolicyError):
+            heartbeat(self.store, first['lease_id'], now=1011.0)
+        second = acquire_lease(self.store, stream_id=beta['stream_id'], owner='w2', ttl=10,
+                               now=1011.0)
+        self.assertEqual(second['state'], 'ACTIVE')
+        self.assertEqual(leases(self.store, stream_id=alpha['stream_id'])[0]['state'], 'EXPIRED')
+        with self.assertRaises(PolicyError):
+            assert_writable(self.store, first['lease_id'], ['src/alpha'], now=1011.0)
+        assert_writable(self.store, second['lease_id'], ['src/alpha/nested'], now=1011.0)
+
+    def test_the_integrator_hook_is_used_and_a_refusal_is_a_conflict(self):
+        # F20-1: the documented merge hook must be called, and a falsy return is a conflict.
+        self._done_stream('alpha', ('src/alpha',))
+        calls = []
+        accepted = integrate(self.store, MISSION,
+                             integrator=lambda item: calls.append(item) or True,
+                             target_root=self.root / 'hook-ok')
+        self.assertEqual(len(calls), 1)
+        self.assertIn('patch', calls[0])
+        self.assertTrue(accepted['integration_ok'])
+        refused = integrate(self.store, MISSION, integrator=lambda item: False,
+                            target_root=self.root / 'hook-refused')
+        self.assertFalse(refused['integration_ok'])
+        self.assertTrue(refused['conflicts'])
+
+    def test_integration_with_no_finished_stream_is_refused(self):
+        # F20-7: PolicyError, never IndexError.
+        self.open()
+        with self.assertRaises(PolicyError):
+            integrate(self.store, MISSION, integrator=None, target_root=self.root / 'none-done')
+
+    def test_extra_path_forms_are_refused_or_normalised(self):
+        # F20-10: the forms the record claims are refused, and duplicate separators normalise.
+        for bad in ('~/x', 'C:/x', 'C:\\x', '\\\\server\\share'):
+            body = decomposition()
+            body['streams'][0]['write_paths'] = [bad]
+            with self.assertRaises(PolicyError):
+                plan_streams(body)
+        duplicate = decomposition()
+        duplicate['streams'][1]['write_paths'] = ['src//alpha']
+        with self.assertRaises(PolicyError):
+            plan_streams(duplicate)  # normalises to the same path as stream one
+
+    def test_a_refused_stream_with_no_worker_leaves_nothing_live(self):
+        # F20-9: a non-PolicyError worker failure must still abandon and revoke.
+        workers = {'alpha': lambda stream, allowed, lease: (_ for _ in ()).throw(
+            RuntimeError('worker crashed')), 'beta': lambda stream, allowed, lease: {}}
+        with self.assertRaises(RuntimeError):
+            run_parallel(self.store, mission_id=MISSION, decomposition=decomposition(),
+                         workers=workers, source_root=str(self.source), task_id=TASK,
+                         streams_root=self.root / 'streams', tier='D3', now=1000.0)
+        states = {row['name']: row['state'] for row in streams(self.store, mission_id=MISSION)}
+        self.assertEqual(states['alpha'], 'ABANDONED')
+        self.assertEqual(sorted(row['state'] for row in leases(self.store, mission_id=MISSION)),
+                         ['REVOKED'])
 
 
 if __name__ == '__main__':

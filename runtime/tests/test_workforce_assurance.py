@@ -136,8 +136,8 @@ class DispatchTests(Base):
         # cannot be dropped (or its trigger mapping deleted) without failing here (audit 17 F17-3).
         self.assertIn('security', str(caught.exception))
         self.assertIn('mandatory', str(caught.exception))
-        # Branch-specific phrase: only the Sentinel branch says this, so deleting the branch
-        # fails here even though the general mandated-lens refusal also says "mandatory" (R19-1).
+        # Branch-specific phrase: only the Sentinel branch says this, so deleting the branch fails
+        # here even though the general mandated-lens refusal also mentions a mandated lens (R19-1).
         self.assertIn('cannot be skipped', str(caught.exception))
         # With the security lens present the same dispatch passes.
         dispatch_assurance(self.store, task_id=TASK, mission_id=MISSION, artifact='art_x', runner=runner,
