@@ -15,6 +15,7 @@ it carries the current values; treat every `TBD` as not-yet-true.
 | unaudited production range | opens with the first Campaign A production commit (TBD); ends at PRE_AUDIT_V1_6_HEAD |
 | integration branch | `ux/v15-journeys` (stable branch `main` holds the last frozen release, v1.5.0) |
 | migration version at open | 19 applied (max); next free version = 20 |
+| P2/P3 denominator | **26 canonical rows (P2 10, P3 16)** — the directive's 27 = P2 10 + P3 17 worklist arithmetic; full original-ID reconciliation in `P2_P3_DISPOSITION.md` §Denominator reconciliation (added 2026-09-18, R9 bookkeeping) |
 | production commit count in range | TBD (see COMMIT_LEDGER.md) |
 | major changed subsystems | TBD (filled per phase; seed: memory, capabilities/UX, providers, workforce wiring, engine-loss UX, visual integration) |
 | high-risk commits | TBD (recorded per increment in COMMIT_LEDGER.md) |
