@@ -406,5 +406,22 @@ focused tests, regression, packaged verification, atomic commits and records con
 - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
 - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
-- **Next**: Phase 6 — memory reality audit (bootstrap §28); see `MAIN_STATUS.next_autonomous_action`
-  for the full Campaign A queue.
+- **Phase 6** completed 2026-09-18 (see below). **Next**: Phase 7 — smart capability
+  recommendations; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
+
+## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+
+Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md`; audit:
+`docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`). Reality inventory (store, write paths, read paths,
+UI surfaces, explicit non-existents), isolation/persistence/provenance verification, dispositions
+MEMR-1..MEMR-7. Bounded fixes in `22f4a3e` — the **first intentionally unaudited production
+commit** of Campaign A: Work-panel knowledge actions follow record state (`memoryRecordActions`,
+7 unit tests), forget asks for confirmation, tombstones read "Content removed.". Re-verified
+carry: SEC-01/APR-01/APR-02 (isolation class) documented; APR-03 reviewed → stays with the P2/P3
+sweep (durable-drain direction recorded); stale-detection wiring (DEF-012/LIM-13) and new-surface
+localization (DEF-013/LIM-12) deferred with records. Tests: engine focused 68 (engine untouched);
+tsc 0; vitest 83 (76→83).
+
+Reports: `docs/v1.6/pre-audit/` corpus updated (COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
+TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS,
+P2_P3_DISPOSITION, REPAIR_HINTS, VISUAL_EVIDENCE_INDEX).

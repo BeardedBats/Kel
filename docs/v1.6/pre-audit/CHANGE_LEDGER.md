@@ -32,14 +32,65 @@ Repair hints:               (pointer into REPAIR_HINTS.md, if any)
 
 ## Entries
 
-*No entries yet.* The ledger opens with the first Campaign A production commit. Increment records
-(`increments/`) are written first; the ledger summarizes each increment's behavior changes here.
+### CHG-001 — Work-panel knowledge actions follow the record's state (+ tombstone placeholder)
+
+ID: CHG-001 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
+
+- **User-visible impact:** the records list in the Work-panel Knowledge tab shows only actions that
+  apply to the record; refused-action errors are no longer reachable; a forgotten record shows
+  "Content removed." instead of a blank line.
+- **Internal impact:** new pure helper `memoryRecordActions` mirrors the engine guards; the panel
+  uses it for the confirm/edit/retract/forget buttons.
+- **Previous behavior:** every record rendered all four buttons; the engine refused non-active
+  records ("Only an active memory can be corrected/confirmed/retracted") and the error surfaced in
+  the panel; forget re-purged tombstones.
+- **New behavior:** confirm = active ∧ unconfirmed ∧ 3≤trust≤6; edit = active; retract = active or
+  stale; forget = any record except an already-purged tombstone.
+- **Primary files:** `desktop/.../chat/KelWorkPanel.tsx`, `desktop/.../kel/memoryRecordActions.ts`,
+  `desktop/tests/unit/memory-record-actions.test.ts`.
+- **Primary symbols:** `memoryRecordActions`.
+- **Data/schema changes:** none.
+- **Failure paths:** none added; engine-side refusals remain as defense in depth and are now
+  unreachable from these buttons.
+- **Security/privacy implications:** none (no capability or scope change).
+- **Persistence implications:** none.
+- **Expected invariants:** INV-MEM-001; added note — UI guard parity with engine guards.
+- **Tests:** 7 unit tests (action matrix); tsc 0; vitest 76→83.
+- **Packaged evidence:** — (RC battery asserts the Knowledge tab; recorded gap).
+- **Known concerns:** the helper must follow future engine-guard changes (audit target).
+- **Audit questions:** can any refused action still be triggered from the UI? Are active-record
+  actions unchanged? Does the packaged app render the gated matrix correctly?
+- **Repair hints:** `KelWorkPanel.tsx` records map; `memoryRecordActions.ts`.
+
+### CHG-002 — Forget asks for confirmation
+
+ID: CHG-002 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
+
+- **User-visible impact:** clicking Forget opens a confirmation ("Forget this record? Its saved
+  content is removed and cannot be recovered. A blank placeholder stays in the history.") with
+  Forget/Cancel; confirming purges as before.
+- **Internal impact:** the button is wrapped in an Arco `Popconfirm`; the same `/api/memory`
+  action fires on confirm.
+- **Previous behavior:** one click purged content irreversibly.
+- **New behavior:** two steps; cancel is the default escape.
+- **Primary files:** `desktop/.../chat/KelWorkPanel.tsx`.
+- **Primary symbols:** records-list render block.
+- **Data/schema changes:** none.
+- **Failure paths:** none added; errors still surface via the panel's error state.
+- **Security/privacy implications:** none; reduces accidental destructive purge.
+- **Persistence implications:** none.
+- **Expected invariants:** none changed.
+- **Tests:** matrix covered by the CHG-001 unit tests; the dialog itself is UI-only (noted).
+- **Packaged evidence:** — (RC battery).
+- **Known concerns:** dialog copy is English (locale pass owns translations — DEF-013).
+- **Audit questions:** verify no bypass path purges without confirmation; verify copy truthfulness.
+- **Repair hints:** `KelWorkPanel.tsx` forget button.
 
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
 |---|---|---|
-| 6 — memory reality audit + bounded fixes | CHG-001+ (any fixes) | IN PROGRESS |
+| 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
 | 7 — smart capability recommendations | CHG-0xx | PENDING |
 | 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
 | 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
