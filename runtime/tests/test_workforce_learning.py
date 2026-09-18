@@ -96,11 +96,17 @@ class Base(unittest.TestCase):
                     ('con_' + mission, task, 1, mission, None, 'sha256:fixture', '{}',
                      time.time()))
 
-    def seed_tier(self, tier='D1', task=TASK):
-        self.team.record_mission_activity('contract.issued',
-                                          detail={'task_id': task, 'contract_id': 'con_x'},
-                                          refs={})
-        self.team.record_mission_activity('staffing.decided', detail={'tier': tier}, refs={})
+    def seed_tier(self, tier='D1', task=TASK, assignment='asn_' + '1' * 8):
+        # Assignment-scoped, like every production writer (delegation/pods): the tier join in
+        # kel/learning.py keys on the assignment id (audit 23, F23-6).
+        self.direct('INSERT INTO team_events(at,kind,actor,assignment_id,job_id,milestone_id,'
+                    'run_id,refs,detail) VALUES(?,?,?,?,?,?,?,?,?)',
+                    (time.time(), 'contract.issued', 'kel', assignment, None, None, None, None,
+                     json.dumps({'task_id': task, 'contract_id': 'con_x'})))
+        self.direct('INSERT INTO team_events(at,kind,actor,assignment_id,job_id,milestone_id,'
+                    'run_id,refs,detail) VALUES(?,?,?,?,?,?,?,?,?)',
+                    (time.time(), 'staffing.decided', 'kel', assignment, None, None, None, None,
+                     json.dumps({'tier': tier})))
 
     def seed_finding(self, lens='maintainability', severity='info', **overrides):
         return record_finding(self.store, finding(lens=lens, severity=severity, **overrides))
@@ -157,7 +163,7 @@ class FlagGateTests(Base):
 
     def test_correct_learning_with_nothing_to_change_is_refused(self):
         with self.assertRaises(PolicyError):
-            correct_learning(self.store, 'whatever', flags=SHADOW_ON)
+            correct_learning(self.store, 'whatever')
 
 
 class LearningRecordTests(Base):
@@ -221,12 +227,32 @@ class LearningRecordTests(Base):
         self.assertEqual(view[0]['source'], 'observed')
         self.assertEqual(view[0]['insight'], 'Observed.')
 
+    def test_distinct_types_share_a_key_without_collision(self):
+        # (type, key) is the identity: the same slug recorded as a pattern and as a pitfall are
+        # two learnings (different memory types) and must not hide each other (audit 23, F23-5).
+        self.record(type='pattern', insight='Recurring shape.', confidence=4)
+        self.record(type='pitfall', insight='Recurring trap.', confidence=3)
+        view = learnings_view(self.store, project_id=PROJECT)
+        types = sorted(item['type'] for item in view
+                       if item['key'] == 'review.fresh-context-bias')
+        self.assertEqual(types, ['pattern', 'pitfall'])
+
     def test_decay_and_stale_are_computed_not_written(self):
         result = self.record(confidence=3, source='observed')
         row = {r['id']: r for r in self.memory_rows()}[result['memory_id']]
-        base = float(row['updated'])
+        base = float(row['created'])
+        # Boundary: whole 30-day periods only — 29 days is still 0, 30 days is the first decay.
+        self.assertEqual(
+            learnings_view(self.store, project_id=PROJECT, now=base + 29 * DAY)[0]
+            ['effective_confidence'], 3)
         at_31d = learnings_view(self.store, project_id=PROJECT, now=base + 31 * DAY)
         self.assertEqual(at_31d[0]['effective_confidence'], 2)
+        # A losing weaker write bumps the winner's `updated` in the memory store but must NOT
+        # reset its decay clock — decay runs from the record's own creation (audit 23, F23-3).
+        self.record(insight='Inferred revision.', confidence=2, source='inferred')
+        still_31d = learnings_view(self.store, project_id=PROJECT, now=base + 31 * DAY)
+        self.assertEqual(still_31d[0]['source'], 'observed')
+        self.assertEqual(still_31d[0]['effective_confidence'], 2)
         # 90 days: 3 - 3 -> effective 0 -> stale; stale leaves DEFAULT retrieval...
         default = learnings_view(self.store, project_id=PROJECT, now=base + 90 * DAY)
         self.assertEqual(default, [])
@@ -328,8 +354,8 @@ class CuratorTests(Base):
         self.direct('INSERT INTO budget_reservations(reservation_id,job_id,milestone_id,'
                     'assignment_id,budget_class,tokens,wallclock,cost,state,note,created,'
                     'updated) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
-                    ('res_x', 'job_x', None, None, 'standard', 100, 60, 1.5, 'reserved',
-                     None, time.time(), time.time()))
+                    ('res_x', 'job_x', None, 'asn_' + '1' * 8, 'standard', 100, 60, 1.5,
+                     'reserved', None, time.time(), time.time()))
         before_events = len(self.events())
         result = curate(self.store, project_id=PROJECT, mission_id=MISSION, flags=SHADOW_ON)
         self.assertTrue(result['applied'])
@@ -373,6 +399,26 @@ class CuratorTests(Base):
         self.assertIn('correction.board.layout', keys)
         view = {item['key']: item for item in learnings_view(self.store, project_id=PROJECT)}
         self.assertEqual(view['correction.board.layout']['source'], 'user-stated')
+
+    def test_lens_candidates_scope_to_the_given_missions(self):
+        # Two missions, both with dismissed maintainability findings; scoping to one mission
+        # must keep the other mission's counts and finding ids out of the learning (audit 23,
+        # F23-2; doc 11 §7 cross-project leakage).
+        self.seed_contract()
+        self.seed_contract(mission=MISSION2, task=TASK2)
+        scoped = [self.dismiss(self.seed_finding(lens='maintainability',
+                                                 fingerprint='scope-a-%d' % index))
+                  for index in range(2)]
+        for index in range(2):
+            self.dismiss(self.seed_finding(lens='maintainability', mission_id=MISSION2,
+                                           task_id=TASK2, fingerprint='scope-b-%d' % index))
+        curate(self.store, project_id=PROJECT, mission_id=MISSION, missions=[MISSION],
+               flags=SHADOW_ON)
+        view = {item['key']: item for item in learnings_view(self.store, project_id=PROJECT)}
+        entry = view['lens.maintainability.false-positive']
+        self.assertEqual(entry['confidence'], 4)                    # 2 + the two scoped ones
+        self.assertEqual(set(entry['evidence']), {item['id'] for item in scoped})
+        self.assertIn('this project', entry['insight'])
 
     def test_shadow_staffing_proposals_are_recorded_with_predictions(self):
         self.seed_contract()
