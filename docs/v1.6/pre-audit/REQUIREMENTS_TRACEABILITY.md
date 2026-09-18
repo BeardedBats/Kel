@@ -44,8 +44,8 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
 | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
 | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | decided — deferred beyond V1.6 | docs commit (2026-09-18) | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | pending (decision review) |
 | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | decided — no Profiles concept; Projects remain the single isolation concept | docs commit (2026-09-18) | — | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | pending (decision review) |
-| REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
-| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
+| REQ-PROV-10 | sprint directive §36 | real provider validation | implemented (as access allows) | docs commit (2026-09-18) | 55 focused; claude real call PASS | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `PROVIDER_VALIDATION_MATRIX.md` | codex blocked (CLI version); internal/deepseek no credentials (DEF-005) | pending |
+| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
 | REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
 | REQ-RK | audit carry-forward | resolution-kind semantics | PENDING | — | — | — | pending |
 | REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |

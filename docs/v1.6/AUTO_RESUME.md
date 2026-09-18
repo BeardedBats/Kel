@@ -406,9 +406,10 @@ focused tests, regression, packaged verification, atomic commits and records con
 - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
 - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
-- **Phase 9 decided** 2026-09-18: no Profiles concept; Projects remain (see below). **Next**:
-  Phase 10 — real provider validation; see `MAIN_STATUS.next_autonomous_action` for the full
-  Campaign A queue.
+- **Phases 10-11 done** 2026-09-18: provider validation (claude PASS, codex CLI-version blocked,
+  internal/deepseek unavailable) and the Rust freshness recheck (verdict upheld; Phase 12 closed).
+  **Next**: F4 real-artifact binding + resolution-kind; see `MAIN_STATUS.next_autonomous_action` for
+  the full Campaign A queue.
 
 ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
 
@@ -462,3 +463,18 @@ by `HIDE_DONOR_AGENT_SURFACES = true`; remaining "profile" strings are unrelated
 and engine internals). No code change required; held visual batch 3 keeps "Projects" language. New
 audit target 46 (AgentBadge assistantId path is donor-dead for Kel conversations). Corpus updated:
 REQ-PP-9, mapping row 9. Next: Phase 10 — real provider validation.
+
+## Phases 10-11 — provider validation + Rust freshness (2026-09-18)
+
+**Phase 10 (sprint §36):** real calls where access allows — `claude -p` minimal call **PASSED**
+(returned `ok`; client 2.1.215, authenticated); `codex exec` reached the real service but was
+refused by CLI model-version logic (`gpt-6-astra` requires a newer Codex — recorded as an
+environment limitation, never a pass); `internal`/`deepseek` have **no credentials anywhere on this
+machine** (presence-only checks; nothing leaked). Fixture refresh: 55 passed (providers +
+assignment). Record: `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; matrix rewritten.
+
+**Phase 11 (sprint §37):** `NO_MIGRATION_NEEDED_NOW` **upheld** against the current tree — process
+model/transports/ownership unchanged by Campaign A work; A1 (`engine_version` reuse check),
+PER-02 (`apply_pending_restore` swallow) and REL-01 (freeze staging) re-verified still open (docket
+P2s); no re-open trigger fired. **Phase 12 CLOSED** (no Rust migration in V1.6). Record:
+`docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md`. Next: F4 real-artifact binding + resolution-kind.
