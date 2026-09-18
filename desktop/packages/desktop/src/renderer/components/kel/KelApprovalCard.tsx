@@ -145,8 +145,16 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
     try {
       await kelApprovalRequest({ kind, id: refId, allow, conversation: engineCid || conversationId, ...extra });
       await refresh();
-    } catch {
-      setNotice('That request was already settled — Kel refreshed the latest state.');
+    } catch (error) {
+      // Audit APR-06: every failure used to be reported as "already settled" — an incorrect claim
+      // about the state of the user's approval. The engine's sentence is the truth when it arrived;
+      // a transport failure says so instead of guessing, and the refresh still self-corrects.
+      const detail = String((error as Error)?.message || '').trim();
+      const unreachable = !detail
+        || /fetch failed|failed to fetch|NetworkError|ECONNREFUSED|ECONNRESET|socket|timed out|timeout|invoking remote method/i.test(detail);
+      setNotice(unreachable
+        ? 'Kel could not reach its engine just now, so that decision was not recorded — it refreshed the latest state.'
+        : detail);
       await refresh();
     } finally {
       setBusy(false);
