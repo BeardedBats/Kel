@@ -271,6 +271,10 @@ class _FixtureStream:
             self.sentences.append(FIXTURE_SENTENCES[0])
         return {'text': ' '.join(self.sentences), 'final': True}
 
+    def close(self):
+        """Nothing to release for the in-process fixture stream (audit TR-01)."""
+        return None
+
 
 class MuseProvider(TranscriptionProvider):
     """Meta Muse Voice Transcribe (donor protocol).
@@ -529,6 +533,22 @@ class _MuseStream:
         while self.state in ('connecting', 'live') and time.time() < deadline:
             time.sleep(0.05)
         return {'text': self._full(), 'final': True, 'state': self.state, 'error': self.error}
+
+    def close(self):
+        """Release an abandoned stream without blocking (audit TR-01).
+
+        The reader thread blocks on `self._queue.get()` until it receives the sentinel, and only
+        then sends `endStream` and closes the websocket. A stream the user abandons (panel closed,
+        app navigated away) would otherwise hold its socket and thread for the life of the process
+        once the entry is reaped. Safe to call repeatedly and from the reaper: the sentinel is
+        queued best-effort and the state settles to 'closed'.
+        """
+        try:
+            self._queue.put_nowait(None)
+        except Exception:
+            pass
+        if self.state in ('connecting', 'live'):
+            self.state = 'closed'
 
 
 # ---- the library service ------------------------------------------------------------------------
@@ -864,19 +884,31 @@ class Transcription:
                 'label': ('Live transcription is on.' if provider.name == 'muse'
                           else 'Practice transcript is on — check any answers before applying.')}
 
-    def _stream(self, session_id):
+    def _stream(self, session_id, conversation=None):
         entry = self._streams.get(session_id)
         if not entry:
             raise PolicyError('That recording session has ended.')
+        # Scope when the caller declares one (audit TR-01, mirroring APR-02/SEC-01): a session
+        # created for another conversation is never driven from this one. Additive — a caller that
+        # declares nothing (or a session created without one) behaves exactly as before.
+        if (conversation and entry.get('conversation')
+                and str(entry['conversation']) != str(conversation)):
+            raise PolicyError('That recording session belongs to another conversation')
         return entry
 
     def _gc_streams(self):
         cutoff = time.time() - 2 * 60 * 60
         for key in [key for key, entry in self._streams.items() if entry['started'] < cutoff]:
-            self._streams.pop(key, None)
+            entry = self._streams.pop(key, None)
+            if entry:
+                # A reaped entry must not keep its socket and reader thread alive (audit TR-01).
+                try:
+                    entry['handle'].close()
+                except Exception:
+                    pass
 
-    def stream_chunk(self, session_id, pcm):
-        entry = self._stream(session_id)
+    def stream_chunk(self, session_id, pcm, conversation=None):
+        entry = self._stream(session_id, conversation)
         data = base64.b64decode(pcm or '', validate=True)
         if data:
             entry['handle'].feed(data)
@@ -885,16 +917,20 @@ class Transcription:
                 'state': state.get('state') or ('live' if entry['provider'] == 'fixture' else 'live'),
                 'error': state.get('error') or ''}
 
-    def stream_status(self, session_id):
-        entry = self._stream(session_id)
+    def stream_status(self, session_id, conversation=None):
+        entry = self._stream(session_id, conversation)
         state = entry['handle'].status()
         return {'session_id': session_id, 'text': state.get('text') or '',
                 'state': state.get('state') or 'live', 'error': state.get('error') or ''}
 
-    def stream_finish(self, session_id):
-        entry = self._stream(session_id)
+    def stream_finish(self, session_id, conversation=None):
+        entry = self._stream(session_id, conversation)
         result = entry['handle'].finish()
         duration = getattr(entry['handle'], 'audio_ms', 0) or 0
         self._streams.pop(session_id, None)
+        try:
+            entry['handle'].close()  # idempotent: a failed/connecting stream may still hold a socket
+        except Exception:
+            pass
         return {'text': (result.get('text') or '').strip(), 'duration_ms': duration,
                 'mode': entry['provider'], 'error': result.get('error') or ''}

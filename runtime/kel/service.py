@@ -895,9 +895,10 @@ class Service:
             return service.quick_transcribe(data.get('filename','audio.wav'),data.get('audio',''),
                                             data.get('duration_ms'))
         if action=='stream_start':return service.stream_start(data.get('conversation'))
-        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''))
-        if action=='stream_status':return service.stream_status(data['session'])
-        if action=='stream_finish':return service.stream_finish(data['session'])
+        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''),
+                                                              data.get('conversation'))
+        if action=='stream_status':return service.stream_status(data['session'],data.get('conversation'))
+        if action=='stream_finish':return service.stream_finish(data['session'],data.get('conversation'))
         if action=='export_text':return service.export_text(data['id'])
         if action=='export_audio':return service.export_audio(data['id'])
         if action=='set_key':return service.set_key(data.get('key',''))

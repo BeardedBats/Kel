@@ -8,14 +8,16 @@ VettingAnswerIngestion pipeline produce equivalent Vetting state.
 import base64
 import io
 import os
+import queue
 import sys
 import tempfile
+import time
 import unittest
 import wave
 from pathlib import Path
 
 from kel.core import PolicyError, Store
-from kel.transcription import Transcription, contextual_title
+from kel.transcription import Transcription, _MuseStream, contextual_title
 from kel.vetting import think_out_loud_buckets
 from kel.service import Service
 from kel.vetting_session import Vetting, snapshot
@@ -170,6 +172,83 @@ class StreamTests(TranscriptionBase):
         with self.assertRaises(PolicyError) as raised:
             self.t.stream_chunk('ts-missing', b64(b'\x00\x00'))
         self.assertIn('ended', str(raised.exception))
+
+
+class _FakeStream:
+    """Records the lifecycle calls the library makes on a stream handle (TR-01)."""
+
+    def __init__(self):
+        self.closed = 0
+        self.finished = 0
+        self.audio_ms = 1000
+
+    def feed(self, data):
+        return None
+
+    def status(self):
+        return {'text': '', 'state': 'live', 'error': ''}
+
+    def finish(self):
+        self.finished += 1
+        return {'text': 'done', 'final': True}
+
+    def close(self):
+        self.closed += 1
+
+
+class StreamLifecycleTests(TranscriptionBase):
+    """TR-01: a reaped or finished stream must release its socket, not just its dict entry."""
+
+    def _install(self, conversation='main', age=0):
+        handle = _FakeStream()
+        session_id = 'ts-fake-%d' % id(handle)
+        self.t._streams[session_id] = {'handle': handle, 'provider': 'fixture',
+                                       'started': time.time() - age,
+                                       'conversation': conversation}
+        self.addCleanup(self.t._streams.pop, session_id, None)
+        return session_id, handle
+
+    def test_an_over_age_stream_is_closed_when_reaped(self):
+        session_id, handle = self._install(age=3 * 60 * 60)
+        fresh_id, fresh = self._install(age=0)
+        self.t._gc_streams()
+        self.assertNotIn(session_id, self.t._streams)
+        self.assertEqual(handle.closed, 1)
+        self.assertIn(fresh_id, self.t._streams)
+        self.assertEqual(fresh.closed, 0)
+
+    def test_finish_releases_the_handle_as_well_as_the_entry(self):
+        session_id, handle = self._install()
+        result = self.t.stream_finish(session_id)
+        self.assertEqual(result['text'], 'done')
+        self.assertNotIn(session_id, self.t._streams)
+        self.assertEqual(handle.finished, 1)
+        self.assertEqual(handle.closed, 1)
+
+    def test_a_declared_conversation_must_match_the_stream(self):
+        session_id, handle = self._install(conversation='main')
+        with self.assertRaises(PolicyError) as caught:
+            self.t.stream_chunk(session_id, b64(b'\x00\x00' * 8), conversation='elsewhere')
+        self.assertIn('another conversation', str(caught.exception))
+        with self.assertRaises(PolicyError):
+            self.t.stream_status(session_id, conversation='elsewhere')
+        with self.assertRaises(PolicyError):
+            self.t.stream_finish(session_id, conversation='elsewhere')
+        # Undeclared (or unscoped) callers keep the previous behaviour.
+        self.t.stream_chunk(session_id, b64(b'\x00\x00' * 8))
+        self.t.stream_status(session_id, conversation='main')
+
+    def test_muse_close_is_idempotent_and_never_blocks(self):
+        stream = _MuseStream.__new__(_MuseStream)
+        stream._queue = queue.Queue()
+        stream.state = 'live'
+        stream.finals = []
+        stream.partial = ''
+        stream.error = ''
+        stream.close()
+        stream.close()
+        self.assertEqual(stream.state, 'closed')
+        self.assertIsNone(stream._queue.get_nowait())
 
 
 class ProviderModeTests(TranscriptionBase):
