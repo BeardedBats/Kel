@@ -624,3 +624,22 @@ APPROVAL-EXACT, PERSIST-CANONICAL, COMPLETION-TRUTH, LIVENESS-SEPARATION,
 RECOVERY-CLASSIFICATION, CREDENTIAL-CONTAINMENT, LIVE-AUTHORITY) and the Round 2.5 hostile-test
 list is in AUDIT_TARGETS §61–80. Independent audit stays paused; nothing new here is audited or
 claimed as accepted.
+
+## R0 — APR-02 fixed: approval resolution is conversation-scoped (2026-09-18)
+
+**APR-02 FIXED (`8a677d0`).** The approvals READ path was conversation-scoped (`chat_approvals.items`
+via `_job_ids_for`) while the resolve path settled by id alone — an id from another conversation
+could settle work the user was not looking at. `_require_owned(store, kind, ref_id, conversation)`
+now resolves the record's owning job (`approvals.job_id`, or `boundary_expansion_requests →
+capability_leases.job_id`) and refuses when it is not in the *same* ownership set the read path
+uses, so read and write cannot drift; `resolve(..., conversation=None)` keeps the HTTP contract
+additive, and both desktop resolve call sites (in-chat card, Work panel) now declare their
+conversation. A latent read-path bug surfaced while sharing the helper — `_job_ids_for` assumed
+`job_links` exists, which bare stores do not have — and is fixed. Tests: 6 new (other-conversation
+refusal for a step approval and a boundary grant, a foreign-conversation job, unknown id, unchanged
+no-conversation behaviour, the service route); focused 33 passed; desktop tsc 0 + vitest 93;
+**full engine suite 915 passed** (+10 subtests, was 909). Digest binding untouched; Round 2.5's
+APPROVAL-EXACT completion (target normalization + revalidation immediately before execution) stays
+with **R4**. Sweep: **17/27 rows carry a final disposition** (P2 7/10, P3 10/17); 10 remain — SEC-01,
+TR-01, TR-02 and 7 P3 rows. Next: SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle
+review), then the P3 rows; R1 follows R0.
