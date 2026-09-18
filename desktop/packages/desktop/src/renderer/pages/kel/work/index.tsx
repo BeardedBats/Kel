@@ -7,7 +7,6 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelMeter,
   KelSection,
@@ -16,6 +15,8 @@ import {
   formatWhen,
   statusFromDerived,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelArtifact,
   kelControl,
@@ -43,7 +44,7 @@ const WorkCenter: React.FC = () => {
   const [artifact, setArtifact] = useState<{ milestone: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [error, setError] = useState<{ cause: string; fix: string } | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(async () => {
     try {
@@ -54,10 +55,7 @@ const WorkCenter: React.FC = () => {
       setError(null);
     } catch (err) {
       setJobs([]);
-      setError({
-        cause: err instanceof Error ? err.message : 'The engine did not answer.',
-        fix: 'Check that the Kel engine is running, then press Reload.',
-      });
+      setError(err);
     }
   }, []);
 
@@ -70,7 +68,7 @@ const WorkCenter: React.FC = () => {
         setNote(`${label} sent to the engine.`);
         await load();
       } catch (err) {
-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
+        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
@@ -143,7 +141,7 @@ const WorkCenter: React.FC = () => {
           </KelButton>
         </div>
 
-        {error && <KelErrorState title="Work could not be loaded" cause={error.cause} fix={error.fix} />}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && jobs === null && <KelLoading rows={4} />}
 
         {!error && jobs !== null && jobs.length === 0 && continuation.length === 0 && (

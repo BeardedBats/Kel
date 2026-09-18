@@ -2,6 +2,8 @@
  * Typed access to the Kel engine through the preload bridge (`window.kelAPI.request`).
  * Only allowlisted routes reach the engine — see process/services/kel/KelService.ts.
  */
+import { type EngineStateFrame } from './engineFailure';
+
 export interface KelAssignment {
   assignment_id: string;
   job_id: string;
@@ -90,6 +92,11 @@ declare global {
       history: (id: string) => Promise<unknown>;
       conversation: (id: string) => Promise<unknown>;
       historySearch: (query: string) => Promise<unknown>;
+      /** Batch 6: the shell's honest engine-link view + support actions. */
+      engineState?: () => Promise<unknown>;
+      engineRetry?: () => Promise<unknown>;
+      diagnostics?: () => Promise<unknown>;
+      onEngineState?: (callback: (frame: unknown) => void) => () => void;
       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
       credentials?: {
         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
@@ -108,6 +115,58 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
   const api = typeof window === 'undefined' ? undefined : window.kelAPI;
   if (!api) throw new Error('Kel bridge unavailable — restart Kel and try again');
   return (await api.request(route, body)) as T;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Batch 6 (findings 16/17): engine-link helpers for the failure surfaces. When the bridge does not
+// expose them (older preload), the helpers degrade honestly to "connected, nothing to report"
+// rather than inventing an incident.
+// ---------------------------------------------------------------------------------------------
+const DEFAULT_ENGINE_FRAME = (): EngineStateFrame => ({ state: 'connected', attempts: 0, maxAttempts: 2, at: Date.now() });
+
+export async function engineState(): Promise<EngineStateFrame> {
+  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+  if (!api?.engineState) return DEFAULT_ENGINE_FRAME();
+  try {
+    return (await api.engineState()) as EngineStateFrame;
+  } catch {
+    return DEFAULT_ENGINE_FRAME();
+  }
+}
+
+export async function engineRetry(): Promise<EngineStateFrame> {
+  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+  if (!api?.engineRetry) return DEFAULT_ENGINE_FRAME();
+  try {
+    return (await api.engineRetry()) as EngineStateFrame;
+  } catch {
+    return { ...DEFAULT_ENGINE_FRAME(), state: 'unrecoverable' };
+  }
+}
+
+export interface KelDesktopDiagnostics {
+  engineVersion?: string;
+  address?: string;
+  state?: EngineStateFrame;
+  logTail?: string;
+}
+
+export async function engineDiagnostics(): Promise<KelDesktopDiagnostics> {
+  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+  if (!api?.diagnostics) return {};
+  try {
+    return (await api.diagnostics()) as KelDesktopDiagnostics;
+  } catch {
+    return {};
+  }
+}
+
+export function onEngineState(listener: (frame: EngineStateFrame) => void): () => void {
+  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+  if (!api?.onEngineState) return () => undefined;
+  return api.onEngineState((frame) => {
+    if (frame && typeof frame === 'object') listener(frame as EngineStateFrame);
+  });
 }
 
 export interface KelMemoryRecord {

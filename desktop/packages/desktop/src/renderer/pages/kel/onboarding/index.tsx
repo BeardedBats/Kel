@@ -13,6 +13,7 @@ import {
   KelSection,
   KelStatusChip,
 } from '@renderer/components/kel/KelPrimitives';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 
 const STEPS = ['Welcome', 'Providers', 'Project', 'Autonomy', 'Ready'] as const;
@@ -49,7 +50,7 @@ export default function KelOnboardingPage() {
   const [rules, setRules] = useState<Array<{ rule: string; text: string }>>([]);
   const [digest, setDigest] = useState('');
   const [engine, setEngine] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     void (async () => {
@@ -72,7 +73,7 @@ export default function KelOnboardingPage() {
         setRules((guardrailPayload.rules ?? []).slice(0, 6));
         setDigest(guardrailPayload.digest ?? '');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'The engine did not answer.');
+        setError(err);
       }
     })();
   }, []);
@@ -109,7 +110,11 @@ export default function KelOnboardingPage() {
           </KelButton>
         </div>
 
-        {error && <p className='kel-meta'>Heads-up: {error}</p>}
+        {error && (
+          <p className='kel-meta'>
+            Heads-up: {failureSentence(error, 'Setup could not read the engine just now — try again.')}
+          </p>
+        )}
 
         {step === 'Welcome' && (
           <KelCard title='Kel runs on this machine'>

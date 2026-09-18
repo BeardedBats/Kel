@@ -9,12 +9,13 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelSection,
   KelTable,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelDiagnostics, type KelDiagnosticsSnapshot } from '@renderer/components/kel/kelApi';
 
 interface Span {
@@ -50,7 +51,7 @@ const Diagnostics: React.FC = () => {
   const [report, setReport] = useState<{ path: string; redacted: boolean; bytes: number } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(async () => {
     try {
@@ -67,7 +68,7 @@ const Diagnostics: React.FC = () => {
       setError(null);
     } catch (err) {
       setSnapshot(null);
-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
+      setError(err);
     }
   }, []);
 
@@ -84,7 +85,7 @@ const Diagnostics: React.FC = () => {
         setMessage(`${label}: ${JSON.stringify(result).slice(0, 220)}`);
         await load();
       } catch (err) {
-        setMessage(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
+        setMessage(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(null);
       }
@@ -120,13 +121,7 @@ const Diagnostics: React.FC = () => {
           </KelButton>
         </div>
 
-        {error && (
-          <KelErrorState
-            title='Diagnostics could not be read'
-            cause={error}
-            fix='Check that the Kel engine is running, then press Reload.'
-          />
-        )}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !snapshot && <KelLoading rows={4} />}
         {message && <p className='kel-meta'>{message}</p>}
 

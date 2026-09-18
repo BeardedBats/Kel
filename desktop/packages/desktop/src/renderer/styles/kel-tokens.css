@@ -442,3 +442,104 @@
   color: var(--kel-accent-ink);
   border-color: var(--kel-accent);
 }
+
+/* ----------------------------------------------------------------------------------------------
+   Batch 6 (findings 16/17): failure card + engine-link strip. Hierarchy through typography and
+   spacing on the existing surfaces — no eyebrows, no colored side borders, no new card style.
+   ---------------------------------------------------------------------------------------------- */
+.kel-failure {
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-surface-1);
+  padding: var(--kel-card-pad);
+  max-width: 560px;
+}
+.kel-failure__title {
+  margin: 0 0 var(--kel-space-2);
+  font-size: var(--kel-type-h2);
+  font-weight: 600;
+  color: var(--kel-text-1);
+}
+.kel-failure__detail {
+  margin: 0;
+  font-size: var(--kel-type-body);
+  color: var(--kel-text-2);
+  line-height: 1.5;
+}
+.kel-failure__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--kel-space-3);
+  margin-top: var(--kel-space-3);
+}
+.kel-failure__details {
+  margin-top: var(--kel-space-3);
+  border-top: 1px solid var(--kel-border);
+  padding-top: var(--kel-space-2);
+}
+.kel-failure__details > summary {
+  cursor: pointer;
+  font-size: var(--kel-type-meta);
+  color: var(--kel-text-3);
+}
+.kel-failure__raw {
+  margin: var(--kel-space-2) 0 0;
+  font-family: var(--kel-font-mono);
+  font-size: var(--kel-type-meta);
+  color: var(--kel-text-2);
+  background: var(--kel-surface-0);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-control);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  overflow: auto;
+  max-height: 220px;
+}
+
+.kel-engine-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--kel-space-3);
+  padding: 6px var(--kel-gutter);
+  font-size: var(--kel-type-label);
+  border-bottom: 1px solid var(--kel-border);
+}
+.kel-engine-notice__text {
+  display: flex;
+  align-items: baseline;
+  gap: var(--kel-space-2);
+  min-width: 0;
+  flex: 1;
+}
+.kel-engine-notice__text strong {
+  color: var(--kel-text-1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kel-engine-notice__text span {
+  color: var(--kel-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kel-engine-notice--info {
+  background: var(--kel-wait-bg);
+}
+.kel-engine-notice--info .kel-engine-notice__text strong,
+.kel-engine-notice--info .kel-engine-notice__text span {
+  color: var(--kel-wait-fg);
+}
+.kel-engine-notice--ok {
+  background: var(--kel-ok-bg);
+}
+.kel-engine-notice--ok .kel-engine-notice__text strong,
+.kel-engine-notice--ok .kel-engine-notice__text span {
+  color: var(--kel-ok-fg);
+}
+.kel-engine-notice--failed {
+  background: var(--kel-failed-bg);
+}
+.kel-engine-notice--failed .kel-engine-notice__text strong,
+.kel-engine-notice--failed .kel-engine-notice__text span {
+  color: var(--kel-failed-fg);
+}
