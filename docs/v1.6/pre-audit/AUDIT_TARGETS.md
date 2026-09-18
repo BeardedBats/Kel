@@ -245,3 +245,25 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     actually available, or mutate state outside the existing action paths behind its buttons.
 85. The attention surface must be provably derived-only: with all durable sources drained, it shows
     nothing, and it never becomes an authority of its own.
+
+## R9 implementation additions (2026-09-18)
+
+86. Supervision honesty (batch 6): the shell's link states (reconnecting / restarted-successfully /
+    could-not-recover) must correspond to real engine state; a slow-but-alive engine must never be
+    duplicated by the supervisor (the patient ping precedes any restart); the automatic restart
+    budget must never be reset by a failed attempt (manual retry starts an explicitly user-started
+    incident). Attack: SIGSTOP-style stall the engine; assert no second engine process while it is
+    alive; kill the restart binary; assert the budget is spent once, honestly.
+87. Failure card containment (batch 6): the raw failure text may appear ONLY inside the "Technical
+    details" disclosure and the diagnostics copy — confirm every visible string stays
+    infrastructure-free for each class, including hostile engine sentences that embed donor words.
+88. Loaded-gun close (batch 6): the before-quit drain must not stop an engine spawned by another
+    live instance — quit a reusing instance and assert the owner instance's engine keeps serving.
+89. Donor preview residue (batch 8, recorded): OfficeWatchViewer/PDFViewer still append a raw
+    exception message to their translated failure line (outside Kel surfaces) — attack by forcing a
+    parse failure and reading the visible line; decide fix vs accept at audit.
+90. Packaging input hygiene (R10/R12, recorded): the visual worktree's `dist/runtime/KelEngine` was a
+    stale 1.5.0 bundle while every other bundle on disk was also stale — the only verified 1.6.0
+    runtime lived beside the R8 freeze assembly. Confirm the RC packaging pipeline sources the
+    engine bundle from the single verified location (or rebuilds it) and that the packaged engine's
+    `engine_version` equals the RC's expected version before any install test.
