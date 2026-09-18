@@ -680,7 +680,8 @@ class Service:
         if data.get('action','resolve')!='resolve':
             raise PolicyError('Unknown approvals action')
         return resolve(self.store,data.get('kind'),data.get('id'),bool(data.get('allow')),
-                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')))
+                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')),
+                       conversation=data.get('conversation'))
 
     def _approvals_list(self,conversation):
         from .chat_approvals import items

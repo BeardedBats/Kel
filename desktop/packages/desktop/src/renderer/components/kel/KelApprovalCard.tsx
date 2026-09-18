@@ -143,7 +143,7 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
     setBusy(true);
     setNotice('');
     try {
-      await kelApprovalRequest({ kind, id: refId, allow, ...extra });
+      await kelApprovalRequest({ kind, id: refId, allow, conversation: engineCid || conversationId, ...extra });
       await refresh();
     } catch {
       setNotice('That request was already settled — Kel refreshed the latest state.');
