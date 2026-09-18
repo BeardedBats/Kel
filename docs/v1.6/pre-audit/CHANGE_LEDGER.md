@@ -182,6 +182,35 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
+
+ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
+
+- **User-visible impact:** none; resolution can no longer settle an item the user is not looking at.
+- **Internal impact:** `chat_approvals._require_owned` + `resolve(..., conversation)` scope the write
+  path to the same ownership set as the read path; `service._approvals_action` passes the declared
+  conversation; both desktop resolve call sites now declare theirs.
+- **Previous behavior:** the resolve path settled by `id` alone (the read path was scoped).
+- **New behavior:** a declared conversation that does not own the record is refused
+  (`That request belongs to another conversation`); an undeclared conversation keeps the old
+  behaviour (additive contract).
+- **Primary files:** `runtime/kel/chat_approvals.py`, `runtime/kel/service.py`,
+  `runtime/tests/test_v16_approvals.py`, `desktop/.../KelApprovalCard.tsx`,
+  `desktop/.../KelWorkPanel.tsx`.
+- **Primary symbols:** `_require_owned`, `resolve`, `_job_ids_for`, `Service._approvals_action`,
+  `KelApprovalCard.act`, `KelWorkPanel.approvalAct`.
+- **Data/schema changes:** none. **Failure paths:** refusals are `PolicyError`s on the existing
+  route; the item stays pending and resolvable from its own conversation.
+- **Security/privacy implications:** closes the release-relevant half of RISK-003 (bare-id
+  addressing) for approvals; digest binding unchanged.
+- **Persistence implications:** none. **Known concern:** Round 2.5 R4 should make the declared
+  conversation mandatory for in-app routes and add normalization/pre-execution revalidation.
+- **Expected invariants:** `INV-APPROVE-002` (partial — scope half); `INV-APPROVE-001` untouched.
+- **Tests:** 6 new (A-19). **Packaged evidence:** n/a.
+- **Audit questions:** can any resolve path still settle without a scope? Does a refused attempt
+  ever mutate the record? Is the ownership set identical to the read path's?
+- **Repair hints:** `_require_owned` and `_job_ids_for` are the single gates; R4 extends them.
+
 ### CHG-010 — Pre-restore snapshots are pruned; the actor-identity guard is pinned by a test
 
 ID: CHG-010 · Phase: Campaign A — P2/P3 sweep · Commit: `84b5646` · Date: 2026-09-18
