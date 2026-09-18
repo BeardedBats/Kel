@@ -24,6 +24,9 @@ OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the da
 SECRET_TABLE = 'transcription_settings'
 SECRET_KEYS = ('meta_api_key',)
 SKIP_ENTRIES = (STAGING, MARKER)
+# Credential custody lives in the OS keychain/app-data, but `KEL_DATA_DIR` can place the encrypted
+# credentials file inside the data root; a backup must never capture it (audit PER-04).
+NEVER_BACKUP = ('kel-credentials.json',)
 # Runtime state the app keeps open while it runs: never part of a backup.
 VOLATILE_ENTRIES = ('logs', 'desktop.log', 'desktop-session.json', 'controller.lock')
 # Everything under `host` is Chromium's user-data tree - caches, storage and locks the running
@@ -143,6 +146,9 @@ class Backup:
         try:
             for entry in self.root.iterdir():
                 if entry.name in SKIP_ENTRIES or entry.name in VOLATILE_ENTRIES:
+                    continue
+                if entry.name in NEVER_BACKUP:
+                    skipped.append(entry.name)  # credentials never travel in a backup (PER-04)
                     continue
                 if entry.name.lower().endswith(('-wal', '-shm', '-journal', '.wal', '.shm', '.journal')):
                     # Live SQLite sidecar files are locked and never copied; the hot database

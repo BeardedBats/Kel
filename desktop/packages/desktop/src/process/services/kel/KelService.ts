@@ -381,7 +381,12 @@ export async function initializeKel(port: number): Promise<void> {
   // store-relative path; main resolves it against the engine root and refuses anything that
   // escapes - the renderer never builds an absolute path.
   ipcMain.removeHandler('kel:artifact-reveal');
-  ipcMain.handle('kel:artifact-reveal', (_event, relpath: string) => {
+  ipcMain.handle('kel:artifact-reveal', (event, relpath: string) => {
+    // Same frame guard as the other privileged handlers: only the app's own main frame may ask the
+    // OS to reveal a path (audit INT-01 - this handler was the one that skipped the check).
+    const url = event.senderFrame?.url || '';
+    if (event.senderFrame !== event.sender.mainFrame || !url.startsWith('file:'))
+      throw new Error('Unknown Kel window');
     if (typeof relpath !== 'string' || !relpath) throw new Error('Missing artifact path');
     const root = path.resolve(dataRoot());
     const target = path.resolve(root, relpath);

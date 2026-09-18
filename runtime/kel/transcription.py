@@ -355,11 +355,25 @@ class MuseProvider(TranscriptionProvider):
         return _MuseStream(self)
 
 
+def _header_safe(value):
+    """One multipart header parameter, safe to interpolate (audit SEC-01-multipart).
+
+    The filename originates from the caller's upload: unsanitised it could close the header early
+    and inject a new part. CR/LF are folded to spaces, quotes (which would end the parameter) are
+    normalised, and backslashes cannot start an escape.
+    """
+    text = str(value or '')
+    for bad, good in (('\r', ' '), ('\n', ' '), ('"', "'"), ('\\', '/')):
+        text = text.replace(bad, good)
+    return text
+
+
 def _multipart(boundary, parts):
     lines = []
     for name, filename, content_type, data in parts:
         lines.append(('--%s\r\n' % boundary).encode())
-        lines.append(('Content-Disposition: form-data; name="%s"; filename="%s"\r\n' % (name, filename)).encode())
+        lines.append(('Content-Disposition: form-data; name="%s"; filename="%s"\r\n'
+                      % (_header_safe(name), _header_safe(filename))).encode())
         lines.append(('Content-Type: %s\r\n\r\n' % content_type).encode())
         lines.append(data)
         lines.append(b'\r\n')
