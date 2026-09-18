@@ -156,3 +156,11 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
 56. On-disk binding coverage: `close_d1(artifact_root=…)` is exercised only where a caller supplies
     a root (tests do; `run_d1` does not yet) — verify the live path supplies one before any release
     claim of on-disk verification, and that a stale/renamed file is refused.
+
+## Restore visibility (2026-09-18 additions)
+
+57. Restore failure surfacing: the engine now records `restore-outcome.json` beside the data and
+    exposes `state()['restore']`; verify no restore failure can occur without that record, that a
+    failed attempt keeps `restore-pending.json`, and that a renderer surface (REQ-ELOSS) reads the
+    existing payload instead of a new endpoint. Also confirm `state()['restore']` cannot report a
+    stale outcome after a later clean start (PER-02) and is not confused by PER-03's snapshot path.

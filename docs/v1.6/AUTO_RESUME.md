@@ -527,3 +527,20 @@ way the real worker wiring must. Commit `081a6ef`; record
 126 passed; **full engine suite 895 passed** (+10 subtests, was 891). Residuals: `run_d1` does not
 yet pass an `artifact_root` (audit target 56); non-content-bound contracts keep their previous
 scope. Next: **P2/P3 sweep**.
+
+## PER-02 — restore failures are recorded and surfaced (2026-09-18)
+
+**FIXED (engine half) — audit P2 PER-02 (Rust-corroborated).** `service.py` used to wrap
+`apply_pending_restore` in `try/except: pass` and discard the boolean, so a restore that could not
+start, or failed halfway, left no trace. Now `backup._record_outcome` writes
+`restore-outcome.json` **beside** the data (the database is what a restore replaces, so the record
+cannot live inside it) on both decisive paths — success `ok=True`; failure `ok=False` with the
+exception *type name* and `restore-pending.json` left in place — and `service.state()` carries
+`restore: {ok, detail, at} | null` next to `connected`/`engine_version` (additive payload, no
+contract break). Boot never aborts on a restore failure. Commit `df1997a`; record
+`increments/PER-02-RESTORE-VISIBILITY.md`; tests `tests/test_v16_restore_visibility.py` (5 new);
+focused 14 passed; **full engine suite 900 passed** (+10 subtests, was 895). The renderer surface
+that would *show* the outcome belongs to REQ-ELOSS (audit target 57) and was deliberately not
+invented here. Sweep status after this increment: **7/27 rows dispositioned** (P2 1/10, P3 6/17).
+Next: continue the sweep (P2 rows need their source records read; A1 and REL-01 remain the
+release-relevant ones).

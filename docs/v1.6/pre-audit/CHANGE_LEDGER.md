@@ -182,6 +182,38 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-007 — A failed or partial restore is recorded and surfaced (audit PER-02)
+
+ID: CHG-007 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
+
+- **User-visible impact:** indirect — a restore that cannot start or fails halfway is now reported in
+  the engine state instead of vanishing; the renderer banner that shows it belongs to REQ-ELOSS.
+- **Internal impact:** `backup.OUTCOME` + `_record_outcome(root, ok, detail)` write a sidecar
+  (`restore-outcome.json`) beside the data on both decisive paths; `service._restore_outcome` reads
+  it and `Service.state()` carries `restore: {ok, detail, at} | null`; the caller records a
+  cannot-start failure while still letting boot proceed.
+- **Previous behavior:** `service.py` wrapped `apply_pending_restore` in `try/except: pass` and threw
+  the boolean away (Rust-corroborated silent failure).
+- **New behavior:** the outcome is durable and observable; `False` keeps its old meaning, and the
+  pending marker stays in place after a failed attempt.
+- **Primary files:** `runtime/kel/backup.py`, `runtime/kel/service.py`,
+  `runtime/tests/test_v16_restore_visibility.py`.
+- **Primary symbols:** listed above.
+- **Data/schema changes:** none (a sidecar file, not a table — the database is what a restore
+  replaces, so the record cannot live in it).
+- **Failure paths:** recording never raises; a failed restore still returns `False`.
+- **Security/privacy implications:** none — `detail` is an exception *type name*, never a message.
+- **Persistence implications:** one new sidecar inside the data root.
+- **Expected invariants:** INV-PER02-001 (new: a restore attempt's outcome is durable and queryable;
+  boot never aborts on a restore failure).
+- **Tests:** `tests/test_v16_restore_visibility.py` (5 new) + full suite (A-15).
+- **Packaged evidence:** n/a (the RC battery can assert `state()['restore']` on a staged restore).
+- **Known concerns:** the renderer does not surface it yet (REQ-ELOSS, audit target 57); PER-03 shares
+  the path and stays open in the sweep.
+- **Audit questions:** can a restore fail without an outcome record? Is the marker still present after
+  a failure? Does `state()` ever report a stale outcome after a later clean start?
+- **Repair hints:** recording in `kel/backup.py`, surfacing in `kel/service.py:state()`.
+
 ### CHG-006 — Real-artifact binding: closure verifies the artifact the assignment delivered
 
 ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) · Commit: implementation commit · Date: 2026-09-18
