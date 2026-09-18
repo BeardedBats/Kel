@@ -406,8 +406,9 @@ focused tests, regression, packaged verification, atomic commits and records con
 - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
 - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
-- **Phase 7** completed 2026-09-18 (see below). **Next**: Phase 8/5.8 — Advanced Worker View
-  decision; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
+- **Phase 8/5.8 decided** 2026-09-18: Advanced Worker View deferred beyond V1.6 (see below).
+  **Next**: Phase 9 — Profiles vs Projects; see `MAIN_STATUS.next_autonomous_action` for the full
+  Campaign A queue.
 
 ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
 
@@ -438,3 +439,15 @@ INV-CAPREC-001 added; audit targets 40–45 added. Tests: engine focused 83; **f
 (+10 subtests; was 878); tsc 0; vitest **90** (was 83). Packaged card evidence deferred — no
 provider in this environment (LIM-14); transcript-inline placement = DEF-014. Next: Phase 8/5.8
 decision.
+
+## Phase 8/5.8 — Advanced Worker View: decision (2026-09-18)
+
+**DECIDED — deferred beyond V1.6.** Final record: `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`
+(supersedes the pending-state 5.8 record). Rationale: North Star ONE assistant; design doc 12's own
+success bar is zero visits; the spec's exit gate (product decision + usability review) has not
+occurred and no user need is recorded; sprint directive §33 says not to block the sprint on the
+optional panel. No UI/endpoints added; existing engine-side data stays available. Re-entry
+conditions recorded (post-V1.6 decision → bounded Advanced/Details-only increment, zero-visit
+default). Phase 5.7 confirmed deferred per §34 (no fabrication; activation criteria already
+recorded). Corpus updated: DEF-002, REQ-AWV-8, REQ-WF-5.8, CHANGE_LEDGER mapping. Next: Phase 9 —
+Profiles vs Projects.
