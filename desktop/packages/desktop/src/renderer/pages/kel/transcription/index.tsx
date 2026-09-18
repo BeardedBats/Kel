@@ -9,9 +9,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
-import { KelCard, KelEmpty, KelErrorState, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
+import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
 import styles from './index.module.css';
+
+/**
+ * Batch 6 (TR-02 residual): every failure toast goes through the classifier, so transport and
+ * infrastructure text never reaches a person. Engine sentences (already plain language) pass
+ * through unchanged.
+ */
+const failMessage = (error: unknown): string => failureSentence(error, 'That did not go through — try again.');
 
 type Folder = { id: string; name: string; created: number };
 type Transcript = {
@@ -78,7 +87,7 @@ const TranscriptionPage: React.FC = () => {
   const [status, setStatus] = useState<ProviderStatus>();
   const [library, setLibrary] = useState<Library>({ folders: [], transcripts: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [dragging, setDragging] = useState(false);
@@ -124,9 +133,9 @@ const TranscriptionPage: React.FC = () => {
       ]);
       setStatus(state);
       setLibrary(data);
-      setLoadError('');
+      setLoadError(null);
     } catch (error) {
-      setLoadError(String((error as Error)?.message || error));
+      setLoadError(error);
     }
   }, []);
 
@@ -201,7 +210,7 @@ const TranscriptionPage: React.FC = () => {
         if (/NotAllowed|NotFound|NotReadable|Overconstrained|Security|Permission/i.test(name + message)) {
           Message.error(friendlyMicError(error));
         } else {
-          Message.error(message);
+          Message.error(failureSentence(error, 'The microphone did not start. Check the audio device and try again.'));
         }
       }
     },
@@ -262,7 +271,7 @@ const TranscriptionPage: React.FC = () => {
         setSelectedId(saved.id);
         Message.success(appended ? 'Recording added to the transcript.' : 'Recording saved to Recents.');
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       } finally {
         setSeconds(0);
         setLiveText('');
@@ -289,7 +298,7 @@ const TranscriptionPage: React.FC = () => {
         setSelectedId(saved.id);
         Message.success('Transcript ready.');
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       } finally {
         setProgress('');
         setBusy(false);
@@ -320,7 +329,7 @@ const TranscriptionPage: React.FC = () => {
       if (transcriptId && folderId) {
         void transcription({ action: 'assign', id: transcriptId, folder: folderId })
           .then(() => refresh())
-          .catch((error) => Message.error(String((error as Error)?.message || error)));
+          .catch((error) => Message.error(failMessage(error)));
         return;
       }
       const file = event.dataTransfer.files?.[0];
@@ -338,7 +347,7 @@ const TranscriptionPage: React.FC = () => {
       setExpanded((current) => new Set(current).add(folder.id));
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [folderDraft, refresh]);
 
@@ -350,7 +359,7 @@ const TranscriptionPage: React.FC = () => {
         await transcription({ action: 'folder_rename', id, name: name.trim() });
         await refresh();
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [refresh]
@@ -368,7 +377,7 @@ const TranscriptionPage: React.FC = () => {
             await transcription({ action: 'folder_delete', id: folder.id });
             await refresh();
           } catch (error) {
-            Message.error(String((error as Error)?.message || error));
+            Message.error(failMessage(error));
           }
         },
       });
@@ -388,7 +397,7 @@ const saveName = useCallback(async () => {
       setRenaming(false);
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [nameDraft, refresh, selected]);
 
@@ -405,7 +414,7 @@ const saveName = useCallback(async () => {
             if (selectedId === item.id) setSelectedId(null);
             await refresh();
           } catch (error) {
-            Message.error(String((error as Error)?.message || error));
+            Message.error(failMessage(error));
           }
         },
       });
@@ -421,7 +430,7 @@ const saveName = useCallback(async () => {
         if (folderId) setExpanded((current) => new Set(current).add(folderId));
         await refresh();
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [refresh, selected]
@@ -453,7 +462,7 @@ const saveName = useCallback(async () => {
       for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
       downloadBlob(exported.name, bytes, exported.mime || 'audio/wav');
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [selected]);
 
@@ -466,7 +475,7 @@ const saveName = useCallback(async () => {
       await refresh();
       Message.success('Merged into this transcript.');
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [combineSource, refresh, selected]);
 
@@ -505,7 +514,7 @@ const saveName = useCallback(async () => {
           setExpanded((current) => new Set(current).add(folderId));
           await refresh();
         } catch (error) {
-          Message.error(String((error as Error)?.message || error));
+          Message.error(failMessage(error));
         }
       },
     }),
@@ -522,7 +531,7 @@ const saveName = useCallback(async () => {
       Message.success('Muse is connected. New recordings and uploads use it.');
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [keyDraft, refresh]);
 
@@ -533,7 +542,7 @@ const saveName = useCallback(async () => {
       Message.success('Back to practice mode.');
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [refresh]);
 
@@ -547,7 +556,7 @@ const saveName = useCallback(async () => {
       setReview((current) => ({ ...current, busy: false, payload, editing: false }));
     } catch (error) {
       setReview((current) => ({ ...current, busy: false }));
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, []);
 
@@ -585,7 +594,7 @@ const saveName = useCallback(async () => {
         setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false });
       } catch (error) {
         setReview((current) => ({ ...current, busy: false }));
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [review.mode, review.text, selected]
@@ -758,13 +767,7 @@ const statusCopy =
         </aside>
 
         <main className={styles.workspace}>
-          {loadError && (
-            <KelErrorState
-              title='Kel could not load the transcript library'
-              cause={loadError}
-              fix='Reopen this page or check that Kel is running.'
-            />
-          )}
+          {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
           {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
               Record — with Record last and primary. Record More is always present (disabled when there is
               nothing to append to) instead of appearing conditionally. */}

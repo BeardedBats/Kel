@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
+import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
@@ -533,6 +534,7 @@ const Layout: React.FC<{
                       : undefined
                 }
               >
+                <KelEngineNotice />
                 <Outlet />
                 <PwaPullToRefresh />
                 <Suspense fallback={null}>
