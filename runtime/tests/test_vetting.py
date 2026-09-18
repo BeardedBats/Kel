@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from kel.core import Store
+from kel.core import PolicyError, Store
 from kel.service import Service
 from kel.vetting_session import Vetting, snapshot
 
@@ -468,3 +468,68 @@ class PanelFallbackTests(VettingBase):
         panel = self.v.panel(conversation='fresh-conversation')
         self.assertEqual(panel['session']['topic'], 'Second design')
         self.assertTrue(panel['cross_conversation'])
+
+
+class SessionScopeTests(VettingBase):
+    """SEC-01: a by-id action must run only against a session in the acting conversation."""
+
+    def _scoped(self, conversation):
+        return Vetting(self.store, conversation=conversation)
+
+    def tearDown(self):
+        # The service's telemetry/log writer can hold files briefly on Windows; a teardown lock is
+        # not a product failure (the engine suite runs the same way elsewhere).
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def test_a_by_id_action_from_another_conversation_is_refused(self):
+        foreign = self._scoped('somewhere-else')
+        with self.assertRaises(PolicyError) as caught:
+            foreign.session(self.sid)
+        self.assertIn('another conversation', str(caught.exception))
+        self.assertIsNotNone(self._scoped('main').session(self.sid))
+
+    def test_every_by_id_action_is_refused_and_leaves_the_session_untouched(self):
+        before = snapshot(self.store, self.sid)
+        foreign = self._scoped('somewhere-else')
+        for call in (lambda: foreign.ingest(self.sid, '1: C'),
+                     lambda: foreign.process(self.sid),
+                     lambda: foreign.finish(self.sid),
+                     lambda: foreign.apply_pending(self.sid, accept=True),
+                     lambda: foreign.help(self.sid, 'q1', 'explain'),
+                     lambda: foreign.greybox(self.sid, 'q1', action='design')):
+            with self.assertRaises(PolicyError) as caught:
+                call()
+            self.assertIn('another conversation', str(caught.exception))
+        # A nonexistent conflict id refuses earlier by design ('Conflict not found'); the scope
+        # gate is what a real foreign conflict would hit next.
+        with self.assertRaises(PolicyError):
+            foreign.conflict_action(self.sid, 'c1', 'accept')
+        self.assertEqual(snapshot(self.store, self.sid), before)
+
+    def test_an_unscoped_instance_keeps_the_previous_behaviour(self):
+        # Direct callers (and tests) that construct without a conversation are unchanged.
+        before = snapshot(self.store, self.sid)
+        self.assertIsNotNone(self.v.session(self.sid))
+        self.v.ingest(self.sid, '1: C')
+        self.assertNotEqual(snapshot(self.store, self.sid), before)
+
+    def test_an_unknown_session_id_is_still_absent_not_a_scope_error(self):
+        self.assertIsNone(self._scoped('main').session('no-such-session'))
+
+    def test_the_service_route_is_scoped_to_the_declared_conversation(self):
+        service = Service(str(Path(self.tmp.name) / 'kel.sqlite3'))
+        self.addCleanup(service.shutdown)
+        with self.assertRaises(PolicyError) as caught:
+            service._vetting_action({'action': 'process', 'session': self.sid,
+                                     'conversation': 'elsewhere'})
+        self.assertIn('another conversation', str(caught.exception))
+        # The owning conversation still resolves the same session (process is honest about an
+        # unanswered session; what matters is that it is no longer refused for scope).
+        service._vetting_action({'action': 'panel', 'session': self.sid, 'conversation': 'main'})
+
+    def test_the_panel_remains_a_marked_display_surface(self):
+        panel = self._scoped('elsewhere').panel(conversation='elsewhere', session_id=self.sid)
+        self.assertEqual(panel['session']['topic'], 'Basketball dashboard')

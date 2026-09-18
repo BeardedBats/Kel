@@ -88,8 +88,13 @@ def opposition_pairs(chosen):
 class Vetting:
     """Durable design-vetting sessions, scoped to a conversation."""
 
-    def __init__(self, store):
+    def __init__(self, store, conversation=None):
         self.store = store
+        # Acting scope (audit SEC-01): the service constructs a Vetting for the conversation the
+        # caller is acting in, and every by-id action then runs only against a session that
+        # belongs to it — the same ownership semantics the panel display path already applies. A
+        # direct caller that constructs without a conversation keeps the previous behaviour.
+        self.scope_conversation = str(conversation) if conversation else None
         ensure_schema(store)
         self._bank_cache = None
         self._memory_check_queue = []
@@ -112,9 +117,13 @@ class Vetting:
         with contextlib.closing(self.store.connect()) as db:
             return run(db)
 
-    def session(self, session_id, db=None):
+    def session(self, session_id, db=None, *, enforce_scope=True):
         def run(db):
-            return _row(db.execute('SELECT * FROM vetting_sessions WHERE id=?', (session_id,)).fetchone())
+            row = _row(db.execute('SELECT * FROM vetting_sessions WHERE id=?', (session_id,)).fetchone())
+            if (row and enforce_scope and self.scope_conversation
+                    and str(row.get('conversation_id')) != self.scope_conversation):
+                raise PolicyError('That vetting session belongs to another conversation')
+            return row
         if db is not None:
             return run(db)
         with contextlib.closing(self.store.connect()) as db:
@@ -511,7 +520,11 @@ class Vetting:
 
     def panel(self, conversation=None, session_id=None):
         with contextlib.closing(self.store.connect()) as db:
-            session = self.session(session_id, db) if session_id else self.active(conversation, db)
+            # Display surface: the panel deliberately reaches a finished/paused session from
+            # elsewhere and marks it `cross_conversation` (PanelFallbackTests), so the acting
+            # scope does not apply to this read (audit SEC-01 scopes actions, not this view).
+            session = (self.session(session_id, db, enforce_scope=False) if session_id
+                       else self.active(conversation, db))
             cross = False
             if not session and conversation:
                 # A finished or paused session stays reachable: the panel keeps showing its
@@ -782,6 +795,10 @@ class Vetting:
     def apply_pending(self, session_id, accept=True, source='chat', correction=''):
         """Confirm or reject proposed (low-confidence) mappings. Never auto-applied."""
         with self.store.transaction() as db:
+            # Scope first (audit SEC-01): even the paths that end up writing nothing must refuse a
+            # session that belongs to another conversation.
+            if self.scope_conversation:
+                self.session(session_id, db)
             row = db.execute("SELECT detail FROM vetting_events WHERE session_id=? AND action='proposals_pending'"
                              ' ORDER BY seq DESC LIMIT 1', (session_id,)).fetchone()
             if not row:

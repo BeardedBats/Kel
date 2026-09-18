@@ -692,7 +692,9 @@ class Service:
         # pasted text and direct callers; this layer only routes and persists the durable
         # out-of-band messages (panel-driven start/process/finish) as conversation content.
         from .vetting_session import Vetting
-        vetting=Vetting(self.store)
+        # The acting conversation is the session scope (audit SEC-01): a by-id vetting action can
+        # only touch a session that belongs to the conversation the caller is acting in.
+        vetting=Vetting(self.store,conversation=(data.get('conversation') or 'main'))
         result=self._vetting_route(vetting,data)
         # Confirmed decisions are compared against saved project knowledge once the session
         # transaction has committed; a disagreeing stored rule queues on the review surface.
