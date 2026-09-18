@@ -151,6 +151,37 @@ ID: CHG-004 · Phase: Campaign A branding requirement (Nick directive 2026-09-18
   legible? Does the extracted exe icon match the shipped `app.ico` frame exactly?
 - **Repair hints:** regenerate via the script; the surface table in `docs/v1.6/branding/CANONICAL_LOGO.md`.
 
+### CHG-005 — Record-bound resolution kinds (findings) + additive workforce migration v17
+
+ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: implementation commit · Date: 2026-09-18
+
+- **User-visible impact:** none directly (learning-loop/review semantics); a finding's resolution is
+  now auditable as recorded data rather than inferred text.
+- **Internal impact:** `findings.resolution_kind` (additive column, migration **v17**
+  `v17-finding-resolution-kind`); `RESOLUTION_KINDS`/`ACCEPTANCE_KINDS` vocabulary;
+  `resolve_finding`/`waive_gate` write the kind; `lens_stats` counts by it; `validate_finding`
+  validates it; `_is_acceptance` demoted to a legacy-row derivation helper.
+- **Previous behavior:** acceptance was inferred from a prefix on the free-text
+  `dismissal_reason` (audit F18-5: not record-bound).
+- **New behavior:** the recorded kind is authoritative; pre-v17 rows are derived once; the F17-2
+  anti-impersonation guarantee (guarded reason markers) is preserved.
+- **Primary files:** `runtime/kel/assurance.py`, `runtime/kel/workforce.py`,
+  `runtime/tests/test_v16_resolution_kind.py` (new), `runtime/tests/test_workforce_schemas.py`.
+- **Primary symbols:** listed above.
+- **Data/schema changes:** `findings.resolution_kind TEXT` (nullable), migration v17 with an
+  in-place `ALTER TABLE` for existing stores; no row rewritten.
+- **Failure paths:** unknown kind → `PolicyError`; pre-v17 row → derived, never an error.
+- **Security/privacy implications:** none (no new inputs).
+- **Persistence implications:** additive migration, idempotent across reopens.
+- **Expected invariants:** INV-RK-001 (new: a resolved status always carries its kind on the guarded
+  paths; statistics never require parsing free text).
+- **Tests:** `tests/test_v16_resolution_kind.py` (6) + focused suite 136 passed + full suite (A-13).
+- **Packaged evidence:** n/a (engine semantics; the RC packaged battery re-runs the engine suite).
+- **Known concerns:** prefixes remain in the stored text (deliberate); no per-kind breakdown exposed.
+- **Audit questions:** can any path write `dismissed`/`fixed` without a kind? Does a hand-written
+  reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+- **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
@@ -163,7 +194,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
 | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
 | F4 real-artifact binding wiring | CHG-0xx | PENDING |
-| resolution-kind semantics | CHG-0xx | PENDING |
+| resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
 | P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
 | Engine-loss/recovery behavior | CHG-0xx | PENDING |
