@@ -158,16 +158,6 @@ export const KelEmpty: React.FC<{ title: string; why: string; actionLabel?: stri
   </div>
 );
 
-export const KelErrorState: React.FC<{ title: string; cause: string; fix: string }> = ({ title, cause, fix }) => (
-  <div className="kel-empty" role="alert">
-    <strong>{title}</strong>
-    {cause}
-    <div className="kel-meta" style={{ marginTop: 6 }}>
-      Fix: {fix}
-    </div>
-  </div>
-);
-
 /** Static skeleton rows: no shimmer, final row rhythm, no reflow when data arrives. */
 export const KelLoading: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
   <div aria-busy="true" aria-live="polite">
