@@ -21,6 +21,7 @@ MARKER = 'restore-pending.json'
 STAGING = '.restore-staging'
 INFO = 'BACKUP-INFO.json'
 OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the data (PER-02)
+SNAPSHOT_KEEP = 2  # pre-restore snapshots retained; older ones are pruned (PER-03)
 SECRET_TABLE = 'transcription_settings'
 SECRET_KEYS = ('meta_api_key',)
 SKIP_ENTRIES = (STAGING, MARKER)
@@ -280,6 +281,25 @@ def _record_outcome(root, ok, detail=''):
         pass
 
 
+def _prune_snapshots(root, keep=SNAPSHOT_KEEP):
+    """Keep only the newest `keep` pre-restore snapshots (audit PER-03).
+
+    Every applied *or attempted* restore leaves `root.name + '.pre-restore-<stamp>'` beside the
+    data, and nothing ever removed them. Only directories matching that exact prefix are touched,
+    the newest `keep` always survive (including the one this attempt just wrote), and pruning is
+    best-effort so it can never fail a restore.
+    """
+    prefix = root.name + '.pre-restore-'
+    try:
+        snapshots = sorted((entry for entry in root.parent.iterdir()
+                            if entry.is_dir() and entry.name.startswith(prefix)),
+                           key=lambda entry: entry.name, reverse=True)
+        for stale in snapshots[keep:]:
+            shutil.rmtree(stale, ignore_errors=True)
+    except Exception:
+        pass
+
+
 def apply_pending_restore(store):
     """Called at engine start, before any connection touches the databases.
 
@@ -313,11 +333,13 @@ def apply_pending_restore(store):
             _restore_entry(entry, root / entry.name)
         shutil.rmtree(staging, ignore_errors=True)
         marker.unlink(missing_ok=True)
+        _prune_snapshots(root)
         _record_outcome(root, True)
         return True
     except Exception as exc:
         # Audit PER-02: a failed or partial restore used to vanish into `False` while the marker
         # stayed behind. The outcome is now recorded (and surfaced by the service) while the
         # marker keeps its meaning: the restore is still pending.
+        _prune_snapshots(root)
         _record_outcome(root, False, type(exc).__name__)
         return False
