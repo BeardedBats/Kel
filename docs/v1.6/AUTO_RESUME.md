@@ -496,3 +496,17 @@ the packaged About capture matching the canonical artwork at 0.960 masked NCC. K
 `CompanyName=AionUi` in exe metadata, dead donor `logo.svg`, donor `.nsh` installer text (not included
 by the builder) — audit targets 47–49. The human pixel gate (16 px legibility, About placement) stays
 open. Next: F4 real-artifact binding + resolution-kind.
+
+## REQ-RK — record-bound resolution kinds (2026-09-18)
+
+**DONE — REQ-RK / audit carry-forward F18-5 (N18-5).** `_is_acceptance` inferred an acceptance from a
+prefix on the free-text `dismissal_reason`; how a finding was resolved is now recorded data.
+`findings.resolution_kind` (vocabulary `fixed|risk-accepted|gate-waived|false-positive`) is written by
+the guarded paths (`resolve_finding`, `waive_gate`), validated when present, and read by `lens_stats`,
+which derives the kind once for rows written before v17. The additive migration **v17**
+(`v17-finding-resolution-kind`) adds the column in place with a PRAGMA guard — no row rewritten, no
+contract change, idempotent across reopens. The F17-2 anti-impersonation guarantee (guarded reason
+markers) is preserved. Commit `a547936`; record `increments/REQ-RK-RESOLUTION-KIND.md`; tests
+`tests/test_v16_resolution_kind.py` (6); focused 136 passed; **full engine suite 891 passed**
+(+10 subtests, was 885). No desktop change required (no desktop code reads reasons or lens stats).
+Next: **F4 real-artifact binding wiring**.

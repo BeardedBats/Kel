@@ -137,3 +137,12 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     every packaged resource; assert none shows the donor mark on a reachable surface.
 52. Derivative integrity: re-run `scripts/make-brand-assets.py --check` and confirm the recorded
     hashes (guards against later asset drift).
+
+## Resolution kinds (2026-09-18 additions)
+
+53. Resolution kinds: confirm every guarded path that writes a resolved status (`resolve_finding`,
+    `waive_gate`) also writes `resolution_kind`, that no other path can write `dismissed`/`fixed`
+    without one, and that a hand-written `dismissal_reason` cannot change any statistic. Verify the
+    v17 `ALTER TABLE` is lossless on a populated pre-v17 store (rows preserved verbatim).
+54. Learning-loop semantics: `fp_rate`/`learnable` must be unchanged for pre-v17 rows (derived once)
+    and correct for new rows; no review surface silently reads reason text.
