@@ -406,8 +406,8 @@ focused tests, regression, packaged verification, atomic commits and records con
 - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
 - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
-- **Phase 8/5.8 decided** 2026-09-18: Advanced Worker View deferred beyond V1.6 (see below).
-  **Next**: Phase 9 — Profiles vs Projects; see `MAIN_STATUS.next_autonomous_action` for the full
+- **Phase 9 decided** 2026-09-18: no Profiles concept; Projects remain (see below). **Next**:
+  Phase 10 — real provider validation; see `MAIN_STATUS.next_autonomous_action` for the full
   Campaign A queue.
 
 ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
@@ -451,3 +451,14 @@ conditions recorded (post-V1.6 decision → bounded Advanced/Details-only increm
 default). Phase 5.7 confirmed deferred per §34 (no fabrication; activation criteria already
 recorded). Corpus updated: DEF-002, REQ-AWV-8, REQ-WF-5.8, CHANGE_LEDGER mapping. Next: Phase 9 —
 Profiles vs Projects.
+
+## Phase 9 — Profiles vs Projects: decision (2026-09-18)
+
+**DECIDED — no Profiles concept in V1.6; Projects remain the single isolation concept.** Record:
+`docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`. Evidence: donor matrix item 21 (REJECT —
+Projects already scope conversations/files/knowledge/artifacts/recipes), donor remediation §4, and
+current-repo verification (no `/profiles` route/nav/locale surface; donor AssistantSettings hidden
+by `HIDE_DONOR_AGENT_SURFACES = true`; remaining "profile" strings are unrelated donor auth labels
+and engine internals). No code change required; held visual batch 3 keeps "Projects" language. New
+audit target 46 (AgentBadge assistantId path is donor-dead for Kel conversations). Corpus updated:
+REQ-PP-9, mapping row 9. Next: Phase 10 — real provider validation.
