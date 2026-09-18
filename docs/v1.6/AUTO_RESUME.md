@@ -32,7 +32,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
 | 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
 | 5.5 Parallel mission teams + mission worktrees | **ACCEPTED** — `5f77f42` + remediations `b1141c4`, `2a12b77` + acceptance patch `d8880f3` | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37) → 851 → 853; migration 19; audits 20/21 **REVISE** → remediated, audit 22 **CONTINUE**; published `9a2965d..d8880f3` |
-| 5.6 Learning loop (shadow) | IMPLEMENTED + audit-requested — commit `ba52869` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 (+23; zero regressions); no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audit 23 pending |
+| 5.6 Learning loop (shadow) | **ACCEPTED** — `ba52869` + remediation `8a2b25d` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 → 878; no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audits 23 REVISE → 24 CONTINUE; 5.7/5.8 decisions deferred (`5.7_DECISION_DEFERRED.md`, `5.8_DECISION_DEFERRED.md`) |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -330,11 +330,14 @@ staffing enablement stays deferred unless the doc-13 campaign metrics and user s
 Update (audit 23 → 24): the delta re-audit returned **REVISE** (`36_PHASE5_6_AUDIT.md`;
 F23-1..F23-10 — an ungated writer, store-wide lens scope claiming project scope, decay/hygiene).
 Remediated in `8a2b25d` (focused 25; full 878; zero regressions; see the record's follow-up
-section); delta re-audit requested (`ba52869..8a2b25d`; cumulative `2236881..8a2b25d`).
+section). Delta re-audit (24): **CONTINUE** — all closed; **Phase 5.6 accepted through
+`8a2b25d`**. Phase 5.7 DEFERRED (entry unmet: doc-13 campaign + user sign-off) and Phase 5.8
+DEFERRED (product decision) — decision records in `docs/v1.6/phase5/`. Next: publish, Visual
+screenshot-index refresh, then Phase 6 (memory reality audit).
 
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → **876 passed** (+10 subtests; zero regressions).
+1. `cd runtime && python -m pytest tests -q` → **878 passed** (+10 subtests; zero regressions).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
