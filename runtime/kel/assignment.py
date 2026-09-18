@@ -88,11 +88,16 @@ def flags_snapshot(env=None):
     """The flags recorded into every assignment snapshot (doc 15 section 3).
 
     Per-project flag storage arrives with the first live consumer (5.2/D1); until then the
-    switch is the documented environment variable and defaults to off.
+    switches are documented environment variables and default to off. The learning loop's
+    shadow switch (`workforce.learning.shadow`, doc 15 §3) rides here too (5.6).
     """
     env = os.environ if env is None else env
-    enabled = str(env.get('KEL_WORKFORCE', '')).strip().lower() in ('1', 'true', 'yes', 'on')
-    return {'workforce.enabled': enabled}
+
+    def _on(name):
+        return str(env.get(name, '')).strip().lower() in ('1', 'true', 'yes', 'on')
+
+    return {'workforce.enabled': _on('KEL_WORKFORCE'),
+            'workforce.learning.shadow': _on('KEL_WORKFORCE_LEARNING_SHADOW')}
 
 
 # ---- role registry v2 ----------------------------------------------------------------------
