@@ -237,7 +237,7 @@ class CodingAdapter:
             tests=connection.call('command/exec',{'command':contract['test_command'],'cwd':str(workspace),
                 'timeoutMs':90000,'sandboxPolicy':{'type':'workspaceWrite',
                 'writableRoots':[str(workspace)],'networkAccess':False},
-                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None}},timeout=100)
+                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None,'DEEPSEEK_API_KEY':None}},timeout=100)
             after=file_manifest(workspace)
             stable=before==after
             git(workspace,'add','-A')
