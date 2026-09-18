@@ -280,6 +280,24 @@ def resolve(store, capability, conversation=None, job=None, consume=False):
             'reason': why}
 
 
+def recommendation(capability, decision):
+    """A structured, actionable recommendation for a refused capability decision.
+
+    Only real capabilities with a real next step are ever recommended: a capability the user
+    disabled for this conversation can be allowed once, enabled for the conversation, or
+    explicitly kept off. Everything else (not available on this computer, needs setup with no
+    connector) returns None — a suggestion nobody could act on would be a no-op surface.
+    """
+    if not isinstance(decision, dict) or decision.get('allowed'):
+        return None
+    entry = BY_ID.get(capability)
+    if not entry or decision.get('rule') != 'capability-conversation-off':
+        return None
+    return {'capability': capability, 'label': entry['label'],
+            'reason': decision.get('reason') or ('%s is disabled for this conversation.' % entry['label']),
+            'actions': ['allow_once', 'enable', 'keep_disabled']}
+
+
 def snapshot(store, conversation):
     """Everything a surface needs to draw the control, with plain words and honest states."""
     ensure_schema(store)

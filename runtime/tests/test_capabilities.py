@@ -504,6 +504,69 @@ class ResearchEffectTests(CapabilityBase):
         current = self.store.get(job)
         self.assertNotEqual(current['milestones']['research']['state'], 'ACCEPTED')
 
+    def test_blocked_effect_carries_a_structured_recommendation(self):
+        calls = []
+        adapter = self._adapter(calls)
+        set_override(self.store, 'chat-a', 'web', 'off')
+        job, run = self._run()
+        result = adapter.execute('Search the latest news.', run_id=run['id'])
+        self.assertEqual(result['outcome'], 'BLOCKED')
+        self.assertEqual(result['capability'], 'web')
+        self.assertEqual(result['recommendation'], {
+            'capability': 'web', 'label': 'Web',
+            'reason': 'Web is disabled for this conversation.',
+            'actions': ['allow_once', 'enable', 'keep_disabled']})
+        self._settle(run, result)
+
+    def test_settled_blocked_effect_exposes_the_recommendation_in_job_state(self):
+        calls = []
+        adapter = self._adapter(calls)
+        set_override(self.store, 'chat-a', 'web', 'off')
+        job, run = self._run()
+        result = adapter.execute('Search the latest news.', run_id=run['id'])
+        self.assertEqual(result['outcome'], 'BLOCKED')
+        self._settle(run, result)
+        current = self.store.get(job)
+        rec = current['milestones']['research'].get('recommendation')
+        self.assertTrue(rec)
+        self.assertEqual(rec['capability'], 'web')
+        self.assertEqual(rec['actions'], ['allow_once', 'enable', 'keep_disabled'])
+        self.assertTrue(current['milestones']['research'].get('error'))
+
+
+class RecommendationTests(CapabilityBase):
+    """Recommendations must never be no-op surfaces: only real capabilities, only real actions."""
+
+    def test_disabled_capability_recommends_the_three_real_actions(self):
+        from kel.capabilities import recommendation
+        set_override(self.store, 'chat-a', 'web', 'off')
+        decision = resolve(self.store, 'web', 'chat-a')
+        self.assertEqual(recommendation('web', decision), {
+            'capability': 'web', 'label': 'Web',
+            'reason': 'Web is disabled for this conversation.',
+            'actions': ['allow_once', 'enable', 'keep_disabled']})
+
+    def test_allowed_decisions_never_carry_a_recommendation(self):
+        from kel.capabilities import recommendation
+        self.assertIsNone(recommendation('web', resolve(self.store, 'web', 'chat-a')))
+
+    def test_unavailable_capabilities_offer_nothing_to_do(self):
+        from kel.capabilities import recommendation
+        self.assertIsNone(recommendation('terminal', {
+            'allowed': False, 'rule': 'capability-unavailable',
+            'reason': 'Terminal is not available on this computer.'}))
+
+    def test_unknown_ids_are_never_recommended(self):
+        from kel.capabilities import recommendation
+        set_override(self.store, 'chat-a', 'web', 'off')
+        self.assertIsNone(recommendation('mcp', resolve(self.store, 'web', 'chat-a')))
+
+    def test_a_live_grant_stops_the_recommendation(self):
+        from kel.capabilities import recommendation
+        set_override(self.store, 'chat-a', 'web', 'off')
+        grant_once(self.store, 'chat-a', 'web')
+        self.assertIsNone(recommendation('web', resolve(self.store, 'web', 'chat-a')))
+
 
 if __name__ == '__main__':
     unittest.main()

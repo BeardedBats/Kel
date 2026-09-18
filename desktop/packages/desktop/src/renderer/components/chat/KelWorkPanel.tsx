@@ -6,6 +6,8 @@ import { useLocation } from 'react-router-dom';
 import Markdown from '@/renderer/components/Markdown';
 import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
 import { memoryRecordActions } from '@/renderer/components/kel/memoryRecordActions';
+import { KelCapabilityCard } from '@/renderer/components/kel/KelCapabilityCard';
+import type { CapabilityRecommendation } from '@/renderer/components/kel/capabilityRecommendation';
 import type { ApprovalItem as WaitingItem } from '@/renderer/components/kel/KelApprovalCard';
 type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
 type Job = {
@@ -13,7 +15,7 @@ type Job = {
   state: string;
   verdict: string;
   contract: { request: string; kind: string; milestones: { id: string; filename: string }[] };
-  milestones: Record<string, { state: string }>;
+  milestones: Record<string, { state: string; error?: string; recommendation?: CapabilityRecommendation | null }>;
 };
 type ContinuationEntry = {
   job_id: string;
@@ -140,6 +142,7 @@ export default function KelWorkPanel() {
     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
   const [history, setHistory] = useState<{ at: number; text: string }[] | null>(null);
   const [lineage, setLineage] = useState<{ request: string; versions: LineageVersion[] } | null>(null);
+  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
   const [vetting, setVetting] = useState<VettingPanelData>(),
     [vettingTopic, setVettingTopic] = useState(''),
     [vettingSpec, setVettingSpec] = useState(''),
@@ -411,6 +414,17 @@ export default function KelWorkPanel() {
                       </React.Fragment>
                     ))}
                 </Space>
+                {Object.entries(job.milestones || {})
+                  .filter(([mid, m]) => m.recommendation && !dismissed[job.id + ':' + mid])
+                  .map(([mid, m]) => (
+                    <KelCapabilityCard
+                      key={job.id + ':' + mid}
+                      conversation={cid}
+                      recommendation={m.recommendation as CapabilityRecommendation}
+                      detail={m.error}
+                      onDone={() => setDismissed((d) => ({ ...d, [job.id + ':' + mid]: true }))}
+                    />
+                  ))}
               </section>
             ))}
             {waiting.map((item) => (
