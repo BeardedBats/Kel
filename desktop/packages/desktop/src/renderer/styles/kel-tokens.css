@@ -346,6 +346,9 @@
   background: var(--kel-accent);
 }
 
+.kel-table td {
+  overflow-wrap: anywhere;
+}
 .kel-table {
   width: 100%;
   border-collapse: collapse;
