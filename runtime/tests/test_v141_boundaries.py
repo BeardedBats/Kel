@@ -208,7 +208,10 @@ class ActorBoundaryTests(unittest.TestCase):
 
     def test_state_reports_engine_version_and_guardrails(self):
         state = self.service.state('main')
-        self.assertEqual(state['engine_version'], '1.5.0')
+        # The engine's identity comes from its single source (`kel.__version__`); R8.B made the
+        # desktop's reuse guard compare exactly this value against `app.getVersion()`.
+        from kel.service import ENGINE_VERSION
+        self.assertEqual(state['engine_version'], ENGINE_VERSION)
         self.assertTrue(state['guardrails_ok'])
 
 
