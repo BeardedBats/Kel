@@ -3,7 +3,7 @@
 MARATHON_MODE: ACTIVE
 
 start_head: 756218e (published docs tip; production 8a677d0)
-current_head: `b2ffed1` (R5) + R6 tests/breadcrumbs (see `git log --oneline -14`)
+current_head: `93b99b5` + R7/R8 breadcrumbs (see `git log --oneline -20`)
 
 completed_this_run:
 - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
@@ -24,8 +24,8 @@ completed_this_run:
   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
   MAIN_STATUS, AUTO_RESUME
 
-current_phase: R7 — credential / network boundary (CREDENTIAL-CONTAINMENT)
-current_item: R7.A — inventory every place a credential could become prompt text, ambient env, artifact, packet, log or export; then sentinel tests
+current_phase: R9 - Visual batches 6-8 + Needs Your Attention (derived-only)
+current_item: R9.A - reconcile the Visual lane (base/tip/overlap/ownership) before writing any batch-6 renderer change
 
 next_queue:
 1. R2 — matrix + repair only demonstrated duplicate-execution gaps + hostile duplicate tests
@@ -46,7 +46,7 @@ last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`, R0 batch)
 last_desktop_vitest: **93 passed** (8 files, R0 batch)
 last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
 
-last_push: `b2ffed1` → origin/ux/v15-journeys (R6 breadcrumbs follow)
+last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
 last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
 
 blocker: NONE
