@@ -45,12 +45,20 @@ CREATE TABLE IF NOT EXISTS assignment_artifacts(
 """
 
 ROLE_FIELDS = ('goal', 'inputs', 'outputs', 'quality_bar', 'boundaries', 'escalation',
-               'evidence_expectations', 'tool_policy', 'model_preference', 'budget')
+               'evidence_expectations', 'tool_policy', 'model_preference', 'budget',
+               # Workforce v2 additions (doc 03 §7; values are validated by kel.assignment
+               # when a role is used for worker assignment — additive, legacy roles keep v1).
+               'authority_max', 'capability_requirements', 'dispatch_tier', 'budget_class',
+               'default_skill_packs', 'independence', 'anti_patterns')
 REQUIRED_ROLE_FIELDS = ('goal', 'outputs', 'quality_bar', 'tool_policy', 'budget')
 ASSIGNMENT_STATES = ('QUEUED', 'ACTIVE', 'WAITING', 'BLOCKED', 'DONE', 'UNCERTAIN', 'FAILED')
 EVENT_KINDS = ('assignment.created', 'assignment.started', 'step.started', 'step.finished',
                'artifact.produced', 'evidence.recorded', 'decision.made', 'approval.requested',
-               'blocked', 'assignment.finished')
+               'blocked', 'assignment.finished',
+               # Workforce kinds (Phase 5.2; additive; the same detail prohibitions apply).
+               'staffing.decided', 'contract.issued', 'task.closed',
+               # Workforce learning loop (Phase 5.6; additive; mission-scoped records).
+               'learning.recorded', 'retro.drafted', 'staffing.proposed', 'proposal.queued')
 FORBIDDEN_DETAIL_KEYS = ('reasoning', 'chain_of_thought', 'thoughts', 'prompt', 'hidden_reasoning')
 TOOLS = ('read', 'write', 'run_tests', 'install', 'browser', 'git', 'external_api', 'shell')
 EVIDENCE_CLASSES = ('artifact', 'test', 'review', 'research', 'screenshot', 'receipt')
@@ -273,7 +281,8 @@ class Team:
 
     # ---- assignments ----------------------------------------------------
     def create_assignment(self, job_id, milestone_id, template_id, project_id='', task_id='',
-                          actor='kel', run_id=None, provider=None, model=None, budget=None):
+                          actor='kel', run_id=None, provider=None, model=None, budget=None,
+                          extra=None):
         if actor != 'kel':
             raise PolicyError('Delegation is Kel’s decision only')
         job = self.store.get(job_id)
@@ -287,6 +296,20 @@ class Team:
                     'tool_policy': fields.get('tool_policy', {}),
                     'model_preference': fields.get('model_preference'),
                     'budget': budget if budget is not None else fields.get('budget')}
+        if extra is not None:
+            if not isinstance(extra, dict):
+                raise PolicyError('Assignment snapshot extras must be an object')
+            collisions = sorted(set(extra) & set(snapshot))
+            if collisions:
+                raise PolicyError('Extras may not override snapshot keys: %s'
+                                  % ', '.join(collisions))
+            # Function-scope import: kel.workforce imports this module at load time.
+            from .workforce import find_unsafe
+            unsafe = find_unsafe(extra, path='snapshot extras')
+            if unsafe:
+                raise PolicyError('Unsafe assignment snapshot extras: %s'
+                                  % '; '.join(unsafe[:3]))
+            snapshot.update(extra)
         assignment_id = uid()
         now = time.time()
         with self.store.transaction() as db:
@@ -336,6 +359,20 @@ class Team:
             self._event(db, kind, actor or assignment_id, assignment_id, row['job_id'],
                         row['milestone_id'], row['run_id'], detail, refs)
         return {'ok': True}
+
+    def record_mission_activity(self, kind, detail=None, refs=None, actor='kel'):
+        """Append one mission-scoped event not tied to a single assignment (learning loop).
+
+        Used by the Phase 5.6 shadow loop (doc 11) for learning/retro/proposal records; the
+        same EVENT_KINDS validation and reasoning-key prohibitions as every other activity
+        apply, and the row is append-only exactly like assignment-scoped activities.
+        """
+        if kind not in EVENT_KINDS:
+            raise PolicyError('Unknown activity kind: %s' % kind)
+        with self.store.transaction() as db:
+            self._event(db, kind, actor, None, None, None, None, detail, refs)
+            seq = db.execute('SELECT max(seq) FROM team_events').fetchone()[0]
+        return {'ok': True, 'seq': seq}
 
     def add_artifact(self, assignment_id, artifact_digest, filename, evidence_class):
         if evidence_class not in EVIDENCE_CLASSES:

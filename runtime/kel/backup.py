@@ -20,9 +20,14 @@ from .core import PolicyError
 MARKER = 'restore-pending.json'
 STAGING = '.restore-staging'
 INFO = 'BACKUP-INFO.json'
+OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the data (PER-02)
+SNAPSHOT_KEEP = 2  # pre-restore snapshots retained; older ones are pruned (PER-03)
 SECRET_TABLE = 'transcription_settings'
 SECRET_KEYS = ('meta_api_key',)
 SKIP_ENTRIES = (STAGING, MARKER)
+# Credential custody lives in the OS keychain/app-data, but `KEL_DATA_DIR` can place the encrypted
+# credentials file inside the data root; a backup must never capture it (audit PER-04).
+NEVER_BACKUP = ('kel-credentials.json',)
 # Runtime state the app keeps open while it runs: never part of a backup.
 VOLATILE_ENTRIES = ('logs', 'desktop.log', 'desktop-session.json', 'controller.lock')
 # Everything under `host` is Chromium's user-data tree - caches, storage and locks the running
@@ -143,6 +148,9 @@ class Backup:
             for entry in self.root.iterdir():
                 if entry.name in SKIP_ENTRIES or entry.name in VOLATILE_ENTRIES:
                     continue
+                if entry.name in NEVER_BACKUP:
+                    skipped.append(entry.name)  # credentials never travel in a backup (PER-04)
+                    continue
                 if entry.name.lower().endswith(('-wal', '-shm', '-journal', '.wal', '.shm', '.journal')):
                     # Live SQLite sidecar files are locked and never copied; the hot database
                     # copy below carries a consistent snapshot of their contents.
@@ -258,6 +266,40 @@ def _restore_entry(source, destination):
     _copy_with_retries(source, destination)
 
 
+def _record_outcome(root, ok, detail=''):
+    """Durable, database-independent record of the last restore attempt (audit PER-02).
+
+    A restore is what replaces the database, so its outcome cannot live inside it: the record is a
+    sidecar next to the data. `Service` reads it and surfaces a failure in `state()` instead of
+    discarding it. Recording never raises — a failed restore must still return its verdict.
+    """
+    try:
+        (Path(root) / OUTCOME).write_text(
+            json.dumps({'ok': bool(ok), 'detail': str(detail)[:200], 'at': time.time()}),
+            encoding='utf-8')
+    except Exception:
+        pass
+
+
+def _prune_snapshots(root, keep=SNAPSHOT_KEEP):
+    """Keep only the newest `keep` pre-restore snapshots (audit PER-03).
+
+    Every applied *or attempted* restore leaves `root.name + '.pre-restore-<stamp>'` beside the
+    data, and nothing ever removed them. Only directories matching that exact prefix are touched,
+    the newest `keep` always survive (including the one this attempt just wrote), and pruning is
+    best-effort so it can never fail a restore.
+    """
+    prefix = root.name + '.pre-restore-'
+    try:
+        snapshots = sorted((entry for entry in root.parent.iterdir()
+                            if entry.is_dir() and entry.name.startswith(prefix)),
+                           key=lambda entry: entry.name, reverse=True)
+        for stale in snapshots[keep:]:
+            shutil.rmtree(stale, ignore_errors=True)
+    except Exception:
+        pass
+
+
 def apply_pending_restore(store):
     """Called at engine start, before any connection touches the databases.
 
@@ -291,6 +333,13 @@ def apply_pending_restore(store):
             _restore_entry(entry, root / entry.name)
         shutil.rmtree(staging, ignore_errors=True)
         marker.unlink(missing_ok=True)
+        _prune_snapshots(root)
+        _record_outcome(root, True)
         return True
-    except Exception:
+    except Exception as exc:
+        # Audit PER-02: a failed or partial restore used to vanish into `False` while the marker
+        # stayed behind. The outcome is now recorded (and surfaced by the service) while the
+        # marker keeps its meaning: the restore is still pending.
+        _prune_snapshots(root)
+        _record_outcome(root, False, type(exc).__name__)
         return False

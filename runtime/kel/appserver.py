@@ -10,6 +10,7 @@ import queue
 import subprocess
 import threading
 import time
+from .internal import child_env
 from .native import executable
 
 
@@ -32,8 +33,7 @@ class CodexConnection:
                         'browser_use','computer_use','image_generation','goals','in_app_browser','browser_use_external'):
             args += ['--disable', feature]
         if process_argv is not None:args=process_argv
-        env = os.environ.copy()
-        env.pop('ANTHROPIC_API_KEY', None)
+        env = child_env(keep=('OPENAI_API_KEY',))  # the trusted Codex child's own credential (R7.C)
         self.process = subprocess.Popen(args, cwd=self.workspace, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=self.err, text=True, encoding='utf-8', env=env,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

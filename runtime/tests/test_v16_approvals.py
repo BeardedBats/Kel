@@ -399,5 +399,76 @@ class ServiceRouteTests(unittest.TestCase):
             self.service.action('/api/approvals', {'action': 'take-over'})
 
 
+class CrossScopeResolutionTests(ApprovalBase):
+    """APR-02 / Round 2.5 APPROVAL-EXACT: the resolve path is scoped like the read path.
+
+    The list is conversation-scoped; before this increment the resolution was not, so an id from
+    another conversation could settle work the caller was not looking at.
+    """
+
+    def test_a_step_approval_cannot_be_resolved_from_another_conversation(self):
+        run, approval_id, thread, result = self.ask_for_step()
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'action', approval_id, True,
+                                   conversation='somewhere-else')
+        self.assertIn('another conversation', str(caught.exception))
+        # Untouched by the refused attempt, and still resolvable from its own conversation.
+        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True,
+                                          conversation='main')
+        self.assertEqual(resolved['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_a_job_in_another_conversation_is_not_resolvable_from_main(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'action', approval_id, True, conversation='main')
+        self.assertIn('another conversation', str(caught.exception))
+        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True,
+                                          conversation='elsewhere')
+        self.assertEqual(resolved['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_a_boundary_grant_cannot_be_resolved_from_another_conversation(self):
+        _, request_id = self.ask_for_access()
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'access', request_id, True,
+                                   conversation='somewhere-else')
+        self.assertIn('another conversation', str(caught.exception))
+        resolved = chat_approvals.resolve(self.store, 'access', request_id, True,
+                                          conversation='main')
+        self.assertEqual(resolved['state'], 'allowed_once')
+
+    def test_an_unknown_id_is_refused_even_with_a_declared_conversation(self):
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'action', 'apr_missing', True, conversation='main')
+        self.assertIn('missing', str(caught.exception))
+
+    def test_without_a_declared_conversation_behaviour_is_unchanged(self):
+        # The HTTP contract stays additive: older callers that declare nothing keep working.
+        run, approval_id, thread, result = self.ask_for_step()
+        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True)
+        self.assertEqual(resolved['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_the_service_route_honours_the_declared_conversation(self):
+        run, approval_id, thread, result = self.ask_for_step()
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+        with self.assertRaises(PolicyError):
+            service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
+                                              'allow': True, 'conversation': 'somewhere-else'})
+        out = service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
+                                                'allow': True, 'conversation': 'main'})
+        self.assertEqual(out['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,9 @@
 # Kel v1.6 program — auto-resume (continuation state)
 
+> NOTE (2026-09-18): sections are chronological. The authoritative current state is
+> `docs/v1.6/status/MAIN_STATUS.md` plus the NEWEST section in this file (Campaign A, at the end).
+> Older paragraphs below are historical.
+
 State at this writing: pre-program checkpoint frozen; program Phases 0–3 complete, verified, and
 committed on `ux/v15-journeys`. **Phase 4 (i18n / donor-string cleanup) is PAUSED with its work
 preserved in a git stash** — do not resume it until the program says so. A P1 capability remediation
@@ -26,7 +30,13 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 3.6 CAP2-CLAUSE remediation | DONE — commit `327e5b2` | engine 610 (+10 subtests), packaged `sessiontools` (with bracket-clause steps) + CAP2 forwarded-text probe + engine regression on `package-p1cap2` (`ux-audit/run-cap2-clause.sh`) |
 | 3.7 CAP2-RESIDUAL remediation | DONE — commit `631881a` | engine 613 (+10 subtests), packaged `sessiontools` (reserved-directive + residual steps) + residual forwarded-text probe + engine regression on `package-p1cap3` (`ux-audit/run-cap2-residual.sh`) |
 | 4 i18n / donor-string cleanup | DONE — commit `fd04c00` (restored safely from the stash on `267364e`, then completed) | `docs/i18n-cleanup/00_STATUS.md`; locales 12× clean (0 residuals, 247 files valid); tsc 0, vitest 76; packaged `package-final17` copy-scan + standing journeys (`ux-audit/run-phase4.sh`) |
-| 5–15 | pending | see the program brief; autonomous Main continues per the charter (Workforce OS research packages must be read before Phase 5 implementation) |
+| 5.0 Workforce schemas & registries | DONE + audit-accepted — commit `cc909b9` | `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md`; engine 658 (+45); audit 8-9 (REVISE → remediation → CONTINUE) |
+| 5.1 Agent-to-model assignment | DONE + audit-accepted — commits `9d6ed55` + follow-up `5b83f0e` | `docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine 693 (+35); audits 10-11 CONTINUE (N1-N6 + S2 closed) |
+| 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
+| 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
+| 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
+| 5.5 Parallel mission teams + mission worktrees | **ACCEPTED** — `5f77f42` + remediations `b1141c4`, `2a12b77` + acceptance patch `d8880f3` | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37) → 851 → 853; migration 19; audits 20/21 **REVISE** → remediated, audit 22 **CONTINUE**; published `9a2965d..d8880f3` |
+| 5.6 Learning loop (shadow) | **ACCEPTED** — `ba52869` + remediation `8a2b25d` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 → 878; no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audits 23 REVISE → 24 CONTINUE; 5.7/5.8 decisions deferred (`5.7_DECISION_DEFERRED.md`, `5.8_DECISION_DEFERRED.md`) |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -166,6 +176,18 @@ as the path.`, API/log lines, `[[web: off]]`) and silent text removal followed.
 ## Phase 4 completion (autonomous Main increment, 2026-09-17)
 
 Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and completed.
+**Independent Audit 1.6 accepted it (increment 7: CONTINUE for `267364e..fd04c00`, no production
+writes, Main worktree untouched).** Dependency-watch cadence for autonomous Main is documented in
+`docs/v1.6/AUTONOMOUS_OPERATION.md` (30-second re-read of the authoritative status file when blocked
+on another thread, stop immediately on change, never hot-loop, commit truth over status prose).
+The Visual checkpoint is published under the orthogonal schema (`visual_state: READY_FOR_VISUAL`,
+`visual_clean_head: 60b2322` — verified: exists, ancestor of the branch, remote-contained) so the Visual
+thread may begin while Main stays `IMPLEMENTING`; the schema and the race-avoidance ownership protocol
+(consult `VISUAL_STATUS.active_owned_files` before touching user-facing Workforce files) are documented
+in `docs/v1.6/AUTONOMOUS_OPERATION.md`. The mandatory Phase 5 reading is
+complete (coverage recorded in `docs/v1.6/phase5/READING_RECORD.md`: 17/17 `workforce-os` docs +
+31/31 role-charter files); the next increment is **Phase 5.0 — Foundations** per
+`15_PHASE5_IMPLEMENTATION_SPEC.md`.
 
 - **Safe restoration**: stash `MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION` (base `70d68e4`,
   object `992ab31c…`, 123 tracked files + 1 untracked) was inspected against the recovery artifact
@@ -190,9 +212,136 @@ Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and
 - **Next Audit 1.6 range**: `267364e..NEW_MAIN_HEAD` (this Phase 4 increment plus the state commit
   that records it).
 
+## Phase 5.0 — workforce schemas & registries (autonomous Main increment, 2026-09-17)
+
+Phase 5.0 (Workforce OS schemas & registries) is implemented on `ux/v15-journeys` (commit `9085335`, remediated `cc909b9`) and
+audit-accepted through `cc909b9` (increment 8 REVISE → increment 9 CONTINUE). Migration 16 (`v16-workforce-schemas`,
+applied at Service startup) creates `task_contracts`, `workforce_messages`, `findings`,
+`evidence_records` and `skill_packs` — append-only triggers on the three ledgers. The
+TaskContract/CompletionPacket/message/finding v1 validators, the evidence writer, the 15-lens
+registry and the R1–R10 staffing rule table ship as pure modules with no consumers yet.
+Documented deviations: `task_contracts` named distinctly from the core `contracts` table;
+interim static role→authority ceilings until role registry v2 (5.1); first append-only SQLite
+triggers in the repo. Evidence: `docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md` (+ audit
+addendum); engine `658 passed (+45)` on Windows; packaged verification deferred to the next
+packaged battery (assert `schema_migrations` 16 on a packaged boot). **Audit: increment 8
+REVISE → remediation `cc909b9` → increment 9 CONTINUE (F1-F3 closed); accepted through
+`cc909b9`.** Carry-forward: partial-coverage test for the lens check; echo-vs-issued-contract
+reconciliation for D1/D2. Next: Phase 5.1 — agent-to-model assignment
+(`test_workforce_assignment.py`).
+
+## Phase 5.1 — agent-to-model assignment (autonomous Main increment, 2026-09-17)
+
+Phase 5.1 (Workforce OS agent-to-model assignment) is implemented on `ux/v15-journeys` as
+commit `9d6ed55`, audit-requested for `cc909b9..9d6ed55`. `kel/assignment.py` seeds the
+8-archetype registry v2 (7 spawnable templates; Commander never a template) into the existing
+V1.4 role storage with the doc-03 §7 fields; AUTO/PREFERRED/FIXED resolution binds roles to
+(provider, model, runtime) over the existing deterministic router with per-role requirement
+profiles; capability grants are fail-closed against the authority ceiling; migration 17 adds
+`budget_reservations`; overlays v1 ship as a graceful no-op registry; assignment snapshots
+freeze mode/binding/grants/reservation/flags via `create_assignment(extra=)`; the contract
+validator now accepts versioned registry ceilings. Nothing live calls the new API (explicit
+path only) and `workforce.enabled` defaults off — B-config parity by construction. Evidence:
+`docs/v1.6/phase5/5.1_IMPLEMENTATION_RECORD.md`; engine `689 passed (+31)` on Windows; same-role
+demo across all three modes snapshotted. **Audit: increment 10 CONTINUE — Phase 5.1 accepted
+for `cc909b9..9d6ed55`; minors N1-N7 recorded (latent FIXED model-check gap, reservation
+milestone/atomicity, record fidelity, cross-mode arguments, extras sanitization, per-project
+ceilings).** The follow-up patch `5b83f0e` closed N1-N6 + S2; audit increment 11 returned
+**CONTINUE** (all closures verified; carry-forward integrity confirmed; new suggestion-level
+items ride the 5.2 wiring review). Next: publish this checkpoint, then Phase 5.2 — D1
+single-specialist delegation (`test_workforce_d1.py`).
+
+## Phase 5.2 — D1 single-specialist delegation (autonomous Main increment, 2026-09-17)
+
+Phase 5.2 (Workforce OS single-specialist delegation) is implemented on `ux/v15-journeys` as
+commit `894be5b`, audit-requested for `5b83f0e..894be5b`. `staffing.decide()` turns the doc-05
+feature vector into a recorded tier decision (bands, R1 cap, mission-flag floors, tier_max);
+`delegation.delegate()` issues the frozen TaskContract for exactly one specialist (migration
+18 links it to the milestone) and records staffing.decided/contract.issued;
+`close_d1()` refuses completed closes on stale, unbound or missing evidence and on missing
+criterion coverage (uncertain/failed close honestly); `run_d1()` enforces worker tools against
+the frozen grants and never spawns nested workers; `task_ledger()`/`progress_ledger()` project
+the trail read-only; flag off performs zero writes. Carry-forward closed: N7 + Sug1-5 + S3.
+Evidence: `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine `717 passed (+24)` on
+Windows; full D1 demo trail in the record. **Audit: increment 12 CONTINUE — Phase 5.2 accepted
+for `5b83f0e..894be5b`; findings F1-F8 recorded (F4 rides the 5.3 real-worker wiring).** The
+follow-up patch landed as `f9cf3ea` (focused 31; full 724) and its delta re-audit
+(increment 13) returned **CONTINUE** — F1-F8 closed or correctly open (F4 remains for 5.3;
+N1 hardening noted for the 5.3 wiring). Next: publish, then Phase 5.3 — D2 small pod +
+verification (`test_workforce_d2.py`).
+
+## Phase 5.3 — D2 small pod + verification (autonomous Main increment, 2026-09-17)
+
+Phase 5.3 (Workforce OS small pod + verification) is implemented on `ux/v15-journeys` as
+commit `48dacb3`, audit-requested for `f9cf3ea..48dacb3`. `kel/pods.py: run_d2` runs the
+hands-off Builder→Verifier flow: two frozen contracts (verifier depends on the builder task,
+carries functional-testing + maintainability lenses), one assignment each (Builder ≠ Verifier;
+family-diverse verifier binding with recorded fallback), an evidence-bound builder close, a
+HANDOFF message, the verifier's findings + verdict (VERIFIED refused while blockers/criticals
+are open), evidence-bound closes throughout, stall probes (`check_stall`) and interruption
+accounting. `kel/messages.py` gained dispatch enforcement (pair ≤6 with cmd exempt, task ≤12,
+fingerprint dedupe, receiver-state guard); `kel/assurance.py` gained the findings pipeline
+(multi-lens confirmation, arbitration ladder v1). `kel/evaluation.py` is the A-vs-C pilot
+harness on classes 2/6/8 — **gates green: escaped_C < escaped_A on every class; interruptions
+0 ≤ budget**. No new migration; flag off performs zero writes; F4/N1 wiring landed with the
+real-worker path. Evidence: `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine
+`765 passed (+41)` on Windows. **Audit: increment 14 CONTINUE — Phase 5.3 accepted for
+`f9cf3ea..48dacb3`; F14-1/F14-2/N14-1 queued for the opening follow-up patch; F4 remains open
+for the real-worker increment.** The follow-up patch landed as `5747567` (focused 43; full 767)
+and its delta re-audit (increment 15) returned **CONTINUE** (all closures verified; two low
+suggestions carried). Next: publish, then Phase 5.4 — assurance army + Sentinel + Oracle
+(`test_workforce_assurance.py`).
+
+## Phase 5.4 — assurance army + Sentinel + Oracle (autonomous Main increment, 2026-09-17)
+
+Phase 5.4 is implemented on `ux/v15-journeys` as commit `932db33`, audit-requested for
+`5747567..932db33`. `kel/assurance.py` gained deterministic scope gating (`lenses_for`: tier
+floors + flag triggers + never-gate at D4; every skipped lens reasoned), anti-anchored
+`dispatch_assurance` (artifact + lens + requirement payloads only; coverage statements
+required; the Sentinel security-lens rule), the deterministic `gate` (blockers always;
+criticals while open; never-gate findings unwaivable by Kel), `waive_gate` (user-only for
+never-gate, recorded), the `oracle_check` harness (family-diverse, coverage-required) and
+`lens_stats` (FP rates). Audit-15 suggestions closed: `messages.ESCALATION_TYPES` is the
+single source; the boundary test enumerates the three escalation types and refuses HANDOFF at
+cap. Evidence: `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine `791 passed (+24)` on
+Windows. Next after audit CONTINUE: publish, then Phase 5.5 — parallel mission teams.
+
+## Phase 5.6 — learning loop (shadow) (autonomous Main increment, 2026-09-18)
+
+Phase 5.6 (Workforce OS learning loop, shadow) is implemented on `ux/v15-journeys` as commit
+`ba52869`, audit-requested for `2236881..ba52869`. New `kel/learning.py` — learnings are
+**memory records** with workforce source types (`workforce_observed`/`workforce_cross_model`/
+`workforce_inferred`; user-stated rides the existing `user_confirmation` level 2), so
+provenance, the trust ladder, supersede chains, conflict queueing and forget semantics all apply
+unchanged; **no new storage surface, no migration** (learnings ride the memory store, history
+rides `team_events`, stats/metrics are derived views). Dedup never forks a key; decay is
+computed at read time (observed/inferred/cross-model −1 point / 30 days; user-stated never
+decays); preferences only from explicit user confirmation; confidence above the auto cap (5) is
+stored capped and queued for promotion (nothing promotes automatically); corrections ride
+`Memory.correct` and become user-stated. The curator (post-mission, bounded, deterministic)
+records candidate learnings from findings/corrections/mission conflicts, drafts the retro
+(`retro.v1`) and records shadow staffing proposals with predictions; performance stats and
+validation metrics (gating precision, false-skip by recomputed gating plans) are derived views
+with small-sample honesty. Additive wiring: `team.py` EVENT_KINDS +
+`Team.record_mission_activity`; `memory.py` workforce `SOURCE_TRUST`; `assignment.py`
+`flags_snapshot` carries `workforce.learning.shadow` (`KEL_WORKFORCE_LEARNING_SHADOW`, default
+off — flag off performs zero writes on every path; nothing calls the module yet).
+Evidence: `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; focused **23 passed**; full runtime
+suite **876 passed (+10 subtests; baseline 853)** on Windows; 876 collected. Next: audit
+increment 23 (`2236881..ba52869`); on CONTINUE publish, then the Phase 5.7 decision (adaptive
+staffing enablement stays deferred unless the doc-13 campaign metrics and user sign-off exist).
+
+Update (audit 23 → 24): the delta re-audit returned **REVISE** (`36_PHASE5_6_AUDIT.md`;
+F23-1..F23-10 — an ungated writer, store-wide lens scope claiming project scope, decay/hygiene).
+Remediated in `8a2b25d` (focused 25; full 878; zero regressions; see the record's follow-up
+section). Delta re-audit (24): **CONTINUE** — all closed; **Phase 5.6 accepted through
+`8a2b25d`**. Phase 5.7 DEFERRED (entry unmet: doc-13 campaign + user sign-off) and Phase 5.8
+DEFERRED (product decision) — decision records in `docs/v1.6/phase5/`. Next: publish, Visual
+screenshot-index refresh, then Phase 6 (memory reality audit).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 613 passed (+10 subtests).
+1. `cd runtime && python -m pytest tests -q` → **878 passed** (+10 subtests; zero regressions).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
@@ -232,3 +381,365 @@ Phase 4 (i18n / donor-string cleanup) was restarted from the preserved stash and
   and the rest of the message is forwarded without only the reserved token. Generic brackets
   (`[web: off]`), quoted commands, code samples, URLs, nested brackets and malformed tokens never
   change state and are forwarded byte-identical; exact forwarding when no directive is recognized.
+
+## CAMPAIGN A — full-speed implementation sprint (2026-09-18)
+
+The operating strategy changed (user directive, 2026-09-18T~15:40Z). From now until a
+PRE-AUDIT V1.6 RELEASE CANDIDATE exists: **implement → self-review → test → package → verify →
+record → commit → integrate → continue.** Independent Audit cycles are **paused** (Campaign B
+consumes the breadcrumb corpus afterwards; Campaign C repairs). Quality control is NOT deferred:
+focused tests, regression, packaged verification, atomic commits and records continue per change.
+
+- **Entry state**: Main `ux/v15-journeys` @ `fd98cc4` (published; clean; frozen refs verified).
+- **Last independently audited production point**: `8a2b25d` (increment 24 CONTINUE). Docs-only
+  commits above it: `c4ae724`, `5127bac`, `fd98cc4`.
+- **First intentionally unaudited production commit**: opens with the first Campaign A production
+  change (recorded in `docs/v1.6/pre-audit/COMMIT_LEDGER.md`).
+- **Breadcrumb corpus**: `docs/v1.6/pre-audit/` — README, AUDIT_SCOPE, ledgers (commit/change/
+  requirement/invariant), evidence indexes (test/packaged/migration/provider/visual), P2/P3
+  disposition, risk register, deferrals, limitations, audit targets, repair hints, final-state
+  matrix, increment records, evidence bundles. Maintained per increment, not at the end.
+- **Audit thread**: parked (`audit_required: false`; `audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC`).
+- **Visual lane**: batches 1–5 are delivered on `ux/v16-visual-fix` (`ac85eb3`) with automated +
+  packaged acceptance; they are NOT independently audited; remaining batches 6–8 and the
+  integration into Main are Campaign A goals.
+- **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+- **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+  `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+- **Phases 10-11 done** 2026-09-18: provider validation (claude PASS, codex CLI-version blocked,
+  internal/deepseek unavailable) and the Rust freshness recheck (verdict upheld; Phase 12 closed).
+  **Next**: F4 real-artifact binding + resolution-kind; see `MAIN_STATUS.next_autonomous_action` for
+  the full Campaign A queue.
+
+## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+
+Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md`; audit:
+`docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`). Reality inventory (store, write paths, read paths,
+UI surfaces, explicit non-existents), isolation/persistence/provenance verification, dispositions
+MEMR-1..MEMR-7. Bounded fixes in `22f4a3e` — the **first intentionally unaudited production
+commit** of Campaign A: Work-panel knowledge actions follow record state (`memoryRecordActions`,
+7 unit tests), forget asks for confirmation, tombstones read "Content removed.". Re-verified
+carry: SEC-01/APR-01/APR-02 (isolation class) documented; APR-03 reviewed → stays with the P2/P3
+sweep (durable-drain direction recorded); stale-detection wiring (DEF-012/LIM-13) and new-surface
+localization (DEF-013/LIM-12) deferred with records. Tests: engine focused 68 (engine untouched);
+tsc 0; vitest 83 (76→83).
+
+Reports: `docs/v1.6/pre-audit/` corpus updated (COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
+TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS,
+P2_P3_DISPOSITION, REPAIR_HINTS, VISUAL_EVIDENCE_INDEX).
+
+## Phase 7 — capability recommendations (2026-09-18)
+
+Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`;
+record: `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`). The engine now emits a structured,
+real-only recommendation when a capability refusal happens (`capabilities.recommendation`;
+research + coding blocked outcomes; retained on the job milestone so `/api/state` carries it), and
+the desktop renders it in the Work panel (`KelCapabilityCard`: Allow once / Enable for this chat /
+Keep it off — fail-closed rendering, real endpoints, dismissal without state change). Invariant
+INV-CAPREC-001 added; audit targets 40–45 added. Tests: engine focused 83; **full 885 passed**
+(+10 subtests; was 878); tsc 0; vitest **90** (was 83). Packaged card evidence deferred — no
+provider in this environment (LIM-14); transcript-inline placement = DEF-014. Next: Phase 8/5.8
+decision.
+
+## Phase 8/5.8 — Advanced Worker View: decision (2026-09-18)
+
+**DECIDED — deferred beyond V1.6.** Final record: `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`
+(supersedes the pending-state 5.8 record). Rationale: North Star ONE assistant; design doc 12's own
+success bar is zero visits; the spec's exit gate (product decision + usability review) has not
+occurred and no user need is recorded; sprint directive §33 says not to block the sprint on the
+optional panel. No UI/endpoints added; existing engine-side data stays available. Re-entry
+conditions recorded (post-V1.6 decision → bounded Advanced/Details-only increment, zero-visit
+default). Phase 5.7 confirmed deferred per §34 (no fabrication; activation criteria already
+recorded). Corpus updated: DEF-002, REQ-AWV-8, REQ-WF-5.8, CHANGE_LEDGER mapping. Next: Phase 9 —
+Profiles vs Projects.
+
+## Phase 9 — Profiles vs Projects: decision (2026-09-18)
+
+**DECIDED — no Profiles concept in V1.6; Projects remain the single isolation concept.** Record:
+`docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`. Evidence: donor matrix item 21 (REJECT —
+Projects already scope conversations/files/knowledge/artifacts/recipes), donor remediation §4, and
+current-repo verification (no `/profiles` route/nav/locale surface; donor AssistantSettings hidden
+by `HIDE_DONOR_AGENT_SURFACES = true`; remaining "profile" strings are unrelated donor auth labels
+and engine internals). No code change required; held visual batch 3 keeps "Projects" language. New
+audit target 46 (AgentBadge assistantId path is donor-dead for Kel conversations). Corpus updated:
+REQ-PP-9, mapping row 9. Next: Phase 10 — real provider validation.
+
+## Phases 10-11 — provider validation + Rust freshness (2026-09-18)
+
+**Phase 10 (sprint §36):** real calls where access allows — `claude -p` minimal call **PASSED**
+(returned `ok`; client 2.1.215, authenticated); `codex exec` reached the real service but was
+refused by CLI model-version logic (`gpt-6-astra` requires a newer Codex — recorded as an
+environment limitation, never a pass); `internal`/`deepseek` have **no credentials anywhere on this
+machine** (presence-only checks; nothing leaked). Fixture refresh: 55 passed (providers +
+assignment). Record: `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; matrix rewritten.
+
+**Phase 11 (sprint §37):** `NO_MIGRATION_NEEDED_NOW` **upheld** against the current tree — process
+model/transports/ownership unchanged by Campaign A work; A1 (`engine_version` reuse check),
+PER-02 (`apply_pending_restore` swallow) and REL-01 (freeze staging) re-verified still open (docket
+P2s); no re-open trigger fired. **Phase 12 CLOSED** (no Rust migration in V1.6). Record:
+`docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md`. Next: F4 real-artifact binding + resolution-kind.
+
+## Canonical logo (Nick directive, 2026-09-18)
+
+**DONE — REQ-LOGO-1.** The exact Nick-supplied folded-ribbon K (`Kel Logo.png`, sha256 `7418a42f…`)
+is now the canonical Kel logo on every production-reachable branding surface: exe/installer/shortcut
+icon, taskbar/tray/notifications, dev window/dock, linux/mac icons, favicon/apple-touch/PWA, the login
+mark, and a new About-screen mark. The canonical source is preserved byte-identical
+(`desktop/resources/branding/kel-logo.png`); every size is a derivative generated by
+`scripts/make-brand-assets.py` (sha256-guarded, premultiplied alpha, no crop/recolour/redraw).
+Enabling `signAndEditExecutable` also fixed a real shipped defect: the previous package's exe carried
+Electron's own identity and icon (`ProductName=Electron`, `CompanyName=GitHub, Inc.`). Record:
+`docs/v1.6/branding/CANONICAL_LOGO.md`; increment `pre-audit/increments/LOGO-CANONICAL.md`; evidence
+`docs/v1.6/branding/evidence/`. Verification: tsc 0, vitest 90, packaged build exit 0 with exe **and**
+installer icons pixel-identical to the shipped frame (mad 0.0), packaged UI harness `errors: []`, and
+the packaged About capture matching the canonical artwork at 0.960 masked NCC. Known residuals:
+`CompanyName=AionUi` in exe metadata, dead donor `logo.svg`, donor `.nsh` installer text (not included
+by the builder) — audit targets 47–49. The human pixel gate (16 px legibility, About placement) stays
+open. Next: F4 real-artifact binding + resolution-kind.
+
+## REQ-RK — record-bound resolution kinds (2026-09-18)
+
+**DONE — REQ-RK / audit carry-forward F18-5 (N18-5).** `_is_acceptance` inferred an acceptance from a
+prefix on the free-text `dismissal_reason`; how a finding was resolved is now recorded data.
+`findings.resolution_kind` (vocabulary `fixed|risk-accepted|gate-waived|false-positive`) is written by
+the guarded paths (`resolve_finding`, `waive_gate`), validated when present, and read by `lens_stats`,
+which derives the kind once for rows written before v17. The additive migration **v17**
+(`v17-finding-resolution-kind`) adds the column in place with a PRAGMA guard — no row rewritten, no
+contract change, idempotent across reopens. The F17-2 anti-impersonation guarantee (guarded reason
+markers) is preserved. Commit `a547936`; record `increments/REQ-RK-RESOLUTION-KIND.md`; tests
+`tests/test_v16_resolution_kind.py` (6); focused 136 passed; **full engine suite 891 passed**
+(+10 subtests, was 885). No desktop change required (no desktop code reads reasons or lens stats).
+Next: **F4 real-artifact binding wiring**.
+
+## REQ-F4 / WF-12 — real-artifact binding (2026-09-18)
+
+**DONE — REQ-F4 / audit carry-forward F4 (audit scope WF-12).** Closure verification compared the
+evidence's artifact digest against the *packet's own* artifact list, and `assignment_artifacts` —
+the table recording what an assignment really delivered — had a writer (`Team.add_artifact`) and no
+reader. Now: `Store._record_assignment_artifact` binds each landed milestone artifact to its
+assignment in the same transaction as `artifact_lineage` (idempotent), and
+`_artifact_violations` refuses a content-bound close whose claimed digest was never recorded for
+that assignment — plus, when a caller supplies `artifact_root`, a missing file or a digest that
+does not match what is on disk. The gate immediately found 8 failures + 5 errors in fixture
+harnesses (D2 builder/verifier workers, pilot specialists) which now record their deliveries the
+way the real worker wiring must. Commit `081a6ef`; record
+`increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; tests `tests/test_workforce_d1.py` (4 new); focused
+126 passed; **full engine suite 895 passed** (+10 subtests, was 891). Residuals: `run_d1` does not
+yet pass an `artifact_root` (audit target 56); non-content-bound contracts keep their previous
+scope. Next: **P2/P3 sweep**.
+
+## PER-02 — restore failures are recorded and surfaced (2026-09-18)
+
+**FIXED (engine half) — audit P2 PER-02 (Rust-corroborated).** `service.py` used to wrap
+`apply_pending_restore` in `try/except: pass` and discard the boolean, so a restore that could not
+start, or failed halfway, left no trace. Now `backup._record_outcome` writes
+`restore-outcome.json` **beside** the data (the database is what a restore replaces, so the record
+cannot live inside it) on both decisive paths — success `ok=True`; failure `ok=False` with the
+exception *type name* and `restore-pending.json` left in place — and `service.state()` carries
+`restore: {ok, detail, at} | null` next to `connected`/`engine_version` (additive payload, no
+contract break). Boot never aborts on a restore failure. Commit `df1997a`; record
+`increments/PER-02-RESTORE-VISIBILITY.md`; tests `tests/test_v16_restore_visibility.py` (5 new);
+focused 14 passed; **full engine suite 900 passed** (+10 subtests, was 895). The renderer surface
+that would *show* the outcome belongs to REQ-ELOSS (audit target 57) and was deliberately not
+invented here. Sweep status after this increment: **7/27 rows dispositioned** (P2 1/10, P3 6/17).
+Next: continue the sweep (P2 rows need their source records read; A1 and REL-01 remain the
+release-relevant ones).
+
+## Sweep batch 2 — INT-01, SEC-01-multipart, PER-04 fixed (2026-09-18)
+
+**Three audit P3s fixed (`0596211`), each verified live in the tree first, each small enough to fix
+correctly now.** (1) **INT-01** — `kel:artifact-reveal` was the only privileged IPC handler without
+the sender-frame guard its four siblings carry; it now requires the main frame and a `file:` URL
+before touching the OS. (2) **SEC-01-multipart** — `_multipart` interpolated the caller's filename
+raw into `Content-Disposition`; every parameter now passes `_header_safe`, so a crafted name cannot
+start a header line while clean names stay byte-identical. (3) **PER-04** — a `KEL_DATA_DIR`
+override can put `kel-credentials.json` inside the backup root; `Backup.create` now skips and
+reports `NEVER_BACKUP`. Also recorded: **DEAD-05** → `DEFERRED_NON_RELEASE` (internal coupling only),
+and **TR-01** stays OPEN (still module-level `_STREAMS`; the lifecycle review the finding asks for
+has not been done — the row explicitly says it is not cleared). Tests: 5 new + 41 focused passed;
+desktop `tsc` 0; **full engine suite 905 passed** (+10 subtests, was 900). The IPC guard has no
+automated test (no Electron/IPC harness here) — recorded as audit target §58 rather than claimed.
+Sweep status: **11/27 rows dispositioned** (P2 1/10, P3 10/17). Next: the remaining P2s, starting
+with A1 and REL-01.
+
+## A1 / ENG-01 — detached-engine reuse validates `engine_version` (2026-09-18)
+
+**A1 FIXED (`101d8c3`), REL-01 recorded `OPEN_RELEASE_BLOCKER`.** The audit's final verdict listed
+A1 as "Detached-engine reuse does not validate `engine_version` — NEW, verified": the app read
+`desktop-session.json`, called `/api/state`, and reused whatever answered, so an upgrade (which
+replaces `resources/kel-engine`) could leave the new build talking to the old engine. The fix is a
+pure decision (`engineVersionAccepted(live, expected)` — exact match; empty expectation means an
+unpackaged dev run where `app.getVersion()` is Electron's, deliberately not enforced) applied at
+**both** trust sites: the reuse path and the spawn-wait loop, because a leftover engine can keep
+re-writing the shared descriptor. Verification: desktop `tsc` 0; vitest **93 passed** (was 90, +3).
+REL-01 is the same subsystem (which engine a build ships) but its only honest verification is a real
+freeze — outside Campaign A's boundary — so it is flagged as a release blocker with the fix drafted
+in its row rather than being silently deferred. Sweep status: **13/27 rows carry a final
+disposition** (P2 3/10, P3 10/17); 14 remain undecided. Next: the remaining P2s (APR-01/02/03,
+SEC-01, PER-03, TR-01/02) and P3s.
+
+## Sweep batch 3 — PER-03 fixed, APR-01 pinned, three rows verified-open (2026-09-18)
+
+**PER-03 FIXED (`84b5646`).** `backup.py` left a full `.pre-restore-<stamp>` copy beside the data on
+every applied *or attempted* restore and nothing pruned them. `SNAPSHOT_KEEP = 2` +
+`_prune_snapshots(root)` now keep only the newest snapshots, running on **both** the success and the
+failure path (repeated failed attempts accumulate too), touching only directories with the exact
+prefix, always keeping the one the current attempt wrote, and never failing a restore. The
+"silently aborts" half of the finding was already closed by CHG-007.
+
+**APR-01 CLOSED by adding the test the docket actually asked for.** Verification showed the
+payload-actor guard **is** present and explicit (`service._action` raises `PolicyError` for a payload
+`actor`, once generically and again on `/api/approval`) — the gap was the missing test, now added.
+
+**Verified OPEN with code evidence and a fix sketch (deliberately not marked fixed):** APR-02
+(approval resolution by id alone while the read is conversation-scoped) and SEC-01 (`Vetting.session`
+loads `WHERE id=?` with no project/conversation filter). **APR-03 → `DEFERRED_NON_RELEASE`** (bounded
+crash window, Phase 6 reviewed). **TR-01/TR-02 stay OPEN** — TR-01 still needs the lifecycle review
+the finding asks for; TR-02 rides with the visual batches. Tests: 4 new; focused 45 passed;
+**full engine suite 909 passed** (+10 subtests, was 905). Sweep status: **16/27 rows carry a final
+disposition** (P2 6/10, P3 10/17); 11 remain undecided. Next: APR-02, SEC-01, TR-01/TR-02 and the
+remaining P3s.
+
+## Round 2.5 canonical roadmap adopted (2026-09-18)
+
+**`docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` is now the forward execution authority for V1.6**
+(historical phase docs are untouched evidence). The Round 2.5 reconciliation concluded: the
+architecture is sound — no pivot, no rewrite, no duplicate authority/memory/workflow/recovery/
+evidence/orchestration systems. Its value is converting several distributed safety behaviors into
+explicit constitutional invariants with adversarial coverage before V1.6 freezes.
+
+New Campaign A critical path: **R0** finish the P2/P3 sweep → **R1** delegation authority ceiling
+(`child_effective_authority ⊆ delegator_effective_authority`) → **R2** logical-work/idempotency
+contract → **R3** durable retry/recovery budgets → **R4** canonical approval binding (absorbs
+APR-02) → **R5** persistence integrity contract → **R6** truthful state + liveness → **R7**
+credential/network boundary confirmation → **R8** packaged/migration assertions (+ REL-01) →
+**R9** Visual batches 6–8 + Needs Your Attention (derived-only) → **R10** engine-loss/recovery UX →
+**R11** Visual → Main integration → **R12** final Campaign A regression →
+**PRE_AUDIT_V1_6_HEAD**, then STOP. Explicitly rejected for V1.6: nested spawning, new RBAC/workflow
+engines, HMAC-everything receipts, second memory platforms/knowledge graphs, an OS network
+firewall, public A2A, one giant runtime enum, a new Advanced Worker View, adaptive staffing,
+Profiles, speculative Rust migration, agent-cockpit UI. Eleven new invariants are seeded in
+INVARIANT_LEDGER (AUTH-DELEGATION, EVENT-IDEMPOTENCY, EFFECT-REPLAY, RETRY-DURABLE,
+APPROVAL-EXACT, PERSIST-CANONICAL, COMPLETION-TRUTH, LIVENESS-SEPARATION,
+RECOVERY-CLASSIFICATION, CREDENTIAL-CONTAINMENT, LIVE-AUTHORITY) and the Round 2.5 hostile-test
+list is in AUDIT_TARGETS §61–80. Independent audit stays paused; nothing new here is audited or
+claimed as accepted.
+
+## R0 — APR-02 fixed: approval resolution is conversation-scoped (2026-09-18)
+
+**APR-02 FIXED (`8a677d0`).** The approvals READ path was conversation-scoped (`chat_approvals.items`
+via `_job_ids_for`) while the resolve path settled by id alone — an id from another conversation
+could settle work the user was not looking at. `_require_owned(store, kind, ref_id, conversation)`
+now resolves the record's owning job (`approvals.job_id`, or `boundary_expansion_requests →
+capability_leases.job_id`) and refuses when it is not in the *same* ownership set the read path
+uses, so read and write cannot drift; `resolve(..., conversation=None)` keeps the HTTP contract
+additive, and both desktop resolve call sites (in-chat card, Work panel) now declare their
+conversation. A latent read-path bug surfaced while sharing the helper — `_job_ids_for` assumed
+`job_links` exists, which bare stores do not have — and is fixed. Tests: 6 new (other-conversation
+refusal for a step approval and a boundary grant, a foreign-conversation job, unknown id, unchanged
+no-conversation behaviour, the service route); focused 33 passed; desktop tsc 0 + vitest 93;
+**full engine suite 915 passed** (+10 subtests, was 909). Digest binding untouched; Round 2.5's
+APPROVAL-EXACT completion (target normalization + revalidation immediately before execution) stays
+with **R4**. Sweep: **17/27 rows carry a final disposition** (P2 7/10, P3 10/17); 10 remain — SEC-01,
+TR-01, TR-02 and 7 P3 rows. Next: SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle
+review), then the P3 rows; R1 follows R0.
+
+## R0 COMPLETE — the P2/P3 sweep is 100% dispositioned (2026-09-18, marathon run)
+
+**Every row in `pre-audit/P2_P3_DISPOSITION.md` now carries a final disposition** (26 rows in-table:
+P2 10, P3 16 — the sprint directive cites 27; the count difference is recorded for Campaign B rather
+than guessed at). Five production commits: `49e528e` SEC-01, `8ab7699` TR-01, `5950efb`
+COR-06/ERR-01, `dd34ac2` APR-05, `594b8b4` COR-03/APR-06/THM-01.
+
+- **SEC-01** — vetting actions are conversation-scoped: `Vetting(store, conversation=…)` carries the
+  acting scope and `session()` (the single load point every by-id action uses) refuses a foreign row;
+  `apply_pending` checks scope before its early returns; the service builds the instance with the
+  acting conversation. `panel()` stays the marked cross-conversation display surface. 7 new tests.
+- **TR-01** — the `_STREAMS` review found a real leak: a reaped/abandoned stream kept its websocket
+  and reader thread blocked on `_queue.get()` for the life of the process. `_MuseStream.close()`
+  (idempotent, sentinel-based) + `_FixtureStream.close()` + close-on-reap + close-after-finish fix
+  it; optional conversation scope added. 4 new tests.
+- **COR-06/ERR-01** — `Service._required(data, key, sentence)` replaces direct payload indexing in
+  both dispatch families and the inline routes (`/api/retry`, `/api/control`, `/api/apply`,
+  `/api/approval`); the vetting family gained the transcription family's unexpected-failure wrapper.
+  3 new tests.
+- **APR-05** — `chat_approvals` migration **v20**: the poll path (approval card refreshes every 3 s)
+  performs no DDL after the first call; pre-marker stores are stamped once. 3 new tests.
+- **COR-03/APR-06/THM-01** — the model pill reports failures instead of rejecting silently; the
+  approval card no longer claims "already settled" for transport failures (engine sentence when it
+  arrived, explicit "could not reach its engine" otherwise); deleting a theme prunes its saved colour
+  overrides. tsc 0; vitest 93.
+- **TR-02** — `DEFERRED_NON_RELEASE`, explicitly bound to R9.A batch 6 / R10 (the residual is
+  transport-failure *presentation*; the fallback path is already honest and fixing it here would race
+  the Visual lane).
+
+Evidence: **full engine suite 931 passed (+10 subtests)** (was 915); focused vetting 36 /
+transcription 31 / sweep-fixes 15; desktop tsc 0 + vitest 93; TEST_EVIDENCE_INDEX A-20; record
+`increments/R0-SWEEP.md`; CHG-012…017; REQ-P2P3/OWNERSHIP-PARITY/POLL-CHEAP/TRUTHFUL-SURFACES/
+ERROR-SENTENCES/THEME-HYGIENE/TR02-BINDING.
+
+Next: **R2 idempotency matrix** → R3 retry durability → R4 approval binding → R5 persistence → R6
+state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs
+Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression →
+PRE_AUDIT_V1_6_HEAD. REL-01 stays `OPEN_RELEASE_BLOCKER` until R8 evidence exists.
+
+## R1 COMPLETE — the delegation authority ceiling is executable (2026-09-18, marathon run)
+
+Commit `dc65fbc` (parent `4440a90`). Round 2.5 **AUTH-DELEGATION**: *delegation may narrow
+authority, never create it* — implemented with existing primitives only (no RBAC, no second ACL).
+
+- **R1.A audit found the real gaps**: only the role→class ceiling was enforced; write
+  scope/boundaries/effects/tools had no delegator dimension; a contract could contradict itself
+  (`write_scope` outside `write_boundaries`); `reserve_budget` never compared against the job
+  envelope. `parent_task` is None everywhere by design (no nesting) — preserved.
+- **Primitive**: `workforce.authority_within(child, parent)` over class rank, write scope, write
+  boundaries (path containment), external effects, tool grants; absent parent dimension = no
+  ceiling; empty delegator scope = a real ceiling.
+- **Enforcement**: `contracts.validate_task_contract(..., parent_authority=…)` refuses a child
+  outside the envelope ('Delegation may narrow authority but never create it: <dimension>'),
+  refuses a self-contradictory scope/boundaries pair, and refuses a nested contract with no
+  delegator. `delegate()`/`issue_task_contract()` pass the envelope; `pods.run_d2` issues the
+  verifier inside the builder's frozen envelope; `assignment.reserve_budget` refuses a reservation
+  beyond the remaining job budget.
+
+Evidence: `tests/test_v16_r1_authority.py` 21 new; workforce family 269 together; full engine
+**952 passed + 10 subtests** (was 931); record `increments/R1-AUTHORITY-CEILING.md`; CHG-018;
+INV-AUTH-DELEGATION; REQ-R25-R1 implemented; TEST_EVIDENCE_INDEX A-21.
+
+Next: **R2 — logical-work/idempotency matrix** (`EVENT-IDEMPOTENCY` + `EFFECT-REPLAY`): classify
+every autonomous event family, prove what is already safe, repair only demonstrated
+duplicate-execution gaps, hostile duplicate tests across restart where possible.
+
+## R2–R6 COMPLETE — invariants executable, evidence recorded (2026-09-18, marathon run)
+
+Five increments; three production commits plus two inventory+test increments:
+
+- **R2 `fde5bbb`** — the 17-family logical-work/idempotency matrix (`increments/R2-IDEMPOTENCY-MATRIX.md`):
+  submissions, intake, events/revisions, runs, epochs, inbox, native RPC/permission replies, approvals,
+  boundary grants, effects, change application, continuation, broker recovery, publication, workforce
+  messages, parallel announcements. 16 proven safe with code anchors; the one latent gap
+  (`Store.observe_effect` overwrote a recorded receipt) repaired minimally + 10 hostile-duplicate tests.
+- **R3 `1a9f538`** — retry/recovery budget inventory: every automatic family already stores its budget
+  on its owner entity (job row, provider row, review_runs, leases, receipts, restore record); 5
+  restart-durability tests; no production change justified.
+- **R4 `8c899c8`** — APPROVAL-EXACT: producer/consumer inventory + the consumer-side window check in
+  `Authorizer._approval_ok`; 7 hostile cases (exact action, other job, pending, outside window,
+  resolve-after-expiry, double resolution, grant scope/revoke).
+- **R5 `b2ffed1`** — PERSIST-CANONICAL: `encode` refuses NaN/Infinity (canonical JSON for durable state
+  *and* digests), provider metrics guarded, submit type guard; 7 hostile ingress tests.
+- **R6 tests+record** — LIVENESS-SEPARATION / COMPLETION-TRUTH / RECOVERY-CLASSIFICATION verified: an
+  expired run is ORPHANED with a fresh epoch, UNCERTAIN 'requires reconciliation', never auto-retried;
+  waiting ≠ completed/failed; liveness never completes work; 5 tests.
+
+Evidence: full engine **981 passed + 10 subtests** at `b2ffed1` (A-24); focused A-25; CHG-019..021;
+INV-EVENT-IDEMPOTENCY / INV-EFFECT-REPLAY / INV-RETRY-DURABLE / INV-APPROVAL-EXACT /
+INV-PERSIST-CANONICAL / INV-LIVENESS-SEPARATION / INV-COMPLETION-TRUTH / INV-RECOVERY-CLASSIFICATION;
+REQ-R25-R2..R6.
+
+Next: **R7 — credential/network boundary** (CREDENTIAL-CONTAINMENT): audit provider metadata,
+credential references/store, native child env, Claude/Codex env, DeepSeek/internal handling,
+native-host, test-command env, prompts, logs, artifacts, packets, diagnostics and error messages;
+synthetic-sentinel tests; document that `host_runtime.py` is user-authorized native execution, not an
+OS sandbox (no Windows egress filtering in Campaign A). Then R8 packaged/migration assertions +
+REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration →
+R12 final regression → PRE_AUDIT_V1_6_HEAD.

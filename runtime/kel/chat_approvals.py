@@ -22,6 +22,8 @@ from .core import PolicyError
 ACCESS = 'access'
 ACTION = 'action'
 ITEM_LIMIT = 200
+MIGRATION_VERSION = 20
+MIGRATION_NAME = 'chat_approval_announcements'
 
 ANNOUNCE_DDL = """
 CREATE TABLE IF NOT EXISTS approval_announcements(
@@ -42,9 +44,18 @@ _ACCESS_SCOPE_TITLE = {
 
 
 def ensure_schema(store):
-    """Idempotent; every entry point that reads or writes announcements calls this."""
+    """Idempotent; every entry point that reads or writes announcements calls this.
+
+    Verified cheap after the first call (audit APR-05): the read path runs on every UI poll (the
+    approval card refreshes every 3 seconds), so once this module's migration row exists the call
+    returns before any DDL — announcements, leases/requests and the coding tables included. A
+    store written before this marker existed runs the idempotent body once and is then stamped.
+    """
+    from .memory import _table
     with contextlib.closing(store.connect()) as db:
-        db.executescript(ANNOUNCE_DDL)
+        if _table(db, 'schema_migrations') and db.execute(
+                'SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone():
+            return True
     # The view reads leases/requests and conversation links, so it creates those schemas
     # on the same entry point - a fresh store can always answer a chat read.
     from .autonomy import ensure_schema as ensure_autonomy
@@ -53,6 +64,10 @@ def ensure_schema(store):
     ensure_autonomy(store)
     ensure_continuation(store)
     CodingAdapter(store)  # schema only; owns approval_actions
+    with contextlib.closing(store.connect()) as db:
+        db.executescript(ANNOUNCE_DDL)
+        db.execute('INSERT OR IGNORE INTO schema_migrations VALUES(?,?,?,?)',
+                   (MIGRATION_VERSION, MIGRATION_NAME, time.time(), 'tables=2'))
     return True
 
 
@@ -155,9 +170,12 @@ def _job_ids_for(db, conversation_id):
             continue
         if str(job.get('conversation')) == conversation_id:
             ids.add(str(job.get('id')))
-    for row in db.execute('SELECT job_id FROM job_links WHERE conversation_id=?',
-                          (conversation_id,)):
-        ids.add(str(row['job_id']))
+    # Bare stores (engine tests, very early boots) have no continuation links yet; the read path
+    # and the resolution scope share this helper, so a missing table must not break either.
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='job_links'").fetchone():
+        for row in db.execute('SELECT job_id FROM job_links WHERE conversation_id=?',
+                              (conversation_id,)):
+            ids.add(str(row['job_id']))
     return ids
 
 
@@ -275,15 +293,46 @@ def announce_denial(store, request_id):
     return {'message_seq': cur.lastrowid}
 
 
-def resolve(store, kind, ref_id, allow, grant_kind='once', remember=False, actor='user'):
+def _require_owned(store, kind, ref_id, conversation):
+    """Refuse a resolution whose record belongs to a different conversation (audit APR-02).
+
+    The read path (`items`) is already conversation-scoped; the write path now uses the same
+    ownership set, so a stale or crafted id cannot settle work the caller is not looking at.
+    """
+    conversation = str(conversation)
+    with contextlib.closing(store.connect()) as db:
+        if kind == ACTION:
+            row = db.execute('SELECT job_id FROM approvals WHERE id=?', (str(ref_id),)).fetchone()
+        elif kind == ACCESS:
+            row = db.execute('SELECT l.job_id AS job_id FROM boundary_expansion_requests r '
+                             'JOIN capability_leases l ON l.lease_id=r.lease_id'
+                             ' WHERE r.request_id=?', (str(ref_id),)).fetchone()
+        else:
+            row = None
+        owned = str(row['job_id']) if row is not None and row['job_id'] is not None else ''
+        ids = _job_ids_for(db, conversation) if owned else set()
+    if not owned:
+        raise PolicyError('Approval request missing')
+    if owned not in ids:
+        raise PolicyError('That request belongs to another conversation')
+
+
+def resolve(store, kind, ref_id, allow, grant_kind='once', remember=False, actor='user',
+            conversation=None):
     """Resolve through the EXISTING engines; never a parallel path.
 
     Boundary grants wake the paused job exactly like the Autonomy page; step approvals resolve
     the same row the coding adapter is polling, so work continues without repeating the ask.
+
+    When the caller declares the conversation it is acting in, the resolution is scoped to it
+    exactly like the read path (audit APR-02). Callers that declare nothing keep the previous
+    behaviour, so the HTTP contract stays additive.
     """
     if actor != 'user':
         raise PolicyError('Only user input can resolve an approval')
     kind = str(kind or '')
+    if conversation:
+        _require_owned(store, kind, ref_id, conversation)
     if kind == ACCESS:
         from .autonomy import Autonomy
         result = Autonomy(store).resolve_expansion(str(ref_id), bool(allow), actor='user',

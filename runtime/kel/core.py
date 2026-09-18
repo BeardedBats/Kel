@@ -8,6 +8,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import sqlite3
@@ -20,7 +21,18 @@ def uid():
 
 
 def encode(value):
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    """Canonical JSON for durable state (PERSIST-CANONICAL, Round 2.5 R5).
+
+    `allow_nan=False` keeps non-standard tokens out of the database: `NaN`/`Infinity` would be
+    written as bare text that `json.loads` reads back as non-finite floats and that strict JSON
+    consumers (the desktop renderer) cannot parse at all.
+    """
+    try:
+        return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+                          allow_nan=False)
+    except ValueError:
+        raise PolicyError('A value that cannot be stored in canonical JSON (NaN or Infinity) '
+                          'was refused') from None
 
 
 def digest(value):
@@ -370,6 +382,28 @@ class Store:
             db.execute('UPDATE artifact_lineage SET superseded_by=? WHERE id=?', (lineage_id, previous['id']))
         return lineage_id
 
+    def _record_assignment_artifact(self, db, job_id, milestone_id, info):
+        """Bind a produced artifact to the assignment that delivered it (audit F4 / WF-12).
+
+        `assignment_artifacts` is what closure verification reads, so the binding has to happen
+        where the artifact lands rather than being claimed by the closing packet. Bare stores that
+        have no team tables (or no assignment for this milestone) are skipped: the close path then
+        refuses the unbound claim instead of accepting a digest nothing produced.
+        """
+        table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table'"
+                           " AND name='assignment_artifacts'").fetchone()
+        if not table:
+            return None
+        row = db.execute('SELECT assignment_id FROM team_assignments WHERE job_id=?'
+                         ' AND milestone_id=? ORDER BY created DESC LIMIT 1',
+                         (job_id, milestone_id)).fetchone()
+        if row is None:
+            return None
+        db.execute('INSERT OR IGNORE INTO assignment_artifacts VALUES(?,?,?,?,?)',
+                   (row['assignment_id'], 'sha256:%s' % (info.get('sha256') or ''),
+                    Path(info['path']).name, 'artifact', time.time()))
+        return row['assignment_id']
+
     def consume(self):
         """Idempotent inbox reduction. Worker claims never assign a verdict."""
         count = 0
@@ -413,9 +447,11 @@ class Store:
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
-                    m.update(state='CHECKING', error=None)
+                    self._record_assignment_artifact(db, job['id'], run['milestone_id'], m['artifact'])
+                    m.update(state='CHECKING', error=None, recommendation=None)
                 else:
-                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'))
+                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
+                             recommendation=result.get('recommendation'))
                 held = 1 if m['state'] == 'CHECKING' else 0
                 job['reserved'] -= run['reservation'] - held
                 job['spent'] += 1  # The other reserved unit remains available for immediate verification.
@@ -725,6 +761,15 @@ class Store:
             e = db.execute("SELECT * FROM effects WHERE id=?", (operation_id,)).fetchone()
             if not e:
                 raise KeyError(operation_id)
+            stored = json.loads(e['receipt']) if e['receipt'] else None
+            # EVENT-IDEMPOTENCY / EFFECT-REPLAY (Round 2.5 R2): an observation is the evidence of
+            # what an external effect actually did. A second, *different* receipt is a
+            # contradiction the local runtime cannot resolve, so it is refused instead of silently
+            # overwriting the record; re-observing the identical receipt stays a no-op.
+            if e['state'] == 'OBSERVED':
+                if stored is not None and stored != receipt:
+                    raise PolicyError("Effect was already observed with a different receipt")
+                return
             db.execute("UPDATE effects SET state='OBSERVED',receipt=? WHERE id=?", (encode(receipt), operation_id))
             job = self._get(db, e['job_id'])
             self._save(db, job, 'effect.observed', {'operation_id': operation_id})
@@ -856,10 +901,12 @@ class Store:
                 elif state['failures']>=3:
                     state.update(circuit_until=time.time()+60,reason='Repeated provider failure')
             state['observed_at']=time.time()
-            if isinstance(result.get('duration'),(int,float)):
-                state['latency']=result['duration'] if state.get('latency') is None else .7*state['latency']+.3*result['duration']
-            if isinstance(result.get('cost_usd'),(int,float)):
-                state.update(cost=result['cost_usd'] if state.get('cost') is None else .7*state['cost']+.3*result['cost_usd'],cost_basis='recent observed per-run cost',cost_is_estimate=True)
+            duration = result.get('duration')
+            if isinstance(duration,(int,float)) and math.isfinite(duration):
+                state['latency']=duration if state.get('latency') is None else .7*state['latency']+.3*duration
+            reported_cost = result.get('cost_usd')
+            if isinstance(reported_cost,(int,float)) and math.isfinite(reported_cost):
+                state.update(cost=reported_cost if state.get('cost') is None else .7*state['cost']+.3*reported_cost,cost_basis='recent observed per-run cost',cost_is_estimate=True)
             db.execute('INSERT INTO providers VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data',(provider,encode(state)))
 
     def provider_states(self):

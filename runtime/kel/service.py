@@ -21,12 +21,25 @@ from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
 
-ENGINE_VERSION='1.5.0'
+# Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
+# whose reported version differs from the app it shipped with, so this literal must match
+# `desktop/package.json`'s version (what `app.getVersion()` reports in the packaged app).
+from . import __version__ as ENGINE_VERSION
 
 # Verbs that mean "change code in an existing project". These are the only
 # requests that need a project root; greenfield ("create an app") is classified
 # separately and never prompts.
 CODING_VERBS=('fix','build','implement','change','add','remove','update','refactor','test')
+
+def _restore_outcome(root):
+    """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
+    path=Path(root)/'restore-outcome.json'
+    try:
+        data=json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        return None
+    return {'ok':bool(data.get('ok')),'detail':data.get('detail') or '','at':data.get('at')}
+
 
 class Service:
     def __init__(self,root):
@@ -36,10 +49,12 @@ class Service:
         # A staged restore (chosen by the user in Settings) applies before anything opens
         # the databases; the previous data is kept beside it as .pre-restore-*.
         try:
-            from .backup import apply_pending_restore
+            from .backup import _record_outcome,apply_pending_restore
             apply_pending_restore(self.store)
-        except Exception:
-            pass
+        except Exception as exc:
+            # PER-02 (audit): boot must survive a restore that cannot even start, and the failure
+            # must not be silent — it is recorded beside the data and surfaced in `state()`.
+            _record_outcome(self.store.root,False,type(exc).__name__)
         self.context=Context(self.store)
         CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
         self.model=InternalAdapter() if os.environ.get('ANTHROPIC_API_KEY') else None
@@ -99,10 +114,18 @@ class Service:
         from .memory import Memory
         from .projectmap import ProjectMap
         from .recipes import RecipeLibrary
+        from .workforce import ensure_schema as ensure_workforce_schema
+        from .assignment import ensure_schema as ensure_assignment_schema
+        from .delegation import ensure_schema as ensure_delegation_schema
+        from .parallel import ensure_schema as ensure_parallel_schema
         Memory(self.store)
         ProjectMap(self.store)
         Continuation(self.store)
         RecipeLibrary(self.store).install_builtins()
+        ensure_workforce_schema(self.store)
+        ensure_assignment_schema(self.store)
+        ensure_delegation_schema(self.store)
+        ensure_parallel_schema(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -132,7 +155,11 @@ class Service:
             except Exception as exc:self.error=type(exc).__name__+': '+str(exc)
 
     def submit(self,data):
-        sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','').strip()
+        sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','')
+        if not isinstance(text,str):
+            # PERSIST-CANONICAL (Round 2.5 R5): a malformed request answers in a plain sentence.
+            raise PolicyError('Request must be 1 to 20000 characters')
+        text=text.strip()
         if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
         attachments=data.get('attachments',[])
         if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
@@ -551,7 +578,8 @@ class Service:
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
-                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining}
+                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
+                'restore':_restore_outcome(self.store.root)}
 
     def action(self,path,data):
         with self.lifecycle_lock:
@@ -577,7 +605,7 @@ class Service:
         if path=='/api/recipes':return self._recipes_action(data)
         if path=='/api/retry':
             with self.store.transaction() as db:
-                row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(data['id'],)).fetchone()
+                row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(self._required(data,'id','Pick a request to retry first.'),)).fetchone()
                 if not row or row['state'] not in ('FAILED','INTERRUPTED'):raise PolicyError('This request is not ready for retry')
                 db.execute("UPDATE submissions SET state='PLANNING',error=NULL WHERE id=?",(row['id'],))
             self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],json.loads(row['packet']),row['kind'])
@@ -592,17 +620,18 @@ class Service:
             return {'id':pid}
         if path=='/api/attach':return {'id':self.context.attach(data['conversation'],data['name'],base64.b64decode(data['content'],validate=True),data.get('mime','text/plain'))}
         if path=='/api/control':
-            self.engine.control(data['job'],data['action']);return {'ok':True}
+            self.engine.control(self._required(data,'job','Pick a request first.'),
+                                self._required(data,'action','Pick what Kel should do first.'));return {'ok':True}
         if path=='/api/apply':
             from .apply_changes import apply_checked
-            return apply_checked(self.store,data['job'],actor='user')
+            return apply_checked(self.store,self._required(data,'job','Kel could not find that change to apply.'),actor='user')
         if path=='/api/approval':
             if 'actor' in data:
                 raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
             with contextlib.closing(self.store.connect()) as db:
-                row=db.execute('SELECT x.action,a.job_id FROM approval_actions x JOIN approvals a ON a.id=x.approval_id WHERE x.approval_id=?',(data['id'],)).fetchone()
+                row=db.execute('SELECT x.action,a.job_id FROM approval_actions x JOIN approvals a ON a.id=x.approval_id WHERE x.approval_id=?',(self._required(data,'id','Permission request missing'),)).fetchone()
             if not row:raise PolicyError('Permission request missing')
-            action=json.loads(row['action']);status=self.store.resolve_approval(data['id'],action,bool(data['allow']))
+            action=json.loads(row['action']);status=self.store.resolve_approval(data.get('id'),action,bool(data.get('allow')))
             if status=='APPROVED' and data.get('remember'):
                 job=self.store.get(row['job_id']);self.context.grant(job['contract'].get('project_id','default'),action)
             return {'status':status}
@@ -659,7 +688,8 @@ class Service:
         if data.get('action','resolve')!='resolve':
             raise PolicyError('Unknown approvals action')
         return resolve(self.store,data.get('kind'),data.get('id'),bool(data.get('allow')),
-                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')))
+                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')),
+                       conversation=data.get('conversation'))
 
     def _approvals_list(self,conversation):
         from .chat_approvals import items
@@ -670,8 +700,17 @@ class Service:
         # pasted text and direct callers; this layer only routes and persists the durable
         # out-of-band messages (panel-driven start/process/finish) as conversation content.
         from .vetting_session import Vetting
-        vetting=Vetting(self.store)
-        result=self._vetting_route(vetting,data)
+        # The acting conversation is the session scope (audit SEC-01): a by-id vetting action can
+        # only touch a session that belongs to the conversation the caller is acting in.
+        vetting=Vetting(self.store,conversation=(data.get('conversation') or 'main'))
+        try:
+            result=self._vetting_route(vetting,data)
+        except PolicyError:
+            raise
+        except Exception:
+            # Same contract as the transcription family (audit COR-06/ERR-01): a missing or
+            # unexpected payload never surfaces as a raw exception string.
+            raise PolicyError('Kel could not finish that design action. Try again.') from None
         # Confirmed decisions are compared against saved project knowledge once the session
         # transaction has committed; a disagreeing stored rule queues on the review surface.
         created=vetting.flush_memory_checks()
@@ -699,22 +738,23 @@ class Service:
                 self.store.add_message(message,'assistant',conversation)
             return result
         if action=='ingest':
-            result=vetting.ingest(data['session'],data.get('text',''),source=data.get('source','direct'))
-            return {'kind':'ingested','session_id':data['session'],'progress':result['progress'],
+            session=self._required(data,'session','Open a design-vetting session first.')
+            result=vetting.ingest(session,data.get('text',''),source=data.get('source','direct'))
+            return {'kind':'ingested','session_id':session,'progress':result['progress'],
                     'applied':result['applied']['applied'],'conflicts':result['conflicts_open'],
                     'proposals':result['proposals'],'unmatched':result['unmatched']}
         if action=='panel':
             return vetting.panel(conversation=conversation,session_id=data.get('session'))
         if action=='process':
-            result=vetting.process(data['session'])
+            result=vetting.process(self._required(data,'session','Open a design-vetting session first.'))
             self.store.add_message(result['message'],'assistant',conversation)
             return result
         if action=='finish':
-            result=vetting.finish(data['session'])
+            result=vetting.finish(self._required(data,'session','Open a design-vetting session first.'))
             self.store.add_message(result['message'],'assistant',conversation)
             return result
         if action=='preview':
-            return {'markdown':vetting.preview(data['session'])}
+            return {'markdown':vetting.preview(self._required(data,'session','Open a design-vetting session first.'))}
         if action=='resurface':
             session=vetting.active(conversation)
             if not session:
@@ -724,15 +764,22 @@ class Service:
             return {'message':vetting._format_resurface(questions) if not self._vetting_all_answered(questions) else '',
                     'progress':vetting._progress(questions)}
         if action=='help':
-            return vetting.help(data['session'],data['question'],data.get('kind','explain'))
+            return vetting.help(self._required(data,'session','Open a design-vetting session first.'),
+                                self._required(data,'question','Pick a question first.'),
+                                data.get('kind','explain'))
         if action=='conflict':
-            return vetting.conflict_action(data['session'],data['conflict'],data['choice'])
+            return vetting.conflict_action(self._required(data,'session','Open a design-vetting session first.'),
+                                           self._required(data,'conflict','Pick a design conflict first.'),
+                                           self._required(data,'choice','Choose how to settle that conflict first.'))
         if action=='greybox':
-            return vetting.greybox(data['session'],data['question'],action=data.get('mode','design'),
+            return vetting.greybox(self._required(data,'session','Open a design-vetting session first.'),
+                                   self._required(data,'question','Pick a question first.'),
+                                   action=data.get('mode','design'),
                                    feedback_kind=data.get('feedback_kind',''),
                                    greybox_id=data.get('greybox_id',''),note=data.get('note',''))
         if action=='apply_pending':
-            return vetting.apply_pending(data['session'],accept=bool(data.get('accept',True)),
+            return vetting.apply_pending(self._required(data,'session','Open a design-vetting session first.'),
+                                         accept=bool(data.get('accept',True)),
                                          correction=data.get('correction',''))
         if action=='transcript_preview':
             return self._plain_errors(lambda: vetting.preview_transcript(
@@ -843,6 +890,17 @@ class Service:
         except Exception:
             raise PolicyError('Kel could not finish that voice action. Try again.') from None
 
+    def _required(self,data,key,sentence):
+        """A required request field, or PolicyError with the sentence a person should read.
+
+        Audit COR-06/ERR-01: dispatch layers used to index payloads directly, so a missing field
+        surfaced as the handler's raw `str(exc)` (e.g. "'session'") instead of a plain sentence.
+        """
+        value=data.get(key)
+        if value in (None,''):
+            raise PolicyError(sentence)
+        return value
+
     def _transcription_dispatch(self,data):
         # Transcription is an input source: this family stores/inspects audio artifacts and text.
         # Vetting answers derived from transcripts flow through /api/vetting's transcript actions,
@@ -853,12 +911,18 @@ class Service:
         if action=='status':return service.status()
         if action=='library':return service.library()
         if action=='folder_create':return service.folder_create(data.get('name',''))
-        if action=='folder_rename':return service.folder_rename(data['id'],data.get('name',''))
-        if action=='folder_delete':return service.folder_delete(data['id'])
-        if action=='rename':return service.transcript_rename(data['id'],data.get('name',''))
-        if action=='delete':return service.transcript_delete(data['id'])
-        if action=='assign':return service.assign(data['id'],data.get('folder') or None)
-        if action=='combine':return service.combine(data['id'],data['source'])
+        if action=='folder_rename':return service.folder_rename(
+            self._required(data,'id','Pick a folder first.'),data.get('name',''))
+        if action=='folder_delete':return service.folder_delete(
+            self._required(data,'id','Pick a folder first.'))
+        if action=='rename':return service.transcript_rename(
+            self._required(data,'id','Pick a recording first.'),data.get('name',''))
+        if action=='delete':return service.transcript_delete(
+            self._required(data,'id','Pick a recording first.'))
+        if action=='assign':return service.assign(self._required(data,'id','Pick a recording first.'),
+                                                  data.get('folder') or None)
+        if action=='combine':return service.combine(self._required(data,'id','Pick a recording first.'),
+                                                    self._required(data,'source','Pick a recording to add first.'))
         if action=='save_recording':
             return service.save_recording(data.get('text',''),data.get('duration_ms',0),data.get('audio',''),
                                           extension=data.get('extension','wav'),
@@ -871,11 +935,17 @@ class Service:
             return service.quick_transcribe(data.get('filename','audio.wav'),data.get('audio',''),
                                             data.get('duration_ms'))
         if action=='stream_start':return service.stream_start(data.get('conversation'))
-        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''))
-        if action=='stream_status':return service.stream_status(data['session'])
-        if action=='stream_finish':return service.stream_finish(data['session'])
-        if action=='export_text':return service.export_text(data['id'])
-        if action=='export_audio':return service.export_audio(data['id'])
+        if action=='stream_chunk':return service.stream_chunk(
+            self._required(data,'session','That recording session has ended.'),
+            data.get('pcm',''),data.get('conversation'))
+        if action=='stream_status':return service.stream_status(
+            self._required(data,'session','That recording session has ended.'),data.get('conversation'))
+        if action=='stream_finish':return service.stream_finish(
+            self._required(data,'session','That recording session has ended.'),data.get('conversation'))
+        if action=='export_text':return service.export_text(
+            self._required(data,'id','Pick a recording first.'))
+        if action=='export_audio':return service.export_audio(
+            self._required(data,'id','Pick a recording first.'))
         if action=='set_key':return service.set_key(data.get('key',''))
         if action=='clear_key':return service.clear_key()
         raise PolicyError('Unknown transcription action')

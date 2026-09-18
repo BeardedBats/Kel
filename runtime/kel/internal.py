@@ -13,6 +13,21 @@ from .core import uid
 _SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
 
 
+def child_env(*, keep=()):
+    """The environment for a child provider process (CREDENTIAL-CONTAINMENT, Round 2.5 R7).
+
+    A trusted provider process receives the credential it requires and nothing more: every other
+    provider key in this process's environment is removed, so a Codex child never sees the
+    Anthropic or DeepSeek key and a Claude child never sees the OpenAI one. `keep` names the
+    credentials the child legitimately needs (R7.C).
+    """
+    env = os.environ.copy()
+    for name in _SECRET_ENV_KEYS:
+        if name not in keep:
+            env.pop(name, None)
+    return env
+
+
 def redact(text):
     """Remove secret-shaped tokens and live key values from anything that can become durable."""
     text = str(text)

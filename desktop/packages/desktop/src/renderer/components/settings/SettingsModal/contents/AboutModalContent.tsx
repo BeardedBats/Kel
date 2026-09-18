@@ -13,6 +13,7 @@ import { useSettingsViewMode } from '../settingsViewContext';
 import { isElectronDesktop, openExternalUrl } from '@/renderer/utils/platform';
 import FeedbackReportModal from './FeedbackReportModal';
 import { ipcBridge } from '@/common';
+import brandMark from '@renderer/assets/logos/brand/app.png';
 import { getIncludePrerelease, runUpdateCheck } from '@/renderer/components/settings/checkForUpdatesShared';
 import { UPDATE_AVAILABLE_EVENT } from '@/renderer/components/settings/useUpdateNotificationController';
 import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
@@ -134,6 +135,13 @@ const AboutModalContent: React.FC = () => {
         <div className='flex flex-col max-w-500px mx-auto'>
           {/* App Info Section */}
           <div className='flex flex-col items-center pb-24px'>
+            <img
+              src={brandMark}
+              alt=''
+              aria-hidden='true'
+              className='w-64px h-64px object-contain mb-12px'
+              data-testid='kel-about-logo'
+            />
             <Typography.Title heading={3} className='text-24px font-bold text-t-primary mb-8px'>
               Kel
             </Typography.Title>
