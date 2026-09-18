@@ -577,3 +577,25 @@ freeze — outside Campaign A's boundary — so it is flagged as a release block
 in its row rather than being silently deferred. Sweep status: **13/27 rows carry a final
 disposition** (P2 3/10, P3 10/17); 14 remain undecided. Next: the remaining P2s (APR-01/02/03,
 SEC-01, PER-03, TR-01/02) and P3s.
+
+## Sweep batch 3 — PER-03 fixed, APR-01 pinned, three rows verified-open (2026-09-18)
+
+**PER-03 FIXED (`84b5646`).** `backup.py` left a full `.pre-restore-<stamp>` copy beside the data on
+every applied *or attempted* restore and nothing pruned them. `SNAPSHOT_KEEP = 2` +
+`_prune_snapshots(root)` now keep only the newest snapshots, running on **both** the success and the
+failure path (repeated failed attempts accumulate too), touching only directories with the exact
+prefix, always keeping the one the current attempt wrote, and never failing a restore. The
+"silently aborts" half of the finding was already closed by CHG-007.
+
+**APR-01 CLOSED by adding the test the docket actually asked for.** Verification showed the
+payload-actor guard **is** present and explicit (`service._action` raises `PolicyError` for a payload
+`actor`, once generically and again on `/api/approval`) — the gap was the missing test, now added.
+
+**Verified OPEN with code evidence and a fix sketch (deliberately not marked fixed):** APR-02
+(approval resolution by id alone while the read is conversation-scoped) and SEC-01 (`Vetting.session`
+loads `WHERE id=?` with no project/conversation filter). **APR-03 → `DEFERRED_NON_RELEASE`** (bounded
+crash window, Phase 6 reviewed). **TR-01/TR-02 stay OPEN** — TR-01 still needs the lifecycle review
+the finding asks for; TR-02 rides with the visual batches. Tests: 4 new; focused 45 passed;
+**full engine suite 909 passed** (+10 subtests, was 905). Sweep status: **16/27 rows carry a final
+disposition** (P2 6/10, P3 10/17); 11 remain undecided. Next: APR-02, SEC-01, TR-01/TR-02 and the
+remaining P3s.

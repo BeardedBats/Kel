@@ -182,6 +182,30 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: 
   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
 - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
 
+### CHG-010 — Pre-restore snapshots are pruned; the actor-identity guard is pinned by a test
+
+ID: CHG-010 · Phase: Campaign A — P2/P3 sweep · Commit: `84b5646` · Date: 2026-09-18
+
+- **User-visible impact:** indirect — repeated restores no longer leave an unbounded pile of full
+  `.pre-restore-*` copies beside the data.
+- **Internal impact:** `backup.SNAPSHOT_KEEP = 2` + `_prune_snapshots(root)` (called on the success and
+  the failure path); `tests/test_v16_sweep_fixes.py` gains two snapshot-retention tests and two
+  payload-actor guard tests.
+- **Previous behavior:** every applied *or attempted* restore added a snapshot directory and nothing
+  removed them.
+- **New behavior:** only the newest snapshots survive; the one the current attempt wrote always does.
+- **Primary files:** `runtime/kel/backup.py`, `runtime/tests/test_v16_sweep_fixes.py`.
+- **Primary symbols:** `SNAPSHOT_KEEP`, `_prune_snapshots`.
+- **Data/schema changes:** none. **Failure paths:** pruning is best-effort and cannot fail a restore.
+- **Security/privacy implications:** none. **Persistence implications:** fewer files beside the data.
+- **Expected invariants:** INV-PER03-001 (snapshot count stays bounded; the newest is never pruned).
+- **Tests:** 4 new (2 retention incl. the failed-restore path, 2 actor guard) + full suite (A-18).
+- **Packaged evidence:** n/a. **Known concerns:** retention is a hard-coded default (2).
+- **Audit questions:** can a prune delete the snapshot a failed restore needs? (It cannot: the current
+  attempt's directory is the newest.) Is the guard checked on every action family that accepts an
+  `actor`?
+- **Repair hints:** `_prune_snapshots` is the single retention point.
+
 ### CHG-009 — Detached-engine reuse validates `engine_version` (audit A1 / ENG-01)
 
 ID: CHG-009 · Phase: Campaign A — P2/P3 sweep · Commit: `101d8c3` · Date: 2026-09-18

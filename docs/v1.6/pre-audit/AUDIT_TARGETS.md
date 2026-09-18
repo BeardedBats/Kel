@@ -183,3 +183,14 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
     the shared `desktop-session.json` cannot satisfy the check, and that a packaged build's
     `app.getVersion()` really equals the engine's `ENGINE_VERSION` in the RC artifact (a mismatch
     would now block startup instead of silently reusing).
+
+## Snapshot retention and actor guard (2026-09-18 additions)
+
+60. Snapshot retention + actor guard: confirm `_prune_snapshots` cannot delete the snapshot a failed
+    restore needs (the current attempt's directory must always be the newest) and that it touches only
+    directories matching the `<data-root>.pre-restore-` prefix — a user's own directory must never be
+    pruned. Confirm the payload-actor guard is reached on **every** action family that accepts input
+    (the generic check plus the per-route repeat), and that adding a new route cannot bypass it.
+    APR-02 and SEC-01 remain OPEN: their fixes must add an ownership/scope parameter to the
+    session/approval lookups — verify the fix actually refuses a cross-scope id rather than only
+    documenting the intent.
