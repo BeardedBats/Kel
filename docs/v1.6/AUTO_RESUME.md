@@ -31,7 +31,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.2 D1 single-specialist delegation | DONE + audit-accepted — commits `894be5b` + follow-up `f9cf3ea` | `docs/v1.6/phase5/5.2_IMPLEMENTATION_RECORD.md`; engine 724 (+31); audits 12-13 CONTINUE (F1-F8 closed/open) |
 | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
 | 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
-| 5.5 Parallel mission teams + mission worktrees | DONE — commit `5f77f42` (audit requested for `71122ef..5f77f42`) | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37); migration 19; two self-found defects fixed with regressions; class-3 pilot gates green |
+| 5.5 Parallel mission teams + mission worktrees | DONE + remediation — `5f77f42` + remediation (audit 20 **REVISE** → F20-1…F20-15 fixed) | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37) then 851 (+9 regressions); migration 19; delta re-audit requested for `5f77f42..NEW` |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
