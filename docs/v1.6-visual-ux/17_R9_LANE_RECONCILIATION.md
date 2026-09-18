@@ -1,0 +1,105 @@
+# 17 — R9.A: Visual lane reconciliation and the integration map (2026-09-18)
+
+Mandated by the Campaign A final-marathon directive §5 ("R9 — reconcile the Visual lane first")
+before any renderer edit. Everything below is verified against git, not prose.
+
+## 1. Verified lane state (at reconciliation)
+
+| Item | Value |
+|---|---|
+| Visual branch | `ux/v16-visual-fix` (local-only; per the sync policy temporary branches stay local until integrated) |
+| Visual tip | `ac85eb3` (BATCH 5) |
+| Visual branch base | `60b2322` (docs-only base; production beneath it `ffeef73`) |
+| Merge base with Main | `60b2322` — confirmed by `git merge-base` |
+| Main branch | `ux/v15-journeys` in `kel-ux-v15` |
+| Main tip at reconciliation | **`05608e6`** (the R9 bookkeeping commit; production tip `022f3ac` beneath the R7/R8 docs commits) |
+| Worktrees | both clean (`git status --short` empty); no stash; no competing writer (single Program Director; Main quiescent during visual work) |
+| Frozen refs | `v1.5.0`, `v1.6.0-pre1`, older freezes verified untouched (ls-remote + local) |
+
+## 2. Overlap / integration map — Main vs Visual since `60b2322`
+
+**Production-file overlap: ZERO.** `comm -12` over the two changed-file sets returns nothing.
+
+- **Visual-only production files (9, the accepted batches 1–5):**
+  `components/layout/Router.tsx` · `components/layout/Sider/index.tsx` ·
+  `pages/conversation/GroupedHistory/ConversationRow.tsx` ·
+  `pages/conversation/utils/conversationAssistantIdentity.ts` ·
+  `pages/kel/transcription/index.module.css` · `pages/kel/transcription/index.tsx` ·
+  `styles/kel-tokens.css` · `styles/themes/default-color-scheme.css` ·
+  `tests/unit/conversation-leading-mark.test.ts` (+ `docs/v1.6-visual-ux/**`).
+- **Main-only production files (154, Campaign A R0–R8 / phases 6–12 / branding), renderer-relevant:**
+  `process/services/kel/KelService.ts`, `engineVersion.ts`(+test) ·
+  `components/chat/KelWorkPanel.tsx` · `components/kel/KelApprovalCard.tsx` ·
+  `components/kel/KelCapabilityCard.tsx` (new) · `components/kel/KelModelControl.tsx` ·
+  `components/kel/capabilityRecommendation.ts` (new) · `components/kel/memoryRecordActions.ts` (new) ·
+  `settings/.../AboutModalContent.tsx` · `settings/.../CssThemeSettings.tsx` (+ tests) — plus
+  engine/runtime files, branding assets and the docs corpus.
+- **No Visual work has landed in Main; no Main work exists in the Visual branch.** The lanes are
+  disjoint supersets of the same base — currently a textual merge is conflict-free in both
+  directions.
+
+## 3. Staleness analysis — which visual findings changed underneath them
+
+| Visual item | Status at reconciliation |
+|---|---|
+| Batch 6 findings 16/17 (raw error leak + no supervision) | **LIVE** — none of the five `pages/kel/**` error sites, `kelApi.ts`, or the supervision gap were touched by Main. `R0`'s COR-03/APR-06/TR-02 fixes improved two *surfaces* (model pill, approval card) but not classification, copy, supervision, diagnostics, or empty-state suppression. |
+| Batch 7 finding 2 (model/tools detached from composer) | **LIVE** — header placement unchanged by Main; `KelModelControl.tsx` gained an error path only (must be preserved by batch 7). |
+| Batch 4 transcription (done, `83af16f`) | Intact; Main did not change the transcription renderer (engine-side TR-01 only). |
+| Batch 5 sidebar rows (done, `ac85eb3`) | Intact; Main did not change `Sider/**`, `ConversationRow.tsx` or the identity resolver. |
+| Batch 1/2 tokens + settings shell (done) | Intact; Main's settings-adjacent changes (`CssThemeSettings`, `AboutModalContent`) do not collide with the token/shell work but DO need the batch-8 normalization pass re-checked against them. |
+| Batch 3 (Work/Projects/Permissions) + 5-Team half + settings half of 8 | Remaining scoped work stays as recorded; the marathon directive's §8 (batch 8) authorizes the *normalization* pass over those surfaces ("fix genuine inconsistencies", not a redesign). |
+
+## 4. Ownership resolution
+
+- `VISUAL_STATUS.active_owned_files` = `NONE` at reconciliation; the previous HELD states were
+  gated on "Main's release of those surfaces". **Main is released**: Campaign A runtime/API work
+  is complete through R8 (`05608e6`), Main is quiescent, and the marathon directive explicitly
+  orders batches 6–8 + Needs Your Attention. The HELD gates are therefore lifted for exactly the
+  directive's scopes (6, 7, 8-normalization, R9.D). Batch 3/5-team full redesigns remain un-ordered
+  and are not performed.
+- **Active-owned files for this visual run** (published in `VISUAL_STATUS` with this commit): the
+  batch-6/7/8/R9.D working set — the five `pages/kel/**` error sites, `components/kel/kelApi.ts`,
+  `components/kel/KelModelControl.tsx`, `components/kel/KelToolsControl.tsx`,
+  `components/chat/SendBox/**`, `pages/conversation/components/ChatConversation.tsx`,
+  `process/services/kel/KelService.ts`, plus new `components/kel/` modules this run adds and the
+  surfaces the batch-8 normalization pass touches. Main must not edit those while visual is active
+  (it is quiescent by plan).
+
+## 5. Decision — re-anchor the visual lane on Main (before batch 6 code)
+
+**Decision: merge `ux/v15-journeys` (`05608e6`) into `ux/v16-visual-fix` as the first act of R9,
+then implement batches 6–8 + R9.D on the re-anchored lane.** Rationale, per the directive's own
+constraints ("do not blindly merge the old Visual branch"; "do not overwrite newer Main behavior
+with stale Visual implementations"; "create an explicit overlap map first"):
+
+1. Batch 6 *extends current semantics* (`KelService` supervision must build on Main's
+   `engineVersionAccepted`, frame guards and truthful-surface work). Implementing against the old
+   base would rebuild behaviour Main already corrected and would force a risky semantic resolution
+   at R11.
+2. The overlap map above proves the merge is a pure union — zero production files changed on both
+   sides — so no accepted visual behavior can be overwritten and no Main behavior can be lost.
+3. R11 stays a semantic integration as mandated: after R9/R10, the *new* visual deltas (which WILL
+   touch files Main also changed, e.g. `KelService.ts`) are integrated with the before-mutation
+   checks in §12 of the directive, and every conflict resolution is recorded.
+
+Verification of the merge (same commit):
+- the 9 visual production files are byte-identical to their `ac85eb3` blobs after the merge
+  (nothing in Main touches them);
+- `bunx tsc --noEmit` 0 and `bun run test` green on the re-anchored lane;
+- Main's tree is untouched by the merge (worktree `kel-ux-v15` stays at `05608e6`, clean).
+
+## 6. Execution order after the re-anchor
+
+1. **Batch 6** — findings 16/17: bridge error classification, human copy for every failure state,
+   engine supervision (readiness → connected → reconnecting → recovered / could-not-recover),
+   truthful "work preserved" messaging, "Copy diagnostics" disclosure, empty-state suppression
+   under failure, `TR-02` residual closed here. Tests: unit (classifier, copy map, health state
+   machine) + tsc + vitest; packaged journey at R10.
+2. **Batch 7** — finding 2: composer owns model/tools; capability controls and recommendation
+   card hierarchy; no donor terminology; one assistant (no Workforce internals).
+3. **Batch 8** — normalization: typography/contrast/spacing/density, Settings/dialogs/sidebar,
+   Work/Projects/Permissions/Transcription/Team-Office genuine inconsistencies, empty/error states,
+   hover actions, responsive width/overflow, icon consistency, canonical logo presence.
+4. **R9.D** — Needs Your Attention: a derived-only view over existing durable state with hostile
+   project-isolation tests.
+5. Evidence: `VISUAL_EVIDENCE_INDEX` + screenshot index refresh; human pixel gate stays PENDING.
