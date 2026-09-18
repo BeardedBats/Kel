@@ -57,6 +57,21 @@ OPEN_GAP (known open finding attacks it).
 - Audit target: enumerate every probe id in production; confirm each resolves closed.
 - Status: DELIVERED (DEAD-08 closure).
 
+## INV-CAPREC-001 — Recommendations are real or absent; acting is the user's
+- Definition: capability recommendations are emitted only for a real refusal of a real capability
+  and only with real next actions (`allow_once` / `enable` / `keep_disabled` for
+  conversation-disabled; nothing for unavailable / unknown / allowed). Emitting never changes
+  state; only the user's action does, through the unchanged session-tools machinery.
+- Owner: `capabilities.recommendation`; producers `research.py` / `coding.py`; carrier `core.py`;
+  card `KelCapabilityCard.tsx` / `capabilityRecommendation.ts`.
+- Tests: `RecommendationTests` matrix; research-blocked + milestone-retention tests;
+  `capability-recommendation.test.ts` (fail-closed rendering, request bodies).
+- Edge cases: a live one-shot grant suppresses the recommendation (tested); coding-path attachment
+  lacks a dedicated blocked-run test (audit target 44).
+- Audit target: forge a payload (unknown id, fake action) — the card must drop it; confirm acting
+  goes through `/api/capabilities` scope checks.
+- Status: DELIVERED (Phase 7, `df87903`).
+
 ## INV-APPROVE-001 — Approval resolution only through canonical resolvers
 - Definition: chat/UI approval resolution always delegates to `Autonomy.resolve_expansion` /
   `Store.resolve_approval`; expiry, one-shot and scope semantics cannot be bypassed.

@@ -94,3 +94,19 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
 38. Knowledge-tab tombstone: forgotten record renders "Content removed.", offers no actions; the
     forget confirmation cannot be bypassed (keyboard/programmatic paths).
 39. Packaged Knowledge-tab pass (recorded gap): records list, actions, tombstones, forget confirm.
+
+## Capability recommendations (Phase 7)
+
+40. Forge a recommendation: unknown capability id, fake action (`"deploy"`), or a non-refused
+    decision — the card must render nothing / act on nothing, and `/api/capabilities` must refuse
+    unknown capabilities/actions plainly.
+41. Stale card: leave a card visible, change the policy elsewhere (Tools control), click Allow
+    once / Enable — assert the result matches the *current* policy and the confirmation is truthful.
+42. Nagging: keep-it-off dismissal persists across panel refreshes; a resolved milestone (success)
+    never re-shows a cleared recommendation.
+43. Grant semantics via the card: Allow once is spent by the real effect exactly once; Enable is
+    conversation-scoped only; both fail closed when the capability is unavailable/removed.
+44. Coding-path attachment: produce a BLOCKED coding run (files/terminal/github off) — assert the
+    milestone carries the same structured recommendation (currently untested end-to-end).
+45. Packaged card rendering (deferred evidence): seed a blocked milestone with a recommendation in a
+    packaged app; assert the card renders, actions hit the engine, and dismissal works.
