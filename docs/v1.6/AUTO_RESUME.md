@@ -32,6 +32,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
 | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
 | 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
 | 5.5 Parallel mission teams + mission worktrees | **ACCEPTED** — `5f77f42` + remediations `b1141c4`, `2a12b77` + acceptance patch `d8880f3` | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37) → 851 → 853; migration 19; audits 20/21 **REVISE** → remediated, audit 22 **CONTINUE**; published `9a2965d..d8880f3` |
+| 5.6 Learning loop (shadow) | IMPLEMENTED + audit-requested — commit `ba52869` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 (+23; zero regressions); no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audit 23 pending |
 
 Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
 probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
@@ -301,9 +302,34 @@ single source; the boundary test enumerates the three escalation types and refus
 cap. Evidence: `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine `791 passed (+24)` on
 Windows. Next after audit CONTINUE: publish, then Phase 5.5 — parallel mission teams.
 
+## Phase 5.6 — learning loop (shadow) (autonomous Main increment, 2026-09-18)
+
+Phase 5.6 (Workforce OS learning loop, shadow) is implemented on `ux/v15-journeys` as commit
+`ba52869`, audit-requested for `2236881..ba52869`. New `kel/learning.py` — learnings are
+**memory records** with workforce source types (`workforce_observed`/`workforce_cross_model`/
+`workforce_inferred`; user-stated rides the existing `user_confirmation` level 2), so
+provenance, the trust ladder, supersede chains, conflict queueing and forget semantics all apply
+unchanged; **no new storage surface, no migration** (learnings ride the memory store, history
+rides `team_events`, stats/metrics are derived views). Dedup never forks a key; decay is
+computed at read time (observed/inferred/cross-model −1 point / 30 days; user-stated never
+decays); preferences only from explicit user confirmation; confidence above the auto cap (5) is
+stored capped and queued for promotion (nothing promotes automatically); corrections ride
+`Memory.correct` and become user-stated. The curator (post-mission, bounded, deterministic)
+records candidate learnings from findings/corrections/mission conflicts, drafts the retro
+(`retro.v1`) and records shadow staffing proposals with predictions; performance stats and
+validation metrics (gating precision, false-skip by recomputed gating plans) are derived views
+with small-sample honesty. Additive wiring: `team.py` EVENT_KINDS +
+`Team.record_mission_activity`; `memory.py` workforce `SOURCE_TRUST`; `assignment.py`
+`flags_snapshot` carries `workforce.learning.shadow` (`KEL_WORKFORCE_LEARNING_SHADOW`, default
+off — flag off performs zero writes on every path; nothing calls the module yet).
+Evidence: `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; focused **23 passed**; full runtime
+suite **876 passed (+10 subtests; baseline 853)** on Windows; 876 collected. Next: audit
+increment 23 (`2236881..ba52869`); on CONTINUE publish, then the Phase 5.7 decision (adaptive
+staffing enablement stays deferred unless the doc-13 campaign metrics and user sign-off exist).
+
 ## Verify quickly (any resume)
 
-1. `cd runtime && python -m pytest tests -q` → 791 passed (+10 subtests; +178 workforce tests since 5.0).
+1. `cd runtime && python -m pytest tests -q` → **876 passed** (+10 subtests; zero regressions).
 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
 3. Packaged journeys (edit `APP` inside each to the current candidate first):
    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
