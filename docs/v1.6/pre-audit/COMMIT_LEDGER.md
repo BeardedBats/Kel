@@ -25,6 +25,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
 | `785df71` | `fd98cc4` | 2026-09-18 | A-entry | pre-audit corpus + IMPLEMENTATION_SPRINT mode (docs/state) | docs only; `.gitignore` scratch ignore | — | none | no | — | no | no | LOW | `increments/INIT-CAMPAIGN-A.md`; corpus README | — |
 | `22f4a3e` | `785df71` | 2026-09-18 | Phase 6 | Work-panel knowledge actions follow record state; forget asks first | `KelWorkPanel.tsx`; `memoryRecordActions.ts` (new) | +7 unit tests (vitest 76→83) | none | yes (renderer) | pending (RC battery) | no | no | MEDIUM | `increments/PHASE6-MEMORY-REALITY.md`; `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md` | MEMR-1/2/3 |
 | `df87903` | `ac5e2a2` | 2026-09-18 | Phase 7 | capability recommendations: engine vocabulary + refusal wiring + milestone retention + desktop card | `capabilities.py`; `research.py`; `coding.py`; `core.py`; `KelCapabilityCard.tsx` (new); `capabilityRecommendation.ts` (new); `KelWorkPanel.tsx` | +7 engine, +7 desktop tests (885; 90) | none | yes (Work panel) | pending (no provider; RC battery) | no | no | MEDIUM | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`; `docs/v1.6/phase7/` | coding-blocked discrimination (audit target 44) |
+| `16de55f` | `df87903` | 2026-09-18 | Phase 7 | Phase 7 record + corpus updates (docs) | docs only | — | none | no | — | no | no | LOW | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | — |
+| `7b32217` | `16de55f` | 2026-09-18 | Phase 7 | published-tip record + packaged pending item (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/status/MAIN_STATUS.md`; PACKAGED_EVIDENCE_INDEX | — |
+| `006159a` | `7b32217` | 2026-09-18 | Phase 8 | Advanced Worker View decision — deferred beyond V1.6 (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | decision to verify in Campaign B |
 
 ## Visual branch commits pending integration (NOT covered by any independent audit)
 
