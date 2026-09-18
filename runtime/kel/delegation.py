@@ -157,8 +157,9 @@ def _issue_contract(store, contract, milestone_id):
 
 def issue_task_contract(store, job, spec, request, *, role, task_id, staffing_id,
                         staffing_result, role_fields, budget=None, now=None, project_id='',
-                        criteria=None, reviewer_lenses=None, depends_on_tasks=None):
-    """Build, validate (registry ceilings), and append one frozen task contract.
+                        criteria=None, reviewer_lenses=None, depends_on_tasks=None,
+                        parent_authority=None):
+    """Build, validate (registry ceilings + delegator envelope), and append one frozen contract.
 
     Public since Phase 5.3: pod orchestration issues multiple contracts per mission
     (builder + verifier tasks). Delegated tasks from `delegate()` keep their own path.
@@ -169,7 +170,8 @@ def issue_task_contract(store, job, spec, request, *, role, task_id, staffing_id
                                criteria=criteria, reviewer_lenses=reviewer_lenses,
                                depends_on_tasks=depends_on_tasks)
     validate_task_contract(contract,
-                           ceilings=registry_ceilings(store, project_id, task_id) or None)
+                           ceilings=registry_ceilings(store, project_id, task_id) or None,
+                           parent_authority=parent_authority)
     contract_id = _issue_contract(store, contract, spec.get('id'))
     return contract, contract_id
 
@@ -177,7 +179,7 @@ def issue_task_contract(store, job, spec, request, *, role, task_id, staffing_id
 def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO',
              preferred=None, fixed=None, features=None, mission_flags=(), tier_max=None,
              budget_class=None, budget=None, budget_estimate=None, project_id='',
-             candidates=None, runtimes=None, enabled=None, now=None):
+             candidates=None, runtimes=None, enabled=None, now=None, parent_authority=None):
     """Decide staffing and issue the D1 contract (no worker runs here).
 
     With `workforce.enabled` off this performs no writes at all and returns
@@ -218,7 +220,8 @@ def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO
                                staffing_id=staffing_id, staffing_result=decision,
                                role_fields=role_fields, budget=budget, now=now)
     validate_task_contract(contract,
-                           ceilings=registry_ceilings(store, project_id, task_id) or None)
+                           ceilings=registry_ceilings(store, project_id, task_id) or None,
+                           parent_authority=parent_authority)
     contract_id = _issue_contract(store, contract, milestone_id)
     reservation_row = None
     if budget_estimate:

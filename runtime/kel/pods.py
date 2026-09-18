@@ -151,7 +151,13 @@ def run_d2(store, job_id, milestone_id, request, builder_worker, verifier_worker
         store, job, spec, verifier_request, role='verifier', task_id=verifier_task,
         staffing_id=staffing_id, staffing_result=decision, role_fields=verifier_fields,
         budget=budget, now=now, project_id=project_id, criteria=verifier_criteria,
-        reviewer_lenses=list(VERIFICATION_LENSES), depends_on_tasks=[builder_task])
+        reviewer_lenses=list(VERIFICATION_LENSES), depends_on_tasks=[builder_task],
+        # AUTH-DELEGATION: the verifier shares the mission's envelope — it may narrow (it is
+        # read-only by design) but it can never hold a class or scope the mission's own
+        # write-bearing arm does not hold. Tool grants stay role-local.
+        parent_authority={'class': builder_contract['authority']['class'],
+                          'write_scope': list(builder_contract['authority'].get('write_scope') or []),
+                          'external_effects': builder_contract['authority']['external_effects']})
 
     reservation_row = None
     if budget_estimate:

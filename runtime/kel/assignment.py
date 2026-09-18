@@ -558,7 +558,7 @@ def reserve_budget(store, job_id, *, budget_class, tokens, wallclock, cost, mile
                    note=None, now=None):
     """Reserve estimated budget before a worker may start (never spawn without reserve)."""
     try:
-        store.get(job_id)
+        job = store.get(job_id)
     except KeyError:
         raise PolicyError('Unknown job for a budget reservation: %s' % job_id)
     class_ids = tuple(item['id'] for item in BUDGET_CLASSES)
@@ -570,6 +570,14 @@ def reserve_budget(store, job_id, *, budget_class, tokens, wallclock, cost, mile
         raise PolicyError('Reserved wallclock must be a positive integer')
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or cost < 0:
         raise PolicyError('Reserved cost must be a non-negative number')
+    remaining = (float(job.get('budget', 0) or 0) - float(job.get('spent', 0) or 0)
+                 - float(job.get('reserved', 0) or 0))
+    if float(cost) > remaining:
+        # AUTH-DELEGATION for the budget dimension (Round 2.5 R1): the job envelope is the
+        # delegator's budget authority, so a delegated reservation may narrow it, never create
+        # more. Without this the engine only noticed at the next milestone boundary.
+        raise PolicyError('Reserved cost %s exceeds the remaining job budget %s'
+                          % (float(cost), remaining))
     stamp = time.time() if now is None else now
     reservation = {'reservation_id': uid(), 'job_id': job_id, 'milestone_id': milestone_id,
                    'assignment_id': None, 'budget_class': budget_class, 'tokens': tokens,
