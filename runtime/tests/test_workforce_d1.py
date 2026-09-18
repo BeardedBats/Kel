@@ -22,6 +22,8 @@ from kel.core import PolicyError, Store
 from kel.delegation import (D1_BUDGET_DEFAULTS, close_d1, delegate, progress_ledger, run_d1,
                             task_ledger)
 from kel.delegation import ensure_schema as ensure_delegation_schema
+import hashlib
+
 from kel.evidence import write_evidence
 from kel.staffing import decide, score
 from kel.team import Team
@@ -213,6 +215,8 @@ class CloseTests(Base):
                                 label='milestone checks green', command='kel check m1',
                                 exit_code=0, output='ok', artifact_digest=artifact_digest,
                                 ran_at=ran_at, produced_by=prepared['assignment_id'])
+        # F4/WF-12: the claimed artifact must be the one this assignment really delivered.
+        self.team.add_artifact(prepared['assignment_id'], artifact_digest, 'export.py', 'artifact')
         body = packet(
             task_id=prepared['task_id'],
             evidence=[{'id': record['id'], 'class': 'check_result', 'command': 'kel check m1',
@@ -461,6 +465,87 @@ class FollowUpF8Tests(Base):
         self.assertEqual(registry_ceilings(self.store, project_id='proj-x').get('builder'),
                          'workspace-write')
         self.assertEqual(registry_ceilings(self.store).get('builder'), 'leased-write')
+
+
+class RealArtifactBindingTests(Base):
+    """F4 / WF-12: a content-bound close binds to an artifact the assignment really delivered.
+
+    The close path used to compare the evidence's artifact digest against the packet's own artifact
+    list, so a self-asserted digest satisfied a content-bound contract.
+    """
+
+    def _prepared(self):
+        return delegate(self.store, self.job_id, 'm1', {'objective': 'Draft'},
+                        features=small_features(), enabled=True, candidates=candidates())
+
+    def _packet(self, prepared, *, digest, path=None, ran_at=None):
+        ran_at = time.time() if ran_at is None else ran_at
+        record = write_evidence(self.store, mission_id=prepared['job_id'],
+                                task_id=prepared['task_id'], evidence_class='check_result',
+                                label='artifact binding', command='kel check m1', exit_code=0,
+                                output='ok', artifact_digest=digest, ran_at=ran_at,
+                                produced_by=prepared['assignment_id'])
+        artifact = {'id': 'art_e51', 'digest': digest, 'kind': 'code', 'bytes': 12}
+        if path is not None:
+            artifact['path'] = path
+        return packet(
+            task_id=prepared['task_id'],
+            artifacts=[artifact],
+            evidence=[{'id': record['id'], 'class': 'check_result', 'command': 'kel check m1',
+                       'exit_code': 0, 'output_digest': record['output_digest'],
+                       'artifact_digest': digest, 'ran_at': ran_at,
+                       'freshness_ok': True, 'produced_by': prepared['assignment_id']}],
+            completion_claims=[{'claim_id': 'c1', 'status': 'verified',
+                                'evidence_refs': [record['id']]},
+                               {'claim_id': 'artifact', 'status': 'verified',
+                                'evidence_refs': [record['id']]}])
+
+    def _record(self, prepared, digest):
+        self.team.add_artifact(prepared['assignment_id'], digest, 'export.py', 'artifact')
+
+    def test_a_claimed_artifact_nothing_delivered_cannot_close(self):
+        prepared = self._prepared()
+        body = self._packet(prepared, digest='sha256:77bb')  # never recorded for the assignment
+        with self.assertRaises(PolicyError) as caught:
+            close_d1(self.store, prepared['task_id'], body)
+        self.assertIn('never recorded as delivered', str(caught.exception))
+
+    def test_a_recorded_artifact_with_a_real_file_closes(self):
+        prepared = self._prepared()
+        root = Path(self.tmp.name) / 'work'
+        target = root / 'src' / 'api' / 'export.py'
+        target.parent.mkdir(parents=True)
+        target.write_text('print("export")\n', encoding='utf-8')
+        digest = 'sha256:' + hashlib.sha256(target.read_bytes()).hexdigest()
+        self._record(prepared, digest)
+        body = self._packet(prepared, digest=digest, path='src/api/export.py')
+        result = close_d1(self.store, prepared['task_id'], body, artifact_root=root)
+        self.assertTrue(result['closed'])
+        self.assertEqual(result['violations'], [])
+
+    def test_a_recorded_artifact_missing_on_disk_is_refused(self):
+        prepared = self._prepared()
+        root = Path(self.tmp.name) / 'work'
+        root.mkdir(parents=True, exist_ok=True)
+        digest = 'sha256:' + 'a' * 64
+        self._record(prepared, digest)
+        body = self._packet(prepared, digest=digest, path='src/api/export.py')
+        with self.assertRaises(PolicyError) as caught:
+            close_d1(self.store, prepared['task_id'], body, artifact_root=root)
+        self.assertIn('is not on disk', str(caught.exception))
+
+    def test_a_digest_that_does_not_match_the_file_is_refused(self):
+        prepared = self._prepared()
+        root = Path(self.tmp.name) / 'work'
+        target = root / 'src' / 'api' / 'export.py'
+        target.parent.mkdir(parents=True)
+        target.write_text('print("export")\n', encoding='utf-8')
+        claimed = 'sha256:' + 'b' * 64  # recorded, but not what is on disk
+        self._record(prepared, claimed)
+        body = self._packet(prepared, digest=claimed, path='src/api/export.py')
+        with self.assertRaises(PolicyError) as caught:
+            close_d1(self.store, prepared['task_id'], body, artifact_root=root)
+        self.assertIn('does not match', str(caught.exception))
 
 
 if __name__ == '__main__':

@@ -294,6 +294,9 @@ class PodFlowTests(Base):
                                     label='builder checks', command='kel check m1',
                                     exit_code=0, output='ok', artifact_digest=digest,
                                     ran_at=now, produced_by=prepared['assignment_id'])
+            # F4/WF-12: the builder records what it delivered; closure verification reads the
+            # delivery ledger, never the packet's own artifact list.
+            self.team.add_artifact(prepared['assignment_id'], digest, 'out.md', 'artifact')
             return packet(task_id=prepared['task_id'],
                           artifacts=[{'id': 'art_delivered', 'digest': digest, 'kind': 'code'}],
                           evidence=[{'id': record['id'], 'class': 'check_result',
@@ -318,6 +321,8 @@ class PodFlowTests(Base):
                                     produced_by=prepared['assignment_id'],
                                     output='verdict %s' % verdict, artifact_digest=digest,
                                     ran_at=now)
+            self.team.add_artifact(prepared['assignment_id'], digest, 'verification.md',
+                                   'artifact')
             items = []
             for index, seed in enumerate(seeds):
                 items.append({'schema_version': 1, 'mission_id': prepared['job_id'],
