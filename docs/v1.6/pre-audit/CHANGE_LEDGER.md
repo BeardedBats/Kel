@@ -296,6 +296,35 @@ ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b
 - **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
   it into the engine-loss presentation.
 
+### CHG-021 — Only canonical JSON reaches durable state (R5 / PERSIST-CANONICAL)
+ID: CHG-021 · Phase: Campaign A — roadmap R5 · Commit: `b2ffed1` · Date: 2026-09-18
+New behavior: `core.encode` refuses non-finite floats (`allow_nan=False`) with a plain sentence, so
+`NaN`/`Infinity` can no longer be written as bare non-standard tokens (and digests stay canonical);
+`provider_outcome` ignores non-finite duration/cost reports while still recording the failure;
+`Service.submit` checks the text type before stripping. Previous: `NaN`/`Infinity` were persisted and
+strict JSON consumers could not parse them; a non-string text raised AttributeError. Primary files:
+`kel/core.py`, `kel/service.py`. Tests: `tests/test_v16_r5_persistence.py` (7). Risk: LOW (strictly
+canonical). Evidence: `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL; A-24.
+
+### CHG-020 — An approval authorizes only inside its window (R4 / APPROVAL-EXACT)
+ID: CHG-020 · Phase: Campaign A — roadmap R4 · Commit: `8c899c8` · Date: 2026-09-18
+New behavior: `Authorizer._approval_ok` requires the approval row to still be inside its window at
+the moment of execution (status APPROVED + exact action digest + matching job were already checked).
+Previous: an APPROVED row authorized its action indefinitely. Primary files: `kel/authorize.py`.
+Tests: `tests/test_v16_r4_approval_exact.py` (7 new hostile cases). Risk: LOW (strictly narrowing).
+Evidence: `increments/R4-APPROVAL-EXACT.md` (producer/consumer inventory); INV-APPROVAL-EXACT; A-23.
+
+### CHG-019 — An observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
+ID: CHG-019 · Phase: Campaign A — roadmap R2 · Commit: `fde5bbb` · Date: 2026-09-18
+New behavior: `Store.observe_effect` no longer overwrites a recorded receipt: an `OBSERVED` effect
+keeps its evidence, an identical re-observation is a no-op, a contradictory receipt is refused
+('Effect was already observed with a different receipt'). Previous: any second observation replaced
+the stored receipt silently. Primary files: `kel/core.py`. Tests:
+`tests/test_v16_r2_idempotency.py` (10 new; includes the full hostile-duplicate set for the families
+the directive names). Risk: LOW (latent path — no production caller existed). Evidence:
+`increments/R2-IDEMPOTENCY-MATRIX.md` (the 17-family matrix); INV-EVENT-IDEMPOTENCY;
+INV-EFFECT-REPLAY; A-22.
+
 ### CHG-018 — Delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
 ID: CHG-018 · Phase: Campaign A — roadmap R1 · Commit: `dc65fbc` · Date: 2026-09-18
 New behavior: `workforce.authority_within(child, parent)` is the pure containment primitive over
@@ -513,5 +542,10 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
 | TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
 | R1 delegation authority ceiling | CHG-018 delivered (`dc65fbc`); record `increments/R1-AUTHORITY-CEILING.md` | DONE |
+| R2 observed-effect receipt + idempotency matrix | CHG-019 delivered (`fde5bbb`); record `increments/R2-IDEMPOTENCY-MATRIX.md` | DONE |
+| R3 retry durability (inventory + restart tests) | inventory `increments/R3-RETRY-DURABILITY.md`; tests `1a9f538` | DONE |
+| R4 approval window (APPROVAL-EXACT) | CHG-020 delivered (`8c899c8`); record `increments/R4-APPROVAL-EXACT.md` | DONE |
+| R5 canonical persistence (PERSIST-CANONICAL) | CHG-021 delivered (`b2ffed1`); record `increments/R5-PERSISTENCE-INTEGRITY.md` | DONE |
+| R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
 | Engine-loss/recovery behavior | CHG-0xx | PENDING |

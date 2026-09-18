@@ -29,6 +29,126 @@ OPEN_GAP (known open finding attacks it).
   issuance refuses it; confirm the D1 path is unchanged when no envelope is supplied; confirm the
   budget check cannot be bypassed by pre-spending the job (`spent`/`reserved` arithmetic).
 
+## INV-EVENT-IDEMPOTENCY — One logical event, at most one authoritative execution
+- Definition: a duplicate delivery of the same logical event (same identity) causes no second
+  authoritative execution; a new attempt exists only under an explicit new attempt identity
+  (fresh run id/epoch, new operation id).
+- Owner: `kel.core` (submissions, intake, events, runs/epochs, inbox, effects, publication),
+  `kel.service` (request dispatch), `kel.continuation`, `kel.parallel`, `kel.workforce`,
+  `kel.apply_changes`, `kel.coding_transport` (native RPC).
+- Code paths (anchors in `increments/R2-IDEMPOTENCY-MATRIX.md`): `submissions.id` early return that
+  skips the executor; `job_intakes.job_id UNIQUE`; `events` `dedupe UNIQUE` +
+  `UNIQUE(aggregate_id,revision)`; `one_active_milestone`; epoch equality in `consume`/
+  `acknowledge_stop`; `inbox` `INSERT OR IGNORE` + `handled` in the same transaction; approvals
+  `PENDING`+digest+run state; boundary grant `request_id`+job state; change application
+  `already_applied`/resume; publication keyed by `digest([job_id, assessment])` with the message
+  written only on a real insert.
+- Tests: `tests/test_v16_r2_idempotency.py` (10). Evidence: `increments/R2-IDEMPOTENCY-MATRIX.md`;
+  TEST_EVIDENCE_INDEX A-22; commit `fde5bbb`.
+- Edge cases: a retried submission **without** a client id creates a new logical submission
+  (documented contract); native RPC replay is refused rather than resolved (fail-closed by design);
+  the matrix lists the directive's families plus what the code actually contains.
+- Audit target: re-derive the matrix independently, then attempt each hostile duplicate the record
+  lists (submission, intake, event revision, run epoch, inbox, RPC, permission reply, approval,
+  boundary grant, effect prepare/observe, continuation, publication, workforce message, parallel
+  announcement) and confirm no second authoritative execution.
+
+## INV-EFFECT-REPLAY — Unresolved effects are reconciled, never blindly replayed
+- Definition: an external effect carries an operation identity and a recorded observation; after
+  uncertain execution the runtime reconciles (refuses) rather than re-dispatches; a recorded
+  observation is evidence and is not silently rewritten.
+- Owner: `kel.core` (`prepare_effect` / `observe_effect`), `kel.apply_changes` (filesystem effects),
+  `kel.coding_transport` (native disposal), `kel.authorize` (granted boundary), `kel.guardrails`.
+- Code paths: `prepare_effect` returns the existing state for the same operation+digest and refuses a
+  reused identity for a different action; `observe_effect` keeps the first receipt (identical
+  re-observation is a no-op, a contradictory receipt is refused — repaired in `fde5bbb`);
+  `apply_changes` resumes PREPARED work with per-file manifest checks and returns `already_applied`;
+  `coding_transport` refuses to replay a dispatched RPC without a receipt.
+- Tests: `tests/test_v16_r2_idempotency.py` (effect subset); `tests/test_apply_changes.py`
+  (crash-resume family). Evidence: `increments/R2-IDEMPOTENCY-MATRIX.md`; A-22.
+- Edge cases: `observe_effect` had no production caller (latent hole now closed); a legitimately
+  revised observation has no in-product entry point — recorded as an audit question rather than
+  invented.
+- Audit target: confirm no code path can overwrite an observed receipt; confirm apply-changes
+  contradiction handling preserves backups; confirm the native transport cannot re-dispatch.
+
+## INV-APPROVAL-EXACT — An approval authorizes one exact action, inside its window
+- Definition: approval means *this exact runtime effect, under these exact relevant
+  preconditions*: status APPROVED, action digest equal to the action about to run, matching job, and
+  still inside the approval window. A materially different action (or a later execution outside the
+  window) needs a new decision.
+- Owner: `kel.core` (`request_approval` / `resolve_approval`), `kel.authorize` (`Authorizer._approval_ok`,
+  `_expansion`, `resume_after_grant`), `kel.coding` (`CodingAdapter.approval`), `kel.context`
+  (remembered grants), `kel.chat_approvals` (the decision surface).
+- Code paths: canonical action built from method/workspace/command/permissions/grantRoot/network with
+  delivery ids excluded; `unrepeatable_request` for patch-less file changes; digest re-check in
+  `resolve_approval` and `_approval_ok`; window check at resolution (EXPIRED) **and** at execution
+  (`8c899c8`); job binding; `grants(project_id, action_digest)` with expiry + revoke.
+- Tests: `tests/test_v16_r4_approval_exact.py` (7); `tests/test_v16_approvals.py`; the APR-02 scope
+  suite. Evidence: `increments/R4-APPROVAL-EXACT.md`; A-23; commits `8a677d0`, `8c899c8`.
+- Edge cases: no HMAC/signature by design (trusted local runtime — the directive's R4.D); clock jumps
+  out of scope; a denial is honoured for the same target until the scope changes.
+- Audit target: copy an approval across job/run/project; change the command or workspace after
+  approval; consume an approval just after its window closes; reuse an `unrepeatable_request`
+  approval for a different item.
+
+## INV-RETRY-DURABLE — Restart never restores spent automatic retry budget
+- Definition: an automatic retry budget lives on the entity that owns the retry and survives
+  restarts; repeated failure reaches an honest terminal state (exhausted, uncertain, paused,
+  blocked), never an infinite silent loop.
+- Owner: `kel.core` (milestone attempts, route retry), `kel.providers` (`core.provider_outcome`),
+  `kel.engine` (review recovery), `kel.parallel` (mission leases), `kel.coding`/`coding_transport`
+  (check recovery, receipts), `kel.backup` (restore record).
+- Code paths: `job['milestones'][mid]['attempts']` with `max_attempts=4` and the EXHAUSTED state;
+  `providers` row `failures`/`circuit_until`; `review_runs.attempts` + the explicit two-interruption
+  UNCERTAIN verdict; `reclaim_stale_leases` (EXPIRED, never resurrected); 'do not replay' receipts.
+- Tests: `tests/test_v16_r3_retry_durability.py` (5 restart-durability cases);
+  `test_review_recovery.py`, `test_broker_recovery.py`, `test_coding_recovery.py`. Evidence:
+  `increments/R3-RETRY-DURABILITY.md`; commit `1a9f538`; A-23.
+- Edge cases: token/wallclock reservation caps have no job-envelope primitive (only cost is
+  enforced); the provider circuit window is time-based and a restart does not change it.
+- Audit target: fail an attempt, restart, and confirm the next automatic attempt continues the count;
+  confirm no code path resets `attempts` except a brand-new contract.
+
+## INV-PERSIST-CANONICAL — Only canonical, reconstructable state is durably committed
+- Definition: every value that reaches the database is validated, JSON-serializable and readable
+  back by strict JSON consumers; a refused value leaves the store healthy with no half-written
+  authoritative row.
+- Owner: `kel.core` (`encode`/`digest` — the single serialization door), `kel.workforce`
+  (`assert_safe`), `kel.contracts` (schema validators), `kel.memory` (proposal schema + secret
+  scan), `kel.apply_changes` (manifest digests), `kel.service` (request ingress).
+- Code paths: `encode(..., allow_nan=False)` + plain refusal; `provider_outcome` finite guards;
+  `submit` type/length guards; `enqueue_result` object check; per-artifact 1 MiB byte cap;
+  `UNIQUE(aggregate_id, revision)` + optimistic revisions (events).
+- Tests: `tests/test_v16_r5_persistence.py` (7). Evidence: `increments/R5-PERSISTENCE-INTEGRITY.md`;
+  A-24; commit `b2ffed1`.
+- Edge cases: externally corrupted stored JSON is not repaired or masked (audit question);
+  `add_message` has no cap (internal trusted writers only); non-finite provider metrics are ignored,
+  not stored.
+- Audit target: attempt to persist NaN/Infinity through every ingress; confirm no half-written rows;
+  confirm a corrupted row is never silently rewritten.
+
+## INV-LIVENESS-SEPARATION · INV-COMPLETION-TRUTH · INV-RECOVERY-CLASSIFICATION (R6)
+- Definition: process liveness, execution/supervisor liveness and mission progress are separate
+  facts; none of them establishes completion, and completion requires the evidence-backed
+  assessment; interrupted work resolves to one of safely resumable / safely retryable /
+  reconcile-first / user-blocked / failed-quarantined.
+- Owner: `kel.core` (runs, `recover_expired`, `consume`, `close`), `kel.diagnostics`
+  (`native_processes` observations, `snapshot()['database']['problems']`), `kel.parallel`
+  (mission leases, reclaim), `kel.engine` (monitor, review recovery), `kel.runner`
+  (`native_processes`), `kel.assurance` (independent certification).
+- Code paths: a run past `expires` → `ORPHANED` + fresh `epoch` + milestone `UNCERTAIN` ('Expired run;
+  native state requires reconciliation') + job `WAITING_RESOURCE`/verdict `UNCERTAIN`; a dead recorded
+  PID is reported ('no longer alive') and nothing else; stale-epoch deliveries are discarded by
+  `consume`; closure requires the verified assessment; `reclaim_stale_leases` reclaims, never
+  resurrects.
+- Tests: `tests/test_v16_r6_liveness.py` (5). Evidence: `increments/R6-TRUTHFUL-STATE.md`; A-25.
+- Edge cases: the compact derived health status is deliberately not persisted (R9.D owns the one
+  surface); `snapshot()` reports but never acts.
+- Audit target: kill a process and confirm nothing completes or auto-retries; deliver a stale-epoch
+  result; check that waiting/idle never reads as complete; verify a legitimately long operation is
+  not stalled out.
+
 ## INV-AUDIT-001 — Builder cannot independently final-certify production output
 - Definition: the thread that writes production code never counts as its own independent reviewer;
   independence is produced only by a separate fresh-context reviewer with its own record.
