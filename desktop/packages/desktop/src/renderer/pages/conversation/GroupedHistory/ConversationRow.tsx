@@ -91,6 +91,15 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     const composedClass = classNames(pinnedHoverFade);
 
     const leadingMark = resolveConversationLeadingMark(conversation, assistantInfo, logos);
+    // Plain single-assistant rows say nothing with a leading mark: it is the
+    // same backend logo repeated row after row, or a generic robot/message
+    // glyph — 30px of title width for no information. Keep the mark only when
+    // it identifies a genuinely different assistant (an assigned/preset
+    // avatar), and always in the collapsed rail, where it is the row's only
+    // visible content (visual batch 5; findings 03 §4 / 04 §4.2).
+    if (leadingMark.decorative && !collapsed) {
+      return null;
+    }
     if (leadingMark.kind === 'emoji') {
       return (
         <span className={classNames('text-16px leading-none flex-shrink-0', composedClass)}>{leadingMark.value}</span>
@@ -160,6 +169,12 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     );
   };
 
+  const leadingMarkNode = renderLeadingIcon();
+  const pinnedMarkShown = !batchMode && isPinned && !isMobile && !isGenerating && !isWaitingConfirmation;
+  const showLeadingSlot = Boolean(
+    leadingMarkNode || showWaitingConfirmation || (isGenerating && !batchMode) || pinnedMarkShown
+  );
+
   return (
     <Tooltip
       key={conversation.id}
@@ -171,7 +186,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
         id={'c-' + conversation.id}
         className={classNames(
           'chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px min-w-0 transition-colors',
-          collapsed ? 'justify-center px-0' : 'justify-start gap-8px pe-16px',
+          collapsed ? 'justify-center px-0' : 'justify-start gap-8px pe-32px',
           // dimIcon means this row sits inside a project/cron parent — visually indent the row content while keeping the bg full-width
           !collapsed && (dimIcon ? 'ps-34px' : 'ps-10px'),
           {
@@ -202,34 +217,32 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
             <Checkbox checked={checked} />
           </span>
         )}
-        <span className='size-22px flex items-center justify-center shrink-0 relative'>
-          {showWaitingConfirmation ? (
-            <Attention
-              theme='filled'
-              size='16'
-              className='line-height-0 flex-shrink-0 text-warning animate-wiggle'
-              data-testid={`conversation-waiting-confirmation-${conversation.id}`}
-            />
-          ) : isGenerating && !batchMode ? (
-            <Spin size={16} />
-          ) : (
-            renderLeadingIcon()
-          )}
-          {/* Hover overlay on the leading icon: drag handle for sortable pinned rows, pushpin marker otherwise */}
-          {!batchMode &&
-            isPinned &&
-            !isMobile &&
-            !isGenerating &&
-            !isWaitingConfirmation &&
-            (dragHandle ?? (
-              <span
-                className='absolute inset-0 flex-center text-t-secondary pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity'
-                style={{ lineHeight: 0 }}
-              >
-                <Pushpin theme='outline' size='14' />
-              </span>
-            ))}
-        </span>
+        {showLeadingSlot && (
+          <span className='size-22px flex items-center justify-center shrink-0 relative'>
+            {showWaitingConfirmation ? (
+              <Attention
+                theme='filled'
+                size='16'
+                className='line-height-0 flex-shrink-0 text-warning animate-wiggle'
+                data-testid={`conversation-waiting-confirmation-${conversation.id}`}
+              />
+            ) : isGenerating && !batchMode ? (
+              <Spin size={16} />
+            ) : (
+              leadingMarkNode
+            )}
+            {/* Hover overlay on the leading icon: drag handle for sortable pinned rows, pushpin marker otherwise */}
+            {pinnedMarkShown &&
+              (dragHandle ?? (
+                <span
+                  className='absolute inset-0 flex-center text-t-secondary pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity'
+                  style={{ lineHeight: 0 }}
+                >
+                  <Pushpin theme='outline' size='14' />
+                </span>
+              ))}
+          </span>
+        )}
         <FlexFullContainer className='h-24px min-w-0 flex-1 collapsed-hidden'>
           <Tooltip
             content={conversation.name}
