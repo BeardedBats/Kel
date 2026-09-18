@@ -273,7 +273,13 @@ class Authorizer:
         return dict(row) if row else None
 
     def _approval_ok(self, approval_id, intent):
-        """A destructive action is approved only by a matching APPROVED approval row."""
+        """A destructive action is approved only by a matching APPROVED approval row.
+
+        APPROVAL-EXACT (Round 2.5 R4): the row must still be inside its approval window, carry the
+        digest of the exact action the caller is about to perform, and belong to the same job. A
+        resolution that happened before the window closed does not authorize a *later* execution
+        outside that window.
+        """
         action = (intent.get('metadata') or {}).get('action')
         if not approval_id or action is None:
             return False
@@ -281,6 +287,8 @@ class Authorizer:
             row = db.execute('SELECT * FROM approvals WHERE id=?', (str(approval_id),)).fetchone()
         if not row or row['status'] != 'APPROVED' or row['action_digest'] != digest(action):
             return False
+        if row['expires'] is not None and float(row['expires']) < time.time():
+            return False  # the approval window closed before this execution
         if intent.get('job') and str(row['job_id']) != str(intent.get('job')):
             return False  # an approval for another job is not this job's approval
         return True
