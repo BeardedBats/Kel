@@ -546,3 +546,27 @@
 .kel-engine-notice--failed .kel-engine-notice__text span {
   color: var(--kel-failed-fg);
 }
+
+/* R9.D — "Needs your attention": derived rows, one line of ownership each, no chrome. */
+.kel-attention__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--kel-space-3);
+  padding: 8px 0;
+  border-top: 1px solid var(--kel-border);
+}
+.kel-attention__row:first-of-type {
+  border-top: none;
+}
+.kel-attention__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.kel-attention__text strong {
+  color: var(--kel-text-1);
+  font-weight: 600;
+  font-size: var(--kel-type-label);
+}
