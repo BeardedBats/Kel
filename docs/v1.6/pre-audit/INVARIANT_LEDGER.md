@@ -9,6 +9,26 @@ OPEN_GAP (known open finding attacks it).
 
 ---
 
+## INV-AUTH-DELEGATION — Delegation may narrow authority, never create it
+- Definition: `effective_child_authority ⊆ effective_delegator_authority` over every dimension a
+  task contract carries: authority class, write scope, write boundaries, external effects, tool
+  grants, and (where the delegator has one) the budget envelope.
+- Owner: `kel.workforce` (vocabulary + primitive), `kel.contracts` (issuance validation),
+  `kel.delegation` / `kel.pods` (issuers), `kel.assignment` (grants + budget reservation).
+- Code paths: `workforce.authority_within`; `contracts.validate_task_contract(*,
+  parent_authority=…, ceilings=…)`; `delegation.delegate(..., parent_authority=…)`;
+  `delegation.issue_task_contract(..., parent_authority=…)`; `pods.run_d2` (verifier inside the
+  builder's frozen envelope); `assignment.reserve_budget` (job envelope ceiling).
+- Tests: `tests/test_v16_r1_authority.py` (21); workforce family (269 together). Evidence:
+  `increments/R1-AUTHORITY-CEILING.md`; TEST_EVIDENCE_INDEX A-21; commit `dc65fbc`.
+- Edge cases: `parent_task` is None in every production path today (no nesting by design — the
+  refusal for a nested contract without an envelope is future-proofing, not a live path); tool
+  grants stay role-local for the verifier (only class/scope/effects inherit the mission envelope);
+  token/wallclock reservation caps have no job-envelope primitive yet (R3 budget accounting).
+- Audit target: construct a contract wider than its delegator on each dimension and confirm
+  issuance refuses it; confirm the D1 path is unchanged when no envelope is supplied; confirm the
+  budget check cannot be bypassed by pre-spending the job (`spent`/`reserved` arithmetic).
+
 ## INV-AUDIT-001 — Builder cannot independently final-certify production output
 - Definition: the thread that writes production code never counts as its own independent reviewer;
   independence is produced only by a separate fresh-context reviewer with its own record.

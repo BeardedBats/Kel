@@ -296,6 +296,25 @@ ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b
 - **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
   it into the engine-loss presentation.
 
+### CHG-018 — Delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
+ID: CHG-018 · Phase: Campaign A — roadmap R1 · Commit: `dc65fbc` · Date: 2026-09-18
+New behavior: `workforce.authority_within(child, parent)` is the pure containment primitive over
+class rank, write scope, write boundaries, external effects and tool grants;
+`validate_task_contract(..., parent_authority=…)` refuses a child outside the delegator envelope,
+refuses a self-contradictory `write_scope`/`write_boundaries` pair, and refuses a nested contract
+that declares no delegator; `delegate()`/`issue_task_contract()` pass the envelope through;
+`pods.run_d2` issues the verifier inside the builder's frozen envelope; `assignment.reserve_budget`
+refuses a reservation beyond the remaining job budget. Previous: only the role→class ceiling was
+enforced. Primary files: `kel/workforce.py`, `kel/contracts.py`, `kel/delegation.py`,
+`kel/pods.py`, `kel/assignment.py`. Tests: `tests/test_v16_r1_authority.py` (21).
+Risk: LOW (strictly narrowing; no schema, no new authority path). Evidence:
+`increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION; A-21.
+
+### CHG-017 — TR-02 renderer binding recorded (R0)
+ID: CHG-017 · Phase: Campaign A — R0 · Commit: docs only · Date: 2026-09-18
+New behavior: none (a binding): abandoned-stream transport-failure presentation is delivered by
+R9.A batch 6 / R10; the fallback path is already honest. Primary files: none.
+
 ### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
 
 ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
@@ -493,5 +512,6 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | APR-05 approval poll DDL | CHG-015 delivered (`dd34ac2`); record `increments/R0-SWEEP.md` | DONE |
 | COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
 | TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
+| R1 delegation authority ceiling | CHG-018 delivered (`dc65fbc`); record `increments/R1-AUTHORITY-CEILING.md` | DONE |
 | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
 | Engine-loss/recovery behavior | CHG-0xx | PENDING |
