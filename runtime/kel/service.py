@@ -21,7 +21,10 @@ from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
 
-ENGINE_VERSION='1.5.0'
+# Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
+# whose reported version differs from the app it shipped with, so this literal must match
+# `desktop/package.json`'s version (what `app.getVersion()` reports in the packaged app).
+from . import __version__ as ENGINE_VERSION
 
 # Verbs that mean "change code in an existing project". These are the only
 # requests that need a project root; greenfield ("create an app") is classified
