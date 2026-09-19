@@ -1,0 +1,280 @@
+......................FFF.F.F.F.FFF.F.F...........FF.....F....F....      [100%]
+================================== FAILURES ===================================
+_ CrossScopeResolutionTests.test_no_conversation_cannot_settle_a_foreign_boundary_grant _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_no_conversation_cannot_settle_a_foreign_boundary_grant>
+
+    def test_no_conversation_cannot_settle_a_foreign_boundary_grant(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        _, request_id = self.ask_for_access_for(other)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:492: AssertionError
+_ CrossScopeResolutionTests.test_no_conversation_cannot_settle_a_foreign_step_approval _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_no_conversation_cannot_settle_a_foreign_step_approval>
+
+    def test_no_conversation_cannot_settle_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:478: AssertionError
+___ CrossScopeResolutionTests.test_the_legacy_singular_route_is_scoped_too ____
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_the_legacy_singular_route_is_scoped_too>
+
+    def test_the_legacy_singular_route_is_scoped_too(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:523: AssertionError
+_ CrossScopeResolutionTests.test_the_service_route_refuses_omission_on_a_foreign_step_approval _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_the_service_route_refuses_omission_on_a_foreign_step_approval>
+
+    def test_the_service_route_refuses_omission_on_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:506: AssertionError
+_ ChildEnvironmentTests.test_a_spawned_native_child_process_sees_only_its_own_key _
+
+self = <test_v15_credentials.ChildEnvironmentTests testMethod=test_a_spawned_native_child_process_sees_only_its_own_key>
+
+    def test_a_spawned_native_child_process_sees_only_its_own_key(self):
+        # Boundary check: the environment a real child process observes, not just the dict.
+        base = dict(os.environ)
+        base.update({'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': 'o-key-value',
+                     'DEEPSEEK_API_KEY': 'd-key-value'})
+        probe = ('import json, os; print(json.dumps({k: os.environ.get(k) for k in '
+                 '("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DEEPSEEK_API_KEY")}))')
+        result = subprocess.run([sys.executable, '-c', probe], env=child_env('claude', base),
+                                capture_output=True, text=True, timeout=30)
+        seen = json.loads(result.stdout.strip().splitlines()[-1])
+>       self.assertEqual(seen, {'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': None,
+                                'DEEPSEEK_API_KEY': None})
+E       AssertionError: {'ANT[27 chars]ue', 'OPENAI_API_KEY': None, 'DEEPSEEK_API_KEY': 'd-key-value'} != {'ANT[27 chars]ue', 'OPENAI_API_KEY': None, 'DEEPSEEK_API_KEY': None}
+E         {'ANTHROPIC_API_KEY': 'a-key-value',
+E       -  'DEEPSEEK_API_KEY': 'd-key-value',
+E       ?                      ^^^^ --------
+E       
+E       +  'DEEPSEEK_API_KEY': None,
+E       ?                      ^^^
+E       
+E          'OPENAI_API_KEY': None}
+
+tests\test_v15_credentials.py:115: AssertionError
+____ ChildEnvironmentTests.test_native_children_strip_third_provider_keys _____
+
+self = <test_v15_credentials.ChildEnvironmentTests testMethod=test_native_children_strip_third_provider_keys>
+
+    def test_native_children_strip_third_provider_keys(self):
+        # AUD-MINOR-003: the child keeps at most its own provider's credential; every other
+        # Kel-managed key (third providers included) is removed, not just the counterpart.
+        base = {'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': 'o-key-value',
+                'DEEPSEEK_API_KEY': 'd-key-value', 'CLAUDECODE': '1'}
+        codex = child_env('codex', base)
+        claude = child_env('claude', base)
+        self.assertIn('OPENAI_API_KEY', codex)
+        self.assertNotIn('ANTHROPIC_API_KEY', codex)
+>       self.assertNotIn('DEEPSEEK_API_KEY', codex)
+E       AssertionError: 'DEEPSEEK_API_KEY' unexpectedly found in {'OPENAI_API_KEY': 'o-key-value', 'DEEPSEEK_API_KEY': 'd-key-value'}
+
+tests\test_v15_credentials.py:94: AssertionError
+_ ChildEnvironmentTests.test_unknown_native_provider_strips_every_provider_key _
+
+self = <test_v15_credentials.ChildEnvironmentTests testMethod=test_unknown_native_provider_strips_every_provider_key>
+
+    def test_unknown_native_provider_strips_every_provider_key(self):
+        base = {'ANTHROPIC_API_KEY': 'a', 'OPENAI_API_KEY': 'o', 'DEEPSEEK_API_KEY': 'd'}
+        env = child_env('fixture', base)
+        for key in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'):
+>           self.assertNotIn(key, env)
+E           AssertionError: 'ANTHROPIC_API_KEY' unexpectedly found in {'ANTHROPIC_API_KEY': 'a', 'DEEPSEEK_API_KEY': 'd'}
+
+tests\test_v15_credentials.py:103: AssertionError
+_ ReservationAccountingTests.test_a_consumed_estimate_keeps_narrowing_the_envelope _
+
+self = <test_workforce_assignment.ReservationAccountingTests testMethod=test_a_consumed_estimate_keeps_narrowing_the_envelope>
+
+    def test_a_consumed_estimate_keeps_narrowing_the_envelope(self):
+        # 'consumed' means the estimate was used; only an explicit release returns budget.
+        first = self._reserve(self.job_id, 5)
+        release_budget(self.store, first['reservation_id'], consumed=True)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_workforce_assignment.py:300: AssertionError
+_ ReservationAccountingTests.test_cumulative_reservations_fill_then_exceed_the_envelope _
+
+self = <test_workforce_assignment.ReservationAccountingTests testMethod=test_cumulative_reservations_fill_then_exceed_the_envelope>
+
+    def test_cumulative_reservations_fill_then_exceed_the_envelope(self):
+        self._reserve(self.job_id, 3)
+        self._reserve(self.job_id, 4)                    # 3 + 4 = 7 <= 8
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_workforce_assignment.py:283: AssertionError
+_ ReservationAccountingTests.test_release_frees_the_envelope_for_the_next_commitment _
+
+self = <test_workforce_assignment.ReservationAccountingTests testMethod=test_release_frees_the_envelope_for_the_next_commitment>
+
+    def test_release_frees_the_envelope_for_the_next_commitment(self):
+        first = self._reserve(self.job_id, 1)
+>       with self.assertRaises(PolicyError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_workforce_assignment.py:290: AssertionError
+____ ReservationAccountingTests.test_the_second_reservation_sees_the_first ____
+
+self = <test_workforce_assignment.ReservationAccountingTests testMethod=test_the_second_reservation_sees_the_first>
+
+    def test_the_second_reservation_sees_the_first(self):
+        first = self._reserve(self.job_id, 1)
+        self.assertEqual(first['state'], 'reserved')
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_workforce_assignment.py:273: AssertionError
+_ AuthorityWithinTests.test_dotdot_entries_resolve_lexically_before_containment _
+
+self = <test_v16_r1_authority.AuthorityWithinTests testMethod=test_dotdot_entries_resolve_lexically_before_containment>
+
+    def test_dotdot_entries_resolve_lexically_before_containment(self):
+        # AUD-MINOR-006: `..` must resolve like any other name — `src/../secrets` names
+        # `secrets`, outside the scope, and a `..` that walks back inside stays contained.
+        parent = self._parent()
+        gap = authority_within({'write_scope': ['src/../secrets']}, parent)
+>       self.assertIn('escapes the delegator scope', gap)
+E       TypeError: argument of type 'NoneType' is not a container or iterable
+
+tests\test_v16_r1_authority.py:63: TypeError
+________ AuthorityWithinTests.test_the_containment_normalization_table ________
+
+self = <test_v16_r1_authority.AuthorityWithinTests testMethod=test_the_containment_normalization_table>
+
+    def test_the_containment_normalization_table(self):
+        parent = self._parent(**{'write_scope': ['src'], 'write_boundaries': []})
+        contained = ['src', 'src/', 'src//nested///file.py', './src/app.py', 'src/./app.py',
+                     'src/sub/../app.py']
+        for entry in contained:
+            self.assertIsNone(authority_within({'write_scope': [entry]}, parent), entry)
+        refused = ['src/../secrets', 'a/../../x', '..', '../src', '/etc/passwd', 'C:file.txt',
+                   'src2/file.py', 'SRC/file.py', '.']
+        for entry in refused:
+            gap = authority_within({'write_scope': [entry]}, parent)
+>           self.assertIn('escapes the delegator scope', gap, entry)
+E           TypeError: argument of type 'NoneType' is not a container or iterable
+
+tests\test_v16_r1_authority.py:78: TypeError
+_ ContractParentAuthorityTests.test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end _
+
+self = <test_v16_r1_authority.ContractParentAuthorityTests testMethod=test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end>
+
+    def test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end(self):
+        # AUD-MINOR-006 consumer confirmation: issuance refuses `src/../secrets` exactly like
+        # the literal `secrets` path — against the boundaries and against the delegator.
+        escaped = contract(authority={'class': 'leased-write',
+                                      'write_scope': ['src/../secrets'],
+                                      'external_effects': 'none'},
+                           write_boundaries=['src'])
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_r1_authority.py:194: AssertionError
+___ IssuanceWiringTests.test_a_second_reservation_sees_the_first_commitment ___
+
+self = <test_v16_r1_authority.IssuanceWiringTests testMethod=test_a_second_reservation_sees_the_first_commitment>
+
+    def test_a_second_reservation_sees_the_first_commitment(self):
+        # Campaign C AUD-MINOR-002: successive delegated reservations aggregate against the
+        # same job envelope; the second may not pass on the first's margin.
+        job = self.store.create({
+            'request': 'R1 budget fixture',
+            'milestones': [{'id': 'm1', 'objective': 'Draft', 'filename': 'out.md',
+                            'depends_on': [],
+                            'checks': [{'kind': 'min_chars', 'value': 20}]}]})
+        first = delegation.reserve_budget(self.store, job, budget_class='standard',
+                                          tokens=1000, wallclock=60, cost=5)
+        self.assertEqual(first['state'], 'reserved')
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_r1_authority.py:293: AssertionError
+============================== warnings summary ===============================
+tests/test_v16_approvals.py::CrossScopeResolutionTests::test_the_legacy_singular_route_is_scoped_too
+  C:\Users\Nick\AppData\Roaming\Python\Python314\site-packages\_pytest\threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-349 (<lambda>)
+  
+  Traceback (most recent call last):
+    File "C:\Python314\Lib\threading.py", line 1082, in _bootstrap_inner
+      self._context.run(self.run)
+      ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+    File "C:\Python314\Lib\threading.py", line 1024, in run
+      self._target(*self._args, **self._kwargs)
+      ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "C:\Users\Nick\Desktop\Kel\kel-ra-negctl\runtime\tests\test_v16_approvals.py", line 117, in <lambda>
+      'ok', adapter.approval(run, 'item/commandExecution/requestApproval',
+            ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                             {'command': command, 'cwd': str(self.project)},
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                             threading.Event())))
+                             ^^^^^^^^^^^^^^^^^^
+    File "C:\Users\Nick\Desktop\Kel\kel-ra-negctl\runtime\kel\coding.py", line 145, in approval
+      with contextlib.closing(self.store.connect()) as db:
+                              ~~~~~~~~~~~~~~~~~~^^
+    File "C:\Users\Nick\Desktop\Kel\kel-ra-negctl\runtime\kel\core.py", line 204, in connect
+      db = sqlite3.connect(self.db_path, timeout=10, isolation_level=None)
+  sqlite3.OperationalError: unable to open database file
+  
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_no_conversation_cannot_settle_a_foreign_boundary_grant
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_no_conversation_cannot_settle_a_foreign_step_approval
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_the_legacy_singular_route_is_scoped_too
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_the_service_route_refuses_omission_on_a_foreign_step_approval
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_a_spawned_native_child_process_sees_only_its_own_key
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_native_children_strip_third_provider_keys
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_unknown_native_provider_strips_every_provider_key
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_a_consumed_estimate_keeps_narrowing_the_envelope
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_cumulative_reservations_fill_then_exceed_the_envelope
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_release_frees_the_envelope_for_the_next_commitment
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_the_second_reservation_sees_the_first
+FAILED tests/test_v16_r1_authority.py::AuthorityWithinTests::test_dotdot_entries_resolve_lexically_before_containment
+FAILED tests/test_v16_r1_authority.py::AuthorityWithinTests::test_the_containment_normalization_table
+FAILED tests/test_v16_r1_authority.py::ContractParentAuthorityTests::test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end
+FAILED tests/test_v16_r1_authority.py::IssuanceWiringTests::test_a_second_reservation_sees_the_first_commitment
+15 failed, 52 passed, 1 warning in 23.93s

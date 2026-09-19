@@ -1,0 +1,53 @@
+== RA 00 binding evidence ==
+
+-- production target ancestry + diff 05a076b..7cf6030 --
+05a076b3d723ab2c1f3666e6a42193dfc9e502e5
+7cf6030cc4d7bd28c4acf1b862661410ea04fc74
+a3490095889222862ea13b4b696166c0ddc5bf0f
+08f56673ea93ed84568018937bb190e0a5acd71b
+5e76b21071a28601a7fb4de508cb3cf349c77db8
+
+05a076b IS ancestor of 7cf6030
+
+A	docs/v1.6/POST_REPAIR_RELEASE_CANDIDATE.md
+M	docs/v1.6/audit-final/MASTER_FINDINGS.md
+M	docs/v1.6/repair-final/01_FINDING_DISPOSITIONS.md
+M	docs/v1.6/repair-final/02_REPAIR_COMMITS.md
+M	docs/v1.6/repair-final/03_REGRESSION_EVIDENCE.md
+M	docs/v1.6/repair-final/04_PACKAGE_EVIDENCE.md
+M	docs/v1.6/repair-final/05_REMAINING_RISKS.md
+M	docs/v1.6/repair-final/REPAIR_RESUME.md
+M	docs/v1.6/repair-final/REPAIR_STATUS.md
+A	docs/v1.6/repair-final/evidence/final-integrity-at-rc-tip.txt
+
+-- frozen tags --
+v1.2.0 7d69288f34e786dc5abb748838809184f63c08bb a520b670ef57e3918738e4e8007476f91a693625
+v1.3.0 05b0687e381ca3de76e55bb07dfe85d5a97a105c b3c7c2466349c607bc7ebfe648b4a11ebf0fa635
+v1.4.0 ee5b907af90cef46b81afaa80eaeb9d72573aa5a 0a4fd2102bc9ddd2a2d1eb59386491a16fee4d74
+v1.4.1 a6e6d922a791f8066731fe8eebcb50cb72391c8f 725c90501dc9639b89f72d83219a017a55f5577c
+v1.5.0 068cd267ff8bdccdffe5f13eb080eafc65f5a0b9 5e76b21071a28601a7fb4de508cb3cf349c77db8
+v1.6.0-pre1 ceac727ef2d04efdf96c4062a3d891825aefa176 f24d9c28b09b30d7222691cdb1aafbe21d412672
+
+-- remote heads (ls-remote) --
+5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/heads/main
+08f56673ea93ed84568018937bb190e0a5acd71b	refs/heads/ux/v15-journeys
+dd67ef42e5c6b52f6d0e298650499abf6771e099	refs/heads/v1.3-dev
+36456722f4370fbedb2a9d48861db4ec0e5ea11f	refs/heads/v1.4-dev
+
+-- worktree heads/status --
+Kel-Repo -> 5e76b21071a28601a7fb4de508cb3cf349c77db8
+?? .agents/
+?? Agents.md
+  (status lines: 2)
+kel-ux-v15 -> 08f56673ea93ed84568018937bb190e0a5acd71b
+  (status lines: 0)
+kel-v16-final-audit -> a3490095889222862ea13b4b696166c0ddc5bf0f
+?? build-output/
+  (status lines: 1)
+kel-v16-final-repair -> 7cf6030cc4d7bd28c4acf1b862661410ea04fc74
+  (status lines: 0)
+kel-v16-postrepair-audit -> 7cf6030cc4d7bd28c4acf1b862661410ea04fc74
+?? docs/v1.6/re-audit-final/
+?? runtime/build2/
+?? runtime/dist2/
+  (status lines: 3)

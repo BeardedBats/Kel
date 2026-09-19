@@ -1,0 +1,31 @@
+cwd=C:\Users\Nick\Desktop\Kel\kel-v16-postrepair-audit\runtime
+=== RA engine attack battery (part 2: budget / credentials / path / wording) ===
+PASS | C1 single reservation accepted | {'reservation_id': '559aef9e-c51d-4dae-9845-b656d6545d15', 'job_id': '95f2fa82-b3a1-4295-8
+PASS | C2 cumulative fill/exceed/exact | third=PolicyError('Reserved cost 2.0 exceeds the remaining job budget 1.0') exact={'reservation_id': 'c07c5532-f336-4e21-aa14-55dbd9d398e7', 'job_id': '76d72a63-1aef-45ea-ad41-3198aeda7098', 'milestone_id': None, 'assignment_id': None, 'budget_class': 'standard', 'tokens': 100, 'wallclock': 60, 'cost': 1.0, 'state': 'reserved', 'note': None, 'created': 1789832889.270607, 'updated': 1789832889.270607}
+PASS | C3 release frees room | {'reservation_id': '21e77462-247c-4789-958c-8e0396ae9bd9', 'job_id': '05533511-c
+PASS | C4 consumed narrows (only 3 remains) | PolicyError('Reserved cost 4.0 exceeds the remaining job budget 3.0')
+PASS | C5 boundary: exact allowed, +0.0001 refused | over=PolicyError('Reserved cost 0.0001 exceeds the remaining job budget 0.0') zero={'reservation_id': 'cf90006c-0ed4-423a-8a49-f35815077c2c', 'job_id': '9b636a6a-ea9b-4a75-8015-4f66ffb712e9', 'milestone_id': None, 'assignment_id': None, 'budget_class': 'standard', 'tokens': 100, 'wallclock': 60, 'cost': 0.0, 'state': 'reserved', 'note': None, 'created': 1789832889.8658593, 'updated': 1789832889.8658593}
+PASS | C6 commitments survive restart | PolicyError('Reserved cost 1.0 exceeds the remaining job budget 0.0')
+PASS | C7 disjoint job envelopes independent | 
+FAIL | C8 concurrent reservations cannot oversubscribe | oversubscribed rounds: [(0, 5, 15.0, 5), (1, 5, 15.0, 5), (2, 4, 12.0, 5), (3, 5, 15.0, 5), (4, 4, 12.0, 5)]
+PASS | C9 release_budget has no production caller (dormant feature; fail-closed) | delegation/pods mention release_budget=False
+PASS | D1a codex child keeps only OPENAI sentinel | 
+PASS | D1b claude child keeps only ANTHROPIC sentinel | 
+PASS | D1c unknown-provider child gets no provider key | 
+PASS | D2a internal child env strips all three | 
+PASS | D2b keep names exactly the credential that is kept | 
+PASS | D3 test command env strips all three | 
+PASS | D4a real codex-policy child: OPENAI present, others absent | 
+PASS | D4b real test-command child: no provider sentinel present | 
+PASS | D5 production native execute drops foreign credentials | 
+PASS | D6 durable text redacts live key values and secret shapes | token=[redacted] plus [redacted]
+PASS | E1 concrete-root canonical battery (26 cases) | []
+PASS | E2 authority_within concrete-root narrowing | []
+PASS | E3 parallel._clean_path refusals | []
+PASS | E4 guardrails observation (resolved denied; lexical spelling misses) | unresolved=None resolved='System locations are outside every Kel project'
+FAIL | E5 universal-root escapes reported contained (expected FAIL = candidate finding) | ..->True ../x->True C:/x->True /x->True authority_within->None
+PASS | F1 directive firing matrix matches the aligned wording | []
+PASS | F2 multiple clauses in source order | [{'capability': 'web', 'state': 'off', 'text': '[kel:web=off]', 'inner': 'web: off', 'start': 0, 'end': 13}, {'capability': 'files', 'state': 'on', 'text': '[kel:files=on]', 'inner': 'files: on', 'start': 18, 'end': 32}, {'capability': 'web', 'state': 'on', 'text': '[kel:web=on]', 'inner': 'web: on', 'start': 38, 'end': 50}]
+=== SUMMARY: 26 checks, 2 failed ===
+FAILED: C8 concurrent reservations cannot oversubscribe
+FAILED: E5 universal-root escapes reported contained (expected FAIL = candidate finding)
