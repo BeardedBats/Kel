@@ -28,3 +28,4 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 20 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-SUG-001 recorded`) | AUD-SUG-001 | docs | Disposition row + detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
 | 21 | `05a076b` | C-DISC-001 | fix | Installer payload check: donor-hardcoded `AionUi.exe` -> single-source `Kel.exe` define; rebuilt v3; installed battery green |
 | 22 | (this commit; see `git log` subject `docs(v1.6-repair): completion records`) | completion | docs | 04 package checklist complete; §16/§17/§18/§19 records; C-DISC-001 recorded; MASTER Campaign C discovered section; status/resume |
+| 23 | (the RC-record commit; see `git log` subject `docs(v1.6): POST_REPAIR_RELEASE_CANDIDATE`) | completion | docs | Post-repair RC record (`POST_REPAIR_V1_6_HEAD = 05a076b`) |
