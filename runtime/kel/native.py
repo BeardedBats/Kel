@@ -12,6 +12,7 @@ import subprocess
 import threading
 import time
 from .core import uid
+from .internal import SECRET_ENV_KEYS
 
 
 def executable(provider):
@@ -28,18 +29,26 @@ def executable(provider):
     raise ValueError('Unknown native provider')
 
 
-def child_env(provider, base=None):
-    """Environment for a native CLI child: never CLAUDECODE, never the other provider's key.
+_NATIVE_PROVIDER_CREDENTIALS = {
+    'codex': ('OPENAI_API_KEY',),
+    'claude': ('ANTHROPIC_API_KEY',),
+}
 
-    A native child receives at most its own provider's credentials; Kel-managed keys for other
-    providers are never forwarded into it.
+
+def child_env(provider, base=None):
+    """Environment for a native CLI child: never CLAUDECODE, never another provider's key.
+
+    A native child receives at most its own provider's credentials; every other Kel-managed
+    provider key is removed (for providers with no declared credentials, every one of them
+    is), so a Codex child never sees the Anthropic or DeepSeek key and a Claude child never
+    sees the OpenAI or DeepSeek one.
     """
     env = dict(os.environ if base is None else base)
     env.pop('CLAUDECODE', None)
-    if provider == 'codex':
-        env.pop('ANTHROPIC_API_KEY', None)
-    else:
-        env.pop('OPENAI_API_KEY', None)
+    allowed = set(_NATIVE_PROVIDER_CREDENTIALS.get(provider, ()))
+    for name in SECRET_ENV_KEYS:
+        if name not in allowed:
+            env.pop(name, None)
     return env
 
 
@@ -57,7 +66,8 @@ class NativeAdapter:
     def probe(self):
         try:
             result = subprocess.run(executable(self.provider)+['--version'], capture_output=True, text=True,
-                                    encoding='utf-8', timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                                    encoding='utf-8', timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+                                    env=child_env(self.provider))
             return dict(provider=self.provider, installed=result.returncode == 0, version=result.stdout.strip(),
                         capabilities=['text', 'native_session'], tool_access=False, native_approval_stream=False,
                         quality=None, quota=None, incremental_cost=None)

@@ -10,7 +10,9 @@ import time
 import urllib.request
 from .core import uid
 
-_SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
+# The canonical Kel-managed provider credentials; containment helpers (native child envs,
+# test commands, redaction) all reason over exactly this set.
+SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
 
 
 def child_env(*, keep=()):
@@ -22,7 +24,7 @@ def child_env(*, keep=()):
     credentials the child legitimately needs (R7.C).
     """
     env = os.environ.copy()
-    for name in _SECRET_ENV_KEYS:
+    for name in SECRET_ENV_KEYS:
         if name not in keep:
             env.pop(name, None)
     return env
@@ -32,7 +34,7 @@ def redact(text):
     """Remove secret-shaped tokens and live key values from anything that can become durable."""
     text = str(text)
     text = re.sub(r'sk-[A-Za-z0-9_\-]{8,}', '[redacted]', text)
-    for name in _SECRET_ENV_KEYS:
+    for name in SECRET_ENV_KEYS:
         value = os.environ.get(name)
         if value and len(value) >= 8:
             text = text.replace(value, '[redacted]')

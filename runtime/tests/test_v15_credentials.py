@@ -7,6 +7,8 @@ worker run. (Renderer exposure and export paths are covered by the custody tests
 """
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -70,22 +72,57 @@ class RequestScopeTests(unittest.TestCase):
 class ChildEnvironmentTests(unittest.TestCase):
     def test_native_children_receive_no_cross_provider_key(self):
         base = {'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': 'o-key-value',
-                'CLAUDECODE': '1'}
+                'DEEPSEEK_API_KEY': 'd-key-value', 'CLAUDECODE': '1'}
         codex = child_env('codex', base)
         claude = child_env('claude', base)
         self.assertNotIn('ANTHROPIC_API_KEY', codex)
-        self.assertIn('OPENAI_API_KEY', codex)     # only the other provider's key is removed
+        self.assertIn('OPENAI_API_KEY', codex)
         self.assertNotIn('OPENAI_API_KEY', claude)
         self.assertIn('ANTHROPIC_API_KEY', claude)
         self.assertNotIn('CLAUDECODE', codex)
         self.assertNotIn('CLAUDECODE', claude)
 
+    def test_native_children_strip_third_provider_keys(self):
+        # AUD-MINOR-003: the child keeps at most its own provider's credential; every other
+        # Kel-managed key (third providers included) is removed, not just the counterpart.
+        base = {'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': 'o-key-value',
+                'DEEPSEEK_API_KEY': 'd-key-value', 'CLAUDECODE': '1'}
+        codex = child_env('codex', base)
+        claude = child_env('claude', base)
+        self.assertIn('OPENAI_API_KEY', codex)
+        self.assertNotIn('ANTHROPIC_API_KEY', codex)
+        self.assertNotIn('DEEPSEEK_API_KEY', codex)
+        self.assertIn('ANTHROPIC_API_KEY', claude)
+        self.assertNotIn('OPENAI_API_KEY', claude)
+        self.assertNotIn('DEEPSEEK_API_KEY', claude)
+
+    def test_unknown_native_provider_strips_every_provider_key(self):
+        base = {'ANTHROPIC_API_KEY': 'a', 'OPENAI_API_KEY': 'o', 'DEEPSEEK_API_KEY': 'd'}
+        env = child_env('fixture', base)
+        for key in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'):
+            self.assertNotIn(key, env)
+
+    def test_a_spawned_native_child_process_sees_only_its_own_key(self):
+        # Boundary check: the environment a real child process observes, not just the dict.
+        base = dict(os.environ)
+        base.update({'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': 'o-key-value',
+                     'DEEPSEEK_API_KEY': 'd-key-value'})
+        probe = ('import json, os; print(json.dumps({k: os.environ.get(k) for k in '
+                 '("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DEEPSEEK_API_KEY")}))')
+        result = subprocess.run([sys.executable, '-c', probe], env=child_env('claude', base),
+                                capture_output=True, text=True, timeout=30)
+        seen = json.loads(result.stdout.strip().splitlines()[-1])
+        self.assertEqual(seen, {'ANTHROPIC_API_KEY': 'a-key-value', 'OPENAI_API_KEY': None,
+                                'DEEPSEEK_API_KEY': None})
+
     def test_test_commands_receive_no_provider_keys(self):
         with mock.patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'a-key-value',
-                                          'OPENAI_API_KEY': 'o-key-value'}):
+                                          'OPENAI_API_KEY': 'o-key-value',
+                                          'DEEPSEEK_API_KEY': 'd-key-value'}):
             env = host_test_command_env()
         self.assertNotIn('ANTHROPIC_API_KEY', env)
         self.assertNotIn('OPENAI_API_KEY', env)
+        self.assertNotIn('DEEPSEEK_API_KEY', env)
         self.assertEqual(env.get('PYTHONDONTWRITEBYTECODE'), '1')
 
 
