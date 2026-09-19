@@ -1,0 +1,54 @@
+== Campaign C §17 package artifacts (HEAD 4e8861fb4e667934e53cf5ed2bc305e68e777837, 2026-09-19T14:08:20Z) ==
+
+-- hashes: installer / unpacked exe / packaged engine / staged engine --
+8ea8458ff104daff8581a34c36147ed7a424ed532706df970addab6b4a8ff5b7 *dist/package-r12/Kel-1.6.0-win-x64.exe
+392d34b5068c898605976b538dd497a291535ae049e3c101dc5fe7792d5d5257 *dist/package-r12/win-unpacked/Kel.exe
+sha256sum: dist/package-r12/win-unpacked/resources/kel-engine/KelEngine.exe: No such file or directory
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *desktop/dist/runtime/KelEngine/KelEngine.exe
+
+-- package resources --
+AionUI-LICENSE.txt
+app.asar
+app.asar.unpacked
+app.png
+bundled-aioncore
+default_app.asar
+elevate.exe
+fonts
+hub
+manifest.webmanifest
+pet-states
+pwa
+sw.js
+
+-- aioncore provenance inside the package --
+{
+  "binary": "aioncore.exe",
+  "sha256": "67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892",
+  "bytes": 99193856,
+  "donorRepository": "https://github.com/iOfficeAI/AionCore",
+  "version": "v0.2.2",
+  "sourceType": "download",
+  "source": {
+    "url": "https://github.com/iOfficeAI/AionCore/releases/download/v0.2.2/aioncore-v0.2.2-x86_64-pc-windows-msvc.zip"
+  },
+  "recordedAt": "2026-09-19T13:59:20.755Z",
+  "recordedBy": "prepare-aioncore (Kel AUD-MINOR-007)"
+}
+
+-- kel-engine listing --
+ls: cannot access 'dist/package-r12/win-unpacked/resources/kel-engine': No such file or directory
+
+== v2 (final) binding — supersedes the v1 section above (v1 lacked kel-engine because ../dist/runtime resolved against the desktop/ cwd; corrected and rebuilt, see final-package-build-log-v2.txt) ==
+fa0dfcaa81d043ef76da0621353678e29d856b43b50c6ddb0b812e40d784b7a3 *dist/package-r12/Kel-1.6.0-win-x64.exe
+392d34b5068c898605976b538dd497a291535ae049e3c101dc5fe7792d5d5257 *dist/package-r12/win-unpacked/Kel.exe
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *dist/package-r12/win-unpacked/resources/kel-engine/KelEngine.exe
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *dist/runtime/KelEngine/KelEngine.exe
+
+-- kel-engine content --
+_internal
+KelEngine.exe
+
+-- aioncore provenance (v2) --
+67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892
+88a1b4761db5ba2ee6c507e7626e08e969cc5da004036efcbf5d42a87ff5124c *dist/package-r12/Kel-1.6.0-win-x64.exe
