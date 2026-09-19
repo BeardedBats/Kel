@@ -1,0 +1,15 @@
+== Campaign C AUD-MINOR-004 gate discrimination ==
+
+-- r12-fresh (the known-bad run: attentionVisible/aboutLogoLoaded false) --
+GATE: FAIL
+  attentionVisible=false
+  aboutLogoLoaded=false
+r12-fresh exit=1
+
+-- r12-fresh2 (the known-good run) --
+GATE: PASS
+r12-fresh2 exit=0
+
+-- repo evidence copy (auditor-installed-probe) --
+GATE: PASS
+repo-copy exit=0

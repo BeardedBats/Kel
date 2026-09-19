@@ -1,0 +1,15 @@
+Campaign C AUD-MINOR-004 - patched R12 evidence tools (ux-audit/)
+
+pre  probe     sha256 = 05a18726930c5c412388e6459dd8ae86c6b4999b44e93e05252ab364ca7e4425
+post probe     sha256 = 4d6780de253dde21ace23b47a2844eaabc0db7d469864842cfb13965dd2bd997
+pre  integrity sha256 = 8609937b8ba42d4ca081ef4ba7b1dfb8435b2c60d52854950290603b6a9c9d6a
+post integrity sha256 = f71b8c2c857effa8a03e820ad67a55d766af23b860e140f1b9e414de254774cf
+new  gate      sha256 = 8faa95bea3aee0a4cb50fde14f0e15ce6045ab5e67163fe64f0dac246dcdfa95
+
+Changes:
+- r12-installed-probe.cjs now requires ./r12-assert-gate.cjs and exits non-zero when the gate
+  fails (healthyBoot / engineVersion=1.6.0 / attentionVisible / aboutLogoLoaded / consoleErrors /
+  rawLeaks / overflow); `out.gate` records the verdict in the JSON.
+- r12-assert-gate.cjs (new): the assertion module + CLI re-evaluation of a retained run file.
+- r12-release-integrity.sh gains --fail-on-dirty (exit 1 on dirty worktree or secret-scan
+  hits) with repo/out overrides, so the check can run against any release-candidate worktree.
