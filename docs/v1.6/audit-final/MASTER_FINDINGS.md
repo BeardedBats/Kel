@@ -136,7 +136,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Severity (final):** AUD-SUG · **Status:** RECORDED · **Subsystem:** `capabilities.py`
 - **Evidence:** `directive_clauses('GET /a/[kel:web=off] 200')` → matched; quoted/code/fenced/nested/word-embedded/scheme-URL/unknown-capability/malformed-state all inert; mixed-case + punctuation-adjacent recognition BY DESIGN (`tests/test_capabilities.py:163-180, 321-325`); long-paste guard returns [] >2000 chars (`capabilities.py:447`).
 - **Expected/Actual:** docstring's exclusion intent vs parser's reserved-token-wherever rule for bare unquoted technical strings.
-- **Confidence:** HIGH (behavior), SUG-class. **Repair criteria:** extend exclusions or align docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). **Regression test:** docstring-conformance table (accepted/rejected forms). **Campaign C:** `NOT_STARTED`.
+- **Confidence:** HIGH (behavior), SUG-class. **Repair criteria:** extend exclusions or align docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). **Regression test:** docstring-conformance table (accepted/rejected forms). **Campaign C:** `REPAIRED` — repair commit: `6d665b2` · re-test: conformance table + docstring pin (fails pre-fix); focused 39/39; behavior unchanged by design (replay `ms1-sug-replay.txt`) · final re-audit: `PENDING`
 
 ---
 
