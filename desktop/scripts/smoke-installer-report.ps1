@@ -3,8 +3,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $reportScript = Join-Path $repoRoot 'resources\windows\support\report-installer-failure.ps1'
 $runId = Get-Date -Format 'yyyyMMdd-HHmmss'
-$logPath = Join-Path $env:TEMP "aionui-installer-smoke-$runId-log.jsonl"
-$statusPath = Join-Path $env:TEMP 'aionui-installer-report.json'
+$logPath = Join-Path $env:TEMP "kel-installer-smoke-$runId-log.jsonl"
+$statusPath = Join-Path $env:TEMP 'kel-installer-report.json'
 
 Remove-Item -LiteralPath $statusPath -Force -ErrorAction SilentlyContinue
 
@@ -44,10 +44,10 @@ if ($status.code -ne 'E1003') {
 if ($status.wrapperCode -ne 'E1002') {
   throw "Expected wrapperCode E1002, got $($status.wrapperCode)"
 }
-if ($status.copyText -notlike '*AionUi installer failure E1003*') {
+if ($status.copyText -notlike '*Kel installer failure E1003*') {
   throw 'copyText does not include failure heading'
 }
-if ($status.copyText -notlike '*To AionUi Team*') {
+if ($status.copyText -notlike '*To Kel Team*') {
   throw 'copyText does not include team footer'
 }
 if ($status.copyText -like '*Blocking process: Windows`r`n*' -or $status.copyText -like '*Blocking process: Windows`n*') {

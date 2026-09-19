@@ -84,15 +84,17 @@ export function initSystemSettingsBridge(): void {
 
   ipcBridge.systemSettings.setPetEnabled.provider(async ({ enabled }) => {
     if (enabled && !KEL_PET_SUBSYSTEM_ENABLED) {
-      // Kel V1.6 policy (AUD-MINOR-008): the donor pet surface cannot be enabled; keep the
-      // stored state honest by persisting the disabled value.
+      // Kel V1.6 policy (AUD-MINOR-008) + human-visual repair (RA-MINOR-003): the pet subsystem is
+      // disabled in this build, so enabling must fail loudly. A quiet return left the toggle ON
+      // until reload while no pet could ever appear — the stored state and the refusal travel
+      // together now, and the renderer settles back to the truthful OFF state with a reason.
       await ProcessConfig.set('pet.enabled', false);
-      return;
+      throw new Error('The desktop pet is not available in this build, so it stays off.');
     }
     const { createPetWindow, destroyPetWindow, isPetSupported } = await import('@process/pet/petManager');
     if (enabled && !isPetSupported()) {
-      console.warn('[SystemSettings] Desktop pet is not supported in headless mode');
-      return;
+      await ProcessConfig.set('pet.enabled', false);
+      throw new Error('This computer cannot create the desktop pet window, so it stays off.');
     }
     await ProcessConfig.set('pet.enabled', enabled);
     if (enabled) {

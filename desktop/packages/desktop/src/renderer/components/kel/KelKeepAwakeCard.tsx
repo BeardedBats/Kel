@@ -60,12 +60,12 @@ export const KelKeepAwakeCard: React.FC = () => {
         </span>
       }
     >
-      <p className='text-13px text-t-secondary m-0'>
+      <p className='text-14px text-t-secondary m-0'>
         Long jobs and scheduled work keep running instead of waiting for the computer to wake up. Kel prevents sleep
         only — your screen can still dim. This applies to this computer, and it stops when Kel closes.
       </p>
       <p
-        className='text-12px text-t-secondary m-0 mt-8px'
+        className='text-14px text-t-secondary m-0 mt-8px'
         data-testid='kel-keep-awake-state'
         data-active={active ? 'true' : 'false'}
       >

@@ -12,7 +12,7 @@
   /* Markdown-region weight; inherits the surrounding weight until one is chosen. */
   font-weight: var(--md-font-weight, inherit);
   /* Comfortable reading size for the rendered preview (source editor is 13px mono). */
-  font-size: var(--md-font-size, 15px);
+  font-size: var(--md-font-size, 16px);
   line-height: 1.7;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -104,7 +104,7 @@
   margin-block-start: 8px;
   margin-block-end: 8px;
   border-radius: 8px;
-  font-size: var(--code-font-size, 13px);
+  font-size: var(--code-font-size, 14px);
   line-height: 1.5;
 }
 .aionui-markdown :where(pre) :where(code) {

@@ -2,7 +2,7 @@
 !define AIONUI_INSTALLER_OBSERVABILITY_NSH
 
 !define AIONUI_APP_EXECUTABLE_FILENAME "Kel.exe"
-!define AIONUI_FALLBACK_LOG "aionui-installer-${VERSION}-fallback-log.jsonl"
+!define AIONUI_FALLBACK_LOG "kel-installer-${VERSION}-fallback-log.jsonl"
 
 !pragma warning disable 6001
 Var /GLOBAL AionUiSessionId
@@ -83,7 +83,7 @@ Var /GLOBAL AionUiSessionLogPath
   ${EndIf}
 
   ${If} $AionUiSessionLogPath == ""
-    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$AionUiSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'aionui-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
+    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$AionUiSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'kel-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
     Pop $AionUiSessionLogResult
     Pop $AionUiSessionLogResult
     StrCpy $AionUiSessionId $AionUiSessionLogResult 12
