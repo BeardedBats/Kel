@@ -1,37 +1,31 @@
 # REPAIR_STATUS — Kel V1.6 human visual repair
 
 - HUMAN_VISUAL_GATE = **PENDING_REVIEW** (Nick owns final visual approval; the agent cannot close it)
-- AUTOMATED_VISUAL_REPAIR = IN_PROGRESS (probe v3 green on most gates; rebuilding + re-running after the final fixes)
-- RELEASE = NOT STARTED (no freeze, no tag, no publish, no merge to main)
+- AUTOMATED_VISUAL_REPAIR = **PASS** (25/25 gates in the source matrix and in the installed battery; audit R12 battery GATE PASS)
+- RELEASE = **NOT STARTED** (no freeze, no tag, no publish, no merge to main)
 
 ## Identity
 
-- Base production target: `05a076b` (`05a076b3d723ab2c1f3666e6a42193dfc9e502e5`) — verified identical to audit head production tree
+- Base production target: `05a076b` — verified identical to audit head production tree
 - Final pre-repair audit head: `eb4da52b40a2500daae12fe8740823d07a6ad1d8`
 - Repair branch: `repair/v16-human-visual`
-- Repair worktree: `C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-fix`
-- Repair commits: `3be6b18`, `14fc254`, `3df2176`, `d934a60`, `393640e`, `6b4e40d`
-- HUMAN_VISUAL_REPAIR_HEAD: (pending — set at completion)
+- HUMAN_VISUAL_REPAIR_HEAD: `6d957ee9aad7200fb2fcff9b505e0771e2dfdcda`
+- Installer: `0dc5dc36010c2d355c874a04fd63f9d5db12059d9974c8369f0f85470fa46509`
+- Engine in package: `f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8` (audited production engine)
 
-## Phase
+## Phase — complete
 
 1. History verified — done
 2. Worktree created — done
-3. Durable state (this dir) — done
-4. Source recon — done; root causes fixed (HV-01…HV-13)
-5. Fix clusters — done (source-level; final cluster `6b4e40d`)
-6. Regression (desktop) — tsc PASS at every checkpoint; full vitest 156 PASS (d934a60); focused 17 PASS (6b4e40d)
-7. Screenshot matrix + probes — probe v3 executed; failures from v3 fixed; final rebuild + re-run in progress
-8. Package + review install — package rebuilding with the audited engine staged; install next
+3. Durable state — done (`docs/v1.6/human-visual-repair/`)
+4. Source recon + fixes — done (HV-01…HV-13; HV-14 polish)
+5. Regression — desktop tsc PASS (every checkpoint), full vitest PASS (156), focused 17 PASS, installer smokes PASS, engine untouched
+6. Visual batteries — source matrix PASS; installed battery PASS; audit R12 battery PASS
+7. Package — built from the repair head; installer hash recorded
+8. Review install — `C:\Users\Nick\KelVisualFixInstall` (registered; seeded root `C:\Users\Nick\KelVisualFixRuns\prepared`)
+9. Audit install — preserved at `C:\Users\Nick\KelV16ReviewInstall` (restored to the audited build; engine `df4f0ee9…`)
 
-## Probe v3 highlights (before the final fixes)
+## For Nick
 
-- PASS: boot (engine 1.6.0), sidebar mark, attention badge fully inside the sider, contrast (no black-on-dark), donor scan, Permissions scroll at all five sizes (wheel/End/Home), drawer plain language, model framing, system folders, tools label, team redirect, About logo (naturalWidth 1024), narrow overflow.
-- Fixed after v3: Work → Open the chat target resolution (donor route id), Work page raw enum phrasing (verdict + milestone state + state-aware actions), probe overlay handling.
-
-## Review artifacts
-
-- Verification probe: `C:\Users\Nick\Desktop\Kel\ux-audit\kelvis-verify.cjs`
-- Repair review runs root: `C:\Users\Nick\KelVisualFixRuns\prepared` (fresh-seeded; audit roots untouched)
-- Repair review install: `C:\Users\Nick\KelVisualFixInstall`
-- Launcher for Nick: `C:\Users\Nick\KelVisualFixRuns\Launch Kel V1.6 Visual Fix Review.cmd`
+Launch: `C:\Users\Nick\KelVisualFixRuns\Launch Kel V1.6 Visual Fix Review.cmd` (isolated review profile with
+conversations, a pending build approval, a folder-access request, and an attention item).

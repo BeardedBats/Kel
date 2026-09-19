@@ -1,46 +1,51 @@
 # 04 — REGRESSION (Kel V1.6 human visual repair)
 
-All results recorded on the repair branch `repair/v16-human-visual`.
-
 ## Desktop — TypeScript
 
-| Run at | Command | Result |
-|--------|---------|--------|
-| cluster 1 (`14fc254`) | `bunx tsc --noEmit` (desktop) | **PASS** (exit 0) |
-| after installer cluster (`3df2176`) | `bunx tsc --noEmit` | **PASS** (exit 0) |
-| after appearance/tools (`d934a60`) | `bunx tsc --noEmit` | **PASS** (exit 0) |
+| Run at | Result |
+|--------|--------|
+| cluster 1 (`14fc254`) | PASS (exit 0) |
+| installer cluster (`3df2176`) | PASS |
+| appearance/tools (`d934a60`) | PASS |
+| conversation/work (`6b4e40d`) | PASS |
+| pet deadline (`65bcaa3`) | PASS |
 
-## Desktop — Vitest (full)
+## Desktop — Vitest
 
-| Run at | Command | Result |
-|--------|---------|--------|
-| after `d934a60` | `bunx vitest run` | **PASS — 15 files / 156 tests** |
-
-Focused runs along the way (all PASS): `tests/unit/donor-policy.test.ts` (now 9 incl. RA-MINOR-003 pins + installer branding gate), `tests/unit/needs-attention.test.ts` (route expectation corrected to `/conversation/…`), `tests/unit/keepAwake.test.ts`.
+| Run | Result |
+|-----|--------|
+| full suite after `d934a60` | **PASS — 15 files / 156 tests** |
+| full suite re-run (before pet fix) | PASS (exit 0) |
+| focused `donor-policy` + `needs-attention` at `65bcaa3` | **PASS — 17 tests** (donor-policy 9 incl. RA-MINOR-003 pins and the installer-branding gate) |
 
 New discriminating coverage added in this pass:
 
-- `needsAttention` action targets only existing routes (`/conversation/<id>`, `/work`, `/autonomy`) — updated to the real conversation route.
-- Desktop Pet truthfulness (RA-MINOR-003): bridge rejects loudly (`throw new Error('The desktop pet is not available in this build…`)) and the settings toggle reverts with a `Message.error`.
-- Installer branding (RA-MINOR-002): `installer-messages.nsh` contains no `AionUi`/`AionCore`; report script header/footer use Kel naming.
+- attention actions resolve to real routes (`/conversation/<donor-id>` via the host mirror; the old raw-Kel-id
+  target 404'd and bounced Home — now covered by the corrected expectation).
+- Desktop Pet truthfulness (RA-MINOR-003): bridge rejects loudly; settings toggle re-reads the authoritative
+  state, reverts, and explains; deadline reconcile pinned.
+- Installer branding (RA-MINOR-002): `installer-messages.nsh` carries no donor names; report header/footer use
+  Kel naming.
 
 ## Engine (`runtime/`)
 
-This pass touches no engine files (`git diff` from `eb4da52` is desktop + docs + resources/windows only —
-verified at packaging time). Engine suites are therefore unaffected; the packaged engine binary is the
-audited production binary (see `05_PACKAGE_EVIDENCE.md`).
+`git diff --name-only eb4da52…6d957ee` touches only `docs/` and `desktop/` — **no engine files changed**.
+Engine suites are unaffected; the packaged engine binary is the audited production binary
+(`f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8`).
 
-## Installer smoke replays (disposable, no machine damage)
+## Installer smoke replays (disposable; see `evidence/smokes.log`)
 
-Pending at recording time — to be replayed after packaging:
-`smoke-installer-failure-messagebox.js --all-scenarios --compile-only`, `smoke-installer-self-lock.js`,
-`smoke-installer-rstrtmgr-ui.js`, `smoke-installer-report.ps1`.
+- failure messagebox, all 12 scenarios, compile-only — **PASS**
+- self-lock — **PASS** (log: `kel-installer-self-lock-…-log.jsonl`)
+- rstrtmgr UI — compile-only **PASS** (the full run opens an interactive harness that waits for a human to click
+  Cancel; not automatable, exercised to compile stage)
+- report script — **PASS** after the final status-path rename (`status=skipped, code=E1003, copyTextLength=613`)
 
-## Routes / actions checklist (installed battery)
+## Routes / actions (installed battery)
 
-Open the chat · Permissions actions · Work & context · sidebar routes · settings routes · Model controls ·
-Tools · Desktop Pet · Remote · Team route (must redirect) — covered by `kelvis-verify.cjs` probe + screenshots.
+Open the chat · Permissions actions · Work & context · sidebar routes · settings routes · Model controls · Tools ·
+Desktop Pet · Remote · Team (must redirect) — all covered by `kelvis-verify.cjs` + `r12-installed-probe.cjs`: PASS.
 
 ## Console
 
-Zero unexplained renderer errors — recorded by the probe (`consoleErrors` in `kelvis-verify.json`).
+Zero unexplained renderer errors in all final runs (source + installed).
