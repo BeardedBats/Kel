@@ -1,0 +1,1 @@
+0dc5dc36010c2d355c874a04fd63f9d5db12059d9974c8369f0f85470fa46509 *dist/package-r12/Kel-1.6.0-win-x64.exe

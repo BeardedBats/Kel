@@ -1,0 +1,259 @@
+{
+  "schema": 1,
+  "appDir": "C:\\Users\\Nick\\KelVisualFixInstall",
+  "rootDir": "C:\\Users\\Nick\\KelVisualFixRuns\\prepared",
+  "startedAt": "2026-09-19T21:18:58.535Z",
+  "steps": {
+    "boot": {
+      "ok": true,
+      "detail": "engine 1.6.0 pid 23344"
+    },
+    "profileReady": {
+      "ok": true,
+      "detail": "#/guid"
+    },
+    "sidebarMark": {
+      "ok": true,
+      "detail": "file:///C:/Users/Nick/KelVisualFixInstall/resources/app.asar/out/renderer/assets"
+    },
+    "attentionBadge": {
+      "ok": true,
+      "detail": "badge \"2\" right=250.0 <= sider 261.0"
+    },
+    "contrast": {
+      "ok": true,
+      "detail": "3 sub-4.5 findings, none below 2.5:1"
+    },
+    "donorVisible": {
+      "ok": true,
+      "detail": "no donor strings in visible text"
+    },
+    "scroll 1366x768": {
+      "ok": true,
+      "detail": "wheel=150 end=150/150 home=0"
+    },
+    "scroll 1440x900": {
+      "ok": true,
+      "detail": "wheel=56 end=56/56 home=0"
+    },
+    "scroll 1440x960": {
+      "ok": true,
+      "detail": "wheel=56 end=56/56 home=0"
+    },
+    "scroll 1920x1080": {
+      "ok": true,
+      "detail": "wheel=56 end=56/56 home=0"
+    },
+    "scroll 1100x800": {
+      "ok": true,
+      "detail": "wheel=139 end=139/139 home=0"
+    },
+    "workLanguage": {
+      "ok": true,
+      "detail": "no raw enums on Work page"
+    },
+    "workToChat": {
+      "ok": true,
+      "detail": "#/conversation/3bdaab68"
+    },
+    "drawerLanguage": {
+      "ok": true,
+      "detail": "drawer in plain language"
+    },
+    "drawerStatus": {
+      "ok": true,
+      "detail": "translated statuses present"
+    },
+    "modelClarity": {
+      "ok": true,
+      "detail": "custom-models framing present"
+    },
+    "modelBadges": {
+      "ok": true,
+      "detail": "availability badges present"
+    },
+    "systemFolders": {
+      "ok": true,
+      "detail": "advanced folders section present"
+    },
+    "systemPathHidden": {
+      "ok": true,
+      "detail": "work directory hidden by default"
+    },
+    "toolsLabel": {
+      "ok": true,
+      "detail": "Kel Browser label present"
+    },
+    "petTruthful": {
+      "ok": true,
+      "detail": "reverted to OFF with message: The desktop pet is not available in this build, so it stays off."
+    },
+    "petReload": {
+      "ok": true,
+      "detail": "still OFF after reload"
+    },
+    "teamHidden": {
+      "ok": true,
+      "detail": "team route redirected to home"
+    },
+    "aboutLogo": {
+      "ok": true,
+      "detail": "naturalWidth=1024"
+    },
+    "narrowOverflow": {
+      "ok": true,
+      "detail": "no horizontal overflow at 1100x800"
+    }
+  },
+  "failures": [],
+  "warnings": [],
+  "consoleErrors": [],
+  "screenshots": [
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\01-chat.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\02-work.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\06-model.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\07-system.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\09-appearance.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\10-tools.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\11-pet.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\12-webui.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\13-about.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\14-archived.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\15-conversation.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top-1366x768.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\04-permissions-mid-1366x768.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05-permissions-bottom-1366x768.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top-1440x900.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\04-permissions-mid-1440x900.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05-permissions-bottom-1440x900.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top-1440x960.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\04-permissions-mid-1440x960.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05-permissions-bottom-1440x960.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top-1920x1080.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\04-permissions-mid-1920x1080.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05-permissions-bottom-1920x1080.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\03-permissions-top-1100x800.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\04-permissions-mid-1100x800.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05-permissions-bottom-1100x800.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\16-drawer.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\07b-system-checked.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\11b-pet-after.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\13b-about-checked.png",
+    "C:\\Users\\Nick\\KelVisualFixRuns\\captures-installed\\05b-permissions-1100.png"
+  ],
+  "screenHashes": {
+    "01-chat": "#/guid",
+    "02-work": "#/work",
+    "03-permissions-top": "#/autonomy",
+    "06-model": "#/settings/model",
+    "07-system": "#/settings/system",
+    "09-appearance": "#/settings/appearance",
+    "10-tools": "#/settings/tools",
+    "11-pet": "#/settings/pet",
+    "12-webui": "#/settings/webui",
+    "13-about": "#/settings/about",
+    "14-archived": "#/settings/archived",
+    "15-conversation": "#/conversation/3bdaab68"
+  },
+  "contrast": {
+    "06-model": [
+      {
+        "tag": "span",
+        "tid": "",
+        "cls": "ms-auto text-12px px-6px rounded-8px",
+        "text": "Needs setup",
+        "fg": "rgb(107, 114, 128)",
+        "bg": "rgb(242, 243, 245)",
+        "ratio": 4.35
+      },
+      {
+        "tag": "span",
+        "tid": "",
+        "cls": "ms-auto text-12px px-6px rounded-8px",
+        "text": "Needs setup",
+        "fg": "rgb(107, 114, 128)",
+        "bg": "rgb(242, 243, 245)",
+        "ratio": 4.35
+      },
+      {
+        "tag": "span",
+        "tid": "",
+        "cls": "ms-auto text-12px px-6px rounded-8px",
+        "text": "Needs setup",
+        "fg": "rgb(107, 114, 128)",
+        "bg": "rgb(242, 243, 245)",
+        "ratio": 4.35
+      }
+    ]
+  },
+  "scrollResults": {
+    "1366x768": {
+      "present": true,
+      "client": 725,
+      "scroll": 875,
+      "canScroll": true,
+      "wheel": 150,
+      "pageDown": 0,
+      "end": {
+        "top": 150,
+        "max": 150
+      },
+      "home": 0
+    },
+    "1440x900": {
+      "present": true,
+      "client": 857,
+      "scroll": 913,
+      "canScroll": true,
+      "wheel": 56,
+      "pageDown": 0,
+      "end": {
+        "top": 56,
+        "max": 56
+      },
+      "home": 0
+    },
+    "1440x960": {
+      "present": true,
+      "client": 917,
+      "scroll": 973,
+      "canScroll": true,
+      "wheel": 56,
+      "pageDown": 0,
+      "end": {
+        "top": 56,
+        "max": 56
+      },
+      "home": 0
+    },
+    "1920x1080": {
+      "present": true,
+      "client": 1037,
+      "scroll": 1093,
+      "canScroll": true,
+      "wheel": 56,
+      "pageDown": 0,
+      "end": {
+        "top": 56,
+        "max": 56
+      },
+      "home": 0
+    },
+    "1100x800": {
+      "present": true,
+      "client": 757,
+      "scroll": 896,
+      "canScroll": true,
+      "wheel": 139,
+      "pageDown": 0,
+      "end": {
+        "top": 139,
+        "max": 139
+      },
+      "home": 0
+    }
+  },
+  "finishedAt": "2026-09-19T21:20:22.204Z",
+  "consoleErrorCount": 0
+}
