@@ -1,0 +1,21 @@
+== Campaign C AUD-MINOR-007: aioncore provenance binding (reference run) ==
+input: copy of kel-ux-v15/desktop/resources/bundled-aioncore (the RC staged tree)
+
+-- writeProvenance() output --
+{
+  "binary": "aioncore.exe",
+  "sha256": "67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892",
+  "bytes": 99193856,
+  "donorRepository": "https://github.com/iOfficeAI/AionCore",
+  "version": "v0.2.2",
+  "sourceType": "download",
+  "source": {
+    "url": "https://github.com/iOfficeAI/AionCore/releases/download/v0.2.2/aioncore-v0.2.2-x86_64-pc-windows-msvc.zip"
+  },
+  "recordedAt": "2026-09-19T13:50:14.489Z",
+  "recordedBy": "prepare-aioncore (Kel AUD-MINOR-007)"
+}
+
+-- sha256: staged copy vs packaged copy (package-final16) --
+67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892 */tmp/mi7/bundled-aioncore/win32-x64/aioncore.exe
+67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892 */c/Users/Nick/Desktop/Kel/kel-ux-v15/dist/package-final16/win-unpacked/resources/bundled-aioncore/win32-x64/aioncore.exe

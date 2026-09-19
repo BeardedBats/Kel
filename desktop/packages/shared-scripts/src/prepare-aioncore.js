@@ -494,6 +494,7 @@ function prepareAioncore(options) {
         files: [binaryName, 'managed-resources/'],
       };
       writeJson(path.join(targetDir, 'manifest.json'), manifest);
+      writeProvenance(targetDir, binaryName, manifest);
       verifyPreparedAioncoreBundle(projectRoot, platform, arch);
       console.log(`  Using local aioncore bundle: ${resolvedLocalBundleDir}`);
       return { prepared: true, dir: targetDir, sourceType: 'local-bundle' };
@@ -570,6 +571,7 @@ function prepareAioncore(options) {
     };
 
     writeJson(path.join(targetDir, 'manifest.json'), manifest);
+    writeProvenance(targetDir, binaryName, manifest);
     verifyPreparedAioncoreBundle(projectRoot, platform, arch);
     console.log(
       `  Bundled aioncore prepared: resources/bundled-aioncore/${runtimeKey}/${binaryName} [source=${sourceType}]`
@@ -583,9 +585,37 @@ function prepareAioncore(options) {
   throw new Error(`aioncore binary not found for ${runtimeKey} (tag: ${tag})`);
 }
 
+function sha256File(filePath) {
+  const crypto = require('crypto');
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+/**
+ * Kel-side provenance record (Campaign C AUD-MINOR-007): binds the staged donor binary to
+ * its release version and a content hash so every package can be traced to a revision.
+ */
+function writeProvenance(targetDir, binaryName, manifest) {
+  const binaryPath = path.join(targetDir, binaryName);
+  const stats = fs.statSync(binaryPath);
+  const provenance = {
+    binary: binaryName,
+    sha256: sha256File(binaryPath),
+    bytes: stats.size,
+    donorRepository: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`,
+    version: manifest.version,
+    sourceType: manifest.sourceType,
+    source: manifest.source || null,
+    recordedAt: new Date().toISOString(),
+    recordedBy: 'prepare-aioncore (Kel AUD-MINOR-007)',
+  };
+  writeJson(path.join(targetDir, 'provenance.json'), provenance);
+  return provenance;
+}
+
 module.exports = {
   getActionsArtifactMissingMessage,
   getActionsArtifactName,
   prepareAioncore,
   verifyPreparedAioncoreBundle,
+  writeProvenance,
 };
