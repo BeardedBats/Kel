@@ -254,6 +254,80 @@ class ReservationTests(Base):
             reservations(self.store, state='bogus')
 
 
+class ReservationAccountingTests(Base):
+    """AUD-MINOR-002 (Campaign C): commitments aggregate; the envelope is shared.
+
+    The job envelope is the delegator's budget authority: every reservation that has not been
+    explicitly released narrows it (reserved AND consumed), so successive reservations can
+    never sum beyond `budget - spent - reserved`.
+    """
+
+    def _reserve(self, job_id, cost, **overrides):
+        params = {'budget_class': 'standard', 'tokens': 1000, 'wallclock': 60, 'cost': cost}
+        params.update(overrides)
+        return reserve_budget(self.store, job_id, **params)
+
+    def test_the_second_reservation_sees_the_first(self):
+        first = self._reserve(self.job_id, 1)
+        self.assertEqual(first['state'], 'reserved')
+        with self.assertRaises(PolicyError) as caught:
+            self._reserve(self.job_id, 8)
+        # 8 (budget) - 1 (live commitment) = 7 remains; the first reservation is intact.
+        self.assertIn('remaining job budget', str(caught.exception))
+        self.assertIn('7.0', str(caught.exception))
+        self.assertEqual(len(reservations(self.store, job_id=self.job_id, state='reserved')), 1)
+
+    def test_cumulative_reservations_fill_then_exceed_the_envelope(self):
+        self._reserve(self.job_id, 3)
+        self._reserve(self.job_id, 4)                    # 3 + 4 = 7 <= 8
+        with self.assertRaises(PolicyError) as caught:
+            self._reserve(self.job_id, 2)                # 7 + 2 = 9 > 8
+        self.assertIn('1.0', str(caught.exception))
+        self.assertEqual(self._reserve(self.job_id, 1)['state'], 'reserved')  # exactly fills
+
+    def test_release_frees_the_envelope_for_the_next_commitment(self):
+        first = self._reserve(self.job_id, 1)
+        with self.assertRaises(PolicyError):
+            self._reserve(self.job_id, 8)
+        released = release_budget(self.store, first['reservation_id'])
+        self.assertEqual(released['state'], 'released')
+        self.assertEqual(self._reserve(self.job_id, 8)['state'], 'reserved')
+
+    def test_a_consumed_estimate_keeps_narrowing_the_envelope(self):
+        # 'consumed' means the estimate was used; only an explicit release returns budget.
+        first = self._reserve(self.job_id, 5)
+        release_budget(self.store, first['reservation_id'], consumed=True)
+        with self.assertRaises(PolicyError) as caught:
+            self._reserve(self.job_id, 4)                # only 3 remains
+        self.assertIn('3.0', str(caught.exception))
+
+    def test_zero_and_exact_values_are_accepted(self):
+        self.assertEqual(self._reserve(self.job_id, 0)['state'], 'reserved')
+        self.assertEqual(self._reserve(self.job_id, 8)['state'], 'reserved')  # exact envelope
+
+    def test_disjoint_jobs_do_not_share_the_envelope(self):
+        other = self.store.create(job_contract(), conversation=self.conversation)
+        self._reserve(self.job_id, 8)
+        self.assertEqual(self._reserve(other, 8)['state'], 'reserved')
+
+    def test_retry_after_release_reserves_again_without_stacking(self):
+        first = self._reserve(self.job_id, 5, milestone_id='m1')
+        release_budget(self.store, first['reservation_id'])        # attempt failed; free it
+        second = self._reserve(self.job_id, 5, milestone_id='m1')  # retry may claim it again
+        self.assertEqual(second['state'], 'reserved')
+        states = {row['state'] for row in reservations(self.store, job_id=self.job_id)}
+        self.assertEqual(states, {'released', 'reserved'})
+
+    def test_token_and_wallclock_stay_disclosed_not_enforced(self):
+        # Disclosed policy (R1-AUTHORITY-CEILING limitations): only cost is checked against
+        # the envelope; tokens/wallclock are validated for shape and recorded. Pinned so any
+        # future enforcement change is deliberate, not drift.
+        row = self._reserve(self.job_id, 1, tokens=10 ** 12, wallclock=10 ** 7)
+        self.assertEqual(row['tokens'], 10 ** 12)
+        with self.assertRaises(PolicyError):
+            self._reserve(self.job_id, 1, tokens=0)
+
+
 class AssignWorkerTests(Base):
     def setUp(self):
         super().setUp()
