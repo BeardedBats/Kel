@@ -228,6 +228,26 @@ class IssuanceWiringTests(unittest.TestCase):
                                       tokens=1000, wallclock=60, cost=9)
         self.assertIn('exceeds the remaining job budget', str(caught.exception))
 
+    def test_a_second_reservation_sees_the_first_commitment(self):
+        # Campaign C AUD-MINOR-002: successive delegated reservations aggregate against the
+        # same job envelope; the second may not pass on the first's margin.
+        job = self.store.create({
+            'request': 'R1 budget fixture',
+            'milestones': [{'id': 'm1', 'objective': 'Draft', 'filename': 'out.md',
+                            'depends_on': [],
+                            'checks': [{'kind': 'min_chars', 'value': 20}]}]})
+        first = delegation.reserve_budget(self.store, job, budget_class='standard',
+                                          tokens=1000, wallclock=60, cost=5)
+        self.assertEqual(first['state'], 'reserved')
+        with self.assertRaises(PolicyError) as caught:
+            delegation.reserve_budget(self.store, job, budget_class='standard',
+                                      tokens=1000, wallclock=60, cost=4)
+        self.assertIn('exceeds the remaining job budget', str(caught.exception))
+        self.assertIn('3.0', str(caught.exception))
+        tail = delegation.reserve_budget(self.store, job, budget_class='standard',
+                                         tokens=1000, wallclock=60, cost=3)
+        self.assertEqual(tail['state'], 'reserved')
+
 
 if __name__ == '__main__':
     unittest.main()

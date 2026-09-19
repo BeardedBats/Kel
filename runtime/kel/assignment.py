@@ -574,12 +574,19 @@ def reserve_budget(store, job_id, *, budget_class, tokens, wallclock, cost, mile
         raise PolicyError('Reserved wallclock must be a positive integer')
     if isinstance(cost, bool) or not isinstance(cost, (int, float)) or cost < 0:
         raise PolicyError('Reserved cost must be a non-negative number')
+    # Campaign C AUD-MINOR-002: every reservation that has not been explicitly released
+    # narrows the same envelope. Without this aggregation each successive reservation passed
+    # alone while the commitments cumulatively exceeded `budget - spent - reserved`.
+    with contextlib.closing(store.connect()) as db:
+        row = db.execute("SELECT COALESCE(SUM(cost), 0) AS committed FROM budget_reservations"
+                         " WHERE job_id=? AND state != 'released'", (job_id,)).fetchone()
+    committed = float(row['committed'] or 0)
     remaining = (float(job.get('budget', 0) or 0) - float(job.get('spent', 0) or 0)
-                 - float(job.get('reserved', 0) or 0))
+                 - float(job.get('reserved', 0) or 0) - committed)
     if float(cost) > remaining:
         # AUTH-DELEGATION for the budget dimension (Round 2.5 R1): the job envelope is the
         # delegator's budget authority, so a delegated reservation may narrow it, never create
-        # more. Without this the engine only noticed at the next milestone boundary.
+        # more; commitments aggregate across successive reservations (AUD-MINOR-002).
         raise PolicyError('Reserved cost %s exceeds the remaining job budget %s'
                           % (float(cost), remaining))
     stamp = time.time() if now is None else now
