@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 3 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 9
+- Repaired: 4 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 8
 
 ## Ledger
 
@@ -15,7 +15,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MAJOR-002 | MAJOR | Privileged IPC sender validation not uniform | REPAIRED | `eaf7bad` | `sender-guard.test.ts` 7 + `ipc-sender-channels.test.ts` 18; desktop vitest 147/147; tsc exit 0 | pre-fix replay: feedback pair + adapter dispatcher accept spoofed frames (4 failed); guard-free anchors for credential/sendSync families | dispatcher kept (shipped donor surfaces) + now guarded; guard semantics == the 8 previously-guarded channels (re-audit note) |
 | AUD-MINOR-001 | MINOR | COMMIT_LEDGER completeness failures | PENDING | — | — | — | — |
 | AUD-MINOR-002 | MINOR | Budget reservations not aggregated (overcommit) | REPAIRED | `7e293ba` | `ReservationAccountingTests` + delegation cumulative test (9; 5 fail pre-fix); focused 65/65; cluster 299/299 | probe §E7: cost 8 after cost 1 refused (remaining 7.0); E5 unchanged; E6 disclosed | token/wallclock unchanged by design (pinned); run-slot vs planning accounting separation (re-audit note) |
-| AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | PENDING | — | — | — | — |
+| AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | REPAIRED | `91bd869` | `ChildEnvironmentTests` 5 (3 fail pre-fix) + spawned-process boundary; cluster 34/34 | probe §G: DeepSeek absent from codex+claude children; G1–G3 unchanged | sibling launchers reviewed (appserver whitelist, test-command strip, coding bridge); system tools inherit by design (re-audit note) |
 | AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | PENDING | — | — | — | — |
 | AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | PENDING | — | — | — | — |
 | AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | PENDING | — | — | — | — |
@@ -56,3 +56,12 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Attack replay:** `mi2-postfix-attack.txt` — E7 now `PolicyError: Reserved cost 8.0 exceeds the remaining job budget 7.0`; E5 unchanged; E6 (tokens=1e12/wallclock=1e7) unchanged and disclosed.
 - **Promotion probe:** `mi2-claiming-probe.txt` — with a cost-4 planning reservation standing on a budget-4 job, execution claims cap actual spend at the envelope (m1+m2 spend 4; m3 refused "Execution and verification budget exhausted"); `spent + reserved ≤ budget` holds. No re-grade; remains MINOR.
 - **Adjacent assessment (re-audit note):** consumers of `job['reserved']` (claim gate, engine dispatch, runner) govern run slots and are intentionally not fed by planning reservations — merging the two dimensions would change execution behaviour beyond this finding; recorded for the final re-audit.
+
+### AUD-MINOR-003 — detail (REPAIRED, `91bd869`)
+
+- **Reproduction (pre-fix):** probe §G (`evidence/mi3-prefix-attack.txt`): G4 — `DEEPSEEK_API_KEY` present in both the `codex` and `claude` child environments; G1–G3 (internal whitelist, redact) already correct.
+- **Root cause:** `native.child_env` popped only the named counterpart key (`if provider == 'codex': pop ANTHROPIC else: pop OPENAI`), so third-provider keys (DeepSeek) and any future Kel-managed keys were forwarded even though the docstring already promised the stronger property.
+- **Repair:** the canonical set is now `internal.SECRET_ENV_KEYS` (promoted from a private name); `native.child_env` removes every key not in the provider's allow map (`codex`→OPENAI, `claude`→ANTHROPIC, unknown→none). The native `--version` probe runs under the same contained environment. Fail-closed for unknown providers; no acceptance widening.
+- **Tests:** `ChildEnvironmentTests` — updated cross-provider pin, third-provider absence for both children, unknown-provider fail-closed, a real spawned-process boundary check (the child process observes only its own key), test-command strip pinned including DeepSeek. 9/9 post-fix (`mi3-newtests-postfix-pass.txt`), 3 new tests fail pre-fix (`mi3-newtests-prefix-fail.txt`); cluster 34/34 (`mi3-adjacent-suite.txt`).
+- **Attack replay:** `mi3-postfix-attack.txt` — G4 now `DEEPSEEK_API_KEY: False` for both children; G1–G3 unchanged.
+- **Sibling search (spawn inventory):** `appserver.py` codex app-server child (internal whitelist `keep=('OPENAI_API_KEY',)`) OK; `host_runtime.test_command_env` strips all three (now pinned with DeepSeek); `coding.py:240` nulls all three for its subprocess; `runner.py`/`coding_transport.py` children are Kel's own engine processes (trusted, need keys); `git`/`powershell.exe`/`wsl.exe` system tools inherit the environment — reviewed, unchanged (local tools with no provider-key semantics; git hooks disabled for the repo calls).

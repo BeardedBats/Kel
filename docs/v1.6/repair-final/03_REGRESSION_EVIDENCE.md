@@ -33,4 +33,12 @@ How to re-run (from `runtime/`):
 - Attack replay: `mi2-postfix-attack.txt` — E7 now refused: `Reserved cost 8.0 exceeds the remaining job budget 7.0`; E5 unchanged; E6 unchanged (disclosed policy).
 - Promotion probe (claiming): `mi2-claiming-probe.txt` — planning reservation 4 on budget 4 accepted; execution spend caps at the envelope (m3 refused, "Execution and verification budget exhausted"); `spent + reserved <= budget` holds — no re-grade.
 
+## AUD-MINOR-003 — native child credential containment (REPAIRED, `91bd869`)
+
+- Reproduction: `evidence/mi3-prefix-attack.txt` (probe §G pre-fix): G4 — `DEEPSEEK_API_KEY` present in both native children; G1–G3 correct.
+- Discriminating tests: `tests/test_v15_credentials.py` 9/9 post-fix (`mi3-newtests-postfix-pass.txt`); 3 new tests fail pre-fix with the fix stashed (`mi3-newtests-prefix-fail.txt`).
+- Cluster: credentials + r7 credentials + providers → 34/34 (`mi3-adjacent-suite.txt`).
+- Attack replay: `mi3-postfix-attack.txt` — G4 DeepSeek absent from both children; G1–G3 unchanged.
+- Boundary evidence: spawned-process check (`test_a_spawned_native_child_process_sees_only_its_own_key`) observes only `ANTHROPIC_API_KEY` inside a real child process.
+
 (Results appended per finding as repairs complete.)
