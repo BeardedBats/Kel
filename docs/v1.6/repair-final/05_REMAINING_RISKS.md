@@ -8,3 +8,4 @@ Known external/unchanged gates (not Campaign C work):
 
 Campaign C residual-risk notes (appended per finding):
 - **AUD-MAJOR-001 (during repair):** adjacent approval surfaces inspected — `/api/state` returns a `PENDING`-approvals array unscoped (read-only display data, no resolution path; unchanged by the narrow repair, flagged for the final re-audit); `/api/autonomy` resolve stays a by-id Work-surface action (no conversation parameter by design; Campaign B reviewed and did not flag it). The resolution authority boundary is the scoped write path.
+- **AUD-MAJOR-001 (repaired `44aee9f`):** the two surfaces above were left intentionally unchanged by the narrow ownership repair (read-only display data; Work-surface by-id resolution reviewed by Campaign B); they are carried forward as explicit final-re-audit items.

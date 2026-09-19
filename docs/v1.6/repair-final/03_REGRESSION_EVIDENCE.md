@@ -4,12 +4,16 @@ Raw outputs are retained under `docs/v1.6/repair-final/evidence/`. Every repaire
 
 How to re-run (from `runtime/`):
 - Engine focused: `python -m pytest tests/<file> -q`
-- Campaign B attacks: `python ../kel-v16-final-audit/docs/v1.6/audit-final/probes/auditor_probe_<n>.py`
+- Campaign B attacks (in-repo copy used by Campaign C): `cd runtime && python ../docs/v1.6/audit-final/probes/auditor_probe_<n>.py`
 
-## AUD-MAJOR-001 — chat-approval conversation scoping
+## AUD-MAJOR-001 — chat-approval conversation scoping (REPAIRED, `44aee9f`)
 
-- Pre-fix reproduction: `evidence/ma1-attack-prefix.txt` (probe §A) — in progress at initialization.
-- Discriminating tests (must fail pre-fix, pass post-fix): `evidence/ma1-newtests-prefix-fail.txt`, `evidence/ma1-newtests-postfix-pass.txt`.
-- Adjacent suites: recorded below once run.
+- Pre-fix reproduction (Campaign B probe §A): `evidence/ma1-attack-prefix.txt` — A2/A6: a caller declaring no conversation settled convA-/main-owned approvals with NO ERROR.
+- Discriminating tests: 4 new tests fail pre-fix (`evidence/ma1-newtests-prefix-fail.txt`: 4 failed, 6 passed, 18 deselected; the single teardown `PermissionError` is a Windows temp-file-lock artifact of the failing run — absent in every subsequent run), 10/10 pass post-fix (`evidence/ma1-newtests-postfix-pass.txt`).
+- Focused suite: `cd runtime && python -m pytest tests/test_v16_approvals.py -q` → 28 passed.
+- Adjacent suite: `python -m pytest tests/test_v16_approvals.py tests/test_v16_r4_approval_exact.py tests/test_v14_autonomy.py tests/test_v15_authorize.py tests/test_v16_r1_authority.py -q` → 129 passed (`evidence/ma1-adjacent-suite-rerun.txt`; original capture `ma1-adjacent-suite.txt`).
+- Campaign B attack replay at fix: `cd runtime && python ../docs/v1.6/audit-final/probes/auditor_probe_1.py` → A2 now `PolicyError: That request belongs to another conversation`; A6 remains allowed (omission = `main` read-path parity; the record it resolves is main-owned); A1/A5 refused; probe ran to `PROBE-END` (`evidence/ma1-attack-replay-at-fix.txt`).
+- Sibling search (all resolution entry points): chat `resolve` (fixed; used by `/api/approvals`, which passes the declared conversation); legacy `/api/approval` singular route (now scoped); `store.resolve_approval` primitive callers — the chat path (guarded) and the coding-adapter expiry-deny, which acts on the run id it owns (reviewed); `Autonomy.resolve_expansion` callers — chat access kind (guarded) and `/api/autonomy` resolve (Work surface, by-id by design; Campaign B reviewed; retained re-audit item); UI callers declare the conversation (KelWorkPanel/KelApprovalCard).
+- Residual risk: `/api/state` still returns an unscoped read-only pending-approvals list (display data, no resolution path) — explicit re-audit item, see `05_REMAINING_RISKS.md`.
 
 (Results appended per finding as repairs complete.)
