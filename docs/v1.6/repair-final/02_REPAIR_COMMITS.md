@@ -17,3 +17,6 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 9 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-003 recorded`) | AUD-MINOR-003 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
 | 10 | `c056a8a` | AUD-MINOR-006 | fix | Delegation containment resolves `..` lexically (workforce._path_within); traversal table + e2e refusal tests |
 | 11 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-006 recorded`) | AUD-MINOR-006 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
+| 12 | `960e023` | AUD-MINOR-001 | fix | COMMIT_LEDGER reconciled 1:1 (rows added, malformed cells fixed) + failing gate script |
+| 13 | `89ab6ad` | AUD-MINOR-004 | fix | R12 probe assertion gate (exit non-zero), integrity --fail-on-dirty, R10 wording, 04 checklist, evidence |
+| 14 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-001 + AUD-MINOR-004 recorded`) | AUD-MINOR-001 / AUD-MINOR-004 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C fields |
