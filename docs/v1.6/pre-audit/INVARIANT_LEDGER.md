@@ -195,7 +195,7 @@ OPEN_GAP (known open finding attacks it).
   corpus must never present Campaign A evidence as "independent".
 - Audit target: verify no acceptance claim in this corpus was minted by the code author alone;
   verify the last independent verdict (`8a2b25d`, increment 24) exists and is authentic.
-- Status: DELIVERED (process), suspended-by-design during Campaign A.
+- Status: DELIVERED (process); the independent re-audit track (Campaign B/C records; final independent re-audit NOT STARTED) supersedes the suspension.
 
 ## INV-FREEZE-001 — Frozen releases remain byte-identical
 - Definition: frozen release artifacts (`Kel-V1.6.0-Pre1-Frozen`, older V1–V1.5 folders, tags
@@ -208,7 +208,7 @@ OPEN_GAP (known open finding attacks it).
   (`resources/kel-engine/kel-engine/`) — pre1 removed it after assembly; `REL-01` (P2, open):
   freeze engine staging is a no-op for the load path the app + manifest hash.
 - Audit target: re-hash the frozen folders + remote tags; confirm `main` and tags byte-equal.
-- Status: DELIVERED; REL-01 open on the tooling gap.
+- Status: DELIVERED; REL-01 closed (`93b99b5`; freeze fixture positive+negative). Releases remain frozen/unreleased by policy.
 
 ## INV-CAP-001 — Ordinary prose never mutates capability state; forwarding stays byte-identical
 - Definition: capability state changes only via standalone human-friendly commands or the reserved
@@ -257,7 +257,7 @@ OPEN_GAP (known open finding attacks it).
   SEC-01).
 - Audit target: attempt resolved-without-announcement, cross-conversation resolution, replay, and
   expired-anchor resolution.
-- Status: PARTIAL (open APR-01..03).
+- Status: RESOLVED — APR-01 fixed `84b5646` (the guard existed; the test was the gap); APR-02 fixed `8a677d0`, scoping completed in Campaign C `44aee9f`; APR-03 DEFERRED_NON_RELEASE (bounded crash window, Phase 6 review).
 
 ## INV-LEASE-001 — Lease release is exact-once on every exit path
 - Definition: parallel-mission stream leases release exactly once on success, failure, refusal and
@@ -278,7 +278,7 @@ OPEN_GAP (known open finding attacks it).
   the same try.
 - Audit target: inject restore failure + snapshot failure; verify the surfaced error is the
   primary one and the failure is visible.
-- Status: OPEN_GAP (PER-02/PER-03).
+- Status: RESOLVED (PER-02 `df1997a`; PER-03 `84b5646` — see P2_P3_DISPOSITION rows).
 
 ## INV-WF-001 — Commander is never spawned
 - Definition: the Commander is an interface concept only; never a spawnable template or worker.
@@ -321,7 +321,7 @@ OPEN_GAP (known open finding attacks it).
 - Edge cases: F4 (no artifact-ownership/content binding — open, wiring increment); producer-check
   optionality (N1) fixed at wiring.
 - Audit target: close with forged/stale evidence; close referencing another task's artifacts.
-- Status: PARTIAL (F4 open).
+- Status: DELIVERED (F4 real-artifact binding closed at `081a6ef`).
 
 ## INV-WF-006 — Ledgers are append-only
 - Definition: `findings`, `evidence_records`, `workforce_messages` (and issued task contracts)
@@ -342,7 +342,7 @@ OPEN_GAP (known open finding attacks it).
   perform. `MDL-01`/`COR-04` (model prefs accept a non-existent conversation).
 - Audit target: cross-project memory retrieval via every entry point; record addressed by foreign
   id; proposals leaked across projects.
-- Status: PARTIAL (isolation holds on memory paths; sibling modules have open findings).
+- Status: DELIVERED (memory paths hold; sibling bare-id findings SEC-01 `49e528e` / APR-02 `8a677d0` closed; MDL-01/COR-04 dispositioned DEFERRED_NON_RELEASE — see P2_P3_DISPOSITION).
 
 ## INV-MEM-002 — Learnings ride the memory store (no second system)
 - Definition: learnings are memory records with workforce source types
@@ -371,7 +371,7 @@ OPEN_GAP (known open finding attacks it).
 - Tests: `test_v15` lineage coverage; packaged lineage probe on final16.
 - Audit target: unrecorded artifact generation paths; lineage rows without real artifact binding
   (see F4).
-- Status: DELIVERED (F4 binding gap open).
+- Status: DELIVERED (F4 binding closed at `081a6ef`).
 
 ## INV-PACKAGE-001 — Packaged app uses the intended runtime engine
 - Definition: the packaged engine is built from the same commit and its identity
@@ -381,7 +381,7 @@ OPEN_GAP (known open finding attacks it).
 - Edge cases: REL-01 (freeze staging no-op); bundled `bundled-aioncore` staged from cache (stock
   binary not in git).
 - Audit target: rebuild from a clean clone; compare engine hash + version end-to-end.
-- Status: DELIVERED (with REL-01 noted for the freeze script).
+- Status: DELIVERED (REL-01 closed `93b99b5`; freeze fixture positive+negative in the R8 records).
 
 ## INV-GIT-001 — Publication is never verification; no history rewrite
 - Definition: pushes are explicit-refspec only, never forced, never tags-all/mirror; a
@@ -397,7 +397,7 @@ OPEN_GAP (known open finding attacks it).
 - Owner: `desktop/.../KelService.ts`.
 - Edge cases: **INT-01** (P3, open): `kel:artifact-reveal` handler lacks the check.
 - Audit target: enumerate channels; attempt calls from an unexpected frame.
-- Status: OPEN_GAP (INT-01).
+- Status: FIXED (INT-01 `0596211`; uniform shared sender guard across all privileged channels in Campaign C `eaf7bad`, AUD-MAJOR-002).
 
 ## INV-VISUAL-001 — Visual never writes Main; integration preserves lineage
 - Definition: the visual worktree writes only its own branch; Main integrates (never force
@@ -405,7 +405,7 @@ OPEN_GAP (known open finding attacks it).
 - Owner: program process (AUTONOMOUS_OPERATION.md; VISUAL_STATUS.md).
 - Tests: n/a (process). Evidence: commit topology.
 - Audit target: integration conflict resolutions (a high-value audit area once integration lands).
-- Status: DELIVERED; integration pending in Campaign A.
+- Status: DELIVERED (process); Main integration not started — pending review/release governance (frozen refs unchanged; recorded for the final re-audit).
 
 ## INV-ROUTE-001 — Deterministic routing, no silent substitution
 - Definition: AUTO/PREFERRED/FIXED resolve deterministically; FIXED never silently substitutes;
@@ -424,7 +424,7 @@ OPEN_GAP (known open finding attacks it).
   behavior is Campaign A scope, batch 6**).
 - Audit target: kill the engine mid-stream, mid-request, at boot, at shutdown; confirm each
   surface; confirm no false success.
-- Status: OPEN_GAP (to close in Campaign A).
+- Status: DELIVERED (R9/R10 — engine-loss classification, supervision, recovery states; packaged probes `ux-audit/runs/r10-*`; wording corrections Campaign C `89ab6ad`).
 
 ## INV-AUTH-001 — Delegated authority is never greater than the delegator's (R2.5: AUTH-DELEGATION)
 - Definition: when a child TaskContract is created, its effective authority is the intersection of
@@ -438,7 +438,7 @@ OPEN_GAP (known open finding attacks it).
   provider/runtime class, budget) + property-style coverage (R1).
 - Edge cases: Commander-mediated D1–D3 today (no nested spawning); revocation must still narrow.
 - Audit target: AUDIT_TARGETS §61–§66 (child requests what the parent lacks).
-- Status: PLANNED (R1).
+- Status: DELIVERED (R1 — `dc65fbc`; `test_v16_r1_authority.py`; Campaign C `c056a8a` resolved the `..` containment gap in this invariant's scope dimension).
 
 ## INV-IDEM-001 — One logical event, at most one authoritative execution (R2.5: EVENT-IDEMPOTENCY)
 - Definition: a logical event may cause no more than one authoritative execution unless an explicit
@@ -450,7 +450,7 @@ OPEN_GAP (known open finding attacks it).
 - Tests: duplicate injection across restart boundaries for every event family in the matrix (R2).
 - Edge cases: native RPC retries vs duplicates; permission replies; boundary grants.
 - Audit target: AUDIT_TARGETS §67–§70.
-- Status: PLANNED (R2).
+- Status: DELIVERED (R2 — `fde5bbb`; `test_v16_r2_idempotency.py`).
 
 ## INV-EFFECT-001 — Unresolved external effects are reconciled, never blindly replayed (R2.5: EFFECT-REPLAY)
 - Definition: an external side effect with an unknown outcome is reconciled against its recorded
@@ -459,7 +459,7 @@ OPEN_GAP (known open finding attacks it).
 - Code paths: `kel/effects.py`, `kel/host_runtime.py`, `kel/coding_transport.py` (R2/R3).
 - Tests: restart after PREPARED with unknown outcome must reconcile first (R2/R3).
 - Audit target: AUDIT_TARGETS §71–§72.
-- Status: PLANNED (R2).
+- Status: DELIVERED (R2/R3 — `fde5bbb`, `1a9f538`; `test_v16_r2_idempotency.py`, `test_v16_r3_retry_durability.py`).
 
 ## INV-RETRY-001 — Automatic retry history survives restart (R2.5: RETRY-DURABLE)
 - Definition: restarting the app, runtime, worker, broker or machine never resets an automatic retry
@@ -471,7 +471,7 @@ OPEN_GAP (known open finding attacks it).
   `kel/continuation.py`, `kel/transcription.py` (R3).
 - Tests: crash/restart between attempts and prove remaining budget does not reset (R3).
 - Audit target: AUDIT_TARGETS §71.
-- Status: PLANNED (R3).
+- Status: DELIVERED (R3 — `1a9f538`; `test_v16_r3_retry_durability.py`).
 
 ## INV-APPROVE-002 — Approval authorizes one exact canonical runtime action (R2.5: APPROVAL-EXACT)
 - Definition: an approval authorizes the exact normalized runtime action (operation, canonical
@@ -483,7 +483,7 @@ OPEN_GAP (known open finding attacks it).
   **absorbs APR-02** (conversation/project/job scoping) rather than creating a second system (R4).
 - Tests: mutate the action/target/scope between approval and execution; cross-scope ids (R4).
 - Audit target: AUDIT_TARGETS §73–§75.
-- Status: PLANNED (R4) — the `INV-APPROVE-001` resolver discipline stays as-is.
+- Status: DELIVERED (R4 — `8c899c8`; `test_v16_r4_approval_exact.py`) — the `INV-APPROVE-001` resolver discipline stays as-is.
 
 ## INV-PERSIST-001 — Only validated, serializable, reconstructable state is durably committed (R2.5: PERSIST-CANONICAL)
 - Definition: nothing externally influenced reaches durable storage without validation before
@@ -496,7 +496,7 @@ OPEN_GAP (known open finding attacks it).
 - Tests: adversarial payloads (types, enums, sizes, nesting, non-serializable, malformed JSON, tool
   shapes) + later startup/rebuild (R5).
 - Audit target: AUDIT_TARGETS §76–§77.
-- Status: PLANNED (R5).
+- Status: DELIVERED (R5 — `b2ffed1`; `test_v16_r5_persistence.py`).
 
 ## INV-STATE-001 — Waiting/idle/process state never establishes completion (R2.5: COMPLETION-TRUTH)
 - Definition: only the evidence/assessment path establishes completion; `idle != completed`,
@@ -508,7 +508,7 @@ OPEN_GAP (known open finding attacks it).
 - Tests: live process with no progress; dead process with durable RUNNING; long healthy work;
   provider outage; user-approval wait; interrupted verifier; engine restart (R6).
 - Audit target: AUDIT_TARGETS §78–§79.
-- Status: PLANNED (R6).
+- Status: DELIVERED (R6 — `e8bbb05`; `test_v16_r6_liveness.py`).
 
 ## INV-LIVENESS-002 — Process liveness, supervisor liveness and mission progress are separate facts (R2.5: LIVENESS-SEPARATION)
 - Definition: three layers are reported separately and never conflated — OS process alive and
@@ -518,7 +518,7 @@ OPEN_GAP (known open finding attacks it).
 - Owner: Diagnostics + the existing lease/heartbeat/stall machinery.
 - Code paths: `kel/diagnostics.py`, `kel/parallel.py`, `kel/host_runtime.py`, `kel/pods.py` (R6).
 - Audit target: AUDIT_TARGETS §78.
-- Status: PLANNED (R6).
+- Status: DELIVERED (R6 — `e8bbb05`; `test_v16_r6_liveness.py`).
 
 ## INV-RECOVERY-002 — Interrupted work resolves to exactly one classification (R2.5: RECOVERY-CLASSIFICATION)
 - Definition: every interrupted unit resolves explicitly to one of: safely resumable; safely
@@ -526,7 +526,7 @@ OPEN_GAP (known open finding attacks it).
 - Owner: continuation/recovery + engine-loss UX.
 - Code paths: `kel/continuation.py`, `kel/engine.py`, `kel/review.py`; renderer recovery surfaces (R6/R10).
 - Audit target: AUDIT_TARGETS §80.
-- Status: PLANNED (R6/R10).
+- Status: DELIVERED (R6/R10 — `e8bbb05` + R10 recovery surfaces; `test_v16_r6_liveness.py`, `19_R10_ENGINE_LOSS_EVIDENCE.md`).
 
 ## INV-CRED-001 — Raw credentials never become arbitrary worker/tool data (R2.5: CREDENTIAL-CONTAINMENT)
 - Definition: capability to use a provider/service never implies access to its raw credential. A
@@ -537,7 +537,7 @@ OPEN_GAP (known open finding attacks it).
   `kel/host_runtime.py`, `kel/evidence.py` (R7 verification).
 - Tests: credential-leak probes across prompt/artifact/log/subprocess/other-provider surfaces (R7).
 - Audit target: AUDIT_TARGETS §81–§83.
-- Status: PARTIAL (V1.5 designed the boundary; R7 proves it or records the honest gap).
+- Status: DELIVERED (R7 proved the boundary at `b6c4eff`; the native-child third-provider leak found by the audit was closed in Campaign C `91bd869`, AUD-MINOR-003).
 
 ## INV-AUTH-002 — Runtime/config changes cannot silently widen running work (R2.5: LIVE-AUTHORITY)
 - Definition: configuration or capability changes never silently widen authority of already-running
@@ -547,7 +547,7 @@ OPEN_GAP (known open finding attacks it).
 - Code paths: `kel/authorize.py`, `kel/assignment.py`, `kel/capabilities.py`; boundary exercised by
   R1/R4 (R1/R4).
 - Audit target: AUDIT_TARGETS §66.
-- Status: PLANNED (R1/R4 boundary).
+- Status: DELIVERED (R1/R4 boundary — `dc65fbc` + `8c899c8`; snapshots/revocation paths covered by their suites).
 
 Mapping to invariants that already exist (Round 2.5 names them; no duplicates are created):
 VERIFIER-INDEPENDENCE → `INV-WF-002`; MEMORY-PROVENANCE → `INV-MEM-001`/`INV-MEM-003`;

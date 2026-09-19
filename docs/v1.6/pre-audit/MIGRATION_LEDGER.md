@@ -28,22 +28,23 @@ databases get one backup before the first mutation of a migration family (e.g. m
 | 13 | v15-model-prefs | model_prefs.py | model preferences | v1.5 era | model_prefs tables | model prefs tests | idem | version check | v1.5 |
 | 14 | v15-conversation-capabilities | capabilities.py | conversation capability overrides | v1.5 era | capability tables | test_capabilities | idem | version check | v1.5 |
 | 15 | v16-memory-proposals | memory.py (`PROPOSALS_VERSION=15`, `ensure_proposals`) | memory proposal surface (Phase 1) | `a8c3511` era (verify) | `memory_proposals` + 2 indexes | test_v16_proposals | test_v13_memory / test_v14_upgrade pins moved to 15 by design | version check; one backup before first proposals mutation of existing data | package-final13 (memoryprops PASS) |
-| 16 | v16-workforce-schemas | workforce.py | task_contracts, workforce_messages, findings, evidence_records, skill_packs + append-only triggers | Phase 5.0 (`9085335`/`cc909b9`) | 5 tables + triggers | test_workforce suite | planned | version check | **assertion pending** |
-| 17 | v16-budget-reservations | assignment.py | budget_reservations | Phase 5.1 (`9d6ed55`/`5b83f0e`) | budget_reservations | test_workforce_assignment | planned | version check | **assertion pending** |
-| 18 | v16-workforce-task-link | delegation.py | contract↔milestone link | Phase 5.2 (`894be5b`) | additive unique link | test_workforce_d1 | planned | version check | **assertion pending** |
-| 19 | v16-workforce-parallel | parallel.py | parallel mission teams | Phase 5.5 (`5f77f42`) | parallel tables | test_workforce_parallel | planned | version check | **assertion pending** |
+| 16 | — | — | *unused: no module claims version 16 (verified 2026-09-19 against every `MIGRATION_VERSION` constant and packaged DBs; the Phase-5.0 workforce schemas ship under the workforce module stamp below)* | — | — | — | — | — | — |
+| 17 | v17-finding-resolution-kind | workforce.py | finding resolution-kind (REQ-RK); also carries the Phase-5.0 workforce schema tables (task_contracts, workforce_messages, findings, evidence_records, skill_packs + append-only triggers) | Phase 5.0 (`9085335`/`cc909b9`) + `7267630` | tables + triggers | test_workforce suite | test_v16_r8_migrations | version check | r10-*/r12-* DBs (stamp 17 present) |
+| 18 | v16-workforce-task-link | delegation.py | contract↔milestone link | Phase 5.2 (`894be5b`) | additive unique link | test_workforce_d1 | test_v16_r8_migrations | version check | r10-*/r12-* DBs (stamp 18 present) |
+| 19 | v16-workforce-parallel | parallel.py | parallel mission teams | Phase 5.5 (`5f77f42`) | parallel tables | test_workforce_parallel | test_v16_r8_migrations | version check | r10-*/r12-* DBs (stamp 19 present) |
+| 20 | chat_approval_announcements | chat_approvals.py | approvals poll marker (APR-05 — the read path performs no DDL once stamped) | `dd34ac2` | marker row (idempotent) | test_v16_sweep_fixes (3) | test_v16_r8_migrations | version check | r10-*/r12-* DBs (stamp 20 present) |
+| 21 | v16-budget-reservations | assignment.py | budget_reservations | Phase 5.1 (`9d6ed55`/`5b83f0e`); applied version assigned 21 | budget_reservations | test_workforce_assignment | test_v16_r8_migrations | version check | r10-*/r12-* DBs (max=21) |
 
-Next free version: **20**. (Phase 5.6 deliberately used no new migration; learnings ride the
-memory store.)
+Next free version: **22** (max applied = 21; Campaign C reconciliation 2026-09-19 verified every `MIGRATION_VERSION` constant and the packaged DB dumps). (Phase 5.6 deliberately used no new migration; learnings ride the memory store.)
 
 ## RC checklist (to assert on the pre-audit package)
 
-- [ ] no duplicate versions (query `schema_migrations` for duplicate `version`)
-- [ ] no missing versions expected by architecture (1..max contiguous)
-- [ ] full chain succeeds on a fresh profile
-- [ ] supported upgrade succeeds on a real prior DB (fixture at migration 14/15, then full chain)
-- [ ] `schema_migrations` max == expected on a packaged boot with a fresh data dir
-- [ ] backup-before-first-mutation behavior verified for migration 15 path
+- [x] no duplicate versions (query `schema_migrations` for duplicate `version`) — `test_v16_r8_migrations` (A-29)
+- [x] no missing versions expected by architecture (1..max; 16 is unclaimed by any module — verified 2026-09-19) — `test_v16_r8_migrations` (A-29)
+- [x] full chain succeeds on a fresh profile — `ux-audit/runs/r12-fresh2`
+- [x] supported upgrade succeeds on a real prior DB (fixture at migration 14/15, then full chain) — `ux-audit/runs/r12-upgrade`
+- [x] `schema_migrations` max == expected on a packaged boot with a fresh data dir — r12-fresh2/r12-upgrade (max 21)
+- [x] backup-before-first-mutation behavior verified for migration 15 path — `test_v13_memory` / proposals-backup tests
 
 ## Maintenance rules
 

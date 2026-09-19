@@ -1,0 +1,26 @@
+CORPUS LINT: FAIL (source: HEAD)
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: Status: PLANNED \(
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: Status: OPEN_GAP
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: Status: PARTIAL \(open APR
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: PARTIAL \(F4 open\)
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: PARTIAL \(V1\.5 designed
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: PARTIAL \(isolation holds
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: DELIVERED \(F4 binding gap open\)
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: integration pending in Campaign A
+  docs/v1.6/pre-audit/INVARIANT_LEDGER.md: stale marker present: REL-01 open
+  docs/v1.6/pre-audit/MIGRATION_LEDGER.md: stale marker present: Next free version: \*\*20\*\*
+  docs/v1.6/pre-audit/MIGRATION_LEDGER.md: stale marker present: \| planned \|
+  docs/v1.6/pre-audit/MIGRATION_LEDGER.md: stale marker present: \*\*assertion pending\*\*
+  docs/v1.6/pre-audit/MIGRATION_LEDGER.md: stale marker present: - \[ \] 
+  docs/v1.6/pre-audit/MIGRATION_LEDGER.md: required reconciliation marker missing: Next free version: \*\*22\*\*
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-R25-R9[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-R25-R11[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-R25-R12[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-WFWIRE[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-PKG-ASSERT[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: REQ-RC[^\n]*PENDING
+  docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md: stale marker present: re-verified open
+  docs/v1.6/pre-audit/AUDIT_HANDOFF.md: stale marker present: \|\s*TBD
+  docs/v1.6/pre-audit/AUDIT_HANDOFF.md: required reconciliation marker missing: FINALIZED at PRE-AUDIT RC
+  docs/v1.6/pre-audit/P2_P3_DISPOSITION.md: required reconciliation marker missing: TL;DR \(Campaign C
+  docs/v1.6-visual-ux/00_STATUS.md: required reconciliation marker missing: Reconciliation note \(Campaign C

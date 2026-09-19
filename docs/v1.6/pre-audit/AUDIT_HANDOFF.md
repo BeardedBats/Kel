@@ -1,24 +1,24 @@
 # AUDIT_HANDOFF — Campaign B entry point
 
-status: OPEN — this file is finalized at PRE-AUDIT RC
-updated: 2026-09-18T16:05Z
+status: FINALIZED at PRE-AUDIT RC (reconciled 2026-09-19, Campaign C AUD-MINOR-005)
+updated: 2026-09-19 (previously 2026-09-18T16:05Z)
 
-When Campaign A closes, this file binds the exact range and points to everything else. Until then
-it carries the current values; treat every `TBD` as not-yet-true.
+The bindings are filled (Campaign C reconciliation 2026-09-19); treat any remaining `TBD` as
+not-yet-true.
 
 ## Bindings
 
 | Field | Value |
 |---|---|
-| PRE_AUDIT_V1_6_HEAD | TBD (recorded at RC in `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md`) |
+| PRE_AUDIT_V1_6_HEAD | `08f5667` (recorded in `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md`; Campaign C repairs continue on `repair/v16-final`) |
 | last_independently_audited_commit | `8a2b25d` (audit increment 24 CONTINUE; cumulative coverage `5e76b21..8a2b25d`) |
-| unaudited production range | opens with the first Campaign A production commit (TBD); ends at PRE_AUDIT_V1_6_HEAD |
+| unaudited production range | `8a2b25d..08f5667` (73 commits, COMMIT_LEDGER-reconciled); Campaign C repair range continues from the audit head `a3490095889222862ea13b4b696166c0ddc5bf0f` |
 | integration branch | `ux/v15-journeys` (stable branch `main` holds the last frozen release, v1.5.0) |
-| migration version at open | 19 applied (max); next free version = 20 |
+| migration version at open | 19 applied (max at corpus open); RC truth: max 21, next free 22 (reconciled 2026-09-19; MIGRATION_LEDGER) |
 | P2/P3 denominator | **26 canonical rows (P2 10, P3 16)** — the directive's 27 = P2 10 + P3 17 worklist arithmetic; full original-ID reconciliation in `P2_P3_DISPOSITION.md` §Denominator reconciliation (added 2026-09-18, R9 bookkeeping) |
-| production commit count in range | TBD (see COMMIT_LEDGER.md) |
-| major changed subsystems | TBD (filled per phase; seed: memory, capabilities/UX, providers, workforce wiring, engine-loss UX, visual integration) |
-| high-risk commits | TBD (recorded per increment in COMMIT_LEDGER.md) |
+| production commit count in range | 73 (reconciled 2026-09-19; gate `docs/v1.6/audit-final/tools/reconcile-commit-ledger.py`) |
+| major changed subsystems | memory, capabilities/UX, providers, workforce (schemas / reservations / task-link / parallel), engine-loss UX, package identity + freeze tooling, approvals + IPC hardening, audit corpus |
+| high-risk commits | recorded per increment in COMMIT_LEDGER.md (highest: freeze staging `93b99b5`, packaging RC `08f5667`, sender guard `eaf7bad`, containment `c056a8a`) |
 
 ## Index paths
 
