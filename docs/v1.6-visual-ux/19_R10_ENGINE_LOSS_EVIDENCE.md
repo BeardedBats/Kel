@@ -21,7 +21,7 @@ errors, screenshots at every state.
 |---|---|---|
 | `r10-c` | first complete package (pre fail-fast follow-ups) | full journey PASS (42s); 5 screenshots |
 | `r10-d` / `r10-e` | mid (spawn-failure deadline burn) | honest path PASS but slow: two real 45s attempt waits before could-not-recover |
-| `r10-f` | **final `fa66f04`** | focused cannot-restart PASS with fail-fast: kill → reconnecting → attempt 1 fails (2 ms) → attempt 2 fails (2 ms) → could-not-recover in ~5 s → manual retry → recovered in 0.5 s; 2 screenshots |
+| `r10-f` | **final `fa66f04`** | focused cannot-restart PASS with fail-fast: kill → reconnecting → attempt 1 fails → attempt 2 fails (per-attempt "2 ms" values were not retained — AUD-MINOR-004 addendum d; the load-bearing timings are retained) → could-not-recover in ~5 s → manual retry → recovered in 0.5 s; 2 screenshots |
 | `r10-g` | **final `fa66f04`** | full journey PASS; 5 screenshots; rawLeaks `[]`; consoleErrors `0` |
 
 ## r10-g (final full journey) — measured facts
