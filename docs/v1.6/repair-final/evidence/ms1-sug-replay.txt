@@ -1,0 +1,6 @@
+probe: GET /a/[kel:web=off] 200
+clauses: [('web', 'off')]
+matching is by design (docstring now states it); quoted/code/word-embedded/scheme-URL stay inert:
+  quoted  -> []
+  url     -> []
+  embedded-> []

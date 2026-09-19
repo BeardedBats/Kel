@@ -437,11 +437,17 @@ def _nested_in_brackets(text, start, end):
 def directive_clauses(text):
     """Reserved `[kel:<capability>=<state>]` directives (outside quotes and code); [] otherwise.
 
-    Only the canonical names and states match; a generic bracket such as `[web: off]`, a malformed
-    token, an unknown capability or state, a nested bracket, a quoted or code sample and a URL
-    segment all match nothing — the message is forwarded byte-for-byte unchanged. Multiple reserved
-    directives are supported and applied in source order (a repeated capability ends on its last
-    value). Only the exact reserved token is removed from the forwarded request.
+    The exact reserved token FIRES WHEREVER IT APPEARS OUTSIDE QUOTES / INLINE CODE / FENCES —
+    including a bare unquoted technical string such as a pasted log line
+    (`GET /a/[kel:web=off] 200`), punctuation-adjacent spellings (`A,[kel:web=off],B`) and
+    mixed-case ones (`[Kel:Web=OFF]`); that is by design — a deliberate human token is honored
+    wherever it is typed. What never fires: a generic bracket such as `[web: off]`, a malformed
+    token, an unknown capability or state, a nested bracket, anything inside quotes / a code
+    sample / a fence, and a token inside a scheme URL segment (`://` before it). Only the
+    canonical names and states match; the rest of the message is forwarded byte-for-byte
+    unchanged. Multiple reserved directives are supported and applied in source order (a repeated
+    capability ends on its last value). Only the exact reserved token is removed from the
+    forwarded request. (Wording aligned to behavior under Campaign C AUD-SUG-001.)
     """
     text = str(text or '')
     if not text or len(text) > 2000:
