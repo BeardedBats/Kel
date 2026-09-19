@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 11 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 1
+- Repaired: 12 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 0
 
 ## Ledger
 
@@ -22,7 +22,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | REPAIRED | `197dbff` | provenance wiring pins (fail pre-fix) + build-side assertion; reference sha256 bound | staged vs packaged `aioncore.exe` byte-identical; `provenance.json` recorded (`mi7-*`) | KEEP (live backend) + provenance-bound; exe metadata donor-named by design (re-audit note) |
 | AUD-MINOR-008 | MINOR | Donor desktop-pet subsystem wired | REPAIRED | `197dbff` | donor tests 5/5 (3 fail pre-fix); gates at 3 entry points | reachability list in `06_DONOR_DISPOSITIONS.md`; settings toggle no-op | modules/assets retained inert; removal deferred post-V1.6 (recorded) |
 | AUD-MINOR-009 | MINOR | Donor builder config is the default build path | REPAIRED | `197dbff` | build-identity pins (fail pre-fix); desktop vitest 152/152; tsc 0 | both builder invocations use `kel-builder.json`; identity assertion pre-build | artifact metadata re-asserted at §17/18 package evidence |
-| AUD-SUG-001 | SUG | Capability directive docstring vs behavior | PENDING | — | — | — | — |
+| AUD-SUG-001 | SUG | Capability directive docstring vs behavior | REPAIRED | `6d665b2` | docstring-conformance table (accepted/rejected) + docstring pin (fails pre-fix); focused 39/39 | replay: `GET /a/[kel:web=off] 200` matched by design; docstring now states it; quoted/code/embedded/URL inert | behavior deliberately unchanged (documentation alignment); no parser risk |
 
 Per-finding detail (reproduction, root cause, repair, tests, replay, residual risk) is appended below as each finding is dispositioned.
 
@@ -121,3 +121,12 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Repair:** the script now uses `KEL_BUILDER_CONFIG = 'kel-builder.json'` for both invocations (main + mac prepackaged DMG) and calls `assertKelBuildIdentity()` before the vite build — refusing to build unless `kel-builder.json` carries `productName: Kel` and `appId: com.kel.desktop`; the donor yml remains only as the `extends` base. All package scripts (`dist`, `dist:win`, …) flow through the Kel default.
 - **Tests:** `donor-policy.test.ts` build-identity pins (fail pre-fix); artifact metadata re-asserted at §17/18 package evidence (exe metadata / installer hash / ARP).
 - **Residual risk:** none beyond the §17/18 artifact binding.
+
+### AUD-SUG-001 — detail (REPAIRED, `6d665b2`)
+
+- **Reproduction (Campaign B):** the `directive_clauses` docstring described exclusions imprecisely — a bare unquoted technical token (`GET /a/[kel:web=off] 200`) fires by design, while the docstring implied broader inertness.
+- **Disposition:** documentation alignment (narrow) — the parser is deliberately unchanged; "do not turn a suggestion into architecture work".
+- **Repair:** the docstring now states the exact rule (token FIRES WHEREVER IT APPEARS OUTSIDE QUOTES / INLINE CODE / FENCES — log lines, punctuation-adjacent, mixed case; scheme-URL segments and quoted/coded forms inert).
+- **Tests:** `test_sug_001_docstring_matches_behavior` — accepted/rejected conformance table (incl. the suggestion's exact probe) + a docstring pin that fails pre-fix (`ms1-conformance-prefix-fail.txt`); focused suite 39/39 (`ms1-conformance-postfix.txt`).
+- **Replay:** `ms1-sug-replay.txt` — behavior unchanged and now documented; quoted/code/word-embedded/scheme-URL stay inert.
+- **Residual risk:** none (no parser change).

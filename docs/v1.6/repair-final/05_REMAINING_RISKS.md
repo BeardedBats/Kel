@@ -19,3 +19,4 @@ Campaign C residual-risk notes (appended per finding):
 - **AUD-MINOR-007 (repaired `197dbff`):** the donor binary stays (live backend) with Kel-side provenance; its Windows exe metadata remains donor-named by design (packaged under `resources/bundled-aioncore/`, not user-visible) — re-audit note.
 - **AUD-MINOR-008 (repaired `197dbff`):** inert pet assets remain shipped by deliberate decision (no risky deletion); post-V1.6 cleanup candidate — recorded.
 - **AUD-MINOR-009 (repaired `197dbff`):** artifact metadata (exe/installer/ARP) is re-asserted at §17/18; until then the config-level identity assertion is the bound evidence.
+- **AUD-SUG-001 (repaired `6d665b2`):** behavior deliberately unchanged; the docstring-conformance table pins the accepted/rejected forms so future edits cannot silently diverge the documentation again.

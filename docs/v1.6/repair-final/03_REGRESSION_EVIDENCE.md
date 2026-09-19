@@ -77,4 +77,9 @@ How to re-run (from `runtime/`):
 - Regression: `evidence/md-donor-full-vitest.txt` — desktop vitest 152/152 (15 files); `tsc --noEmit` exit 0.
 - Decisions + reachability lists: `06_DONOR_DISPOSITIONS.md`.
 
+## AUD-SUG-001 — directive docstring alignment (REPAIRED, `6d665b2`)
+
+- Docstring conformance: `evidence/ms1-conformance-postfix.txt` (focused 39/39); `ms1-conformance-prefix-fail.txt` (docstring pin fails pre-fix).
+- Replay: `evidence/ms1-sug-replay.txt` — the suggestion's exact probe matches by design and is now documented; quoted/code/word-embedded/scheme-URL stay inert.
+
 (Results appended per finding as repairs complete.)
