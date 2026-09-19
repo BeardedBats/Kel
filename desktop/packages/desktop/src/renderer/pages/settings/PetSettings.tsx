@@ -53,14 +53,29 @@ const PetSettings: React.FC = () => {
   const handleEnabledChange = useCallback((checked: boolean) => {
     setEnabled(checked);
     configService.setLocal('pet.enabled', checked);
-    systemSettings.setPetEnabled.invoke({ enabled: checked }).catch((error: unknown) => {
-      // The toggle must never sit ON when the pet cannot actually be created: settle back to the
-      // real state and say why (RA-MINOR-003). A reload must not contradict what was just shown.
-      setEnabled(!checked);
-      configService.setLocal('pet.enabled', !checked);
-      const detail = String((error as Error)?.message || '').trim();
-      Message.error(detail || 'Kel could not change the desktop pet just now.');
-    });
+    systemSettings.setPetEnabled
+      .invoke({ enabled: checked })
+      .catch(() => {
+        // The bridge refuses loudly, but the refusal reason already traveled; settle below.
+        configService.setLocal('pet.enabled', !checked);
+      })
+      .finally(async () => {
+        // The toggle must never sit ON when the pet cannot actually be created (RA-MINOR-003):
+        // re-read the authoritative state and settle the UI + stored value on the truth, with a
+        // reason when an enable was refused. A reload must not contradict what was just shown.
+        try {
+          const actual = await systemSettings.getPetEnabled.invoke();
+          setEnabled(Boolean(actual));
+          configService.setLocal('pet.enabled', Boolean(actual));
+          if (checked && !actual) {
+            Message.error('The desktop pet is not available in this build, so it stays off.');
+          }
+        } catch {
+          setEnabled(false);
+          configService.setLocal('pet.enabled', false);
+          if (checked) Message.error('The desktop pet could not be turned on.');
+        }
+      });
   }, []);
 
   const handleSizeChange = useCallback(

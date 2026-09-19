@@ -41,7 +41,8 @@ describe('desktop pet truthfulness (RA-MINOR-003)', () => {
   it('the settings toggle reverts and explains when the enable is refused', () => {
     const page = read('packages/desktop/src/renderer/pages/settings/PetSettings.tsx');
     expect(page).toContain('Message.error');
-    expect(page).toContain('setEnabled(!checked)');
+    expect(page).toMatch(/getPetEnabled\.invoke\(\)/);
+    expect(page).toContain('setEnabled(Boolean(actual))');
   });
 });
 
