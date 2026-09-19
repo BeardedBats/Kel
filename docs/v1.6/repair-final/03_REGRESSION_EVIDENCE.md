@@ -16,4 +16,12 @@ How to re-run (from `runtime/`):
 - Sibling search (all resolution entry points): chat `resolve` (fixed; used by `/api/approvals`, which passes the declared conversation); legacy `/api/approval` singular route (now scoped); `store.resolve_approval` primitive callers — the chat path (guarded) and the coding-adapter expiry-deny, which acts on the run id it owns (reviewed); `Autonomy.resolve_expansion` callers — chat access kind (guarded) and `/api/autonomy` resolve (Work surface, by-id by design; Campaign B reviewed; retained re-audit item); UI callers declare the conversation (KelWorkPanel/KelApprovalCard).
 - Residual risk: `/api/state` still returns an unscoped read-only pending-approvals list (display data, no resolution path) — explicit re-audit item, see `05_REMAINING_RISKS.md`.
 
+## AUD-MAJOR-002 — privileged IPC sender validation (REPAIRED, `eaf7bad`)
+
+- Guard truth table + per-channel refusals: `evidence/ma2-newtests-postfix-pass.txt` — focused run 2 files, 25 passed. Spoof shapes exercised per family: subframe, foreign origin, missing `senderFrame`, missing `sender.mainFrame`, frame without url, mismatched frame identity; plus the legit main-frame path.
+- Pre-fix discrimination: stash replay (tracked sources reverted) → 4 failed / 14 passed on the in-place channels (`evidence/ma2-newtests-prefix-fail.txt`); extracted families' pre-fix inline handlers guard-free at HEAD (`evidence/ma2-prefix-anchors.txt`).
+- TypeScript: `node_modules/.bin/tsc -p tsconfig.json --noEmit` → exit 0 (`evidence/ma2-tsc-postfix.txt`). (`npx tsc` on this machine resolves the deprecated `tsc` stub package — the local binary is the correct invocation; recorded for reproducibility.)
+- Desktop regression: `cd desktop && npx vitest run` → 147 passed / 14 files, exit 0 (`evidence/ma2-desktop-vitest-full.txt`; Campaign B baseline at RC was 122/122 — +25 new tests).
+- Sibling search: full `ipcMain.*` inventory across `desktop/packages` — the guarded set (KelService 11, feedback 3, `backendStartupIpc` 5, adapter dispatcher 1) plus pet channels (`petManager`, `petConfirmManager`; MINOR-008 scope, reviewed, unchanged). No other privileged registrations exist.
+
 (Results appended per finding as repairs complete.)

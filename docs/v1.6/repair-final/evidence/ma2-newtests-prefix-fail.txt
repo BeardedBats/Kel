@@ -1,0 +1,28 @@
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22madapter bridge dispatcher[2m > [22mrefuses spoofed senders before any donor bridge method runs
+[31m[1mAssertionError[22m: an untrusted subframe: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m262:61[22m[39m
+    [90m260|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m261|[39m         // The dispatcher checks the guard before parsing; the refusal…
+    [90m262|[39m         expect(() => dispatch(makeEvent(), payload), label).toThrow(RE…
+    [90m   |[39m                                                             [31m^[39m
+    [90m263|[39m       }
+    [90m264|[39m       [34mexpect[39m(emitter[33m.[39memit)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m14 passed[39m[22m[90m (18)[39m
+[2m   Start at [22m 09:13:44
+[2m   Duration [22m 268ms[2m (transform 71ms, setup 18ms, import 80ms, tests 14ms, environment 0ms)[22m
+
