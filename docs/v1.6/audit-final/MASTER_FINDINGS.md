@@ -24,7 +24,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Adjacent risk:** same additive pattern elsewhere (vetting defaults `'main'` fail-closed; transcription stream calls still undeclared — documented). Audit the pattern anywhere scope is caller-optional.
 - **Repair acceptance criteria:** enforce ownership unconditionally (required param or default `'main'` consistent with reads); omission + cross-conversation refused with the existing sentence; decide the singular route (scope or remove); UI behavior unchanged.
 - **Regression test:** engine test — foreign/no-conversation resolution refused at chat module AND service layers, incl. hostile omission case.
-- **Campaign C:** `NOT_STARTED` — repair commit: — · re-test: — · final re-audit: —
+- **Campaign C:** `REPAIRED` — repair commit: `44aee9f` · re-test: focused 28/28 (`test_v16_approvals.py`), adjacent 129/129, probe-1 §A replay refused (omission no longer settles a foreign approval; `main`-parity kept) · final re-audit: `PENDING`
 
 ---
 
