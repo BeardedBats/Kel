@@ -1,9 +1,11 @@
 # VISUAL_EVIDENCE_INDEX — visual findings, batches, acceptance, human gate
 
-updated: 2026-09-18T16:05Z
+updated: 2026-09-18T00:20Z
 authority: `kel-v16-visual-audit/docs/v1.6-visual-ux/VISUAL_STATUS.md` (the schema block there is
 authoritative; this index mirrors it for the audit corpus). Implementation branch
-`ux/v16-visual-fix` @ `ac85eb3`; integration into Main: **NOT YET** (Campaign A §44 goal).
+`ux/v16-visual-fix` @ `fa66f04` (code) / `bc92f7f` (evidence); integration into Main:
+**DONE** — merge commit `7267630` (R11; before-mutation record in `increments/R11-INTEGRATION.md`,
+zero overlapping files, no conflict resolutions).
 
 ## Batch ledger
 
@@ -11,13 +13,12 @@ authoritative; this index mirrors it for the audit corpus). Implementation branc
 |---|---|---|---|---|---|---|---|---|
 | 1 — design tokens | visual plan set §tokens | — | `8dd21f9` | 39/39 WCAG contrast checks; tsc 0; vitest 76/76 | package-visual5 (probe a) | visual5 captures 1–23 (probe a) | OPEN | PENDING |
 | 2 — settings shell | finding S1-1 + Tools route | — | `3d9202c` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
-| 3 — Work / Projects / Permissions | held | — | — | — | — | — | — | HELD (Main surface release needed) |
-| 4 — transcription IA | finding 2/3 baseline caveat | — | `83af16f` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
-| 5 — sidebar rows (action gutter + leading mark) | findings S2/S3 (03 §2, 03 §4 · 04 §4.2) | — | `ac85eb3` | tsc 0; **79/79** (+3 unit tests) | package-visual5 probe c: overlapPx −4 (was +12), 32px gutter, marks correct | package-visual5 captures (probe c) | OPEN | PENDING |
-| 5 (Team half) | team terminology / entry merge | — | — | — | — | — | — | HELD |
-| 6 — engine loss / error translation / supervision | findings 16/17 reproduced by probe b | HIGH (raw `TypeError: fetch failed` surfaces) | — | — | — | — | — | PENDING |
-| 7 — composer / Model / Tools | gated by coordinator | — | — | — | — | — | — | HELD |
-| 8 — final normalization (settings half) | — | — | — | — | — | — | — | HELD |
+| 6 — engine loss / error translation / supervision | findings 16/17 reproduced by probe b | HIGH (raw `TypeError: fetch failed` surfaces) | `2897207` (+ `645898a`, `fa66f04` fail-fast follow-ups) | tsc 0; vitest 114→122 (classifier + health-machine suites) | **R10 packaged journey PASS** — `ux-audit/runs/r10-{f,g}/` (r10-g full journey; r10-f fast-fail cannot-restart); 7 screenshots; DOM leak scan clean | `r10-g/r10-0{0..4}*.png`, `r10-f/r10d-0*.png` | OPEN | **DONE** (`7267630`) |
+| 7 — composer / Model / Tools | finding 2 (03 §2) | — | `0e7d21a` | tsc 0; vitest 114 | covered by r10-g boot/connected captures | `r10-g/r10-00-connected.png` | OPEN | **DONE** (`7267630`) |
+| 8 — final normalization | directive §8 | — | `c911d81` | tsc 0; vitest 114 | covered by r10-g captures | as above | OPEN | **DONE** (`7267630`) |
+| R9.D — Needs Your Attention | directive §9 / roadmap item N | — | `938dc9b` | tsc 0; vitest 122 (hostile isolation suite) | R12 battery (Work-surface capture) | — | OPEN | **DONE** (`7267630`) |
+| 3 — Work / Projects / Permissions (full rebuild) | visual plan set | — | — | — | — | — | — | NOT ORDERED (normalization-only scope applied in batch 8) |
+| 5 (Team half full redesign) | team terminology / entry merge | — | — | — | — | — | — | NOT ORDERED (normalization-only) |
 
 ## Packaged acceptance detail (package-visual5, 2026-09-18)
 
@@ -59,8 +60,10 @@ Committed captures + reproduction commands: `docs/v1.6/branding/evidence/`.
 
 - **Two missing baseline captures** for findings 2 and 3 (before those surfaces are touched).
 - **Human pixel review**: OPEN — no image perception in agent threads; prepared index stands ready.
-- **Integration**: commit lineage must be preserved on merge (§44); every conflict resolution is
-  an audit target (AUDIT_TARGETS §29).
+- **Integration DONE** (`7267630`): zero overlapping files at integration time; no conflict
+  resolutions were required (audit target §29 therefore records "no resolutions"). R9/R10 lineage
+  preserved in `docs/v1.6-visual-ux/17–19` and the corpus rows of `increments/R11-INTEGRATION.md`.
 - **Main edit notice (2026-09-18):** Phase 6 (`22f4a3e`) touched `KelWorkPanel.tsx` (Knowledge tab
-  only) — the HELD visual batches (3, 5-team half) are not affected by this edit; the Visual thread
-  revalidates against current Main before editing per protocol.
+  only) — resolved during R9.A by re-anchoring the lane on Main `05608e6` (pure-union merge); the
+  pre-existing `KelModelControl` / `KelApprovalCard` / `KelCapabilityCard` behavior was preserved
+  exactly as Main shipped it.

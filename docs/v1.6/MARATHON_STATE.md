@@ -3,7 +3,7 @@
 MARATHON_MODE: ACTIVE
 
 start_head: 756218e (published docs tip; production 8a677d0)
-current_head: `05608e6` (docs: denominator reconciliation) + R9 visual lane `938dc9b`/`96979c7` (see `git log --oneline -20` in both worktrees)
+current_head: `7267630` (R11 integration merge; visual lane `bc92f7f` integrated; see `git log --oneline -20`)
 
 completed_this_run:
 - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
@@ -32,32 +32,39 @@ completed_this_run:
   the R9 evidence index (`96979c7`). Acceptance: tsc 0, vitest **122/122**. Bookkeeping: the
   27-vs-26 P2/P3 denominator is RECONCILED (`05608e6`; every original finding ID mapped;
   no closed finding reopened; no repo gap found).
-- **R10 IN PROGRESS** — packaged journey: `Kel-1.6.0` win-unpacked rebuilt from the re-anchored
-  lane, bundling the frozen **1.6.0** engine (the visual worktree's `dist/runtime/KelEngine` was
-  a stale 1.5.0 bundle — replaced from `kel-ux-v15/dist/runtime/KelEngine`, verified 1.6.0 in the
-  package). The packaged engine-loss probe (kill → reconnecting → supervised restart → durable
-  folder preserved → repeat loss → could-not-recover → manual retry; `desktop-link.log`
-  transitions; screenshots; raw-leak scan) is running.
+- **R10 COMPLETE** — packaged engine-loss/recovery journey PASS on the final lane package: boot
+  healthy (engine 1.6.0) → kill → truthful reconnecting → supervised restart → durable work
+  preserved → repeat loss → recovered → restart impossible → honest could-not-recover (~5 s with
+  the ENOENT fail-fast) → manual retry → recovered. Evidence `ux-audit/runs/r10-{f,g}` (7
+  screenshots; DOM leak scan clean; console errors 0); record `docs/v1.6-visual-ux/19_…`.
+- **R11 COMPLETE** — visual lane → Main merge `7267630` (before-mutation record: merge base
+  `05608e6`, Main-only 3 docs, Visual-only 55 files, ZERO overlapping files, no conflict
+  resolutions); post-merge Main: tsc 0 + vitest 122/122; corpus records updated
+  (`COMMIT_LEDGER`, `CHANGE_LEDGER` CHG-024…028, `REQUIREMENTS_TRACEABILITY`, `VISUAL_EVIDENCE_INDEX`,
+  `increments/R11-INTEGRATION.md`).
 - breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
   MAIN_STATUS, AUTO_RESUME
 
-current_phase: R10 - engine-loss/recovery packaged journey
-current_item: R10 - run + collect the packaged journey (session `51g2x4zf`), then write the R10 evidence record
+current_phase: R12 - final Campaign A regression + packaged/installed battery
+current_item: R12 - full engine + desktop suites, packaged/installed battery from the MERGED Main, failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD
 
 next_queue:
-1. R10 — finish the packaged engine-loss/recovery journey + record evidence (screenshots, link log)
-2. R11 — Visual → Main integration (before-mutation checks; resolve KelService/transcription/
-   KelWorkPanel overlaps on current semantics; tsc + vitest + packaged probes after)
-3. R12 — final Campaign A regression: full engine suite, desktop suite, packaged/installed
-   battery (installer, icons, About, console), failure injection, release integrity
-4. PRE_AUDIT_V1_6_HEAD — finalize the pre-audit corpus + the Campaign B handoff
+1. R12 — full engine suite (fresh + upgrade DB, all V1.6 migrations, authority/approvals/leases/
+   idempotency/effects/retry/persist/liveness/recovery/memory/continuation/providers/routing/D1-D3/
+   assurance/learning/evidence/completion/lineage/vetting/transcription/restore/release identity)
+2. R12 — desktop tsc + full vitest on the merged tree
+3. R12 — packaged/installed battery: rebuild from merged Main; NSIS installer + icons + About +
+   branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals +
+   capabilities + memory + transcription + artifacts + Workforce asserts + attention + engine-loss
+4. R12 — failure injection + release integrity
+5. PRE_AUDIT_V1_6_HEAD — finalize `PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B handoff corpus
 
-last_focused_tests: R9 lane: desktop vitest 122/122 (12 files) + tsc 0 (visual lane tip `938dc9b`)
-last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` (was 974 at `8c899c8`)
-last_desktop_tsc: 0 errors (visual lane, R9 batches 6-8 + R9.D; main lane 93-era still green)
-last_desktop_vitest: **122 passed** (12 files, R9 lane)
-last_packaged: `Kel-1.6.0` win-unpacked (visual lane, engine 1.6.0 verified) + R10 journey in flight
+last_focused_tests: R11 post-merge: desktop vitest 122/122 (12 files) + tsc 0 on Main
+last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` — R12 re-runs on the merged tree
+last_desktop_tsc: 0 errors (Main post-merge `7267630`)
+last_desktop_vitest: **122 passed** (12 files, Main post-merge)
+last_packaged: `Kel-1.6.0` lane package + R10 journey PASS (`ux-audit/runs/r10-{f,g}`); R12 rebuilds from Main incl. the installer
 
 last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
 last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
