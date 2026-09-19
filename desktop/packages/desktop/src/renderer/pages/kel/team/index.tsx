@@ -12,7 +12,6 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelMeter,
   KelStatusChip,
@@ -21,6 +20,7 @@ import {
   formatWhen,
   statusFromDerived,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import {
   KelAssignment,
   KelRole,
@@ -63,7 +63,7 @@ export default function KelTeamPage() {
   const [assignments, setAssignments] = useState<KelAssignment[] | null>(null);
   const [roles, setRoles] = useState<KelRole[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [events, setEvents] = useState<KelTeamEvent[]>([]);
   const [detail, setDetail] = useState<KelRoleDetail | null>(null);
@@ -78,7 +78,7 @@ export default function KelTeamPage() {
       setRoles(roster.roles);
       setDepartments(roster.departments);
     } catch (err) {
-      setError(String(err instanceof Error ? err.message : err));
+      setError(err);
     }
   }, []);
 
@@ -92,7 +92,7 @@ export default function KelTeamPage() {
       const timeline = await kelTeam.timeline(assignmentId);
       setEvents(timeline.events);
     } catch (err) {
-      setError(String(err instanceof Error ? err.message : err));
+      setError(err);
       setEvents([]);
     }
   }, []);
@@ -105,7 +105,7 @@ export default function KelTeamPage() {
       setHistory(versions.versions);
       setView('studio');
     } catch (err) {
-      setError(String(err instanceof Error ? err.message : err));
+      setError(err);
     } finally {
       setBusy(false);
     }
@@ -118,7 +118,7 @@ export default function KelTeamPage() {
         await kelTeam.rollback(templateId, to);
         await openRole(templateId);
       } catch (err) {
-        setError(String(err instanceof Error ? err.message : err));
+        setError(err);
       } finally {
         setBusy(false);
       }
@@ -163,13 +163,7 @@ export default function KelTeamPage() {
           />
         </div>
 
-        {error && (
-          <KelErrorState
-            title="Kel could not read the team state"
-            cause={error}
-            fix="Check that the engine is running, then retry."
-          />
-        )}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
 
         {!error && assignments === null && <KelLoading rows={4} />}
 

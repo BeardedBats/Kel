@@ -41,7 +41,7 @@ export function resolveConversationBackend(
   return conversation.type;
 }
 
-export type ConversationLeadingMark =
+export type ConversationLeadingMark = (
   | {
       kind: 'emoji';
       value: string;
@@ -59,7 +59,17 @@ export type ConversationLeadingMark =
   | {
       kind: 'assistant_fallback';
       label: string;
-    };
+    }
+) & {
+  /**
+   * True when the mark merely restates the single default assistant — the same
+   * backend logo repeated on every row, or a generic robot/message glyph. Rows
+   * hide decorative marks on plain expanded rows; avatar marks (emoji/image for
+   * a genuinely assigned or preset assistant) carry information and are never
+   * decorative (visual batch 5; findings 03 §4 / 04 §4.2).
+   */
+  decorative?: boolean;
+};
 
 export function resolveConversationLeadingMark(
   conversation: TChatConversation,
@@ -71,6 +81,7 @@ export function resolveConversationLeadingMark(
       return {
         kind: 'assistant_fallback',
         label: assistantInfo.name,
+        decorative: true,
       };
     }
 
@@ -108,6 +119,7 @@ export function resolveConversationLeadingMark(
     return {
       kind: 'assistant_fallback',
       label: assistantLabel,
+      decorative: true,
     };
   }
 
@@ -118,11 +130,13 @@ export function resolveConversationLeadingMark(
       kind: 'image',
       value: logo,
       label: backendKey,
+      decorative: true,
     };
   }
 
   return {
     kind: 'fallback',
     label: backendKey,
+    decorative: true,
   };
 }

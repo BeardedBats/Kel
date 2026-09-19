@@ -341,6 +341,15 @@ const ChatConversation: React.FC<{
             assistantId={acpAssistantId}
             forkCapability={conversation.fork_capability}
             promptCapability={conversation.prompt_capability}
+            composerControls={
+              acpAssistantId === 'kel' || !acpAssistantId ? (
+                <div className='flex items-center gap-8px min-w-0 flex-wrap'>
+                  <KelModelPill conversationId={conversation.id} />
+                  <KelToolsControl conversationId={conversation.id} />
+                  <KelMemoryProposalControl conversationId={conversation.id} />
+                </div>
+              ) : undefined
+            }
           ></AcpChat>
         );
       default:
@@ -382,23 +391,18 @@ const ChatConversation: React.FC<{
       // per-chat model choice, both in plain language. Other assistants keep the ACP selector.
       if (acpAssistantId === 'kel' || !acpAssistantId) {
         // The donor selector stays mounted (invisible): its warmup drives the sendbox/mic
-        // readiness. The Kel pill replaces it visually so the choice reads in plain language.
+        // readiness. The visible Kel controls live WITH the composer (batch 7, finding 2).
         return (
-          <>
-            <span style={{ display: 'none' }} aria-hidden='true'>
-              <AcpModelSelector
-                conversation_id={conversation.id}
-                readonlyLabel={t('common.kel.automatic')}
-                backend={resolvedConversationBackend}
-                initialModelId={extra.current_model_id}
-                onRuntimeReadyChange={handleRuntimeReadyChange}
-                waitForWarmup
-              />
-            </span>
-            <KelModelPill conversationId={conversation.id} />
-            <KelToolsControl conversationId={conversation.id} />
-            <KelMemoryProposalControl conversationId={conversation.id} />
-          </>
+          <span style={{ display: 'none' }} aria-hidden='true'>
+            <AcpModelSelector
+              conversation_id={conversation.id}
+              readonlyLabel={t('common.kel.automatic')}
+              backend={resolvedConversationBackend}
+              initialModelId={extra.current_model_id}
+              onRuntimeReadyChange={handleRuntimeReadyChange}
+              waitForWarmup
+            />
+          </span>
         );
       }
       return (
@@ -426,6 +430,10 @@ const ChatConversation: React.FC<{
   if (conversation && conversation.type === 'aionrs') {
     return <AionrsConversationPanel key={conversation.id} conversation={conversation} sliderTitle={sliderTitle} />;
   }
+
+  // Batch 7 (finding 2): kel conversations' secondary controls (model / tools / memory) form a
+  // compact row attached to the composer — one assistant, no provider machinery, no detached
+  // islands, no duplicate controls (the header keeps only the invisible warmup selector).
 
   // 如果有预设助手信息，使用预设助手的 logo 和名称；加载中时不进入 fallback；否则使用 backend 的 logo
   // If preset assistant info exists, use preset logo/name; while loading, avoid fallback; otherwise use backend logo

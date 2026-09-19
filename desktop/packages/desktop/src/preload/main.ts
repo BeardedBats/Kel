@@ -110,6 +110,19 @@ contextBridge.exposeInMainWorld('kelAPI', {
   history: (id: string) => ipcRenderer.invoke('kel:history', id),
   conversation: (id: string) => ipcRenderer.invoke('kel:conversation', id),
   historySearch: (query: string) => ipcRenderer.invoke('kel:history-search', query),
+  // Batch 6 (findings 16/17): the engine-link state for the shell's reconnecting / recovered /
+  // could-not-recover surfaces, the manual retry action, and the diagnostics bundle the failure
+  // card copies. Presentation support only — no durable state is owned here.
+  engineState: () => ipcRenderer.invoke('kel:engine-state'),
+  engineRetry: () => ipcRenderer.invoke('kel:engine-retry'),
+  diagnostics: () => ipcRenderer.invoke('kel:diagnostics'),
+  onEngineState: (callback: (frame: unknown) => void) => {
+    const handler = (_event: unknown, frame: unknown) => callback(frame);
+    ipcRenderer.on('kel:engine-state', handler);
+    return () => {
+      ipcRenderer.off('kel:engine-state', handler);
+    };
+  },
   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
   // Credential custody: store, list field names, delete. Deliberately no value getter, so a secret

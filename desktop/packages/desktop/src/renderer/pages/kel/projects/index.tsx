@@ -8,13 +8,14 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelSection,
   KelTable,
   KelTabs,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelMapAction, kelMemoryAction, kelRecipePreview, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
 
 type View = 'knowledge' | 'map' | 'recipes';
@@ -34,7 +35,7 @@ export default function KelProjectsPage() {
   }, [pathname]);
 
   const [work, setWork] = useState<KelWork | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ recipe: string; payload: Record<string, unknown> } | null>(
@@ -47,7 +48,7 @@ export default function KelProjectsPage() {
       setError(null);
     } catch (err) {
       setWork(null);
-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
+      setError(err);
     }
   }, []);
 
@@ -64,7 +65,7 @@ export default function KelProjectsPage() {
         setNote(`${label} recorded.`);
         await load();
       } catch (err) {
-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
+        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(null);
       }
@@ -112,13 +113,7 @@ export default function KelProjectsPage() {
         />
 
         {note && <p className="kel-meta">{note}</p>}
-        {error && (
-          <KelErrorState
-            title="Project context could not be loaded"
-            cause={error}
-            fix="Check that the Kel engine is running, then press Reload."
-          />
-        )}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !work && <KelLoading rows={4} />}
 
         {!error && work && view === 'knowledge' && (

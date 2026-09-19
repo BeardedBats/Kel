@@ -8,13 +8,14 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelSection,
   KelTable,
   KelTabs,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelAutonomy, type KelBoundaryRequest, type KelLease } from '@renderer/components/kel/kelApi';
 
 const STATE_CLASS: Record<string, string> = {
@@ -39,7 +40,7 @@ export default function KelAutonomyPage() {
   );
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(async () => {
     try {
@@ -55,7 +56,7 @@ export default function KelAutonomyPage() {
       setError(null);
     } catch (err) {
       setLeases([]);
-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
+      setError(err);
     }
   }, []);
 
@@ -72,7 +73,7 @@ export default function KelAutonomyPage() {
         setNote(`${label} recorded.`);
         await load();
       } catch (err) {
-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
+        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
@@ -117,13 +118,7 @@ export default function KelAutonomyPage() {
           their next cancellation check. It does not undo completed effects.
         </p>
 
-        {error && (
-          <KelErrorState
-            title="Autonomy state could not be loaded"
-            cause={error}
-            fix="Check that the Kel engine is running, then press Reload."
-          />
-        )}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && leases === null && <KelLoading rows={3} />}
         {note && <p className="kel-meta">{note}</p>}
 

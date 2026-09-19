@@ -96,6 +96,11 @@ declare global {
       history: (id: string) => Promise<unknown>;
       conversation: (id: string) => Promise<unknown>;
       historySearch: (query: string) => Promise<unknown>;
+      /** Batch 6: the shell's honest engine-link view + support actions. */
+      engineState?: () => Promise<unknown>;
+      engineRetry?: () => Promise<unknown>;
+      diagnostics?: () => Promise<unknown>;
+      onEngineState?: (callback: (frame: unknown) => void) => () => void;
       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
       credentials?: {
         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;

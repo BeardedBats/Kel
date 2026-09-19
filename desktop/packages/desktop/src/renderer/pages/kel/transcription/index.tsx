@@ -9,9 +9,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
-import { KelCard, KelEmpty, KelErrorState, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
+import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
 import styles from './index.module.css';
+
+/**
+ * Batch 6 (TR-02 residual): every failure toast goes through the classifier, so transport and
+ * infrastructure text never reaches a person. Engine sentences (already plain language) pass
+ * through unchanged.
+ */
+const failMessage = (error: unknown): string => failureSentence(error, 'That did not go through — try again.');
 
 type Folder = { id: string; name: string; created: number };
 type Transcript = {
@@ -78,7 +87,7 @@ const TranscriptionPage: React.FC = () => {
   const [status, setStatus] = useState<ProviderStatus>();
   const [library, setLibrary] = useState<Library>({ folders: [], transcripts: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [dragging, setDragging] = useState(false);
@@ -124,9 +133,9 @@ const TranscriptionPage: React.FC = () => {
       ]);
       setStatus(state);
       setLibrary(data);
-      setLoadError('');
+      setLoadError(null);
     } catch (error) {
-      setLoadError(String((error as Error)?.message || error));
+      setLoadError(error);
     }
   }, []);
 
@@ -201,7 +210,7 @@ const TranscriptionPage: React.FC = () => {
         if (/NotAllowed|NotFound|NotReadable|Overconstrained|Security|Permission/i.test(name + message)) {
           Message.error(friendlyMicError(error));
         } else {
-          Message.error(message);
+          Message.error(failureSentence(error, 'The microphone did not start. Check the audio device and try again.'));
         }
       }
     },
@@ -262,7 +271,7 @@ const TranscriptionPage: React.FC = () => {
         setSelectedId(saved.id);
         Message.success(appended ? 'Recording added to the transcript.' : 'Recording saved to Recents.');
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       } finally {
         setSeconds(0);
         setLiveText('');
@@ -289,7 +298,7 @@ const TranscriptionPage: React.FC = () => {
         setSelectedId(saved.id);
         Message.success('Transcript ready.');
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       } finally {
         setProgress('');
         setBusy(false);
@@ -320,7 +329,7 @@ const TranscriptionPage: React.FC = () => {
       if (transcriptId && folderId) {
         void transcription({ action: 'assign', id: transcriptId, folder: folderId })
           .then(() => refresh())
-          .catch((error) => Message.error(String((error as Error)?.message || error)));
+          .catch((error) => Message.error(failMessage(error)));
         return;
       }
       const file = event.dataTransfer.files?.[0];
@@ -338,7 +347,7 @@ const TranscriptionPage: React.FC = () => {
       setExpanded((current) => new Set(current).add(folder.id));
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [folderDraft, refresh]);
 
@@ -350,7 +359,7 @@ const TranscriptionPage: React.FC = () => {
         await transcription({ action: 'folder_rename', id, name: name.trim() });
         await refresh();
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [refresh]
@@ -368,7 +377,7 @@ const TranscriptionPage: React.FC = () => {
             await transcription({ action: 'folder_delete', id: folder.id });
             await refresh();
           } catch (error) {
-            Message.error(String((error as Error)?.message || error));
+            Message.error(failMessage(error));
           }
         },
       });
@@ -388,7 +397,7 @@ const saveName = useCallback(async () => {
       setRenaming(false);
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [nameDraft, refresh, selected]);
 
@@ -405,7 +414,7 @@ const saveName = useCallback(async () => {
             if (selectedId === item.id) setSelectedId(null);
             await refresh();
           } catch (error) {
-            Message.error(String((error as Error)?.message || error));
+            Message.error(failMessage(error));
           }
         },
       });
@@ -421,7 +430,7 @@ const saveName = useCallback(async () => {
         if (folderId) setExpanded((current) => new Set(current).add(folderId));
         await refresh();
       } catch (error) {
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [refresh, selected]
@@ -453,7 +462,7 @@ const saveName = useCallback(async () => {
       for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
       downloadBlob(exported.name, bytes, exported.mime || 'audio/wav');
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [selected]);
 
@@ -466,7 +475,7 @@ const saveName = useCallback(async () => {
       await refresh();
       Message.success('Merged into this transcript.');
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [combineSource, refresh, selected]);
 
@@ -505,7 +514,7 @@ const saveName = useCallback(async () => {
           setExpanded((current) => new Set(current).add(folderId));
           await refresh();
         } catch (error) {
-          Message.error(String((error as Error)?.message || error));
+          Message.error(failMessage(error));
         }
       },
     }),
@@ -522,7 +531,7 @@ const saveName = useCallback(async () => {
       Message.success('Muse is connected. New recordings and uploads use it.');
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [keyDraft, refresh]);
 
@@ -533,7 +542,7 @@ const saveName = useCallback(async () => {
       Message.success('Back to practice mode.');
       await refresh();
     } catch (error) {
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, [refresh]);
 
@@ -547,7 +556,7 @@ const saveName = useCallback(async () => {
       setReview((current) => ({ ...current, busy: false, payload, editing: false }));
     } catch (error) {
       setReview((current) => ({ ...current, busy: false }));
-      Message.error(String((error as Error)?.message || error));
+      Message.error(failMessage(error));
     }
   }, []);
 
@@ -585,7 +594,7 @@ const saveName = useCallback(async () => {
         setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false });
       } catch (error) {
         setReview((current) => ({ ...current, busy: false }));
-        Message.error(String((error as Error)?.message || error));
+        Message.error(failMessage(error));
       }
     },
     [review.mode, review.text, selected]
@@ -615,6 +624,20 @@ const statusCopy =
         onDrop={onDrop}
       >
         <aside className={styles.sidebar} aria-label='Transcript library'>
+          {/* Authoritative standalone IA (finding 6): the column keeps the donor's own title and a
+              plain-text API Key entry — not a gear — because that is where a user looks for the
+              transcription credential. */}
+          <div className={styles.sidebarHeader}>
+            <h1 className={styles.sidebarTitle}>Transcriptions</h1>
+            <button
+              type='button'
+              className={styles.apiKeyAction}
+              onClick={() => setSettingsOpen(true)}
+              data-testid='transcription-settings'
+            >
+              API Key
+            </button>
+          </div>
           <div className={styles.sectionTitle}>Folders</div>
           <div className={styles.scrollArea}>
             {library.folders.length === 0 && (
@@ -711,7 +734,7 @@ const statusCopy =
             </div>
           </div>
           <div className={styles.divider} />
-          <div className={styles.sectionTitle}>Recent Transcriptions</div>
+          <div className={styles.sectionTitle}>Recent</div>
           <div className={styles.scrollArea} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
@@ -737,39 +760,35 @@ const statusCopy =
               </button>
             ))}
           </div>
-          <div className={styles.divider} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 10px' }}>
-            <span className={styles.rowMeta} data-testid='transcription-mode'>
-              {status?.label || 'Checking…'}
-            </span>
-            <Button size='mini' type='text' style={{ marginLeft: 'auto' }} onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>
-              Source
-            </Button>
+          {/* The connection state stays one quiet line; the entry point moved to the column header. */}
+          <div className={styles.sidebarFooterNote} data-testid='transcription-mode'>
+            {status?.label || 'Checking…'}
           </div>
         </aside>
 
         <main className={styles.workspace}>
-          {loadError && (
-            <KelErrorState
-              title='Kel could not load the transcript library'
-              cause={loadError}
-              fix='Reopen this page or check that Kel is running.'
-            />
-          )}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
+          {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
+              Record — with Record last and primary. Record More is always present (disabled when there is
+              nothing to append to) instead of appearing conditionally. */}
+          <div className={styles.actionRow}>
             {recState === 'idle' && (
               <>
-                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
-                  Record
-                </Button>
                 <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
                   Upload Audio
                 </Button>
-                {selected?.source_type === 'recording' && (
-                  <Button onClick={() => void beginRecording(selected.id)} data-testid='record-more'>
-                    Record more
-                  </Button>
-                )}
+                <Button
+                  disabled={selected?.source_type !== 'recording'}
+                  onClick={() => {
+                    if (selected) void beginRecording(selected.id);
+                  }}
+                  data-testid='record-more'
+                >
+                  Record More
+                </Button>
+                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
+                  Record
+                </Button>
               </>
             )}
             <input
@@ -826,7 +845,7 @@ const statusCopy =
             )}
             {selected && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div className={styles.documentHeader}>
                   {renaming ? (
                     <Input
                       value={nameDraft}
@@ -838,12 +857,18 @@ const statusCopy =
                       data-testid='transcript-rename'
                     />
                   ) : (
-                    <strong className='text-16px' data-testid='transcript-name'>
+                    <h2 className={styles.documentTitle} data-testid='transcript-name'>
                       {selected.name}
-                    </strong>
+                    </h2>
                   )}
-                  <Button
-                    size='mini'
+                  {/* Saved / recording state reads beside the title, as in the standalone app. */}
+                  <span className={styles.documentStatus} data-testid='transcript-status'>
+                    {statusCopy}
+                  </span>
+                  <span className={styles.grow} />
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
                     onClick={() => {
                       setRenaming(true);
                       setNameDraft(selected.name);
@@ -851,10 +876,7 @@ const statusCopy =
                     data-testid='rename-button'
                   >
                     Rename
-                  </Button>
-                  <span className={styles.rowMeta} data-testid='transcript-status'>
-                    {statusCopy}
-                  </span>
+                  </button>
                 </div>
                 <div className={styles.rowMeta}>
                   {selected.source_type === 'recording' ? 'Recording' : `Upload: ${selected.source_filename || 'audio'}`}
@@ -880,16 +902,9 @@ const statusCopy =
                 <p className={styles.transcriptText} data-testid='transcript-text'>
                   {(selected.text || '').trim() || '(No speech was recognized.)'}
                 </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                    paddingTop: 10,
-                    marginTop: 10,
-                    borderTop: '1px solid var(--color-border-2)',
-                  }}
-                >
+                {/* Authoritative IA: the donor's four actions come first and keep the weight; Kel's
+                    additions stay available but quieter, so the document footer still reads as before. */}
+                <div className={styles.documentActions}>
                   <Button onClick={() => void copyTranscript()} data-testid='copy-transcript'>
                     Copy Transcript
                   </Button>
@@ -907,20 +922,37 @@ const statusCopy =
                     }}
                     data-testid='combine-open'
                   >
-                    Combine with…
+                    Combine
                   </Button>
-                  <Button onClick={sendToChat} data-testid='send-to-chat'>
+                </div>
+                <div className={styles.secondaryActions}>
+                  <button type='button' className={styles.secondaryAction} onClick={sendToChat} data-testid='send-to-chat'>
                     Send to chat
-                  </Button>
-                  <Button type='primary' onClick={() => void openReview('answers')} data-testid='use-vetting'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
+                    onClick={() => void openReview('answers')}
+                    data-testid='use-vetting'
+                  >
                     Use as vetting answers
-                  </Button>
-                  <Button onClick={() => void openReview('freethink')} data-testid='think-out-loud'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.secondaryAction}
+                    onClick={() => void openReview('freethink')}
+                    data-testid='think-out-loud'
+                  >
                     Think out loud
-                  </Button>
-                  <Button status='danger' onClick={() => removeTranscript(selected)} data-testid='delete-transcript'>
+                  </button>
+                  <button
+                    type='button'
+                    className={styles.dangerAction}
+                    onClick={() => removeTranscript(selected)}
+                    data-testid='delete-transcript'
+                  >
                     Delete
-                  </Button>
+                  </button>
                 </div>
               </>
             )}
@@ -930,27 +962,38 @@ const statusCopy =
 
       {dragging && <div className={styles.dropOverlay}>Drop audio or video to transcribe</div>}
 
+      {/* The user's explicit decision: the standalone app's key sheet, in Kel's words — a plain
+          "Meta API key" modal with no helper paragraph under the button. */}
       <Modal
-        title='Transcription source'
+        title='Meta API key'
         visible={settingsOpen}
         footer={null}
         onCancel={() => setSettingsOpen(false)}
         style={{ maxWidth: 480 }}
       >
-        <p style={{ marginBottom: 8 }}>{status?.detail || 'Checking the transcription source…'}</p>
+        <p className={styles.keySheetBody}>
+          {status?.has_key
+            ? 'Replace the key used for Muse transcription.'
+            : 'Add a Model API key to begin transcribing.'}
+        </p>
         {status && !status.has_key && (
-          <>
-            <p style={{ fontSize: 13, color: 'var(--color-text-2)', marginBottom: 8 }}>
-              Kel uses Muse (Meta) for live and file transcription when a Meta API key is connected. Without a
-              key, practice mode records exactly the same way and writes clear practice text.
-            </p>
+          <div className={styles.keySheetForm}>
+            <label className={styles.keySheetLabel} htmlFor='meta-api-key'>
+              API key
+            </label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Input.Password value={keyDraft} onChange={setKeyDraft} placeholder='Meta API key' data-testid='key-input' />
+              <Input.Password
+                id='meta-api-key'
+                value={keyDraft}
+                onChange={setKeyDraft}
+                placeholder='Paste your Meta Model API key'
+                data-testid='key-input'
+              />
               <Button type='primary' onClick={() => void saveKey()} disabled={!keyDraft.trim()} data-testid='key-save'>
-                Connect
+                Save and Verify
               </Button>
             </div>
-          </>
+          </div>
         )}
         {status?.has_key && (
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>

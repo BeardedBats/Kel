@@ -1,19 +1,20 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
-import { app, ipcMain, shell } from 'electron';
-import { spawn } from 'child_process';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
+import { EngineHealthMachine } from './engineHealth';
 import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
 const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
-async function kelRequest(route: string, body?: unknown) {
+async function kelRequest(route: string, body?: unknown, timeoutMs = 30000) {
   const address = new URL(descriptor.url);
   if (address.protocol !== 'http:' || address.hostname !== '127.0.0.1') throw new Error('Invalid local Kel address');
   const response = await fetch(new URL(route, descriptor.url), {
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(timeoutMs),
     method: body === undefined ? 'GET' : 'POST',
     headers: { Authorization: 'Bearer ' + descriptor.token, 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -21,46 +22,25 @@ async function kelRequest(route: string, body?: unknown) {
   if (!response.ok) throw new Error((await response.json()).error || 'Kel request failed');
   return response.headers.get('content-type')?.includes('application/json') ? response.json() : response.text();
 }
-export async function initializeKel(port: number): Promise<void> {
-  console.log(`[KEL-BOOT] initializeKel entry (aioncorePort=${port})`);
-  const root = dataRoot();
-  fs.mkdirSync(root, { recursive: true });
-  // Register the drain hook FIRST: if anything below fails, a quit must still
-  // ask the engine to stop so a failed startup never orphans KelEngine.
-  // The hook blocks the quit briefly so the HTTP drain cannot race process exit.
-  // Registered without removeAllListeners: other before-quit handlers (e.g. the
-  // config flush) must keep running.
-  let drained = false;
-  app.on('before-quit', (event) => {
-    if (drained || !descriptor) return;
-    event.preventDefault();
-    drained = true;
-    kelRequest('/api/shutdown-idle', {})
-      .catch((): undefined => undefined)
-      .finally(() => {
-        setTimeout(() => app.quit(), 50);
-      });
-  });
-  const descriptorPath = path.join(root, 'desktop-session.json');
-  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
-  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
-  // version must not be reused. A packaged build knows its own version; an unpackaged dev run
-  // reports Electron's through `app.getVersion()`, so it passes an empty expectation and the check
-  // is not enforced there.
-  const expectedEngineVersion = process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
-  const expectedEngineAnswered = async () => {
-    const state = (await kelRequest('/api/state')) as { engine_version?: string } | undefined;
-    return engineVersionAccepted(state?.engine_version, expectedEngineVersion);
-  };
-  let connected = false;
-  try {
-    descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
-    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
-    connected = true;
-    console.log('[KEL-BOOT] initializeKel reused running engine');
-  } catch {
-    console.log('[KEL-BOOT] initializeKel no live engine; spawning');
-  }
+
+// --------------------------------------------------------------------------------------------
+// Batch 6 (visual findings 16/17): engine launch helpers + honest supervision.
+// The launch helpers are shared by the first boot and by the supervised restart; the health
+// machine (./engineHealth) decides when a restart is due and never claims success it has not
+// observed. States are presentation-only — durable truth stays in the engine's own records.
+// --------------------------------------------------------------------------------------------
+const HEALTH_INTERVAL_MS = 5000;
+const HEALTH_TIMEOUT_MS = 4000;
+const PATIENT_PING_TIMEOUT_MS = 20000;
+const ENGINE_WAIT_MS = 45000;
+let spawnedByUs = false;
+let quitRequested = false;
+let healthMachine: EngineHealthMachine | undefined;
+let healthTimer: NodeJS.Timeout | undefined;
+let restartInFlight = false;
+let lastBroadcastState = '';
+
+function engineLaunchSpec() {
   const packed = path.join(process.resourcesPath, 'kel-engine', 'KelEngine.exe');
   const source = process.env.KEL_SOURCE_ROOT || path.resolve(process.cwd(), '../runtime');
   // AionCore validates the ACP agent's CLI via its whitespace-split `binary_name`
@@ -68,7 +48,7 @@ export async function initializeKel(port: number): Promise<void> {
   // space-free application-data directory so agent registration and ACP spawn
   // never depend on the install path. Falls back to the packed path when it is
   // already space-free or when even the data dir contains spaces.
-  const engineCommand = (() => {
+  const command = (() => {
     if (!fs.existsSync(packed)) {
       return { command: process.env.KEL_PYTHON || 'python', baseArgs: ['-m', 'kel.service'], cwd: source };
     }
@@ -97,42 +77,212 @@ export async function initializeKel(port: number): Promise<void> {
     }
     return { command: packed, baseArgs: [], cwd: path.dirname(packed) };
   })();
-  const command = engineCommand.command;
-  const baseArgs = engineCommand.baseArgs;
-  if (!connected) {
-    const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
-    // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
-    // spawn and passed only through this child's environment. Values never enter the renderer, the
-    // engine database, exports, or logs; native children and test commands strip them again.
-    const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
-    const anthropicKey = getCredential('anthropic', 'api_key');
-    if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
-    const child = spawn(command, [...baseArgs, '--data', root], {
-      cwd: engineCommand.cwd,
-      detached: true,
-      windowsHide: true,
-      env: injectedEnv,
-      stdio: ['ignore', log, log],
-    });
-    child.unref();
-    fs.closeSync(log);
-    console.log('[KEL-BOOT] initializeKel spawned engine child');
-    const deadline = Date.now() + 45000;
-    while (Date.now() < deadline) {
-      try {
-        descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
-        // The descriptor file is shared with any leftover engine: keep waiting until the engine
-        // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
-        if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
-        connected = true;
-        break;
-      } catch {
-        await new Promise((r) => setTimeout(r, 250));
-      }
+  return { ...command, packed, source };
+}
+
+function expectedEngineVersion(): string {
+  return process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
+}
+
+async function expectedEngineAnswered(): Promise<boolean> {
+  const state = (await kelRequest('/api/state', undefined, HEALTH_TIMEOUT_MS)) as
+    | { engine_version?: string }
+    | undefined;
+  return engineVersionAccepted(state?.engine_version, expectedEngineVersion());
+}
+
+function spawnEngine(root: string): ChildProcess {
+  const spec = engineLaunchSpec();
+  const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
+  // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
+  // spawn and passed only through this child's environment. Values never enter the renderer, the
+  // engine database, exports, or logs; native children and test commands strip them again.
+  const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
+  const anthropicKey = getCredential('anthropic', 'api_key');
+  if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
+  const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
+    cwd: spec.cwd,
+    detached: true,
+    windowsHide: true,
+    env: injectedEnv,
+    stdio: ['ignore', log, log],
+  });
+  child.unref();
+  fs.closeSync(log);
+  spawnedByUs = true;
+  return child;
+}
+
+async function waitForEngineReady(child: ChildProcess | null, descriptorPath: string): Promise<boolean> {
+  const deadline = Date.now() + ENGINE_WAIT_MS;
+  while (Date.now() < deadline) {
+    // A spawn that failed outright must be reported fast — a missing binary (pid never assigned)
+    // or an immediately-dead child should not wait out a full deadline.
+    if (child && (child.pid === undefined || child.exitCode !== null)) return false;
+    try {
+      descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+      // The descriptor file is shared with any leftover engine: keep waiting until the engine
+      // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
+      if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
+      return true;
+    } catch {
+      await new Promise((r) => setTimeout(r, 250));
     }
-    if (!connected) throw new Error('Kel engine did not start. See desktop.log.');
+  }
+  return false;
+}
+
+function engineStateFrame() {
+  const snap = healthMachine?.snapshot();
+  return {
+    state: snap?.state ?? 'starting',
+    attempts: snap?.restarts ?? 0,
+    maxAttempts: snap?.maxRestarts ?? 2,
+    at: snap?.at ?? Date.now(),
+  };
+}
+
+function broadcastEngineState(force = false): void {
+  const frame = engineStateFrame();
+  const key = `${frame.state}:${frame.attempts}`;
+  if (!force && key === lastBroadcastState) return;
+  lastBroadcastState = key;
+  // Packaged evidence + support: link transitions land beside the engine log (the packaged app
+  // has no console). Best-effort only — logging must never break supervision.
+  try {
+    fs.appendFileSync(
+      path.join(dataRoot(), 'desktop-link.log'),
+      `[KEL-LINK] ${new Date().toISOString()} state=${frame.state} attempts=${frame.attempts}\n`
+    );
+  } catch {
+    // Best effort.
+  }
+  for (const window of BrowserWindow.getAllWindows()) {
+    try {
+      window.webContents.send('kel:engine-state', frame);
+    } catch {
+      // Window disposed mid-broadcast: nothing to do.
+    }
+  }
+}
+
+async function healthPing(): Promise<boolean> {
+  try {
+    await kelRequest('/api/state', undefined, HEALTH_TIMEOUT_MS);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function performEngineRestart(root: string, descriptorPath: string): Promise<void> {
+  if (restartInFlight || quitRequested) return;
+  restartInFlight = true;
+  try {
+    // Give a slow-but-alive engine a patient chance to answer first: it must never be duplicated
+    // (two engines would share one data root). Only a confirmed unreachable engine is re-spawned.
+    try {
+      await kelRequest('/api/state', undefined, PATIENT_PING_TIMEOUT_MS);
+      healthMachine?.alive();
+      broadcastEngineState(true);
+      return;
+    } catch {
+      // Confirmed unreachable — fall through to the restart.
+    }
+    const child = spawnEngine(root);
+    const ok = await waitForEngineReady(child, descriptorPath);
+    healthMachine?.restartFinished(ok);
+    broadcastEngineState(true);
+  } finally {
+    restartInFlight = false;
+  }
+}
+
+async function engineHealthTick(root: string, descriptorPath: string): Promise<void> {
+  if (restartInFlight || quitRequested) return;
+  const machine = healthMachine;
+  if (!machine) return;
+  const ok = await healthPing();
+  const decision = ok ? machine.alive() : machine.missed();
+  broadcastEngineState();
+  if (decision.action === 'restart') await performEngineRestart(root, descriptorPath);
+}
+
+function startEngineSupervision(root: string, descriptorPath: string): void {
+  healthMachine = new EngineHealthMachine();
+  lastBroadcastState = '';
+  broadcastEngineState(true);
+  if (healthTimer) clearInterval(healthTimer);
+  healthTimer = setInterval(() => {
+    void engineHealthTick(root, descriptorPath);
+  }, HEALTH_INTERVAL_MS);
+  healthTimer.unref?.();
+}
+
+function readLogTail(root: string, lines = 40): string {
+  try {
+    const file = path.join(root, 'desktop.log');
+    const size = fs.statSync(file).size;
+    const start = Math.max(0, size - 16 * 1024);
+    const fd = fs.openSync(file, 'r');
+    const buffer = Buffer.alloc(size - start);
+    fs.readSync(fd, buffer, 0, buffer.length, start);
+    fs.closeSync(fd);
+    return buffer.toString('utf8').split(/\r?\n/).slice(-lines).join('\n');
+  } catch {
+    return '';
+  }
+}
+
+export async function initializeKel(port: number): Promise<void> {
+  console.log(`[KEL-BOOT] initializeKel entry (aioncorePort=${port})`);
+  const root = dataRoot();
+  fs.mkdirSync(root, { recursive: true });
+  // Register the drain hook FIRST: if anything below fails, a quit must still
+  // ask the engine to stop so a failed startup never orphans KelEngine.
+  // The hook blocks the quit briefly so the HTTP drain cannot race process exit.
+  // Registered without removeAllListeners: other before-quit handlers (e.g. the
+  // config flush) must keep running.
+  let drained = false;
+  app.on('before-quit', (event) => {
+    quitRequested = true;
+    // Batch 6 (findings 16/17) — the loaded gun: only the instance that SPAWNED the engine may
+    // ask it to stop. An instance that merely reused a running engine (second window, second
+    // launch) must never stop an engine someone else is using when it quits.
+    if (drained || !descriptor || !spawnedByUs) return;
+    event.preventDefault();
+    drained = true;
+    kelRequest('/api/shutdown-idle', {})
+      .catch((): undefined => undefined)
+      .finally(() => {
+        setTimeout(() => app.quit(), 50);
+      });
+  });
+  const descriptorPath = path.join(root, 'desktop-session.json');
+  let connected = false;
+  try {
+    descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
+    connected = true;
+    console.log('[KEL-BOOT] initializeKel reused running engine');
+  } catch {
+    console.log('[KEL-BOOT] initializeKel no live engine; spawning');
+  }
+  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
+  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
+  // version must not be reused. `expectedEngineAnswered` (module scope) enforces this at every
+  // connect, including supervised restarts.
+  const launch = engineLaunchSpec();
+  const { packed, source } = launch;
+  const command = launch.command;
+  const baseArgs = launch.baseArgs;
+  if (!connected) {
+    const child = spawnEngine(root);
+    console.log('[KEL-BOOT] initializeKel spawned engine child');
+    if (!(await waitForEngineReady(child, descriptorPath))) throw new Error('Kel engine did not start. See desktop.log.');
   }
   console.log('[KEL-BOOT] initializeKel engine ready');
+  startEngineSupervision(root, descriptorPath);
   async function core(route: string, body?: unknown, method?: string) {
     const r = await fetch(`http://127.0.0.1:${port}${route}`, {
       method: method || (body === undefined ? 'GET' : 'POST'),
@@ -389,6 +539,38 @@ export async function initializeKel(port: number): Promise<void> {
     )
       throw new Error('Unknown Kel action');
     return kelRequest(route, body);
+  });
+  // Batch 6 (findings 16/17): the shell's honest view of the engine link, plus the support
+  // actions the failure surfaces offer. Presentation-only — no durable state is owned here.
+  const guardKelWindow = (event: Electron.IpcMainInvokeEvent) => {
+    const url = event.senderFrame?.url || '';
+    if (event.senderFrame !== event.sender.mainFrame || (!url.startsWith('file:') && !url.startsWith('http://localhost:')))
+      throw new Error('Unknown Kel window');
+  };
+  ipcMain.removeHandler('kel:engine-state');
+  ipcMain.handle('kel:engine-state', (event) => {
+    guardKelWindow(event);
+    return engineStateFrame();
+  });
+  ipcMain.removeHandler('kel:engine-retry');
+  ipcMain.handle('kel:engine-retry', async (event) => {
+    guardKelWindow(event);
+    const machine = healthMachine;
+    if (!machine) return engineStateFrame();
+    const decision = machine.manualRetry();
+    broadcastEngineState(true);
+    if (decision.action === 'restart') await performEngineRestart(root, descriptorPath);
+    return engineStateFrame();
+  });
+  ipcMain.removeHandler('kel:diagnostics');
+  ipcMain.handle('kel:diagnostics', (event) => {
+    guardKelWindow(event);
+    return {
+      engineVersion: descriptor?.engine_version,
+      address: descriptor?.url,
+      state: engineStateFrame(),
+      logTail: readLogTail(root),
+    };
   });
   // Artifact lineage: reveal a produced artifact in the OS file manager. The renderer sends the
   // store-relative path; main resolves it against the engine root and refuses anything that
