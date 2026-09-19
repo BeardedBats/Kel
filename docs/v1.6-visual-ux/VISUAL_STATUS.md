@@ -1,35 +1,35 @@
 # VISUAL_STATUS
 
-updated_utc: 2026-09-18T23:25:00Z
+updated_utc: 2026-09-19T00:45:00Z
 program: Kel V1.6
 
 audit_worktree: C:\Users\Nick\Desktop\Kel\kel-v16-visual-audit
 implementation_worktree: C:\Users\Nick\Desktop\Kel\kel-v16-visual-fix
 implementation_branch: ux/v16-visual-fix
 
-state: IMPLEMENTING
+state: INTEGRATED
 
 base_main_head: 60b2322
-implementation_head: 3050761 (re-anchored on Main 05608e6; lane reconciliation 0ff061d)
-integrated_main_head: NONE
+implementation_head: bc92f7f (code `fa66f04`; re-anchored on Main 05608e6; R9 17/18/19 records)
+integrated_main_head: 7267630 (R11 merge into ux/v15-journeys; post-merge tsc 0 + vitest 122/122)
 
-current_batch: R9 (final marathon) — lane reconciled (`17_R9_LANE_RECONCILIATION.md`); the lane is RE-ANCHORED on Main `05608e6` (pure-union merge, zero production overlap, visual files byte-identical); next: BATCH 6 (engine-loss / failure states), then 7, 8-normalization, R9.D.
-completed_batches: BATCH 1 design tokens+density (8dd21f9), BATCH 2 settings shell (3d9202c), BATCH 4 transcription IA (83af16f), BATCH 5 sidebar rows (ac85eb3)
+current_batch: NONE in flight — R9 (batches 6-8 + R9.D) delivered and INTEGRATED (R11). R10 packaged proof PASS (`ux-audit/runs/r10-{f,g}`). Verification continues in the R12 battery on the MERGED tree (packaged/installed battery from Main).
+completed_batches: BATCH 1 design tokens+density (8dd21f9), BATCH 2 settings shell (3d9202c), BATCH 4 transcription IA (83af16f), BATCH 5 sidebar rows (ac85eb3), R9: BATCH 6 (2897207 + 645898a + fa66f04), BATCH 7 (0e7d21a), BATCH 8 (c911d81), R9.D (938dc9b), evidence 96979c7/bc92f7f
 
-active_owned_files: pages/kel/work/index.tsx; pages/kel/projects/index.tsx; pages/kel/autonomy/index.tsx; pages/kel/team/index.tsx; pages/kel/transcription/index.tsx; components/kel/kelApi.ts; components/kel/KelModelControl.tsx; components/kel/KelToolsControl.tsx; components/chat/SendBox/**; pages/conversation/components/ChatConversation.tsx; process/services/kel/KelService.ts; new components/kel/* modules added by this run (engine state/failure copy), plus batch-8 normalization surfaces. Main must not edit these while this lane is active (Main is quiescent by plan; directive §4/§5).
+active_owned_files: NONE (integrated; Main owns the tree now)
 
-automated_acceptance: PASS (re-anchored lane: tsc 0; vitest 96/96 on 9 files)
-packaged_acceptance: PASS (package-visual5; probe-a/b/c all green; see appendix) — R9 batches re-run packaged probes at R10
+automated_acceptance: PASS (lane tip `fa66f04`: tsc 0; vitest 122/122 on 12 files; post-merge Main identical)
+packaged_acceptance: PASS (R10 engine-loss journeys `r10-f`/`r10-g` on the lane package with the 1.6.0 engine: truthful reconnecting/restarted/could-not-recover, durable work preserved, manual retry; 7 screenshots; DOM leak scan clean) — R12 re-runs from the merged Main
 manual_dom_acceptance: OPEN
 pixel_review: OPEN
 
 human_visual_gate: OPEN
 
-main_worktree_written: false
+main_worktree_written: true (R11 integration merge `7267630`)
 frozen_release_touched: false
 
-blocking_reason: NONE. The previous HELD gates for batches 6, 7 and the settings half of 8 were lifted by the 2026-09-18 final-marathon directive (§5–§8) now that Main released the surfaces and is quiescent (Campaign A runtime work complete through R8, Main tip `05608e6`).
-next_autonomous_action: Execute BATCH 6 on the re-anchored lane per `17_R9_LANE_RECONCILIATION.md` §6 (bridge error classification; human copy for every failure state; engine supervision with truthful reconnecting/recovered/could-not-recover states; diagnostics disclosure; empty-state suppression; TR-02 residual). Then BATCH 7 (composer/model/tools), BATCH 8 (normalization), R9.D (Needs Your Attention).
+blocking_reason: NONE. The R10 lane package bundled a stale 1.5.0 `dist/runtime/KelEngine` initially; replaced with the frozen 1.6.0 runtime before the final runs (audit target 90 records the packaging-input hygiene).
+next_autonomous_action: None on this lane — integrated. Watch the Main-side R12 battery and the eventual PRE_AUDIT_V1_6_HEAD; human pixel review remains the open gate.
 
 <!-- ------------------------------------------------------------------ -->
 <!-- Appendix. The schema block above is authoritative and machine-read. -->
