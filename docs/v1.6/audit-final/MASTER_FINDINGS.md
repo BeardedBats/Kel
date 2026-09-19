@@ -55,7 +55,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Evidence:** `evidence/ledger-vs-git.txt`, `commit-classification.tsv`, `git show` outputs. **Confidence:** HIGH (mechanical).
 - **Repair criteria:** ledger reconciles 1:1; no placeholder SHA cells; production-affecting exceptions documented; scripted reconciliation gate.
 - **Regression test:** reconciliation script fails on any unlisted/malformed row (already prototyped: `tools/classify-commits.py`).
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `960e023` · re-test: ledger gate FAIL before (12 unlisted + 2 malformed) → PASS 1:1 after (73 commits) · final re-audit: `PENDING`
 
 ## AUD-MINOR-002 — Budget reservations are not integrated with job budget accounting (cumulative overcommit); token/wallclock caps absent (disclosed)
 
@@ -84,7 +84,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Evidence:** probe script lines 100-157; `r12-integrity.txt`; install script; directory listings. **Confidence:** HIGH.
 - **Repair criteria:** probe exit gates on assertions; uninstall run logged+retained; release-integrity re-run enforced at final RC head; package build command+log retained; doc wording corrected to retained evidence.
 - **Regression test:** probe returns non-zero on failed assertions; integrity script `--fail-on-dirty`.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `89ab6ad` · re-test: gate FAIL on r12-fresh / PASS on r12-fresh2; integrity --fail-on-dirty PASS at the repair head (dirty=0, hits=0) · §17/18 executions tracked in 04_PACKAGE_EVIDENCE · final re-audit: `PENDING`
 
 ## AUD-MINOR-005 — Corpus state drift not reconciled at RC (statuses/rows contradict the delivered tree)
 

@@ -49,4 +49,17 @@ How to re-run (from `runtime/`):
 - Cluster: r1 + workforce set → 303/303 (`mi6-adjacent-suite.txt`).
 - End-to-end consumer confirmation: issuance (`validate_task_contract`) refuses `src/../secrets` against the declared boundaries and against the delegator (test in `ContractParentAuthorityTests`).
 
+## AUD-MINOR-001 — commit-ledger reconciliation (REPAIRED, `960e023`)
+
+- Gate before: `evidence/mi1-ledger-check-prefix-fail.txt` — 12 unlisted commits + 2 malformed rows against `git rev-list 8a2b25d..08f5667` (73 commits).
+- Gate after: `evidence/mi1-ledger-check-postfix-pass.txt` — `PASS - 73 commits ... every row well-formed, 1:1`.
+- Gate script: `docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` (exit 1 on unlisted/placeholder/wrong-parent rows; runnable at any RC head).
+
+## AUD-MINOR-004 — R12 evidence tooling (REPAIRED, `89ab6ad`)
+
+- Gate discrimination: `evidence/mi4-gate-discrimination.txt` — r12-fresh `GATE: FAIL` exit 1 (attentionVisible=false, aboutLogoLoaded=false); r12-fresh2 `GATE: PASS` exit 0; repo copy PASS.
+- Integrity re-run at repair head: `evidence/mi4-integrity-repair-head.txt` — `INTEGRITY: PASS dirty=0 actionable_hits=0` (branch `repair/v16-final`, head `960e023`).
+- Script hashes: `evidence/mi4-script-hashes.txt`.
+- Remaining executions (build log, gated installed probe, uninstall log, final integrity re-run) tracked in `04_PACKAGE_EVIDENCE.md`.
+
 (Results appended per finding as repairs complete.)

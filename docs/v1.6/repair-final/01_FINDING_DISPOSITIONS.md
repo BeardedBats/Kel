@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 5 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 7
+- Repaired: 7 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 5
 
 ## Ledger
 
@@ -13,10 +13,10 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 |---|---|---|---|---|---|---|---|
 | AUD-MAJOR-001 | MAJOR | Chat-approval conversation scoping opt-in | REPAIRED | `44aee9f` | `test_v16_approvals.py` 28/28 (4 fail pre-fix) + adjacent 129/129 | probe-1 §A: omission on a foreign approval refused (was approved); A6 `main`-parity kept | `/api/state` read-only pending list + `/api/autonomy` by-id resolve (unchanged; re-audit) |
 | AUD-MAJOR-002 | MAJOR | Privileged IPC sender validation not uniform | REPAIRED | `eaf7bad` | `sender-guard.test.ts` 7 + `ipc-sender-channels.test.ts` 18; desktop vitest 147/147; tsc exit 0 | pre-fix replay: feedback pair + adapter dispatcher accept spoofed frames (4 failed); guard-free anchors for credential/sendSync families | dispatcher kept (shipped donor surfaces) + now guarded; guard semantics == the 8 previously-guarded channels (re-audit note) |
-| AUD-MINOR-001 | MINOR | COMMIT_LEDGER completeness failures | PENDING | — | — | — | — |
+| AUD-MINOR-001 | MINOR | COMMIT_LEDGER completeness failures | REPAIRED | `960e023` | ledger gate: 12 unlisted + 2 malformed → PASS 1:1 (73 commits) | pre/post gate runs (`mi1-ledger-check-*`) | gate keeps the ledger honest; keep it green |
 | AUD-MINOR-002 | MINOR | Budget reservations not aggregated (overcommit) | REPAIRED | `7e293ba` | `ReservationAccountingTests` + delegation cumulative test (9; 5 fail pre-fix); focused 65/65; cluster 299/299 | probe §E7: cost 8 after cost 1 refused (remaining 7.0); E5 unchanged; E6 disclosed | token/wallclock unchanged by design (pinned); run-slot vs planning accounting separation (re-audit note) |
 | AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | REPAIRED | `91bd869` | `ChildEnvironmentTests` 5 (3 fail pre-fix) + spawned-process boundary; cluster 34/34 | probe §G: DeepSeek absent from codex+claude children; G1–G3 unchanged | sibling launchers reviewed (appserver whitelist, test-command strip, coding bridge); system tools inherit by design (re-audit note) |
-| AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | PENDING | — | — | — | — |
+| AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | REPAIRED | `89ab6ad` | gate FAIL (r12-fresh) / PASS (r12-fresh2); integrity --fail-on-dirty PASS at repair head | `mi4-gate-discrimination.txt`; `mi4-integrity-repair-head.txt`; hashes `mi4-script-hashes.txt` | §17/18 executions (build log, gated probe, uninstall log, final integrity re-run) tracked in `04_PACKAGE_EVIDENCE.md` |
 | AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | PENDING | — | — | — | — |
 | AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | REPAIRED | `c056a8a` | r1 containment table + e2e issuance refusal (4; 3 fail pre-fix); focused 26/26; cluster 303/303 | inline replay: `src/../secrets` refused (was contained); traversal matrix in `mi6-*` | `parallel._clean_path` safe by construction; guardrails deny-list normalization recorded (re-audit) |
 | AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | PENDING | — | — | — | — |
@@ -74,3 +74,19 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Tests:** `test_dotdot_entries_resolve_lexically_before_containment`, `test_the_containment_normalization_table` (contained: exact root/trailing slash/repeated separators/mixed separators/`./`/interior `..`; refused: `src/../secrets`, `a/../../x`, `..`, `../src`, absolute, drive-relative, sibling-prefix `src2`, case variant, `.`), `test_a_dot_root_stays_universal_by_design`, `test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end` (issuance refuses against both the boundaries dimension and the delegator dimension). 4/4 post-fix (`mi6-newtests-postfix-pass.txt`), 3 fail pre-fix (`mi6-newtests-prefix-fail.txt`); focused file 26/26 (`mi6-focused-file.txt`); cluster 303/303 (`mi6-adjacent-suite.txt`).
 - **Attack replay:** `mi6-postfix-attack.txt` — `src/../secrets` refused; full traversal matrix behaves as documented; legitimate nested/interior-`..` paths stay contained.
 - **Sibling search:** `parallel.py` compares declared paths with the same string-shape logic but validates every declared path at entry (`_clean_path` refuses absolute and any `.`/`..` segment; pinned by `test_workforce_parallel.py::test_absolute_and_escaping_paths_are_refused`) — safe by construction, unchanged. `guardrails._norm` deny-list normalization does not resolve `..`; inputs at the effect points observed (apply_changes passes `resolve(strict=True)` roots; project-create resolves before use) — recorded as a re-audit item (see `05`), unchanged as outside this finding's primitive. Filesystem-backed checks (`core.py` artifacts, `coding.py` untracked, `runner.py` attachments) already use `resolve()`.
+
+### AUD-MINOR-001 — detail (REPAIRED, `960e023`)
+
+- **Reproduction (pre-fix):** the new gate (`evidence/mi1-ledger-check-prefix-fail.txt`) reported 12 unlisted commits (022f3ac, 0aadd42, 34947f0, 12f87a7, 08f5667, e8bbb05, eea6503, 4440a90, 756218e, ae4c5b0, 820ee3e, edd50de) and 2 malformed cells against `git rev-list 8a2b25d..08f5667` (73 commits).
+- **Root cause:** the ledger was maintained by hand during Campaign A; four commits landed without rows, two rows kept placeholder cells (`HEAD`, prose `R6 tests+record`), and the RC commit (with packaging edits) was never added.
+- **Repair:** all missing rows added (including a clearly marked reconciliation table), the two malformed cells corrected to `0aadd42`/`022f3ac` and `e8bbb05`, headers filled with the RC end value, and a gate script added — `docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` exits 1 on any unlisted commit, placeholder SHA cell, or wrong parent.
+- **Verification:** FAIL before → PASS after (`mi1-ledger-check-postfix-pass.txt`: 73 commits, every row well-formed, 1:1).
+- **Residual risk:** the gate must stay green as commits land (documented in the ledger's maintenance rules).
+
+### AUD-MINOR-004 — detail (REPAIRED, `89ab6ad`)
+
+- **Reproduction (pre-fix):** the RC probe exited 0 with `attentionVisible:false` + `aboutLogoLoaded:false` (r12-fresh); no uninstall evidence; `r12-integrity.txt` captured with modified packaging files under an "expect empty" header and a script that never fails; unretained per-attempt timings asserted in the R10 doc; no build command/log for `package-r12`.
+- **Repair (items a/c/d):** the probe now runs through `r12-assert-gate.cjs` (hard assertions: healthyBoot, engineVersion, attentionVisible, aboutLogoLoaded, consoleErrors, rawLeaks, overflow) and exits non-zero on failure, recording `out.gate`; the integrity script gains `--fail-on-dirty` + repo/out overrides; the r10-f row no longer asserts unretained timings.
+- **Verification:** `mi4-gate-discrimination.txt` — r12-fresh FAIL/exit 1 vs r12-fresh2 PASS/exit 0 vs repo evidence copy PASS; `mi4-integrity-repair-head.txt` — `INTEGRITY: PASS dirty=0 actionable_hits=0` at the repair head; script hashes in `mi4-script-hashes.txt`.
+- **Items b/e:** the uninstall log and the repaired-package build command/log are produced + retained at §17/18; `04_PACKAGE_EVIDENCE.md` carries the checklist and links the artifacts.
+- **Residual risk:** §17/18 executions are required to keep this finding's evidence set complete (tracked in `04`).
