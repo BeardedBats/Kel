@@ -26,3 +26,5 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 18 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-007/008/009 recorded`) | AUD-MINOR-007 / 008 / 009 | docs | Disposition rows + details, commit ledger, regression evidence, status/resume, master-findings Campaign C fields |
 | 19 | `6d665b2` | AUD-SUG-001 | fix | Directive docstring aligned to parser behavior + conformance table; behavior unchanged |
 | 20 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-SUG-001 recorded`) | AUD-SUG-001 | docs | Disposition row + detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
+| 21 | `05a076b` | C-DISC-001 | fix | Installer payload check: donor-hardcoded `AionUi.exe` -> single-source `Kel.exe` define; rebuilt v3; installed battery green |
+| 22 | (this commit; see `git log` subject `docs(v1.6-repair): completion records`) | completion | docs | 04 package checklist complete; §16/§17/§18/§19 records; C-DISC-001 recorded; MASTER Campaign C discovered section; status/resume |
