@@ -1,0 +1,59 @@
+== RA installer donor-string scan (desktop/resources/windows) ==
+
+-- count of donor mentions per file --
+installer-messages.nsh:71
+installer-observability.nsh:55
+installer-process-control.nsh:98
+installer-remove-registry.nsh:94
+installer-repair-heal.nsh:86
+installer-update-verify.nsh:107
+installer-errors-sentry.nsh:51
+windows-installer-x64.nsh:29
+
+-- user-visible message defines (sample) --
+4:!define AIONUI_MSG_INSTALL_FAILED_ZH "AionUi 安装失败"
+5:!define AIONUI_MSG_INSTALL_FAILED_EN "AionUi installation failed"
+17:!define AIONUI_MSG_SEND_REPORT_ZH "是否将此安装失败报告发送给 AionUi 团队？报告会包含错误码和当前安装日志。"
+18:!define AIONUI_MSG_SEND_REPORT_EN "Send this installer failure report to the AionUi team? The report includes the error code and the current installer log."
+20:!define AIONUI_MSG_GENERIC_FAILURE_ZH "安装器无法继续。请查看诊断信息、安装日志路径，或将失败报告发送给 AionUi 团队。"
+23:!define AIONUI_MSG_VERIFY_REQUIRED_FILE_EN "AionUi installation is incomplete. Missing required file:"
+24:!define AIONUI_MSG_VERIFY_REQUIRED_FILE_ZH "AionUi 安装不完整，缺少必需文件："
+25:!define AIONUI_MSG_VERIFY_REQUIRED_FILE_ACTION_EN "Please reinstall AionUi or download a newer installer."
+26:!define AIONUI_MSG_VERIFY_REQUIRED_FILE_ACTION_ZH "请重新安装 AionUi，或下载更新版本的安装器。"
+28:!define AIONUI_MSG_EXTRACT_FAILED_EN "AionUi could not extract the application files correctly."
+29:!define AIONUI_MSG_EXTRACT_FAILED_ZH "AionUi 无法正确解压应用文件。"
+30:!define AIONUI_MSG_EXTRACT_FAILED_ACTION_EN "Download a fresh installer and run it again. If it still fails, send the installer report to the AionUi team."
+31:!define AIONUI_MSG_EXTRACT_FAILED_ACTION_ZH "请重新下载安装器后再次运行。如果仍然失败，请将安装失败报告发送给 AionUi 团队。"
+33:!define AIONUI_MSG_BUNDLED_AIONCORE_INCOMPLETE_EN "AionUi installed, but the bundled AionCore resources are incomplete."
+34:!define AIONUI_MSG_BUNDLED_AIONCORE_INCOMPLETE_ZH "AionUi 已安装部分文件，但内置 AionCore 资源不完整。"
+35:!define AIONUI_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_EN "Download a fresh installer and run it again. If it still fails, send the installer report to the AionUi team."
+36:!define AIONUI_MSG_BUNDLED_AIONCORE_INCOMPLETE_ACTION_ZH "请重新下载安装器后再次运行。如果仍然失败，请将安装失败报告发送给 AionUi 团队。"
+40:!define AIONUI_MSG_ARCH_MISMATCH_ACTION_EN "Download the AionUi installer that matches this Windows architecture, then run it again."
+
+-- query-lockers known files --
+81:      'AionUi.exe',
+82:      'Uninstall AionUi.exe',
+
+-- report script empty-DSN skip --
+
+-- generated Sentry DSN include (last Kel build) --
+!define AIONUI_SENTRY_DSN ""
+
+(also: same file in kel-v16-final-repair build)
+!define AIONUI_SENTRY_DSN ""
+
+== follow-up: exact empty-DSN guard in report-installer-failure.ps1 ==
+if ([string]::IsNullOrWhiteSpace($Dsn)) {
+  Write-StatusFile ([ordered]@{
+    status = 'skipped'
+    reason = 'empty-dsn'
+    code = $Code
+    wrapperCode = $wrapperCode
+    session = $Session
+    release = $Release
+    logPath = $log
+    blockingDiagnostics = $blockingDiagnostics
+    handleDiagnostics = $handleDiagnostics
+
+== audit-build generated include (this audit's package build) ==
+!define AIONUI_SENTRY_DSN ""

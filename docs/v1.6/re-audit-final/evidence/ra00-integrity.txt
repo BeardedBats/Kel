@@ -1,0 +1,26 @@
+=== FROZEN TAG OBJECTS ===
+v1.2.0 tagobj=7d69288f34e786dc5abb748838809184f63c08bb commit=a520b670ef57e3918738e4e8007476f91a693625
+v1.3.0 tagobj=05b0687e381ca3de76e55bb07dfe85d5a97a105c commit=b3c7c2466349c607bc7ebfe648b4a11ebf0fa635
+v1.4.0 tagobj=ee5b907af90cef46b81afaa80eaeb9d72573aa5a commit=0a4fd2102bc9ddd2a2d1eb59386491a16fee4d74
+v1.4.1 tagobj=a6e6d922a791f8066731fe8eebcb50cb72391c8f commit=725c90501dc9639b89f72d83219a017a55f5577c
+v1.5.0 tagobj=068cd267ff8bdccdffe5f13eb080eafc65f5a0b9 commit=5e76b21071a28601a7fb4de508cb3cf349c77db8
+v1.6.0-pre1 tagobj=ceac727ef2d04efdf96c4062a3d891825aefa176 commit=f24d9c28b09b30d7222691cdb1aafbe21d412672
+
+=== RC WORKTREE (kel-ux-v15) ===
+08f56673ea93ed84568018937bb190e0a5acd71b
+
+=== CAMPAIGN B AUDIT WORKTREE ===
+a3490095889222862ea13b4b696166c0ddc5bf0f
+?? build-output/
+
+=== MAIN WORKTREE ===
+5e76b21071a28601a7fb4de508cb3cf349c77db8
+?? .agents/
+?? Agents.md
+
+=== REPAIR WORKTREE ===
+7cf6030cc4d7bd28c4acf1b862661410ea04fc74
+
+=== VISUAL WORKTREES ===
+bc92f7f33eb40988da8b53dc22f5c4f968aeef90
+4199ebbb52e65f566f66399921d44ff71dc9ba21

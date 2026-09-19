@@ -1,0 +1,21 @@
+﻿{
+    "installer":  "C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-postrepair-audit\\dist\\package-r12\\Kel-1.6.0-win-x64.exe",
+    "target":  "C:\\Users\\Nick\\KelFinalAuditInstall",
+    "exitCode":  0,
+    "checks":  {
+                   "Kel.exe":  true,
+                   "Uninstall":  true,
+                   "kel-engine":  true,
+                   "app.asar":  true
+               },
+    "version":  {
+                    "product_version":  "1.6.0.0",
+                    "company":  "Kel",
+                    "file":  "1.6.0",
+                    "product":  "Kel"
+                },
+    "engineSha256":  "DF4F0EE991DFD5C0D74E54FFFC9510EBF4948DD3D9050088F39561A33EA7E01F",
+    "exeIcon":  "C:\\Users\\Nick\\r12-exe-icon.png",
+    "desktopShortcut":  true,
+    "startMenuShortcut":  true
+}

@@ -1,0 +1,7 @@
+Key             : 9280710d-02b9-55d6-ba7a-2b7d6f91d60a
+DisplayName     : Kel
+DisplayVersion  : 1.6.0
+Publisher       : Kel
+InstallLocation : 
+UninstallString : "C:\Users\Nick\KelFinalAuditInstall\Uninstall Kel.exe" /currentuser
+DisplayIcon     : C:\Users\Nick\KelFinalAuditInstall\uninstallerIcon.ico

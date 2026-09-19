@@ -1,0 +1,429 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/Nick/Desktop/Kel/kel-ra-mutctl/desktop[39m
+
+ [31m❯[39m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 7[2mms[22m[39m
+     [32m✓[39m accepts the packaged main frame[32m 1[2mms[22m[39m
+[31m     [31m×[31m accepts the dev-server main frame only when allowDevServer is set[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m refuses a subframe even when the top frame is trusted[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m refuses a main frame from a foreign origin[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed when sender metadata is missing[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m fails closed on malformed metadata (no url, mismatched frame identity)[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m assertTrustedSender throws the shared refusal for untrusted senders only[39m[32m 1[2mms[22m[39m
+ [31m❯[39m [30m[43m node [49m[39m tests/unit/donor-policy.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 20[2mms[22m[39m
+[31m     [31m×[31m the desktop pet is disabled by policy[39m[32m 4[2mms[22m[39m
+     [32m✓[39m every reachable entry point is gated by the policy[32m 2[2mms[22m[39m
+     [32m✓[39m kel-builder.json carries Kel identity[32m 0[2mms[22m[39m
+     [32m✓[39m the build script defaults to the Kel config and never targets the donor config directly[32m 0[2mms[22m[39m
+     [32m✓[39m the packaging step records and asserts binary provenance[32m 14[2mms[22m[39m
+ [31m❯[39m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts [2m([22m[2m18 tests[22m[2m | [22m[31m12 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+[31m       [31m×[31m get-backend-port: refuses spoofed senders and answers null[39m[32m 4[2mms[22m[39m
+       [32m✓[39m get-backend-port: serves the legitimate main frame[32m 1[2mms[22m[39m
+[31m       [31m×[31m get-initial-language: refuses spoofed senders and answers null[39m[32m 1[2mms[22m[39m
+       [32m✓[39m get-initial-language: serves the legitimate main frame[32m 0[2mms[22m[39m
+[31m       [31m×[31m get-backend-startup-failed: refuses spoofed senders and answers null[39m[32m 0[2mms[22m[39m
+       [32m✓[39m get-backend-startup-failed: serves the legitimate main frame[32m 0[2mms[22m[39m
+[31m       [31m×[31m get-backend-startup-failure: refuses spoofed senders and answers null[39m[32m 1[2mms[22m[39m
+       [32m✓[39m get-backend-startup-failure: serves the legitimate main frame[32m 0[2mms[22m[39m
+       [32m✓[39m get-backend-port: serves the dev-server main frame[32m 0[2mms[22m[39m
+[31m       [31m×[31m backend:recover-corrupted-database: refuses spoofed senders and runs for the main frame[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m kel:credential-status refuses spoofed senders[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m kel:credential-set refuses spoofed senders before any custody action[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m kel:credential-delete refuses spoofed senders before any custody action[39m[32m 1[2mms[22m[39m
+       [32m✓[39m a failing provider sync never fails the custody action[32m 0[2mms[22m[39m
+[31m       [31m×[31m feedback:collect-logs refuses spoofed senders[39m[32m 0[2mms[22m[39m
+[31m       [31m×[31m feedback:capture-screenshot refuses spoofed senders[39m[32m 0[2mms[22m[39m
+[31m       [31m×[31m feedback:renderer-log silently drops spoofed senders[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m refuses spoofed senders before any donor bridge method runs[39m[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 19 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/donor-policy.test.ts[2m > [22mdonor-surface policy (AUD-MINOR-008)[2m > [22mthe desktop pet is disabled by policy
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/donor-policy.test.ts:[2m22:39[22m[39m
+    [90m 20|[39m [34mdescribe[39m([32m'donor-surface policy (AUD-MINOR-008)'[39m[33m,[39m () [33m=>[39m {
+    [90m 21|[39m   [34mit[39m([32m'the desktop pet is disabled by policy'[39m[33m,[39m () [33m=>[39m {
+    [90m 22|[39m     [34mexpect[39m([33mKEL_PET_SUBSYSTEM_ENABLED[39m)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   |[39m                                       [31m^[39m
+    [90m 23|[39m   })[33m;[39m
+    [90m 24|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mbackend-startup channels[2m > [22mget-backend-port: refuses spoofed senders and answers null
+[31m[1mAssertionError[22m: get-backend-port refused an untrusted subframe: expected 5199 to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+5199
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m130:68[22m[39m
+    [90m128|[39m           expect(listener, `${channel} listener registered`).toBeTruth…
+    [90m129|[39m           [34mlistener[39m[33m![39m(event)[33m;[39m
+    [90m130|[39m           expect(event.returnValue, `${channel} refused ${label}`).toB…
+    [90m   |[39m                                                                    [31m^[39m
+    [90m131|[39m         }
+    [90m132|[39m         [34mexpect[39m(deps[depKey])[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mbackend-startup channels[2m > [22mget-initial-language: refuses spoofed senders and answers null
+[31m[1mAssertionError[22m: get-initial-language refused an untrusted subframe: expected 'en' to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+"en"
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m130:68[22m[39m
+    [90m128|[39m           expect(listener, `${channel} listener registered`).toBeTruth…
+    [90m129|[39m           [34mlistener[39m[33m![39m(event)[33m;[39m
+    [90m130|[39m           expect(event.returnValue, `${channel} refused ${label}`).toB…
+    [90m   |[39m                                                                    [31m^[39m
+    [90m131|[39m         }
+    [90m132|[39m         [34mexpect[39m(deps[depKey])[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mbackend-startup channels[2m > [22mget-backend-startup-failed: refuses spoofed senders and answers null
+[31m[1mAssertionError[22m: get-backend-startup-failed refused an untrusted subframe: expected true to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+true
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m130:68[22m[39m
+    [90m128|[39m           expect(listener, `${channel} listener registered`).toBeTruth…
+    [90m129|[39m           [34mlistener[39m[33m![39m(event)[33m;[39m
+    [90m130|[39m           expect(event.returnValue, `${channel} refused ${label}`).toB…
+    [90m   |[39m                                                                    [31m^[39m
+    [90m131|[39m         }
+    [90m132|[39m         [34mexpect[39m(deps[depKey])[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mbackend-startup channels[2m > [22mget-backend-startup-failure: refuses spoofed senders and answers null
+[31m[1mAssertionError[22m: get-backend-startup-failure refused an untrusted subframe: expected { code: 'x' } to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+{
+  "code": "x",
+}
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m130:68[22m[39m
+    [90m128|[39m           expect(listener, `${channel} listener registered`).toBeTruth…
+    [90m129|[39m           [34mlistener[39m[33m![39m(event)[33m;[39m
+    [90m130|[39m           expect(event.returnValue, `${channel} refused ${label}`).toB…
+    [90m   |[39m                                                                    [31m^[39m
+    [90m131|[39m         }
+    [90m132|[39m         [34mexpect[39m(deps[depKey])[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mbackend-startup channels[2m > [22mbackend:recover-corrupted-database: refuses spoofed senders and runs for the main frame
+[31m[1mAssertionError[22m: promise resolved "undefined" instead of rejecting[39m
+
+[32m- Expected:[39m
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m152:63[22m[39m
+    [90m150|[39m       [35mconst[39m recovery [33m=[39m [34mhandleAt[39m([32m'backend:recover-corrupted-database'[39m)[33m;[39m
+    [90m151|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m152|[39m         await expect(recovery(makeEvent()), `${label} refused`).reject…
+    [90m   |[39m                                                               [31m^[39m
+    [90m153|[39m       }
+    [90m154|[39m       [34mexpect[39m(deps[33m.[39mrecoverCorruptedDatabase)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mKel credential channels[2m > [22mkel:credential-status refuses spoofed senders
+[31m[1mAssertionError[22m: an untrusted subframe: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m180:50[22m[39m
+    [90m178|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m179|[39m         // The status handler answers synchronously; the guard must th…
+    [90m180|[39m         [34mexpect[39m(() [33m=>[39m [34mstatus[39m([34mmakeEvent[39m())[33m,[39m label)[33m.[39m[34mtoThrow[39m([33mREFUSAL[39m)[33m;[39m
+    [90m   |[39m                                                  [31m^[39m
+    [90m181|[39m       }
+    [90m182|[39m       [34mexpect[39m(deps[33m.[39mstatus)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mKel credential channels[2m > [22mkel:credential-set refuses spoofed senders before any custody action
+[31m[1mAssertionError[22m: promise resolved "{ provider: 'anthropic', …(1) }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "fields": [[39m
+[31m+     "api_key",[39m
+[31m+   ],[39m
+[31m+   "provider": "anthropic",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m189:80[22m[39m
+    [90m187|[39m       [35mconst[39m [35mset[39m [33m=[39m [34mhandleAt[39m([32m'kel:credential-set'[39m)[33m;[39m
+    [90m188|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m189|[39m         await expect(set(makeEvent(), 'anthropic', 'api_key', 'sk-test…
+    [90m   |[39m                                                                                [31m^[39m
+    [90m190|[39m       }
+    [90m191|[39m       [34mexpect[39m(deps[33m.[39m[35mset[39m)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mKel credential channels[2m > [22mkel:credential-delete refuses spoofed senders before any custody action
+[31m[1mAssertionError[22m: promise resolved "{ provider: 'anthropic', removed: 1 }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "provider": "anthropic",[39m
+[31m+   "removed": 1,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m208:61[22m[39m
+    [90m206|[39m       [35mconst[39m remove [33m=[39m [34mhandleAt[39m([32m'kel:credential-delete'[39m)[33m;[39m
+    [90m207|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m208|[39m         await expect(remove(makeEvent(), 'anthropic'), label).rejects.…
+    [90m   |[39m                                                             [31m^[39m
+    [90m209|[39m       }
+    [90m210|[39m       [34mexpect[39m(deps[33m.[39mremove)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mfeedback channels[2m > [22mfeedback:collect-logs refuses spoofed senders
+[31m[1mAssertionError[22m: promise resolved "null" instead of rejecting[39m
+
+[32m- Expected:[39m
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m
+null
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m228:49[22m[39m
+    [90m226|[39m       [35mconst[39m collect [33m=[39m [34mhandleAt[39m([32m'feedback:collect-logs'[39m)[33m;[39m
+    [90m227|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m228|[39m         await expect(collect(makeEvent()), label).rejects.toThrow(REFU…
+    [90m   |[39m                                                 [31m^[39m
+    [90m229|[39m       }
+    [90m230|[39m       [35mawait[39m [34mexpect[39m([34mcollect[39m([34mlegitEvent[39m()))[33m.[39mresolves[33m.[39m[34mtoBeNull[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mfeedback channels[2m > [22mfeedback:capture-screenshot refuses spoofed senders
+[31m[1mAssertionError[22m: promise resolved "null" instead of rejecting[39m
+
+[32m- Expected:[39m
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m
+null
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m236:49[22m[39m
+    [90m234|[39m       [35mconst[39m capture [33m=[39m [34mhandleAt[39m([32m'feedback:capture-screenshot'[39m)[33m;[39m
+    [90m235|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m236|[39m         await expect(capture(makeEvent()), label).rejects.toThrow(REFU…
+    [90m   |[39m                                                 [31m^[39m
+    [90m237|[39m       }
+    [90m238|[39m       [35mawait[39m [34mexpect[39m([34mcapture[39m([34mlegitEvent[39m()))[33m.[39mresolves[33m.[39m[34mtoBeNull[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22mfeedback channels[2m > [22mfeedback:renderer-log silently drops spoofed senders
+[31m[1mAssertionError[22m: expected "info" to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st info call:
+
+[22m    Array [
+      "[FeedbackReport:renderer] hostile",
+    ]
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m246:24[22m[39m
+    [90m244|[39m       [34mexpect[39m(listener)[33m.[39m[34mtoBeTruthy[39m()[33m;[39m
+    [90m245|[39m       listener!({ ...refusalEvents[0][1](), }, { level: 'info', messag…
+    [90m246|[39m       [34mexpect[39m(info)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m247|[39m       listener!(legitEvent(), { level: 'info', message: 'legitimate' }…
+    [90m248|[39m       expect(info).toHaveBeenCalledWith('[FeedbackReport:renderer] leg…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts[2m > [22mprivileged IPC sender refusals (Campaign C AUD-MAJOR-002)[2m > [22madapter bridge dispatcher[2m > [22mrefuses spoofed senders before any donor bridge method runs
+[31m[1mAssertionError[22m: an untrusted subframe: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/ipc-sender-channels.test.ts:[2m262:61[22m[39m
+    [90m260|[39m       [35mfor[39m ([35mconst[39m [label[33m,[39m makeEvent] [35mof[39m refusalEvents) {
+    [90m261|[39m         // The dispatcher checks the guard before parsing; the refusal…
+    [90m262|[39m         expect(() => dispatch(makeEvent(), payload), label).toThrow(RE…
+    [90m   |[39m                                                             [31m^[39m
+    [90m263|[39m       }
+    [90m264|[39m       [34mexpect[39m(emitter[33m.[39memit)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22maccepts the dev-server main frame only when allowDevServer is set
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m30:38[22m[39m
+    [90m 28|[39m
+    [90m 29|[39m   it('accepts the dev-server main frame only when allowDevServer is se…
+    [90m 30|[39m     [34mexpect[39m([34misTrustedSender[39m(devMain))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   |[39m                                      [31m^[39m
+    [90m 31|[39m     expect(isTrustedSender(devMain, { allowDevServer: true })).toBe(tr…
+    [90m 32|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22mrefuses a subframe even when the top frame is trusted
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m35:55[22m[39m
+    [90m 33|[39m
+    [90m 34|[39m   [34mit[39m([32m'refuses a subframe even when the top frame is trusted'[39m[33m,[39m () [33m=>[39m {
+    [90m 35|[39m     [34mexpect[39m([34misTrustedSender[39m(subframeOfPackagedWindow))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   |[39m                                                       [31m^[39m
+    [90m 36|[39m     expect(isTrustedSender(subframeOfPackagedWindow, { allowDevServer:…
+    [90m 37|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22mrefuses a main frame from a foreign origin
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m40:42[22m[39m
+    [90m 38|[39m
+    [90m 39|[39m   [34mit[39m([32m'refuses a main frame from a foreign origin'[39m[33m,[39m () [33m=>[39m {
+    [90m 40|[39m     [34mexpect[39m([34misTrustedSender[39m(foreignMain))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   |[39m                                          [31m^[39m
+    [90m 41|[39m     expect(isTrustedSender(foreignMain, { allowDevServer: true })).toB…
+    [90m 42|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22mfails closed when sender metadata is missing
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m45:40[22m[39m
+    [90m 43|[39m
+    [90m 44|[39m   [34mit[39m([32m'fails closed when sender metadata is missing'[39m[33m,[39m () [33m=>[39m {
+    [90m 45|[39m     [34mexpect[39m([34misTrustedSender[39m(undefined))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   |[39m                                        [31m^[39m
+    [90m 46|[39m     [34mexpect[39m([34misTrustedSender[39m([35mnull[39m))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m 47|[39m     [34mexpect[39m([34misTrustedSender[39m({ sender[33m:[39m { mainFrame } }))[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22mfails closed on malformed metadata (no url, mismatched frame identity)
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m55:83[22m[39m
+    [90m 53|[39m   it('fails closed on malformed metadata (no url, mismatched frame ide…
+    [90m 54|[39m     [35mconst[39m noUrl [33m=[39m {}[33m;[39m
+    [90m 55|[39m     expect(isTrustedSender({ senderFrame: noUrl, sender: { mainFrame: …
+    [90m   |[39m                                                                                   [31m^[39m
+    [90m 56|[39m     [34mexpect[39m(
+    [90m 57|[39m       isTrustedSender({ senderFrame: { url: 'file:///x' }, sender: { m…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/19]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts[2m > [22msender guard (Campaign C AUD-MAJOR-002)[2m > [22massertTrustedSender throws the shared refusal for untrusted senders only
+[31m[1mAssertionError[22m: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/sender-guard.test.ts:[2m65:65[22m[39m
+    [90m 63|[39m     [34mexpect[39m(() [33m=>[39m [34massertTrustedSender[39m(packagedMain))[33m.[39mnot[33m.[39m[34mtoThrow[39m()[33m;[39m
+    [90m 64|[39m     expect(() => assertTrustedSender(devMain, { allowDevServer: true }…
+    [90m 65|[39m     expect(() => assertTrustedSender(subframeOfPackagedWindow)).toThro…
+    [90m   |[39m                                                                 [31m^[39m
+    [90m 66|[39m     expect(() => assertTrustedSender(foreignMain)).toThrow(SENDER_REFU…
+    [90m 67|[39m     expect(() => assertTrustedSender(undefined)).toThrow(SENDER_REFUSA…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/19]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m19 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 11:54:57
+[2m   Duration [22m 282ms[2m (transform 171ms, setup 51ms, import 184ms, tests 40ms, environment 0ms)[22m
+

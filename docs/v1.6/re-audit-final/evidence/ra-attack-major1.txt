@@ -1,0 +1,27 @@
+cwd=C:\Users\Nick\Desktop\Kel\kel-v16-postrepair-audit\runtime
+=== RA engine attack battery (part 1: AUD-MAJOR-001 + surfaces) ===
+PASS | A1 foreign omission refused | refused: That request belongs to another conversation
+PASS | A2 declared-main on foreign refused | refused: That request belongs to another conversation
+PASS | A3 owner settles (feature still works) | approved
+PASS | A4 omission==main parity on main-owned | approved
+PASS | A5 malformed conversation spellings all refused | []
+PASS | A5b owner still settles after attack attempts | approved
+PASS | A6 unknown kind refused | refused: Approval request missing
+PASS | A7 missing id refused | refused: Approval request missing
+PASS | A8 duplicate resolve refused, record intact | refused: Approval does not match this action
+PASS | A9 same-conversation sibling job allowed (by design) | approved
+PASS | A10 expired cannot be approved (records expired) | expired
+PASS | A11 jobless approval refused | refused: Approval request missing
+PASS | A12a foreign omission refused (access kind) | refused: That request belongs to another conversation
+PASS | A12b declared-main on foreign refused (access kind) | refused: That request belongs to another conversation
+PASS | A12c owner allowed once (access kind) | allowed_once
+PASS | B1 /api/approvals owner settles | {'id': 'b784fdb7-9825-4a8c-9104-3b7bdb55d39e', 'kind': 'action', 'state': 'approved'}
+PASS | B2 /api/approvals wrong conversation refused | refused: That request belongs to another conversation
+PASS | B3 /api/approvals omission on foreign refused | refused: That request belongs to another conversation
+PASS | B4 /api/approvals omission on main allowed | {'id': 'b47a322b-45bd-49e3-90fb-cd99496721d0', 'kind': 'action', 'state': 'approved'}
+PASS | B5a legacy /api/approval omission on foreign refused | refused: That request belongs to another conversation
+PASS | B5b legacy /api/approval wrong conversation refused | refused: That request belongs to another conversation
+PASS | B5c legacy /api/approval owner allowed | {'status': 'APPROVED'}
+PASS | B6 /api/state (read-only) lists foreign pending approvals [observation] | foreign pending ids visible in main state=True ids=['a38e1e49-c773-46c1-b0d8-352f4d62b0c7']
+PASS | B7 /api/autonomy resolves foreign boundary request by id (by design; observed) | status=GRANTED listed=True
+=== SUMMARY: 24 checks, 0 failed ===

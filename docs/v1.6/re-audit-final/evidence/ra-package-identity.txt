@@ -1,0 +1,38 @@
+== RA package identity chain (this audit's build; HEAD 7cf6030) ==
+built: 2026-09-19T16:04:20Z
+
+-- sha256 --
+034e2c181b991dc2e237afd5610119cf54afa446ff15dbe905ac72f7d474e9be *dist/package-r12/Kel-1.6.0-win-x64.exe
+f65b430ad2bd62868f5846d40c3a201b60ff43847e47abf52a857476ecc84a96 *dist/package-r12/win-unpacked/Kel.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *dist/package-r12/win-unpacked/resources/kel-engine/KelEngine.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *dist/runtime/KelEngine/KelEngine.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *desktop/dist/runtime/KelEngine/KelEngine.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *runtime/dist/KelEngine/KelEngine.exe
+
+-- aioncore provenance in package --
+{
+  "binary": "aioncore.exe",
+  "sha256": "67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892",
+  "bytes": 99193856,
+  "donorRepository": "https://github.com/iOfficeAI/AionCore",
+  "version": "v0.2.2",
+  "sourceType": "download",
+  "source": {
+    "url": "https://github.com/iOfficeAI/AionCore/releases/download/v0.2.2/aioncore-v0.2.2-x86_64-pc-windows-msvc.zip"
+  },
+  "recordedAt": "2026-09-19T15:56:14.498Z",
+  "recordedBy": "prepare-aioncore (Kel AUD-MINOR-007)"
+}
+
+-- unpacked exe metadata --
+ProductName    : Kel
+CompanyName    : Kel
+FileVersion    : 1.6.0
+ProductVersion : 1.6.0.0
+-- installer metadata --
+ProductName    : Kel
+CompanyName    : Kel
+FileVersion    : 1.6.0
+ProductVersion : 1.6.0
+-- engine dir file count --
+31
