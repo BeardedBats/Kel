@@ -65,7 +65,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Reproduction:** probe-1 E5–E7. **Evidence:** `evidence/auditor-probe-1.log`. **Confidence:** HIGH. **Root cause:** two parallel reservation systems without aggregation.
 - **Adjacent risk:** consumers of `job.reserved` see incomplete accounting. **Repair criteria:** aggregate active reservations (or update `job.reserved` on reserve/release); reject sums > remaining; docs; tests for cumulative + token/wallclock policy.
 - **Regression test:** cumulative-overcommit test; multi-reservation per job. **Promotion criterion (Campaign C):** runtime claiming probe — if actual spend can cross the envelope, re-grade.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `7e293ba` · re-test: cumulative suite 9/9 (5 fail pre-fix), focused 65/65, workforce cluster 299/299, probe §E7 replay refused · promotion probe: actual spend capped at the envelope (no re-grade) · final re-audit: `PENDING`
 
 ## AUD-MINOR-003 — `native.child_env` claims weaker stripping than it performs: unrelated provider keys reach native CLI children
 

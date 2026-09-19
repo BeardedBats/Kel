@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 2 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 10
+- Repaired: 3 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 9
 
 ## Ledger
 
@@ -14,7 +14,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MAJOR-001 | MAJOR | Chat-approval conversation scoping opt-in | REPAIRED | `44aee9f` | `test_v16_approvals.py` 28/28 (4 fail pre-fix) + adjacent 129/129 | probe-1 §A: omission on a foreign approval refused (was approved); A6 `main`-parity kept | `/api/state` read-only pending list + `/api/autonomy` by-id resolve (unchanged; re-audit) |
 | AUD-MAJOR-002 | MAJOR | Privileged IPC sender validation not uniform | REPAIRED | `eaf7bad` | `sender-guard.test.ts` 7 + `ipc-sender-channels.test.ts` 18; desktop vitest 147/147; tsc exit 0 | pre-fix replay: feedback pair + adapter dispatcher accept spoofed frames (4 failed); guard-free anchors for credential/sendSync families | dispatcher kept (shipped donor surfaces) + now guarded; guard semantics == the 8 previously-guarded channels (re-audit note) |
 | AUD-MINOR-001 | MINOR | COMMIT_LEDGER completeness failures | PENDING | — | — | — | — |
-| AUD-MINOR-002 | MINOR | Budget reservations not aggregated (overcommit) | PENDING | — | — | — | — |
+| AUD-MINOR-002 | MINOR | Budget reservations not aggregated (overcommit) | REPAIRED | `7e293ba` | `ReservationAccountingTests` + delegation cumulative test (9; 5 fail pre-fix); focused 65/65; cluster 299/299 | probe §E7: cost 8 after cost 1 refused (remaining 7.0); E5 unchanged; E6 disclosed | token/wallclock unchanged by design (pinned); run-slot vs planning accounting separation (re-audit note) |
 | AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | PENDING | — | — | — | — |
 | AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | PENDING | — | — | — | — |
 | AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | PENDING | — | — | — | — |
@@ -46,3 +46,13 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Pre-fix discrimination:** stash replay with tracked sources reverted → the in-place channels (feedback pair ×3, adapter dispatcher) accept spoofed senders (4 failed / 14 passed); the extracted families' pre-fix inline registrations are guard-free at HEAD (`evidence/ma2-prefix-anchors.txt`).
 - **Sibling search:** every `ipcMain.*` registration across `desktop/packages` enumerated — the set above plus pet channels (`petManager.ts`, `petConfirmManager.ts`; pet-window events, MINOR-008 scope) — reviewed, unchanged; no other privileged registrations exist.
 - **Residual risk (re-audit note):** guard semantics deliberately identical to the previously-guarded channels (top frame of the sending webContents + allow-listed origin schemes); a stricter window-identity check was not required by the finding and would risk breaking donor windows — carried for the final re-audit.
+
+### AUD-MINOR-002 — detail (REPAIRED, `7e293ba`)
+
+- **Reproduction (pre-fix):** probe §E (`evidence/mi2-prefix-attack.txt`): E7 — after a cost-1 reservation, a second cost-8 reservation was accepted on an envelope of 8 (cumulative 9); E5 (single far-beyond) was already refused.
+- **Root cause:** two parallel reservation systems — run-slot accounting (`job['reserved']`, maintained by the core run lifecycle) vs the Phase-5.3 `budget_reservations` table; `reserve_budget`'s envelope check read only `budget − spent − reserved` and never aggregated its own table.
+- **Repair:** `reserve_budget` now subtracts every un-released reservation (`state != 'released'`; `consumed` still narrows) from the envelope before accepting a commitment. Narrow: the existing check extended, the existing table aggregated — no new subsystem; token/wallclock semantics untouched.
+- **Tests:** `ReservationAccountingTests` (8) + delegation-path cumulative test (1): second-sees-first, cumulative fill/exceed, release frees, consumed narrows, zero/exact values, disjoint jobs, retry-after-release, disclosure pin. 9/9 post-fix (`mi2-newtests-postfix-pass.txt`), 5 fail pre-fix (`mi2-newtests-prefix-fail.txt`); focused files 65/65 (`mi2-focused-suite.txt`); cluster 299/299 (`mi2-adjacent-suite.txt`).
+- **Attack replay:** `mi2-postfix-attack.txt` — E7 now `PolicyError: Reserved cost 8.0 exceeds the remaining job budget 7.0`; E5 unchanged; E6 (tokens=1e12/wallclock=1e7) unchanged and disclosed.
+- **Promotion probe:** `mi2-claiming-probe.txt` — with a cost-4 planning reservation standing on a budget-4 job, execution claims cap actual spend at the envelope (m1+m2 spend 4; m3 refused "Execution and verification budget exhausted"); `spent + reserved ≤ budget` holds. No re-grade; remains MINOR.
+- **Adjacent assessment (re-audit note):** consumers of `job['reserved']` (claim gate, engine dispatch, runner) govern run slots and are intentionally not fed by planning reservations — merging the two dimensions would change execution behaviour beyond this finding; recorded for the final re-audit.
