@@ -1,0 +1,24 @@
+# Frozen-release hash spot-checks (Campaign B, independent)
+
+Date: 2026-09-19 (auditor-run). Method: `sha256sum` on frozen artifacts vs the frozen folder's own
+`RELEASE_MANIFEST.md.txt` / `SHA256Sums.txt`; candidate↔frozen byte-identity spot-check.
+
+## Kel-V1.6.0-Pre1-Frozen
+- Manifest (assembled 2026-09-17T01:51:54-04:00) key hashes: Kel.exe D573BF04…, resources/app.asar 907631CC…, resources/kel-engine/KelEngine.exe E019D002…, resources/bundled-aioncore/win32-x64/aioncore.exe 67EB0277…
+- Independent sha256 of `Kel.exe` = `d573bf0456871df9fe86497586f6996a0e21be7c166adf92fdb6e426136f820b` → **matches manifest/SHA256Sums** (spot-check 1 of 4).
+- Candidate↔frozen byte-identity: `kel-ux-v15/dist/package-checkpoint/Kel.exe` = same hash `d573bf04…` → **byte-identical for Kel.exe** (as claimed: candidate frozen 3/3 verifier; remaining 3 hashes not yet independently recomputed).
+- Nested-duplicate check: `resources/kel-engine/` contains `KelEngine.exe` + `_internal/` only; **no nested `kel-engine/kel-engine/`** — consistent with "pre1 removed it after assembly".
+
+## Kel-V1.5-Frozen
+- Manifest (assembled 2026-09-16T10:03:01-04:00): Kel.exe CF1984AC…, resources/app.asar 51DD5DFE…, resources/kel-engine/KelEngine.exe AB3024A0…, bundled-aioncore 67EB0277…
+- Independent sha256 of `Kel.exe` = `cf1984acfa8a72a673c71fa418d1a40ed27cc2066d77f4902f6afc57c9b1224b` → **matches manifest** (spot-check 1 of 4).
+- NOTE: `Kel-V1.5-Frozen` contains no `KEL_VERIFICATION_REPORT.md` (that file exists for V1–V1.3 folders; V1.4/V1.4.1 pending check). Its verification lives in manifest/sums + program records only.
+
+## Tag↔artifact notes
+- `v1.6.0-pre1` tag (annotated) → commit `f24d9c2`; tag message names artifact source `0fb095f` and the frozen folder — consistent with the folder above.
+- `v1.5.0` tag → commit `5e76b21` == `main`.
+- Frozen folders present for: Kel-V1, V1.1, V1.2, V1.3, V1.4, V1.4.1, V1.5, V1.6.0-Pre1. No V1.6.0 final (as expected — release not started).
+
+## Open follow-ups
+- Recompute remaining pre1/V1.5 hashes (app.asar, KelEngine.exe, aioncore.exe) — low priority; 2 of 8 recomputed so far, both exact.
+- Check V1.4/V1.4.1 folders for verification reports.
