@@ -332,6 +332,30 @@ export const getSnapshotConversationName = (conversation_id: string): string | u
   return name ? name : undefined;
 };
 
+/**
+ * Human-visual repair: resolve a Kel conversation id to the donor conversation id the
+ * `/conversation/:id` route accepts. The host mirrors every Kel conversation into a donor
+ * conversation carrying `extra.kel_conversation_id`; the sidebar opens conversations by that
+ * donor id, so deep links (Work → Open the chat) must resolve the same way instead of landing on
+ * "Conversation not found" and bouncing Home. Returns undefined when the id is unknown or the
+ * list has not loaded yet.
+ */
+export const getRouteConversationIdForKelId = (kel_conversation_id: string): string | undefined => {
+  const row = conversationsState.find(
+    (item) => (item.extra as { kel_conversation_id?: string } | undefined)?.kel_conversation_id === kel_conversation_id
+  );
+  return row?.id;
+};
+
+/** Compose the resolver for a `/conversation/:id` link target. Non-conversation links pass through. */
+export const resolveConversationRoute = (to: string): string => {
+  const match = /^\/conversation\/(.+)$/.exec(to);
+  if (!match) return to;
+  const kelId = decodeURIComponent(match[1]);
+  const donorId = getRouteConversationIdForKelId(kelId);
+  return donorId ? `/conversation/${donorId}` : to;
+};
+
 const refreshConversations = () => {
   void ipcBridge.database.getUserConversations
     .invoke({ limit: 10000 })
