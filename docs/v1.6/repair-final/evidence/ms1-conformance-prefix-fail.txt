@@ -1,0 +1,8 @@
+        doc = caps.directive_clauses.__doc__ or ''
+>       self.assertIn('fires wherever it appears outside quotes', doc)
+E       AssertionError: 'fires wherever it appears outside quotes' not found in 'Reserved `[kel:<capability>=<state>]` directives (outside quotes and code); [] otherwise.\n\nOnly the canonical names and states match; a generic bracket such as `[web: off]`, a malformed\ntoken, an unknown capability or state, a nested bracket, a quoted or code sample and a URL\nsegment all match nothing — the message is forwarded byte-for-byte unchanged. Multiple reserved\ndirectives are supported and applied in source order (a repeated capability ends on its last\nvalue). Only the exact reserved token is removed from the forwarded request.\n'
+
+tests\test_capabilities.py:338: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_capabilities.py::DirectiveTests::test_sug_001_docstring_matches_behavior
+1 failed, 38 deselected in 0.15s

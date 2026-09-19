@@ -329,6 +329,37 @@ class DirectiveTests(CapabilityBase):
         for text, want in cases:
             self.assertEqual(_without_clauses(text, directive_clauses(text)), want, text)
 
+    def test_sug_001_docstring_matches_behavior(self):
+        # AUD-SUG-001: the docstring is the contract for the reserved-token rule. Behavior is
+        # deliberately unchanged (the exact token fires wherever it appears outside quotes/code;
+        # scheme URLs are excluded); this table keeps docstring and parser in lock-step.
+        import kel.capabilities as caps
+        doc = caps.directive_clauses.__doc__ or ''
+        self.assertIn('fires wherever it appears outside quotes', doc.lower())
+        self.assertIn('scheme URL', doc)
+        accepted = [
+            ('Please refactor parser.py. [kel:terminal=off]', ('terminal', 'off')),
+            ('GET /a/[kel:web=off] 200', ('web', 'off')),            # bare unquoted log line
+            ('A,[kel:web=off],B', ('web', 'off')),                   # punctuation-adjacent
+            ('[Kel:Web=OFF] Mixed case directive', ('web', 'off')),  # mixed case by design
+        ]
+        for text, want in accepted:
+            got = [(c['capability'], c['state']) for c in directive_clauses(text)]
+            self.assertEqual(got, [want], text)
+        rejected = [
+            'he said "[kel:web=off]" in the meeting',   # quoted
+            'run `[kel:web=off]` first',                # inline code
+            '```\n[kel:web=off]\n```',                  # fenced
+            'foo[kel:web=off]bar',                      # word-embedded
+            'https://example.com/[kel:web=off]',        # scheme URL segment
+            '[web: off]',                               # generic bracket
+            '[kel:web=maybe]',                          # malformed state
+            '[kel:nope=off]',                           # unknown capability
+            '[[kel:web=off]]',                          # nested bracket
+        ]
+        for text in rejected:
+            self.assertEqual(directive_clauses(text), [], text)
+
     def test_ordinary_text_is_not_a_command(self):
         self.assertIsNone(directive('Write a short note about the weather tomorrow.'))
         self.assertIsNone(apply_directive(self.store, 'chat-a', 'Fix the failing test in parser.py'))
