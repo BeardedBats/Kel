@@ -1,0 +1,19 @@
+Reading additional input from stdin...
+2026-09-19T04:03:05.198634Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 137 column 5
+OpenAI Codex v0.142.5
+--------
+workdir: C:\Users\Nick\Desktop\Kel\kel-v16-final-audit\runtime
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a0b7d5-030d-7970-b477-201f5f75b401
+--------
+user
+Reply with exactly: ok
+warning: Model metadata for `gpt-6-astra` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+ERROR: {"type":"error","status":400,"error":{"type":"invalid_request_error","message":"The 'gpt-6-astra' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again."}}
+ERROR: {"type":"error","status":400,"error":{"type":"invalid_request_error","message":"The 'gpt-6-astra' model requires a newer version of Codex. Please upgrade to the latest app or CLI and try again."}}
