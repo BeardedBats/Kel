@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "appDir": "C:\\Users\\Nick\\KelAuditInstall",
+  "startedAt": "2026-09-19T05:16:47.784Z",
+  "steps": {
+    "healthyBoot": true,
+    "engineVersion": "1.6.0",
+    "conversations": [
+      "9d893403-19d8-48d4-8913-55ef34fa08cc",
+      "main"
+    ],
+    "restore": null,
+    "onboardingSkipped": "Skip setup",
+    "hashAfterSkip": "#/guid",
+    "attentionVisible": true,
+    "attentionText": "Needs your attention Nothing needs you right now.",
+    "aboutLogoLoaded": true,
+    "aboutText": "Model AI Core Agents Skills Tools Application Appearance Remote Desktop Pet System Archived Archived conversations Other About Work & context Back to Chat"
+  },
+  "consoleErrors": [],
+  "rawLeaks": [],
+  "overflow": {
+    "/work": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/about": {
+      "doc": 0,
+      "body": 0
+    },
+    "/": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/appearance": {
+      "doc": 0,
+      "body": 0
+    },
+    "/autonomy": {
+      "doc": 0,
+      "body": 0
+    }
+  },
+  "screenshots": [
+    "r12-work.png",
+    "r12-about.png"
+  ],
+  "linkLog": [
+    "[KEL-LINK] 2026-09-19T05:16:52.012Z state=connected attempts=0"
+  ]
+}

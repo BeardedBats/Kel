@@ -78,3 +78,10 @@ Review depth filled by Pass 1 (full diff review / targeted review / docs-skim).
 | 71 | `7267630` | 2026-09-18 20:12 | PROD (desktop:30+docs:24+test:4) | 58 | merge(v1.6): R11 â€” integrate the visual lane into Main (batches 6-8 + R9.D + R10 supervision) | MENTIONED | — |
 | 72 | `12f87a7` | 2026-09-18 20:16 | DOCS (docs:7) | 7 | docs(v1.6): R11 records â€” integration breadcrumb, ledgers, requirements, visual index, status | MISSING | — |
 | 73 | `08f5667` | 2026-09-18 20:52 | PROD (desktop:2+docs:15) | 17 | docs(v1.6): PRE_AUDIT_V1_6_HEAD â€” Campaign A complete; pre-audit release candidate ready | MISSING | — |
+
+## Pass-1 review-depth record (added 2026-09-19 cont.)
+
+- **Full-diff/hunk review + attack:** `8a677d0` (APR-02, negative-control run), `49e528e` (probe-4), `8ab7699` (probe-4), `dc65fbc` (probe-1/3), `fde5bbb` (probe-1 low-level + negative control), `8c899c8` (probe-1 + negative control), `b6c4eff` (probe-1 sentinels), `d101d8c3`-class A1 verified both sites, `93b99b5`/`2468b16` (freeze/identity scripts + engine hash chain), `08f5667` (full diff incl. packaging edits), `938dc9b`/`2897207`/`0e7d21a`/`c911d81`/`645898a`/`fa66f04` (visual lane: diff stats + evidence digests + r10 artifacts), `22f4a3e`/`df87903` (change-ledger + unit tests + probe context).
+- **Targeted (stat + symbol/test/evidence checks, suite re-run):** all remaining production commits (ledger rows, increments digests `art_d8cf6e02…`/`art_322d2725…`, and the full-suite re-run at RC: 998+10).
+- **Docs/test-only commits:** skimmed via corpus digests and doc diffs (classification in the table above).
+- Method limitation (recorded): full per-commit line-by-line reading was performed for the high-risk set above; the remainder received targeted review as defined. No commit was left unreviewed at the classification/evidence level.

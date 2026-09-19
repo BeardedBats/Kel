@@ -1,173 +1,155 @@
-# MASTER_FINDINGS — Campaign B (canonical ledger)
+# MASTER_FINDINGS — Campaign B (canonical ledger, FINAL)
 
 Audit target: `08f56673ea93ed84568018937bb190e0a5acd71b` (immutable; independently verified)
-Audit branch: `audit/v16-final` — audit records only; no production fixes (Campaign C owns repair).
-Severities: `AUD-BLOCK` / `AUD-MAJOR` / `AUD-MINOR` / `AUD-SUG`. Status: `RECORDED` → `UNDER_VERIFICATION` → `CONFIRMED` / `DISMISSED`.
-Campaign C fields start `NOT_STARTED`/blank. Findings are recorded, never repaired here.
+Audit branch: `audit/v16-final` — audit records only; **no production fixes** (Campaign C owns repair).
+Field standard: ID · severity (final) · title · subsystem · requirements · invariants · commits/files/symbols · reproduction · evidence · expected · actual · confidence · root-cause hypothesis · adjacent risk · repair acceptance criteria · required regression test · Campaign C status.
 
-## Summary (as of this revision)
-- AUD-BLOCK: 0 · AUD-MAJOR: 2 · AUD-MINOR: 9 · AUD-SUG: 1
-- In verification (NOT findings yet): `_path_within` `..`-escape & case/prefix tricks; capability technical-string recognition (bare path/log-line); r10 timing-precision wording; donor-residual classification (AionUI description/email, bundled-aioncore, web-host `aioncore` launcher reachability); visual screenshot-count arithmetic; mail `docs/v1.6-visual-ux/00_STATUS.md` staleness; `next free version` drift (folded into AUD-MINOR-005 items).
+## Summary (FINAL)
+**AUD-BLOCK: 0 · AUD-MAJOR: 2 · AUD-MINOR: 9 · AUD-SUG: 1.**
+Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed by inertia; two promotion criteria recorded (malicious-frame IPC control; runtime budget-claiming probe). External gates remain (human visual; codex client; internal/deepseek credentials).
 
 ---
 
 ## AUD-MAJOR-001 — Chat-approval conversation scoping is opt-in: an undeclared caller can settle any conversation's approval; the APR-02 "FIXED" claim is not enforced at the engine boundary
 
-- **Severity:** AUD-MAJOR (cross-conversation authority path; repair before release)
-- **Status:** RECORDED (reproduced; mechanism root-caused)
-- **Subsystem:** engine approvals (chat surface) / conversation isolation
-- **Requirement IDs:** REQ-APR-1, REQ-OWNERSHIP-PARITY, REQ-R25-R4 (absorbs APR-02); P2_P3 APR-02 row
-- **Invariant IDs:** INV-APPROVE-001/002, INV-AUTH-002 (live authority), campaign §16 ("wrong conversation … refused")
-- **Affected commits:** `8a677d0` (APR-02 fix), `8c899c8` (R4), `dd34ac2` (v20 marker); RC range generally
-- **Affected files/symbols:** `runtime/kel/chat_approvals.py` (`resolve()`, `_require_owned()`); `runtime/kel/service.py` (`_action` `/api/approvals`, `_action` `/api/approval` singular); `desktop/.../KelService.ts` route allowlist (optional `?conversation=`)
-- **Claim challenged:** "The chat approval surface now refuses a resolution whose record belongs to a different conversation — a stale or crafted id cannot settle work the caller is not looking at" (APR-02 disposition / P2_P3; chat_approvals docstring "uses the same ownership set").
-- **Expected:** resolution of another conversation's approval is refused regardless of caller; at minimum, omitting the conversation parameter must not bypass ownership.
-- **Actual:** `resolve(..., conversation=None)` skips `_require_owned` entirely (`if conversation:`). Reproduced: a no-conversation caller **resolved a foreign conversation's approval to `approved`** (probe `evidence/auditor-probe-1.log` A2/A6; ids in log). Declared-foreign callers ARE refused (A1/A5). The engine route passes `conversation=data.get('conversation')` through verbatim (`service.py` ~687). Desktop UI call sites do declare (`KelWorkPanel.tsx:275`, `KelApprovalCard.tsx:146`) — but the bridge allowlist accepts `/api/approvals` without `conversation`, and the singular `/api/approval` route resolves by id with **no scoping at all** (`service.py` ~628; no current UI caller found = dormant), so the enforcement is caller-opt-in, not engine-enforced.
-- **Reproduction:** `cd runtime && python ../docs/v1.6/audit-final/probes/auditor_probe_1.py` §A (A2/A6 show NO ERROR + `state: approved`); code anchors above.
-- **Evidence:** `evidence/auditor-probe-1.log`; code quotes in this sheet; P2_P3_DISPOSITION APR-02 row; probe source in `probes/auditor_probe_1.py`.
-- **Environment:** audit worktree @ `08f56673`; Python 3.14.3 (system), Windows.
-- **Root cause:** the APR-02 repair added the ownership check as an optional, backward-compatible path parameter ("additive") instead of enforcing scope on the write path by default (read path defaults to `'main'`; write path defaults to unscoped).
-- **Confidence:** HIGH (reproduced at module layer; route pass-through read directly).
-- **Adjacent risk:** same additive pattern used for transcription/vetting (REQ-OWNERSHIP-PARITY row itself notes "desktop stream calls do not declare a conversation yet"). Vetting defaults to `'main'` on omission (fail-closed) — chat approvals do not. Audit the same pattern anywhere else.
-- **Repair acceptance criteria:** resolve must enforce ownership unconditionally (require the parameter, or default it to `'main'` consistently with the read path); omission + cross-conversation is refused with the existing sentence; decide `/api/approval` singular (scope it or remove it as dead surface); keep UI behavior unchanged.
-- **Regression test required:** engine test: foreign/no-conversation resolution refused at both the chat module and service layers; omission case in the hostile suite.
-- **Campaign C:** repair status `NOT_STARTED` — repair commit: — · re-test: — · final re-audit: —
+- **Severity (final):** AUD-MAJOR · **Status:** RECORDED (reproduced; root-caused) · **Subsystem:** engine approvals (chat surface) / conversation isolation
+- **Requirements:** REQ-APR-1, REQ-OWNERSHIP-PARITY, REQ-R25-R4 (absorbs APR-02); P2_P3 APR-02 row
+- **Invariants:** INV-APPROVE-001/002, INV-AUTH-002; campaign §16 ("wrong conversation … refused")
+- **Commits/files/symbols:** `8a677d0` (APR-02 fix), `8c899c8` (R4), `dd34ac2`; `runtime/kel/chat_approvals.py` (`resolve()`, `_require_owned()`); `runtime/kel/service.py` (`/api/approvals` ~687, `/api/approval` singular ~628); `KelService.ts` allowlist (optional `?conversation=`)
+- **Expected:** resolution of another conversation's approval is refused regardless of caller; omission of the conversation parameter must not bypass ownership.
+- **Actual:** `resolve(..., conversation=None)` skips `_require_owned` entirely (`if conversation:`). A no-conversation caller **resolved a foreign conversation's approval to `approved`**; declared-foreign callers are refused; the singular route resolves by id with no scoping at all (dormant; no UI caller found). UI call sites do declare (`KelWorkPanel.tsx:275`, `KelApprovalCard.tsx:146`).
+- **Reproduction:** `cd runtime && python ../docs/v1.6/audit-final/probes/auditor_probe_1.py` §A (A2/A6 → no error + `state: approved`); code anchors above.
+- **Evidence:** `evidence/auditor-probe-1.log`; P2_P3_DISPOSITION APR-02 row.
+- **Confidence:** HIGH (module-layer repro + route pass-through read) · **Root cause hypothesis:** the APR-02 repair added ownership as an optional backward-compatible parameter ("additive") instead of enforcing scope on the write path by default (read path defaults `'main'`; write path defaults unscoped).
+- **Adjacent risk:** same additive pattern elsewhere (vetting defaults `'main'` fail-closed; transcription stream calls still undeclared — documented). Audit the pattern anywhere scope is caller-optional.
+- **Repair acceptance criteria:** enforce ownership unconditionally (required param or default `'main'` consistent with reads); omission + cross-conversation refused with the existing sentence; decide the singular route (scope or remove); UI behavior unchanged.
+- **Regression test:** engine test — foreign/no-conversation resolution refused at chat module AND service layers, incl. hostile omission case.
+- **Campaign C:** `NOT_STARTED` — repair commit: — · re-test: — · final re-audit: —
+
+---
+
+## AUD-MAJOR-002 — Privileged IPC surface lacks sender validation across multiple channels, including a generic bridge dispatcher into donor bridge methods
+
+- **Severity (final):** AUD-MAJOR · **Status:** RECORDED (code-verified; no Electron harness for an empirical subframe control — same limitation the corpus records at §58) · **Subsystem:** desktop main/renderer boundary
+- **Requirements:** INV-IPC-001 closure claim; INT-01 class; §26 donor sweep
+- **Invariants:** INV-IPC-001, INV-BRAND-001 (surface hygiene)
+- **Commits/files/symbols:** `KelService.ts` (8 guarded channels; unguarded `kel:credential-status` :594, `kel:credential-set` :595-607, `kel:credential-delete` :608-616); `feedbackBridge.ts` (`feedback:collect-logs` :52 returns log bytes; `feedback:capture-screenshot` :76); `index.ts` sendSync (`get-backend-port`, `get-initial-language`, `get-backend-startup-*` :255-269; `backend:recover-corrupted-database` :271); `common/adapter/main.ts` (`ADAPTER_BRIDGE_EVENT_KEY` generic dispatcher → donor bridge provider map incl. `app.update-cdp-config`, `app.clear-browser-data`, `app.set-start-on-boot`, `update.download`, `auto-update.quit-and-install`, `shell.openExternal`, `app.set-zoom-factor`, `skills.files.*`) reachable via `preload/main.ts` `electronAPI.emit`.
+- **Expected:** a uniform privileged-IPC boundary — every privileged channel validates the sender frame (only the app's own main frame may act).
+- **Actual:** validation is partial: 8 of 11 Kel channels; 0 of 2 feedback channels; 0 sendSync handlers; generic dispatcher unvalidated. Electron runs preload in subframes, and artifact preview renders iframes/webviews (`HTMLRenderer`, `WebviewHost`, `OfficeWatchViewer`, `PDFViewer`), so the exposed bridge can exist in non-main frames; the eight guarded channels show the intended control.
+- **Reproduction:** static read of the files above; no harness run (recorded).
+- **Evidence:** file/line anchors in this sheet; `13/15` docs.
+- **Confidence:** HIGH for missing guards; MEDIUM-HIGH for subframe reachability (Electron semantics + code; unexecuted control).
+- **Root cause hypothesis:** security closure applied per-handler during W-sweeps instead of via one shared sender-validation helper installed across the whole privileged surface (new channels re-opened gaps).
+- **Adjacent risk:** donor bridge methods with system effects (CDP config, browser data clearing, installer download/quit-install, openExternal) as the highest-blast-radius reachable set.
+- **Repair acceptance criteria:** one shared, tested sender-validation helper on every privileged channel (Kel trio + feedback pair + sendSync handlers + recovery channel + adapter dispatcher); decide whether the generic dispatcher is needed for Kel at all; per-channel regression list.
+- **Regression test:** unit tests asserting rejection for spoofed sender per channel; subframe control (empirical) where feasible.
+- **Campaign C:** `NOT_STARTED` — — · — · —
 
 ---
 
 ## AUD-MINOR-001 — COMMIT_LEDGER completeness failures (4 unlisted commits; 2 malformed rows; RC packaging edits unaccounted)
 
-- **Severity:** AUD-MINOR · **Status:** RECORDED (mechanical reconciliation complete)
-- **Subsystem:** audit/evidence corpus · **Req:** RL-03; campaign §5
-- **Commits:** `022f3ac` (test), `0aadd42` (docs; ledger row says "HEAD" with wrong parent `93b99b5`), `34947f0` (feat; production — `KelService.ts` +10), `12f87a7` (docs); `08f5667` (RC) is docs-plus-packaging (`desktop/kel-builder.json` output dir; `desktop/package.json` companyName/author) and is not accounted anywhere; row "R6 tests+record" lacks its SHA (`e8bbb05`).
-- **Evidence:** `evidence/ledger-vs-git.txt`; `commit-classification.tsv`; `git show` outputs.
-- **Repair criteria:** ledger reconciles `git rev-list 8a2b25d..08f5667` 1:1; no placeholder SHA cells; production-affecting exceptions documented; keep a scripted reconciliation gate.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
----
+- **Severity (final):** AUD-MINOR · **Status:** RECORDED (mechanical reconciliation complete) · **Subsystem:** audit/evidence corpus · **Req:** RL-03; campaign §5
+- **Commits:** `022f3ac` (test), `0aadd42` (docs; row says "HEAD", wrong parent `93b99b5`), `34947f0` (feat; `KelService.ts` +10), `12f87a7` (docs); `08f5667` (RC; docs + `kel-builder.json`/`package.json` packaging edits) unaccounted; row "R6 tests+record" lacks SHA (`e8bbb05`).
+- **Expected/Actual:** ledger reconciles `git rev-list 8a2b25d..08f5667` 1:1 / four commits unlisted, two malformed rows, packaging edits unaccounted.
+- **Evidence:** `evidence/ledger-vs-git.txt`, `commit-classification.tsv`, `git show` outputs. **Confidence:** HIGH (mechanical).
+- **Repair criteria:** ledger reconciles 1:1; no placeholder SHA cells; production-affecting exceptions documented; scripted reconciliation gate.
+- **Regression test:** reconciliation script fails on any unlisted/malformed row (already prototyped: `tools/classify-commits.py`).
+- **Campaign C:** `NOT_STARTED`.
 
 ## AUD-MINOR-002 — Budget reservations are not integrated with job budget accounting (cumulative overcommit); token/wallclock caps absent (disclosed)
 
-- **Severity:** AUD-MINOR (resource-accounting invariant, partially disclosed)
-- **Status:** RECORDED (reproduced)
-- **Subsystem:** workforce/delegation budget · **Req:** REQ-R25-R1; campaign targets 61–66 ("budget")
-- **Invariants:** INV-AUTH-DELEGATION (budget dimension)
-- **Commits/files:** `dc65fbc`; `runtime/kel/assignment.py` (`reserve_budget`), `runtime/kel/core.py` (`reserved` accounting)
-- **Claim challenged:** "the job envelope is the delegator's budget authority, so a delegated reservation may narrow it, never create more" (in-code comment) / R1 row "reserve_budget envelope check".
-- **Expected:** cumulative Phase-5.3 reservations cannot sum beyond `job.budget − spent − reserved`.
-- **Actual:** `reserve_budget` checks `job.budget − spent − reserved` but **never updates `job.reserved`** from the `budget_reservations` table, so each call sees the same remaining and multiple reservations exceed the envelope. Reproduced: reservation cost 1 accepted, then cost 8 accepted with envelope 8 (cumulative 9); tokens=1e12, wallclock=1e7 accepted in a single reservation (probe E6/E7). Token/wallclock non-enforcement is **explicitly disclosed** in `increments/R1-AUTHORITY-CEILING.md` (~line 105); the cumulative non-accounting is not.
-- **Evidence:** `evidence/auditor-probe-1.log` E5–E7; `assignment.py` `reserve_budget` body.
-- **Root cause:** two parallel reservation systems (`core` run-cycle reserved counter vs Phase-5.3 `budget_reservations`) with no aggregation between them.
-- **Confidence:** HIGH. **Adjacent risk:** milestone-boundary enforcement still caps actual spend on the core cycle — practical impact is planning overcommit (recheck consumers in Campaign C).
-- **Repair criteria:** aggregate active reservations into the envelope check (or update `job.reserved` on reserve/release); reject reservation sums > remaining; update docs; tests for cumulative + token/wallclock policy.
-- **Regression test:** cumulative-overcommit test; multi-reservation per job.
-- **Campaign C:** `NOT_STARTED` — — · — · —
+- **Severity (final):** AUD-MINOR (effect-reachability reviewed: serialized claim path caps real spend; overcommit is planning-impact) · **Status:** RECORDED (reproduced) · **Subsystem:** workforce/delegation budget · **Req:** REQ-R25-R1 · **Invariant:** INV-AUTH-001 (budget dimension)
+- **Files:** `runtime/kel/assignment.py` (`reserve_budget`), `runtime/kel/core.py` (`reserved` accounting) · **Commit:** `dc65fbc`
+- **Expected:** cumulative Phase-5.3 reservations cannot sum beyond `job.budget − spent − reserved`. **Actual:** envelope check never aggregates `budget_reservations` into `job.reserved`; reservation cost 1 accepted then cost 8 with envelope 8 (cumulative 9); tokens=1e12/wallclock=1e7 accepted single-shot (non-enforcement disclosed in `increments/R1-AUTHORITY-CEILING.md` ~105; the cumulative gap is not).
+- **Reproduction:** probe-1 E5–E7. **Evidence:** `evidence/auditor-probe-1.log`. **Confidence:** HIGH. **Root cause:** two parallel reservation systems without aggregation.
+- **Adjacent risk:** consumers of `job.reserved` see incomplete accounting. **Repair criteria:** aggregate active reservations (or update `job.reserved` on reserve/release); reject sums > remaining; docs; tests for cumulative + token/wallclock policy.
+- **Regression test:** cumulative-overcommit test; multi-reservation per job. **Promotion criterion (Campaign C):** runtime claiming probe — if actual spend can cross the envelope, re-grade.
+- **Campaign C:** `NOT_STARTED`.
 
----
+## AUD-MINOR-003 — `native.child_env` claims weaker stripping than it performs: unrelated provider keys reach native CLI children
 
-## AUD-MINOR-003 — `native.child_env` claims weaker-stripping than it performs: unrelated provider keys reach native CLI children
-
-- **Severity:** AUD-MINOR · **Status:** RECORDED (reproduced)
-- **Subsystem:** credentials/native providers · **Req:** REQ-R25-R7; campaign target 82
-- **Invariants:** INV-CRED-001 · **Files:** `runtime/kel/native.py` (`child_env`, docstring), vs `runtime/kel/internal.py` (`child_env(keep=…)`, whitelist)
-- **Claim:** "A native child receives at most its own provider's credentials; Kel-managed keys for other providers are never forwarded into it."
-- **Actual:** only the named counterpart key is popped; other provider credentials pass through — `DEEPSEEK_API_KEY` reaches both `codex` and `claude` children (probe G4). `internal.child_env` (Kel-managed keys) correctly strips with a whitelist (G1/G2); `redact` works (G3).
-- **Evidence:** `evidence/auditor-probe-1.log` §G. **Confidence:** HIGH (env content printed; sentinels used). The R7 row discloses generic env inheritance for engine-local helpers — the native-CLI case is narrower and contradicts the docstring.
-- **Repair criteria:** strip per-provider map (or explicitly document native children keep the user env except other providers' keys, and align the docstring); add test for third-provider key absence.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
----
+- **Severity (final):** AUD-MINOR (environs-only propagation observed; no exfiltration demonstrated; two primary providers spawn children) · **Status:** RECORDED (reproduced with sentinels) · **Subsystem:** credentials/native providers · **Req:** REQ-R25-R7 · **Invariant:** INV-CRED-001
+- **Files:** `runtime/kel/native.py` (`child_env`, docstring) vs `runtime/kel/internal.py` (whitelist `child_env(keep=…)`).
+- **Expected:** "A native child receives at most its own provider's credentials…" **Actual:** only the named counterpart key is popped — `DEEPSEEK_API_KEY` reaches both `codex` and `claude` children; internal whitelist path correct; `redact` works.
+- **Reproduction:** probe-1 §G (G1–G4). **Evidence:** `evidence/auditor-probe-1.log`. **Confidence:** HIGH.
+- **Adjacent risk / follow-through:** sentinel trace through logs/prompts/artifacts/CompletionPackets showed environs presence only; tool policy + `fetch/network` refusals reduce exfiltration reach (deepening recorded in this pass).
+- **Repair criteria:** per-provider strip map (or align docstring to documented native-env policy); test for third-provider key absence. **Regression test:** env-content test for both native children.
+- **Campaign C:** `NOT_STARTED`.
 
 ## AUD-MINOR-004 — R12 packaged-evidence integrity gaps (non-discriminating probe exit; uninstall evidence absent; pre-RC integrity snapshot)
 
-- **Severity:** AUD-MINOR · **Status:** RECORDED (verified)
-- **Subsystem:** release evidence · **Req:** REQ-PKG-ASSERT, REQ-R25-R12; campaign §22/§28
-- **Items:** (a) `ux-audit/r12-installed-probe.cjs` exits `0` unconditionally on the happy path (`process.exit(0)` after writing the JSON; only a caught exception exits 1) — `runs/r12-fresh` exited 0 with `attentionVisible:false` + `aboutLogoLoaded:false`; the PASS disposition leans on `r12-fresh2` (booleans true). (b) No uninstall evidence is retained anywhere; the install script only comments that cleanup is "cleaned up with the uninstaller afterwards"; `runs/r12-installed` is empty after removal. (c) `runs/r12-integrity.txt` was captured at `12f87a7` with `M desktop/kel-builder.json` + `M desktop/package.json` present under a header that says "expect empty"; the script records but never fails on unexpected state, and no post-RC (08f5667) re-run is retained.
-- **Evidence:** probe script lines 100–157; `r12-integrity.txt`; install script; directory listings.
-- **Repair criteria:** probe exit code gates on its assertions; uninstall run logged (registry/shortcuts/dir) and retained; release-integrity re-run at the final RC head with enforcement.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
----
+- **Severity (final):** AUD-MINOR · **Status:** RECORDED (verified) · **Subsystem:** release evidence · **Req:** REQ-PKG-ASSERT, REQ-R25-R12; campaign §22/§28
+- **Items:** (a) `ux-audit/r12-installed-probe.cjs` exits 0 unconditionally on the happy path (`process.exit(0)` after JSON write; only a caught exception exits 1) — `r12-fresh` exited 0 with `attentionVisible:false` + `aboutLogoLoaded:false`; PASS leans on `r12-fresh2`. (b) No uninstall evidence retained anywhere. (c) `r12-integrity.txt` captured at `12f87a7` with `M desktop/kel-builder.json` + `M desktop/package.json` under an "expect empty" header; no post-RC re-run; script records but never fails. (d) r10-f "2 ms" per-attempt timings not retained (load-bearing timings ARE; addendum folded here). (e) No build log/command for RC `package-r12` retained; documented generic command cannot produce NSIS from committed `win.target=["dir"]` — exact invocation unreconstructable (auditor rebuild mirrors with `-c.win.target=nsis`).
+- **Evidence:** probe script lines 100-157; `r12-integrity.txt`; install script; directory listings. **Confidence:** HIGH.
+- **Repair criteria:** probe exit gates on assertions; uninstall run logged+retained; release-integrity re-run enforced at final RC head; package build command+log retained; doc wording corrected to retained evidence.
+- **Regression test:** probe returns non-zero on failed assertions; integrity script `--fail-on-dirty`.
+- **Campaign C:** `NOT_STARTED`.
 
 ## AUD-MINOR-005 — Corpus state drift not reconciled at RC (statuses/rows contradict the delivered tree)
 
-- **Severity:** AUD-MINOR · **Status:** RECORDED (verified samples; itemized)
-- **Subsystem:** audit corpus accuracy · **Req:** campaign §4/§5 (claims vs reality)
-- **Items (verified):** (1) `INVARIANT_LEDGER.md` status column stale for delivered work: INV-AUTH-001 "PLANNED (R1)", INV-IDEM-001/ EFFECT-001/ RETRY-001 "PLANNED", INV-APPROVE-001 "PARTIAL (open APR-01..03)" (APR-01/02 fixed; APR-03 deferred), INV-ERROR-001 "OPEN_GAP (PER-02/PER-03)" (both fixed), INV-WF-005 "PARTIAL (F4 open)" (F4 delivered `081a6ef`), INV-IPC-001 "OPEN_GAP (INT-01)" (fixed), INV-UI-001 "OPEN_GAP" (closed), INV-CRED-001, INV-MEM-001. (2) `MIGRATION_LEDGER.md`: table ends at 19 with "Next free version: 20" while max is **21** (verified from constants + packaged DBs max 21); RC checklist checkboxes remain unchecked though packaged boots ran. (3) `REQUIREMENTS_TRACEABILITY.md` stale rows: R9/R11/R12 "PENDING" though delivered; RUST row says "re-verified open" post-fixes; PKG-ASSERT PENDING though R12 battery ran; REQ-WFWIRE PENDING with no later row (needs a scope decision). (4) `AUDIT_HANDOFF.md` TBD cells remain. (5) `docs/v1.6-visual-ux/00_STATUS.md` stale copy in the RC tree. (6) P2_P3 §reconciliation explains "27" as worklist arithmetic while other prose insists "26 canonical" — consistent only if read carefully; see AUD doc for line-level notes.
-- **Evidence:** direct file reads at RC; constants grep (`assignment.py:39` v21); packaged DB queries (`r12-fresh2`/`r12-upgrade` max 21).
-- **Repair criteria:** every status/table row reconciled to the RC tree or explicitly marked historical; no unchecked claim remains that the tree satisfies.
-- **Campaign C:** `NOT_STARTED` — — · — · —
+- **Severity (final):** AUD-MINOR · **Status:** RECORDED (verified samples; itemized) · **Subsystem:** audit corpus accuracy · **Req:** campaign §4/§5
+- **Items:** (1) `INVARIANT_LEDGER.md` stale statuses (INV-AUTH-001 "PLANNED (R1)"; INV-IDEM-001/EFFECT-001/RETRY-001 "PLANNED"; INV-APPROVE-001 "PARTIAL (APR-01..03)" though 01/02 fixed/03 deferred; INV-ERROR-001 "OPEN_GAP" though PER-02/03 fixed; INV-WF-005 "PARTIAL" though F4 delivered `081a6ef`; INV-IPC-001 OPEN_GAP though INT-01 fixed; INV-UI-001, INV-CRED-001, INV-MEM-001 stale). (2) `MIGRATION_LEDGER.md` "Next free version: 20" vs max **21**; RC checkboxes unchecked though packaged boots ran. (3) `REQUIREMENTS_TRACEABILITY.md` R9/R11/R12 "PENDING" though delivered; RUST "re-verified open"; PKG-ASSERT pending; REQ-WFWIRE pending (scope decision open). (4) `AUDIT_HANDOFF.md` TBD cells. (5) `docs/v1.6-visual-ux/00_STATUS.md` stale in RC tree. (6) P2_P3 "27 vs 26" explainable only on careful read (worklist arithmetic).
+- **Evidence:** direct reads at RC; `assignment.py:39` (v21); packaged DB queries (fresh/upgrade max 21). **Confidence:** HIGH.
+- **Repair criteria:** every status/table row reconciled to the RC tree or marked historical; zero unchecked satisfied claims.
+- **Regression test:** corpus-lint (grep-able stale-marker denylist) run at RC head.
+- **Campaign C:** `NOT_STARTED`.
+
+## AUD-MINOR-006 — Delegation containment primitive does not resolve `..`: `src/../secrets` counts as within `src`
+
+- **Severity (final):** AUD-MINOR (no consumer-confirmed filesystem crossing; primitives resolve natively under the worktree) · **Status:** RECORDED · **Subsystem:** workforce/contracts (`_path_within` / `authority_within`) · **Req/invariants:** AUTH-DELEGATION (INV-AUTH-001); campaign attack target 62
+- **Expected:** a child scope lexically escaping the delegator scope (via `..`) is refused. **Actual:** `authority_within({'write_scope': ['src/../secrets']}, {'write_scope': ['src']})` → contained (`None`); `_path_within` normalizes `./` + separators, never resolves `..`; `.` as parent root universal by design; `..` alone refused.
+- **Reproduction:** inline probe 2026-09-19; `runtime/kel/workforce.py` source read. **Evidence:** thread transcript + this ledger. **Confidence:** HIGH (primitive), MEDIUM (consumer impact).
+- **Adjacent risk:** any future consumer treating scope strings as real boundaries inherits the gap. **Repair criteria:** resolve `..` lexically or refuse `..` segments; document `.` semantics; tests `src/../x`, `a/../../x`, mixed separators. **Promotion criterion:** consumer runtime confirmation (Campaign C).
+- **Regression test:** primitive table + one end-to-end contract refusal. **Campaign C:** `NOT_STARTED`.
+
+## AUD-MINOR-007 — Donor-derived `aioncore` runtime is live and shipped; no corpus disposition found (binary staged from cache)
+
+- **Severity (final):** AUD-MINOR (presence+viability proven; Kel-code reachability not established; legal attribution present) · **Status:** RECORDED · **Subsystem:** desktop runtime / package / donor sweep
+- **Evidence:** `desktop/packages/desktop/src/index.ts:36` imports `BackendLifecycleManager` from `@aionui/web-host`; `:235` constructs it; `process/backend/binaryResolver.ts` resolves `bundled-aioncore/{platform-arch}/aioncore[.exe]`; RC resources contain `bundled-aioncore/`; real run data `host/aionui/**` (r10-f timestamps); vitest covers the launcher (mocked `AIONCORE_LISTENING`); build flow calls `prepareAioncore(...)` (`scripts/build-with-builder.js` step 5); `kel-builder.json` ships `LICENSE → AIONUI-LICENSE.txt` — intentional, config-driven packaging input; `AionUI-LICENSE.txt` present in package.
+- **Expected/Actual:** every shipped binary bound to source/revision with a disposition / live donor-named runtime shipped, disposition + provenance binding absent (binary staged from cache; stock binary not in git).
+- **Confidence:** HIGH (presence/wiring), MEDIUM-HIGH (import-graph reachability from Kel paths; launcher startup not observed live). **Adjacent risk:** un-vetted runtime process surface.
+- **Repair criteria:** bind bundled binary to revision + hash; decide keep/rename/remove; record disposition; refresh donor sweep; security read of what starts it.
+- **Regression test:** build assertion (provenance manifest) + reachability note in sweep.
+- **Campaign C:** `NOT_STARTED`.
+
+## AUD-MINOR-008 — Donor desktop-pet subsystem is wired into the shipped app (no disposition found)
+
+- **Severity (final):** AUD-MINOR · **Status:** RECORDED · **Subsystem:** desktop
+- **Evidence:** `src/index.ts:1067` `createPetWindow`; `systemSettingsBridge.ts` pet APIs; `process/pet/petManager.ts`, `petStateMachine.ts`, `pet-confirm.html`; `resources/pet-states/*.svg` shipped in RC.
+- **Expected/Actual:** V1.6 surfaces are Kel's (donor features removed or intentionally kept with recorded decision) / no disposition found; settings API reachable; window start requires a host-side call; donor assets+behavior shipped.
+- **Confidence:** HIGH (wiring/assets), MEDIUM (end-user UI reachability not fully traced). **Adjacent risk:** un-vetted donor UI/process surface; brand/behavior leakage.
+- **Repair criteria:** decide keep/hide/remove; if kept — disposition row; if hidden — prove unreachable. **Regression test:** surface-reachability list in the donor sweep.
+- **Campaign C:** `NOT_STARTED`.
+
+## AUD-MINOR-009 — Donor builder config remains the default build path (`electron-builder.yml`: appId com.aionui.app, productName AionUi)
+
+- **Severity (final):** AUD-MINOR (Kel identity verified in all produced artifacts; risk is wrong-default misuse) · **Status:** RECORDED · **Subsystem:** packaging/build tooling (donor residual)
+- **Evidence:** `desktop/packages/desktop/electron-builder.yml` (`appId: com.aionui.app`, `productName: AionUi`) is the only config referenced by `scripts/build-with-builder.js` (used by `bun run build`/`dist:win`; fallbacks hardcode `AionUi.exe`); Kel packages only when `--config kel-builder.json` is explicit; auditor build log confirms kel-builder.json loaded as the effective config (and donor yml merged as parent).
+- **Expected/Actual:** one obvious production build path / default scripts build a donor-branded app; Kel config is a side path; `bun run dist:win` would emit `AionUi`-named artifacts.
+- **Confidence:** HIGH. **Adjacent risk:** CI/maintainer misuse; donor identity regression in future packages.
+- **Repair criteria:** make Kel config default (or remove donor scripts/names); single packaging config; build-identity assertion (productName/appId) in CI.
+- **Regression test:** artifact metadata assertion step. **Campaign C:** `NOT_STARTED`.
+
+## AUD-SUG-001 — Capability directive docstring vs behavior for unquoted log-line/path tokens
+
+- **Severity (final):** AUD-SUG · **Status:** RECORDED · **Subsystem:** `capabilities.py`
+- **Evidence:** `directive_clauses('GET /a/[kel:web=off] 200')` → matched; quoted/code/fenced/nested/word-embedded/scheme-URL/unknown-capability/malformed-state all inert; mixed-case + punctuation-adjacent recognition BY DESIGN (`tests/test_capabilities.py:163-180, 321-325`); long-paste guard returns [] >2000 chars (`capabilities.py:447`).
+- **Expected/Actual:** docstring's exclusion intent vs parser's reserved-token-wherever rule for bare unquoted technical strings.
+- **Confidence:** HIGH (behavior), SUG-class. **Repair criteria:** extend exclusions or align docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). **Regression test:** docstring-conformance table (accepted/rejected forms). **Campaign C:** `NOT_STARTED`.
 
 ---
 
-## Campaign C handoff (running)
-Repair set so far: `AUD-MAJOR-001`, `AUD-MAJOR-002`, `AUD-MINOR-001` … `AUD-MINOR-009`, `AUD-SUG-001`. Nothing repaired in Campaign B; the RC target is unchanged.
+## Verification summary (supporting)
 
-### AUD-MINOR-006 — Delegation containment primitive does not resolve `..`: `src/../secrets` counts as within `src`
+- Engine suite re-run at RC: **998 passed + 10 subtests, exit 0**; desktop vitest **122/122** (`evidence/auditor-engine-suite.log`, `auditor-desktop-vitest.log`).
+- Negative controls (discriminating): pre-APR-02 → 6F+1E; pre-R2 → 1F; pre-R4 → 1F (`17_TEST_QUALITY.md`).
+- Frozen refs/engine identity: `main`=`5e76b21`; `v1.6.0-pre1^{}`=`f24d9c28`; candidate↔frozen byte-identity (pre1 `Kel.exe`); engine `69123af0…` == staged == packaged == installed.
+- Brand: canonical sha256 `7418a42f…` == Desktop original == in-repo; 9 derivatives verified; check-mode exit 0.
+- Auditor package: independent rebuild; install/reinstall/uninstall lifecycle clean; installed journey PASS; **engine-loss ladder PASS on installed build** (kill×2→recovered, kill#3→unrecoverable, manual→recovered; work preserved; 0 leaks/errors).
+- Migrations: max **21** (`v16-budget-reservations`) across constants + packaged fresh/upgrade stores.
+- Corpus drift/rebuild notes retained in `14/15`; no production file was modified by this audit at any point.
 
-- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** workforce/contracts (`_path_within` / `authority_within`)
-- **Req/invariants:** AUTH-DELEGATION (INV-AUTH-001); campaign attack target 62 (path tricks).
-- **Claim challenged:** "delegation may narrow authority, never create it" — the executable primitive itself.
-- **Expected:** a child scope/boundary that lexically escapes the delegator scope (via `..`) is refused.
-- **Actual:** `authority_within({'write_scope': ['src/../secrets']}, {'write_scope': ['src']})` -> `None` (contained). `_path_within` normalizes `./` and separators but never resolves `..` (runtime/kel/workforce.py). `.` as a parent root is universal by design (open question (4) in the R1 increment); `..` alone IS refused.
-- **Repro:** inline probe 2026-09-19 (thread transcript); `_path_within` source read.
-- **Impact:** any consumer treating `write_scope`/`write_boundaries` as a real boundary inherits a normalization gap; no consumer-confirmed filesystem effect established yet (consumer analysis queued).
-- **Repair criteria:** resolve `..` lexically or refuse segments containing `..`; document `.` semantics; tests for `src/../x`, `a/../../x`, mixed separators.
-- **Campaign C:** `NOT_STARTED` — — · — · —
+## Campaign C handoff (final)
 
-### AUD-MINOR-007 — Donor-derived `aioncore` runtime is live and shipped; no corpus disposition found (binary staged from cache)
-
-- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** desktop runtime / package / donor sweep
-- **Evidence:** `desktop/packages/desktop/src/index.ts:36` imports `BackendLifecycleManager` from `@aionui/web-host`; `:235` constructs it; `process/backend/binaryResolver.ts` resolves `bundled-aioncore/{platform-arch}/aioncore[.exe]`; RC resources contain `bundled-aioncore/`; real run data contains `host/aionui/**` (skills + node runtime caches; r10-f timestamps during the journey); vitest covers the launcher (mocked `AIONCORE_LISTENING`).
-- **Claim challenged:** §26 donor sweep completeness; INV-PACKAGE-001 provenance ("bundled-aioncore staged from cache (stock binary not in git)") — no revision/hash binding of the shipped binary found in the read corpus.
-- **Expected:** every shipped binary has source/revision binding; donor-named runtime surfaces carry a disposition (keep/rename/remove).
-- **Actual:** live donor-named runtime shipped; `AionUI-LICENSE.txt` present (legal attribution — allowed).
-- **Repair criteria:** bind the bundled binary to a revision + hash; decide keep/rename/remove; record disposition; refresh donor sweep.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
-### AUD-MINOR-008 — Donor desktop-pet subsystem is wired into the shipped app (no disposition found)
-
-- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** desktop
-- **Evidence:** `src/index.ts:1067` `createPetWindow`; `systemSettingsBridge.ts` pet APIs; `process/pet/petManager.ts`, `petStateMachine.ts`, `pet-confirm.html`; `resources/pet-states/*.svg` shipped in the RC.
-- **Expected:** V1.6 surfaces are Kel's; donor features removed or intentionally kept with a recorded decision.
-- **Actual:** no disposition found in the read corpus; UI reachability not yet established (queue).
-- **Repair criteria:** decide keep/hide/remove; if kept, a disposition row; if hidden, prove unreachable.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
-### AUD-SUG-001 — Capability directive docstring vs behavior for unquoted log-line/path tokens
-
-- **Severity:** AUD-SUG · **Status:** RECORDED · **Subsystem:** `capabilities.py`
-- **Evidence:** `directive_clauses('GET /a/[kel:web=off] 200')` → matched; quoted/code/fenced/nested/word-embedded/scheme-URL/unknown tokens all inert; punctuation-adjacent and mixed-case recognition are BY DESIGN (`tests/test_capabilities.py:163-180, 321-325`).
-- **Suggestion:** extend exclusions or align the docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). Wording/design-intent only; no failure count inflation.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
-### Addendum to AUD-MINOR-004 (item d)
-
-- r10-f row claims per-attempt failure timings ("attempt 1 fails (2 ms) → attempt 2 fails (2 ms)") that are NOT retained in `ux-audit/runs/r10-f/**`; the load-bearing timings ARE retained (reconnect#1 00:09:35.236 → unrecoverable 00:09:40.249 ≈ 5.01 s; manual retry → recovered in 0.53 s).
-
-### AUD-MAJOR-002 — Privileged IPC surface lacks sender validation across multiple channels, including a generic bridge dispatcher into donor bridge methods
-
-- **Severity:** AUD-MAJOR · **Status:** RECORDED (code-verified; empirical subframe test not performed — no Electron harness, same limitation the corpus records at §58) · **Subsystem:** desktop main/renderer boundary
-- **Evidence:** `KelService.ts` guards 8 channels with `event.senderFrame === event.sender.mainFrame` (+file:/localhost URL), but the credential trio has NO guard: `kel:credential-status` (`:594`, no event param), `kel:credential-set` (`:595-607`, stores secrets), `kel:credential-delete` (`:608-616`, removes them). `feedbackBridge.ts`: `feedback:collect-logs` (`:52`, returns log file bytes, no event param) and `feedback:capture-screenshot` (`:76`, captures the window) have no frame validation. `index.ts` sendSync channels `get-backend-port`/`get-initial-language`/`get-backend-startup-*` (`:255-269`) and `backend:recover-corrupted-database` (`:271`) are unguarded. `common/adapter/main.ts` registers `ipcMain.handle(ADAPTER_BRIDGE_EVENT_KEY, (_event, info) => emitter.emit(name, data))` — a generic dispatcher with no sender check, reachable via `electronAPI.emit` (`preload/main.ts:20-33`) and dispatching into the donor bridge provider map (`app.update-cdp-config`, `app.clear-browser-data`, `app.set-start-on-boot`, `update.download` / `auto-update.quit-and-install`, `shell.openExternal`, `app.set-zoom-factor`, `skills.files.*`, …).
-- **Expected:** the declared closure of the INT-01 class is a uniform privileged-IPC surface: every privileged channel validates the sender frame (only the app's own main frame may act).
-- **Actual:** validation is partial (8 of 11 Kel channels; 0 of 2 feedback channels; 0 sendSync handlers; generic dispatcher unvalidated). Electron runs the preload for subframes as well, so the app-exposed `electronAPI`/`kelAPI` surface can exist in non-main frames (welcome-home for the guard that eight channels DO apply); artifact preview renders iframes/webviews (`HTMLRenderer`, `WebviewHost`, `OfficeWatchViewer`, `PDFViewer`, Markdown components).
-- **Impact:** non-main frames — if any reachable frame carries the exposed bridge — can set/delete provider credentials, pull log bytes, capture the window, or invoke donor bridge methods with system-level effects (CDP config, browser-data clearing, installer download/quit-and-install, openExternal). Even in the most conservative reading (main-frame-only reachability), the unguarded channels contradict the declared uniform boundary and reintroduce the INT-01 class on new channels.
-- **Repair criteria:** apply one shared, tested sender-validation helper to every privileged channel (Kel trio + feedback pair + sendSync handlers + `backend:recover-corrupted-database` + the adapter dispatcher); decide whether the generic dispatcher surface is needed at all for Kel (vs donor dormant); regression list per channel.
-- **Confidence:** HIGH for the missing guards (code); MEDIUM-HIGH for subframe reachability (Electron semantics + code analysis; no harness run).
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
-### AUD-MINOR-009 — Donor builder config remains the default build path (`electron-builder.yml`: appId com.aionui.app, productName AionUi)
-
-- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** packaging/build tooling (donor residual)
-- **Evidence:** `desktop/packages/desktop/electron-builder.yml` — `appId: com.aionui.app`, `productName: AionUi` (only config referenced by `scripts/build-with-builder.js`, which `bun run build` / `dist:win` use and whose fallbacks hardcode `AionUi.exe`, `AionUi/Electron process` checks). Kel packages are produced only when `--config kel-builder.json` is passed explicitly (RC evidence: `docs/v1.6/AUTO_RESUME.md:372`; build logs `package-*-build.log` → `loaded configuration file=...kel-builder.json`).
-- **Expected:** one obvious production build path; donor configs removed or clearly quarantined.
-- **Actual:** the DEFAULT scripts build a donor-branded app; the Kel config is an explicit side path. A maintainer/CI running `bun run dist:win` would produce `AionUi`-named artifacts.
-- **Repair criteria:** make the Kel config the default (or remove donor build scripts/names); ensure `kel-builder.json` is the single packaging config; add a build-identity assertion (productName=Kel, appId) to a CI step.
-- **Campaign C:** `NOT_STARTED` — — · — · —
-
-### Revision notes (2026-09-19 continuation)
-
-- **AUD-MINOR-004 addendum (e):** no build log/command record for the RC `package-r12` was retained anywhere (no `package-r12-build.log`; only install/probe evidence). The documented generic command (`--config kel-builder.json --win --x64`) cannot itself produce the NSIS artifact given `win.target=["dir"]` in the committed config — the exact R12 invocation is unreconstructable from retained evidence; the auditor rebuild mirrors it with `-c.win.target=nsis`.
-- **AUD-MINOR-007 added evidence:** the official build flow calls `prepareAioncore(...)` (`scripts/build-with-builder.js` step 5) and `kel-builder.json` `extraResources` ships `{from: LICENSE, to: AionUI-LICENSE.txt}` — i.e., the donor runtime and its license are intentional, config-driven packaging inputs; the open question is provenance binding + naming disposition, not removal.
-- **Engine rebuild evidence:** independent PyInstaller rebuild from the RC tree succeeded (log `evidence/auditor-engine-rebuild.log`); fresh `KelEngine.exe` = 3,326,709 B (same size as packaged) with a different SHA-256 (`3bd693b3…` vs `69123af0…`) — expected PyInstaller non-reproducibility; the RC's own chain (staged == packaged == installed claim) remains hash-exact.
-
+Repair set: **AUD-MAJOR-001, AUD-MAJOR-002, AUD-MINOR-001…009, AUD-SUG-001.** Priority: MAJOR-001 (authority path) → MAJOR-002 (prerequisite-tight, uniform IPC guard) → MINOR-002/003/006 (real-effect reachability checks) → evidence/corpus items. Every finding carries repair criteria + a required regression test. Campaign C owns ALL repairs; nothing was repaired during Campaign B; the RC target never moved.
