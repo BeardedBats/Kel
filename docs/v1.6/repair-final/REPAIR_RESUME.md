@@ -9,17 +9,20 @@
 
 ## State now
 - Integrity verified end-to-end (see `00_REPAIR_BINDING.md` §1): all checks YES.
-- Dispositioned: **1/12** — `AUD-MAJOR-001` REPAIRED (`44aee9f`; focused 28/28, adjacent 129/129, probe §A replay refused, evidence under `evidence/`).
-- In progress: `AUD-MAJOR-002` (privileged IPC sender validation).
+- Dispositioned: **2/12** — `AUD-MAJOR-001` REPAIRED (`44aee9f`; focused 28/28, adjacent 129/129, probe §A replay refused). `AUD-MAJOR-002` REPAIRED (`eaf7bad`; desktop vitest 147/147, tsc exit 0, pre-fix replay fails; evidence `ma2-*`).
+- In progress: `AUD-MINOR-002` (budget reservation aggregation).
 
 ## Next actions (ordered)
-1. `AUD-MAJOR-002`: read pass docs `07`/`13`/`15` + desktop main-process code; one shared sender guard across every privileged channel (Kel trio + feedback pair + sendSync handlers + recovery channel + adapter dispatcher); per-channel negative tests; commit.
-2. MINORs in severity order (`002`, `003`, `006` security-adjacent; `004`, `005` evidence/corpus; `007`, `008`, `009` donor; `001` ledger), then `AUD-SUG-001`.
-3. Full regression, package build + installed battery, migrations/persistence, isolation checks; finalize `docs/v1.6/POST_REPAIR_RELEASE_CANDIDATE.md`.
+1. `AUD-MINOR-002` (budget aggregation) → `AUD-MINOR-003` (credential containment) → `AUD-MINOR-006` (path containment) — security-adjacent MINORs.
+2. `AUD-MINOR-001` / `004` / `005` — commit ledger, package-evidence, corpus drift (documentation truth).
+3. `AUD-MINOR-007` / `008` / `009` — donor runtime / desktop-pet / builder config.
+4. `AUD-SUG-001` — directive docstring vs behavior.
+5. Full regression, package build + installed battery, migrations/persistence, isolation checks; finalize `docs/v1.6/POST_REPAIR_RELEASE_CANDIDATE.md`.
 
 ## How to verify current state
 - `git -C kel-v16-final-repair log --oneline -8`; `git status` clean except declared build artifacts.
-- Engine suite: `cd runtime && python -m pytest tests -q`; probes: `docs/v1.6/audit-final/probes/`.
+- Engine suite: `cd runtime && python -m pytest tests -q`. Desktop: `cd desktop && npx vitest run` + `node_modules/.bin/tsc -p tsconfig.json --noEmit`.
+- Campaign B probes: `docs/v1.6/audit-final/probes/`.
 
 ## Hard rules (still binding)
 - No release, no freeze, no `main` movement, no final independent audit; `HUMAN_VISUAL_GATE` stays PENDING.

@@ -9,3 +9,5 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 1 | (initialization; see `git log` subject `docs(v1.6-repair): initialize`) | — | docs | Campaign C repair record initialized (binding, dispositions, evidence protocol, status, resume) |
 | 2 | `44aee9f` | AUD-MAJOR-001 | fix | Unconditional approval conversation ownership (chat path + both service routes); discriminating tests; raw attack/focused/adjacent evidence |
 | 3 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MAJOR-001 recorded`) | AUD-MAJOR-001 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
+| 4 | `eaf7bad` | AUD-MAJOR-002 | fix | One shared sender guard on every privileged IPC channel (Kel trio, feedback trio, sendSync + recovery, adapter dispatcher); per-channel refusal tests |
+| 5 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MAJOR-002 recorded`) | AUD-MAJOR-002 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |

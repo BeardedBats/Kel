@@ -43,7 +43,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Adjacent risk:** donor bridge methods with system effects (CDP config, browser data clearing, installer download/quit-install, openExternal) as the highest-blast-radius reachable set.
 - **Repair acceptance criteria:** one shared, tested sender-validation helper on every privileged channel (Kel trio + feedback pair + sendSync handlers + recovery channel + adapter dispatcher); decide whether the generic dispatcher is needed for Kel at all; per-channel regression list.
 - **Regression test:** unit tests asserting rejection for spoofed sender per channel; subframe control (empirical) where feasible.
-- **Campaign C:** `NOT_STARTED` — — · — · —
+- **Campaign C:** `REPAIRED` — repair commit: `eaf7bad` · re-test: desktop vitest 147/147 (25 new: guard truth table + per-channel refusals), tsc exit 0, pre-fix stash replay fails on the in-place channels · final re-audit: `PENDING`
 
 ---
 
