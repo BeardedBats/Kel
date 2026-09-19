@@ -1,0 +1,73 @@
+08f56673ea93ed84568018937bb190e0a5acd71b|12f87a7f0da3c9a3a9040182e796aa2193256621|2026-09-18 20:52:11 -0400|docs(v1.6): PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready
+12f87a7f0da3c9a3a9040182e796aa2193256621|72676306c78f9fd627684ff31cfd6bbb465deaaa|2026-09-18 20:16:01 -0400|docs(v1.6): R11 records — integration breadcrumb, ledgers, requirements, visual index, status
+72676306c78f9fd627684ff31cfd6bbb465deaaa|93b70746a6241233ce36b5ce50d7fd174ec78e6f bc92f7f33eb40988da8b53dc22f5c4f968aeef90|2026-09-18 20:12:53 -0400|merge(v1.6): R11 — integrate the visual lane into Main (batches 6-8 + R9.D + R10 supervision)
+bc92f7f33eb40988da8b53dc22f5c4f968aeef90|fa66f04f8751655e559163daa3d4441b4b55f830|2026-09-18 20:12:21 -0400|docs(v1.6-visual): R10 evidence — packaged engine-loss/recovery journey PASS (r10-f/r10-g on fa66f04)
+fa66f04f8751655e559163daa3d4441b4b55f830|645898a3580face7501001e280de6484c969fa6f|2026-09-18 20:03:11 -0400|fix(v1.6-visual): batch 6 follow-up 2 — ENOENT spawns fail fast (pid undefined check)
+645898a3580face7501001e280de6484c969fa6f|34947f0f6e2224c57afc93702fdfb264b1ed4258|2026-09-18 19:57:57 -0400|fix(v1.6-visual): batch 6 follow-up — fail fast when a supervised engine spawn dies outright
+93b70746a6241233ce36b5ce50d7fd174ec78e6f|1972b682b7093f4eb500c9c768f63698ad7d3c09|2026-09-18 19:55:44 -0400|docs(v1.6): audit targets 86-90 (R9 supervision/loaded-gun/preview residue/packaging input hygiene)
+1972b682b7093f4eb500c9c768f63698ad7d3c09|05608e6ae6f1c1c55005dfba8f1d741d7a8383cd|2026-09-18 19:52:51 -0400|docs(v1.6): R9 complete on the visual lane; R10 packaged journey in flight (state breadcrumbs)
+34947f0f6e2224c57afc93702fdfb264b1ed4258|96979c77c4d9a772f071a9c334fd0c3082f52cfe|2026-09-18 19:33:57 -0400|feat(v1.6-visual): R10 prep — [KEL-LINK] transition log beside the engine log (packaged evidence)
+96979c77c4d9a772f071a9c334fd0c3082f52cfe|938dc9be2570a56a0c76117a54654e493594945a|2026-09-18 19:32:37 -0400|docs(v1.6-visual): R9 evidence index — batches 6-8 + R9.D, commits, acceptance, R11 conflict surface
+938dc9be2570a56a0c76117a54654e493594945a|c911d81debdf3629df18ec1d21c6611d4b4e418e|2026-09-18 19:32:08 -0400|feat(v1.6-visual): R9.D — "Needs your attention" derived-only view
+c911d81debdf3629df18ec1d21c6611d4b4e418e|0e7d21acccddff5f579876141700280c64287210|2026-09-18 19:29:11 -0400|feat(v1.6-visual): BATCH 8 — final normalization pass (genuine inconsistencies only)
+0e7d21acccddff5f579876141700280c64287210|28972071f5b35626c4eed347c1f6950996455fb8|2026-09-18 19:27:53 -0400|feat(v1.6-visual): BATCH 7 — the composer owns its secondary controls
+28972071f5b35626c4eed347c1f6950996455fb8|3050761d6510b1861c71bd30038231feaa411fb3|2026-09-18 19:25:36 -0400|feat(v1.6-visual): BATCH 6 — engine loss and failure states become honest and human
+3050761d6510b1861c71bd30038231feaa411fb3|0ff061d7b82ce0e9a0afb5e1843a84c9ce17f9d3 05608e6ae6f1c1c55005dfba8f1d741d7a8383cd|2026-09-18 19:15:05 -0400|Merge branch 'ux/v15-journeys' into ux/v16-visual-fix
+0ff061d7b82ce0e9a0afb5e1843a84c9ce17f9d3|ac85eb338ef80ad17e72a6491b576d0b7e670f0a|2026-09-18 19:15:05 -0400|docs(v1.6-visual): R9.A lane reconciliation + integration map (zero-overlap, re-anchor decision)
+05608e6ae6f1c1c55005dfba8f1d741d7a8383cd|0aadd42c19e632d1b15c9453da7a879aed4b8d5e|2026-09-18 19:14:37 -0400|docs(v1.6): R9 bookkeeping — the 27-vs-26 P2/P3 denominator is reconciled
+0aadd42c19e632d1b15c9453da7a879aed4b8d5e|022f3acdf7635c1f3952f4bbee4a996a3b6de246|2026-09-18 18:27:17 -0400|docs(v1.6): R7–R8 breadcrumbs — credential containment, package identity, REL-01 CLOSED
+022f3acdf7635c1f3952f4bbee4a996a3b6de246|93b99b5a5af969d5cd32189c9984fe5ae1975674|2026-09-18 18:20:22 -0400|test(v1.6): engine-version assertion follows the single source (R8.B follow-up)
+93b99b5a5af969d5cd32189c9984fe5ae1975674|2468b16f6d9be13c36a5dd81bd5847d624cd1515|2026-09-18 18:14:41 -0400|fix(v1.6): REL-01 closed — the runtime that is hashed is the runtime that loads (R8.B/C/D)
+2468b16f6d9be13c36a5dd81bd5847d624cd1515|b6c4eff0dfe295d93819f5e836800c5c8cf30ec4|2026-09-18 17:57:55 -0400|fix(v1.6): migration markers are unique; R8.A assertions (R8 / PACKAGE-IDENTITY prep)
+b6c4eff0dfe295d93819f5e836800c5c8cf30ec4|e8bbb051d58176174896ab505473ac7a0eaf9259|2026-09-18 17:51:38 -0400|fix(v1.6): provider children receive only the credential they require (R7 / CREDENTIAL-CONTAINMENT)
+e8bbb051d58176174896ab505473ac7a0eaf9259|b2ffed1703f1fbe7a1612f7c1f3e71eb8266119b|2026-09-18 17:48:32 -0400|docs(v1.6): R3–R6 breadcrumbs — retry durability, approval window, canonical persistence, liveness truth
+b2ffed1703f1fbe7a1612f7c1f3e71eb8266119b|8c899c8316d886af373dc51ca902d5b4968b033a|2026-09-18 17:41:29 -0400|fix(v1.6): only canonical JSON reaches durable state (R5 / PERSIST-CANONICAL)
+8c899c8316d886af373dc51ca902d5b4968b033a|1a9f538555e403c8c73ab1eb2c381ea6f3011e9b|2026-09-18 17:35:53 -0400|fix(v1.6): an approval authorizes only inside its window and for its exact action (R4 / APPROVAL-EXACT)
+1a9f538555e403c8c73ab1eb2c381ea6f3011e9b|fde5bbb4e8f12c9039b02544e10da5e7ba09f078|2026-09-18 17:32:30 -0400|test(v1.6): retry budgets are durable across restarts (R3 / RETRY-DURABLE)
+fde5bbb4e8f12c9039b02544e10da5e7ba09f078|eea6503a48d73a089d259f2f9fb3bf7262a7fb76|2026-09-18 17:24:48 -0400|fix(v1.6): an observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
+eea6503a48d73a089d259f2f9fb3bf7262a7fb76|dc65fbcb2782471d80c153a7275c02b2e9390e56|2026-09-18 17:20:36 -0400|docs(v1.6): R1 complete — delegation authority ceiling breadcrumbs
+dc65fbcb2782471d80c153a7275c02b2e9390e56|4440a90d270a3e77c2a4d0059772724d94e8ca08|2026-09-18 17:14:40 -0400|feat(v1.6): delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
+4440a90d270a3e77c2a4d0059772724d94e8ca08|594b8b4ad54d7ed40513807ea53d6e93d1e925d5|2026-09-18 17:04:51 -0400|docs(v1.6): R0 complete — the P2/P3 sweep is 100% dispositioned
+594b8b4ad54d7ed40513807ea53d6e93d1e925d5|dd34ac27010c99b7b83ed288fdc28bec3a03fcce|2026-09-18 16:57:51 -0400|fix(v1.6): model/approval/theme failure surfaces tell the truth (R0 / COR-03 + APR-06 + THM-01)
+dd34ac27010c99b7b83ed288fdc28bec3a03fcce|5950efba7765cc513a35390aaa2dcd2eef5da052|2026-09-18 16:55:11 -0400|perf(v1.6): approval poll path stops running DDL once stamped (R0 / APR-05)
+5950efba7765cc513a35390aaa2dcd2eef5da052|8ab76990131da077f5af4595c2e7239bc2fe8736|2026-09-18 16:53:01 -0400|fix(v1.6): dispatch layers answer missing request fields with plain sentences (R0 / COR-06 + ERR-01)
+8ab76990131da077f5af4595c2e7239bc2fe8736|49e528ee78d382c1df455bee079bfe6a323f566c|2026-09-18 16:49:04 -0400|fix(v1.6): transcription stream lifecycle releases sockets; optional conversation scope (R0 / TR-01)
+49e528ee78d382c1df455bee079bfe6a323f566c|756218e456841643ec83964a2319d0697446f11f|2026-09-18 16:44:35 -0400|fix(v1.6): vetting session actions enforce conversation ownership (R0 / SEC-01)
+756218e456841643ec83964a2319d0697446f11f|8a677d0bb361c7e51de3e34cbd602d88fbbcce90|2026-09-18 15:07:46 -0400|docs(v1.6): R0/APR-02 breadcrumbs (17/27 sweep rows decided)
+8a677d0bb361c7e51de3e34cbd602d88fbbcce90|9eab3c66d45cefb8f10b929c3651c9c9d2d8a3ff|2026-09-18 15:06:49 -0400|fix(v1.6): approval resolution is conversation-scoped (R0 / APR-02)
+9eab3c66d45cefb8f10b929c3651c9c9d2d8a3ff|ae4c5b008c969f48e89e342812b91e33f06d4013|2026-09-18 14:55:57 -0400|docs(v1.6): adopt Round 2.5 canonical roadmap (KEL_CANONICAL_ROADMAP_R2_5)
+ae4c5b008c969f48e89e342812b91e33f06d4013|84b5646d15cfe4f01931a2469629333045b3eb46|2026-09-18 14:13:44 -0400|docs(v1.6): sweep batch 3 breadcrumbs (16/27 rows decided)
+84b5646d15cfe4f01931a2469629333045b3eb46|11e152558ce4b53c693fa5c93ac1d5e729c9b2eb|2026-09-18 14:12:32 -0400|fix(v1.6): pre-restore snapshots are pruned; actor guard pinned (sweep batch 3)
+11e152558ce4b53c693fa5c93ac1d5e729c9b2eb|101d8c3e31465a258be995944ba8a799a9119b7d|2026-09-18 14:04:09 -0400|docs(v1.6): A1 breadcrumbs + REL-01 flagged as a release blocker (13/27 rows decided)
+101d8c3e31465a258be995944ba8a799a9119b7d|a3e272da909124f9213508ac611714673f2b2ea7|2026-09-18 14:02:48 -0400|fix(v1.6): detached-engine reuse validates engine_version (A1 / ENG-01)
+a3e272da909124f9213508ac611714673f2b2ea7|0596211938c8db879c3b6e6609da1e0174a1f907|2026-09-18 14:00:23 -0400|docs(v1.6): sweep batch 2 breadcrumbs (11/27 rows dispositioned)
+0596211938c8db879c3b6e6609da1e0174a1f907|cbd0430dc054631d052b7284bca5c975bb58e9a5|2026-09-18 13:59:30 -0400|fix(v1.6): sweep batch 2 — IPC frame guard, multipart header hygiene, credentials out of backups
+cbd0430dc054631d052b7284bca5c975bb58e9a5|df1997ade8f783a8049b38f1d3e742a534ae0beb|2026-09-18 13:50:29 -0400|docs(v1.6): PER-02 breadcrumbs + P2/P3 sweep progress (7/27 rows dispositioned)
+df1997ade8f783a8049b38f1d3e742a534ae0beb|c1bb9809505fbf5c3ea5279c7e5df5ad793895ef|2026-09-18 13:49:43 -0400|engine(v1.6): a failed or partial restore is recorded and surfaced (PER-02)
+c1bb9809505fbf5c3ea5279c7e5df5ad793895ef|820ee3ed83abf98e2d4e8867207f927758a0679b|2026-09-18 13:41:05 -0400|docs(v1.6): P2/P3 sweep — first batch (6 rows dispositioned against the tree)
+820ee3ed83abf98e2d4e8867207f927758a0679b|081a6ef67900410d2c4d5d8731500c793e56e54c|2026-09-18 13:33:46 -0400|docs(v1.6): REQ-F4 real-artifact binding breadcrumbs (carry-forward F4 / WF-12 closed)
+081a6ef67900410d2c4d5d8731500c793e56e54c|a7c7aa4400987ca352b9dc324d60405eefc820fd|2026-09-18 13:33:14 -0400|assurance(v1.6): real-artifact binding — closure verifies the delivered artifact (REQ-F4 / WF-12)
+a7c7aa4400987ca352b9dc324d60405eefc820fd|a5479363d464fe81ae1e803cdee1dc81a86c4a19|2026-09-18 13:15:17 -0400|docs(v1.6): REQ-RK resolution-kind breadcrumbs (carry-forward F18-5 closed)
+a5479363d464fe81ae1e803cdee1dc81a86c4a19|1894ef7fefced68a998988f331d42216f88a124a|2026-09-18 13:14:34 -0400|assurance(v1.6): record-bound resolution kinds on findings (REQ-RK)
+1894ef7fefced68a998988f331d42216f88a124a|71c78f05186efb48bb5448c442a51e5d9a16faf8|2026-09-18 13:00:53 -0400|docs(v1.6): canonical-logo requirement recorded as REQ-LOGO-1
+71c78f05186efb48bb5448c442a51e5d9a16faf8|edd50de3c5dd88f456b0ae0677f7baf665cb4753|2026-09-18 13:00:07 -0400|branding(v1.6): canonical Kel logo across all production-reachable surfaces
+edd50de3c5dd88f456b0ae0677f7baf665cb4753|24d775b77a1dd24d5c02534e6ff41e8daf07e835|2026-09-18 12:35:56 -0400|docs(v1.6): commit ledger completeness — Phase 6 docs row + Phases 8-11 docs row
+24d775b77a1dd24d5c02534e6ff41e8daf07e835|fed59ddba93adbeeeb7be4b9f80b11567ebcd816|2026-09-18 12:35:26 -0400|docs(v1.6): ledger rows for Phase 8-11 docs commits; published-tip refresh
+fed59ddba93adbeeeb7be4b9f80b11567ebcd816|6ea68c248400533d1cdc8b0e83d2c5c7daecd007|2026-09-18 12:34:59 -0400|docs(v1.6): Phases 10-11 — provider validation + Rust freshness recheck (Phase 12 closed)
+6ea68c248400533d1cdc8b0e83d2c5c7daecd007|fa31618208bf4f221ecd2aa3a4a345edbafce64e|2026-09-18 12:32:46 -0400|docs(v1.6): Phase 9 decision — no Profiles concept; Projects remain the single isolation concept
+fa31618208bf4f221ecd2aa3a4a345edbafce64e|006159a31ea1d8edaf4db28d12b2389d8da9c05d|2026-09-18 12:32:01 -0400|docs(v1.6): commit ledger rows for Phase 7 docs + Phase 8 decision commits
+006159a31ea1d8edaf4db28d12b2389d8da9c05d|7b3221795608df24299d1268b58e8abb763272c5|2026-09-18 12:31:29 -0400|docs(v1.6): Phase 8/5.8 decision — Advanced Worker View deferred beyond V1.6
+7b3221795608df24299d1268b58e8abb763272c5|16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d|2026-09-18 12:30:30 -0400|docs(v1.6): record the published Phase 6+7 tip (16de55f); packaged pending item for the capability card
+16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d|df879034eb2c5889a8022c1eaa7b3b8c21ed7ccf|2026-09-18 12:29:53 -0400|docs(v1.6): Phase 7 record + pre-audit corpus updates (capability recommendations)
+df879034eb2c5889a8022c1eaa7b3b8c21ed7ccf|ac5e2a216473dd97705a0321e642bee0211f6e9b|2026-09-18 12:28:39 -0400|feat(v1.6): capability recommendations — real capabilities, real actions, no nagging
+ac5e2a216473dd97705a0321e642bee0211f6e9b|22f4a3e7f94dd1a8a1c94961a75e0807a2a4bc94|2026-09-18 12:17:44 -0400|docs(v1.6): Phase 6 record + pre-audit corpus updates (memory reality audit)
+22f4a3e7f94dd1a8a1c94961a75e0807a2a4bc94|785df71d9ce189907b2240023c24fa04f314ebc5|2026-09-18 12:15:24 -0400|fix(v1.6): Work-panel knowledge actions follow record state; forget asks first
+785df71d9ce189907b2240023c24fa04f314ebc5|fd98cc402b98acf9a230fb160e4766f7f5f931f3|2026-09-18 12:09:41 -0400|docs(v1.6): Campaign A entry — pre-audit corpus initialized, IMPLEMENTATION_SPRINT mode, baseline 878 green
+fd98cc402b98acf9a230fb160e4766f7f5f931f3|5127bacca293f9a483167665506eb434e8c4f1ca|2026-09-18 09:14:17 -0400|docs(v1.6): record the published integration tip (5127bac); visual slice complete
+5127bacca293f9a483167665506eb434e8c4f1ca|c4ae724438d8608d3dd7f1c4abe0a778d6cb30a3|2026-09-18 09:12:35 -0400|docs(v1.6): Phase 5.6 accepted - audit 24 CONTINUE; Phase 5.7/5.8 decisions deferred
+c4ae724438d8608d3dd7f1c4abe0a778d6cb30a3|8a2b25db588f82153f1433a46f107ef184017d76|2026-09-18 09:07:31 -0400|docs(v1.6): Phase 5.6 remediation record + delta re-audit request (ba52869..8a2b25d)
+ac85eb338ef80ad17e72a6491b576d0b7e670f0a|83af16fca140a6a1a6438535f3ca6f7ce3ff3eae|2026-09-18 00:14:03 -0400|fix(v1.6-visual): BATCH 5 — sidebar rows reserve the action gutter; redundant leading mark hidden
+83af16fca140a6a1a6438535f3ca6f7ce3ff3eae|3d9202cd4de064b6c23826988a709610eac979e3|2026-09-17 14:31:12 -0400|feat(v1.6-visual): BATCH 4 — transcription adopts the authoritative standalone IA
+3d9202cd4de064b6c23826988a709610eac979e3|8dd21f9436ae98deabb2bbb732a51022a744d6c1|2026-09-17 14:09:33 -0400|fix(v1.6-visual): BATCH 2 — Settings shell no longer ejects on Team; Tools shows Tools
+8dd21f9436ae98deabb2bbb732a51022a744d6c1|04151c8b5062c6d5f8bf91bb19526649d62a513c|2026-09-17 14:07:48 -0400|feat(v1.6-visual): BATCH 1 — Kel design tokens (slate-navy foundation, compact density)
+04151c8b5062c6d5f8bf91bb19526649d62a513c|60b2322b29c986aee5d6e543e51e197f8a4e8ccc|2026-09-17 14:07:48 -0400|docs(v1.6-visual): carry the Visual UX plan set onto the implementation branch

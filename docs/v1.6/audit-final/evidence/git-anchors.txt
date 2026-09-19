@@ -1,0 +1,23 @@
+== TARGET ==
+08f56673ea93ed84568018937bb190e0a5acd71b
+12f87a7f0da3c9a3a9040182e796aa2193256621
+BeardedBats <nickrpollack@gmail.com>
+2026-09-18 20:52:11 -0400
+docs(v1.6): PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready
+== 8a2b25d ==
+8a2b25db588f82153f1433a46f107ef184017d76
+de0af2397d57bba23154bbe4223dd7a1040cb580
+2026-09-18 09:06:40 -0400
+fix(v1.6): Phase 5.6 remediation - F23-1..F23-10 from audit increment 23
+== 22f4a3e ==
+22f4a3e7f94dd1a8a1c94961a75e0807a2a4bc94
+785df71d9ce189907b2240023c24fa04f314ebc5
+2026-09-18 12:15:24 -0400
+fix(v1.6): Work-panel knowledge actions follow record state; forget asks first
+== tips ==
+08f56673ea93ed84568018937bb190e0a5acd71b ux/v15-journeys
+08f56673ea93ed84568018937bb190e0a5acd71b origin/ux/v15-journeys
+5e76b21071a28601a7fb4de508cb3cf349c77db8 main
+5e76b21071a28601a7fb4de508cb3cf349c77db8 origin/main
+068cd267ff8bdccdffe5f13eb080eafc65f5a0b9 v1.5.0
+ceac727ef2d04efdf96c4062a3d891825aefa176 v1.6.0-pre1
