@@ -55,6 +55,38 @@ class AuthorityWithinTests(unittest.TestCase):
         self.assertIsNone(authority_within({'write_scope': ['src/nested/file.py']},
                                            self._parent()))
 
+    def test_dotdot_entries_resolve_lexically_before_containment(self):
+        # AUD-MINOR-006: `..` must resolve like any other name — `src/../secrets` names
+        # `secrets`, outside the scope, and a `..` that walks back inside stays contained.
+        parent = self._parent()
+        gap = authority_within({'write_scope': ['src/../secrets']}, parent)
+        self.assertIn('escapes the delegator scope', gap)
+        self.assertIsNone(authority_within({'write_scope': ['src/nested/../file.py']}, parent))
+        self.assertIsNone(authority_within({'write_scope': ['src/nested/deep/../../file.py']},
+                                           parent))
+
+    def test_the_containment_normalization_table(self):
+        parent = self._parent(**{'write_scope': ['src'], 'write_boundaries': []})
+        contained = ['src', 'src/', 'src//nested///file.py', './src/app.py', 'src/./app.py',
+                     'src/sub/../app.py']
+        for entry in contained:
+            self.assertIsNone(authority_within({'write_scope': [entry]}, parent), entry)
+        refused = ['src/../secrets', 'a/../../x', '..', '../src', '/etc/passwd', 'C:file.txt',
+                   'src2/file.py', 'SRC/file.py', '.']
+        for entry in refused:
+            gap = authority_within({'write_scope': [entry]}, parent)
+            self.assertIn('escapes the delegator scope', gap, entry)
+        mixed = 'src' + chr(92) + 'nested' + chr(92) + 'file.py'
+        self.assertIsNone(authority_within({'write_scope': [mixed]}, parent))
+
+    def test_a_dot_root_stays_universal_by_design(self):
+        # Documented semantics: `.` is the delegator's scope base — it places no further
+        # containment constraint on entries (the filesystem boundary applies at effect time).
+        self.assertIsNone(authority_within({'write_scope': ['deep/nested/file.py']},
+                                           {'write_scope': ['.']}))
+        self.assertIsNone(authority_within({'write_scope': ['src/file.py']},
+                                           {'write_scope': ['./']}))
+
     def test_an_effect_the_delegator_does_not_hold_is_refused(self):
         parent = self._parent(**{'class': 'external-effect', 'external_effects': ['deploy']})
         gap = authority_within({'class': 'external-effect', 'external_effects': ['publish']}, parent)
@@ -151,6 +183,25 @@ class ContractParentAuthorityTests(unittest.TestCase):
             validate_task_contract(contradictory)
         self.assertIn('write_scope must stay inside the declared write boundaries',
                       str(caught.exception))
+
+    def test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end(self):
+        # AUD-MINOR-006 consumer confirmation: issuance refuses `src/../secrets` exactly like
+        # the literal `secrets` path — against the boundaries and against the delegator.
+        escaped = contract(authority={'class': 'leased-write',
+                                      'write_scope': ['src/../secrets'],
+                                      'external_effects': 'none'},
+                           write_boundaries=['src'])
+        with self.assertRaises(PolicyError) as caught:
+            validate_task_contract(escaped)
+        self.assertIn('write_scope must stay inside the declared write boundaries',
+                      str(caught.exception))
+        smuggled = contract(authority={'class': 'leased-write',
+                                       'write_scope': ['src/../secrets'],
+                                       'external_effects': 'none'},
+                            write_boundaries=['src', 'secrets'])
+        with self.assertRaises(PolicyError) as caught:
+            validate_task_contract(smuggled, parent_authority=self._parent())
+        self.assertIn('never create it', str(caught.exception))
 
     def test_the_plain_contract_still_validates_without_a_parent(self):
         validate_task_contract(contract())
