@@ -1,0 +1,6 @@
+planning reservation cost=4 on budget=4 -> reserved
+initial spent/reserved = 0 0
+after m1: spent=2 reserved=0 verdict=VERIFIED
+after m2: spent=4 reserved=0 verdict=VERIFIED
+claim m3 refused: Execution and verification budget exhausted
+final spent=4 reserved=0 budget=4 -> spent+reserved<=budget: True

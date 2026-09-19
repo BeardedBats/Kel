@@ -24,4 +24,13 @@ How to re-run (from `runtime/`):
 - Desktop regression: `cd desktop && npx vitest run` → 147 passed / 14 files, exit 0 (`evidence/ma2-desktop-vitest-full.txt`; Campaign B baseline at RC was 122/122 — +25 new tests).
 - Sibling search: full `ipcMain.*` inventory across `desktop/packages` — the guarded set (KelService 11, feedback 3, `backendStartupIpc` 5, adapter dispatcher 1) plus pet channels (`petManager`, `petConfirmManager`; MINOR-008 scope, reviewed, unchanged). No other privileged registrations exist.
 
+## AUD-MINOR-002 — budget reservation aggregation (REPAIRED, `7e293ba`)
+
+- Reproduction: `evidence/mi2-prefix-attack.txt` (probe §E at the unfixed state): E5 refused; E6 cost-1 accepted (tokens/wallclock disclosed); E7 cost-8 accepted after cost-1 (cumulative 9 vs envelope 8).
+- Discriminating tests: `ReservationAccountingTests` + delegation cumulative test — 9/9 post-fix (`mi2-newtests-postfix-pass.txt`), 5 fail pre-fix with the fix stashed (`mi2-newtests-prefix-fail.txt`).
+- Focused suites: `tests/test_workforce_assignment.py` + `tests/test_v16_r1_authority.py` → 65/65 (`mi2-focused-suite.txt`).
+- Cluster: workforce set (assignment/schemas/learning/parallel/assurance/d1/d2) + r1 → 299/299 in 95s (`mi2-adjacent-suite.txt`).
+- Attack replay: `mi2-postfix-attack.txt` — E7 now refused: `Reserved cost 8.0 exceeds the remaining job budget 7.0`; E5 unchanged; E6 unchanged (disclosed policy).
+- Promotion probe (claiming): `mi2-claiming-probe.txt` — planning reservation 4 on budget 4 accepted; execution spend caps at the envelope (m3 refused, "Execution and verification budget exhausted"); `spent + reserved <= budget` holds — no re-grade.
+
 (Results appended per finding as repairs complete.)

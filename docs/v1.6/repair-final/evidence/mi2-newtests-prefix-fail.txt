@@ -1,0 +1,22 @@
+        # Campaign C AUD-MINOR-002: successive delegated reservations aggregate against the
+        # same job envelope; the second may not pass on the first's margin.
+        job = self.store.create({
+            'request': 'R1 budget fixture',
+            'milestones': [{'id': 'm1', 'objective': 'Draft', 'filename': 'out.md',
+                            'depends_on': [],
+                            'checks': [{'kind': 'min_chars', 'value': 20}]}]})
+        first = delegation.reserve_budget(self.store, job, budget_class='standard',
+                                          tokens=1000, wallclock=60, cost=5)
+        self.assertEqual(first['state'], 'reserved')
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_r1_authority.py:242: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_a_consumed_estimate_keeps_narrowing_the_envelope
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_cumulative_reservations_fill_then_exceed_the_envelope
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_release_frees_the_envelope_for_the_next_commitment
+FAILED tests/test_workforce_assignment.py::ReservationAccountingTests::test_the_second_reservation_sees_the_first
+FAILED tests/test_v16_r1_authority.py::IssuanceWiringTests::test_a_second_reservation_sees_the_first_commitment
+5 failed, 4 passed, 56 deselected in 1.38s
