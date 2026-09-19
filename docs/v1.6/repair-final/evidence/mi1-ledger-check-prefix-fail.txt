@@ -1,0 +1,15 @@
+LEDGER RECONCILIATION: FAIL
+  unlisted commit: 08f5667
+  unlisted commit: 12f87a7
+  unlisted commit: 34947f0
+  unlisted commit: 0aadd42
+  unlisted commit: 022f3ac
+  unlisted commit: e8bbb05
+  unlisted commit: eea6503
+  unlisted commit: 4440a90
+  unlisted commit: 756218e
+  unlisted commit: ae4c5b0
+  unlisted commit: 820ee3e
+  unlisted commit: edd50de
+  malformed row: placeholder SHA cell: 'R6 tests+record'
+  malformed row: placeholder SHA cell: '`HEAD`'

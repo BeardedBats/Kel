@@ -1,8 +1,8 @@
 # COMMIT_LEDGER — production-affecting commits, audited point → PRE_AUDIT_V1_6_HEAD
 
-updated: 2026-09-18T16:05Z
+updated: 2026-09-19 (Campaign C AUD-MINOR-001 reconciliation; previously 2026-09-18T16:05Z)
 range opens at: `8a2b25d` (last independently audited production point; increment 24 CONTINUE)
-range ends at: PRE_AUDIT_V1_6_HEAD (TBD; recorded at RC)
+range ends at: `08f5667` = PRE_AUDIT_V1_6_HEAD (recorded at RC; reconciled 2026-09-19)
 first intentionally unaudited production commit: `22f4a3e` (2026-09-18, Phase 6 bounded fixes)
 rule: EVERY production-affecting commit in this range must appear here. Docs-only commits are
 listed for completeness with `priority: LOW / docs-only`.
@@ -58,11 +58,12 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
 | `8c899c8` | `1a9f538` | 2026-09-18 | R4 / APPROVAL-EXACT | an approval authorizes only inside its window and for its exact action (consumer-side window check; producer inventory recorded) | `kel/authorize.py`; `tests/test_v16_r4_approval_exact.py`; `docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md` | +7 engine tests; authorization family 96 passed; full suite A-23 | none | no | yes (window semantics) | no | no | MEDIUM | `increments/R4-APPROVAL-EXACT.md`; INV-APPROVAL-EXACT; REQ-R25-R4 | producer side already digest-bound; no HMAC added by design |
 | `1a9f538` | `fde5bbb` | 2026-09-18 | R3 / RETRY-DURABLE | retry budgets proven durable across restarts (inventory + restart tests; no production change justified) | `tests/test_v16_r3_retry_durability.py`; `docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md` | +5 tests; recovery family 24 passed | none | no | n/a | no | no | MEDIUM | `increments/R3-RETRY-DURABILITY.md`; INV-RETRY-DURABLE; REQ-R25-R3 | token/wallclock caps still lack a job-envelope primitive |
 | `b2ffed1` | `8c899c8` | 2026-09-18 | R5 / PERSIST-CANONICAL | only canonical JSON reaches durable state (NaN/Infinity refused; finite provider metrics; submit type guard) | `kel/core.py`; `kel/service.py`; `tests/test_v16_r5_persistence.py`; record | +7 tests; focused R2–R5 + core 84 passed; full suite A-24 (**981**) | none | no | yes (encoding contract) | no | yes (canonical JSON) | MEDIUM | `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL; REQ-R25-R5 | corrupted stored JSON is an audit question |
-| R6 tests+record | `b2ffed1` | 2026-09-18 | R6 / LIVENESS-SEPARATION | liveness/state truth verified + 5 discriminating tests (no production change) | `tests/test_v16_r6_liveness.py`; `docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md` | +5 tests (A-25) | none | no | n/a | no | no | MEDIUM | `increments/R6-TRUTHFUL-STATE.md` | derived health status deliberately lives with R9.D |
+| `e8bbb05` | `b2ffed1` | 2026-09-18 | R6 / LIVENESS-SEPARATION | liveness/state truth verified + 5 discriminating tests (no production change) | `tests/test_v16_r6_liveness.py`; `docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md` | +5 tests (A-25) | none | no | n/a | no | no | MEDIUM | `increments/R6-TRUTHFUL-STATE.md` | derived health status deliberately lives with R9.D |
 | `b6c4eff` | `e8bbb05` | 2026-09-18 | R7 / CREDENTIAL-CONTAINMENT | provider children receive only the credential they require; sentinel tests | `kel/internal.py`; `kel/appserver.py`; `kel/coding.py`; `tests/test_v16_r7_credentials.py`; record | +5 tests; focused 85 passed; full suite A-26 (**991**) | none | no | yes (child env) | no | yes (containment) | MEDIUM | `increments/R7-CREDENTIAL-BOUNDARY.md`; INV-CREDENTIAL-CONTAINMENT; REQ-R25-R7 | engine-local helper subprocesses inherit the user env (disclosed); network sandboxing = post-V1.6 |
 | `2468b16` | `b6c4eff` | 2026-09-18 | R8.A / migrations | unique module migration markers (workforce and assignment both claimed 17 -> assignment 21) | `kel/assignment.py`; `tests/test_v16_r8_migrations.py` | +4 tests | **21** (new max; existing stores stamped once) | no | no | no | yes (marker) | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; A-27 | DDL always ran before the marker; the defect was identity/accounting |
 | `93b99b5` | `2468b16` | 2026-09-18 | R8.B/C/D / PACKAGE-IDENTITY + REL-01 | frozen load path carries the staged runtime (no nesting); the freeze refuses divergence; engine/desktop version identity = 1.6.0 | `scripts/freeze-release.ps1`; `scripts/validate-freeze.ps1`; `kel/__init__.py`; `kel/service.py`; `desktop/package.json`; `tests/test_v16_r8_identity.py`; `engineVersion.test.ts`; record | +3 engine + 3 desktop tests; packaged probe (1.6.0, 4 providers); full suite A-26 | none | yes (version strings) | no | no | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 fixture evidence | installer battery + real-package freeze remain R12 |
-| `HEAD` | `93b99b5` | 2026-09-18 | R7+R8 | R7/R8 breadcrumbs (this commit) | docs only | engine full A-26; desktop A-27 | none | no | - | no | no | LOW | corpus rows REQ-R25-R7/R8, INV-CREDENTIAL-CONTAINMENT/PACKAGE-IDENTITY, CHG-022/023, A-26/27; `increments/R7...`, `R8...` | next: R9 Visual 6-8 + Needs Your Attention |
+| `022f3ac` | `93b99b5` | 2026-09-18 | R8.B follow-up | engine-version assertion follows the single source (test-only follow-up) | `desktop/tests/unit/engineVersion.test.ts` | desktop A-27 re-run | none | no | n/a | no | no | LOW | `02_COMMIT_COVERAGE.md` row 55; added by Campaign C reconciliation (AUD-MINOR-001) | — |
+| `0aadd42` | `022f3ac` | 2026-09-18 | R7+R8 | R7/R8 breadcrumbs | docs only | engine full A-26; desktop A-27 | none | no | - | no | no | LOW | corpus rows REQ-R25-R7/R8, INV-CREDENTIAL-CONTAINMENT/PACKAGE-IDENTITY, CHG-022/023, A-26/27; `increments/R7...`, `R8...` | SHA/parent filled by Campaign C reconciliation (AUD-MINOR-001); previously `HEAD`/`93b99b5` |
 
 ## Visual lane commits — INTEGRATED into Main (R11 `7267630`; NOT covered by an independent audit)
 
@@ -99,6 +100,31 @@ tip `fa66f04`: tsc 0; vitest **122/122** (12 files). Packaged: R10 engine-loss j
 | `93b7074` | 2026-09-18 | R9 audit targets | targets 86–90 (supervision/loaded-gun/preview residue/packaging inputs) | docs | — |
 | `7267630` | 2026-09-18 | **R11** | integration merge: visual lane → Main (batches 1–8 + R9.D + R10 supervision) | union (55 lane files + 3 Main docs) | zero overlapping files; no conflict resolutions; post-merge tsc 0 + vitest 122/122 |
 
+## Reconciliation additions — 2026-09-19 (Campaign C AUD-MINOR-001)
+
+The audit found this ledger did not reconcile 1:1 with the commit range. These rows were added
+(or corrected in place above: the former `HEAD` row is now `0aadd42`, the former
+`R6 tests+record` row now carries SHA `e8bbb05`). Every SHA is verified against
+`git rev-list 8a2b25d..08f5667` (73 commits) by the gate script
+`docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` (exit 1 on any unlisted or malformed
+row). Cells: SHA | parent | date | class | intent | evidence.
+
+| SHA | parent | date | class | intent | evidence |
+|---|---|---|---|---|---|
+| `34947f0` | `96979c7` | 2026-09-18 | prod (desktop) | R10 prep — [KEL-LINK] transition log beside the engine log (packaged evidence) | `02_COMMIT_COVERAGE.md` row 65; `19_R10_ENGINE_LOSS_EVIDENCE.md` |
+| `12f87a7` | `7267630` | 2026-09-18 | docs | R11 records — integration breadcrumb, ledgers, requirements, visual index, status | `02_COMMIT_COVERAGE.md` row 72 |
+| `08f5667` | `12f87a7` | 2026-09-18 | prod (docs + packaging) | PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready; packaging edits `desktop/kel-builder.json` + `desktop/package.json` (RC packaging inputs) | `02_COMMIT_COVERAGE.md` row 73 (full diff incl. packaging edits reviewed) |
+| `4440a90` | `594b8b4` | 2026-09-18 | docs | R0 complete — the P2/P3 sweep is 100% dispositioned | `02_COMMIT_COVERAGE.md` row 44 |
+| `756218e` | `8a677d0` | 2026-09-18 | docs | R0/APR-02 breadcrumbs (17/27 sweep rows decided) | `02_COMMIT_COVERAGE.md` row 38 |
+| `eea6503` | `dc65fbc` | 2026-09-18 | docs | R1 complete — delegation authority ceiling breadcrumbs | `02_COMMIT_COVERAGE.md` row 46 |
+| `ae4c5b0` | `84b5646` | 2026-09-18 | docs | sweep batch 3 breadcrumbs (16/27 rows decided) | `02_COMMIT_COVERAGE.md` row 35 |
+| `820ee3e` | `081a6ef` | 2026-09-18 | docs | REQ-F4 real-artifact binding breadcrumbs (F4 / WF-12 closed) | `02_COMMIT_COVERAGE.md` row 26 |
+| `edd50de` | `24d775b` | 2026-09-18 | docs | commit ledger completeness — Phase 6 docs row + Phases 8-11 docs row | `02_COMMIT_COVERAGE.md` row 20 |
+
+Reconciliation result: `8a2b25d..08f5667` = 73 commits, every one rowed; gate
+`python docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` → PASS (Campaign C evidence
+`docs/v1.6/repair-final/evidence/mi1-ledger-check-*.txt`).
+
 ## Maintenance rules
 
 - Append a row when a production commit lands; never rewrite history in this file.
@@ -106,4 +132,6 @@ tip `fa66f04`: tsc 0; vitest **122/122** (12 files). Packaged: R10 engine-loss j
   or engine behavior), CRITICAL (security/privacy/persistence/lifecycle).
 - `packaged` column: name the packaged evidence (see PACKAGED_EVIDENCE_INDEX.md) or `-`.
 - Keep the count current: at RC, `production commit count in range` = number of rows in the
-  Campaign A table + integration commits (cross-checked against `git log`).
+  Campaign A table + integration commits (cross-checked against `git log`). Reconciled
+  2026-09-19 (AUD-MINOR-001): 73 commits in `8a2b25d..08f5667`; gate:
+  `python docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` (PASS required).
