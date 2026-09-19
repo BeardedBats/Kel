@@ -1,0 +1,7 @@
+C:/Users/Nick/Desktop/Kel/Kel-Repo             5e76b21 [main]
+C:/Users/Nick/Desktop/Kel/kel-rust-audit       9c1e7d0 [audit/rust-runtime]
+C:/Users/Nick/Desktop/Kel/kel-ux-v15           08f5667 [ux/v15-journeys]
+C:/Users/Nick/Desktop/Kel/kel-v16-code-audit   fd04c00 (detached HEAD)
+C:/Users/Nick/Desktop/Kel/kel-v16-final-audit  08f5667 [audit/v16-final]
+C:/Users/Nick/Desktop/Kel/kel-v16-visual-audit 4199ebb [audit/v16-visual-ux]
+C:/Users/Nick/Desktop/Kel/kel-v16-visual-fix   bc92f7f [ux/v16-visual-fix]

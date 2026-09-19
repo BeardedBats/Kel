@@ -1,0 +1,549 @@
+=== 08f56673ea93ed84568018937bb190e0a5acd71b 2026-09-18 20:52:11 -0400 docs(v1.6): PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready
+
+1	1	desktop/kel-builder.json
+2	1	desktop/package.json
+18	0	docs/v1.6/AUTO_RESUME.md
+27	22	docs/v1.6/MARATHON_STATE.md
+65	0	docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md
+10	0	docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+8	0	docs/v1.6/pre-audit/AUDIT_SCOPE.md
+9	0	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+8	0	docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+10	0	docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+8	0	docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+20	14	docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+7	0	docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+11	0	docs/v1.6/pre-audit/REPAIR_HINTS.md
+11	0	docs/v1.6/pre-audit/RISK_REGISTER.md
+37	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+7	7	docs/v1.6/status/MAIN_STATUS.md
+=== 12f87a7f0da3c9a3a9040182e796aa2193256621 2026-09-18 20:16:01 -0400 docs(v1.6): R11 records — integration breadcrumb, ledgers, requirements, visual index, status
+
+27	20	docs/v1.6/MARATHON_STATE.md
+52	2	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+25	5	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+3	3	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+16	13	docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+47	0	docs/v1.6/pre-audit/increments/R11-INTEGRATION.md
+8	8	docs/v1.6/status/MAIN_STATUS.md
+=== 72676306c78f9fd627684ff31cfd6bbb465deaaa 2026-09-18 20:12:53 -0400 merge(v1.6): R11 — integrate the visual lane into Main (batches 6-8 + R9.D + R10 supervision)
+=== bc92f7f33eb40988da8b53dc22f5c4f968aeef90 2026-09-18 20:12:21 -0400 docs(v1.6-visual): R10 evidence — packaged engine-loss/recovery journey PASS (r10-f/r10-g on fa66f04)
+
+79	0	docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md
+=== fa66f04f8751655e559163daa3d4441b4b55f830 2026-09-18 20:03:11 -0400 fix(v1.6-visual): batch 6 follow-up 2 — ENOENT spawns fail fast (pid undefined check)
+
+3	3	desktop/packages/desktop/src/process/services/kel/KelService.ts
+=== 645898a3580face7501001e280de6484c969fa6f 2026-09-18 19:57:57 -0400 fix(v1.6-visual): batch 6 follow-up — fail fast when a supervised engine spawn dies outright
+
+11	7	desktop/packages/desktop/src/process/services/kel/KelService.ts
+=== 93b70746a6241233ce36b5ce50d7fd174ec78e6f 2026-09-18 19:55:44 -0400 docs(v1.6): audit targets 86-90 (R9 supervision/loaded-gun/preview residue/packaging input hygiene)
+
+22	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+=== 1972b682b7093f4eb500c9c768f63698ad7d3c09 2026-09-18 19:52:51 -0400 docs(v1.6): R9 complete on the visual lane; R10 packaged journey in flight (state breadcrumbs)
+
+32	19	docs/v1.6/MARATHON_STATE.md
+9	9	docs/v1.6/status/MAIN_STATUS.md
+=== 34947f0f6e2224c57afc93702fdfb264b1ed4258 2026-09-18 19:33:57 -0400 feat(v1.6-visual): R10 prep — [KEL-LINK] transition log beside the engine log (packaged evidence)
+
+10	0	desktop/packages/desktop/src/process/services/kel/KelService.ts
+=== 96979c77c4d9a772f071a9c334fd0c3082f52cfe 2026-09-18 19:32:37 -0400 docs(v1.6-visual): R9 evidence index — batches 6-8 + R9.D, commits, acceptance, R11 conflict surface
+
+61	0	docs/v1.6-visual-ux/18_R9_EVIDENCE.md
+=== 938dc9be2570a56a0c76117a54654e493594945a 2026-09-18 19:32:08 -0400 feat(v1.6-visual): R9.D — "Needs your attention" derived-only view
+
+73	0	desktop/packages/desktop/src/renderer/components/kel/KelNeedsAttention.tsx
+148	0	desktop/packages/desktop/src/renderer/components/kel/needsAttention.ts
+3	0	desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+24	0	desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+115	0	desktop/tests/unit/needs-attention.test.ts
+=== c911d81debdf3629df18ec1d21c6611d4b4e418e 2026-09-18 19:29:11 -0400 feat(v1.6-visual): BATCH 8 — final normalization pass (genuine inconsistencies only)
+
+0	10	desktop/packages/desktop/src/renderer/components/kel/KelPrimitives.tsx
+3	0	desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+=== 0e7d21acccddff5f579876141700280c64287210 2026-09-18 19:27:53 -0400 feat(v1.6-visual): BATCH 7 — the composer owns its secondary controls
+
+24	16	desktop/packages/desktop/src/renderer/pages/conversation/components/ChatConversation.tsx
+4	0	desktop/packages/desktop/src/renderer/pages/conversation/platforms/acp/AcpChat.tsx
+9	1	desktop/packages/desktop/src/renderer/pages/conversation/platforms/acp/AcpSendBox.tsx
+=== 28972071f5b35626c4eed347c1f6950996455fb8 2026-09-18 19:25:36 -0400 feat(v1.6-visual): BATCH 6 — engine loss and failure states become honest and human
+
+13	0	desktop/packages/desktop/src/preload/main.ts
+244	76	desktop/packages/desktop/src/process/services/kel/KelService.ts
+110	0	desktop/packages/desktop/src/process/services/kel/engineHealth.ts
+5	0	desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+64	0	desktop/packages/desktop/src/renderer/components/kel/KelEngineNotice.tsx
+81	0	desktop/packages/desktop/src/renderer/components/kel/KelFailureCard.tsx
+175	0	desktop/packages/desktop/src/renderer/components/kel/engineFailure.ts
+59	0	desktop/packages/desktop/src/renderer/components/kel/kelApi.ts
+2	0	desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+6	11	desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx
+6	11	desktop/packages/desktop/src/renderer/pages/kel/diagnostics/index.tsx
+8	3	desktop/packages/desktop/src/renderer/pages/kel/onboarding/index.tsx
+6	11	desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx
+9	16	desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx
+7	13	desktop/packages/desktop/src/renderer/pages/kel/team/index.tsx
+31	28	desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+6	8	desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+101	0	desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+106	0	desktop/tests/unit/engine-failure.test.ts
+64	0	desktop/tests/unit/engine-health.test.ts
+=== 3050761d6510b1861c71bd30038231feaa411fb3 2026-09-18 19:15:05 -0400 Merge branch 'ux/v15-journeys' into ux/v16-visual-fix
+=== 0ff061d7b82ce0e9a0afb5e1843a84c9ce17f9d3 2026-09-18 19:15:05 -0400 docs(v1.6-visual): R9.A lane reconciliation + integration map (zero-overlap, re-anchor decision)
+
+105	0	docs/v1.6-visual-ux/17_R9_LANE_RECONCILIATION.md
+=== 05608e6ae6f1c1c55005dfba8f1d741d7a8383cd 2026-09-18 19:14:37 -0400 docs(v1.6): R9 bookkeeping — the 27-vs-26 P2/P3 denominator is reconciled
+
+1	0	docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+54	7	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+5	2	docs/v1.6/pre-audit/increments/R0-SWEEP.md
+=== 0aadd42c19e632d1b15c9453da7a879aed4b8d5e 2026-09-18 18:27:17 -0400 docs(v1.6): R7–R8 breadcrumbs — credential containment, package identity, REL-01 CLOSED
+
+4	4	docs/v1.6/MARATHON_STATE.md
+19	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+4	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+35	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+1	1	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+2	2	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+2	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+70	0	docs/v1.6/pre-audit/increments/R7-CREDENTIAL-BOUNDARY.md
+106	0	docs/v1.6/pre-audit/increments/R8-PACKAGE-ASSERTIONS.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 022f3acdf7635c1f3952f4bbee4a996a3b6de246 2026-09-18 18:20:22 -0400 test(v1.6): engine-version assertion follows the single source (R8.B follow-up)
+
+4	1	runtime/tests/test_v141_boundaries.py
+=== 93b99b5a5af969d5cd32189c9984fe5ae1975674 2026-09-18 18:14:41 -0400 fix(v1.6): REL-01 closed — the runtime that is hashed is the runtime that loads (R8.B/C/D)
+
+1	1	desktop/package.json
+29	0	desktop/packages/desktop/src/process/services/kel/engineVersion.test.ts
+1	1	runtime/kel/__init__.py
+4	1	runtime/kel/service.py
+35	0	runtime/tests/test_v16_r8_identity.py
+33	1	scripts/freeze-release.ps1
+32	0	scripts/validate-freeze.ps1
+=== 2468b16f6d9be13c36a5dd81bd5847d624cd1515 2026-09-18 17:57:55 -0400 fix(v1.6): migration markers are unique; R8.A assertions (R8 / PACKAGE-IDENTITY prep)
+
+5	1	runtime/kel/assignment.py
+94	0	runtime/tests/test_v16_r8_migrations.py
+=== b6c4eff0dfe295d93819f5e836800c5c8cf30ec4 2026-09-18 17:51:38 -0400 fix(v1.6): provider children receive only the credential they require (R7 / CREDENTIAL-CONTAINMENT)
+
+2	2	runtime/kel/appserver.py
+1	1	runtime/kel/coding.py
+15	0	runtime/kel/internal.py
+74	0	runtime/tests/test_v16_r7_credentials.py
+=== e8bbb051d58176174896ab505473ac7a0eaf9259 2026-09-18 17:48:32 -0400 docs(v1.6): R3–R6 breadcrumbs — retry durability, approval window, canonical persistence, liveness truth
+
+34	0	docs/v1.6/AUTO_RESUME.md
+12	7	docs/v1.6/MARATHON_STATE.md
+34	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+6	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+120	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+5	5	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+4	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+79	0	docs/v1.6/pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md
+71	0	docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md
+75	0	docs/v1.6/pre-audit/increments/R5-PERSISTENCE-INTEGRITY.md
+60	0	docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+95	0	runtime/tests/test_v16_r6_liveness.py
+=== b2ffed1703f1fbe7a1612f7c1f3e71eb8266119b 2026-09-18 17:41:29 -0400 fix(v1.6): only canonical JSON reaches durable state (R5 / PERSIST-CANONICAL)
+
+19	5	runtime/kel/core.py
+5	1	runtime/kel/service.py
+106	0	runtime/tests/test_v16_r5_persistence.py
+=== 8c899c8316d886af373dc51ca902d5b4968b033a 2026-09-18 17:35:53 -0400 fix(v1.6): an approval authorizes only inside its window and for its exact action (R4 / APPROVAL-EXACT)
+
+9	1	runtime/kel/authorize.py
+99	0	runtime/tests/test_v16_r4_approval_exact.py
+=== 1a9f538555e403c8c73ab1eb2c381ea6f3011e9b 2026-09-18 17:32:30 -0400 test(v1.6): retry budgets are durable across restarts (R3 / RETRY-DURABLE)
+
+68	0	docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md
+87	0	runtime/tests/test_v16_r3_retry_durability.py
+=== fde5bbb4e8f12c9039b02544e10da5e7ba09f078 2026-09-18 17:24:48 -0400 fix(v1.6): an observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
+
+9	0	runtime/kel/core.py
+177	0	runtime/tests/test_v16_r2_idempotency.py
+=== eea6503a48d73a089d259f2f9fb3bf7262a7fb76 2026-09-18 17:20:36 -0400 docs(v1.6): R1 complete — delegation authority ceiling breadcrumbs
+
+28	2	docs/v1.6/AUTO_RESUME.md
+30	29	docs/v1.6/MARATHON_STATE.md
+20	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+2	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+20	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+115	0	docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== dc65fbcb2782471d80c153a7275c02b2e9390e56 2026-09-18 17:14:40 -0400 feat(v1.6): delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
+
+9	1	runtime/kel/assignment.py
+27	5	runtime/kel/contracts.py
+8	5	runtime/kel/delegation.py
+7	1	runtime/kel/pods.py
+57	0	runtime/kel/workforce.py
+233	0	runtime/tests/test_v16_r1_authority.py
+=== 4440a90d270a3e77c2a4d0059772724d94e8ca08 2026-09-18 17:04:51 -0400 docs(v1.6): R0 complete — the P2/P3 sweep is 100% dispositioned
+
+40	0	docs/v1.6/AUTO_RESUME.md
+50	0	docs/v1.6/MARATHON_STATE.md
+120	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+6	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+35	29	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+7	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+107	0	docs/v1.6/pre-audit/increments/R0-SWEEP.md
+8	8	docs/v1.6/status/MAIN_STATUS.md
+=== 594b8b4ad54d7ed40513807ea53d6e93d1e925d5 2026-09-18 16:57:51 -0400 fix(v1.6): model/approval/theme failure surfaces tell the truth (R0 / COR-03 + APR-06 + THM-01)
+
+10	2	desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+14	6	desktop/packages/desktop/src/renderer/components/kel/KelModelControl.tsx
+4	0	desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/CssThemeSettings.tsx
+=== dd34ac27010c99b7b83ed288fdc28bec3a03fcce 2026-09-18 16:55:11 -0400 perf(v1.6): approval poll path stops running DDL once stamped (R0 / APR-05)
+
+17	2	runtime/kel/chat_approvals.py
+65	1	runtime/tests/test_v16_sweep_fixes.py
+=== 5950efba7765cc513a35390aaa2dcd2eef5da052 2026-09-18 16:53:01 -0400 fix(v1.6): dispatch layers answer missing request fields with plain sentences (R0 / COR-06 + ERR-01)
+
+65	27	runtime/kel/service.py
+47	0	runtime/tests/test_v16_sweep_fixes.py
+=== 8ab76990131da077f5af4595c2e7239bc2fe8736 2026-09-18 16:49:04 -0400 fix(v1.6): transcription stream lifecycle releases sockets; optional conversation scope (R0 / TR-01)
+
+4	3	runtime/kel/service.py
+44	8	runtime/kel/transcription.py
+80	1	runtime/tests/test_transcription.py
+=== 49e528ee78d382c1df455bee079bfe6a323f566c 2026-09-18 16:44:35 -0400 fix(v1.6): vetting session actions enforce conversation ownership (R0 / SEC-01)
+
+3	1	runtime/kel/service.py
+21	4	runtime/kel/vetting_session.py
+66	1	runtime/tests/test_vetting.py
+=== 756218e456841643ec83964a2319d0697446f11f 2026-09-18 15:07:46 -0400 docs(v1.6): R0/APR-02 breadcrumbs (17/27 sweep rows decided)
+
+19	0	docs/v1.6/AUTO_RESUME.md
+29	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	1	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+140	0	docs/v1.6/pre-audit/increments/R0-APR02-APPROVAL-SCOPE.md
+3	3	docs/v1.6/status/MAIN_STATUS.md
+=== 8a677d0bb361c7e51de3e34cbd602d88fbbcce90 2026-09-18 15:06:49 -0400 fix(v1.6): approval resolution is conversation-scoped (R0 / APR-02)
+
+2	1	desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+1	1	desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+38	4	runtime/kel/chat_approvals.py
+2	1	runtime/kel/service.py
+71	0	runtime/tests/test_v16_approvals.py
+=== 9eab3c66d45cefb8f10b929c3651c9c9d2d8a3ff 2026-09-18 14:55:57 -0400 docs(v1.6): adopt Round 2.5 canonical roadmap (KEL_CANONICAL_ROADMAP_R2_5)
+
+25	0	docs/v1.6/AUTO_RESUME.md
+290	0	docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md
+51	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+15	0	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+128	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+3	0	docs/v1.6/pre-audit/README.md
+13	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+8	0	docs/v1.6/pre-audit/RISK_REGISTER.md
+3	2	docs/v1.6/status/MAIN_STATUS.md
+=== ae4c5b008c969f48e89e342812b91e33f06d4013 2026-09-18 14:13:44 -0400 docs(v1.6): sweep batch 3 breadcrumbs (16/27 rows decided)
+
+22	0	docs/v1.6/AUTO_RESUME.md
+11	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+24	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+6	6	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+141	0	docs/v1.6/pre-audit/increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 84b5646d15cfe4f01931a2469629333045b3eb46 2026-09-18 14:12:32 -0400 fix(v1.6): pre-restore snapshots are pruned; actor guard pinned (sweep batch 3)
+
+22	0	runtime/kel/backup.py
+71	1	runtime/tests/test_v16_sweep_fixes.py
+=== 11e152558ce4b53c693fa5c93ac1d5e729c9b2eb 2026-09-18 14:04:09 -0400 docs(v1.6): A1 breadcrumbs + REL-01 flagged as a release blocker (13/27 rows decided)
+
+16	0	docs/v1.6/AUTO_RESUME.md
+10	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+28	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+2	2	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+128	0	docs/v1.6/pre-audit/increments/A1-ENGINE-VERSION-BINDING.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 101d8c3e31465a258be995944ba8a799a9119b7d 2026-09-18 14:02:48 -0400 fix(v1.6): detached-engine reuse validates engine_version (A1 / ENG-01)
+
+15	2	desktop/packages/desktop/src/process/services/kel/KelService.ts
+16	0	desktop/packages/desktop/src/process/services/kel/engineVersion.ts
+32	0	desktop/tests/unit/kelEngineVersion.test.ts
+=== a3e272da909124f9213508ac611714673f2b2ea7 2026-09-18 14:00:23 -0400 docs(v1.6): sweep batch 2 breadcrumbs (11/27 rows dispositioned)
+
+17	0	docs/v1.6/AUTO_RESUME.md
+9	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+33	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+5	5	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+136	0	docs/v1.6/pre-audit/increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 0596211938c8db879c3b6e6609da1e0174a1f907 2026-09-18 13:59:30 -0400 fix(v1.6): sweep batch 2 — IPC frame guard, multipart header hygiene, credentials out of backups
+
+6	1	desktop/packages/desktop/src/process/services/kel/KelService.ts
+6	0	runtime/kel/backup.py
+15	1	runtime/kel/transcription.py
+71	0	runtime/tests/test_v16_sweep_fixes.py
+=== cbd0430dc054631d052b7284bca5c975bb58e9a5 2026-09-18 13:50:29 -0400 docs(v1.6): PER-02 breadcrumbs + P2/P3 sweep progress (7/27 rows dispositioned)
+
+17	0	docs/v1.6/AUTO_RESUME.md
+8	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+32	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	1	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+130	0	docs/v1.6/pre-audit/increments/PER-02-RESTORE-VISIBILITY.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== df1997ade8f783a8049b38f1d3e742a534ae0beb 2026-09-18 13:49:43 -0400 engine(v1.6): a failed or partial restore is recorded and surfaced (PER-02)
+
+22	1	runtime/kel/backup.py
+17	4	runtime/kel/service.py
+98	0	runtime/tests/test_v16_restore_visibility.py
+=== c1bb9809505fbf5c3ea5279c7e5df5ad793895ef 2026-09-18 13:41:05 -0400 docs(v1.6): P2/P3 sweep — first batch (6 rows dispositioned against the tree)
+
+28	11	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+=== 820ee3ed83abf98e2d4e8867207f927758a0679b 2026-09-18 13:33:46 -0400 docs(v1.6): REQ-F4 real-artifact binding breadcrumbs (carry-forward F4 / WF-12 closed)
+
+17	0	docs/v1.6/AUTO_RESUME.md
+10	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+33	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+145	0	docs/v1.6/pre-audit/increments/REQ-F4-REAL-ARTIFACT-BINDING.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 081a6ef67900410d2c4d5d8731500c793e56e54c 2026-09-18 13:33:14 -0400 assurance(v1.6): real-artifact binding — closure verifies the delivered artifact (REQ-F4 / WF-12)
+
+23	0	runtime/kel/core.py
+56	4	runtime/kel/delegation.py
+7	0	runtime/kel/evaluation.py
+85	0	runtime/tests/test_workforce_d1.py
+5	0	runtime/tests/test_workforce_d2.py
+=== a7c7aa4400987ca352b9dc324d60405eefc820fd 2026-09-18 13:15:17 -0400 docs(v1.6): REQ-RK resolution-kind breadcrumbs (carry-forward F18-5 closed)
+
+14	0	docs/v1.6/AUTO_RESUME.md
+9	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+32	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+1	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+135	0	docs/v1.6/pre-audit/increments/REQ-RK-RESOLUTION-KIND.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== a5479363d464fe81ae1e803cdee1dc81a86c4a19 2026-09-18 13:14:34 -0400 assurance(v1.6): record-bound resolution kinds on findings (REQ-RK)
+
+35	15	runtime/kel/assurance.py
+10	4	runtime/kel/workforce.py
+142	0	runtime/tests/test_v16_resolution_kind.py
+1	1	runtime/tests/test_workforce_schemas.py
+=== 1894ef7fefced68a998988f331d42216f88a124a 2026-09-18 13:00:53 -0400 docs(v1.6): canonical-logo requirement recorded as REQ-LOGO-1
+
+18	0	docs/v1.6/AUTO_RESUME.md
+83	0	docs/v1.6/branding/CANONICAL_LOGO.md
+27	0	docs/v1.6/branding/evidence/README.md
+-	-	docs/v1.6/branding/evidence/about-screen-kel-logo.png
+-	-	docs/v1.6/branding/evidence/exe-icon-extracted-previous-package.png
+-	-	docs/v1.6/branding/evidence/exe-icon-extracted.png
+-	-	docs/v1.6/branding/evidence/installer-icon-extracted.png
+-	-	docs/v1.6/branding/evidence/packaged-boot.png
+-	-	docs/v1.6/branding/evidence/packaged-landing.png
+21	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+35	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+2	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+3	0	docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+5	0	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+3	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+21	0	docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+143	0	docs/v1.6/pre-audit/increments/LOGO-CANONICAL.md
+6	4	docs/v1.6/status/MAIN_STATUS.md
+=== 71c78f05186efb48bb5448c442a51e5d9a16faf8 2026-09-18 13:00:07 -0400 branding(v1.6): canonical Kel logo across all production-reachable surfaces
+
+12	1	desktop/kel-builder.json
+-	-	desktop/packages/desktop/src/renderer/assets/logos/brand/app.png
+8	0	desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx
+-	-	desktop/public/pwa/icon-180.png
+-	-	desktop/public/pwa/icon-192.png
+-	-	desktop/public/pwa/icon-512.png
+-	-	desktop/resources/app.icns
+-	-	desktop/resources/app.ico
+-	-	desktop/resources/app.png
+-	-	desktop/resources/app_dev.png
+-	-	desktop/resources/branding/kel-logo.png
+-	-	desktop/resources/icon.png
+167	0	scripts/make-brand-assets.py
+127	0	scripts/verify-brand-render.py
+=== edd50de3c5dd88f456b0ae0677f7baf665cb4753 2026-09-18 12:35:56 -0400 docs(v1.6): commit ledger completeness — Phase 6 docs row + Phases 8-11 docs row
+
+2	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+=== 24d775b77a1dd24d5c02534e6ff41e8daf07e835 2026-09-18 12:35:26 -0400 docs(v1.6): ledger rows for Phase 8-11 docs commits; published-tip refresh
+
+3	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	1	docs/v1.6/status/MAIN_STATUS.md
+=== fed59ddba93adbeeeb7be4b9f80b11567ebcd816 2026-09-18 12:34:59 -0400 docs(v1.6): Phases 10-11 — provider validation + Rust freshness recheck (Phase 12 closed)
+
+19	3	docs/v1.6/AUTO_RESUME.md
+35	0	docs/v1.6/phase10/PROVIDER_VALIDATION.md
+33	0	docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md
+3	3	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+24	22	docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+2	2	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+3	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+6	6	docs/v1.6/status/MAIN_STATUS.md
+=== 6ea68c248400533d1cdc8b0e83d2c5c7daecd007 2026-09-18 12:32:46 -0400 docs(v1.6): Phase 9 decision — no Profiles concept; Projects remain the single isolation concept
+
+13	2	docs/v1.6/AUTO_RESUME.md
+55	0	docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md
+6	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+1	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== fa31618208bf4f221ecd2aa3a4a345edbafce64e 2026-09-18 12:32:01 -0400 docs(v1.6): commit ledger rows for Phase 7 docs + Phase 8 decision commits
+
+3	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+=== 006159a31ea1d8edaf4db28d12b2389d8da9c05d 2026-09-18 12:31:29 -0400 docs(v1.6): Phase 8/5.8 decision — Advanced Worker View deferred beyond V1.6
+
+15	2	docs/v1.6/AUTO_RESUME.md
+57	0	docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md
+1	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+1	1	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+2	2	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 7b3221795608df24299d1268b58e8abb763272c5 2026-09-18 12:30:30 -0400 docs(v1.6): record the published Phase 6+7 tip (16de55f); packaged pending item for the capability card
+
+3	0	docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+1	1	docs/v1.6/status/MAIN_STATUS.md
+=== 16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d 2026-09-18 12:29:53 -0400 docs(v1.6): Phase 7 record + pre-audit corpus updates (capability recommendations)
+
+15	2	docs/v1.6/AUTO_RESUME.md
+64	0	docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md
+16	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+32	1	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+1	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+1	0	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+15	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+1	0	docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+3	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+128	0	docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== df879034eb2c5889a8022c1eaa7b3b8c21ed7ccf 2026-09-18 12:28:39 -0400 feat(v1.6): capability recommendations — real capabilities, real actions, no nagging
+
+15	1	desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+85	0	desktop/packages/desktop/src/renderer/components/kel/KelCapabilityCard.tsx
+50	0	desktop/packages/desktop/src/renderer/components/kel/capabilityRecommendation.ts
+67	0	desktop/tests/unit/capability-recommendation.test.ts
+18	0	runtime/kel/capabilities.py
+6	2	runtime/kel/coding.py
+3	2	runtime/kel/core.py
+5	2	runtime/kel/research.py
+63	0	runtime/tests/test_capabilities.py
+=== ac5e2a216473dd97705a0321e642bee0211f6e9b 2026-09-18 12:17:44 -0400 docs(v1.6): Phase 6 record + pre-audit corpus updates (memory reality audit)
+
+19	2	docs/v1.6/AUTO_RESUME.md
+144	0	docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md
+18	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+54	3	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+3	1	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+2	0	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+2	0	docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+1	1	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+1	1	docs/v1.6/pre-audit/REPAIR_HINTS.md
+1	1	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+4	4	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+3	0	docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+123	0	docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md
+7	7	docs/v1.6/status/MAIN_STATUS.md
+=== 22f4a3e7f94dd1a8a1c94961a75e0807a2a4bc94 2026-09-18 12:15:24 -0400 fix(v1.6): Work-panel knowledge actions follow record state; forget asks first
+
+32	14	desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+31	0	desktop/packages/desktop/src/renderer/components/kel/memoryRecordActions.ts
+73	0	desktop/tests/unit/memory-record-actions.test.ts
+=== 785df71d9ce189907b2240023c24fa04f314ebc5 2026-09-18 12:09:41 -0400 docs(v1.6): Campaign A entry — pre-audit corpus initialized, IMPLEMENTATION_SPRINT mode, baseline 878 green
+
+4	0	.gitignore
+31	0	docs/v1.6/AUTO_RESUME.md
+88	0	docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+152	0	docs/v1.6/pre-audit/AUDIT_SCOPE.md
+78	0	docs/v1.6/pre-audit/AUDIT_TARGETS.md
+52	0	docs/v1.6/pre-audit/CHANGE_LEDGER.md
+48	0	docs/v1.6/pre-audit/COMMIT_LEDGER.md
+19	0	docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+35	0	docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+246	0	docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+19	0	docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+52	0	docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+64	0	docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+38	0	docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+33	0	docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+103	0	docs/v1.6/pre-audit/README.md
+39	0	docs/v1.6/pre-audit/REPAIR_HINTS.md
+63	0	docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+24	0	docs/v1.6/pre-audit/RISK_REGISTER.md
+67	0	docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+42	0	docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+27	0	docs/v1.6/pre-audit/evidence/campaign-a-baseline/engine-suite-20260918.txt
+50	0	docs/v1.6/pre-audit/evidence/campaign-a-baseline/reconciliation.md
+24	0	docs/v1.6/pre-audit/evidence/campaign-a-baseline/remote-refs.txt
+112	0	docs/v1.6/pre-audit/increments/INIT-CAMPAIGN-A.md
+15	9	docs/v1.6/status/MAIN_STATUS.md
+=== fd98cc402b98acf9a230fb160e4766f7f5f931f3 2026-09-18 09:14:17 -0400 docs(v1.6): record the published integration tip (5127bac); visual slice complete
+
+5	5	docs/v1.6/status/MAIN_STATUS.md
+=== 5127bacca293f9a483167665506eb434e8c4f1ca 2026-09-18 09:12:35 -0400 docs(v1.6): Phase 5.6 accepted - audit 24 CONTINUE; Phase 5.7/5.8 decisions deferred
+
+6	3	docs/v1.6/AUTO_RESUME.md
+4	0	docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md
+22	0	docs/v1.6/phase5/5.7_DECISION_DEFERRED.md
+17	0	docs/v1.6/phase5/5.8_DECISION_DEFERRED.md
+15	15	docs/v1.6/status/MAIN_STATUS.md
+=== c4ae724438d8608d3dd7f1c4abe0a778d6cb30a3 2026-09-18 09:07:31 -0400 docs(v1.6): Phase 5.6 remediation record + delta re-audit request (ba52869..8a2b25d)
+
+5	0	docs/v1.6/AUTO_RESUME.md
+38	4	docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md
+10	10	docs/v1.6/status/MAIN_STATUS.md
+=== ac85eb338ef80ad17e72a6491b576d0b7e670f0a 2026-09-18 00:14:03 -0400 fix(v1.6-visual): BATCH 5 — sidebar rows reserve the action gutter; redundant leading mark hidden
+
+42	29	desktop/packages/desktop/src/renderer/pages/conversation/GroupedHistory/ConversationRow.tsx
+16	2	desktop/packages/desktop/src/renderer/pages/conversation/utils/conversationAssistantIdentity.ts
+88	0	desktop/tests/unit/conversation-leading-mark.test.ts
+=== 83af16fca140a6a1a6438535f3ca6f7ce3ff3eae 2026-09-17 14:31:12 -0400 feat(v1.6-visual): BATCH 4 — transcription adopts the authoritative standalone IA
+
+179	43	desktop/packages/desktop/src/renderer/pages/kel/transcription/index.module.css
+96	56	desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+=== 3d9202cd4de064b6c23826988a709610eac979e3 2026-09-17 14:09:33 -0400 fix(v1.6-visual): BATCH 2 — Settings shell no longer ejects on Team; Tools shows Tools
+
+4	4	desktop/packages/desktop/src/renderer/components/layout/Router.tsx
+9	3	desktop/packages/desktop/src/renderer/components/layout/Sider/index.tsx
+=== 8dd21f9436ae98deabb2bbb732a51022a744d6c1 2026-09-17 14:07:48 -0400 feat(v1.6-visual): BATCH 1 — Kel design tokens (slate-navy foundation, compact density)
+
+102	87	desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+30	28	desktop/packages/desktop/src/renderer/styles/themes/default-color-scheme.css
+=== 04151c8b5062c6d5f8bf91bb19526649d62a513c 2026-09-17 14:07:48 -0400 docs(v1.6-visual): carry the Visual UX plan set onto the implementation branch
+
+104	0	docs/v1.6-visual-ux/00_STATUS.md
+369	0	docs/v1.6-visual-ux/01_HUMAN_FINDINGS.md
+184	0	docs/v1.6-visual-ux/02_VISUAL_SYSTEM.md
+151	0	docs/v1.6-visual-ux/03_CHAT_AND_COMPOSER.md
+141	0	docs/v1.6-visual-ux/04_SIDEBAR_AND_NAVIGATION.md
+155	0	docs/v1.6-visual-ux/05_WORK_PROJECTS_PERMISSIONS.md
+110	0	docs/v1.6-visual-ux/06_TRANSCRIPTION.md
+87	0	docs/v1.6-visual-ux/07_TEAM_AND_AGENTS.md
+98	0	docs/v1.6-visual-ux/08_DARK_LIGHT_READABILITY.md
+131	0	docs/v1.6-visual-ux/09_ERROR_STATES.md
+88	0	docs/v1.6-visual-ux/10_IMPLEMENTATION_OWNERSHIP.md
+104	0	docs/v1.6-visual-ux/11_CONFLICT_MAP.md
+60	0	docs/v1.6-visual-ux/12_ACCEPTANCE_CRITERIA.md
+62	0	docs/v1.6-visual-ux/13_IMPLEMENTATION_DEPENDENCIES.md
+60	0	docs/v1.6-visual-ux/14_SCREENSHOT_REVIEW_INDEX.md
+121	0	docs/v1.6-visual-ux/15_SEMANTICS_FLAGS.md
+121	0	docs/v1.6-visual-ux/16_PHASE4_DELTA.md
+97	0	docs/v1.6-visual-ux/AUTO_RESUME.md

@@ -1,0 +1,6 @@
+v1.2.0|7d69288f34e786dc5abb748838809184f63c08bb|tag|2026-09-15 00:28:26 -0400|Kel V1.2 verified source baseline
+v1.3.0|05b0687e381ca3de76e55bb07dfe85d5a97a105c|tag|2026-09-15 08:19:22 -0400|Kel V1.3 Context & Continuity
+v1.4.0|ee5b907af90cef46b81afaa80eaeb9d72573aa5a|tag|2026-09-15 16:10:40 -0400|Kel V1.4.0 - solution integrity, Team, autonomy, diagnostics, visual redesign
+v1.4.1|a6e6d922a791f8066731fe8eebcb50cb72391c8f|tag|2026-09-15 17:40:19 -0400|Kel V1.4.1 — post-release audit corrections; see docs/v1.4.1/
+v1.5.0|068cd267ff8bdccdffe5f13eb080eafc65f5a0b9|tag|2026-09-16 10:04:49 -0400|Kel V1.5 - authorization boundary, diagnostics, packaging; frozen and verified 3/3
+v1.6.0-pre1|ceac727ef2d04efdf96c4062a3d891825aefa176|tag|2026-09-17 01:55:42 -0400|Kel v1.6.0-pre1 - pre-program checkpoint freeze (NOT the final release). Frozen: C:\Users\Nick\Desktop\Kel\Kel Releases\Kel-V1.6.0-Pre1-Frozen; artifact source commit 0fb095f; verifier 3/3; candidate<->frozen byte-identical.
