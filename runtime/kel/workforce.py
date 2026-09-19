@@ -38,15 +38,36 @@ AUTHORITY_RANK = {name: index for index, name in enumerate(AUTHORITY_CLASSES)}
 
 
 def _path_within(path, root):
-    """True when `path` names the same place as, or something inside, `root`."""
+    """True when `path` names the same place as, or something inside, `root`.
+
+    Scope paths are LEXICAL (no filesystem access): both separator directions are normalized,
+    `.` segments are dropped, and `..` segments pop the preceding segment — `src/../secrets`
+    therefore resolves to `secrets` and is refused under `src` (Campaign C AUD-MINOR-006).
+    An absolute path, a drive-relative path (`C:file`), or a path whose `..` escapes its own
+    base (`a/../../x`, `..`) can never be contained in a relative scope; case variants are
+    compared exactly, which fails containment conservatively. `.` as `root` is the delegator's
+    scope base and stays universal by design; `.` as `path` means the base itself.
+    """
     def normalize(value):
         text = str(value or '').replace('\\', '/').strip()
-        while text.startswith('./'):
-            text = text[2:]
-        return text.rstrip('/') or '.'
+        if text.startswith('/') or ':' in text.split('/')[0]:
+            return None
+        parts = []
+        for segment in text.split('/'):
+            if segment in ('', '.'):
+                continue
+            if segment == '..':
+                if not parts:
+                    return None
+                parts.pop()
+                continue
+            parts.append(segment)
+        return '/'.join(parts) or '.'
     path, root = normalize(path), normalize(root)
     if root == '.':
         return True
+    if path is None or root is None:
+        return False
     return path == root or path.startswith(root + '/')
 
 
