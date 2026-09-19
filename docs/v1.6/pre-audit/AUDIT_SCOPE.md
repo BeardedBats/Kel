@@ -150,3 +150,11 @@ Legend for audit status now: **PENDING** (Campaign B) for everything; notes carr
 | RL-02 | Remote sync | publication records match ls-remote | sync-recon records | PENDING |
 | RL-03 | This corpus | claims match reality; evidence paths resolve | this directory | PENDING |
 | RL-04 | PRE-AUDIT RC record | `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` complete | to be created | PENDING |
+
+## PRE-AUDIT RC update (2026-09-19)
+
+R9–R12 deltas included in scope: the visual lane (batches 1–8 + R9.D Needs Your Attention) as
+integrated at `7267630`; engine-link supervision + failure-state translation (`engineFailure.ts`,
+`engineHealth.ts`, `KelService.ts`); the packaged RC (`package-r12`). New audit targets 84–90 cover
+the attention surface, supervision honesty, failure-card containment, the loaded-gun close, donor
+preview residue, and packaging input hygiene. Everything else in this scope is unchanged.

@@ -743,3 +743,21 @@ synthetic-sentinel tests; document that `host_runtime.py` is user-authorized nat
 OS sandbox (no Windows egress filtering in Campaign A). Then R8 packaged/migration assertions +
 REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration →
 R12 final regression → PRE_AUDIT_V1_6_HEAD.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+
+## R9–R12 and PRE-AUDIT_V1_6_HEAD (2026-09-18/19)
+
+- Bookkeeping resolved first: the 27-vs-26 P2/P3 denominator reconciled (`05608e6`; full original-ID
+  map; no closed finding reopened).
+- R9 on the visual lane: reconciled + re-anchored (`0ff061d`, `3050761`), batch 6 (engine-loss /
+  failure states + supervision; `2897207` + `645898a` + `fa66f04`), batch 7 (composer;
+  `0e7d21a`), batch 8 (`c911d81`), R9.D Needs Your Attention (`938dc9b`); evidence 17–19.
+- R10: packaged engine-loss journey PASS on the frozen-1.6.0 package (`ux-audit/runs/r10-{f,g}`).
+- R11: visual lane → Main (`7267630`; zero overlaps; post-merge tsc 0 + vitest 122/122).
+- R12: engine full suite **998+10**; desktop **122/122**; RC installer `package-r12` with full Kel
+  identity (install→uninstall clean; fresh + upgrade packaged boots; attention + About verified);
+  release integrity clean.
+- PRE_AUDIT_V1_6_HEAD created; Campaign B handoff corpus finalized. STOP boundary honored: no
+  Campaign B/C, no release freeze, `main` untouched, frozen refs unchanged.

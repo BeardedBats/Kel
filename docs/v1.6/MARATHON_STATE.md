@@ -3,7 +3,7 @@
 MARATHON_MODE: ACTIVE
 
 start_head: 756218e (published docs tip; production 8a677d0)
-current_head: `7267630` (R11 integration merge; visual lane `bc92f7f` integrated; see `git log --oneline -20`)
+current_head: PRE_AUDIT_V1_6_HEAD (resolve via `git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings`); prior integration `7267630`
 
 completed_this_run:
 - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
@@ -42,35 +42,40 @@ completed_this_run:
   resolutions); post-merge Main: tsc 0 + vitest 122/122; corpus records updated
   (`COMMIT_LEDGER`, `CHANGE_LEDGER` CHG-024…028, `REQUIREMENTS_TRACEABILITY`, `VISUAL_EVIDENCE_INDEX`,
   `increments/R11-INTEGRATION.md`).
+- **R12 COMPLETE** — engine full suite **998 passed + 10 subtests** (284.53s) on the merged tree;
+  desktop tsc 0 + vitest **122/122**; **RC package `package-r12`** built from merged Main:
+  NSIS `Kel-1.6.0-win-x64.exe` (stock template; silent install exit 0 → shortcuts → uninstall
+  clean; Add/Remove `Kel · Kel · 1.6.0`; exe `ProductName/CompanyName = Kel · 1.6.0`), engine
+  SHA-256 `69123AF0…` equals the frozen runtime; installed probes fresh + upgrade-DB PASS
+  (attention section + About K present; 0 leaks / 0 console errors / 0 horizontal overflow on 5
+  routes); release integrity clean (remote exact; frozen refs unchanged; secret scan 0). Evidence:
+  A-28/A-29, `PACKAGED_EVIDENCE_INDEX` `package-r12` rows, `ux-audit/runs/r12-*`.
+- **PRE_AUDIT_V1_6_HEAD CREATED** — `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B
+  handoff corpus finalized. Campaign A is complete; STOP boundary honored (no Campaign B/C, no
+  release freeze, `main` untouched, frozen refs unchanged; human visual gate PENDING).
 - breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
   MAIN_STATUS, AUTO_RESUME
 
-current_phase: R12 - final Campaign A regression + packaged/installed battery
-current_item: R12 - full engine + desktop suites, packaged/installed battery from the MERGED Main, failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD
+current_phase: PRE_AUDIT RELEASE CANDIDATE READY — Campaign A complete (R0–R12); STOP boundary honored
+current_item: Campaign B starts in a FRESH context (directive §15). No further work in this thread.
 
 next_queue:
-1. R12 — full engine suite (fresh + upgrade DB, all V1.6 migrations, authority/approvals/leases/
-   idempotency/effects/retry/persist/liveness/recovery/memory/continuation/providers/routing/D1-D3/
-   assurance/learning/evidence/completion/lineage/vetting/transcription/restore/release identity)
-2. R12 — desktop tsc + full vitest on the merged tree
-3. R12 — packaged/installed battery: rebuild from merged Main; NSIS installer + icons + About +
-   branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals +
-   capabilities + memory + transcription + artifacts + Workforce asserts + attention + engine-loss
-4. R12 — failure injection + release integrity
-5. PRE_AUDIT_V1_6_HEAD — finalize `PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B handoff corpus
+1. (OUT OF SCOPE HERE) Campaign B — independent hostile audit in a FRESH context
+2. (OUT OF SCOPE HERE) Campaign C
+3. (OUT OF SCOPE HERE) Final release freeze + V1.6 release tag — never in Campaign A
 
-last_focused_tests: R11 post-merge: desktop vitest 122/122 (12 files) + tsc 0 on Main
-last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` — R12 re-runs on the merged tree
-last_desktop_tsc: 0 errors (Main post-merge `7267630`)
-last_desktop_vitest: **122 passed** (12 files, Main post-merge)
-last_packaged: `Kel-1.6.0` lane package + R10 journey PASS (`ux-audit/runs/r10-{f,g}`); R12 rebuilds from Main incl. the installer
+last_focused_tests: R12: engine (**998 passed + 10 subtests**, 284.53s; `ux-audit/r12-engine-suite.log`); desktop tsc 0 + vitest 122/122
+last_full_engine: **998 passed + 10 subtests** (284.53s) at the merged tree
+last_desktop_tsc: 0 errors (Main post-merge + packaging fixes)
+last_desktop_vitest: **122 passed** (12 files)
+last_packaged: `package-r12` — NSIS install/uninstall lifecycle + fresh/upgrade installed probes PASS; engine SHA `69123AF0…`; metadata `Kel · Kel · 1.6.0`
 
-last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
-last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
+last_push: `ux/v15-journeys` → origin (fast-forward; final push at RC finalization)
+last_scan: 0 real hits (R0–R12; `ux-audit/runs/r12-integrity.txt`)
 
 blocker: NONE
 
-return_allowed: NO
-(gate: R0–R12 complete → PRE_AUDIT_V1_6_HEAD, or a genuine human stop condition
-per the marathon directive §32. A clean checkpoint is never a stopping point.)
+return_allowed: YES
+(Campaign A gate satisfied: R0–R12 complete → PRE_AUDIT_V1_6_HEAD created. Campaign B must start in
+a FRESH context; this thread must not continue into Campaign B/C or any release/freeze action.)

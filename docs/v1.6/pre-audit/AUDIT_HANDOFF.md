@@ -87,3 +87,13 @@ it carries the current values; treat every `TBD` as not-yet-true.
 
 This does NOT mean a metaphysical guarantee that no bug exists. It means every declared item is
 accounted for, with evidence, and nothing silently disappears.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+- HEAD at RC: resolve with `git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings`
+  (see `PRE_AUDIT_RELEASE_CANDIDATE.md`).
+- Batteries: engine **998 passed + 10 subtests** (`ux-audit/r12-engine-suite.log`); desktop tsc 0 +
+  vitest **122/122**; packaged `package-r12` (NSIS install/uninstall lifecycle, fresh + upgrade DB,
+  engine SHA `69123AF0…`); failure injection mapped in `TEST_EVIDENCE_INDEX.md` A-29; release
+  integrity in `ux-audit/runs/r12-integrity.txt` (0 actionable; frozen refs unchanged).
+- Visual lane: integrated (`7267630`); human visual gate **PENDING** (never claimed).

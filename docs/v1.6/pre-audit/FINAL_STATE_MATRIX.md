@@ -33,3 +33,11 @@ Values: `yes` / `partial` / `pending` / `—` (not applicable). The `independent
 | Visual integration (batches 1–5 → Main) | no | no | yes | yes | yes | — | yes | OPEN | never audited | not merged | NO |
 | P2/P3 sweep | pending | — | — | — | — | — | — | — | pending | docket open | NO |
 | Pre-audit corpus itself | yes | yes (this commit) | — | — | — | — | — | — | pending | grows per increment | pending RC |
+
+## PRE-AUDIT RC update (2026-09-19)
+
+| R9 (visual 6–8 + R9.D) | COMPLETE | lane `fa66f04` → Main `7267630`; tsc 0; vitest 122/122; attention hostile suite 8 | integrated, not audited |
+| R10 (engine loss/recovery) | COMPLETE | packaged journeys `r10-f`/`r10-g` PASS; `[KEL-LINK]` transitions; 7 screenshots | `19_R10_ENGINE_LOSS_EVIDENCE.md` |
+| R11 (visual → Main) | COMPLETE | merge `7267630`; zero overlaps; post-merge tsc 0 + 122/122 | `increments/R11-INTEGRATION.md` |
+| R12 (regression + packaged battery) | COMPLETE | engine 998+10; desktop 122/122; installed fresh + upgrade PASS; installer lifecycle clean; integrity 0 hits | A-29; `package-r12` row |
+| PRE_AUDIT_V1_6_HEAD | CREATED | resolution via commit-message grep (RC doc) | `PRE_AUDIT_RELEASE_CANDIDATE.md` |

@@ -50,3 +50,11 @@ memory store.)
 - A new migration lands only with: version constant + name constant, idempotence, a focused test,
   a ledger row here, and a packaged assertion plan.
 - Never renumber; never reuse.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+RC boot evidence: the RC package booted a fresh root (full V1.6 migration chain on first start)
+AND a populated 1.6.0 root (no migration drift; conversations preserved) — `ux-audit/runs/r12-fresh2`,
+`ux-audit/runs/r12-upgrade`. No new migrations were added after `93b99b5` (max remains **21** plus
+the approval marker at 20); the engine suite's fresh/upgrade/interrupted-migration checks run in
+`test_v16_r8_migrations.py` (A-29).

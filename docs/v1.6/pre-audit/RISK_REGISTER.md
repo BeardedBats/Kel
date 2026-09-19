@@ -30,3 +30,14 @@ Auditor guidance: attack HIGH/CRITICAL first; a risk is not a finding until repr
 
 - Add rows when implementation reveals fragility (even without a bug).
 - A risk closes only with evidence (fix + test) or an explicit accepted-deferral decision.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+- RISK-003 (bare-id addressing): closed on the audited paths (APR-02 `8a677d0`, SEC-01 `49e528e`);
+  R9.D adds a fail-closed derived view on top — no new addressing surface.
+- NEW (recorded, not release-blocking): engine-link supervision could in principle duplicate an
+  engine if a patient ping were skipped — mitigated by construction (patient ping precedes every
+  restart; budget pinned by tests); packaged evidence r10-f/g.
+- NEW (recorded): packaging input hygiene — a stale `dist/runtime/KelEngine` produced a
+  wrong-version bundle before replacement; audit target 90 demands the RC pipeline assert the
+  bundle identity before packaging (currently verified by discovery: installed SHA == frozen SHA).
