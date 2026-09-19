@@ -1,0 +1,20 @@
+== R12 release integrity 2026-09-19T15:06:50Z
+-- repo: /c/Users/Nick/Desktop/Kel/kel-v16-final-repair
+-- branch/head
+repair/v16-final
+ea61003456120c161c2208c691675691b775f1ef
+-- worktree status (expect empty)
+-- local tags
+v1.5.0^{}  = 5e76b21071a28601a7fb4de508cb3cf349c77db8
+v1.6.0-pre1^{} = f24d9c28b09b30d7222691cdb1aafbe21d412672
+main = 5e76b21071a28601a7fb4de508cb3cf349c77db8
+-- remote refs
+5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/heads/main
+08f56673ea93ed84568018937bb190e0a5acd71b	refs/heads/ux/v15-journeys
+068cd267ff8bdccdffe5f13eb080eafc65f5a0b9	refs/tags/v1.5.0
+5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/tags/v1.5.0^{}
+ceac727ef2d04efdf96c4062a3d891825aefa176	refs/tags/v1.6.0-pre1
+f24d9c28b09b30d7222691cdb1aafbe21d412672	refs/tags/v1.6.0-pre1^{}
+-- secret scan over 8a2b25d..HEAD (expect 0)
+actionable_hits=0
+-- push behavior note: all pushes this marathon were fast-forward; no force push performed
