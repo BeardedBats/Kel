@@ -16,3 +16,6 @@ Campaign C residual-risk notes (appended per finding):
 - **AUD-MINOR-001 (repaired `960e023`):** the reconciliation gate is now part of the durable corpus; any future commit landing inside `8a2b25d..08f5667` without a ledger row fails `tools/reconcile-commit-ledger.py`. No residual risk beyond keeping the gate green.
 - **AUD-MINOR-004 (repaired `89ab6ad`):** probe/integrity gates are discriminating in place; the uninstall log and the repaired-package build command/log are produced at §17/18 (checklist in `04_PACKAGE_EVIDENCE.md`) — required before the final RC.
 - **AUD-MINOR-005 (repaired `8ca6231`):** corpus + ledger gates must stay green; Campaign C records are labeled as Campaign C — the final independent re-audit remains the sole authority for acceptance.
+- **AUD-MINOR-007 (repaired `197dbff`):** the donor binary stays (live backend) with Kel-side provenance; its Windows exe metadata remains donor-named by design (packaged under `resources/bundled-aioncore/`, not user-visible) — re-audit note.
+- **AUD-MINOR-008 (repaired `197dbff`):** inert pet assets remain shipped by deliberate decision (no risky deletion); post-V1.6 cleanup candidate — recorded.
+- **AUD-MINOR-009 (repaired `197dbff`):** artifact metadata (exe/installer/ARP) is re-asserted at §17/18; until then the config-level identity assertion is the bound evidence.

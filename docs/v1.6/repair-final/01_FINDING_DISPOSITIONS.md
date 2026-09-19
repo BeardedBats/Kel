@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 8 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 4
+- Repaired: 11 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 1
 
 ## Ledger
 
@@ -19,9 +19,9 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | REPAIRED | `89ab6ad` | gate FAIL (r12-fresh) / PASS (r12-fresh2); integrity --fail-on-dirty PASS at repair head | `mi4-gate-discrimination.txt`; `mi4-integrity-repair-head.txt`; hashes `mi4-script-hashes.txt` | §17/18 executions (build log, gated probe, uninstall log, final integrity re-run) tracked in `04_PACKAGE_EVIDENCE.md` |
 | AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | REPAIRED | `8ca6231` | corpus lint FAIL at HEAD (25 markers) → PASS (6 files); ledger gate re-run 1:1 | pre/post lint runs (`mi5-*`) | none; both gates keep the corpus honest |
 | AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | REPAIRED | `c056a8a` | r1 containment table + e2e issuance refusal (4; 3 fail pre-fix); focused 26/26; cluster 303/303 | inline replay: `src/../secrets` refused (was contained); traversal matrix in `mi6-*` | `parallel._clean_path` safe by construction; guardrails deny-list normalization recorded (re-audit) |
-| AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | PENDING | — | — | — | — |
-| AUD-MINOR-008 | MINOR | Donor desktop-pet subsystem wired | PENDING | — | — | — | — |
-| AUD-MINOR-009 | MINOR | Donor builder config is the default build path | PENDING | — | — | — | — |
+| AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | REPAIRED | `197dbff` | provenance wiring pins (fail pre-fix) + build-side assertion; reference sha256 bound | staged vs packaged `aioncore.exe` byte-identical; `provenance.json` recorded (`mi7-*`) | KEEP (live backend) + provenance-bound; exe metadata donor-named by design (re-audit note) |
+| AUD-MINOR-008 | MINOR | Donor desktop-pet subsystem wired | REPAIRED | `197dbff` | donor tests 5/5 (3 fail pre-fix); gates at 3 entry points | reachability list in `06_DONOR_DISPOSITIONS.md`; settings toggle no-op | modules/assets retained inert; removal deferred post-V1.6 (recorded) |
+| AUD-MINOR-009 | MINOR | Donor builder config is the default build path | REPAIRED | `197dbff` | build-identity pins (fail pre-fix); desktop vitest 152/152; tsc 0 | both builder invocations use `kel-builder.json`; identity assertion pre-build | artifact metadata re-asserted at §17/18 package evidence |
 | AUD-SUG-001 | SUG | Capability directive docstring vs behavior | PENDING | — | — | — | — |
 
 Per-finding detail (reproduction, root cause, repair, tests, replay, residual risk) is appended below as each finding is dispositioned.
@@ -99,3 +99,25 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Verification:** `mi5-lint-postfix-pass.txt` — `CORPUS LINT: PASS (6 files checked)`; the ledger gate re-run still `PASS — 73 commits … 1:1`.
 - **Gate:** `docs/v1.6/audit-final/tools/check-corpus-staleness.py` (denylist + required markers; `--source <rev>` is the pre/post discriminator).
 - **Residual risk:** none beyond keeping both gates green as the RC finalizes.
+
+### AUD-MINOR-007 — detail (REPAIRED, `197dbff`)
+
+- **Reproduction (Campaign B, static):** `bundled-aioncore/win32-x64/aioncore.exe` shipped and spawned (backend launcher) with no corpus disposition; the binary was staged from a download cache (donor manifest: v0.2.2, iOfficeAI/AionCore release) with no content hash.
+- **Decision:** KEEP — it is the live app backend (`BackendLifecycleManager` → launcher spawn), not dead code; removal or rename would reshape the architecture beyond this finding.
+- **Repair:** `prepare-aioncore.js` now writes a Kel-side `provenance.json` next to the donor manifest (sha256, bytes, donor repo, version, source) in both staging branches, and `build-with-builder.js` fails the build when it is missing. Reference hash (staged and packaged copies byte-identical): `67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892` (`mi7-aioncore-provenance.txt`).
+- **Security read:** spawn via backend-launcher with `{...process.env}` inheritance (same containment policy as AUD-MINOR-003); `AIONUI_BACKEND_BIN` developer override; dynamic local port; exe metadata stays donor-named by design (packaged under `resources/bundled-aioncore/`, not user-visible) — re-audit note in `06`.
+- **Tests/pins:** `donor-policy.test.ts` provenance wiring checks (fail pre-fix); build-side provenance assertion.
+
+### AUD-MINOR-008 — detail (REPAIRED, `197dbff`)
+
+- **Reproduction (Campaign B, static):** the pet subsystem was wired (`createPetWindow`, settings APIs, shipped assets) with no disposition; end-user reachability exists via the settings surface.
+- **Decision:** DISABLED (hidden) — modules/assets retained (no risky deletion); every activation path is gated by `petPolicy.KEL_PET_SUBSYSTEM_ENABLED = false`: `petManager.createPetWindow` refuses; the settings setter refuses enabling (persists `false`); the `src/index.ts` startup path requires `pet.enabled === true && KEL_PET_SUBSYSTEM_ENABLED`.
+- **Unreachability proof:** `donor-policy.test.ts` (3 pins; fail pre-fix) + the reachability list in `06_DONOR_DISPOSITIONS.md`; the toggle is a no-op, so no pet window can be created and no donor behavior/brand is reachable.
+- **Residual risk:** inert assets remain shipped (recorded for post-V1.6 cleanup); removal deferred deliberately.
+
+### AUD-MINOR-009 — detail (REPAIRED, `197dbff`)
+
+- **Reproduction (Campaign B):** `scripts/build-with-builder.js` defaulted both electron-builder invocations to the donor `electron-builder.yml` (appId com.aionui.app / productName AionUi); Kel packaging required an explicit `--config kel-builder.json`.
+- **Repair:** the script now uses `KEL_BUILDER_CONFIG = 'kel-builder.json'` for both invocations (main + mac prepackaged DMG) and calls `assertKelBuildIdentity()` before the vite build — refusing to build unless `kel-builder.json` carries `productName: Kel` and `appId: com.kel.desktop`; the donor yml remains only as the `extends` base. All package scripts (`dist`, `dist:win`, …) flow through the Kel default.
+- **Tests:** `donor-policy.test.ts` build-identity pins (fail pre-fix); artifact metadata re-asserted at §17/18 package evidence (exe metadata / installer hash / ARP).
+- **Residual risk:** none beyond the §17/18 artifact binding.

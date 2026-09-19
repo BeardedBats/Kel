@@ -111,7 +111,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Confidence:** HIGH (presence/wiring), MEDIUM-HIGH (import-graph reachability from Kel paths; launcher startup not observed live). **Adjacent risk:** un-vetted runtime process surface.
 - **Repair criteria:** bind bundled binary to revision + hash; decide keep/rename/remove; record disposition; refresh donor sweep; security read of what starts it.
 - **Regression test:** build assertion (provenance manifest) + reachability note in sweep.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `197dbff` · re-test: provenance recorded + build fails without it; staged vs packaged sha256 identical (`67eb0277…`) · final re-audit: `PENDING`
 
 ## AUD-MINOR-008 — Donor desktop-pet subsystem is wired into the shipped app (no disposition found)
 
@@ -120,7 +120,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Expected/Actual:** V1.6 surfaces are Kel's (donor features removed or intentionally kept with recorded decision) / no disposition found; settings API reachable; window start requires a host-side call; donor assets+behavior shipped.
 - **Confidence:** HIGH (wiring/assets), MEDIUM (end-user UI reachability not fully traced). **Adjacent risk:** un-vetted donor UI/process surface; brand/behavior leakage.
 - **Repair criteria:** decide keep/hide/remove; if kept — disposition row; if hidden — prove unreachable. **Regression test:** surface-reachability list in the donor sweep.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `197dbff` · re-test: donor tests 5/5 (3 fail pre-fix); pet disabled by policy at all three entry points; reachability list in `06_DONOR_DISPOSITIONS.md` · final re-audit: `PENDING`
 
 ## AUD-MINOR-009 — Donor builder config remains the default build path (`electron-builder.yml`: appId com.aionui.app, productName AionUi)
 
@@ -129,7 +129,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Expected/Actual:** one obvious production build path / default scripts build a donor-branded app; Kel config is a side path; `bun run dist:win` would emit `AionUi`-named artifacts.
 - **Confidence:** HIGH. **Adjacent risk:** CI/maintainer misuse; donor identity regression in future packages.
 - **Repair criteria:** make Kel config default (or remove donor scripts/names); single packaging config; build-identity assertion (productName/appId) in CI.
-- **Regression test:** artifact metadata assertion step. **Campaign C:** `NOT_STARTED`.
+- **Regression test:** artifact metadata assertion step. **Campaign C:** `REPAIRED` — repair commit: `197dbff` · re-test: build-identity pins (fail pre-fix) + identity assertion pre-build; desktop vitest 152/152 · final re-audit: `PENDING`
 
 ## AUD-SUG-001 — Capability directive docstring vs behavior for unquoted log-line/path tokens
 
