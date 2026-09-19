@@ -60,6 +60,13 @@ const CapabilitiesRedirect: React.FC = () => {
  */
 const HIDE_DONOR_AGENT_SURFACES = true;
 
+/**
+ * Human-visual repair (HV-12): the Office/Roster/Studio workforce surface exposes Kel's internal
+ * staffing model to ordinary users and Advanced Worker View is deferred past V1.6. While true the
+ * routes redirect to Home; the page and the Workforce runtime stay in the bundle. Flip to restore.
+ */
+const HIDE_WORKFORCE_SURFACES = true;
+
 const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
   const { status, user } = useAuth();
   // Mounted once for every authenticated route: the loop warning has to reach
@@ -153,10 +160,22 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
           <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
           <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
-          <Route path='/team' element={<Navigate to='/team/office' replace />} />
-          <Route path='/team/office' element={withRouteFallback(KelTeam)} />
-          <Route path='/team/roster' element={withRouteFallback(KelTeam)} />
-          <Route path='/team/studio' element={withRouteFallback(KelTeam)} />
+          <Route
+            path='/team'
+            element={<Navigate to={HIDE_WORKFORCE_SURFACES ? '/guid' : '/team/office'} replace />}
+          />
+          <Route
+            path='/team/office'
+            element={HIDE_WORKFORCE_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(KelTeam)}
+          />
+          <Route
+            path='/team/roster'
+            element={HIDE_WORKFORCE_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(KelTeam)}
+          />
+          <Route
+            path='/team/studio'
+            element={HIDE_WORKFORCE_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(KelTeam)}
+          />
           <Route path='/projects' element={<Navigate to='/projects/knowledge' replace />} />
           <Route path='/projects/knowledge' element={withRouteFallback(KelProjects)} />
           <Route path='/projects/map' element={withRouteFallback(KelProjects)} />

@@ -11,10 +11,8 @@ import {
   Earth,
   Inbox,
   Info,
-  Lightning,
   LinkCloud,
   Puzzle,
-  Speed,
   System,
   Toolkit,
 } from '@icon-park/react';
@@ -34,9 +32,9 @@ import { getSiderTooltipProps } from '@/renderer/utils/ui/siderTooltip';
  * here plus its page route, and the sider filter below hides desktop-only tabs in browser mode.
  */
 export const BUILTIN_TAB_IDS = [
+  // Human-visual repair (HV-12): 'agent' (Agents) and 'skills' (Team roles) were removed — their
+  // only destination was the internal Team/roster surface, which is hidden from ordinary users.
   'model',
-  'agent',
-  'skills',
   'tools',
   'appearance',
   'webui',
@@ -52,8 +50,6 @@ export const BUILTIN_TAB_IDS = [
  * This keeps older extensions working without requiring them to update.
  */
 export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
-  'skills-hub': 'skills',
-  capabilities: 'skills',
   display: 'appearance',
 };
 
@@ -63,7 +59,6 @@ export const LEGACY_ANCHOR_REMAP: Record<string, string> = {
  * Extension tabs anchored between these builtins inherit the enclosing group visually.
  */
 const GROUP_HEADER_BEFORE: Record<string, string> = {
-  agent: 'settings.groupAiCore',
   appearance: 'settings.groupApp',
   archived: 'settings.archived.title',
   about: 'settings.groupAbout',
@@ -94,18 +89,6 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     // Build builtin items
     const builtinMap: Record<string, SiderItem> = {
       model: { id: 'model', label: t('settings.model'), icon: <LinkCloud />, path: 'model' },
-      agent: {
-        id: 'agent',
-        label: t('settings.agents', { defaultValue: 'Agents' }),
-        icon: <Speed />,
-        path: 'agent',
-      },
-      skills: {
-        id: 'skills',
-        label: t('settings.skills', { defaultValue: 'Team roles' }),
-        icon: <Lightning />,
-        path: 'skills',
-      },
       tools: {
         id: 'tools',
         label: t('settings.tools', { defaultValue: 'Tools' }),

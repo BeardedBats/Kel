@@ -5,8 +5,9 @@
    V1.6 changes vs V1.4 ("Desk"):
      · dark surfaces moved from neutral charcoal to slate-navy; primary text is off-white, not pure #fff
      · accent moved from saturated green to a restrained sky/slate blue; status colours desaturated
-     · type scale and spacing compacted for a desktop shell (h1 32→24, h2 24→16, body 16→15, 4px ladder)
+     · type scale and spacing compacted for a desktop shell (h1 32→24, h2 24→16, 4px ladder)
      · one radius for controls and surfaces (8px); card padding 24→16; page gutter 32→24
+     · human-visual repair: body/meta restored to readability floors (16px body, 14px meta)
    Unchanged on purpose: the AA-clean light palette values, the global focus ring, the skip link, the
    reduced-motion fallback, and the donor muted-text overrides. */
 
@@ -54,9 +55,9 @@
   --kel-type-h1: 24px;
   --kel-type-h2: 16px;
   --kel-type-h3: 16px;
-  --kel-type-body: 15px;
+  --kel-type-body: 16px;
   --kel-type-label: 14px;
-  --kel-type-meta: 12px;
+  --kel-type-meta: 14px;
   --kel-font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   --kel-font-mono: "Cascadia Code", Consolas, monospace;
 
@@ -183,6 +184,14 @@
   font-family: var(--kel-font);
   font-size: var(--kel-type-body);
   line-height: 1.5;
+  /* Human-visual repair: Kel pages must own their scrolling. The shell clips at html/body and
+     routed Kel pages have no other scrollable ancestor (settings pages bring their own wrapper),
+     so .kel-scope is the single predictable wheel/trackpad/PageDown target at every window size. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;
 }
 
 .kel-page {
@@ -222,6 +231,9 @@
 }
 
 .kel-card {
+  /* Human-visual repair: a surface that paints its own background pins its own foreground, so
+     Kel cards stay readable inside donor settings pages (outside .kel-scope). */
+  color: var(--kel-text-1);
   background: var(--kel-surface-1);
   border: 1px solid var(--kel-border);
   border-radius: var(--kel-radius-card);

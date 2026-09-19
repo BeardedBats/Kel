@@ -70,7 +70,7 @@
      var(--font-mono) site declares font-weight: var(--font-mono-weight) next to
      it, so the code-region weight follows the selection for free. */
   --font-mono-weight: var(--code-font-weight, inherit);
-  --code-font-size: 13px;
+  --code-font-size: 14px;
   --aion-overlay-bg: #ffffff;
   --aion-overlay-text: #1d2129;
   --aion-overlay-border: #e5e6eb;
@@ -123,6 +123,16 @@ body {
      is a fixed white, so if html/body stay transparent any layout gap leaks white
      through — glaringly so in dark mode. */
   background-color: var(--bg-1);
+  /* Human-visual repair: pin the theme foreground at the root so text outside kel scopes
+     (settings pages, donor components) never falls back to the UA black on dark surfaces. */
+  color: var(--text-primary);
+}
+
+/* Native form controls inherit the themed foreground instead of the UA default black. */
+input,
+select,
+textarea {
+  color: inherit;
 }
 
 html body .arco-tooltip-content,

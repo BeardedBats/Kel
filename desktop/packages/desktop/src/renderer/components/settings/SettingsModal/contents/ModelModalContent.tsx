@@ -379,7 +379,7 @@ const ModelModalContent: React.FC = () => {
           data-testid='model-header'
           title={t('settings.model')}
           description={t('settings.modelDescription', {
-            defaultValue: 'Configure LLM providers and API keys for use across all assistants.',
+            defaultValue: 'Add your own API-backed models. The built-in models are listed above with their current availability.',
           })}
           actions={headerActions}
         />
@@ -400,6 +400,11 @@ const ModelModalContent: React.FC = () => {
           <div className='flex flex-col items-center justify-center py-40px'>
             <Info theme='outline' size='48' className='text-t-secondary mb-16px' />
             <h3 className='text-16px font-500 text-t-primary mb-8px'>{t('settings.noConfiguredModels')}</h3>
+            {isPageMode && (
+              <p className='m-0 text-14px text-t-secondary'>
+                Add an API-backed model of your own — or keep using the built-in models listed above.
+              </p>
+            )}
           </div>
         ) : (
           <div className='space-y-16px'>

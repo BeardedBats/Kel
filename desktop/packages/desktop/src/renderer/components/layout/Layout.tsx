@@ -15,6 +15,7 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
+import brandMark from '@renderer/assets/logos/brand/app.png';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
@@ -439,22 +440,14 @@ const Layout: React.FC<{
                 )}
               >
                 <div
-                  className={classNames('bg-black shrink-0 size-32px relative rd-0.5rem', {
+                  className={classNames('shrink-0 size-32px relative rd-0.5rem overflow-hidden', {
                     '!size-24px': collapsed,
                   })}
                   onClick={onClick}
                 >
-                  <svg
-                    className={classNames('w-5.5 h-5.5 absolute inset-0 m-auto', {
-                      'scale-140': !collapsed,
-                    })}
-                    viewBox='0 0 80 80'
-                    fill='none'
-                  >
-                    <text x='40' y='55' textAnchor='middle' fill='white' fontSize='48' fontWeight='700'>
-                      K
-                    </text>
-                  </svg>
+                  {/* Canonical Kel mark — the same asset the About page loads. Never redrawn or
+                      replaced with a text glyph. */}
+                  <img src={brandMark} alt='' className='absolute inset-0 size-full object-contain' draggable={false} />
                 </div>
                 {isSettingsRoute ? (
                   <Tooltip content={t('common.back', { defaultValue: 'Back to Chat' })} position='bottom'>

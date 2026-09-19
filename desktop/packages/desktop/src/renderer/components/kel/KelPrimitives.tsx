@@ -204,3 +204,15 @@ export function formatWhen(seconds: number | null | undefined): string {
   if (delta < 86400) return `${Math.round(delta / 3600)}h ago`;
   return `${Math.round(delta / 86400)}d ago`;
 }
+
+/* Human-visual repair: expiry timestamps are in the FUTURE — formatWhen() clamps any future time to
+   '0s ago' (the 'Expires: 0s ago' defect). This formats time-until instead. */
+export function formatUntil(seconds: number | null | undefined): string {
+  if (!seconds) return '—';
+  const delta = Math.round(seconds - Date.now() / 1000);
+  if (delta <= 0) return 'in <1m';
+  if (delta < 60) return `in ${delta}s`;
+  if (delta < 3600) return `in ${Math.round(delta / 60)}m`;
+  if (delta < 86400) return `in ${Math.round(delta / 3600)}h`;
+  return `in ${Math.round(delta / 86400)}d`;
+}

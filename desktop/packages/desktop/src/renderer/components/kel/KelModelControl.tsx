@@ -120,10 +120,10 @@ export const useKelModelState = (conversationId?: string) => {
 
 const availableChip = (available: boolean) => (
   <span
-    className='ms-auto text-11px px-6px rounded-8px'
+    className='ms-auto text-12px px-6px rounded-8px'
     style={{
-      color: available ? 'var(--aou-9)' : 'var(--color-text-3)',
-      background: available ? 'rgba(47,163,124,0.12)' : 'var(--color-fill-2)',
+      color: available ? 'var(--kel-ok-fg)' : 'var(--kel-text-3)',
+      background: available ? 'var(--kel-ok-bg)' : 'var(--kel-surface-2)',
     }}
   >
     {available ? 'Available' : 'Needs setup'}
@@ -156,7 +156,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
           <Menu.Item key='chat-global' disabled={false} onClick={() => void setConversation(null)}>
             <span className='flex items-center w-full'>
               <span>Use the default model</span>
-              {!state.conversation ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : null}
+              {!state.conversation ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : null}
             </span>
           </Menu.Item>
           {providers.map((provider) =>
@@ -178,7 +178,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                     <span className='ms-6px text-11px text-t-secondary'>{provider.label}</span>
                   </span>
                   {state.conversation?.provider === provider.id && state.conversation?.model === option.id ? (
-                    <span className='ms-auto text-11px'>Current</span>
+                    <span className='ms-auto text-12px'>Current</span>
                   ) : (
                     availableChip(option.available)
                   )}
@@ -197,7 +197,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
         >
           <span className='flex items-center w-full'>
             <span>Automatic — Kel picks what is available</span>
-            {!state.default ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : null}
+            {!state.default ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : null}
           </span>
         </Menu.Item>
         {providers.map((provider) =>
@@ -215,7 +215,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                   <span className='ms-6px text-11px text-t-secondary'>{provider.label}</span>
                 </span>
                 {state.default?.provider === provider.id && state.default?.model === option.id ? (
-                  <span className='ms-auto text-11px'>Current</span>
+                  <span className='ms-auto text-12px'>Current</span>
                 ) : (
                   availableChip(option.available)
                 )}
@@ -225,7 +225,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
         )}
       </Menu.ItemGroup>
       <Menu.Item key='details' disabled>
-        <span className='text-11px text-t-secondary'>
+        <span className='text-12px text-t-secondary'>
           Details: answering with {effectiveLabel.label} ({effectiveLabel.scope})
         </span>
       </Menu.Item>
@@ -257,12 +257,13 @@ export const KelDefaultModelCard: React.FC = () => {
 
   return (
     <KelCard title='Default Kel model' data-testid='kel-default-model-card'>
-      <p className='text-13px text-t-secondary m-0 mb-10px'>
-        Kel uses this model for normal conversations. A chat can still pick its own model from the
-        chat header. Automatic keeps Kel's routing across every available provider.
+      <p className='text-14px text-t-secondary m-0 mb-10px'>
+        Kel uses this model for normal conversations. The list shows the models available to Kel right
+        now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
+        routing across every available provider.
       </p>
       {!state ? (
-        <p className='text-13px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
+        <p className='text-14px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
       ) : (
         <div className='flex flex-col gap-4px'>
           <button
@@ -272,7 +273,7 @@ export const KelDefaultModelCard: React.FC = () => {
             className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer'
             style={{ background: !state.default ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
           >
-            <span className='text-13px'>Automatic — Kel picks what is available</span>
+            <span className='text-14px'>Automatic — Kel picks what is available</span>
             {!state.default ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : null}
           </button>
           {providers.map((provider) =>
@@ -287,23 +288,23 @@ export const KelDefaultModelCard: React.FC = () => {
                   onClick={() => void setDefault({ provider: provider.id, model: option.id })}
                   className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer disabled:cursor-not-allowed'
                   style={{
-                    background: current ? 'var(--color-fill-2)' : 'transparent',
-                    border: '1px solid var(--color-border-2)',
+                    background: current ? 'var(--kel-surface-2)' : 'transparent',
+                    border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
                     opacity: option.available ? 1 : 0.6,
                   }}
                 >
-                  <span className='text-13px'>
+                  <span className='text-14px'>
                     {option.label}
-                    <span className='ms-6px text-11px text-t-secondary'>{provider.label}</span>
+                    <span className='ms-6px text-12px text-t-secondary'>{provider.label}</span>
                   </span>
-                  {current ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : availableChip(option.available)}
+                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availableChip(option.available)}
                 </button>
               );
             })
           )}
         </div>
       )}
-      <p className='text-11px text-t-secondary m-0 mt-8px'>Saved immediately. Switching back to Automatic restores Kel's normal routing.</p>
+      <p className='text-12px text-t-secondary m-0 mt-8px'>Saved immediately. Switching back to Automatic restores Kel's normal routing.</p>
     </KelCard>
   );
 };
