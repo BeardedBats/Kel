@@ -41,4 +41,12 @@ How to re-run (from `runtime/`):
 - Attack replay: `mi3-postfix-attack.txt` — G4 DeepSeek absent from both children; G1–G3 unchanged.
 - Boundary evidence: spawned-process check (`test_a_spawned_native_child_process_sees_only_its_own_key`) observes only `ANTHROPIC_API_KEY` inside a real child process.
 
+## AUD-MINOR-006 — delegation containment resolves `..` (REPAIRED, `c056a8a`)
+
+- Reproduction: `evidence/mi6-prefix-attack.txt` — `src/../secrets` was contained under `src` pre-fix; post-fix `evidence/mi6-postfix-attack.txt` refuses it and behaves as documented for the whole traversal matrix.
+- Discriminating tests: 4/4 post-fix (`mi6-newtests-postfix-pass.txt`); 3 fail pre-fix with the fix stashed (`mi6-newtests-prefix-fail.txt`).
+- Focused file: `tests/test_v16_r1_authority.py` → 26/26 (`mi6-focused-file.txt`).
+- Cluster: r1 + workforce set → 303/303 (`mi6-adjacent-suite.txt`).
+- End-to-end consumer confirmation: issuance (`validate_task_contract`) refuses `src/../secrets` against the declared boundaries and against the delegator (test in `ContractParentAuthorityTests`).
+
 (Results appended per finding as repairs complete.)

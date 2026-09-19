@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 4 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 8
+- Repaired: 5 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 7
 
 ## Ledger
 
@@ -18,7 +18,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | REPAIRED | `91bd869` | `ChildEnvironmentTests` 5 (3 fail pre-fix) + spawned-process boundary; cluster 34/34 | probe §G: DeepSeek absent from codex+claude children; G1–G3 unchanged | sibling launchers reviewed (appserver whitelist, test-command strip, coding bridge); system tools inherit by design (re-audit note) |
 | AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | PENDING | — | — | — | — |
 | AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | PENDING | — | — | — | — |
-| AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | PENDING | — | — | — | — |
+| AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | REPAIRED | `c056a8a` | r1 containment table + e2e issuance refusal (4; 3 fail pre-fix); focused 26/26; cluster 303/303 | inline replay: `src/../secrets` refused (was contained); traversal matrix in `mi6-*` | `parallel._clean_path` safe by construction; guardrails deny-list normalization recorded (re-audit) |
 | AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | PENDING | — | — | — | — |
 | AUD-MINOR-008 | MINOR | Donor desktop-pet subsystem wired | PENDING | — | — | — | — |
 | AUD-MINOR-009 | MINOR | Donor builder config is the default build path | PENDING | — | — | — | — |
@@ -65,3 +65,12 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Tests:** `ChildEnvironmentTests` — updated cross-provider pin, third-provider absence for both children, unknown-provider fail-closed, a real spawned-process boundary check (the child process observes only its own key), test-command strip pinned including DeepSeek. 9/9 post-fix (`mi3-newtests-postfix-pass.txt`), 3 new tests fail pre-fix (`mi3-newtests-prefix-fail.txt`); cluster 34/34 (`mi3-adjacent-suite.txt`).
 - **Attack replay:** `mi3-postfix-attack.txt` — G4 now `DEEPSEEK_API_KEY: False` for both children; G1–G3 unchanged.
 - **Sibling search (spawn inventory):** `appserver.py` codex app-server child (internal whitelist `keep=('OPENAI_API_KEY',)`) OK; `host_runtime.test_command_env` strips all three (now pinned with DeepSeek); `coding.py:240` nulls all three for its subprocess; `runner.py`/`coding_transport.py` children are Kel's own engine processes (trusted, need keys); `git`/`powershell.exe`/`wsl.exe` system tools inherit the environment — reviewed, unchanged (local tools with no provider-key semantics; git hooks disabled for the repo calls).
+
+### AUD-MINOR-006 — detail (REPAIRED, `c056a8a`)
+
+- **Reproduction (pre-fix):** inline replay (`evidence/mi6-prefix-attack.txt`): `authority_within({'write_scope': ['src/../secrets']}, {'write_scope': ['src']})` → contained (None); `src/../secrets` counted as within `src`.
+- **Root cause:** `_path_within` normalized `./` and separators but never resolved `..` — the containment decision was lexical on unresolved text, so any `..` segment that string-prefixed correctly passed.
+- **Repair:** canonical lexical resolution inside the primitive with no filesystem access: separators normalized (both directions), `.` dropped, `..` pops the previous segment; absolute, drive-relative, and self-escaping entries can never be contained in a relative scope (fail-closed); case-exact comparison documented as conservative; `.`-as-root stays universal by design (docstring + pinned test). No authority widened: entries that resolve inside the scope keep passing; entries that resolve outside are now refused.
+- **Tests:** `test_dotdot_entries_resolve_lexically_before_containment`, `test_the_containment_normalization_table` (contained: exact root/trailing slash/repeated separators/mixed separators/`./`/interior `..`; refused: `src/../secrets`, `a/../../x`, `..`, `../src`, absolute, drive-relative, sibling-prefix `src2`, case variant, `.`), `test_a_dot_root_stays_universal_by_design`, `test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end` (issuance refuses against both the boundaries dimension and the delegator dimension). 4/4 post-fix (`mi6-newtests-postfix-pass.txt`), 3 fail pre-fix (`mi6-newtests-prefix-fail.txt`); focused file 26/26 (`mi6-focused-file.txt`); cluster 303/303 (`mi6-adjacent-suite.txt`).
+- **Attack replay:** `mi6-postfix-attack.txt` — `src/../secrets` refused; full traversal matrix behaves as documented; legitimate nested/interior-`..` paths stay contained.
+- **Sibling search:** `parallel.py` compares declared paths with the same string-shape logic but validates every declared path at entry (`_clean_path` refuses absolute and any `.`/`..` segment; pinned by `test_workforce_parallel.py::test_absolute_and_escaping_paths_are_refused`) — safe by construction, unchanged. `guardrails._norm` deny-list normalization does not resolve `..`; inputs at the effect points observed (apply_changes passes `resolve(strict=True)` roots; project-create resolves before use) — recorded as a re-audit item (see `05`), unchanged as outside this finding's primitive. Filesystem-backed checks (`core.py` artifacts, `coding.py` untracked, `runner.py` attachments) already use `resolve()`.
