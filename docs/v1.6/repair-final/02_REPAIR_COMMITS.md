@@ -20,3 +20,5 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 12 | `960e023` | AUD-MINOR-001 | fix | COMMIT_LEDGER reconciled 1:1 (rows added, malformed cells fixed) + failing gate script |
 | 13 | `89ab6ad` | AUD-MINOR-004 | fix | R12 probe assertion gate (exit non-zero), integrity --fail-on-dirty, R10 wording, 04 checklist, evidence |
 | 14 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-001 + AUD-MINOR-004 recorded`) | AUD-MINOR-001 / AUD-MINOR-004 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C fields |
+| 15 | `8ca6231` | AUD-MINOR-005 | fix | Corpus reconciliation (6 files) + staleness gate + pre/post evidence |
+| 16 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-005 recorded`) | AUD-MINOR-005 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |

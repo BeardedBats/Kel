@@ -5,7 +5,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 ## Summary
 
 - Total Campaign B findings: **12** (AUD-BLOCK 0 · AUD-MAJOR 2 · AUD-MINOR 9 · AUD-SUG 1)
-- Repaired: 7 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 5
+- Repaired: 8 · Not reproducible: 0 · Invalid: 0 · Deferred: 0 · Remaining: 4
 
 ## Ledger
 
@@ -17,7 +17,7 @@ Status vocabulary: `PENDING` · `IN_PROGRESS` · `REPAIRED` · `NOT_REPRODUCIBLE
 | AUD-MINOR-002 | MINOR | Budget reservations not aggregated (overcommit) | REPAIRED | `7e293ba` | `ReservationAccountingTests` + delegation cumulative test (9; 5 fail pre-fix); focused 65/65; cluster 299/299 | probe §E7: cost 8 after cost 1 refused (remaining 7.0); E5 unchanged; E6 disclosed | token/wallclock unchanged by design (pinned); run-slot vs planning accounting separation (re-audit note) |
 | AUD-MINOR-003 | MINOR | `native.child_env` strip weaker than claimed | REPAIRED | `91bd869` | `ChildEnvironmentTests` 5 (3 fail pre-fix) + spawned-process boundary; cluster 34/34 | probe §G: DeepSeek absent from codex+claude children; G1–G3 unchanged | sibling launchers reviewed (appserver whitelist, test-command strip, coding bridge); system tools inherit by design (re-audit note) |
 | AUD-MINOR-004 | MINOR | R12 packaged-evidence integrity gaps | REPAIRED | `89ab6ad` | gate FAIL (r12-fresh) / PASS (r12-fresh2); integrity --fail-on-dirty PASS at repair head | `mi4-gate-discrimination.txt`; `mi4-integrity-repair-head.txt`; hashes `mi4-script-hashes.txt` | §17/18 executions (build log, gated probe, uninstall log, final integrity re-run) tracked in `04_PACKAGE_EVIDENCE.md` |
-| AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | PENDING | — | — | — | — |
+| AUD-MINOR-005 | MINOR | Corpus state drift not reconciled at RC | REPAIRED | `8ca6231` | corpus lint FAIL at HEAD (25 markers) → PASS (6 files); ledger gate re-run 1:1 | pre/post lint runs (`mi5-*`) | none; both gates keep the corpus honest |
 | AUD-MINOR-006 | MINOR | Delegation containment does not resolve `..` | REPAIRED | `c056a8a` | r1 containment table + e2e issuance refusal (4; 3 fail pre-fix); focused 26/26; cluster 303/303 | inline replay: `src/../secrets` refused (was contained); traversal matrix in `mi6-*` | `parallel._clean_path` safe by construction; guardrails deny-list normalization recorded (re-audit) |
 | AUD-MINOR-007 | MINOR | Donor `aioncore` runtime live/shipped; no disposition | PENDING | — | — | — | — |
 | AUD-MINOR-008 | MINOR | Donor desktop-pet subsystem wired | PENDING | — | — | — | — |
@@ -90,3 +90,12 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Verification:** `mi4-gate-discrimination.txt` — r12-fresh FAIL/exit 1 vs r12-fresh2 PASS/exit 0 vs repo evidence copy PASS; `mi4-integrity-repair-head.txt` — `INTEGRITY: PASS dirty=0 actionable_hits=0` at the repair head; script hashes in `mi4-script-hashes.txt`.
 - **Items b/e:** the uninstall log and the repaired-package build command/log are produced + retained at §17/18; `04_PACKAGE_EVIDENCE.md` carries the checklist and links the artifacts.
 - **Residual risk:** §17/18 executions are required to keep this finding's evidence set complete (tracked in `04`).
+
+### AUD-MINOR-005 — detail (REPAIRED, `8ca6231`)
+
+- **Reproduction (pre-fix):** `evidence/mi5-lint-prefix-fail.txt` — the new gate run against HEAD lists 25 stale/absent markers across `INVARIANT_LEDGER.md` (signature rows in PLANNED/OPEN_GAP/PARTIAL states), `MIGRATION_LEDGER.md` (next-free 20, unchecked RC checklist, "planned"/"assertion pending" cells), `REQUIREMENTS_TRACEABILITY.md` (R9/R11/R12/WFWIRE/PKG-ASSERT/RC PENDING; "re-verified open"), `AUDIT_HANDOFF.md` (TBD bindings), `P2_P3_DISPOSITION.md` and `docs/v1.6-visual-ux/00_STATUS.md` (missing reconciliation markers).
+- **Root cause:** the corpus was maintained through the marathon but never reconciled at RC; several tables kept their pre-delivery states and two version tables disagreed with the code constants.
+- **Repair:** every itemized row/status reconciled to the delivered tree with commit/test anchors — INVARIANT_LEDGER 22 rows; MIGRATION_LEDGER version truth from code constants + packaged DB dumps (16 unclaimed; 17 = v17-finding-resolution-kind; 20 = chat_approval_announcements; 21 = v16-budget-reservations; next free 22; RC checklist asserted with run anchors); REQUIREMENTS R9/R11/R12/WFWIRE/PKG-ASSERT/RC delivered; AUDIT_HANDOFF bindings filled (HEAD `08f5667`, range `8a2b25d..08f5667` = 73 commits); P2_P3 TL;DR; 00_STATUS marked as the historical audit-stop record. No historical evidence fabricated — Campaign C evidence is labeled as such; cells that were never true are corrected, not re-recorded.
+- **Verification:** `mi5-lint-postfix-pass.txt` — `CORPUS LINT: PASS (6 files checked)`; the ledger gate re-run still `PASS — 73 commits … 1:1`.
+- **Gate:** `docs/v1.6/audit-final/tools/check-corpus-staleness.py` (denylist + required markers; `--source <rev>` is the pre/post discriminator).
+- **Residual risk:** none beyond keeping both gates green as the RC finalizes.
