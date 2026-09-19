@@ -1,0 +1,58 @@
+
+== A. chat approval conversation scoping (APR-02 attack) ==
+RESULT A1 convB DECLARED resolving convA-owned approval -> PolicyError: That request belongs to another conversation
+RESULT A2 NO conversation declared resolving convA-owned approval -> PolicyError: That request belongs to another conversation
+A3 items(convB): []
+A4 items(convA): ['a7cef2f2-0501-4ca1-9156-77cd4c8a6b62']
+RESULT A5 convA DECLARED resolving main-owned approval -> PolicyError: That request belongs to another conversation
+RESULT A6 NO conversation declared resolving main-owned approval -> NO ERROR ({'id': '9ebfe688-6272-44fc-8932-24254579e840', 'kind': 'action', 'state': 'approved'})
+
+== B. approval window + duplicate resolution (spot) ==
+RESULT B1 resolve after the window (declared) -> NO ERROR ({'id': '64f2e6e4-de94-4dd0-b487-0a9acc9b1134', 'kind': 'action', 'state': 'expired'})
+RESULT B2 first resolution -> NO ERROR ({'id': '8d33af3e-8df8-4fcc-b95c-736a15c61861', 'kind': 'action', 'state': 'approved'})
+RESULT B3 second resolution (duplicate) -> PolicyError: Approval does not match this action
+
+== C. effect idempotency / replay (spot) ==
+RESULT C1 prepare op then prepare same op different target -> PolicyError: Operation identity reused for a different effect
+RESULT C2 observe identical receipt again (noop expected) -> NO ERROR (None)
+RESULT C3 observe contradictory receipt -> PolicyError: Effect was already observed with a different receipt
+
+== D. canonical persistence primitives ==
+RESULT D encode(NaN) -> PolicyError: A value that cannot be stored in canonical JSON (NaN or Infinity) was refused
+RESULT D encode(Infinity) -> PolicyError: A value that cannot be stored in canonical JSON (NaN or Infinity) was refused
+RESULT D encode(bytes) -> TypeError: Object of type bytes is not JSON serializable
+RESULT D encode(set) -> TypeError: Object of type set is not JSON serializable
+
+== E. AUTH-DELEGATION widening (spot attacks) ==
+RESULT E1 child wider class -> PolicyError: Delegation may narrow authority but never create it: authority class external-effect exceeds leased-write
+RESULT E2 child extra tool -> PolicyError: Delegation may narrow authority but never create it: write_scope entry 'tests/test_export.py' escapes the delegator scope ['src']
+RESULT E3 scope escape -> PolicyError: Delegation may narrow authority but never create it: write_scope entry 'secrets/x' escapes the delegator scope ['src']
+RESULT E4 nested contract without a declared delegator -> PolicyError: A nested task contract must declare its delegator authority
+RESULT E5 reserve cost far beyond envelope -> PolicyError: Reserved cost 1000000000.0 exceeds the remaining job budget 8.0
+RESULT E6 reserve tokens=1e12 wallclock=1e7 cost=1 (cost-only check?) -> NO ERROR ({'reservation_id': '314550bb-704a-48fc-b071-1d7c8befb774', 'job_id': 'ce73731c-974d-42a5-a53d-d30fe31eef84', 'milestone_id': 'm1', 'assignment_id': None, 'budget_class': 'standard', 'tokens': 1000000000000, 'wallclock': 10000000, 'cost': 1.0, 'state': 'reserved', 'note': None, 'created': 1789823089.1233509, 'updated': 1789823089.1233509})
+RESULT E7 reserve cost=8 after the cost=1 reservation -> NO ERROR ({'reservation_id': 'b8688ed1-4d5e-4759-a772-989b45612470', 'job_id': 'ce73731c-974d-42a5-a53d-d30fe31eef84', 'milestone_id': 'm1', 'assignment_id': None, 'budget_class': 'standard', 'tokens': 10, 'wallclock': 10, 'cost': 8.0, 'state': 'reserved', 'note': None, 'created': 1789823089.1336508, 'updated': 1789823089.1336508})
+
+== F. capability fail-closed + directive negative controls ==
+RESULT F1 resolve an unknown capability -> PolicyError: That is not a Kel capability.
+F2 directive[plain] -> None
+F2 directive[inline code] -> None
+F2 directive[fenced] -> None
+F2 directive[quoted] -> None
+F2 directive[nested] -> None
+F2 directive[word-embedded] -> None
+F2 directive[mixed case] -> None
+F2 directive[paren-adjacent] -> None
+
+== G. credential containment (child envs + redact) ==
+G1 internal.child_env(keep=ANTHROPIC) -> present: {'AUDIT_SENTINEL_SECRET': True, 'ANTHROPIC_API_KEY': True, 'OPENAI_API_KEY': False, 'DEEPSEEK_API_KEY': False}
+G2 internal.child_env() -> present: {'AUDIT_SENTINEL_SECRET': True, 'ANTHROPIC_API_KEY': False, 'OPENAI_API_KEY': False, 'DEEPSEEK_API_KEY': False}
+G3 redact -> 'token [redacted] and [redacted]'
+G4 native.child_env(codex) -> present: {'AUDIT_SENTINEL_SECRET': True, 'ANTHROPIC_API_KEY': False, 'OPENAI_API_KEY': True, 'DEEPSEEK_API_KEY': True}
+G4 native.child_env(claude) -> present: {'AUDIT_SENTINEL_SECRET': True, 'ANTHROPIC_API_KEY': True, 'OPENAI_API_KEY': False, 'DEEPSEEK_API_KEY': True}
+
+== H. packaged fresh/upgrade DB schema_migrations (read-only) ==
+H r12-fresh2 kel.sqlite3: 14 rows; max=(21, 'v16-budget-reservations')
+H r12-upgrade kel.sqlite3: 15 rows; max=(21, 'v16-budget-reservations')
+H r12-upgrade-out: no kel.sqlite3 found
+
+PROBE-END

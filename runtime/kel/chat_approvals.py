@@ -293,13 +293,15 @@ def announce_denial(store, request_id):
     return {'message_seq': cur.lastrowid}
 
 
-def _require_owned(store, kind, ref_id, conversation):
+def require_owned(store, kind, ref_id, conversation):
     """Refuse a resolution whose record belongs to a different conversation (audit APR-02).
 
-    The read path (`items`) is already conversation-scoped; the write path now uses the same
-    ownership set, so a stale or crafted id cannot settle work the caller is not looking at.
+    One ownership check for every resolution entry point (the chat module and both service
+    routes). It uses the same ownership set as the read path, and a caller that declares
+    nothing acts as the `main` conversation - exactly like the read path - so omitting the
+    scope can never bypass ownership (Campaign C AUD-MAJOR-001).
     """
-    conversation = str(conversation)
+    conversation = str(conversation or 'main')
     with contextlib.closing(store.connect()) as db:
         if kind == ACTION:
             row = db.execute('SELECT job_id FROM approvals WHERE id=?', (str(ref_id),)).fetchone()
@@ -324,15 +326,14 @@ def resolve(store, kind, ref_id, allow, grant_kind='once', remember=False, actor
     Boundary grants wake the paused job exactly like the Autonomy page; step approvals resolve
     the same row the coding adapter is polling, so work continues without repeating the ask.
 
-    When the caller declares the conversation it is acting in, the resolution is scoped to it
-    exactly like the read path (audit APR-02). Callers that declare nothing keep the previous
-    behaviour, so the HTTP contract stays additive.
+    The resolution is always scoped to the acting conversation, exactly like the read path
+    (audit APR-02; Campaign C AUD-MAJOR-001): a caller that declares nothing acts as the `main`
+    conversation, so a crafted or stale id can never settle work the caller is not looking at.
     """
     if actor != 'user':
         raise PolicyError('Only user input can resolve an approval')
     kind = str(kind or '')
-    if conversation:
-        _require_owned(store, kind, ref_id, conversation)
+    require_owned(store, kind, ref_id, conversation)
     if kind == ACCESS:
         from .autonomy import Autonomy
         result = Autonomy(store).resolve_expansion(str(ref_id), bool(allow), actor='user',

@@ -87,6 +87,19 @@ class ApprovalBase(unittest.TestCase):
         self.assertTrue(block_job(self.store, self.job, 'code', decision))
         return run, decision['boundary_request_id']
 
+    def ask_for_access_for(self, job):
+        """The same real sequence as `ask_for_access`, for a job in any conversation."""
+        run = self.store.claim(job, 'code', provider='codex-code')
+        decision = self.authz.decide(self.worker_intent(run, job=job, target=str(self.other)))
+        self.assertEqual(decision['outcome'], 'REQUIRES_BOUNDARY_EXPANSION')
+        with self.store.transaction() as db:
+            db.execute("UPDATE runs SET state='RESULT_RECORDED' WHERE id=?", (run['id'],))
+            job_row = self.store._get(db, job)
+            job_row['milestones']['code'].update(state='NEEDS_REPAIR')
+            self.store._save(db, job_row, 'test.worker-blocked')
+        self.assertTrue(block_job(self.store, job, 'code', decision))
+        return run, decision['boundary_request_id']
+
     def second_job(self):
         """A second job in the same conversation (one job can only wait on one ask at a time)."""
         return self.store.create(compile_coding('Second task.', self.project,
@@ -448,11 +461,74 @@ class CrossScopeResolutionTests(ApprovalBase):
             chat_approvals.resolve(self.store, 'action', 'apr_missing', True, conversation='main')
         self.assertIn('missing', str(caught.exception))
 
-    def test_without_a_declared_conversation_behaviour_is_unchanged(self):
-        # The HTTP contract stays additive: older callers that declare nothing keep working.
+    def test_without_a_declared_conversation_acts_as_main(self):
+        # Read-path parity (Campaign C AUD-MAJOR-001): omission acts as the `main` conversation
+        # and can never reach another conversation - the refusal tests below pin that half.
         run, approval_id, thread, result = self.ask_for_step()
         resolved = chat_approvals.resolve(self.store, 'action', approval_id, True)
         self.assertEqual(resolved['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_no_conversation_cannot_settle_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'action', approval_id, True)
+        self.assertIn('another conversation', str(caught.exception))
+        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True,
+                                          conversation='elsewhere')
+        self.assertEqual(resolved['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_no_conversation_cannot_settle_a_foreign_boundary_grant(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        _, request_id = self.ask_for_access_for(other)
+        with self.assertRaises(PolicyError) as caught:
+            chat_approvals.resolve(self.store, 'access', request_id, True)
+        self.assertIn('another conversation', str(caught.exception))
+        resolved = chat_approvals.resolve(self.store, 'access', request_id, True,
+                                          conversation='elsewhere')
+        self.assertEqual(resolved['state'], 'allowed_once')
+
+    def test_the_service_route_refuses_omission_on_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+        with self.assertRaises(PolicyError) as caught:
+            service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
+                                              'allow': True})
+        self.assertIn('another conversation', str(caught.exception))
+        out = service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
+                                                'allow': True, 'conversation': 'elsewhere'})
+        self.assertEqual(out['state'], 'approved')
+        thread.join(timeout=5)
+        self.assertTrue(result.get('ok'))
+
+    def test_the_legacy_singular_route_is_scoped_too(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+        with self.assertRaises(PolicyError) as caught:
+            service.action('/api/approval', {'id': approval_id, 'allow': True})
+        self.assertIn('another conversation', str(caught.exception))
+        with self.assertRaises(PolicyError):
+            service.action('/api/approval', {'id': approval_id, 'allow': True,
+                                             'conversation': 'main'})
+        out = service.action('/api/approval', {'id': approval_id, 'allow': True,
+                                               'conversation': 'elsewhere'})
+        self.assertEqual(out['status'], 'APPROVED')
         thread.join(timeout=5)
         self.assertTrue(result.get('ok'))
 
