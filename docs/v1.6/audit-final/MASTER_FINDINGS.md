@@ -6,7 +6,7 @@ Severities: `AUD-BLOCK` / `AUD-MAJOR` / `AUD-MINOR` / `AUD-SUG`. Status: `RECORD
 Campaign C fields start `NOT_STARTED`/blank. Findings are recorded, never repaired here.
 
 ## Summary (as of this revision)
-- AUD-BLOCK: 0 · AUD-MAJOR: 1 · AUD-MINOR: 5 · AUD-SUG: 0
+- AUD-BLOCK: 0 · AUD-MAJOR: 1 · AUD-MINOR: 8 · AUD-SUG: 1
 - In verification (NOT findings yet): `_path_within` `..`-escape & case/prefix tricks; capability technical-string recognition (bare path/log-line); r10 timing-precision wording; donor-residual classification (AionUI description/email, bundled-aioncore, web-host `aioncore` launcher reachability); visual screenshot-count arithmetic; mail `docs/v1.6-visual-ux/00_STATUS.md` staleness; `next free version` drift (folded into AUD-MINOR-005 items).
 
 ---
@@ -101,4 +101,47 @@ Campaign C fields start `NOT_STARTED`/blank. Findings are recorded, never repair
 ---
 
 ## Campaign C handoff (running)
-Repair set so far: `AUD-MAJOR-001`, `AUD-MINOR-001` … `AUD-MINOR-005`. Nothing repaired in Campaign B; the RC target is unchanged.
+Repair set so far: `AUD-MAJOR-001`, `AUD-MINOR-001` … `AUD-MINOR-008`, `AUD-SUG-001`. Nothing repaired in Campaign B; the RC target is unchanged.
+
+### AUD-MINOR-006 — Delegation containment primitive does not resolve `..`: `src/../secrets` counts as within `src`
+
+- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** workforce/contracts (`_path_within` / `authority_within`)
+- **Req/invariants:** AUTH-DELEGATION (INV-AUTH-001); campaign attack target 62 (path tricks).
+- **Claim challenged:** "delegation may narrow authority, never create it" — the executable primitive itself.
+- **Expected:** a child scope/boundary that lexically escapes the delegator scope (via `..`) is refused.
+- **Actual:** `authority_within({'write_scope': ['src/../secrets']}, {'write_scope': ['src']})` -> `None` (contained). `_path_within` normalizes `./` and separators but never resolves `..` (runtime/kel/workforce.py). `.` as a parent root is universal by design (open question (4) in the R1 increment); `..` alone IS refused.
+- **Repro:** inline probe 2026-09-19 (thread transcript); `_path_within` source read.
+- **Impact:** any consumer treating `write_scope`/`write_boundaries` as a real boundary inherits a normalization gap; no consumer-confirmed filesystem effect established yet (consumer analysis queued).
+- **Repair criteria:** resolve `..` lexically or refuse segments containing `..`; document `.` semantics; tests for `src/../x`, `a/../../x`, mixed separators.
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### AUD-MINOR-007 — Donor-derived `aioncore` runtime is live and shipped; no corpus disposition found (binary staged from cache)
+
+- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** desktop runtime / package / donor sweep
+- **Evidence:** `desktop/packages/desktop/src/index.ts:36` imports `BackendLifecycleManager` from `@aionui/web-host`; `:235` constructs it; `process/backend/binaryResolver.ts` resolves `bundled-aioncore/{platform-arch}/aioncore[.exe]`; RC resources contain `bundled-aioncore/`; real run data contains `host/aionui/**` (skills + node runtime caches; r10-f timestamps during the journey); vitest covers the launcher (mocked `AIONCORE_LISTENING`).
+- **Claim challenged:** §26 donor sweep completeness; INV-PACKAGE-001 provenance ("bundled-aioncore staged from cache (stock binary not in git)") — no revision/hash binding of the shipped binary found in the read corpus.
+- **Expected:** every shipped binary has source/revision binding; donor-named runtime surfaces carry a disposition (keep/rename/remove).
+- **Actual:** live donor-named runtime shipped; `AionUI-LICENSE.txt` present (legal attribution — allowed).
+- **Repair criteria:** bind the bundled binary to a revision + hash; decide keep/rename/remove; record disposition; refresh donor sweep.
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### AUD-MINOR-008 — Donor desktop-pet subsystem is wired into the shipped app (no disposition found)
+
+- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** desktop
+- **Evidence:** `src/index.ts:1067` `createPetWindow`; `systemSettingsBridge.ts` pet APIs; `process/pet/petManager.ts`, `petStateMachine.ts`, `pet-confirm.html`; `resources/pet-states/*.svg` shipped in the RC.
+- **Expected:** V1.6 surfaces are Kel's; donor features removed or intentionally kept with a recorded decision.
+- **Actual:** no disposition found in the read corpus; UI reachability not yet established (queue).
+- **Repair criteria:** decide keep/hide/remove; if kept, a disposition row; if hidden, prove unreachable.
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### AUD-SUG-001 — Capability directive docstring vs behavior for unquoted log-line/path tokens
+
+- **Severity:** AUD-SUG · **Status:** RECORDED · **Subsystem:** `capabilities.py`
+- **Evidence:** `directive_clauses('GET /a/[kel:web=off] 200')` → matched; quoted/code/fenced/nested/word-embedded/scheme-URL/unknown tokens all inert; punctuation-adjacent and mixed-case recognition are BY DESIGN (`tests/test_capabilities.py:163-180, 321-325`).
+- **Suggestion:** extend exclusions or align the docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). Wording/design-intent only; no failure count inflation.
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### Addendum to AUD-MINOR-004 (item d)
+
+- r10-f row claims per-attempt failure timings ("attempt 1 fails (2 ms) → attempt 2 fails (2 ms)") that are NOT retained in `ux-audit/runs/r10-f/**`; the load-bearing timings ARE retained (reconnect#1 00:09:35.236 → unrecoverable 00:09:40.249 ≈ 5.01 s; manual retry → recovered in 0.53 s).
+
