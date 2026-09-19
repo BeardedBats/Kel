@@ -82,4 +82,18 @@ How to re-run (from `runtime/`):
 - Docstring conformance: `evidence/ms1-conformance-postfix.txt` (focused 39/39); `ms1-conformance-prefix-fail.txt` (docstring pin fails pre-fix).
 - Replay: `evidence/ms1-sug-replay.txt` — the suggestion's exact probe matches by design and is now documented; quoted/code/word-embedded/scheme-URL stay inert.
 
+## Final-head batteries (completion, §15/§16/§19)
+
+- Engine: `cd runtime && python -m pytest tests -q` → **1019 passed, 10 subtests passed in 353.40s** (`evidence/final-engine-suite.txt`; Campaign B baseline at RC: 998+10).
+- Desktop: `cd desktop && npx vitest run` → **152 passed / 15 files**; `./node_modules/.bin/tsc -p tsconfig.json --noEmit` → exit 0 (`evidence/final-desktop-battery-vitest.txt`, `final-desktop-tsc.txt`).
+- Attack replay at the final head: `evidence/final-attack-replay.txt` — probe-1 runs to `PROBE-END`; A2 refused; E5 refused; **E7 refused (`Reserved cost 8.0 exceeds the remaining job budget 7.0`)**; G1–G3 correct and **G4 shows `DEEPSEEK_API_KEY: False` for both native children**; remaining sections behave as recorded in the per-finding replays (`ma1-* … ms1-*`).
+- Engine build for the repaired package: `evidence/final-engine-build-log.txt` (PyInstaller 6.19.0; staged to `desktop/dist/runtime/KelEngine`).
+
+## §17/§18 — repaired package + installed battery (C-DISC-001)
+
+- Fresh build from the production head: `evidence/final-package-build-log-v3.txt`; artifact hashes in `evidence/final-package-artifacts.txt`; packaged engine == staged (`f525b15b…`); aioncore provenance `67eb0277…`.
+- C-DISC-001 (discovered + repaired): pre-fix silent install EXIT=2, E1010 `missing=AionUi.exe`, no ARP/shortcuts (`evidence/cdisc001-installer-e1010-prefix.txt`); post-fix EXIT=0 with UninstallString/ARP/`Kel.lnk`; reinstalled OK; uninstall exit 0 with retained data (`evidence/installed-battery.txt`).
+- Installed probes: fresh GATE PASS; continuity (RC-era store, max 21) GATE PASS with conversations preserved (`evidence/installed-probe-fresh/`, `evidence/installed-probe-upgrade/`).
+- Final release-integrity at the corpus tip: `evidence/final-integrity-at-rc-tip.txt`.
+
 (Results appended per finding as repairs complete.)

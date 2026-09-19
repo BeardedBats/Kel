@@ -130,3 +130,10 @@ Per-finding detail (reproduction, root cause, repair, tests, replay, residual ri
 - **Tests:** `test_sug_001_docstring_matches_behavior` — accepted/rejected conformance table (incl. the suggestion's exact probe) + a docstring pin that fails pre-fix (`ms1-conformance-prefix-fail.txt`); focused suite 39/39 (`ms1-conformance-postfix.txt`).
 - **Replay:** `ms1-sug-replay.txt` — behavior unchanged and now documented; quoted/code/word-embedded/scheme-URL stay inert.
 - **Residual risk:** none (no parser change).
+
+### C-DISC-001 — installer registration aborted by donor-hardcoded `AionUi.exe` (REPAIRED, `05a076b`)
+
+- **Discovered by Campaign C §18** (not a Campaign B item; recorded durably, repaired in the same release scope, preserved for the final independent re-audit): the script-built installer aborted registration with `event=extract result=fail method=7z missing=AionUi.exe` (E1010, exit 2), skipping uninstaller/ARP/shortcuts, because `resources/windows/installer-observability.nsh` hardcoded the donor executable name as the required payload file while the product ships `Kel.exe` (the auditor's direct-CLI build used the stock installer and never exercised this path).
+- **Repair:** `AIONUI_APP_EXECUTABLE_FILENAME -> "Kel.exe"` (single source) + the literal checks/messages now use the define; `installer-update-verify.nsh` verify likewise.
+- **Verified:** rebuilt v3 → silent install EXIT=0; `Uninstall Kel.exe`, ARP (`Kel 1.6.0`, `/currentuser`), `Kel.lnk` (start menu + desktop) created; fresh + continuity probes GATE PASS; reinstall OK; uninstall exit 0 with data retained.
+- **Evidence:** `cdisc001-installer-e1010-prefix.txt`, `installed-battery.txt`, `installed-probe-fresh/`, `installed-probe-upgrade/`, `final-package-build-log-v3.txt`, `final-package-artifacts.txt`.

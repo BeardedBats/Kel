@@ -138,6 +138,15 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Expected/Actual:** docstring's exclusion intent vs parser's reserved-token-wherever rule for bare unquoted technical strings.
 - **Confidence:** HIGH (behavior), SUG-class. **Repair criteria:** extend exclusions or align docstring wording ("the exact reserved token fires wherever it appears outside quotes/code; scheme-URLs excluded"). **Regression test:** docstring-conformance table (accepted/rejected forms). **Campaign C:** `REPAIRED` — repair commit: `6d665b2` · re-test: conformance table + docstring pin (fails pre-fix); focused 39/39; behavior unchanged by design (replay `ms1-sug-replay.txt`) · final re-audit: `PENDING`
 
+## Campaign C — discovered items (appended 2026-09-19; Campaign B text untouched)
+
+### C-DISC-001 — installer registration aborted by donor-hardcoded `AionUi.exe` (E1010)
+
+- **Status:** DISCOVERED + REPAIRED in Campaign C (`05a076b`); preserved for the final independent re-audit.
+- **Observed:** with the Campaign C script-built package, silent install exits 2 after extraction — `event=extract result=fail method=7z missing=AionUi.exe` (E1010) — skipping uninstaller/ARP/shortcuts because `resources/windows/installer-observability.nsh` required `AionUi.exe` while the product ships `Kel.exe` (the auditor's direct-CLI build used the stock installer and did not exercise this path).
+- **Repair:** the executable name is single-sourced as `Kel.exe` (define + `installer-update-verify.nsh`); rebuilt package v3: EXIT=0 with `Uninstall Kel.exe`, ARP (`Kel 1.6.0`), `Kel.lnk` shortcuts; fresh + continuity installed probes PASS; uninstall clean with data retention.
+- **Evidence:** `docs/v1.6/repair-final/evidence/cdisc001-installer-e1010-prefix.txt`, `installed-battery.txt`, `installed-probe-fresh/`, `installed-probe-upgrade/`, `final-package-build-log-v3.txt`, `final-package-artifacts.txt`.
+
 ---
 
 ## Verification summary (supporting)
