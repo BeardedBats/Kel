@@ -28,6 +28,7 @@ import { initializeKel } from './process/services/kel/KelService';
 import { startBackendOrExit } from './process/startup/backendStartup';
 import { assertStartupArchitectureCompatible } from './process/startup/architectureCompatibility';
 import { classifyBackendStartupFailure } from './process/startup/backendStartupFailure';
+import { registerBackendStartupIpc } from './process/startup/backendStartupIpc';
 import { installQuitCleanup } from './process/startup/quitCleanup';
 import { shouldRegisterBackendStartup } from './process/startup/singleInstanceGating';
 import { ProcessConfig } from './process/utils/initStorage';
@@ -252,23 +253,17 @@ let rendererInitialLanguage: string | null = null;
 let backendMigrationsScheduled = false;
 let ensureAdminUserPromise: Promise<void> | null = null;
 
-ipcMain.on('get-backend-port', (event) => {
-  event.returnValue = backendManager.port;
+// Privileged IPC (Campaign C AUD-MAJOR-002): one shared sender guard across the whole
+// surface; refusals fail closed (sync lookups answer null, recovery rejects).
+registerBackendStartupIpc({
+  getPort: () => backendManager.port,
+  getInitialLanguage: () => rendererInitialLanguage,
+  getStartupFailed: () => backendStartupFailed,
+  getStartupFailureInfo: () => backendStartupFailureInfo,
+  recoverCorruptedDatabase: performCorruptedDatabaseRecovery,
 });
 
-ipcMain.on('get-initial-language', (event) => {
-  event.returnValue = rendererInitialLanguage;
-});
-
-ipcMain.on('get-backend-startup-failed', (event) => {
-  event.returnValue = backendStartupFailed;
-});
-
-ipcMain.on('get-backend-startup-failure', (event) => {
-  event.returnValue = backendStartupFailureInfo;
-});
-
-ipcMain.handle('backend:recover-corrupted-database', async () => {
+async function performCorruptedDatabaseRecovery(): Promise<void> {
   const { recoverCorruptedDatabaseAfterUserConfirmation } = await import('./process/startup/recoverCorruptedDatabase');
 
   await recoverCorruptedDatabaseAfterUserConfirmation({
@@ -319,7 +314,7 @@ ipcMain.handle('backend:recover-corrupted-database', async () => {
     logInfo: console.info,
     logWarn: console.warn,
   });
-});
+}
 
 // Push the latest backend startup state to the renderer so it can either show
 // the "starting" view, switch to the honest-failure view, or return to the App.
