@@ -116,9 +116,9 @@ function spawnEngine(root: string): ChildProcess {
 async function waitForEngineReady(child: ChildProcess | null, descriptorPath: string): Promise<boolean> {
   const deadline = Date.now() + ENGINE_WAIT_MS;
   while (Date.now() < deadline) {
-    // A spawn that failed outright (missing binary, refused start) must be reported fast — the
-    // person should not wait out a full deadline for a process that never existed.
-    if (child && child.exitCode !== null) return false;
+    // A spawn that failed outright must be reported fast — a missing binary (pid never assigned)
+    // or an immediately-dead child should not wait out a full deadline.
+    if (child && (child.pid === undefined || child.exitCode !== null)) return false;
     try {
       descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
       // The descriptor file is shared with any leftover engine: keep waiting until the engine
