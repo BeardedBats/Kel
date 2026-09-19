@@ -69,4 +69,12 @@ How to re-run (from `runtime/`):
 - Regression gates re-run: ledger gate `PASS — 73 commits … 1:1`; corpus gate `PASS`.
 - Gate script: `docs/v1.6/audit-final/tools/check-corpus-staleness.py` (`--source <rev>` discriminator).
 
+## AUD-MINOR-007/008/009 — donor cluster (REPAIRED, `197dbff`)
+
+- Provenance: `evidence/mi7-aioncore-provenance.txt` — `provenance.json` recorded (v0.2.2, iOfficeAI/AionCore); staged vs packaged-final16 `aioncore.exe` sha256 identical (`67eb02774bab3855b759ec9756c2e540cd17b64b850407fa4b8bad07fd8a0892`).
+- Pet policy: `evidence/md-donor-postfix-pass.txt` — donor tests 5/5 post-fix; `md-donor-prefix-fail.txt` — 3 fail pre-fix (stash replay).
+- Build identity: pinned by the same suite (`kel-builder.json` is the default; identity assertion runs pre-build).
+- Regression: `evidence/md-donor-full-vitest.txt` — desktop vitest 152/152 (15 files); `tsc --noEmit` exit 0.
+- Decisions + reachability lists: `06_DONOR_DISPOSITIONS.md`.
+
 (Results appended per finding as repairs complete.)

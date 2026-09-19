@@ -9,17 +9,16 @@
 
 ## State now
 - Integrity verified end-to-end (see `00_REPAIR_BINDING.md` §1): all checks YES.
-- Dispositioned: **8/12** — `AUD-MAJOR-001` (`44aee9f`), `AUD-MAJOR-002` (`eaf7bad`), `AUD-MINOR-001` (`960e023`), `AUD-MINOR-002` (`7e293ba`), `AUD-MINOR-003` (`91bd869`), `AUD-MINOR-004` (`89ab6ad`), `AUD-MINOR-005` (`8ca6231`), `AUD-MINOR-006` (`c056a8a`). Evidence `ma1-* … mi6-*`.
-- In progress: `AUD-MINOR-007/008/009` (donor cluster) — read the final Campaign B evidence first; preserve legal attribution; inspect the built package after repairs.
-- Then: `AUD-SUG-001` (directive docstring vs behavior) with a recorded final disposition.
+- Dispositioned: **11/12** — all MAJORs + `AUD-MINOR-001…009` except none; remaining: `AUD-SUG-001`. Key commits: `44aee9f`, `eaf7bad`, `7e293ba`, `91bd869`, `c056a8a`, `960e023`, `89ab6ad`, `8ca6231`, `197dbff`.
+- In progress: `AUD-SUG-001` (directive docstring vs behavior) — then the completion battery.
 
 ## Next actions (ordered)
-1. Donor cluster `007 → 008 → 009`.
-2. `AUD-SUG-001`.
-3. Full engine battery + desktop battery; package build (§17) + installed battery (§18) with the `04` checklist; replay all Campaign B attacks (§19); finalize `docs/v1.6/repair-final/` corpus (§20) and `docs/v1.6/POST_REPAIR_RELEASE_CANDIDATE.md` (§21).
+1. `AUD-SUG-001` — narrow correction + final disposition row.
+2. Full engine battery (§15) + desktop battery (§16), replay all Campaign B attacks (§19).
+3. Package build (§17) + installed battery (§18) executing the `04_PACKAGE_EVIDENCE.md` checklist; then finalize `05`, corpus (§20), `POST_REPAIR_RELEASE_CANDIDATE.md` (§21).
 
 ## How to verify current state
-- `git -C kel-v16-final-repair log --oneline -22`; `git status` clean except declared build artifacts.
+- `git -C kel-v16-final-repair log --oneline -26`; `git status` clean except declared build artifacts.
 - Engine: `cd runtime && python -m pytest tests -q`. Desktop: `cd desktop && npx vitest run` + `node_modules/.bin/tsc -p tsconfig.json --noEmit`.
 - Gates: `python docs/v1.6/audit-final/tools/reconcile-commit-ledger.py` and `python docs/v1.6/audit-final/tools/check-corpus-staleness.py` (both must PASS).
 

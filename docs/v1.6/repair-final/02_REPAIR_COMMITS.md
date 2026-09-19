@@ -22,3 +22,5 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 14 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-001 + AUD-MINOR-004 recorded`) | AUD-MINOR-001 / AUD-MINOR-004 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C fields |
 | 15 | `8ca6231` | AUD-MINOR-005 | fix | Corpus reconciliation (6 files) + staleness gate + pre/post evidence |
 | 16 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-005 recorded`) | AUD-MINOR-005 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
+| 17 | `197dbff` | AUD-MINOR-007 / 008 / 009 | fix | Donor-cluster dispositions: aioncore provenance binding (KEEP); pet subsystem disabled by policy; Kel build config default + identity assertion; tests + 06 doc |
+| 18 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-007/008/009 recorded`) | AUD-MINOR-007 / 008 / 009 | docs | Disposition rows + details, commit ledger, regression evidence, status/resume, master-findings Campaign C fields |
