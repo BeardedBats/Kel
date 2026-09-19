@@ -15,7 +15,6 @@ import {
   Earth,
   Inbox,
   Info,
-  Lightning,
   LinkCloud,
   Puzzle,
   Robot,
@@ -46,18 +45,6 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
       label: t('settings.assistants', { defaultValue: 'Assistants' }),
       icon: <Robot theme='outline' size='16' />,
       path: 'assistants',
-    },
-    agent: {
-      id: 'agent',
-      label: t('settings.agents', { defaultValue: 'Agents' }),
-      icon: <Robot theme='outline' size='16' />,
-      path: 'agent',
-    },
-    skills: {
-      id: 'skills',
-      label: t('settings.skills', { defaultValue: 'Skills' }),
-      icon: <Lightning theme='outline' size='16' />,
-      path: 'skills',
     },
     tools: {
       id: 'tools',

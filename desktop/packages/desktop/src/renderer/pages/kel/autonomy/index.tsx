@@ -13,6 +13,7 @@ import {
   KelTable,
   KelTabs,
   formatWhen,
+  formatUntil,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
@@ -28,6 +29,12 @@ const STATE_CLASS: Record<string, string> = {
 
 const CHECK_KINDS = ['write', 'repo', 'browser', 'tool', 'destructive'];
 
+const STATE_TEXT: Record<string, string> = {
+  ACTIVE: 'Active',
+  REVOKED: 'Revoked',
+  PENDING: 'Waiting',
+};
+
 export default function KelAutonomyPage() {
   const [leases, setLeases] = useState<KelLease[] | null>(null);
   const [requests, setRequests] = useState<KelBoundaryRequest[]>([]);
@@ -41,6 +48,7 @@ export default function KelAutonomyPage() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [advanced, setAdvanced] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -114,8 +122,8 @@ export default function KelAutonomyPage() {
         </div>
 
         <p className="kel-meta">
-          Emergency stop revokes every active lease and pauses all active or queued work; workers stop at
-          their next cancellation check. It does not undo completed effects.
+          Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
+          at its next safe check. It does not undo work that already finished.
         </p>
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
@@ -123,27 +131,24 @@ export default function KelAutonomyPage() {
         {note && <p className="kel-meta">{note}</p>}
 
         {!error && leases !== null && (
-          <KelCard title="Capability leases">
+          <KelCard title="Active permissions">
             {leases.length === 0 ? (
               <KelEmpty
-                title="No lease has been issued in this project."
-                why="A lease is created only after a reviewed plan is approved and records the scope you granted. Kel enforces that scope on the worker execution path: a worker cannot start, and a change cannot be applied, outside it — anything else comes back to you as one boundary request."
+                title="No permissions yet in this project."
+                why="Kel only gains permissions when you approve a reviewed plan — that approval records exactly what it may do. Kel enforces those limits while it works; anything outside them comes back to you as one access request."
               />
             ) : (
               <KelTable
-                head={['Job', 'State', 'Review', 'Expires', 'Scope', 'Actions']}
+                head={['Work', 'State', 'Expires', 'Scope', 'Actions']}
                 rows={leases.map((lease) => [
                   <span className="kel-strong" key={`${lease.lease_id}-job`}>
                     {lease.job_id}
                   </span>,
                   <span className={STATE_CLASS[lease.state] ?? 'kel-chip'} key={`${lease.lease_id}-st`}>
-                    {lease.state.toLowerCase()}
-                  </span>,
-                  <span className="kel-meta" key={`${lease.lease_id}-rev`}>
-                    {lease.review_ref}
+                    {STATE_TEXT[lease.state] ?? lease.state.toLowerCase().replace(/_/g, ' ')}
                   </span>,
                   <span className="kel-meta" key={`${lease.lease_id}-exp`}>
-                    {lease.expired ? 'expired' : formatWhen(lease.expires_at)}
+                    {lease.expired ? 'Expired' : formatUntil(lease.expires_at)}
                   </span>,
                   <span className="kel-meta" key={`${lease.lease_id}-scope`}>
                     {lease.scope
@@ -166,11 +171,11 @@ export default function KelAutonomyPage() {
         )}
 
         {!error && leases !== null && (
-          <KelCard title="Boundary requests">
+          <KelCard title="Access requests">
             {pending.length === 0 ? (
               <KelEmpty
-                title="Nothing needs a wider scope."
-                why="Kel asks here when work genuinely crosses outside the reviewed lease — once per scope, never per command."
+                title="Nothing is waiting for extra access."
+                why="Kel asks here when work needs to go beyond what you already approved — once per scope, never per command."
               />
             ) : (
               pending.map((request) => (
@@ -223,12 +228,19 @@ export default function KelAutonomyPage() {
           </KelCard>
         )}
 
-        <KelCard title="Ask the engine about a scope">
+        <div className="kel-row">
+          <KelButton variant="quiet" onClick={() => setAdvanced((value) => !value)}>
+            {advanced ? 'Hide advanced details' : 'Advanced details'}
+          </KelButton>
+        </div>
+
+        {advanced && (
+          <>
+            <KelCard title="Permission check">
           <p className="kel-sub">
-            The policy checker Kel exposes for a scope. It fails closed on its inputs: anything outside the
-            leased scope, locked, frozen, or missing a snapshot reference is refused. Since V1.5 the same
-            boundary runs at the effect points that exist today — repository work, file application, and
-            project creation — so this checker's verdict is what stops execution before anything runs.
+            Test what Kel's permission checker would decide for a scope before any work runs. It refuses
+            anything outside what you approved, work on locked or frozen targets, and anything it cannot
+            verify.
           </p>
           <div className="kel-row">
             <KelTabs
@@ -258,7 +270,7 @@ export default function KelAutonomyPage() {
                 })
               }
             >
-              Ask the engine
+              Check scope
             </KelButton>
           </div>
           {decision && (
@@ -268,16 +280,15 @@ export default function KelAutonomyPage() {
                 : `Refused — rule ${decision.rule}: ${decision.reason}`}
             </p>
           )}
-          {!firstLeaseId && <p className="kel-meta">Issue a lease first; the check needs a scope to test against.</p>}
+          {!firstLeaseId && <p className="kel-meta">Grant a permission first; the check needs a scope to test against.</p>}
         </KelCard>
 
         {rules.length > 0 && (
           <KelSection title={`Locked guardrails · digest ${digest.slice(0, 12)}`}>
             <p className="kel-sub">
-              These rules are locked against roles, projects, repositories, and web content; the engine
-              detects runtime modification of the rule set and refuses new work. Worker actions are checked
-              against these rules on the execution path: locked action kinds, frozen releases, and system
-              locations are denied before anything runs, and every decision is recorded.
+              These safety rules are locked and cannot be changed by projects, repositories, or web content;
+              Kel refuses work that tries to change them. Every action is checked against them before it
+              runs, and every decision is recorded.
             </p>
             <KelTable
               head={['Rule', 'What it means', 'Covered by test']}
@@ -292,6 +303,8 @@ export default function KelAutonomyPage() {
               ])}
             />
           </KelSection>
+            )}
+          </>
         )}
       </main>
     </div>

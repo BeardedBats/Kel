@@ -128,6 +128,30 @@ function previewText(result: Record<string, unknown>): string {
   lines.push('Budget: ' + String(result.budget ?? ''));
   return lines.join('\n');
 }
+
+// Human-visual repair: the drawer speaks in user language — raw engine enums never render here.
+const JOB_STATE_LABEL: Record<string, string> = {
+  QUEUED: 'Waiting to start',
+  READY: 'Ready to run',
+  RUNNING: 'In progress',
+  WAITING_RESOURCE: 'Waiting for a free resource',
+  AWAITING_USER: 'Waiting for you',
+  PAUSED: 'Paused',
+  BLOCKED: 'Stopped by a safety rule',
+  CLOSED: 'Finished',
+  CANCELLED: 'Cancelled',
+};
+const JOB_VERDICT_LABEL: Record<string, string> = {
+  VERIFIED: 'Verified',
+  FAILED: 'Failed',
+  UNCERTAIN: "Couldn't confirm status",
+};
+const jobStateText = (state: string): string => JOB_STATE_LABEL[state] ?? state.toLowerCase().replace(/_/g, ' ');
+const jobStatusText = (job: { state: string; verdict?: string }): string =>
+  job.verdict
+    ? `${jobStateText(job.state)} · ${JOB_VERDICT_LABEL[job.verdict] ?? job.verdict.toLowerCase().replace(/_/g, ' ')}`
+    : jobStateText(job.state);
+
 export default function KelWorkPanel() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -339,16 +363,21 @@ export default function KelWorkPanel() {
   const projectName = (id: string) => state?.projects.find((p) => p.id === id)?.name || '';
   return (
     <>
-      <Badge count={pendingApprovals} maxCount={9} offset={[10, -4]}>
-        <Button
-          long
-          type='text'
-          onClick={() => setVisible(true)}
-          className='kel-work-context-btn'
-        >
-          {t('common.kel.workContext')}
-        </Button>
-      </Badge>
+      {/* Footer affordance for the drawer. The trigger sits inside the sidebar's side padding and
+          the badge offset keeps the attention count fully visible at every sider width. */}
+      <div className='shrink-0 px-10px pt-6px pb-4px'>
+        <Badge count={pendingApprovals} maxCount={9} offset={[0, -4]} className='block w-full'>
+          <Button
+            long
+            type='text'
+            onClick={() => setVisible(true)}
+            className='kel-work-context-btn'
+            style={{ justifyContent: 'flex-start', paddingInlineStart: 8, textAlign: 'left' }}
+          >
+            {t('common.kel.workContext')}
+          </Button>
+        </Badge>
+      </div>
       <Drawer
         title={t('common.kel.workContext')}
         visible={visible}
@@ -369,26 +398,89 @@ export default function KelWorkPanel() {
         </Form>
         <Tabs defaultActiveTab='work'>
           <Tabs.TabPane key='work' title={t('common.kel.work')}>
+            {/* Attention first: what Kel needs from a person outranks what it is running. */}
+            {waiting.map((item) => (
+              <section key={item.kind + ':' + item.id} className='py-16px' data-testid='kel-work-waiting'>
+                <Typography.Title heading={6}>
+                  {item.kind === 'access' ? 'Needs folder access' : 'An approval is waiting'}
+                </Typography.Title>
+                <div data-testid='kel-work-waiting-title'>
+                  <Typography.Text bold>{item.title}</Typography.Text>
+                </div>
+                {item.target ? (
+                  <div
+                    className='mt-4px text-14px break-all text-t-secondary'
+                    data-testid='kel-work-waiting-target'
+                  >
+                    {item.target}
+                  </div>
+                ) : null}
+                {item.summary ? <div className='mt-4px text-14px'>Kel wants to {item.summary}.</div> : null}
+                {item.why ? (
+                  <div className='mt-4px text-14px text-t-secondary' data-testid='kel-work-waiting-why'>
+                    {item.why}
+                  </div>
+                ) : null}
+                <Space className='mt-8px' wrap>
+                  {item.kind === 'access' ? (
+                    <>
+                      <Button
+                        data-testid='kel-work-allow-once'
+                        onClick={() => void approvalAct(item, { grant_kind: 'once' })}
+                      >
+                        Allow once
+                      </Button>
+                      <Button
+                        data-testid='kel-work-allow-project'
+                        onClick={() => void approvalAct(item, { grant_kind: 'project' })}
+                      >
+                        Allow for this project
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button data-testid='kel-work-allow' onClick={() => void approvalAct(item)}>
+                        Approve
+                      </Button>
+                      {item.repeatable ? (
+                        <Button
+                          data-testid='kel-work-remember'
+                          onClick={() => void approvalAct(item, { remember: true })}
+                        >
+                          Always allow
+                        </Button>
+                      ) : null}
+                    </>
+                  )}
+                  <Button
+                    data-testid='kel-work-deny'
+                    onClick={() => void approvalAct(item, { allow: false })}
+                  >
+                    {t('common.kel.deny')}
+                  </Button>
+                </Space>
+              </section>
+            ))}
             {state?.jobs.length === 0 && <Typography.Paragraph>{t('common.kel.noWork')}</Typography.Paragraph>}
             {state?.jobs.map((job) => (
               <section key={job.id} className='py-16px border-b border-solid border-[var(--color-border-2)]'>
                 <Typography.Paragraph>{job.contract.request}</Typography.Paragraph>
-                <Typography.Paragraph type='secondary'>
-                  {job.state} · {job.verdict}
-                </Typography.Paragraph>
+                <Typography.Paragraph type='secondary'>{jobStatusText(job)}</Typography.Paragraph>
                 <Space wrap>
+                  {(job.state === 'RUNNING' || job.state === 'QUEUED' || job.state === 'READY') && (
+                    <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'pause' })}>
+                      {t('common.kel.pause')}
+                    </Button>
+                  )}
+                  {job.state === 'PAUSED' && (
+                    <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'resume' })}>
+                      {t('common.kel.resume')}
+                    </Button>
+                  )}
                   {!['CLOSED', 'CANCELLED'].includes(job.state) && (
-                    <>
-                      <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'pause' })}>
-                        {t('common.kel.pause')}
-                      </Button>
-                      <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'resume' })}>
-                        {t('common.kel.resume')}
-                      </Button>
-                      <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'cancel' })}>
-                        {t('common.kel.cancel')}
-                      </Button>
-                    </>
+                    <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'cancel' })}>
+                      {t('common.kel.cancel')}
+                    </Button>
                   )}
                   {job.verdict === 'VERIFIED' && job.contract.kind === 'coding' && (
                     <Button disabled={busy} onClick={() => action('/api/apply', { job: job.id })}>
@@ -433,68 +525,6 @@ export default function KelWorkPanel() {
                   ))}
               </section>
             ))}
-            {waiting.map((item) => (
-              <section key={item.kind + ':' + item.id} className='py-16px' data-testid='kel-work-waiting'>
-                <Typography.Title heading={6}>
-                  {item.kind === 'access' ? 'Access needed' : t('common.kel.approval')}
-                </Typography.Title>
-                <div data-testid='kel-work-waiting-title'>
-                  <Typography.Text bold>{item.title}</Typography.Text>
-                </div>
-                {item.target ? (
-                  <div
-                    className='mt-4px text-12px break-all text-t-secondary'
-                    data-testid='kel-work-waiting-target'
-                  >
-                    {item.target}
-                  </div>
-                ) : null}
-                {item.summary ? <div className='mt-4px text-12px'>It wants to {item.summary}.</div> : null}
-                {item.why ? (
-                  <div className='mt-4px text-12px text-t-secondary' data-testid='kel-work-waiting-why'>
-                    {item.why}
-                  </div>
-                ) : null}
-                <Space className='mt-8px' wrap>
-                  {item.kind === 'access' ? (
-                    <>
-                      <Button
-                        data-testid='kel-work-allow-once'
-                        onClick={() => void approvalAct(item, { grant_kind: 'once' })}
-                      >
-                        Allow once
-                      </Button>
-                      <Button
-                        data-testid='kel-work-allow-project'
-                        onClick={() => void approvalAct(item, { grant_kind: 'project' })}
-                      >
-                        Allow for this project
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button data-testid='kel-work-allow' onClick={() => void approvalAct(item)}>
-                        Approve
-                      </Button>
-                      {item.repeatable ? (
-                        <Button
-                          data-testid='kel-work-remember'
-                          onClick={() => void approvalAct(item, { remember: true })}
-                        >
-                          Always allow
-                        </Button>
-                      ) : null}
-                    </>
-                  )}
-                  <Button
-                    data-testid='kel-work-deny'
-                    onClick={() => void approvalAct(item, { allow: false })}
-                  >
-                    {t('common.kel.deny')}
-                  </Button>
-                </Space>
-              </section>
-            ))}
           </Tabs.TabPane>
           <Tabs.TabPane key='vetting' title='Vetting'>
             {!vetting?.session && (
@@ -523,7 +553,7 @@ export default function KelWorkPanel() {
             {vetting?.session && (
               <>
                 <Typography.Paragraph>
-                  <Typography.Text bold>{vetting.session.topic}</Typography.Text> · {vetting.session.state}
+                  <Typography.Text bold>{vetting.session.topic}</Typography.Text> · {jobStateText(vetting.session.state)}
                   {vetting.progress ? ` · ${vetting.progress.handled}/${vetting.progress.total} recorded` : ''}
                 </Typography.Paragraph>
                 <Space wrap>
@@ -737,7 +767,7 @@ export default function KelWorkPanel() {
               <section key={entry.job_id} className='py-12px border-b border-solid border-[var(--color-border-2)]'>
                 <Typography.Paragraph>{entry.title || entry.job_id}</Typography.Paragraph>
                 <Typography.Paragraph type='secondary'>
-                  {entry.state.toLowerCase().replace(/_/g, ' ')} · {entry.accepted}/{entry.total}
+                  {jobStateText(entry.state)} · {entry.accepted} of {entry.total} steps done
                 </Typography.Paragraph>
                 <Button
                   type='primary'

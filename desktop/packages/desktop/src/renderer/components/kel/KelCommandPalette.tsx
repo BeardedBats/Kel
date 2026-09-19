@@ -2,14 +2,14 @@
  * Kel V1.4 command palette — `Ctrl+K` anywhere, `/` opens it in search mode.
  *
  * Keyboard-first: ArrowUp/ArrowDown move, Enter runs, Escape closes; the list is a real listbox.
- * Results come from the engine (`/api/state`, `/api/work`, `/api/team`) plus fixed navigation, so the
- * palette can never show a surface or object the app cannot actually open.
+ * Results come from the engine (`/api/state`, `/api/work`) plus fixed navigation, so the palette can
+ * never show a surface or object the app cannot actually open.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { configService } from '@/common/config/configService';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
-import { kelState, kelTeam, kelWork } from '@renderer/components/kel/kelApi';
+import { kelState, kelWork } from '@renderer/components/kel/kelApi';
 
 type PaletteItem = {
   id: string;
@@ -26,9 +26,6 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-settings', label: 'Settings', hint: 'models, appearance, system', path: '/settings/model' },
   { id: 'nav-settings-appearance', label: 'Settings · Appearance', hint: 'theme and colors', path: '/settings/appearance' },
   { id: 'nav-settings-system', label: 'Settings · System', hint: 'data, backup, updates', path: '/settings/system' },
-  { id: 'nav-office', label: 'Team · Office', hint: 'who is working', path: '/team/office' },
-  { id: 'nav-roster', label: 'Team · Roster', hint: 'specialists', path: '/team/roster' },
-  { id: 'nav-studio', label: 'Team · Studio', hint: 'edit a specialist', path: '/team/studio' },
   { id: 'nav-knowledge', label: 'Projects · Knowledge', hint: 'what Kel learned', path: '/projects/knowledge' },
   { id: 'nav-map', label: 'Projects · Map', hint: 'project map', path: '/projects/map' },
   { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
@@ -79,10 +76,9 @@ const KelCommandPalette: React.FC = () => {
     loadedOnce.current = true;
     setLoading(true);
     try {
-      const [state, work, roster] = await Promise.all([
+      const [state, work] = await Promise.all([
         kelState().catch((): Awaited<ReturnType<typeof kelState>> => ({ jobs: [], providers: [], projects: [] })),
         kelWork('main').catch((): null => null),
-        kelTeam.roster().catch((): Awaited<ReturnType<typeof kelTeam.roster>> => ({ roles: [], departments: [] })),
       ]);
       const items: PaletteItem[] = [];
       (state.jobs ?? []).forEach((job) => {
@@ -111,15 +107,6 @@ const KelCommandPalette: React.FC = () => {
           label: entry.name ?? entry.title ?? id,
           hint: 'dry run from Projects · Recipes',
           run: () => navigate('/projects/recipes'),
-        });
-      });
-      (roster.roles ?? []).forEach((role) => {
-        items.push({
-          id: `role-${role.template_id}`,
-          group: 'Roles',
-          label: role.name,
-          hint: `${role.department} · v${role.version ?? '—'}`,
-          run: () => navigate('/team/studio'),
         });
       });
       setDynamic(items);

@@ -46,9 +46,9 @@ export const jobProject = (job: KelWorkJob): string | undefined => job.contract?
 const requestTitle = (job: KelWorkJob): string => job.contract?.request?.trim() || 'Untitled work';
 
 function openAction(conversation: string | undefined, label: string): { label: string; to: string } {
-  // Both targets are existing surfaces that already own the follow-up: the chat that hosts the
-  // approval/result, or the Work list when the payload cannot name a conversation.
-  return conversation ? { label, to: `/chat/${conversation}` } : { label, to: '/work' };
+  // Both targets are existing surfaces that already own the follow-up: the conversation route
+  // that hosts the approval/result, or the Work list when the payload cannot name a conversation.
+  return conversation ? { label, to: `/conversation/${conversation}` } : { label, to: '/work' };
 }
 
 export function collectAttention(payload: AttentionPayload, filter: AttentionFilter = {}): AttentionItem[] {
