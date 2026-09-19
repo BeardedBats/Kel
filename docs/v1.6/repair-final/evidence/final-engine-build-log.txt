@@ -1,0 +1,77 @@
+148 INFO: PyInstaller: 6.19.0, contrib hooks: 2026.2
+149 INFO: Python: 3.14.3
+173 INFO: Platform: Windows-11-10.0.26200-SP0
+173 INFO: Python environment: C:\Python314
+179 INFO: Removing temporary files and cleaning cache in C:\Users\Nick\AppData\Local\pyinstaller
+180 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-final-repair\\runtime',
+ 'C:\\Python314\\python314.zip',
+ 'C:\\Python314\\DLLs',
+ 'C:\\Python314\\Lib',
+ 'C:\\Python314',
+ 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages',
+ 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\win32',
+ 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\win32\\lib',
+ 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\pythonwin',
+ 'C:\\Python314\\Lib\\site-packages',
+ 'C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-final-repair\\runtime']
+1090 INFO: Appending 'datas' from .spec
+1090 INFO: checking Analysis
+1090 INFO: Building Analysis because Analysis-00.toc is non existent
+1091 INFO: Looking for Python shared library...
+1091 INFO: Using Python shared library: C:\Python314\python314.dll
+1091 INFO: Running Analysis Analysis-00.toc
+1091 INFO: Target bytecode optimization level: 0
+1091 INFO: Initializing module dependency graph...
+1091 INFO: Initializing module graph hook caches...
+1225 INFO: Analyzing modules for base_library.zip ...
+1800 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+2798 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+3303 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+6469 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+7837 INFO: Caching module dependency graph...
+7870 INFO: Analyzing C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\kel_backend_entry.py
+8079 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+8249 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+8681 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+8698 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+9030 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+9306 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks'
+10532 INFO: Processing module hooks (post-graph stage)...
+10673 INFO: Performing binary vs. data reclassification (7 entries)
+10725 INFO: Looking for ctypes DLLs
+10753 INFO: Analyzing run-time hooks ...
+10754 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\rthooks'
+10763 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\rthooks'
+10772 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\Nick\\AppData\\Roaming\\Python\\Python314\\site-packages\\PyInstaller\\hooks\\rthooks'
+10785 INFO: Creating base_library.zip...
+10803 INFO: Looking for dynamic libraries
+10939 INFO: Extra DLL search directories (AddDllDirectory): []
+10939 INFO: Extra DLL search directories (PATH): []
+11153 INFO: Warnings written to C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\build\KelEngine\warn-KelEngine.txt
+11175 INFO: Graph cross-reference written to C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\build\KelEngine\xref-KelEngine.html
+11219 INFO: checking PYZ
+11220 INFO: Building PYZ because PYZ-00.toc is non existent
+11220 INFO: Building PYZ (ZlibArchive) C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\build\KelEngine\PYZ-00.pyz
+11382 INFO: Building PYZ (ZlibArchive) C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\build\KelEngine\PYZ-00.pyz completed successfully.
+11400 INFO: checking PKG
+11400 INFO: Building PKG because PKG-00.toc is non existent
+11400 INFO: Building PKG (CArchive) KelEngine.pkg
+11439 INFO: Building PKG (CArchive) KelEngine.pkg completed successfully.
+11440 INFO: Bootloader C:\Users\Nick\AppData\Roaming\Python\Python314\site-packages\PyInstaller\bootloader\Windows-64bit-intel\run.exe
+11440 INFO: checking EXE
+11440 INFO: Building EXE because EXE-00.toc is non existent
+11440 INFO: Building EXE from EXE-00.toc
+11440 INFO: Copying bootloader EXE to C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\build\KelEngine\KelEngine.exe
+11541 INFO: Copying icon to EXE
+11581 INFO: Copying 0 resources to EXE
+11581 INFO: Embedding manifest in EXE
+11616 INFO: Appending PKG archive to EXE
+11616 WARNING: Execution of '_append_data_to_exe' failed on attempt #1 / 20: PermissionError(13, 'Permission denied'). Retrying in 0.05 second(s)...
+11701 INFO: Fixing EXE headers
+11879 INFO: Building EXE from EXE-00.toc completed successfully.
+11881 INFO: checking COLLECT
+11881 INFO: Building COLLECT because COLLECT-00.toc is non existent
+11881 INFO: Building COLLECT COLLECT-00.toc
+11978 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+11979 INFO: Build complete! The results are available in: C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\runtime\dist
