@@ -1,0 +1,1735 @@
+commit 785df71d9ce189907b2240023c24fa04f314ebc5
+2026-09-18 12:09:41 -0400
+docs(v1.6): Campaign A entry — pre-audit corpus initialized, IMPLEMENTATION_SPRINT mode, baseline 878 green
+
+
+diff --git a/.gitignore b/.gitignore
+index 33c4d8f..58d20eb 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -56,3 +56,7 @@ credentials.json
+ # --- intermediate archives ---
+ *.rar
+ *.zip
++
++# --- local session tooling scratch (never publish) ---
++.kunsdd/
++.tmp-image/
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 1cae2e7..6e1b79f 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -1,5 +1,9 @@
+ # Kel v1.6 program — auto-resume (continuation state)
+ 
++> NOTE (2026-09-18): sections are chronological. The authoritative current state is
++> `docs/v1.6/status/MAIN_STATUS.md` plus the NEWEST section in this file (Campaign A, at the end).
++> Older paragraphs below are historical.
++
+ State at this writing: pre-program checkpoint frozen; program Phases 0–3 complete, verified, and
+ committed on `ux/v15-journeys`. **Phase 4 (i18n / donor-string cleanup) is PAUSED with its work
+ preserved in a git stash** — do not resume it until the program says so. A P1 capability remediation
+@@ -377,3 +381,30 @@ screenshot-index refresh, then Phase 6 (memory reality audit).
+   and the rest of the message is forwarded without only the reserved token. Generic brackets
+   (`[web: off]`), quoted commands, code samples, URLs, nested brackets and malformed tokens never
+   change state and are forwarded byte-identical; exact forwarding when no directive is recognized.
++
++## CAMPAIGN A — full-speed implementation sprint (2026-09-18)
++
++The operating strategy changed (user directive, 2026-09-18T~15:40Z). From now until a
++PRE-AUDIT V1.6 RELEASE CANDIDATE exists: **implement → self-review → test → package → verify →
++record → commit → integrate → continue.** Independent Audit cycles are **paused** (Campaign B
++consumes the breadcrumb corpus afterwards; Campaign C repairs). Quality control is NOT deferred:
++focused tests, regression, packaged verification, atomic commits and records continue per change.
++
++- **Entry state**: Main `ux/v15-journeys` @ `fd98cc4` (published; clean; frozen refs verified).
++- **Last independently audited production point**: `8a2b25d` (increment 24 CONTINUE). Docs-only
++  commits above it: `c4ae724`, `5127bac`, `fd98cc4`.
++- **First intentionally unaudited production commit**: opens with the first Campaign A production
++  change (recorded in `docs/v1.6/pre-audit/COMMIT_LEDGER.md`).
++- **Breadcrumb corpus**: `docs/v1.6/pre-audit/` — README, AUDIT_SCOPE, ledgers (commit/change/
++  requirement/invariant), evidence indexes (test/packaged/migration/provider/visual), P2/P3
++  disposition, risk register, deferrals, limitations, audit targets, repair hints, final-state
++  matrix, increment records, evidence bundles. Maintained per increment, not at the end.
++- **Audit thread**: parked (`audit_required: false`; `audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC`).
++- **Visual lane**: batches 1–5 are delivered on `ux/v16-visual-fix` (`ac85eb3`) with automated +
++  packaged acceptance; they are NOT independently audited; remaining batches 6–8 and the
++  integration into Main are Campaign A goals.
++- **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
++- **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
++  `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
++- **Next**: Phase 6 — memory reality audit (bootstrap §28); see `MAIN_STATUS.next_autonomous_action`
++  for the full Campaign A queue.
+diff --git a/docs/v1.6/pre-audit/AUDIT_HANDOFF.md b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+new file mode 100644
+index 0000000..d96823a
+--- /dev/null
++++ b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+@@ -0,0 +1,88 @@
++# AUDIT_HANDOFF — Campaign B entry point
++
++status: OPEN — this file is finalized at PRE-AUDIT RC
++updated: 2026-09-18T16:05Z
++
++When Campaign A closes, this file binds the exact range and points to everything else. Until then
++it carries the current values; treat every `TBD` as not-yet-true.
++
++## Bindings
++
++| Field | Value |
++|---|---|
++| PRE_AUDIT_V1_6_HEAD | TBD (recorded at RC in `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md`) |
++| last_independently_audited_commit | `8a2b25d` (audit increment 24 CONTINUE; cumulative coverage `5e76b21..8a2b25d`) |
++| unaudited production range | opens with the first Campaign A production commit (TBD); ends at PRE_AUDIT_V1_6_HEAD |
++| integration branch | `ux/v15-journeys` (stable branch `main` holds the last frozen release, v1.5.0) |
++| migration version at open | 19 applied (max); next free version = 20 |
++| production commit count in range | TBD (see COMMIT_LEDGER.md) |
++| major changed subsystems | TBD (filled per phase; seed: memory, capabilities/UX, providers, workforce wiring, engine-loss UX, visual integration) |
++| high-risk commits | TBD (recorded per increment in COMMIT_LEDGER.md) |
++
++## Index paths
++
++- Requirements index: `docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md`
++- Commit ledger: `docs/v1.6/pre-audit/COMMIT_LEDGER.md`
++- Change ledger: `docs/v1.6/pre-audit/CHANGE_LEDGER.md`
++- Invariant ledger: `docs/v1.6/pre-audit/INVARIANT_LEDGER.md`
++- Test evidence index: `docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md`
++- Packaged evidence index: `docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md`
++- Migration ledger: `docs/v1.6/pre-audit/MIGRATION_LEDGER.md`
++- Provider matrix: `docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md`
++- Visual evidence index: `docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md`
++- P2/P3 disposition: `docs/v1.6/pre-audit/P2_P3_DISPOSITION.md`
++- Risk register: `docs/v1.6/pre-audit/RISK_REGISTER.md`
++- Known limitations: `docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md`
++- Deferred items: `docs/v1.6/pre-audit/DEFERRED_ITEMS.md`
++- Audit targets (attack list): `docs/v1.6/pre-audit/AUDIT_TARGETS.md`
++- Repair hints: `docs/v1.6/pre-audit/REPAIR_HINTS.md`
++- Final state matrix: `docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md`
++- Increment records: `docs/v1.6/pre-audit/increments/`
++- Raw evidence: `docs/v1.6/pre-audit/evidence/`
++- Historic audit records (independent): `C:\Users\Nick\Desktop\Kel\kel-v16-code-audit\docs\code-audit\`
++- Historic program records: `docs/v1.6/` (phase5 records, AUTO_RESUME, status) and
++  `docs/session-tools/`, `docs/memory-proposals/`, `docs/artifact-lineage/`,
++  `docs/in-chat-approvals/`, `docs/i18n-cleanup/`, `docs/release-hardening/`
++
++## Suggested audit traversal order
++
++1. `README.md` → this file (bind the range; verify `PRE_AUDIT_V1_6_HEAD` is an ancestor of the
++   integration branch and the tree is clean).
++2. `COMMIT_LEDGER.md` → for each production commit: increment record → evidence bundle.
++3. `CHANGE_LEDGER.md` → for each CHG: read the primary files and attack the recorded failure paths.
++4. `REQUIREMENTS_TRACEABILITY.md` → find requirements without implementation AND implementations
++   without requirements.
++5. `INVARIANT_LEDGER.md` + `AUDIT_TARGETS.md` → attack each invariant with the seed list first,
++   then free-form adversarial testing.
++6. `MIGRATION_LEDGER.md` → fresh and upgrade DB runs; packaged schema assertions.
++7. `TEST_EVIDENCE_INDEX.md` / `PACKAGED_EVIDENCE_INDEX.md` → re-run the critical commands; confirm
++   counts; verify packaged claims on a real build.
++8. `P2_P3_DISPOSITION.md` → re-verify every disposition (including the historical F-findings).
++9. `VISUAL_EVIDENCE_INDEX.md` → walk findings, screenshots, packaged acceptance; note the human
++   pixel gate is separate.
++10. `PROVIDER_VALIDATION_MATRIX.md` → disposition every provider row (mock vs real).
++11. `RISK_REGISTER.md`, `KNOWN_LIMITATIONS.md`, `DEFERRED_ITEMS.md` → acknowledge each; challenge
++    the ones that hide behind "deferred".
++12. Produce the master findings ledger (stable ID scheme) — no fixes.
++
++## Exact definition of audit completeness (for Campaign B)
++
++100% of the declared V1.6 scope accounted for means the auditor can prove, with evidence:
++
++- every production commit in the range reviewed (COMMIT_LEDGER.md rows closed);
++- every changed production file reviewed (per-commit file lists);
++- every migration reviewed and exercised (fresh + upgrade);
++- every requirement dispositioned (both directions);
++- every invariant challenged (attempt documented, result recorded);
++- every P2/P3 disposition checked;
++- every major user journey exercised or explicitly reviewed;
++- every persistence/isolation expectation considered;
++- failure injections considered (engine loss, provider loss, restore failure, lease failure,
++  capability abuse);
++- every provider path dispositioned (real / mock / unavailable — never blurred);
++- every visual finding dispositioned (automated vs human separate);
++- every release gate dispositioned;
++- every known limitation acknowledged as accepted or escalated.
++
++This does NOT mean a metaphysical guarantee that no bug exists. It means every declared item is
++accounted for, with evidence, and nothing silently disappears.
+diff --git a/docs/v1.6/pre-audit/AUDIT_SCOPE.md b/docs/v1.6/pre-audit/AUDIT_SCOPE.md
+new file mode 100644
+index 0000000..d2d2f92
+--- /dev/null
++++ b/docs/v1.6/pre-audit/AUDIT_SCOPE.md
+@@ -0,0 +1,152 @@
++# AUDIT_SCOPE — the declared V1.6 audit surface
++
++updated: 2026-09-18T16:05Z (Campaign A open; refined continuously through the sprint, frozen at PRE-AUDIT RC)
++
++Every item below must receive one Campaign B disposition:
++`PASS` / `FAIL` / `PARTIAL` / `NOT_APPLICABLE` / `NOT_TESTABLE` / `DEFERRED_WITH_RATIONALE`.
++No scope item may silently disappear. "Prior coverage" notes what the historic audits (increments
++1–24, `5e76b21..8a2b25d`) already dispositioned — Campaign B may still re-challenge it, but should
++not re-litigate without reason.
++
++Legend for audit status now: **PENDING** (Campaign B) for everything; notes carry context.
++
++## 1. Desktop shell
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| DS-01 | Shell startup / boot dialogs | app boots, dialogs truthful, engine handshake | KelService.ts; boot logs; packaged probes | prior: partial (packaged sweeps); PENDING |
++| DS-02 | Single-instance / window lifecycle | one instance, close/quit safe, no orphan engine | KelService.ts; packaged probe a | PENDING |
++| DS-03 | Update behavior | update paths never fake success; release links | boot-dialog/update links (Phase 4); GITHUB_SYNC_POLICY | PENDING |
++| DS-04 | Source identity / version identity | app+engine version strings truthful (1.5.0→1.6 target) | package.json; ENGINE_VERSION; release gates | version bump is an RC task — verify at RC |
++| DS-05 | Theme system | theme toggle, overrides deletion (`THM-01` open) | applyTheme.ts; packaged probe a | PENDING |
++| DS-06 | i18n (13 locales) | no donor strings; fallback behavior; key parity | docs/i18n-cleanup/00_STATUS.md; audit increment 6 | prior: audited (CONTINUE); PENDING re-check at RC |
++| DS-07 | Error translation | infra errors → human copy; no raw errors (`ERR-01`, engine-loss class) | renderer error surfaces; visual finding 16/17 | PENDING; engine-loss is a campaign item |
++
++## 2. Engine core
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| EN-01 | Store / jobs / runs / effects core | durable semantics; state machines | runtime/kel/core.py; existing suites | prior: audited historically; PENDING |
++| EN-02 | Guardrails / tamper check | `guardrails_ok` truthful; tamper detected | engine.py; tests | PENDING |
++| EN-03 | Engine lifecycle: startup / shutdown / restart | clean start; clean stop; restart; no stuck locks | service.py; instance_lock.py; diagnostics; packaged probes | PENDING |
++| EN-04 | Post-launch engine loss | user-facing failure/recovery, no raw errors; **Phase 43 sprint item** | KelService.ts; renderer surfaces; visual batch 6 | OPEN finding (visual 16/17); campaign item |
++| EN-05 | IPC bridge | whitelist accuracy; sender-frame validation (`INT-01` open) | KelService.ts frame checks; audit regex checks | PENDING |
++| EN-06 | Leases | acquire/release exactly once on every path (INV-LEASE-001) | runtime/kel/parallel.py; lease tests | prior: Phase 5.5 audited; PENDING |
++| EN-07 | Approvals | announce/resolve semantics; no bypass (`APR-01..06`) | chat_approvals.py, autonomy.py; docs/in-chat-approvals | PENDING |
++| EN-08 | Authorization / grants | policy gate; resume-after-grant; spend at effect | authorize.py; tests | prior: audited; PENDING |
++| EN-09 | Capabilities (web/files/terminal/github) | reserved grammar, fail-closed, conversation scoping | capabilities.py, research.py, acp_host.py; test_capabilities | prior: audited (CAP arcs); PENDING |
++| EN-10 | Continuation / resume | resume truthfulness; replay safety | continuation.py | PENDING |
++| EN-11 | Backup / restore | failure visibility (`PER-02`), snapshot retention (`PER-03`), `KEL_DATA_DIR` (`PER-04`) | backup.py; service.py restore call | PENDING |
++| EN-12 | Diagnostics | records truthful; startup/shutdown markers | diagnostics.py | PENDING |
++| EN-13 | Search | error handling (`COR-05`); result quality | search.py | PENDING |
++| EN-14 | Vetting sessions | ownership scoping (`SEC-01`); dispatch errors (`COR-06`) | vetting_session.py; vetting_bank.py | PENDING |
++| EN-15 | Transcription (engine) | `_STREAMS` lifecycle (`TR-01`); multipart filename (`SEC-01-multipart`) | transcription.py | PENDING |
++| EN-16 | Model routing / runtime routing | AUTO/PREFERRED/FIXED no silent substitution; fallback recorded | router.py, assignment.py; routing tests | prior: Phase 5.1; PENDING |
++| EN-17 | Providers | claude-code / codex / anthropic / deepseek definitions, state probing, key handling | providers.py; Phase 10 matrix | PENDING; real-credential validation = Phase 10 |
++| EN-18 | Process runner / durable adapter | process identity, termination safety | runner.py, windows_job.py | PENDING |
++| EN-19 | Native adapters (claude/codex CLIs) | bridge correctness, no donor leftovers | native.py, native_claude.mjs | PENDING |
++| EN-20 | Engine version identity | packaged engine == fresh build hash; ENGINE_VERSION | service.py; PackageIndex | PENDING; re-prove at RC |
++
++## 3. Persistence / migrations
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| DB-01 | SQLite schema & migrations 1..19 | chain correct, no dup/missing, idempotent | MIGRATION_LEDGER.md; migration modules | PENDING |
++| DB-02 | Fresh DB init vs upgrade | fresh install succeeds; supported upgrade succeeds | fresh/upgrade tests (`test_v13_memory`, `test_v14_upgrade`, per-module) | PENDING; packaged assertions 16–19 open |
++| DB-03 | Append-only ledgers | triggers hold; no mutation path bypasses | workforce.py triggers; tests | prior: Phase 5.0 audited |
++| DB-04 | Memory store | isolation, provenance, trust ladder, decay, forget | memory.py; test_v13_memory; docs/v1.3 KEL_V1.3_MEMORY_MODEL | Phase 6 audit = campaign item |
++| DB-05 | Memory proposals | review surface, dedupe keys, states | memory.py; test_v16_proposals; docs/memory-proposals | prior: Phase 1; PENDING |
++| DB-06 | Artifact lineage | every generated artifact says where it came from | runtime/kel/lineage (core schema); docs/artifact-lineage | prior: Phase 2; PENDING |
++| DB-07 | Conversation / project isolation | no cross-project/conv leakage (INV-MEM-001) | memory.py, model_prefs, capabilities scoping | PENDING — see AUDIT_TARGETS |
++| DB-08 | Workforce tables 16–19 | schemas, links, budgets, parallel tables | MIGRATION_LEDGER.md | PENDING |
++
++## 4. Workforce OS
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| WF-01 | Role registry / skill registry / contracts / completion packets | v1 validators, ceilings, append-only | workforce.py, contracts.py; phase records 5.0 | prior: audited |
++| WF-02 | Agent-to-model assignment | modes, requirement profiles, fail-closed grants, reservations | assignment.py; 5.1 record | prior: audited |
++| WF-03 | Staffing decision + D0–D4 | bands, floors, tier_max; commander never spawned | staffing.py, delegation.py; 5.2 record | prior: audited |
++| WF-04 | D1 delegation | contract issuance, evidence-bound close, no nesting | delegation.py; 5.2 record | prior: audited |
++| WF-05 | D2 pods | Builder ≠ Verifier, family diversity, verdict consistency | pods.py; 5.3 record | prior: audited |
++| WF-06 | D3 parallel missions | disjoint-write streams, leases, integration, ignored paths (`F20-6`) | parallel.py; 5.5 record | prior: audited (limitations carried) |
++| WF-07 | Assurance / Sentinel / Oracle | scope gating, anti-anchored dispatch, never-gate, waive rules | assurance.py; 5.4 record | prior: audited |
++| WF-08 | Findings / evidence | ledger integrity, staleness rejection, close refusals | workforce.py, evidence.py | prior: audited |
++| WF-09 | Learning loop (shadow) | learning-as-memory, caps, promotion queue, zero auto-apply | learning.py; 5.6 record | prior: audited (24-N1..N3 informational) |
++| WF-10 | Adaptive staffing disposition | stays deferred (5.7) | 5.7_DECISION_DEFERRED.md | DEFERRED_WITH_RATIONALE expected |
++| WF-11 | Advanced Worker View disposition | product decision (Phases 5.8/8) | 5.8_DECISION_DEFERRED.md | decision recorded in campaign; then disposition |
++| WF-12 | Real-artifact binding (`F4`) | evidence binds to real delivered artifacts | campaign wiring item | OPEN carry-forward; campaign item |
++| WF-13 | Evidence-bound review rows + resolution-kind (`F17-4`/`F18-5`) | close semantics complete | campaign wiring item | OPEN carry-forward; campaign item |
++
++## 5. Memory (Phase 6 surface)
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| MEM-01 | Reachable controls | every control reachable; no no-op surfaces | campaign Phase 6 record | campaign item |
++| MEM-02 | Persistence | memories survive restart; edits durable | Phase 6 record; probes | campaign item |
++| MEM-03 | Conversation isolation | cross-conversation reads/writes impossible | memory.py scoping; tests | campaign item |
++| MEM-04 | Project isolation | cross-project reads/writes impossible | memory.py `_require_project`; tests | campaign item |
++| MEM-05 | Source / provenance | trust ladder honest; user-stated vs inferred | memory.py; learning.py SOURCE_TRUST | campaign item |
++| MEM-06 | Edits / corrections | correct/confirm/retract paths truthful | memory.py; tests | campaign item |
++| MEM-07 | Forget / delete semantics | tombstone + audit; retrieval stops | memory.py forget; tests | campaign item |
++| MEM-08 | Stale memory | decay at read time; nothing silently gates | learning.py decay; test_workforce_learning | campaign item |
++| MEM-09 | Backend/UI match | UI shows what backend holds; no hidden mutation | Phase 6 record | campaign item |
++
++## 6. UX surfaces
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| UX-01 | Composer / Model/Tools controls | controls truthful; per-conversation scoping | KelModelControl.tsx; `COR-03`; visual batch 7 | PENDING; batch 7 is a campaign item |
++| UX-02 | Sidebar | rows, actions, marks (batch 5 done) | visual evidence index | PENDING (human gate) |
++| UX-03 | Team / Office | terminology, APIs, read-mostly | Team surfaces; `active_owned_files` protocol | PENDING |
++| UX-04 | Work panel | progress surfaces truthful | KelWorkPanel.tsx | PENDING |
++| UX-05 | Projects / Permissions / Profiles vs Projects | semantics decision ships (Phase 9) | campaign Phase 9 record | campaign item |
++| UX-06 | Settings | shell routing (batch 2 done); settings half of batch 8 held | visual evidence index | PENDING |
++| UX-07 | Transcription UI | standalone IA (batch 4 done); abandoned-stream UX (`TR-02`) | visual evidence index; audit records | PENDING |
++| UX-08 | Memory UX | proposals surface (Phase 1) + Phase 6 findings | docs/memory-proposals; Phase 6 record | campaign item |
++| UX-09 | Command palette | truthful actions; no dead entries | KelCommandPalette.tsx | PENDING |
++| UX-10 | Approvals UI | in-chat approvals journey verified | docs/in-chat-approvals; packaged journey | prior: Phase 3; PENDING |
++| UX-11 | Lineage UI | versions view truthful | packaged lineage probe | prior: Phase 2; PENDING |
++
++## 7. Security / privacy
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| SP-01 | Secret scanning | writer-side scans; no secrets in evidence | memory.scan_secret; evidence indexes | PENDING |
++| SP-02 | Credential storage | keys not leaked to backups/evidence; `PER-04` | backup.py; kelCredentials.ts | PENDING |
++| SP-03 | Capability token grammar | prose never mutates; reserved namespace only | test_capabilities corpora; CAP arcs | prior: audited; re-attack in Campaign B |
++| SP-04 | IPC sender-frame validation | all channels checked (`INT-01`) | KelService.ts | PENDING |
++| SP-05 | Approval payload actor checks | `APR-01..03` class | chat_approvals.py, service.py | PENDING |
++| SP-06 | Ownership scoping by bare id | `SEC-01`/`APR-02` shared root cause | vetting_session.py, approval resolvers | PENDING — systemic pattern, audit first |
++| SP-07 | Public repository safety | scan gate on every publication | GITHUB_SYNC_POLICY; sync-recon records | PENDING |
++| SP-08 | Privacy constraints on providers | local-only hints, data boundaries | router.py, providers.py | PENDING |
++
++## 8. Failure states / data integrity
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| FI-01 | No false success | closes/approvals/restores never claim success falsely | close_d1 refuses; restore truth (`PER-02`) | PENDING |
++| FI-02 | Cleanup vs primary error | cleanup failure never masks primary error (INV-ERROR-001) | backup/restore; guardrails | PENDING |
++| FI-03 | Degraded states | engine loss, provider loss, quota states surface honestly | error surfaces; Phase 10 | PENDING |
++| FI-04 | Dispatch errors | no KeyError leaks (`ERR-01`/`COR-06`) | service.py dispatch | PENDING |
++| FI-05 | Stall/interruption accounting | pods/parallel honest accounting | pods.py; 5.3 record | prior: audited |
++
++## 9. Packaging / runtime identity
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| PK-01 | Packaged app boots with intended engine | engine hash == fresh build (INV-PACKAGE-001) | PACKAGED_EVIDENCE_INDEX.md | PENDING |
++| PK-02 | Migrations on packaged boot | schema_migrations 16–19 asserted | packaged battery (carry-forward) | OPEN assertion |
++| PK-03 | Routes / journeys in packaged app | sessiontools/approvals/lineage/memoryprops sweeps | PACKAGED_EVIDENCE_INDEX.md | PENDING |
++| PK-04 | Update behavior packaged | update paths, honest failures | boot logs; DS-03 | PENDING |
++| PK-05 | Freeze tooling | `REL-01` no-op staging understood/fixed; manifest hashes | scripts/freeze-release.ps1 | PENDING |
++| PK-06 | Frozen releases | byte-identical (INV-FREEZE-001) | freeze verification scripts | PENDING; verify at RC |
++
++## 10. Release / process
++
++| # | Item | What to verify | Evidence sources | Notes |
++|---|---|---|---|---|
++| RL-01 | Git safety | clean tree, intended branch, no rewrite | GITHUB_SYNC_POLICY.md | PENDING |
++| RL-02 | Remote sync | publication records match ls-remote | sync-recon records | PENDING |
++| RL-03 | This corpus | claims match reality; evidence paths resolve | this directory | PENDING |
++| RL-04 | PRE-AUDIT RC record | `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` complete | to be created | PENDING |
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+new file mode 100644
+index 0000000..3eecb53
+--- /dev/null
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -0,0 +1,78 @@
++# AUDIT_TARGETS — adversarial seed list for Campaign B
++
++updated: 2026-09-18T16:05Z
++rule: these are attacks, not accusations. Every attack ends in reproduction evidence or a
++recorded "not reproduced". Aim to make the audit smarter than the implementer.
++
++## Engine lifecycle / recovery
++1. Kill the engine after the UI successfully mounted, then request — assert no raw infrastructure
++   error, no false success, and a real recovery path (currently reproduced: findings 16/17).
++2. Kill the engine mid-stream; assert terminal state truthfulness (no "completed" without output).
++3. Restart the app while a mission/parallel mission is in flight; assert resume correctness and no
++   instance-state loss (APR-03 class: `_memory_check_queue`).
++4. Force a lease-release failure while a primary error exists — assert the primary causal error
++   surfaces and cleanup failure does not mask it (INV-LEASE/INV-ERROR).
++5. Trigger announce-failure after a terminal stream state (approvals flow) — assert no silent
++   inconsistency between anchors and chat.
++
++## Capabilities
++6. Embed capability tokens in: quoted text, inline code, fenced code, URLs, nested brackets
++   (`[[kel:web=off]]`), word-embedded (`prefix[kel:web=off]suffix`), mixed case, punctuation
++   adjacency; assert byte-identical forwarding and zero state change.
++7. Long-message edge: a reserved directive inside a >2000-char paste (CAP2-LONGTEXT) — assert
++   fail-safe (no mutation, no silent text removal) and note the missing feedback.
++8. `web: off` in conversation A while a research job is dispatched from conversation B (including
++   engine/scheduled jobs with no `submissions` row) — assert the correct conversation's decision.
++9. Unknown capability probe — assert fail-closed (unavailable + resolve denies; DEAD-08).
++
++## Memory / isolation / learning
++10. Retrieve/correct/forget project A memories from project B context (all endpoints + proposals);
++    same for conversation-scoped prefs (MDL-01/COR-04) and vetting sessions (SEC-01).
++11. Memory proposals: identical evidence must not re-propose; changed evidence must re-propose;
++    supersede chains must not fork a (type, key) identity.
++12. Learning decay at read time: re-observation multiplicity (24-N2), rate denominators
++   (F23-2/8/9) — recompute from raw rows; challenge small-sample labels.
++13. Forget semantics: tombstone + audit event; assert retrieval cannot resurrect; assert
++    correction chains keep user-stated trust.
++
++## Workforce
++14. Attempt to spawn Commander via any path (INV-WF-001); attempt Builder == Verifier; force
++    family-diverse fallback unavailability.
++15. Close a task with stale, unbound, or missing evidence; missing criterion coverage; assert
++    honest uncertain/failed closes and refusal of completed closes.
++16. Attempt to waive a never-gate finding as Kel (must be user-only) and to auto-promote learnings
++    above the cap (must queue, not promote).
++17. Parallel missions: two streams writing the same file (disjointness), ignored paths (F20-6),
++    conflict timing (F20-14), undeclared writes (N21-5).
++18. Flag-off parity: every automatic workforce write path with flags off (zero writes).
++19. Provider disappears between assignment and execution — assert fallback recorded with basis;
++    no silent substitution (AUTO/PREFERRED/FIXED; N1 legacy check).
++
++## Security / privacy / data
++20. Approval payload without/with a forged actor (APR-01); resolution from a different
++    conversation scope than the read (APR-02); expired/one-shot re-use.
++21. Restore failure injection (PER-02): assert user-visible truthful state, no silent swallow;
++    snapshot growth/retention (PER-03); `KEL_DATA_DIR` credential inclusion (PER-04).
++22. Multipart filename escaping (SEC-01-multipart); transcription stream cleanup on shutdown
++    (TR-01); abandoned-stream UX (TR-02).
++23. IPC sender-frame validation on every `kel:*` channel (INT-01); dispatch KeyError leaks
++    (ERR-01/COR-06); theme overrides surviving deletion (THM-01).
++24. Secret scan over the whole published range (not just new commits); assert no credentials in
++    corpus evidence files.
++
++## Migrations / packaging / release
++25. Migration chain: fresh DB; upgrade from a real prior DB (pins at 14 and 15); interrupted
++    migration; duplicate/missing version check; packaged boot `schema_migrations` assertion.
++26. Packaged engine identity: hash vs fresh build; detached-engine reuse with wrong-version
++    descriptor (A1); update behavior.
++27. Freeze tooling: staging no-op (REL-01) and nested inert runtime duplicate; frozen releases
++    remain byte-identical (4-hash manifest) at RC; remote refs unchanged.
++28. Publication claims vs `ls-remote` (publication is never verification).
++
++## Visual / integration / corpus
++29. Every visual merge conflict resolution (§44) — no force updates, no silently dropped behavior;
++    lineage preserved.
++30. Corpus integrity: `git log 8a2b25d..PRE_AUDIT_V1_6_HEAD` vs COMMIT_LEDGER rows (no gap, no
++    unlisted commit); every evidence path exists; every count matches the artifact; hunt for
++    "empty but plausible" records.
++31. Re-run the critical commands from TEST_EVIDENCE_INDEX on a fresh clone; compare counts.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+new file mode 100644
+index 0000000..a002696
+--- /dev/null
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -0,0 +1,52 @@
++# CHANGE_LEDGER — product-behavior changes in the unaudited range
++
++updated: 2026-09-18T16:05Z
++
++Organized by PRODUCT BEHAVIOR, not commits. One entry per behavior change that Campaign A (or the
++pending visual integration) delivers. Earlier, already-audited V1.6 arcs are traced in
++REQUIREMENTS_TRACEABILITY.md instead — this ledger is what Campaign B must read closely.
++
++Template (all fields required; write `none` explicitly rather than leaving blanks):
++
++```
++ID:            CHG-###
++Title:
++Phase:
++User-visible impact:
++Internal impact:
++Previous behavior:
++New behavior:
++Primary files:
++Primary symbols/functions/classes:
++Data/schema changes:
++Failure paths:
++Security/privacy implications:
++Persistence implications:
++Expected invariants:        (pointer into INVARIANT_LEDGER.md)
++Tests:                      (what proves it, incl. discriminating coverage)
++Packaged evidence:          (or `-`)
++Known concerns:
++Audit questions:            (what should Campaign B attack on this change)
++Repair hints:               (pointer into REPAIR_HINTS.md, if any)
++```
++
++## Entries
++
++*No entries yet.* The ledger opens with the first Campaign A production commit. Increment records
++(`increments/`) are written first; the ledger summarizes each increment's behavior changes here.
++
++Planned Phase-to-CHG mapping (kept current as work lands):
++
++| Phase | Expected CHGs | Status |
++|---|---|---|
++| 6 — memory reality audit + bounded fixes | CHG-001+ (any fixes) | IN PROGRESS |
++| 7 — smart capability recommendations | CHG-0xx | PENDING |
++| 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
++| 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
++| 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
++| 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
++| F4 real-artifact binding wiring | CHG-0xx | PENDING |
++| resolution-kind semantics | CHG-0xx | PENDING |
++| P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
++| Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
++| Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+new file mode 100644
+index 0000000..149332f
+--- /dev/null
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -0,0 +1,48 @@
++# COMMIT_LEDGER — production-affecting commits, audited point → PRE_AUDIT_V1_6_HEAD
++
++updated: 2026-09-18T16:05Z
++range opens at: `8a2b25d` (last independently audited production point; increment 24 CONTINUE)
++range ends at: PRE_AUDIT_V1_6_HEAD (TBD; recorded at RC)
++rule: EVERY production-affecting commit in this range must appear here. Docs-only commits are
++listed for completeness with `priority: LOW / docs-only`.
++
++Columns: SHA | parent | date (local) | phase | increment | intent | production files | tests |
++migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | evidence | known concerns
++
++## Commits above the audited point at corpus open (docs-only, verified per-commit)
++
++| SHA | parent | date | intent | class | priority | evidence |
++|---|---|---|---|---|---|---|
++| `c4ae724` | `8a2b25d` | 2026-09-18 | Phase 5.6 remediation record + delta re-audit request | docs-only | LOW | `git show --stat` = 3 docs files |
++| `5127bac` | `c4ae724` | 2026-09-18 | Phase 5.6 accepted — audit 24 CONTINUE; 5.7/5.8 decisions deferred | docs-only | LOW | `git show --stat` = 5 docs files |
++| `fd98cc4` | `5127bac` | 2026-09-18 | record published integration tip; visual slice complete | docs-only | LOW | `git show --stat` = MAIN_STATUS only |
++
++## Campaign A production commits (the intentionally-unaudited range)
++
++| SHA | parent | date | phase | intent | production files | tests | migrations | UI? | packaged | sec/priv | persistence | priority | evidence | concerns |
++|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
++| — | — | — | — | *no production commit yet — the first one opens this table* | | | | | | | | | | |
++
++## Visual branch commits pending integration (NOT covered by any independent audit)
++
++Branch `ux/v16-visual-fix` (worktree `kel-v16-visual-fix`). These carry production changes that
++have automated (79/79 vitest, tsc 0) and packaged (`package-visual5` probes a/b/c) acceptance only.
++When integrated into `ux/v15-journeys` they enter the Commit Ledger range above as NEW commits
++(integration commit(s) + preserved lineage), and their original SHAs remain traceable.
++
++| SHA | date | batch | intent | production files (summary) | evidence | concerns |
++|---|---|---|---|---|---|---|
++| `8dd21f9` | 2026-09-17 | Batch 1 | Kel design tokens (slate-navy foundation, compact density) | renderer styles/tokens | 39/39 contrast checks; tsc 0; 76/76 | human pixel gate open |
++| `3d9202c` | 2026-09-17 | Batch 2 | Settings shell: `/team/*` stays in Settings; `/settings/tools` shows Tools | settings renderer | tsc 0; 76/76 | — |
++| `04151c8` | 2026-09-17 | docs | visual plan docs onto the branch | docs | — | — |
++| `83af16f` | 2026-09-18 | Batch 4 | Transcription standalone IA | transcription renderer | tsc 0; 76/76 | finding 2/3 baselines pending |
++| `ac85eb3` | 2026-09-18 | Batch 5 | Sidebar rows: action gutter + leading-mark semantics | ConversationRow, tests | tsc 0; **79/79**; packaged probe c | human pixel gate open |
++
++## Maintenance rules
++
++- Append a row when a production commit lands; never rewrite history in this file.
++- Priority definition: LOW (docs/tests-internal), MEDIUM (localized behavior), HIGH (user-journey
++  or engine behavior), CRITICAL (security/privacy/persistence/lifecycle).
++- `packaged` column: name the packaged evidence (see PACKAGED_EVIDENCE_INDEX.md) or `-`.
++- Keep the count current: at RC, `production commit count in range` = number of rows in the
++  Campaign A table + integration commits (cross-checked against `git log`).
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+new file mode 100644
+index 0000000..d3bd71a
+--- /dev/null
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -0,0 +1,19 @@
++# DEFERRED_ITEMS — deliberate deferments with rationale
++
++updated: 2026-09-18T16:05Z
++rule: no vague "later". Every item records why, release impact, required future evidence, whether
++it blocks V1.6, owner, and the revisit condition.
++
++| ID | Item | Why deferred | Release impact | Required future evidence | Blocks V1.6? | Owner | Revisit condition |
++|---|---|---|---|---|---|---|---|
++| DEF-001 | Phase 5.7 — adaptive staffing enablement | Entry conditions unmet: no doc-13 full campaign window, no user sign-off; enabling would fabricate readiness | None (shadow learning stays on) | doc-13 campaign (classes 3/5/9 + baseline-B conflict rate) + pre-registered H1–H5 outcomes + explicit user sign-off | NO | user (sign-off) + Main | Campaign results + user sign-off |
++| DEF-002 | Phase 5.8 / Phase 8 — Advanced Worker View | No product decision; North Star is ONE assistant; endpoints exist for a future decision; implementing panels now would be UI-first | None for V1.6 (hidden orchestration stays) | Product decision (is it V1.6 scope?) + usability review with zero-visit default preserved | NO | product/Nick | The Phase 8 decision record (Campaign A) — currently: deferred |
++| DEF-003 | Phase 12 — Rust migration | Rust audit verdict NO_MIGRATION_NEEDED_NOW at `9c1e7d0` | None | Re-verify freshness in Phase 11; if evidence still negative, close Phase 12 explicitly | NO | Main | Phase 11 recheck |
++| DEF-004 | doc-13 full evaluation campaign | Pilot (classes 2/6/8) succeeded; full matrix is a validation vehicle, not a release behavior | None (nothing reads it to gate) | Campaign run over 10 classes × 3 configs × ≥3 seeds | NO | Main/user | Before any adaptive-enablement re-entry |
++| DEF-005 | Optional provider validation (providers without available credentials) | No credentials available in this environment | Documented limitation, not a blocker | Real call evidence when access exists | NO | Main/user | When credentials become available |
++| DEF-006 | Per-project flag storage (workforce flags) | Current single-flag scope is sufficient for shadow behavior | None | Design + migration when per-project control is needed | NO | Main | First real multi-project flag need |
++| DEF-007 | Overlay content at calibration | Overlays v1 ship as a graceful no-op registry until real role overlays are authored | None | Authored overlay content + calibration results | NO | Main | When role overlays are content-authored |
++| DEF-008 | Provider 'web'/context tokens in evidence | Only evidence-backed tokens allowed; no evidence yet | None | Evidence from real provider runs | NO | Main | Phase 10 creates evidence (or not) |
++| DEF-009 | F16-3 — workforce guarantees stay engine-level (no production caller) | Wiring into live product flows is a product decision; guarantees hold engine-level | Documented limitation | A wiring increment decision | NO | Main | Sprint §30 "provider/Workforce real wiring" item — re-decide in Campaign A |
++| DEF-010 | Human pixel review | Requires a human; no image perception in agent threads (honest limitation) | Release gate remains open by design | Human review of `packaged-visual5`/later captures via SCREENSHOT_REVIEW_INDEX | YES for release (not for RC) | Nick | At the pre-release human gate |
++| DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |
+diff --git a/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md b/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+new file mode 100644
+index 0000000..192a056
+--- /dev/null
++++ b/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+@@ -0,0 +1,35 @@
++# FINAL_STATE_MATRIX — area × verified state (draft; completed at RC)
++
++updated: 2026-09-18T16:05Z
++Values: `yes` / `partial` / `pending` / `—` (not applicable). The `independent audit` column is
++`PENDING` by design during Campaign A for the unaudited range (Campaign B fills it).
++
++| Area | Implemented | Integrated (Main) | Source tests | Full tests | Packaged test | Real provider | Visual evidence | Human review | Independent audit | Known blocker | Release ready |
++|---|---|---|---|---|---|---|---|---|---|---|---|
++| Engine core (store/jobs/runs/effects) | yes | yes | yes | yes | partial | — | — | — | covered ≤8a2b25d; pending above | — | pending RC |
++| Engine lifecycle (startup/shutdown/restart) | yes | yes | yes | yes | partial | — | — | — | covered ≤8a2b25d | engine-loss UX gap (RISK-001) | pending RC |
++| Post-launch engine loss / recovery | partial | partial | partial | partial | repro (probe b) | — | pending | — | pending | findings 16/17 | NO |
++| Capabilities (web/files/terminal/github) | yes | yes | yes | yes | yes (p1cap*) | partial (401 wire) | — | — | covered ≤8a2b25d; CAP2-LONGTEXT open | — | pending RC |
++| Approvals (in-chat + boundaries) | yes | yes | yes | yes | yes (final16) | — | — | — | covered ≤8a2b25d; APR-01..03 open | APR-02 scope | pending RC |
++| Authorization/leases | yes | yes | yes | yes | partial | — | — | — | covered ≤8a2b25d | — | pending RC |
++| Memory store | yes | yes | yes | yes | yes (final13) | — | — | — | covered ≤8a2b25d; Phase 6 audit in progress | — | pending RC |
++| Memory proposals | yes | yes | yes | yes | yes | — | — | — | covered ≤8a2b25d | — | pending RC |
++| Artifact lineage | yes | yes | yes | yes | yes (final15/16) | — | — | — | covered ≤8a2b25d | F4 binding open | pending RC |
++| Transcription | yes | yes | yes | yes | yes | — | yes (batch 4) | OPEN | pending | TR-01/02, SEC-01-multipart | pending RC |
++| Workforce 5.0–5.6 (schemas→learning) | yes | yes | yes | yes | **assertion pending** | — | — | — | covered ≤8a2b25d | F16-3 no live caller | pending RC |
++| Workforce wiring (live product flows) | pending | — | — | — | — | — | — | — | pending | decision pending | NO |
++| Routing (AUTO/PREFERRED/FIXED) | yes | yes | yes | yes | partial | partial (401) | — | — | covered ≤8a2b25d | matrix completion | pending RC |
++| Providers (4) real validation | pending | yes | yes | yes | partial | **no real success yet** | — | — | pending | Phase 10 | NO |
++| Desktop shell (startup, updates, source identity) | yes | yes | yes | yes | yes | — | yes | OPEN | covered ≤8a2b25d | — | pending RC |
++| Settings | yes | yes | yes | yes | yes | — | partial (batches) | OPEN | pending (visual) | batch 8 settings half | pending RC |
++| Work/Projects/Permissions | yes | yes | yes | yes | partial | — | held (batch 3) | OPEN | covered ≤8a2b25d | — | pending RC |
++| Team/Office | yes | yes | yes | yes | partial | — | held (batch 5 team half) | OPEN | pending | — | pending RC |
++| Sidebar | yes | yes | yes | yes | yes (visual5) | — | yes (batch 5) | OPEN | pending | integration pending | pending RC |
++| Composer / Model / Tools | yes | yes | yes | yes | partial | — | pending (batch 7) | — | covered ≤8a2b25d | batch 7 | pending RC |
++| Error translation / failure states | partial | partial | partial | partial | repro | — | pending (batch 6) | — | pending | findings 16/17 | NO |
++| i18n (13 locales; donor cleanup) | yes | yes | yes | yes | yes (final17) | — | — | — | covered (audit 7) | — | pending RC |
++| Migrations 1–19 | yes | yes | yes | yes | **pending assertions** | — | — | — | covered ≤8a2b25d (14/15); 16–19 pending | packaged assertions | pending RC |
++| Packaging / runtime identity | yes | yes | yes | yes | yes | — | — | — | covered ≤8a2b25d | A1/REL-01 open | pending RC |
++| Visual integration (batches 1–5 → Main) | no | no | yes | yes | yes | — | yes | OPEN | never audited | not merged | NO |
++| P2/P3 sweep | pending | — | — | — | — | — | — | — | pending | docket open | NO |
++| Pre-audit corpus itself | yes | yes (this commit) | — | — | — | — | — | — | pending | grows per increment | pending RC |
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+new file mode 100644
+index 0000000..004ed4a
+--- /dev/null
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -0,0 +1,246 @@
++# INVARIANT_LEDGER — cross-cutting invariants for independent challenge
++
++updated: 2026-09-18T16:05Z
++rule: every invariant carries definition, owner, code paths, tests, known edge cases, and an audit
++target. Campaign B must explicitly attempt every "Audit target" line.
++
++Status legend: DELIVERED (claimed and covered by tests) · PARTIAL (delivered with an open gap) ·
++OPEN_GAP (known open finding attacks it).
++
++---
++
++## INV-AUDIT-001 — Builder cannot independently final-certify production output
++- Definition: the thread that writes production code never counts as its own independent reviewer;
++  independence is produced only by a separate fresh-context reviewer with its own record.
++- Owner: program process (AUTONOMOUS_OPERATION.md; review-relay protocol).
++- Code paths: `kel-v16-code-audit` worktree (read-only w.r.t. production); review-relay records.
++- Tests: n/a (process invariant). Evidence: every audit record states no production writes.
++- Edge cases: **Campaign A intentionally suspends independent audit** — all Campaign A
++  verification is parent-executed or self-review; independence arrives only in Campaign B. The
++  corpus must never present Campaign A evidence as "independent".
++- Audit target: verify no acceptance claim in this corpus was minted by the code author alone;
++  verify the last independent verdict (`8a2b25d`, increment 24) exists and is authentic.
++- Status: DELIVERED (process), suspended-by-design during Campaign A.
++
++## INV-FREEZE-001 — Frozen releases remain byte-identical
++- Definition: frozen release artifacts (`Kel-V1.6.0-Pre1-Frozen`, older V1–V1.5 folders, tags
++  `v1.6.0-pre1` @ `f24d9c2`, `v1.5.0` @ `5e76b21`) are never modified, moved, re-tagged, or
++  force-updated; a correction is a new tag.
++- Owner: release process (GITHUB_SYNC_POLICY.md §5).
++- Code paths: `scripts/freeze-release.ps1` (4-hash manifest), `ux-audit/verify-prior-frozen.ps1`.
++- Tests: re-verification runs (last: 2026-09-17, 4/4 hashes OK).
++- Edge cases: freeze tooling nests an inert runtime duplicate
++  (`resources/kel-engine/kel-engine/`) — pre1 removed it after assembly; `REL-01` (P2, open):
++  freeze engine staging is a no-op for the load path the app + manifest hash.
++- Audit target: re-hash the frozen folders + remote tags; confirm `main` and tags byte-equal.
++- Status: DELIVERED; REL-01 open on the tooling gap.
++
++## INV-CAP-001 — Ordinary prose never mutates capability state; forwarding stays byte-identical
++- Definition: capability state changes only via standalone human-friendly commands or the reserved
++  `[kel:<capability>=<state>]` namespace (canonical names/states only). Anything else — quotes,
++  code, URLs, nested brackets, malformed tokens, prose — is forwarded byte-identical and mutates
++  nothing.
++- Owner: capabilities subsystem (`runtime/kel/capabilities.py`, `acp_host.py`, `research.py`).
++- Tests: `test_capabilities.py` ORDINARY_PROSE corpus + reserved boundary corpus + a negative
++  control executing the pre-fix parser from git; `test_acp_host.py` end-to-end cases A–G.
++- Edge cases: messages >2000 chars silently ignore directives (CAP2-LONGTEXT P3, fails safe);
++  repeated directives last-write-wins; exact-removal rules (one adjacent separator max).
++- Audit target: new prose attacks (mixed quotes/fences/tables), long-paste behavior, unicode
++  confusables in the reserved namespace.
++- Status: DELIVERED (CAP-01/02/03 + CAP2-CLAUSE + CAP2-RESIDUAL closed through `631881a`).
++
++## INV-CAP-002 — Capability decisions fail closed
++- Definition: an unknown/unresolvable tool probe reads unavailable and `resolve()` denies; no
++  silent-open fallback.
++- Owner: `capabilities.py` (`availability` explicit fail-closed branch).
++- Tests: `test_unknown_probe_fails_closed_not_open` (synthetic unknown probe).
++- Audit target: enumerate every probe id in production; confirm each resolves closed.
++- Status: DELIVERED (DEAD-08 closure).
++
++## INV-APPROVE-001 — Approval resolution only through canonical resolvers
++- Definition: chat/UI approval resolution always delegates to `Autonomy.resolve_expansion` /
++  `Store.resolve_approval`; expiry, one-shot and scope semantics cannot be bypassed.
++- Owner: approvals subsystem (`chat_approvals.py`, `autonomy.py`, `service.py` `/api/approvals`).
++- Tests: `test_v14_autonomy.py`; packaged approvals journey (`run-approvals.sh` on final16).
++- Edge cases: **APR-01** (P2) payload-actor rejection implicit + comment claims a guard that is
++  absent; **APR-02/APR-03** (P2) unscoped resolvers addressed by bare id (shared root cause with
++  SEC-01).
++- Audit target: attempt resolved-without-announcement, cross-conversation resolution, replay, and
++  expired-anchor resolution.
++- Status: PARTIAL (open APR-01..03).
++
++## INV-LEASE-001 — Lease release is exact-once on every exit path
++- Definition: parallel-mission stream leases release exactly once on success, failure, refusal and
++  interruption; a release failure never masks the primary causal error.
++- Owner: parallel missions (`runtime/kel/parallel.py`, migration 19).
++- Tests: `test_workforce_parallel.py` (incl. ignored-path accounting).
++- Edge cases: F20-6 (ignored paths are neither integrated nor counted — recorded limitation);
++  F20-14 (no conflict-resolution timing).
++- Audit target: kill/interrupt mid-integration; double-release; release after failed integrate.
++- Status: DELIVERED (limitations recorded).
++
++## INV-ERROR-001 — Cleanup failure never masks the primary causal error
++- Definition: a failure while cleaning up (restore rollback, snapshot, teardown) is reported and
++  never replaces the original error; failures are never swallowed silently.
++- Owner: service/backup paths (`service.py` startup restore call, `backup.py`).
++- Tests: partially covered; **PER-02** (P2, open): failed/partial restore is silent;
++  **PER-03** (P2, open): pre-restore snapshots unbounded, snapshot failure aborts restore inside
++  the same try.
++- Audit target: inject restore failure + snapshot failure; verify the surfaced error is the
++  primary one and the failure is visible.
++- Status: OPEN_GAP (PER-02/PER-03).
++
++## INV-WF-001 — Commander is never spawned
++- Definition: the Commander is an interface concept only; never a spawnable template or worker.
++- Owner: workforce (`assignment.py` registry v2, 7 spawnable templates).
++- Tests: `test_workforce_assignment.py`.
++- Audit target: attempt to template/instantiate a Commander via every registry path.
++- Status: DELIVERED.
++
++## INV-WF-002 — Builder ≠ Verifier
++- Definition: where independent verification is required, verifier binding is a different agent
++  identity and family-diverse with a recorded fallback; verdicts refuse while blockers/criticals
++  are open.
++- Owner: `pods.py` (`run_d2`).
++- Tests: `test_workforce_d2.py`.
++- Audit target: same-family fallback path; verifier == builder attempt; VERIFIED-with-open-blocker.
++- Status: DELIVERED.
++
++## INV-WF-003 — Flag-off performs zero writes (parity by construction)
++- Definition: `workforce.enabled` off and `workforce.learning.shadow` off mean zero writes on every
++  path; behavior parity with pre-workforce builds.
++- Owner: staffing/delegation/pods/learning modules.
++- Tests: flag-off parity tests in every workforce phase (5.1–5.6).
++- Edge cases: explicit user corrections are user actions, never gated (5.6).
++- Audit target: diff DB before/after a full flag-off mission and a flag-off learning window.
++- Status: DELIVERED.
++
++## INV-WF-004 — Nothing auto-applies; never-gate is unwaivable by Kel
++- Definition: adaptive gating stays off; promotion queue requires the user; learnings are shadow;
++  never-gate findings can be waived only by the user, recorded.
++- Owner: `assurance.py` (`gate`, `waive_gate`), `learning.py` (promotion queue).
++- Tests: `test_workforce_assurance.py`, `test_workforce_learning.py`.
++- Audit target: waive never-gate as Kel (must refuse); promotion without user; adaptive flag on.
++- Status: DELIVERED.
++
++## INV-WF-005 — Evidence-bound closes; honest uncertain/failed
++- Definition: a completed close is refused on stale, unbound or missing evidence, or missing
++  criterion coverage; malformed evidence routes end in a violation; double-close refused.
++- Owner: `delegation.py` (`close_d1`), `pods.py`.
++- Tests: `test_workforce_d1.py`, `test_workforce_d2.py`.
++- Edge cases: F4 (no artifact-ownership/content binding — open, wiring increment); producer-check
++  optionality (N1) fixed at wiring.
++- Audit target: close with forged/stale evidence; close referencing another task's artifacts.
++- Status: PARTIAL (F4 open).
++
++## INV-WF-006 — Ledgers are append-only
++- Definition: `findings`, `evidence_records`, `workforce_messages` (and issued task contracts)
++  refuse UPDATE/DELETE at the SQLite trigger level.
++- Owner: `workforce.py` DDL (migration 16).
++- Tests: append-only trigger tests.
++- Audit target: direct SQLite UPDATE/DELETE attempts against trigger names; trigger tampering.
++- Status: DELIVERED.
++
++## INV-MEM-001 — Project/conversation isolation is preserved
++- Definition: memory records, proposals, and conversation-addressed subsystems are scoped to their
++  project/conversation; cross-scope reads or writes refuse with a policy error.
++- Owner: `memory.py` (`_require_project`), `acp_host.py` (`_memory_action` ownership compare).
++- Tests: `test_v16_proposals.py`, `test_v13_memory.py`; isolation regressions in
++  `test_v141_boundaries.py`.
++- Edge cases: the **bare-id addressing class** — `SEC-01` (vetting sessions) and `APR-02`
++  (approval resolvers) look records up by id without the ownership comparison the memory paths
++  perform. `MDL-01`/`COR-04` (model prefs accept a non-existent conversation).
++- Audit target: cross-project memory retrieval via every entry point; record addressed by foreign
++  id; proposals leaked across projects.
++- Status: PARTIAL (isolation holds on memory paths; sibling modules have open findings).
++
++## INV-MEM-002 — Learnings ride the memory store (no second system)
++- Definition: learnings are memory records with workforce source types
++  (`workforce_observed`/`workforce_cross_model`/`workforce_inferred`; user-stated rides
++  `user_confirmation`); provenance, trust ladder, supersede chains, conflict queueing and forget
++  semantics all apply unchanged; no new storage surface, no migration.
++- Owner: `learning.py` + `memory.py` SOURCE_TRUST.
++- Tests: `test_workforce_learning.py`.
++- Audit target: attempt a learning write bypassing the memory writer; duplicate key fork.
++- Status: DELIVERED.
++
++## INV-MEM-003 — Decay/preferences/confidence honesty
++- Definition: decay is computed at read time from each record's own creation; preferences only
++  from explicit user confirmation; confidence above the auto cap is stored capped and queued —
++  nothing promotes automatically; retros/metrics carry small-sample labels.
++- Owner: `learning.py`, `memory.py`.
++- Tests: `test_workforce_learning.py` (decay, preference-requires-user, promotion queue).
++- Edge cases: 24-N2 multiplicity ordering note; F23-2/F23-8/F23-9 rate-denominator deviation.
++- Audit target: recompute decay/rates from raw rows; attempt promotion without user.
++- Status: DELIVERED (limitations recorded).
++
++## INV-LINEAGE-001 — Every generated artifact can say where it came from
++- Definition: artifact lineage chains are recorded and readable (`/api/lineage` →
++  `{versions:[...]}`); the workspace panel exposes origin for generated artifacts.
++- Owner: artifact lineage (core table `artifact_lineage`, unversioned by design).
++- Tests: `test_v15` lineage coverage; packaged lineage probe on final16.
++- Audit target: unrecorded artifact generation paths; lineage rows without real artifact binding
++  (see F4).
++- Status: DELIVERED (F4 binding gap open).
++
++## INV-PACKAGE-001 — Packaged app uses the intended runtime engine
++- Definition: the packaged engine is built from the same commit and its identity
++  (`ENGINE_VERSION`, hash) matches the fresh `dist/runtime` build; probes assert it.
++- Owner: packaging (`scripts/build-runtime.ps1`, `kel-builder.json`, probe scripts).
++- Tests: packaged engine hash checks in `run-p1-capabilities.sh` etc.
++- Edge cases: REL-01 (freeze staging no-op); bundled `bundled-aioncore` staged from cache (stock
++  binary not in git).
++- Audit target: rebuild from a clean clone; compare engine hash + version end-to-end.
++- Status: DELIVERED (with REL-01 noted for the freeze script).
++
++## INV-GIT-001 — Publication is never verification; no history rewrite
++- Definition: pushes are explicit-refspec only, never forced, never tags-all/mirror; a
++  pre-publication public-safety scan gates each transmitted range; `main` advances only by FF to a
++  frozen release.
++- Owner: release process (GITHUB_SYNC_POLICY.md; `ux-audit/github-sync-recon/`).
++- Tests: scan records + `ls-remote` verification per publication.
++- Audit target: re-scan the published range; verify remote refs match records; no phantom tags.
++- Status: DELIVERED.
++
++## INV-IPC-001 — Renderer→main IPC validates sender frames
++- Definition: every privileged channel validates `senderFrame` before acting.
++- Owner: `desktop/.../KelService.ts`.
++- Edge cases: **INT-01** (P3, open): `kel:artifact-reveal` handler lacks the check.
++- Audit target: enumerate channels; attempt calls from an unexpected frame.
++- Status: OPEN_GAP (INT-01).
++
++## INV-VISUAL-001 — Visual never writes Main; integration preserves lineage
++- Definition: the visual worktree writes only its own branch; Main integrates (never force
++  updates), preserving visual commit lineage; `active_owned_files` prevents races.
++- Owner: program process (AUTONOMOUS_OPERATION.md; VISUAL_STATUS.md).
++- Tests: n/a (process). Evidence: commit topology.
++- Audit target: integration conflict resolutions (a high-value audit area once integration lands).
++- Status: DELIVERED; integration pending in Campaign A.
++
++## INV-ROUTE-001 — Deterministic routing, no silent substitution
++- Definition: AUTO/PREFERRED/FIXED resolve deterministically; FIXED never silently substitutes;
++  fallback records its basis; grants are fail-closed against the authority ceiling.
++- Owner: `router.py`, `assignment.py`.
++- Tests: `test_workforce_assignment.py` (cross-mode arguments, fallback_basis).
++- Audit target: FIXED with missing model; provider disappears between assignment and execution.
++- Status: DELIVERED.
++
++## INV-UI-001 — No raw infrastructure errors in user-facing surfaces
++- Definition: engine loss / transport failure surfaces a translated, recoverable user state — never
++  a raw `TypeError: fetch failed` class message; recovery is explicit (reconnect/restart) and a
++  degraded state must not claim success.
++- Owner: renderer error paths + `KelService.ts` + engine-loss supervision.
++- Tests: packaged probe b reproduces the raw error today (open findings 16/17 — **engine-loss
++  behavior is Campaign A scope, batch 6**).
++- Audit target: kill the engine mid-stream, mid-request, at boot, at shutdown; confirm each
++  surface; confirm no false success.
++- Status: OPEN_GAP (to close in Campaign A).
++
++---
++
++## Maintenance
++
++- New invariants are added when a change introduces cross-cutting behavior; do not delete entries
++  during Campaign A — mark superseded if genuinely replaced and explain.
++- Every increment record must name which invariants its change touches
++  (`INVARIANT_LEDGER` pointers) and any new AUDIT_TARGETS lines.
+diff --git a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+new file mode 100644
+index 0000000..b94d653
+--- /dev/null
++++ b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+@@ -0,0 +1,19 @@
++# KNOWN_LIMITATIONS — honest limits of the Campaign A evidence
++
++updated: 2026-09-18T16:05Z
++rule: a limitation is never a hidden assumption. If it bounds what an evidence claim can mean, it
++must be here.
++
++| # | Limitation | What it bounds | Compensating evidence | Re-check |
++|---|---|---|---|---|
++| LIM-1 | **No independent audit during Campaign A.** All Campaign A verification is self/parent-executed. | Campaign A "PASS" means internally verified, never independently reviewed. Campaign B is the independence. | Historical audit discipline is preserved and referenced; the sprint directive explicitly pauses audits. | Campaign B |
++| LIM-2 | **No real provider credentials validated yet** (dummy-key probes reached the wire once, 401). | PROVIDER_VALIDATION_MATRIX rows marked `mock/static` cannot be read as real validation. | Phase 10 attempts real calls where access allows; unavailable paths recorded as such. | Phase 10 + Campaign B |
++| LIM-3 | **Human pixel review not performed** (agents have no image perception). | Visual "packaged acceptance PASS" is automated only; it is NOT visual sign-off. | SCREENSHOT_REVIEW_INDEX prepared for the human reviewer; `human_visual_gate: OPEN` tracked. | Human gate |
++| LIM-4 | **Engine-loss behavior currently fails honestly but rawly** (findings 16/17: `TypeError: fetch failed` surfaces). | The RC must not claim graceful engine-loss UX until the fix lands and is evidenced. | Probe b reproduction documented in PACKAGED_EVIDENCE_INDEX. | When batch 6 lands |
++| LIM-5 | Packaged migration assertions 15–19 not yet recorded. | Packaged app schema state on upgrade is not yet proven end-to-end. | RC checklist in MIGRATION_LEDGER.md. | At RC |
++| LIM-6 | Historical F-finding limitations carried: F20-6 (ignored paths neither integrated nor counted), F20-14 (no conflict-resolution timing), N21-5 (undeclared writes reported not counted), R22-3 (evidence-package nits). | Workforce 5.5 guarantees hold within these recorded bounds. | Recorded in 5.5 record + audits 20–22. | Campaign B |
++| LIM-7 | 5.6 learning limitations: lens-evidence mission scoping without a findings→project link; identical-value re-observation multiplicity (24-N2); rate denominator deviations (F23-2/8/9). | Metric reads carry small-sample/denominator caveats; nothing auto-applies. | Recorded in 5.6 record + audit 24 residuals. | Campaign B |
++| LIM-8 | Reviewer sessions in this runtime are **static-only** (no execution); execution artifacts are parent-produced and commit-bound. | Historical "independent" verdicts verified artifacts rather than re-running them. Campaign B must re-run critical commands itself where possible. | Artifacts are reproducible from commits; commands documented in TEST_EVIDENCE_INDEX. | Campaign B |
++| LIM-9 | Windows-only validation. | macOS/Linux behavior is unverified. | macOS pipeline concerns were treated in v1.5 gates; frozen releases exist for Win. | Release gates |
++| LIM-10 | Frozen-release verification is hash-based. | It proves byte identity, not provenance beyond the manifest. | 4-hash manifests + freeze tools. | RC |
++| LIM-11 | Conversation transcripts/chat history are NOT authoritative evidence. | This corpus is the evidence layer; chat is control-plane only. | AUTONOMOUS_OPERATION.md disk-backed handoffs. | Always |
+diff --git a/docs/v1.6/pre-audit/MIGRATION_LEDGER.md b/docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+new file mode 100644
+index 0000000..afeba0f
+--- /dev/null
++++ b/docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+@@ -0,0 +1,52 @@
++# MIGRATION_LEDGER — schema migrations 1..N
++
++updated: 2026-09-18T16:05Z
++rule: no unrecorded schema mutation. Every migration row records schema, idempotence, fresh/upgrade
++tests, service wiring and packaged-boot verification.
++
++Wiring: `service.py` startup imports and calls the module `ensure_schema` functions (workforce,
++assignment, delegation, parallel at startup; memory/others per module use). All share the
++`schema_migrations(version INTEGER PRIMARY KEY, name TEXT, applied REAL, note TEXT)` table and the
++standard pattern: version check first → `CREATE IF NOT EXISTS` DDL → `INSERT OR IGNORE`. Existing
++databases get one backup before the first mutation of a migration family (e.g. memory proposals
++`_backup`); fresh databases skip the backup.
++
++| # | Name | Module | Feature | Commit | Schema | Fresh-DB test | Upgrade test | Idempotence | Packaged boot |
++|---|---|---|---|---|---|---|---|---|---|
++| 1 | v13-memory | memory.py | memory store + audit events + FTS | v1.3 era | memory tables | test_v13_memory | test_v13_memory upgrade paths | version check | v1.3 packages |
++| 2 | v13-projectmap | projectmap.py | project map | v1.3 era | project tables | test_v13_projectmap | test_v14_upgrade | version check | v1.3 |
++| 3 | v13-continuation | continuation.py | continuation/resume | v1.3 era | continuation tables | test_v13_continuation | idem | version check | v1.3 |
++| 4 | v13-recipes | recipes.py | recipes | v1.3 era | recipes tables | test_v13_recipes | idem | version check | v1.3 |
++| 5 | v14-solution | solution.py | solution briefs | v1.4 era | solution_briefs | test_v14_solution | idem | version check | v1.4 |
++| 6 | v14-team | team.py | team + events | v1.4 era | team tables | test_v14_team | idem | version check | v1.4 |
++| 7 | v14-providers | providers.py | provider registry + credentials | v1.4 era | provider tables | test_v14_providers | idem | version check | v1.4 |
++| 8 | v14-autonomy | autonomy.py | autonomy + approvals | v1.4 era | approvals, boundary_expansion_requests | test_v14_autonomy | idem | version check | v1.4 |
++| 9 | v14-diagnostics | diagnostics.py | diagnostics | v1.4 era | diagnostics tables | test_v14_diagnostics | idem | version check | v1.4 |
++| 10 | v15-authorization | authorize.py | authorization/leases | v1.5 era | authorization tables | test_v15_authorize | idem | version check | v1.5 packages |
++| 11 | v15-vetting | vetting.py | vetting bank/sessions | v1.5 era | vetting tables | vetting suite | idem | version check | v1.5 |
++| 12 | v15-transcription | transcription.py | transcription | v1.5 era | transcription tables | transcription suite | idem | version check | v1.5 |
++| 13 | v15-model-prefs | model_prefs.py | model preferences | v1.5 era | model_prefs tables | model prefs tests | idem | version check | v1.5 |
++| 14 | v15-conversation-capabilities | capabilities.py | conversation capability overrides | v1.5 era | capability tables | test_capabilities | idem | version check | v1.5 |
++| 15 | v16-memory-proposals | memory.py (`PROPOSALS_VERSION=15`, `ensure_proposals`) | memory proposal surface (Phase 1) | `a8c3511` era (verify) | `memory_proposals` + 2 indexes | test_v16_proposals | test_v13_memory / test_v14_upgrade pins moved to 15 by design | version check; one backup before first proposals mutation of existing data | package-final13 (memoryprops PASS) |
++| 16 | v16-workforce-schemas | workforce.py | task_contracts, workforce_messages, findings, evidence_records, skill_packs + append-only triggers | Phase 5.0 (`9085335`/`cc909b9`) | 5 tables + triggers | test_workforce suite | planned | version check | **assertion pending** |
++| 17 | v16-budget-reservations | assignment.py | budget_reservations | Phase 5.1 (`9d6ed55`/`5b83f0e`) | budget_reservations | test_workforce_assignment | planned | version check | **assertion pending** |
++| 18 | v16-workforce-task-link | delegation.py | contract↔milestone link | Phase 5.2 (`894be5b`) | additive unique link | test_workforce_d1 | planned | version check | **assertion pending** |
++| 19 | v16-workforce-parallel | parallel.py | parallel mission teams | Phase 5.5 (`5f77f42`) | parallel tables | test_workforce_parallel | planned | version check | **assertion pending** |
++
++Next free version: **20**. (Phase 5.6 deliberately used no new migration; learnings ride the
++memory store.)
++
++## RC checklist (to assert on the pre-audit package)
++
++- [ ] no duplicate versions (query `schema_migrations` for duplicate `version`)
++- [ ] no missing versions expected by architecture (1..max contiguous)
++- [ ] full chain succeeds on a fresh profile
++- [ ] supported upgrade succeeds on a real prior DB (fixture at migration 14/15, then full chain)
++- [ ] `schema_migrations` max == expected on a packaged boot with a fresh data dir
++- [ ] backup-before-first-mutation behavior verified for migration 15 path
++
++## Maintenance rules
++
++- A new migration lands only with: version constant + name constant, idempotence, a focused test,
++  a ledger row here, and a packaged assertion plan.
++- Never renumber; never reuse.
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+new file mode 100644
+index 0000000..1c713fc
+--- /dev/null
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -0,0 +1,64 @@
++# P2_P3_DISPOSITION — every finding, current disposition
++
++updated: 2026-09-18T16:05Z (seed; completed during the P2/P3 sweep phase — sprint directive §40)
++The full historic finding set lives in the audit records (`kel-v16-code-audit/docs/code-audit/`,
++increments 1–24). This file carries the live disposition table and grows to cover every historic
++P2/P3. Campaign B independently re-verifies every disposition; no finding disappears.
++
++Allowed final dispositions: **FIXED · STALE · NOT_APPLICABLE · DEFERRED_NON_RELEASE ·
++OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (sweep pending)`.
++
++## P2 — open at corpus open
++
++| ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Test | Release relevance | Audit confirm |
++|---|---|---|---|---|---|---|---|---|
++| APR-01 | `/api/approvals` payload-actor rejection implicit; comment claims a guard that is absent | P2 | `13_PHASE3_DELTA_AUDIT.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | add payload-actor test | TBD in sweep | pending |
++| APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | cross-scope resolution test | TBD | pending |
++| APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on restart | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | restart regression | TBD | pending |
++| A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | OPEN (sweep pending) | — | stale-descriptor boot test | TBD | pending |
++| REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | freeze tooling test | TBD | pending |
++| SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | cross-scope session attack | TBD | pending |
++| PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | OPEN (sweep pending) | — | failure injection | TBD | pending |
++| PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | retention test | TBD | pending |
++| TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | OPEN (sweep pending) | — | shutdown cleanup test | TBD | pending |
++| TR-02 | Abandoned-stream UX in the transcription renderer (residual) | P2 | `02_FILE_REVIEW_LEDGER.md` | OPEN (sweep pending) | — | renderer state test | TBD | pending |
++
++## P3 — open at corpus open
++
++| ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Release relevance | Audit confirm |
++|---|---|---|---|---|---|---|---|
++| APR-04 | `approval_announcements` DDL defined twice, with no migration version | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| APR-05 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| APR-06 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| DEAD-06 | `packaging/ux-audit.cjs` unwired and misfiled (referenced by nothing outside docs) | P3 | `08_DEAD_CODE.md` | OPEN (sweep pending) | — | TBD | pending |
++| CAP2-LONGTEXT | `directive_clauses()` returns `[]` above 2000 chars — reserved directives in long pastes silently ignored (fails safe) | P3 | `19_CAP2_RESIDUAL_REAUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| INT-01 | Inconsistent sender-frame validation (`kel:artifact-reveal` lacks the check) | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| PER-04 | `KEL_DATA_DIR` puts `kel-credentials.json` inside the backup root (override path only) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-03 | `KelModelControl.setConversation` has no error path | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-04 | `set_conversation` accepts a non-existent conversation | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-05 | `search.py` bare `except` per section | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-06 | KeyError leaks from vetting/transcription dispatch | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
++| MDL-01 | `set_conversation` accepts a non-existent conversation (with COR-04) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| THM-01 | Theme overrides keyed by theme id survive theme deletion | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| SEC-01-multipart | Caller-supplied filename interpolated into a multipart header unescaped (transcription) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
++| DEAD-05 | `service.py` calls `Vetting` privates (`_questions`, `_format_resurface`) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| ERR-01 | KeyError leaks from dispatch (with COR-06) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
++
++## Closed / retracted in the audited range (for completeness — do not re-open without cause)
++
++- **CAP-01, CAP-02, CAP-03 (P1)** → FIXED (`75d1f68`, `327e5b2`, `631881a`; audits 3–5 CONTINUE).
++- **CAP2-CLAUSE / CAP2-RESIDUAL (P1-adjacent)** → FIXED (bracketed clause → reserved `[kel:...]`
++  namespace; negative-control discrimination recorded).
++- **DEAD-01** superseded; **DEAD-07** superseded; **DEAD-08** FIXED with fail-closed regression.
++- **I18N-01** — RETRACTED by the auditor (structurally unobservable; audit 7 self-correction).
++- Per-increment F-findings (F1–F23 arcs): closure tables live in the numbered audit records
++  `21`–`37`; none remain open except as carried in the rows above (F4/F16-3/F17-4/F18-5/R22-3 are
++  carried items with their own dispositions in DEFERRED_ITEMS.md / REQUIREMENTS_TRACEABILITY.md).
++
++## Sweep worklist (sprint §40)
++
++1. Complete one-line descriptions for APR-05/06 from `13_PHASE3_DELTA_AUDIT.md`.
++2. Decide per finding: release-relevant → fix in Campaign A; else DEFERRED_NON_RELEASE with a
++   rationale.
++3. Every fix gets a test + a CHANGE_LEDGER entry + an updated row here.
++4. Campaign B re-verifies all rows; discrepancies are findings.
+diff --git a/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+new file mode 100644
+index 0000000..8f756e7
+--- /dev/null
++++ b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+@@ -0,0 +1,38 @@
++# PACKAGED_EVIDENCE_INDEX — packaged-app proof per build
++
++updated: 2026-09-18T16:05Z
++rule: source-passed is never packaged-passed. Every row must name a real packaged build.
++Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --win --x64
++--config.directories.output=../dist/package-NAME`; builds take ~5–8 min. Engine built by
++`scripts/build-runtime.ps1` (PyInstaller). Evidence bundles live under `ux-audit/` (build logs,
++`runs/<name>/`), not in this repo.
++
++| Package | Source commit | Engine identity | Migration @ boot | Probes / journeys | Result | Evidence | Notes |
++|---|---|---|---|---|---|---|---|
++| `package-final11` | pre1 era | fresh build | ≤15 | pre-checkpoint battery | PASS | ux-audit/run-precheckpoint-*.sh; `Kel-V1.6.0-Pre1-Frozen` 3/3 verifier | byte-identical to the frozen pre1 folder |
++| `package-final12` | — | — | — | — | **UB — never cite** | — | superseded intermediate (UI bug) |
++| `package-final13` | Phase 1 era | fresh | 15 | memoryprops journey | PASS | ux-audit/run-memoryprops.sh; memoryprops-db-probe.py | memory proposal surface |
++| `package-final15` | Phase 2 era | fresh | 15 | lineage probe | PASS | ux-audit/run-lineage-probe.sh | artifact lineage |
++| `package-final16` | Phase 3 era | fresh | 15 | approvals journey + lineage re-run | PASS | ux-audit/run-approvals.sh; verify-approvals.py | in-chat approvals |
++| `package-final17` | `fd04c00` | fresh (PyInstaller 6.19.0 / Python 3.14.3) | 15 | copy-scan over reachable routes + approvals + lineage journeys | PASS | ux-audit/run-phase4.sh; package-final17-build.log | Phase 4 completion evidence |
++| `package-p1cap` | `75d1f68` era | fresh (hash == fresh `dist/runtime`) | 15 | sessiontools journey + packaged-engine capability probe | PASS | ux-audit/run-p1-capabilities.sh; p1-capability-engine-probe.py | CAP-01 regression check; real transport reached (401 w/ dummy key) |
++| `package-p1cap2` | `327e5b2` era | fresh | 15 | sessiontools (bracket-clause steps) + CAP2 forwarded-text probe + engine regression | PASS | ux-audit/run-cap2-clause.sh | clause grammar |
++| `package-p1cap3` | `631881a` era | fresh | 15 | sessiontools (reserved/ residual steps) + residual db probe + engine regression | PASS | ux-audit/run-cap2-residual.sh | reserved `[kel:...]` grammar |
++| `package-visual5` | `ac85eb3` (visual branch) | fresh from visual branch | 15 | probe a: shell sweep 21 surfaces (0 console errors; first paint 3.03s; 23 screenshots); probe b: color control/New Chat/engine-loss (reproduces findings 16/17); probe c: populated sidebar (overlapPx −4, gutter 32px, leading marks correct) | PASS | ux-audit/visual/runs/visual5-{a,b,c}/; `kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md` | batches 1–5 acceptance; 35 screenshots indexed |
++
++## Known pending packaged work (carry-forward)
++
++- Packaged migration assertions 16/17/18/19 on a packaged boot are **not yet asserted**
++  (carry-forward). Campaign A: assert `schema_migrations` max = current + correct rows on the RC
++  package.
++- Packaged engine-loss/recovery behavior: current raw failure surfaces are reproduced by probe b
++  (findings 16/17) — Campaign A closes this behavior (visual batch 6 + engine supervision work).
++- RC package: `package-prea` (name reserved) — full battery + migration assertions + journeys at
++  PRE_AUDIT_V1_6_HEAD. Recorded here when built.
++
++## Maintenance rules
++
++- One row per packaged build that produced acceptance evidence; never delete a row (annotate
++  supersession).
++- `Engine identity` must state how it was verified (hash comparison to fresh build, or which
++  probe asserted it).
+diff --git a/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+new file mode 100644
+index 0000000..0987f22
+--- /dev/null
++++ b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+@@ -0,0 +1,33 @@
++# PROVIDER_VALIDATION_MATRIX — provider/model/runtime validation
++
++updated: 2026-09-18T16:05Z (seed; completed in Phase 10 — sprint §36)
++rule: **mock validation is never real-provider validation.** A row may only read `real: PASS`
++with a recorded call artifact (timestamp, transport, result — never credentials).
++
++Providers defined in `runtime/kel/providers.py` (`DEFINITIONS`): `claude-code` (native CLI,
++subscription), `codex` (native CLI, subscription), `internal` (Anthropic API, `ANTHROPIC_API_KEY`),
++`deepseek` (API, `DEEPSEEK_API_KEY`). Engine adapters: native, internal, coding, durable/research.
++
++## Matrix
++
++| Provider | Model | Runtime | AUTO | PREFERRED | FIXED | fallback | Capability grants | Privacy/local-only | Budget | Real call? | Mock only? | Credentials? | Result | Evidence | Known limitation |
++|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
++| internal (Anthropic API) | claude-sonnet-4-6 | engine adapter | routed via assignment tests | routed | routed | recorded-basis tests (engine) | fail-closed grants tests | privacy-enforced checks in assignment | reservations tested | **wire reached once** — packaged engine probe, HTTP 401 with dummy key (`package-p1cap`) | routing/assignment fixtures | none available in this environment (as of corpus open) | transport real, auth denied; real success NOT yet validated | ux-audit/p1-capability-engine-probe.py; 5.1 record | real-credential run pending Phase 10 |
++| deepseek | deepseek-chat / deepseek-reasoner | engine adapter | same test surface | same | same | same | same | — | same | no | fixtures only | none available | untested real | — | — |
++| claude-code | claude-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | fallback recorded at assignment layer | native tools (text/tools/edit/shell) | subscription auth | n/a | no | fixtures only | unknown in this environment | untested real | — | Phase 10 |
++| codex | codex-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | same | text/tools/edit/shell | subscription auth | n/a | no | fixtures only | unknown | untested real | — | Phase 10 |
++
++## Model routing semantics under test (engine-level, audited through 8a2b25d)
++
++- AUTO / PREFERRED / FIXED resolution with no silent substitution; requirement profiles fail
++  closed; overlays are a graceful no-op registry (Phase 5.1; audits 10–11).
++- Per-mode fallback basis recorded (`fallback_basis`); cross-mode arguments refused.
++- Capability grants fail closed against the authority ceiling.
++
++## Phase 10 completion checklist
++
++- [ ] Enumerate every provider path reachable in this environment; attempt a real call where a
++      credential exists; record timestamp/result.
++- [ ] Record unavailable paths as `unavailable` — never as pass.
++- [ ] Confirm no credentials appear in any evidence artifact (scan).
++- [ ] Re-run the model-routing fixtures at RC and attach counts.
+diff --git a/docs/v1.6/pre-audit/README.md b/docs/v1.6/pre-audit/README.md
+new file mode 100644
+index 0000000..75cff7c
+--- /dev/null
++++ b/docs/v1.6/pre-audit/README.md
+@@ -0,0 +1,103 @@
++# Kel V1.6 — Pre-Audit Evidence Corpus
++
++status: CAMPAIGN_A_IN_PROGRESS
++opened: 2026-09-18T16:05Z, at Main HEAD `fd98cc4`
++owner: autonomous Main / Program Director (single writer; see AUTONOMOUS_OPERATION.md)
++scope: the whole V1.6 declared surface, emphasized on the post-audit range
++
++## Purpose
++
++This corpus exists so a fresh-context auditor — with no access to any chat history — can
++systematically inspect 100% of the declared V1.6 scope, and so a subsequent fresh-context repair
++agent can systematically resolve every finding that audit accepts.
++
++It is maintained **while** the Campaign A implementation sprint runs, not reconstructed afterwards.
++
++## Program strategy (three campaigns)
++
++- **Campaign A — implementation sprint (current).** Finish the remaining autonomous V1.6
++  implementation and produce a PRE-AUDIT RELEASE CANDIDATE. Independent audit cycles are paused;
++  ordinary engineering quality control is not (self-review, focused tests, regression, packaged
++  verification, atomic commits, records). Stop before release/freeze/tag/human gates.
++- **Campaign B — 100% independent audit (future).** A fresh-context auditor consumes this corpus,
++  dispositions every declared scope item, and produces ONE master findings ledger
++  (`docs/v1.6/audit-final/MASTER_FINDINGS.md`, created by Campaign B, stable IDs
++  AUD-BLOCK-### / AUD-MAJOR-### / AUD-MINOR-### / AUD-SUG-###).
++- **Campaign C — 100% repair (future).** A fresh implementation agent verifies and repairs every
++  accepted finding, adds discriminating coverage, proves closure, updates the master ledger, and
++  produces POST_REPAIR_V1_6_HEAD.
++
++## Key program points (repository truth at corpus open)
++
++- **Last genuinely independently audited production point (Main line): `8a2b25d`** — audit
++  increment 24 CONTINUE, covering `ba52869..8a2b25d`; cumulative audited coverage from `5e76b21`
++  through `8a2b25d` (records `29`–`37` and packages `increment-16`…`increment-24` in the audit
++  worktree `kel-v16-code-audit`).
++- Docs-only commits above it on `ux/v15-journeys`: `c4ae724`, `5127bac`, `fd98cc4` (no production
++  change; verified per-commit).
++- **First intentionally unaudited production commit: TBD — it opens with the first production
++  commit of Campaign A** and is recorded in `COMMIT_LEDGER.md` when it lands.
++- Current Main HEAD at open: `fd98cc4`; remote tip `origin/ux/v15-journeys` = `fd98cc4`; frozen
++  refs `v1.5.0` / `v1.6.0-pre1` verified on the remote and byte-untouched locally.
++- **PRE_AUDIT_V1_6_HEAD:** to be recorded at the end of Campaign A
++  (`docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md`).
++- Visual lane: `ux/v16-visual-fix` @ `ac85eb3` (batches 1–5) — automated + packaged acceptance
++  only; **not covered by any independent audit**; not yet integrated into Main. Integration is a
++  Campaign A goal (§44 of the sprint directive).
++- Rust verdict: NO_MIGRATION_NEEDED_NOW (rust-audit worktree at `9c1e7d0`); freshness re-verified
++  in Phase 11.
++- Baseline at open: engine suite **878 passed (+10 subtests)** at `fd98cc4` (fresh run
++  2026-09-18; evidence in `evidence/campaign-a-baseline/`).
++- Open docket at open: P2 = APR-01..03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-02;
++  P3 = APR-04..06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03..06, MDL-01, THM-01,
++  SEC-01-multipart, DEAD-05, ERR-01.
++
++## Directory map
++
++| Path | Content |
++|---|---|
++| README.md | this file — strategy, program points, provenance rules |
++| AUDIT_SCOPE.md | the declared V1.6 audit surface; every item gets a Campaign B disposition |
++| COMMIT_LEDGER.md | every production-affecting commit from the last audited point → PRE_AUDIT_V1_6_HEAD |
++| CHANGE_LEDGER.md | product-behavior changes in the unaudited range (CHG-###) |
++| REQUIREMENTS_TRACEABILITY.md | requirement → implementation → commit → tests → evidence matrix |
++| INVARIANT_LEDGER.md | cross-cutting invariants with code paths, tests, edge cases, audit targets |
++| TEST_EVIDENCE_INDEX.md | test runs: command, commit, date, result, count, category |
++| PACKAGED_EVIDENCE_INDEX.md | packaged-app proof per build (never confused with source tests) |
++| MIGRATION_LEDGER.md | migrations 1..N — schema, fresh/upgrade tests, packaged boot verification |
++| PROVIDER_VALIDATION_MATRIX.md | provider/model/runtime validation, incl. AUTO/PREFERRED/FIXED & fallback |
++| VISUAL_EVIDENCE_INDEX.md | visual findings, batches, packaged acceptance, human gate status |
++| P2_P3_DISPOSITION.md | every historic P2/P3 and its current disposition |
++| RISK_REGISTER.md | risks discovered during implementation (not confirmed bugs) |
++| DEFERRED_ITEMS.md | deliberate deferments with rationale, impact, revisit conditions |
++| KNOWN_LIMITATIONS.md | honest limitations (credentials, environment, human gates) |
++| AUDIT_TARGETS.md | adversarial seed list — where Campaign B should attack first |
++| REPAIR_HINTS.md | navigation clues for Campaign C (no prescribed fixes without evidence) |
++| FINAL_STATE_MATRIX.md | area × verified-state matrix (completed at RC) |
++| AUDIT_HANDOFF.md | the Campaign B entry point (finalized at PRE-AUDIT RC) |
++| increments/ | one record per substantial increment |
++| evidence/ | raw evidence bundles (logs, outputs) grouped by increment/phase |
++
++## Provenance rules
++
++1. Every claim names a commit, a command, a date and an artifact path.
++2. Categories are never blurred:
++   - **implementation evidence** — produced by the implementer (diffs, records);
++   - **self-review** — the implementer's own critical pass;
++   - **parent-executed tests** — run by the implementing thread (most of this corpus);
++   - **packaged evidence** — produced from a real packaged build;
++   - **independent review** — only what a separate fresh-context reviewer produced (audit
++     worktree records, review relay). Campaign A records never become "independent" by age.
++3. Unknown stays unknown; deferred stays deferred; unaudited stays unaudited.
++4. Publication is never verification (GITHUB_SYNC_POLICY.md).
++5. Evidence belongs on disk, bounded and referenced — not in chat history.
++
++## How a fresh auditor should use this package
++
++1. Read `AUDIT_HANDOFF.md` (entry point; when finalized it binds PRE_AUDIT_V1_6_HEAD).
++2. Walk `AUDIT_SCOPE.md` and disposition every item (PASS / FAIL / PARTIAL / NOT_APPLICABLE /
++   NOT_TESTABLE / DEFERRED_WITH_RATIONALE). No scope item may silently disappear.
++3. For each commit in `COMMIT_LEDGER.md`, open its increment record and evidence bundle.
++4. Challenge every invariant in `INVARIANT_LEDGER.md`, seeded by `AUDIT_TARGETS.md`.
++5. File findings in the Campaign B master ledger using the stable ID scheme.
++6. Do not implement fixes (that is Campaign C).
+diff --git a/docs/v1.6/pre-audit/REPAIR_HINTS.md b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+new file mode 100644
+index 0000000..2dd0796
+--- /dev/null
++++ b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+@@ -0,0 +1,39 @@
++# REPAIR_HINTS — navigation clues for Campaign C
++
++updated: 2026-09-18T16:05Z
++rule: navigation, not prescription. Do not invent fixes; verify against evidence first. Each hint
++names where the defect (if confirmed) most likely lives and how to validate a repair.
++
++| Candidate | Likely files | Likely symbols | Related tests | Validation | Expected invariant |
++|---|---|---|---|---|---|
++| SEC-01 vetting ownership | `runtime/kel/vetting_session.py`, `runtime/kel/acp_host.py` | `Vetting.session()`, the 8 session-addressed entrypoints (`ingest`, `process`, `finish`, `preview`, `help`, `conflict_action`, `greybox`, `apply_pending`) | vetting suite; add cross-scope regression | Route each action through a conversation-scoped lookup OR compare `session['project_id']` vs `_project_of(data['conversation'])` (mirror `_memory_action`); acceptance criteria recorded in audit `16_FINDING_STATUS.md` | INV-MEM-001 |
++| APR-01 approvals actor | `runtime/kel/chat_approvals.py`, `runtime/kel/service.py` | `/api/approvals` handler | approvals journey (packaged), add payload-actor rejection test | Assert `'actor' in data` rejection matches sibling endpoints; fix comment-vs-code drift | INV-APPROVE-001 |
++| APR-02 resolution scope | `runtime/kel/chat_approvals.py` | resolution lookup | add conversation-scope regression | Make resolution conversation-scoped like the read | INV-APPROVE-001 |
++| APR-03 restart queue | `runtime/kel/chat_approvals.py` (~line 95) | `_memory_check_queue` instance state | add restart test | Persist or rebuild the queue on restart; assert no lost checks | INV-MEM-001 |
++| APR-04 DDL duplication | `runtime/kel/chat_approvals.py`, `runtime/kel/autonomy.py` (`approval_announcements`) | DDL blocks | schema tests | De-duplicate DDL; decide versioned vs core-schema treatment (like `artifact_lineage`) | INV-DATA-001 (append-only) |
++| PER-02 silent restore | `runtime/kel/service.py` (apply_pending_restore call site), `runtime/kel/backup.py` | `apply_pending_restore`, startup try/except | backup-probe.py; add failure injection | Surface failure to the app state; never swallow | INV-ERROR-001 |
++| PER-03 snapshot growth | `runtime/kel/backup.py` | `.pre-restore-*` creation | backup probe | Retention/pruning; move snapshot out of the restore try (failure of snapshot must not abort restore silently) | INV-ERROR-001 |
++| PER-04 KEL_DATA_DIR creds | `runtime/kel/backup.py`, desktop `kelCredentials.ts`, `KelService.ts` `dataRoot()` | backup root selection | targeted test with KEL_DATA_DIR set | Exclude credentials when data dir is overridden | security |
++| A1 engine version reuse | `desktop/.../process/services/kel/KelService.ts:43-52` | descriptor read/reuse path | boot tests | Validate `descriptor.engine_version` before reuse; else respawn | INV-PACKAGE-001 |
++| REL-01 freeze staging | `scripts/freeze-release.ps1` | engine staging block | freeze tooling test | Make staging match the load path or remove it; verify manifest hashes cover what loads | INV-FREEZE-001 |
++| INT-01 sender frame | `desktop/.../KelService.ts` | `kel:artifact-reveal` handler | enumerate channels | Add the same senderFrame check as sibling channels | INV-IPC-001 |
++| COR-03 model control errors | `KelModelControl.tsx` | `setConversation` | renderer unit tests | Add error path (visible failure, no silent keep) | INV-ERROR-001 |
++| COR-04 / MDL-01 prefs scope | `runtime/kel/model_prefs.py` | `set_conversation` | model prefs tests | Validate conversation existence + scope | INV-MEM-001 |
++| COR-05 search exceptions | `runtime/kel/search.py` | per-section `except` | search tests | Narrow the bare except; report degraded sections | INV-ERROR-001 |
++| COR-06 / ERR-01 dispatch leak | `runtime/kel/service.py` | vetting/transcription dispatch | dispatch tests | KeyError → typed error → translated message | INV-ERROR-001 |
++| DEAD-05 privates | `runtime/kel/service.py` (`_vetting_route`), `vetting_session.py` | `_questions`, `_format_resurface` | routing tests | Promote to public API or wrap | maintainability |
++| DEAD-06 unwired harness | `packaging/ux-audit.cjs` | — | — | Either wire into a package.json/script or relocate to evidence tooling | maintainability |
++| THM-01 theme deletion | `applyTheme.ts` | overrides map | theme tests | Prune overrides on theme deletion | INV-UI-clean |
++| TR-01 stream lifecycle | `runtime/kel/transcription.py` | `_STREAMS` | add shutdown/cleanup test | Cleanup on shutdown; bounded sessions | lifecycle |
++| TR-02 abandoned-stream UX | `renderer/.../kel/transcription/index.tsx` | stream UI state | renderer tests | Honest abandoned state; no silent stale stream | UX truth |
++| CAP2-LONGTEXT | `runtime/kel/capabilities.py` | `directive_clauses` (>2000 char early return) | long-paste test | Consider feedback path; keep fail-safe | INV-CAP-001 |
++| SEC-01-multipart | `runtime/kel/transcription.py` | `_multipart` header interpolation | add escaping test | Escape/validate filename | security |
++| Engine-loss surfaces | renderer error paths, `KelService.ts`, engine supervision | fetch error translation chain | probe b reproduction | User-facing failure + recovery; no raw infra text | INV-UI-001 / RISK-001 |
++| Visual integration conflicts | merge between `ux/v16-visual-fix` and `ux/v15-journeys` | `ConversationRow`, settings shell, `KelService.ts`-adjacent | visual probes a/b/c re-run | Record every resolution; re-run automated suite + probes | INV-VISUAL-001 |
++
++## Source pointers
++
++- Findings detail: `kel-v16-code-audit/docs/code-audit/` records `11`, `13`, `16`, `17`, `19`
++  and per-increment audits `21`–`37`.
++- Acceptance criteria for SEC-01: `16_FINDING_STATUS.md` (quoted above).
++- A1/PER-02 overlap analysis: `15_RUST_LEAD_VERIFICATION.md`.
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+new file mode 100644
+index 0000000..6ae3ae9
+--- /dev/null
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -0,0 +1,63 @@
++# REQUIREMENTS_TRACEABILITY — requirement → implementation → evidence
++
++updated: 2026-09-18T16:05Z
++purpose: let Campaign B ask BOTH directions — "which requirement has no implementation?" and
++"which implementation has no requirement?" — across the whole V1.6 surface.
++
++Requirement sources live in: `docs/v1.6/` (program records), `docs/session-tools/`,
++`docs/memory-proposals/`, `docs/artifact-lineage/`, `docs/in-chat-approvals/`,
++`docs/i18n-cleanup/`, `docs/release-hardening/`, `docs/product/`, `docs/basic-ux-sweep/`,
++`docs/transcription/`, `docs/vetting/`, `docs/v1.6-visual-ux/` (in the visual worktrees), and the
++Workforce OS library at `C:\Users\Nick\Desktop\Kel\ux-audit\workforce-os\` (00–15 + role charters
++at `ux-audit\workforce-role-charters`). Campaign A work follows the sprint directive dated
++2026-09-18 (KEL V1.6 FULL-SPEED IMPLEMENTATION SPRINT).
++
++Audit status column: `covered` = inside an independent audit increment; `pending` = in the
++unaudited range; `deferred` = explicitly deferred with a decision record.
++
++## Delivered arcs (audited coverage through `8a2b25d`)
++
++| Req ID | Source | Section | Status | Commit(s) | Primary code | Tests | Evidence | Limitations | Audit |
++|---|---|---|---|---|---|---|---|---|---|
++| REQ-ST-1 | docs/session-tools | closure plan | implemented | (pre-1.6 arc) | `runtime/kel/*` session tools | fresh 545-suite + packaged sessiontools 24/24 | docs/session-tools/ | — | covered |
++| REQ-MEMP-1 | docs/memory-proposals (01–07) | all | implemented | `a8c3511` | `memory.py` proposals; `KelMemoryProposal.tsx` | `test_v16_proposals.py`; packaged memoryprops | docs/memory-proposals/ | — | covered |
++| REQ-LIN-1 | docs/artifact-lineage | all | implemented | `ffeef73` | lineage store + `/api/lineage` | engine 574; packaged lineage probe | docs/artifact-lineage/ | F4 binding open | covered |
++| REQ-APR-1 | docs/in-chat-approvals | all | implemented | `85e99fb` | `chat_approvals.py`, anchors | engine 592; packaged approvals journey | docs/in-chat-approvals/ | APR-01..03 P2 open | covered |
++| REQ-CAP-1 | audit 1.6 CAP-01/02/03 | remediation | implemented | `75d1f68`, `327e5b2`, `631881a` | `capabilities.py`, `research.py`, `acp_host.py` | engine 604→613 (+10 subtests each); packaged probes | docs/session-tools/03; ux-audit/run-cap2-residual.sh | CAP2-LONGTEXT P3 | covered |
++| REQ-I18N-1 | docs/i18n-cleanup | 00_STATUS | implemented | `fd04c00` | desktop locales (12 translated + en-US) | tsc 0; 76/76; copy-scan probe | docs/i18n-cleanup/00_STATUS.md | dormant boundaries kept | covered |
++| REQ-WF-5.0 | workforce-os 15 §5.0; docs 03/06/07/08 | — | implemented | `9085335`, `cc909b9` | `workforce.py` (migration 16) | +45; audits 8/9 | docs/v1.6/phase5/5.0_IMPLEMENTATION_RECORD.md | lens partial-coverage carry | covered |
++| REQ-WF-5.1 | 15 §5.1; doc 10 | — | implemented | `9d6ed55`, `5b83f0e` | `assignment.py` (migration 17) | +31; audits 10/11 | 5.1_IMPLEMENTATION_RECORD.md | N7 etc. recorded | covered |
++| REQ-WF-5.2 | 15 §5.2; doc 05 | — | implemented | `894be5b`, `f9cf3ea` | `staffing.py`, `delegation.py` (migration 18) | +24; audits 12/13 | 5.2_IMPLEMENTATION_RECORD.md | F4 open | covered |
++| REQ-WF-5.3 | 15 §5.3; docs 05/08 | — | implemented | `48dacb3`, `5747567` | `pods.py`, `messages.py`, `assurance.py` | +41; audits 14/15 | 5.3_IMPLEMENTATION_RECORD.md | F4 open | covered |
++| REQ-WF-5.4 | 15 §5.4; doc 08 | — | implemented | `932db33` + 3 patches `f25a4bf` | `assurance.py` (gating/Sentinel/Oracle) | +24; audits 16–19 | 5.4_IMPLEMENTATION_RECORD.md | — | covered |
++| REQ-WF-5.5 | 15 §5.5 | — | implemented | `5f77f42`, `b1141c4`, `2a12b77`, `d8880f3` | `parallel.py` (migration 19) | 842→853; audits 20–22 | 5.5_IMPLEMENTATION_RECORD.md | F20-6/F20-14/N21-5/R22-3 | covered |
++| REQ-WF-5.6 | 15 §5.6; doc 11 | — | implemented | `ba52869`, `8a2b25d` | `learning.py`; memory/team/assignment hooks | 853→878; audits 23/24 | 5.6_IMPLEMENTATION_RECORD.md | 5.6 limitation set | covered |
++| REQ-WF-5.7 | 15 §5.7; doc 11 §5 | deferral | deferred (decision) | — | — | — | 5.7_DECISION_DEFERRED.md | entry unmet | deferred |
++| REQ-WF-5.8 | 15 §5.8; doc 12 | deferral | deferred (decision) | — | — | — | 5.8_DECISION_DEFERRED.md | awaits Phase 8 decision | deferred |
++| REQ-VIS-1..5 | visual plan set (worktrees) | batches 1–5 | implemented on visual branch | `8dd21f9`, `3d9202c`, `83af16f`, `ac85eb3` | renderer surfaces | tsc 0; 76→79; packaged visual5 probes | VISUAL_EVIDENCE_INDEX.md | human gate open | pending (never audited) |
++
++## Campaign A arcs (unaudited range; updated as increments land)
++
++| Req ID | Source | Section | Status | Commit(s) | Tests | Evidence | Audit |
++|---|---|---|---|---|---|---|---|
++| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | IN PROGRESS | — | — | docs/v1.6/phase6/ (to be created) | pending |
++| REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | PENDING | — | — | — | pending |
++| REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
++| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
++| REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
++| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
++| REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
++| REQ-RK | audit carry-forward | resolution-kind semantics | PENDING | — | — | — | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
++| REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
++| REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
++| REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
++| REQ-PKG-ASSERT | carry-forward | packaged battery assertions 16–19 | PENDING | — | — | PACKAGED_EVIDENCE_INDEX.md | pending |
++| REQ-RC | sprint directive §45/§46 | pre-audit regression + RC | PENDING | — | — | docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md | pending |
++
++## Maintenance rules
++
++- Every increment record must add/adjust its rows here; no implementation without a requirement
++  row, and no requirement row left without a disposition.
++- When Campaign B finds "implementation without requirement", the row is added with
++  `source: UNDECLARED` so Campaign C can decide scope.
+diff --git a/docs/v1.6/pre-audit/RISK_REGISTER.md b/docs/v1.6/pre-audit/RISK_REGISTER.md
+new file mode 100644
+index 0000000..ddee358
+--- /dev/null
++++ b/docs/v1.6/pre-audit/RISK_REGISTER.md
+@@ -0,0 +1,24 @@
++# RISK_REGISTER — risks discovered during implementation (not confirmed bugs)
++
++updated: 2026-09-18T16:05Z
++Auditor guidance: attack HIGH/CRITICAL first; a risk is not a finding until reproduced.
++
++| RISK ID | Area | Description | Likelihood | Impact | Trigger | Mitigation | Status | Audit target | Repair target |
++|---|---|---|---|---|---|---|---|---|---|
++| RISK-001 | Engine lifecycle / UX | Engine loss surfaces raw infrastructure errors (`TypeError: fetch failed`) with no user-facing recovery path (findings 16/17; probe b reproduced on `package-visual5`) | HIGH (reproduced) | HIGH (user-facing trust) | Kill engine after UI mounted | Campaign A: engine-loss/recovery behavior (visual batch 6 + supervision work) | OPEN — implementation queued | Force loss at every stage (mounted, streaming, idle); require no raw errors, no false success | renderer error paths; `KelService.ts`; engine supervision |
++| RISK-002 | Integration | Visual branch (`ux/v16-visual-fix`, 5 commits incl. `KelService.ts`-adjacent surfaces) integrates into a Main line that moved since its base; conflict resolutions are unaudited | MEDIUM | HIGH | Merge conflicts on integration | Integrate with recorded resolutions; §44 requires lineage preservation; audit targets record every resolution | OPEN — integration pending | Review every conflict resolution; prove no behavior silently dropped | integration commit(s) |
++| RISK-003 | Security | Bare-id addressing without conversation/project scope is a systemic pattern (SEC-01 vetting, APR-01/02 approvals, MDL-01 model prefs) | MEDIUM | HIGH (isolation) | Crafted id from another scope | Sweep fixes the release-relevant subset; audit re-verifies | OPEN | Cross-scope id attacks on every session/approval/pref endpoint | vetting_session.py; chat_approvals.py; model_prefs.py |
++| RISK-004 | Data integrity | Backup/restore failure is silent (PER-02) and pre-restore snapshots grow unbounded (PER-03); restore failure can abort silently | MEDIUM | HIGH (data) | Corrupt/partial restore | Sweep: surface restore failures; retention policy | OPEN | Inject restore failure; assert user-visible truthful state | service.py call site; backup.py |
++| RISK-005 | Migrations | Packaged boot assertions for migrations 15–19 not yet recorded (carry-forward) | MEDIUM | MEDIUM | Packaged release with unexpected schema state | RC checklist in MIGRATION_LEDGER.md | OPEN — RC step | Packaged fresh-dir boot; assert exact `schema_migrations` content | packaging scripts; engine startup |
++| RISK-006 | Providers | No real-credential validation yet for any provider path (dummy-key probe reached the wire once) | HIGH (no creds) | MEDIUM | Provider breakage undetected | Phase 10: validate what access allows; record rest as unavailable | OPEN — Phase 10 | Re-check matrix rows never blur mock vs real | providers.py; adapters; router |
++| RISK-007 | Learning/metrics | Small-sample and denominator deviations in learning metrics (F23-2/8/9, 24-N2 multiplicity) could mislead gating-precision reads | MEDIUM | MEDIUM | Metrics read as decision input | Small-sample honesty labels; nothing auto-applies | OPEN (recorded limitation) | Recompute metrics from raw rows; challenge denominators | learning.py |
++| RISK-008 | Corpus drift | Breadcrumb corpus could lag behind commits during a fast sprint | MEDIUM | HIGH (audit value) | Fast increments | Discipline: corpus updated in the same increment commit; RC audit of corpus vs `git log` | OPEN — structural | `git log <last-audited>..HEAD` vs COMMIT_LEDGER rows; every row's evidence path exists | this corpus |
++| RISK-009 | Prose vs git | Status prose can lag commit truth (historically flagged by the audit thread) | MEDIUM | MEDIUM | Parallel threads | Commit truth beats prose (AUTONOMOUS_OPERATION.md); status refreshed per increment | CONTROLLED | Compare every status claim against git | status files |
++| RISK-010 | Frozen releases | Any accidental touch of frozen folders/tags destroys the immutability story | LOW | CRITICAL | Wrong path in tooling (REL-01 class) | Verification at open + RC; scripts reviewed | CONTROLLED (verified 2026-09-18 at open) | Re-verify 4-hash manifests at RC; remote refs unchanged | freeze tooling; `Kel Releases\` |
++| RISK-011 | Visual acceptance | Automated screenshot probes can pass while human pixel judgment remains open — risk of treating "packaged PASS" as visual sign-off | MEDIUM | MEDIUM | Release gate confusion | `human_visual_gate: OPEN` tracked; pixel review stays a human gate | OPEN (by design) | Check no document claims human visual approval | VISUAL_EVIDENCE_INDEX.md |
++| RISK-012 | IPC | Sender-frame validation missing on at least one channel (INT-01); new channels could add more | LOW | MEDIUM | Malicious renderer content | Sweep adds the check; audit enumerates channels | OPEN | Enumerate all `kel:*` IPC channels vs frame checks | `KelService.ts` |
++
++## Maintenance rules
++
++- Add rows when implementation reveals fragility (even without a bug).
++- A risk closes only with evidence (fix + test) or an explicit accepted-deferral decision.
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+new file mode 100644
+index 0000000..cc7e77a
+--- /dev/null
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -0,0 +1,67 @@
++# TEST_EVIDENCE_INDEX — test runs with command, commit, date, result
++
++updated: 2026-09-18T16:05Z
++
++Category column: `parent-executed` (run by the implementing thread — most rows) ·
++`independent` (run/verified by a separate fresh-context reviewer) · `fresh-clone` · `packaged`
++(points to PACKAGED_EVIDENCE_INDEX.md) · `human` (human-executed).
++
++## Campaign A baseline
++
++| # | Suite | Command | Commit | Date | Result | Count | Reqs | Invariants | Evidence | Category |
++|---|---|---|---|---|---|---|---|---|---|---|
++| A-1 | engine full suite | `cd runtime && python -m pytest tests -q` (Python 3.14.3) | `fd98cc4` | 2026-09-18 | PASS | **878 passed, 10 subtests passed** (251.55s) | all engine reqs | INV-CAP/MEM/WF | `evidence/campaign-a-baseline/engine-suite-20260918.txt` | parent-executed |
++| A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `fd98cc4` (code = `ac85eb3` visual for renderer files? NO — main tree is fd98cc4) | TBD in Campaign A | pending | — | desktop reqs | — | — | parent-executed |
++
++Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). The desktop
++typecheck/unit run for the Main line is scheduled in the Campaign A regression sweep; the last
++recorded desktop numbers belong to the visual branch (`ac85eb3`: tsc 0, **79/79**).
++
++## Historical runs in the audited range (from AUTO_RESUME.md / phase records)
++
++| # | Suite | Commit | Date | Result | Count | Evidence | Category |
++|---|---|---|---|---|---|---|---|
++| H-1 | engine full after 5.6 remediation | `8a2b25d` | 2026-09-18 | PASS | 878 (+10 subtests; baseline 853) | 5.6_IMPLEMENTATION_RECORD.md; audit increment 24 | parent-executed; artifacts reviewed by independent audit 24 |
++| H-2 | engine focused 5.6 remediation | `8a2b25d` | 2026-09-18 | PASS | 25 | idem; discriminating for F23-1..F23-10 | parent-executed |
++| H-3 | engine full 5.6 | `ba52869` | 2026-09-18 | PASS | 876 (+10; baseline 853) | 5.6 record | parent-executed |
++| H-4 | engine full 5.5 arc | `5f77f42` → `d8880f3` | 2026-09-17 | PASS | 842 → 851 → 853 | 5.5 record; audits 20–22 | parent-executed |
++| H-5 | engine full 5.4 arc | `932db33` → `f25a4bf` | 2026-09-17 | PASS | 791 → 805 (+3 +3) | 5.4 record; audits 16–19 | parent-executed |
++| H-6 | engine full 5.3 arc | `48dacb3` → `5747567` | 2026-09-17 | PASS | 765 → 767 | 5.3 record; audits 14/15 | parent-executed |
++| H-7 | engine full 5.2 arc | `894be5b` → `f9cf3ea` | 2026-09-17 | PASS | 717 → 724 | 5.2 record; audits 12/13 | parent-executed |
++| H-8 | engine full 5.1 arc | `9d6ed55` → `5b83f0e` | 2026-09-17 | PASS | 689 → 693 | 5.1 record; audits 10/11 | parent-executed |
++| H-9 | engine full 5.0 arc | `9085335` → `cc909b9` | 2026-09-17 | PASS | 658 | 5.0 record; audits 8/9 | parent-executed |
++| H-10 | engine full Phase 4 | `fd04c00` | 2026-09-17 | PASS | 613 | i18n record; audit 7 | parent-executed |
++| H-11 | desktop after Phase 4 | `fd04c00` | 2026-09-17 | PASS | tsc 0; vitest 76 | i18n record; audit 7 | parent-executed |
++| H-12 | engine 545-suite (session-tools closure) | pre-1.6 arc | 2026-09-17 | PASS | 545 | docs/session-tools/ | parent-executed |
++| H-13 | clone-clean runs (v1.5 gates) | `6f65ef0`, `9841395` era | 2026-09-16 | PASS | — | docs/v1.5/ | fresh-clone |
++
++## Packaged journeys (summaries; full detail in PACKAGED_EVIDENCE_INDEX.md)
++
++| # | Journey | Package | Result | Evidence | Category |
++|---|---|---|---|---|---|
++| P-1 | sessiontools + engine capability probe | `package-p1cap` | PASS | ux-audit/run-p1-capabilities.sh | packaged |
++| P-2 | sessiontools + CAP2-clause probes + engine probe | `package-p1cap2` | PASS | ux-audit/run-cap2-clause.sh | packaged |
++| P-3 | sessiontools reserved/residual + db probes + engine probe | `package-p1cap3` | PASS | ux-audit/run-cap2-residual.sh | packaged |
++| P-4 | approvals journey + lineage probe | `package-final16` | PASS | ux-audit/run-approvals.sh; run-lineage-probe.sh | packaged |
++| P-5 | memory proposals journey | `package-final13` | PASS | ux-audit/run-memoryprops.sh | packaged |
++| P-6 | Phase 4 copy-scan + standing journeys | `package-final17` | PASS | ux-audit/run-phase4.sh | packaged |
++| P-7 | visual5 probes a/b/c | `package-visual5` | PASS (probe b reproduces engine-loss findings 16/17 — recorded, not a regression) | ux-audit/visual/runs/visual5-{a,b,c} | packaged |
++
++## Discrimination log (regression fixes)
++
++Per §14 of the sprint directive, record discrimination where practical. `FAILS_PRE_FIX` /
++`PASSES_POST_FIX` pairs are recorded in the phase records; entries:
++
++- 5.0 F1-F3: focused 45 post-fix; discrimination in `22_PHASE5_0_REAUDIT.md` closure table.
++- 5.1 N1-N6: focused 35 post-fix (`5b83f0e`).
++- 5.5 N21-1..5: 853 post-fix; discriminating tests recorded in `2a12b77` message + record.
++- 5.6 F23-1..F23-10: focused 25; two new discriminating regressions + boundary assertions
++  (`8a2b25d`).
++- CAP2-CLAUSE: negative control executes the pre-fix parser from git (`85cf0f1`) proving it
++  rewrote text; post-fix corpus byte-identity. `test_capabilities.py`.
++- CAP2-RESIDUAL: same negative-control pattern vs `4f6535a`. `test_capabilities.py`.
++
++## Maintenance rules
++
++- Add a row per meaningful run; never edit a historical row (append corrections).
++- Counts must be the literal pytest/vitest line; evidence paths must exist.
+diff --git a/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+new file mode 100644
+index 0000000..5703c03
+--- /dev/null
++++ b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+@@ -0,0 +1,42 @@
++# VISUAL_EVIDENCE_INDEX — visual findings, batches, acceptance, human gate
++
++updated: 2026-09-18T16:05Z
++authority: `kel-v16-visual-audit/docs/v1.6-visual-ux/VISUAL_STATUS.md` (the schema block there is
++authoritative; this index mirrors it for the audit corpus). Implementation branch
++`ux/v16-visual-fix` @ `ac85eb3`; integration into Main: **NOT YET** (Campaign A §44 goal).
++
++## Batch ledger
++
++| Batch | Finding source | Original severity (as recorded) | Implementation commit | Automated acceptance | Packaged acceptance | Screenshots | Human review | Main integration |
++|---|---|---|---|---|---|---|---|---|
++| 1 — design tokens | visual plan set §tokens | — | `8dd21f9` | 39/39 WCAG contrast checks; tsc 0; vitest 76/76 | package-visual5 (probe a) | visual5 captures 1–23 (probe a) | OPEN | PENDING |
++| 2 — settings shell | finding S1-1 + Tools route | — | `3d9202c` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
++| 3 — Work / Projects / Permissions | held | — | — | — | — | — | — | HELD (Main surface release needed) |
++| 4 — transcription IA | finding 2/3 baseline caveat | — | `83af16f` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
++| 5 — sidebar rows (action gutter + leading mark) | findings S2/S3 (03 §2, 03 §4 · 04 §4.2) | — | `ac85eb3` | tsc 0; **79/79** (+3 unit tests) | package-visual5 probe c: overlapPx −4 (was +12), 32px gutter, marks correct | package-visual5 captures (probe c) | OPEN | PENDING |
++| 5 (Team half) | team terminology / entry merge | — | — | — | — | — | — | HELD |
++| 6 — engine loss / error translation / supervision | findings 16/17 reproduced by probe b | HIGH (raw `TypeError: fetch failed` surfaces) | — | — | — | — | — | PENDING |
++| 7 — composer / Model / Tools | gated by coordinator | — | — | — | — | — | — | HELD |
++| 8 — final normalization (settings half) | — | — | — | — | — | — | — | HELD |
++
++## Packaged acceptance detail (package-visual5, 2026-09-18)
++
++- Build provenance: `ux/v16-visual-fix` @ `ac85eb3`; renderer fresh via electron-vite; KelEngine
++  fresh from this branch via `scripts/build-runtime.ps1`; packaged to
++  `kel-v16-visual-fix/dist/package-visual5/win-unpacked`.
++- Probe a (shell sweep, 21 surfaces): 0 console errors; first paint 3.03s; theme toggle + close
++  clean; 23 screenshots.
++- Probe b (color control / New Chat / engine-loss): 0 console errors; engine-loss reproduces raw
++  failure surfaces — **open findings 16/17, Batch 6 scope**.
++- Probe c (populated sidebar): hover `overlapPx = −4`; `rowPaddingRight: 32px`; leading-mark
++  semantics exactly as specified.
++- Screenshot review index (authoritative mapping of all 35 captures to findings):
++  `kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md`.
++- Raw evidence: `ux-audit/visual/runs/visual5-{a,b,c}/`.
++
++## Open items
++
++- **Two missing baseline captures** for findings 2 and 3 (before those surfaces are touched).
++- **Human pixel review**: OPEN — no image perception in agent threads; prepared index stands ready.
++- **Integration**: commit lineage must be preserved on merge (§44); every conflict resolution is
++  an audit target (AUDIT_TARGETS §29).
+diff --git a/docs/v1.6/pre-audit/evidence/campaign-a-baseline/engine-suite-20260918.txt b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/engine-suite-20260918.txt
+new file mode 100644
+index 0000000..c96bfb3
+--- /dev/null
++++ b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/engine-suite-20260918.txt
+@@ -0,0 +1,27 @@
++# Campaign A baseline — engine suite run (2026-09-18)
++
++Command: cd runtime && python -m pytest tests -q
++Interpreter: Python 3.14.3 (Windows, Git Bash)
++Commit: fd98cc4 (worktree ux/v15-journeys)
++Started: 2026-09-18 ~11:49 local (15:49Z); duration 251.55s
++
++## Output (tail)
++
++```
++........................................................................ [  8%]
++.................................................................... [ 15%]
++........................................................................ [ 24%]
++........................................................................ [ 32%]
++........................................................................ [ 40%]
++........................................................................ [ 48%]
++........................................................................ [ 56%]
++........................................................................ [ 65%]
++........................................................................ [ 73%]
++........................................................................ [ 81%]
++........................................................................ [ 89%]
++........................................................................ [ 97%]
++..................                                                 [100%]
++878 passed, 10 subtests passed in 251.55s (0:04:11)
++```
++
++Result: **PASS — 878 passed, 10 subtests passed.**
+diff --git a/docs/v1.6/pre-audit/evidence/campaign-a-baseline/reconciliation.md b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/reconciliation.md
+new file mode 100644
+index 0000000..1af517c
+--- /dev/null
++++ b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/reconciliation.md
+@@ -0,0 +1,50 @@
++# Campaign A baseline — reconciliation notes (2026-09-18)
++
++Recorded by the Program Director at Campaign A entry. Sources: git commands in `kel-ux-v15`,
++worktree inspection, `ls-remote origin`, process inspection (tasklist), file mtimes.
++
++## Ownership confirmation
++
++- Single writer confirmed for the Main worktree: no commits beyond the known chain (reflog
++  verified), no stash entries, last repo mtime ~13:15Z (the previous director's final state
++  update), no live watcher processes (the code-audit `.watch` files are stale since
++  2026-09-17T18:09Z; no `.watch` in other worktrees).
++- Visual worktree (`kel-v16-visual-fix`) and audit worktree (`kel-v16-code-audit`) are dormant;
++  this director line inherits them per the sprint directive ("sole Program Director").
++
++## Worktrees
++
++```
++C:/Users/Nick/Desktop/Kel/Kel-Repo              5e76b21 [main]
++C:/Users/Nick/Desktop/Kel/kel-rust-audit        9c1e7d0 [audit/rust-runtime]
++C:/Users/Nick/Desktop/Kel/kel-ux-v15            fd98cc4 [ux/v15-journeys]      <- THIS
++C:/Users/Nick/Desktop/Kel/kel-v16-code-audit    fd04c00 (detached)
++C:/Users/Nick/Desktop/Kel/kel-v16-visual-audit  ffeef73 [audit/v16-visual-ux]
++C:/Users/Nick/Desktop/Kel/kel-v16-visual-fix    ac85eb3 [ux/v16-visual-fix]
++```
++
++## Remote refs (ls-remote origin, 2026-09-18T16:05Z)
++
++- `refs/heads/main` = `5e76b21` (v1.5.0); `refs/heads/ux/v15-journeys` = `fd98cc4`.
++- Tags verify: `v1.5.0` peeled `5e76b21`; `v1.6.0-pre1` peeled `f24d9c2` (unchanged).
++- `v1.3-dev`/`v1.4-dev` unchanged. Full capture: `remote-refs.txt`.
++
++## Program state at entry
++
++- Phase 5 CLOSED; Phase 5.6 accepted via audit increment 24 (CONTINUE) through `8a2b25d`.
++- Docs-only commits above the audited point: `c4ae724`, `5127bac`, `fd98cc4` (per-commit
++  `git show --stat` verified).
++- Visual: `ux/v16-visual-fix` @ `ac85eb3` (batch 5); not audited; not integrated.
++- Rust: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`).
++- Open docket: P2 ×10, P3 ×16 (see MAIN_STATUS lists + P2_P3_DISPOSITION.md).
++
++## Baseline test evidence
++
++- `cd runtime && python -m pytest tests -q` (Python 3.14.3, Windows) →
++  **878 passed, 10 subtests passed in 251.55s**. Captured in `engine-suite-20260918.txt`.
++
++## Notes for future readers
++
++- `docs/v1.6/AUTO_RESUME.md` top sections are historical; the authoritative state is
++  `MAIN_STATUS.md` + the newest AUTO_RESUME sections (Campaign A appended 2026-09-18).
++- Publication is never verification (GITHUB_SYNC_POLICY.md).
+diff --git a/docs/v1.6/pre-audit/evidence/campaign-a-baseline/remote-refs.txt b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/remote-refs.txt
+new file mode 100644
+index 0000000..8941892
+--- /dev/null
++++ b/docs/v1.6/pre-audit/evidence/campaign-a-baseline/remote-refs.txt
+@@ -0,0 +1,24 @@
++# Remote refs captured at Campaign A entry (ls-remote origin, 2026-09-18T16:05Z)
++
++```
++5e76b21071a28601a7fb4de508cb3cf349c77db8	HEAD
++5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/heads/main
++fd98cc402b98acf9a230fb160e4766f7f5f931f3	refs/heads/ux/v15-journeys
++dd67ef42e5c6b52f6d0e298650499abf6771e099	refs/heads/v1.3-dev
++36456722f4370fbedb2a9d48861db4ec0e5ea11f	refs/heads/v1.4-dev
++dd67ef42e5c6b52f6d0e298650499abf6771e099	refs/pull/1/head
++ab4aef0fd3c08cb780a2df12613d62fd519da5b8	refs/pull/2/head
++507220ffe362761a916e3f9279c7a6cd17b8e1c9	refs/pull/3/head
++7d69288f34e786dc5abb748838809184f63c08bb	refs/tags/v1.2.0
++a520b670ef57e3918738e4e8007476f91a693625	refs/tags/v1.2.0^{}
++05b0687e381ca3de76e55bb07dfe85d5a97a105c	refs/tags/v1.3.0
++b3c7c2466349c607bc7ebfe648b4a11ebf0fa635	refs/tags/v1.3.0^{}
++ee5b907af90cef46b81afaa80eaeb9d72573aa5a	refs/tags/v1.4.0
++0a4fd2102bc9ddd2a2d1eb59386491a16fee4d74	refs/tags/v1.4.0^{}
++a6e6d922a791f8066731fe8eebcb50cb72391c8f	refs/tags/v1.4.1
++725c90501dc9639b89f72d83219a017a55f5577c	refs/tags/v1.4.1^{}
++068cd267ff8bdccdffe5f13eb080eafc65f5a0b9	refs/tags/v1.5.0
++5e76b21071a28601a7fb4de508cb3cf349c77db8	refs/tags/v1.5.0^{}
++ceac727ef2d04efdf96c4062a3d891825aefa176	refs/tags/v1.6.0-pre1
++f24d9c28b09b30d7222691cdb1aafbe21d412672	refs/tags/v1.6.0-pre1^{}
++```
+diff --git a/docs/v1.6/pre-audit/increments/INIT-CAMPAIGN-A.md b/docs/v1.6/pre-audit/increments/INIT-CAMPAIGN-A.md
+new file mode 100644
+index 0000000..adb496e
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/INIT-CAMPAIGN-A.md
+@@ -0,0 +1,112 @@
++# Increment — INIT-CAMPAIGN-A
++
++increment_id: INIT-CAMPAIGN-A
++phase: Campaign A entry (sprint initialization)
++base_commit: fd98cc4
++target_commit: this commit (the Campaign A entry commit on top of fd98cc4; see `git log --oneline -1`)
++status: complete (docs/state increment — no production change)
++
++## Objective
++
++Enter IMPLEMENTATION_SPRINT mode durably per the 2026-09-18 sprint directive; reconcile repository
++truth; confirm sole ownership; preserve the last independently audited production point; initialize
++the pre-audit breadcrumb corpus; establish the Campaign A test baseline.
++
++## Requirement Sources
++
++- Sprint directive (2026-09-18): §3 (repository truth), §5–6 (breadcrumb corpus), §52 (first
++  actions).
++- `docs/v1.6/AUTONOMOUS_OPERATION.md` (ownership, disk-backed handoffs).
++
++## Implementation Summary
++
++1. **Reconciliation** (full detail in `evidence/campaign-a-baseline/reconciliation.md`):
++   - Main worktree `kel-ux-v15` @ `fd98cc4` on `ux/v15-journeys`; remote tip `fd98cc4`;
++     `main` = `5e76b21` (v1.5.0); frozen tags `v1.5.0` / `v1.6.0-pre1` intact (ls-remote verified).
++   - Audit thread (`kel-v16-code-audit`): increment 24 CONTINUE; `audited_through: 8a2b25d`;
++     `next_required_from: WAIT_FOR_MAIN`; no live watcher (`.watch` stale since 2026-09-17 18:09Z).
++   - Visual thread (`kel-v16-visual-fix` @ `ac85eb3`; status in `kel-v16-visual-audit`):
++     batches 1–5 delivered; automated + packaged acceptance only; NOT independently audited;
++     integration into Main pending.
++   - Rust thread: `NO_MIGRATION_NEEDED_NOW` at `9c1e7d0`.
++   - No live writers: last repo mtime 2026-09-18 ~13:15Z (previous director's final state
++     updates); reflog shows no commits outside the known chain; stash list empty.
++   - Ownership: single Program Director confirmed; no racing writers.
++2. **Mode entry**: `docs/v1.6/status/MAIN_STATUS.md` switched to `state: IMPLEMENTATION_SPRINT`
++   with `audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC`; `docs/v1.6/AUTO_RESUME.md` carries the Campaign A
++   section.
++3. **Corpus initialized** at `docs/v1.6/pre-audit/`: README, AUDIT_SCOPE, AUDIT_HANDOFF,
++   COMMIT_LEDGER, CHANGE_LEDGER, REQUIREMENTS_TRACEABILITY, INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
++   PACKAGED_EVIDENCE_INDEX, MIGRATION_LEDGER, PROVIDER_VALIDATION_MATRIX, VISUAL_EVIDENCE_INDEX,
++   P2_P3_DISPOSITION, RISK_REGISTER, DEFERRED_ITEMS, KNOWN_LIMITATIONS, AUDIT_TARGETS,
++   REPAIR_HINTS, FINAL_STATE_MATRIX, increments/, evidence/.
++4. **Baseline**: engine suite re-run at `fd98cc4` → **878 passed, 10 subtests passed** (251.55s).
++
++## Files Changed
++
++All under `docs/v1.6/` (status + AUTONOMOUS docs note + new `pre-audit/` tree). No production code.
++
++## Symbols Changed
++
++None.
++
++## Schema/Migrations
++
++None (max applied version 19; next free 20).
++
++## User-Facing Behavior / Internal Behavior
++
++None (docs only). Program behavior: independent audit requests paused until RC.
++
++## Error Paths / Lifecycle / Persistence / Security
++
++n/a — no production change. No secrets introduced; evidence files contain no credentials.
++
++## Self-Review Findings
++
++- Verified every corpus file exists and is non-empty (one file initially wrote as a stub —
++  `P2_P3_DISPOSITION.md` — detected and rewritten before commit; recorded for honesty).
++- Verified all claims against git (`ls-remote`, reflog, `git show --stat` per commit).
++- Verified no live watcher processes before status writes.
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests -q` → 878 passed, 10 subtests passed in 251.55s
++  (Python 3.14.3). Evidence: `evidence/campaign-a-baseline/engine-suite-20260918.txt`.
++
++## Results
++
++PASS (baseline). No regression possible (docs-only increment).
++
++## Packaged Verification
++
++None for this increment (no production change).
++
++## Known Weaknesses
++
++- P2/P3 disposition rows APR-05/06 lack one-line descriptions (completed in the sweep).
++- Some packaged-evidence rows rely on prior records' summaries (full raw evidence lives under
++  `ux-audit/`); the RC pass re-verifies the critical ones.
++
++## Deferred Questions
++
++- First unaudited production commit: opens with the first Campaign A production change (TBD).
++
++## Audit Targets
++
++- Corpus integrity (AUDIT_TARGETS §30): after RC, compare `git log 8a2b25d..HEAD` against
++  COMMIT_LEDGER rows; hunt for "empty but plausible" records.
++
++## Repair Hints
++
++- None (no production change).
++
++## Evidence Paths
++
++- `evidence/campaign-a-baseline/reconciliation.md`
++- `evidence/campaign-a-baseline/engine-suite-20260918.txt`
++- `evidence/campaign-a-baseline/remote-refs.txt`
++
++## Commit Chain
++
++`fd98cc4` → this commit (Campaign A entry). Next: Phase 6 increment(s).
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 17d75b4..e46ed06 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,19 +1,25 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T13:58:00Z
++updated_utc: 2026-09-18T16:30:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 8a2b25d (plus docs/state commits on top; see `git log --oneline -5`)
++head: fd98cc4 (the Campaign A entry commit sits on top; see `git log --oneline -5`)
+ worktree_clean: true
+ 
+-state: PHASE_5_6_ACCEPTED
++state: IMPLEMENTATION_SPRINT
++sprint_campaign: CAMPAIGN_A
++audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
++pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
++last_audited_production: 8a2b25d
++first_unaudited_production: TBD (opens with the first Campaign A production commit)
++unaudited_range: 8a2b25d..HEAD (docs-only above 8a2b25d until the first production change)
+ 
+-current_increment: Phase 5.6 ACCEPTED — learning loop (shadow). Audit 23 REVISE (F23-1 major: an ungated writer under a false "every write path is gated" claim; F23-2 major: store-wide lens evidence claiming project scope; plus decay/view/tier/hygiene findings) → remediation `8a2b25d` → audit 24 **CONTINUE** (all F23-1..F23-10 closed; 24-N1..N3 informational residuals only). Learned guarantees: learnings are memory records with workforce source types (no second memory system, no new storage surface, no migration); dedup/supersede ride the memory chains and never fork a (type, key) identity; decay is computed from each record's own creation; preferences only from explicit user confirmation; confidence caps + promotion queue (nothing promotes); retros, shadow staffing proposals (with predictions) and performance/validation metrics are recorded/derived with small-sample honesty; every automatic write path is gated by `workforce.learning.shadow` (default off; explicit user corrections are user actions, never gated). Phase 5.7 DEFERRED (entry unmet: no doc-13 campaign window, no user sign-off — `5.7_DECISION_DEFERRED.md`); Phase 5.8 DEFERRED (Phase 8 product decision — `5.8_DECISION_DEFERRED.md`). Next: publish this accepted checkpoint, refresh the Visual screenshot index, then Phase 6 — the memory reality audit.
+-current_phase: Phase 5 — CLOSED (5.0-5.6 accepted; 5.7/5.8 deferred decisions recorded); Phase 6 next
++current_increment: Campaign A initiated — repository truth reconciled, sole ownership confirmed, pre-audit corpus initialized, baseline 878 green. Next: Phase 6.
++current_phase: Phase 6 — memory reality audit + bounded fixes (bootstrap §28)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
+ 
+-audit_requested_from: NONE (5.6 accepted through increment 24)
++audit_requested_from: NONE
+ audit_requested_through: NONE
+ audit_required: false
+ audit_last_seen_head: 8a2b25d
+@@ -22,7 +28,7 @@ audit_last_seen_verdict: CONTINUE (increment 24 — all F23-1..F23-10 closed; 24
+ visual_state: READY_FOR_VISUAL
+ visual_clean_head: 60b2322
+ visual_required: true
+-visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — package-visual5, probe-a/b/c green; see VISUAL_STATUS)
++visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — package-visual5; NOT independently audited; integration into Main pending per Campaign A)
+ visual_last_seen_verdict: BATCH 5 accepted on the visual branch (automated 79/79 + packaged probes); human pixel gate open by design
+ 
+ rust_verdict: NO_MIGRATION_NEEDED_NOW
+@@ -37,12 +43,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
+ known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
+ 
+ github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
+-github_remote_integration: 5127bacca293f9a483167665506eb434e8c4f1ca (verified by ls-remote after the Phase 5.6 publication — `ux-audit/github-sync-recon/19_PHASE5_6_PUBLICATION.md`)
++github_remote_integration: fd98cc402b98acf9a230fb160e4766f7f5f931f3 (verified by ls-remote at Campaign A entry 2026-09-18T16:05Z)
+ github_publication_current: true
+ 
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Publication done (`5127bac`, `ux-audit/github-sync-recon/19_PHASE5_6_PUBLICATION.md`); Visual screenshot index refreshed (`kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md`). Begin **Phase 6 — the memory reality audit** (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed; the memory proposal surface itself was Phase 1, commit a8c3511). Phase 5.7 stays deferred until the doc-13 campaign runs and the user signs off; Phase 5.8 waits on the Phase 8 product decision. Carry-forward: F20-6 (ignored paths are neither integrated nor counted), F20-14 (no conflict-resolution timing), N21-5 (undeclared writes reported but not counted in the conflict rate), R22-3 (evidence-package nits), and the 5.6 limitations (lens-evidence mission scoping without a findings->project link; identical-value re-observation multiplicity — 24-N2 suggests `(created, rowid)` ordering if ever tightened; rate denominator deviation — audit 23 F23-2/F23-8/F23-9) as recorded limitations; F4 real-artifact binding + F17-4/F18-5 evidence-bound review rows + a resolution-kind column (wiring increment); F16-3 (no production caller — workforce guarantees stay engine-level); doc-13 full campaign (classes 3/5/9, baseline-B conflict rate) when the matrix runs; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Review handoffs must stay disk-backed (AUTONOMOUS_OPERATION.md).
++next_autonomous_action: Phase 6 — memory reality audit (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 6: Phase 7 capability recommendations; Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

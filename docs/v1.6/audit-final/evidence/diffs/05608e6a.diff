@@ -1,0 +1,133 @@
+commit 05608e6ae6f1c1c55005dfba8f1d741d7a8383cd
+2026-09-18 19:14:37 -0400
+docs(v1.6): R9 bookkeeping — the 27-vs-26 P2/P3 denominator is reconciled
+
+
+diff --git a/docs/v1.6/pre-audit/AUDIT_HANDOFF.md b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+index d96823a..c0362fa 100644
+--- a/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
++++ b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+@@ -15,6 +15,7 @@ it carries the current values; treat every `TBD` as not-yet-true.
+ | unaudited production range | opens with the first Campaign A production commit (TBD); ends at PRE_AUDIT_V1_6_HEAD |
+ | integration branch | `ux/v15-journeys` (stable branch `main` holds the last frozen release, v1.5.0) |
+ | migration version at open | 19 applied (max); next free version = 20 |
++| P2/P3 denominator | **26 canonical rows (P2 10, P3 16)** — the directive's 27 = P2 10 + P3 17 worklist arithmetic; full original-ID reconciliation in `P2_P3_DISPOSITION.md` §Denominator reconciliation (added 2026-09-18, R9 bookkeeping) |
+ | production commit count in range | TBD (see COMMIT_LEDGER.md) |
+ | major changed subsystems | TBD (filled per phase; seed: memory, capabilities/UX, providers, workforce wiring, engine-loss UX, visual integration) |
+ | high-risk commits | TBD (recorded per increment in COMMIT_LEDGER.md) |
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index ce9010c..b81d10e 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -1,6 +1,6 @@
+ # P2_P3_DISPOSITION — every finding, current disposition
+ 
+-updated: 2026-09-18T17:05Z (R0 sweep complete — **every row carries a final disposition**; sprint §40)
++updated: 2026-09-18 (R9 bookkeeping — denominator reconciliation added; every row carries a final disposition; sprint §40)
+ The full historic finding set lives in the audit records (`kel-v16-code-audit/docs/code-audit/`,
+ increments 1–24). This file carries the live disposition table and grows to cover every historic
+ P2/P3. Campaign B independently re-verifies every disposition; no finding disappears.
+@@ -8,11 +8,55 @@ P2/P3. Campaign B independently re-verifies every disposition; no finding disapp
+ Allowed final dispositions: **FIXED · STALE · NOT_APPLICABLE · DEFERRED_NON_RELEASE ·
+ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (sweep pending)`.
+ 
+-**R0 completion (2026-09-18):** this table carries 26 rows (P2 10, P3 16) and all 26 are final —
+-verified by grepping the file for any remaining `OPEN (sweep pending)` row before commit. The sprint
+-directive cites 27 rows; the difference is a bookkeeping discrepancy recorded for Campaign B (no
+-row in this file is undispositioned). REL-01 remains `OPEN_RELEASE_BLOCKER` per its own rules and is
+-the only row awaiting R8-level package evidence.
++**R0 completion (2026-09-18):** this table carries 26 rows (P2 10, P3 16) and all 26 carry a final
++disposition — verified by grepping the file for any remaining `OPEN (sweep pending)` row before
++commit. REL-01 was the last row to resolve; it is FIXED (`93b99b5`, R8) — see its row.
++
++## Denominator reconciliation — the 27-vs-26 question (R9 bookkeeping, 2026-09-18)
++
++**Determination.** Both **enumerated** slates on disk have always been 26 rows (P2 10, P3 16): this
++table, and the independent audit's own reconciled docket (`kel-v16-code-audit/docs/code-audit/`
++`AUDIT_STATUS.md` → `p2_open` / `p3_open`, corroborated by `increment-16/review-manifest.md`).
++The 27 is **worklist arithmetic**, not an inventory count: **P2 10 + P3 17**. The P3 17 is the
++audit material the sprint directive was written against — the increment-1 P3 slate as the audit's
++own increment-2 ledger counted it (`12_FINAL_VERDICT.md`: "*+ 14 P3 unchanged from increment 1*")
++plus the increment-2 additions `APR-04`/`APR-05`/`APR-06`:
++
++- the 14: `BKP-03, THM-01, MDL-01, SEC-01, SEC-02, ERR-01, ARCH-01, DEAD-01, DEAD-02, DEAD-03,
++  DEAD-04, DOC-01, HAR-01, INT-01` — the 11 P3 rows of `11_FINDINGS.md` plus `DEAD-02`–`DEAD-04`
++  from `08_DEAD_CODE.md`;
++- plus `APR-04`, `APR-05`, `APR-06`.
++
++The frozen 16-row P3 slate = that 17 **minus six** increment-1 entries the audit resolved or
++absorbed before its docket froze, **plus five** entries carried under their own IDs that the
++worklist count did not include (17 − 6 + 5 = 16). No finding disappears; every original ID below
++carries a terminal disposition, re-verified against the tree on 2026-09-18:
++
++| Original ID (as filed) | Terminal state | Evidence (tree-verified 2026-09-18) |
++|---|---|---|
++| `DEAD-01` | RESOLVED during the P1 remediation arc (audit increment 3 records it; "superseded") | `capabilities._OFF`/`_ON` are absent from the module — the parser is the single source of the directive forms |
++| `DEAD-02` | SUPERSEDED by the CAP-01 enforcement rework | `research.py:52-67` passes `capability_for_tool('research')` through `resolve()` before the external request; `EFFECT_KINDS` remains the generic gate's designed vocabulary |
++| `DEAD-03` | SUPERSEDED by the same rework | `_TOOL_MAP` is now derived from the capability registry (`capabilities.py:59-62`), never a stale six-tool literal |
++| `DEAD-04` | DEFERRED_NON_RELEASE — recorded clean-up note, never a docket row; retained as written ("worth a dedicated clean-up pass, not a V1.6 blocker") | the donor-surface `Navigate` redirect block is still present and reachable by URL (`Router.tsx`, 22 `Navigate` references) |
++| `DOC-01` | FIXED within the CAP-02 remediation arc | `directive('web: use default')` is implemented and pinned by the standalone-command corpus (`test_capabilities.py:138,186`) |
++| `INT-01` (increment-1 content: hidden donor selector) | NOT_A_DEFECT — filed as an observation in the audit's own ledger ("not a defect"); its ID was re-used by the modern docket for `SEC-02`'s sender-frame content | `AcpModelSelector` is still intentionally mounted with `waitForWarmup` (`ChatConversation.tsx:389-405`) |
++
++The five carried under their own IDs outside the 14+3 count: `COR-03`, `COR-04`, `COR-05`, `COR-06`
++(increment-1 `03_CORRECTNESS.md` material — `COR-04`/`COR-05` are near-alias pairs of `MDL-01` and
++`ERR-01`, and both IDs are deliberately kept and dispositioned in the table above) and
++`CAP2-LONGTEXT` (increment-5 re-audit). The additions are traceability only — **no closed finding
++was reopened, and no closed row was changed to fit the count.** No repository evidence revealed a
++real gap during this verification.
++
++**Alias map (original ID → canonical row above):** `VET-01`→`SEC-01` · `BKP-01`→`PER-02` ·
++`BKP-02`→`PER-03` · `BKP-03`→`PER-04` · `COR-01`→P1 `CAP-02` · `COR-02`→`PER-02` ·
++`SEC-01`(inc-1 transcription reading)→`SEC-01-multipart` · `SEC-02`→`INT-01` · `ERR-01`(inc-1
++`search.run` reading)→`COR-05` · `ARCH-01`→`DEAD-05` · `HAR-01`→`DEAD-06` · `A1`≡`ENG-01` ·
++`A5`≡`REL-01` · `TEST-01`→P1 `CAP-03`.
++
++**Consequence for Campaign B:** the sweep denominator is 26 canonical rows; the original finding
++inventory is fully enumerated here (original-ID table + alias map) — accounting for 100% of the
++original IDs requires no guessing about which slate a count came from.
+ 
+ ## P2 — open at corpus open
+ 
+@@ -55,7 +99,10 @@ the only row awaiting R8-level package evidence.
+ - **CAP-01, CAP-02, CAP-03 (P1)** → FIXED (`75d1f68`, `327e5b2`, `631881a`; audits 3–5 CONTINUE).
+ - **CAP2-CLAUSE / CAP2-RESIDUAL (P1-adjacent)** → FIXED (bracketed clause → reserved `[kel:...]`
+   namespace; negative-control discrimination recorded).
+-- **DEAD-01** superseded; **DEAD-07** superseded; **DEAD-08** FIXED with fail-closed regression.
++- **DEAD-01** superseded; **DEAD-07** superseded; **DEAD-08** FIXED with fail-closed regression;
++  **DOC-01** FIXED (CAP-02 arc), **DEAD-02**/**DEAD-03** superseded by the CAP-01 rework,
++  **DEAD-04** DEFERRED_NON_RELEASE, increment-1 **INT-01** NOT_A_DEFECT — all six with tree-verified
++  evidence in the denominator reconciliation above.
+ - **I18N-01** — RETRACTED by the auditor (structurally unobservable; audit 7 self-correction).
+ - Per-increment F-findings (F1–F23 arcs): closure tables live in the numbered audit records
+   `21`–`37`; none remain open except as carried in the rows above (F4/F16-3/F17-4/F18-5/R22-3 are
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index a870785..3b3b483 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | **complete — every row in `P2_P3_DISPOSITION.md` carries a final disposition** (26 rows in-table: P2 10, P3 16; REL-01 the only `OPEN_RELEASE_BLOCKER`, awaiting R8 package/freeze-level evidence; TR-02 `DEFERRED_NON_RELEASE` bound to R9.A/R10) | `49e528e`; `8ab7699`; `5950efb`; `dd34ac2`; `594b8b4` (earlier `8a677d0`/`84b5646`/`101d8c3`/`0596211`/`df1997a`) | focused per row; full suite see A-20 | P2_P3_DISPOSITION.md; `increments/R0-SWEEP.md` | 26-vs-27 row count left for Campaign B by design | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | **complete — every row in `P2_P3_DISPOSITION.md` carries a final disposition** (26 canonical rows: P2 10, P3 16; REL-01 FIXED `93b99b5`; TR-02 `DEFERRED_NON_RELEASE` bound to R9.A/R10). **Denominator reconciled 2026-09-18 (R9 bookkeeping):** the directive's 27 = P2 10 + P3 17 worklist arithmetic over the increment-1/2 audit material; every original finding ID -> canonical row or terminal closed state is enumerated in `P2_P3_DISPOSITION.md` §Denominator reconciliation (no closed finding reopened; no repo gap found) | `49e528e`; `8ab7699`; `5950efb`; `dd34ac2`; `594b8b4` (earlier `8a677d0`/`84b5646`/`101d8c3`/`0596211`/`df1997a`) | focused per row; full suite see A-20 | P2_P3_DISPOSITION.md (§Denominator reconciliation; alias map); `increments/R0-SWEEP.md` | Campaign B re-verifies every disposition; count question closed (26 canonical) | pending |
+ | REQ-OWNERSHIP-PARITY | R0 sweep (SEC-01/TR-01; extends APR-02) | action paths enforce the same conversation ownership as read/display paths | implemented | `49e528e`; `8ab7699` | 11 focused (7 vetting + 4 transcription); full see A-20 | `increments/R0-SWEEP.md` | the vetting panel keeps its marked cross-conversation display read; desktop stream calls do not declare a conversation yet (additive) | pending |
+ | REQ-POLL-CHEAP | R0 sweep (APR-05) | the approvals read path performs no DDL once its migration marker exists | implemented | `dd34ac2` | 3 focused; full see A-20 | `increments/R0-SWEEP.md` | v20 marker stamps pre-existing stores on the next call | pending |
+ | REQ-TRUTHFUL-SURFACES | R0 sweep (COR-03/APR-06) | a failure notice never claims a state the surface cannot know | implemented | `594b8b4` | tsc 0; vitest 93 | `increments/R0-SWEEP.md` | no component harness (§58) | pending |
+diff --git a/docs/v1.6/pre-audit/increments/R0-SWEEP.md b/docs/v1.6/pre-audit/increments/R0-SWEEP.md
+index 7f0ebdf..57e08d3 100644
+--- a/docs/v1.6/pre-audit/increments/R0-SWEEP.md
++++ b/docs/v1.6/pre-audit/increments/R0-SWEEP.md
+@@ -93,8 +93,11 @@ Cross-cutting behavior changes:
+   tsc + suite + code read; the packaged probes at R8/R12 are the behavioral gate.
+ - TR-02 is intentionally not implemented here — Campaign B should verify the binding to R9.A/R10 is
+   honored by the time the RC is assembled.
+-- The sprint directive cites 27 P2/P3 rows; the in-repo table carries 26 (P2 10, P3 16). Campaign B
+-  should reconcile the count from the audit records rather than trusting either number.
++- The sprint directive cites 27 P2/P3 rows; the in-repo table carries 26 (P2 10, P3 16).
++  **Reconciled 2026-09-18 (R9 bookkeeping):** the 27 = P2 10 + P3 17 worklist arithmetic over the
++  increment-1/2 audit material; every original finding ID → canonical row or terminal closed state
++  is enumerated in `P2_P3_DISPOSITION.md` §Denominator reconciliation (verified against the tree;
++  no closed finding reopened; no real gap found). Campaign B verifies the mapping, not a guess.
+ - ERR-01 has two source descriptions in the audited corpus (`search.run` bare except = COR-05 vs the
+   KeyError family = this fix). Both readings are dispositioned; the alias is recorded in the table.
+ - Repair hints: none open from this increment (all FIXED rows carry their commit + test).

@@ -1,0 +1,40 @@
+commit c911d81debdf3629df18ec1d21c6611d4b4e418e
+2026-09-18 19:29:11 -0400
+feat(v1.6-visual): BATCH 8 — final normalization pass (genuine inconsistencies only)
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelPrimitives.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelPrimitives.tsx
+index 092b940..83b418b 100644
+--- a/desktop/packages/desktop/src/renderer/components/kel/KelPrimitives.tsx
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelPrimitives.tsx
+@@ -158,16 +158,6 @@ export const KelEmpty: React.FC<{ title: string; why: string; actionLabel?: stri
+   </div>
+ );
+ 
+-export const KelErrorState: React.FC<{ title: string; cause: string; fix: string }> = ({ title, cause, fix }) => (
+-  <div className="kel-empty" role="alert">
+-    <strong>{title}</strong>
+-    {cause}
+-    <div className="kel-meta" style={{ marginTop: 6 }}>
+-      Fix: {fix}
+-    </div>
+-  </div>
+-);
+-
+ /** Static skeleton rows: no shimmer, final row rhythm, no reflow when data arrives. */
+ export const KelLoading: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
+   <div aria-busy="true" aria-live="polite">
+diff --git a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+index 12b6ddd..cd6d651 100644
+--- a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
++++ b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+@@ -346,6 +346,9 @@
+   background: var(--kel-accent);
+ }
+ 
++.kel-table td {
++  overflow-wrap: anywhere;
++}
+ .kel-table {
+   width: 100%;
+   border-collapse: collapse;

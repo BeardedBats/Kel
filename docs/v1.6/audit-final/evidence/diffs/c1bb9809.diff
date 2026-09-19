@@ -1,0 +1,78 @@
+commit c1bb9809505fbf5c3ea5279c7e5df5ad793895ef
+2026-09-18 13:41:05 -0400
+docs(v1.6): P2/P3 sweep — first batch (6 rows dispositioned against the tree)
+
+
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index e85d720..3eb93a0 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -27,18 +27,18 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ 
+ | ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Release relevance | Audit confirm |
+ |---|---|---|---|---|---|---|---|
+-| APR-04 | `approval_announcements` DDL defined twice, with no migration version | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| APR-04 | `approval_announcements` DDL defined twice, with no migration version | P3 | `13_PHASE3_DELTA_AUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18: the two blocks are semantically identical — `chat_approvals.py:27-33`, `core.py:157-161`; `IF NOT EXISTS` makes the duplicate inert and there is no schema divergence) | — | none | pending |
+ | APR-05 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
+ | APR-06 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
+-| DEAD-06 | `packaging/ux-audit.cjs` unwired and misfiled (referenced by nothing outside docs) | P3 | `08_DEAD_CODE.md` | OPEN (sweep pending) | — | TBD | pending |
+-| CAP2-LONGTEXT | `directive_clauses()` returns `[]` above 2000 chars — reserved directives in long pastes silently ignored (fails safe) | P3 | `19_CAP2_RESIDUAL_REAUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| DEAD-06 | `packaging/ux-audit.cjs` unwired and misfiled (referenced by nothing outside docs) | P3 | `08_DEAD_CODE.md` | **NOT_APPLICABLE** (verified 2026-09-18: it is the packaged-UI evidence tool — PACKAGED_EVIDENCE_INDEX `package-logo` + phases 6–7 + the visual batches; referenced by the pre-audit corpus, not dead) | — | none | pending |
++| CAP2-LONGTEXT | `directive_clauses()` returns `[]` above 2000 chars — reserved directives in long pastes silently ignored (fails safe) | P3 | `19_CAP2_RESIDUAL_REAUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `capabilities.py:437-448`: >2000 chars → `[]`; the message is forwarded byte-for-byte, so no capability is silently enabled) | — | none | pending |
+ | INT-01 | Inconsistent sender-frame validation (`kel:artifact-reveal` lacks the check) | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | PER-04 | `KEL_DATA_DIR` puts `kel-credentials.json` inside the backup root (override path only) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | COR-03 | `KelModelControl.setConversation` has no error path | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| COR-04 | `set_conversation` accepts a non-existent conversation | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| COR-05 | `search.py` bare `except` per section | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-04 | `set_conversation` accepts a non-existent conversation | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `model_prefs.py:107-110`: only non-empty is validated; callers pass the open conversation, and a stranded preference is inert) | — | none | pending |
++| COR-05 | `search.py` bare `except` per section | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `search.py:51,72,91`: per-section `except Exception: pass`; fails soft, sections independent, no data loss) | — | none | pending |
+ | COR-06 | KeyError leaks from vetting/transcription dispatch | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| MDL-01 | `set_conversation` accepts a non-existent conversation (with COR-04) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| MDL-01 | `set_conversation` accepts a non-existent conversation (with COR-04) | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (same evidence as COR-04) | — | none | pending |
+ | THM-01 | Theme overrides keyed by theme id survive theme deletion | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | SEC-01-multipart | Caller-supplied filename interpolated into a multipart header unescaped (transcription) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | DEAD-05 | `service.py` calls `Vetting` privates (`_questions`, `_format_resurface`) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+@@ -57,8 +57,25 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ 
+ ## Sweep worklist (sprint §40)
+ 
+-1. Complete one-line descriptions for APR-05/06 from `13_PHASE3_DELTA_AUDIT.md`.
+-2. Decide per finding: release-relevant → fix in Campaign A; else DEFERRED_NON_RELEASE with a
+-   rationale.
+-3. Every fix gets a test + a CHANGE_LEDGER entry + an updated row here.
+-4. Campaign B re-verifies all rows; discrepancies are findings.
++Method: per row, verify the current tree (grep/read) *and* read the source audit record for the
++original claim, then set one of the five dispositions with the evidence inline. Rows still reading
++`OPEN (sweep pending)` are unverified — they must not be read as cleared.
++
++Progress 2026-09-18 (first batch, verified against the tree):
++
++1. **OPEN** — complete one-line descriptions for APR-05/06: the source record lives in the audit
++   worktree `kel-v16-code-audit/docs/code-audit/13_PHASE3_DELTA_AUDIT.md`; read it next.
++2. **DONE** — DEAD-06, CAP2-LONGTEXT, APR-04, COR-04, COR-05, MDL-01 dispositioned with inline
++   evidence (see the tables above).
++3. **OPEN** — still need source-record reads + a decision: P2 = APR-01, APR-02, APR-03, A1, REL-01,
++   SEC-01, PER-02, PER-03, TR-01, TR-02; P3 = APR-05, APR-06, INT-01, PER-04, COR-06, THM-01,
++   SEC-01-multipart, DEAD-05, ERR-01.
++4. **A1 note for the sweep** — `KelService.ts` still reuses a running engine after only
++   `JSON.parse(descriptor)` + `/api/state`, with no `engine_version` comparison even though the
++   `Descriptor` type carries the field (read 2026-09-18). Fix-or-defer is the sweep's decision; a
++   fix needs a desktop test for the stale-descriptor path.
++Rules for the rest of the sweep:
++
++- Release-relevant → fix in Campaign A; otherwise DEFERRED_NON_RELEASE with a rationale.
++- Every fix gets a test + a CHANGE_LEDGER entry + an updated row here.
++- Campaign B re-verifies all rows; discrepancies are findings.
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 1bcabfd..526df71 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 6/27 rows dispositioned with inline evidence (P2 0/10, P3 6/17); the rest stay `OPEN (sweep pending)` | — | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |

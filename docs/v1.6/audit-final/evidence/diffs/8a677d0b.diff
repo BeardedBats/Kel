@@ -1,0 +1,196 @@
+commit 8a677d0bb361c7e51de3e34cbd602d88fbbcce90
+2026-09-18 15:06:49 -0400
+fix(v1.6): approval resolution is conversation-scoped (R0 / APR-02)
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+index 1f2e74f..e946d2b 100644
+--- a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
++++ b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+@@ -265,8 +265,9 @@ export default function KelWorkPanel() {
+   }
+   async function approvalAct(item: WaitingItem, extra: Record<string, unknown> = {}) {
+     // Same durable resolution the chat card uses; Work simply reflects it right after.
++    // The declared conversation scopes the resolution exactly like the read path (APR-02).
+     const allow = extra.allow !== false;
+-    await action('/api/approvals', { kind: item.kind, id: item.id, allow, ...extra });
++    await action('/api/approvals', { kind: item.kind, id: item.id, allow, conversation: cid, ...extra });
+   }
+   async function loadHistory() {
+     try {
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+index d1c34cf..06ade73 100644
+--- a/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+@@ -143,7 +143,7 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
+     setBusy(true);
+     setNotice('');
+     try {
+-      await kelApprovalRequest({ kind, id: refId, allow, ...extra });
++      await kelApprovalRequest({ kind, id: refId, allow, conversation: engineCid || conversationId, ...extra });
+       await refresh();
+     } catch {
+       setNotice('That request was already settled — Kel refreshed the latest state.');
+diff --git a/runtime/kel/chat_approvals.py b/runtime/kel/chat_approvals.py
+index fcd3a08..b0ee739 100644
+--- a/runtime/kel/chat_approvals.py
++++ b/runtime/kel/chat_approvals.py
+@@ -155,9 +155,12 @@ def _job_ids_for(db, conversation_id):
+             continue
+         if str(job.get('conversation')) == conversation_id:
+             ids.add(str(job.get('id')))
+-    for row in db.execute('SELECT job_id FROM job_links WHERE conversation_id=?',
+-                          (conversation_id,)):
+-        ids.add(str(row['job_id']))
++    # Bare stores (engine tests, very early boots) have no continuation links yet; the read path
++    # and the resolution scope share this helper, so a missing table must not break either.
++    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='job_links'").fetchone():
++        for row in db.execute('SELECT job_id FROM job_links WHERE conversation_id=?',
++                              (conversation_id,)):
++            ids.add(str(row['job_id']))
+     return ids
+ 
+ 
+@@ -275,15 +278,46 @@ def announce_denial(store, request_id):
+     return {'message_seq': cur.lastrowid}
+ 
+ 
+-def resolve(store, kind, ref_id, allow, grant_kind='once', remember=False, actor='user'):
++def _require_owned(store, kind, ref_id, conversation):
++    """Refuse a resolution whose record belongs to a different conversation (audit APR-02).
++
++    The read path (`items`) is already conversation-scoped; the write path now uses the same
++    ownership set, so a stale or crafted id cannot settle work the caller is not looking at.
++    """
++    conversation = str(conversation)
++    with contextlib.closing(store.connect()) as db:
++        if kind == ACTION:
++            row = db.execute('SELECT job_id FROM approvals WHERE id=?', (str(ref_id),)).fetchone()
++        elif kind == ACCESS:
++            row = db.execute('SELECT l.job_id AS job_id FROM boundary_expansion_requests r '
++                             'JOIN capability_leases l ON l.lease_id=r.lease_id'
++                             ' WHERE r.request_id=?', (str(ref_id),)).fetchone()
++        else:
++            row = None
++        owned = str(row['job_id']) if row is not None and row['job_id'] is not None else ''
++        ids = _job_ids_for(db, conversation) if owned else set()
++    if not owned:
++        raise PolicyError('Approval request missing')
++    if owned not in ids:
++        raise PolicyError('That request belongs to another conversation')
++
++
++def resolve(store, kind, ref_id, allow, grant_kind='once', remember=False, actor='user',
++            conversation=None):
+     """Resolve through the EXISTING engines; never a parallel path.
+ 
+     Boundary grants wake the paused job exactly like the Autonomy page; step approvals resolve
+     the same row the coding adapter is polling, so work continues without repeating the ask.
++
++    When the caller declares the conversation it is acting in, the resolution is scoped to it
++    exactly like the read path (audit APR-02). Callers that declare nothing keep the previous
++    behaviour, so the HTTP contract stays additive.
+     """
+     if actor != 'user':
+         raise PolicyError('Only user input can resolve an approval')
+     kind = str(kind or '')
++    if conversation:
++        _require_owned(store, kind, ref_id, conversation)
+     if kind == ACCESS:
+         from .autonomy import Autonomy
+         result = Autonomy(store).resolve_expansion(str(ref_id), bool(allow), actor='user',
+diff --git a/runtime/kel/service.py b/runtime/kel/service.py
+index e77af29..dd00e1f 100644
+--- a/runtime/kel/service.py
++++ b/runtime/kel/service.py
+@@ -680,7 +680,8 @@ class Service:
+         if data.get('action','resolve')!='resolve':
+             raise PolicyError('Unknown approvals action')
+         return resolve(self.store,data.get('kind'),data.get('id'),bool(data.get('allow')),
+-                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')))
++                       grant_kind=data.get('grant_kind','once'),remember=bool(data.get('remember')),
++                       conversation=data.get('conversation'))
+ 
+     def _approvals_list(self,conversation):
+         from .chat_approvals import items
+diff --git a/runtime/tests/test_v16_approvals.py b/runtime/tests/test_v16_approvals.py
+index 0f1a535..8990190 100644
+--- a/runtime/tests/test_v16_approvals.py
++++ b/runtime/tests/test_v16_approvals.py
+@@ -399,5 +399,76 @@ class ServiceRouteTests(unittest.TestCase):
+             self.service.action('/api/approvals', {'action': 'take-over'})
+ 
+ 
++class CrossScopeResolutionTests(ApprovalBase):
++    """APR-02 / Round 2.5 APPROVAL-EXACT: the resolve path is scoped like the read path.
++
++    The list is conversation-scoped; before this increment the resolution was not, so an id from
++    another conversation could settle work the caller was not looking at.
++    """
++
++    def test_a_step_approval_cannot_be_resolved_from_another_conversation(self):
++        run, approval_id, thread, result = self.ask_for_step()
++        with self.assertRaises(PolicyError) as caught:
++            chat_approvals.resolve(self.store, 'action', approval_id, True,
++                                   conversation='somewhere-else')
++        self.assertIn('another conversation', str(caught.exception))
++        # Untouched by the refused attempt, and still resolvable from its own conversation.
++        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True,
++                                          conversation='main')
++        self.assertEqual(resolved['state'], 'approved')
++        thread.join(timeout=5)
++        self.assertTrue(result.get('ok'))
++
++    def test_a_job_in_another_conversation_is_not_resolvable_from_main(self):
++        other = self.store.create(compile_coding('Elsewhere.', self.project,
++                                                 ['python', '-m', 'unittest']),
++                                  conversation='elsewhere')
++        run, approval_id, thread, result = self.ask_for_step(job=other)
++        with self.assertRaises(PolicyError) as caught:
++            chat_approvals.resolve(self.store, 'action', approval_id, True, conversation='main')
++        self.assertIn('another conversation', str(caught.exception))
++        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True,
++                                          conversation='elsewhere')
++        self.assertEqual(resolved['state'], 'approved')
++        thread.join(timeout=5)
++        self.assertTrue(result.get('ok'))
++
++    def test_a_boundary_grant_cannot_be_resolved_from_another_conversation(self):
++        _, request_id = self.ask_for_access()
++        with self.assertRaises(PolicyError) as caught:
++            chat_approvals.resolve(self.store, 'access', request_id, True,
++                                   conversation='somewhere-else')
++        self.assertIn('another conversation', str(caught.exception))
++        resolved = chat_approvals.resolve(self.store, 'access', request_id, True,
++                                          conversation='main')
++        self.assertEqual(resolved['state'], 'allowed_once')
++
++    def test_an_unknown_id_is_refused_even_with_a_declared_conversation(self):
++        with self.assertRaises(PolicyError) as caught:
++            chat_approvals.resolve(self.store, 'action', 'apr_missing', True, conversation='main')
++        self.assertIn('missing', str(caught.exception))
++
++    def test_without_a_declared_conversation_behaviour_is_unchanged(self):
++        # The HTTP contract stays additive: older callers that declare nothing keep working.
++        run, approval_id, thread, result = self.ask_for_step()
++        resolved = chat_approvals.resolve(self.store, 'action', approval_id, True)
++        self.assertEqual(resolved['state'], 'approved')
++        thread.join(timeout=5)
++        self.assertTrue(result.get('ok'))
++
++    def test_the_service_route_honours_the_declared_conversation(self):
++        run, approval_id, thread, result = self.ask_for_step()
++        service = Service(str(self.base / 'data'))
++        self.addCleanup(service.shutdown)
++        with self.assertRaises(PolicyError):
++            service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
++                                              'allow': True, 'conversation': 'somewhere-else'})
++        out = service.action('/api/approvals', {'kind': 'action', 'id': approval_id,
++                                                'allow': True, 'conversation': 'main'})
++        self.assertEqual(out['state'], 'approved')
++        thread.join(timeout=5)
++        self.assertTrue(result.get('ok'))
++
++
+ if __name__ == '__main__':
+     unittest.main()

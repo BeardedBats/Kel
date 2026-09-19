@@ -1,0 +1,172 @@
+commit 1a9f538555e403c8c73ab1eb2c381ea6f3011e9b
+2026-09-18 17:32:30 -0400
+test(v1.6): retry budgets are durable across restarts (R3 / RETRY-DURABLE)
+
+
+diff --git a/docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md b/docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md
+new file mode 100644
+index 0000000..3007fa9
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md
+@@ -0,0 +1,68 @@
++# Increment — R3: durable retry / recovery budgets (RETRY-DURABLE)
++
++increment_id: V16-R3-RETRY-DURABILITY
++invariant: **RETRY-DURABLE** — restarting Kel, the runtime, a worker, a broker or the machine must
++not restore spent automatic retry budget
++requirement: `REQ-R25-R3` (roadmap R2.5 §R3; marathon directive §11)
++phase: Campaign A — R3
++base_commit: `fde5bbb`
++production_commit: none — the inventory found every automatic retry family already durable; this
++increment adds the discriminating tests and the inventory record (the honest outcome the directive
++asks for when a family is already safe)
++status: complete
++
++## Inventory (code-verified, before any change)
++
++| Automatic retry / recovery domain | Where the budget lives | Durable? | Terminal honest state | Evidence |
++|---|---|---|---|---|
++| Milestone attempts | `job['milestones'][mid]['attempts']` on the job row; claims cap at `max_attempts=4` (`core.py:297, 806-817`) | **yes** (job row) | `EXHAUSTED`; `reopen` refuses with 'No retryable milestones to resume' | new tests; `test_core.py` |
++| TaskContract attempt ceiling | `contract.budget.attempts_max` (schema-validated 1..4, `contracts.py`) | yes (frozen contract row) | contract refuses a larger budget | `test_workforce_schemas.py` |
++| Provider failure / circuit | `providers` row `data` JSON: `failures`, `circuit_until` (`core.provider_outcome`, `core.py:879-890`) | **yes** (DB row) | circuit open after 3 failures (or one auth failure for a day); a success clears it | new tests |
++| Route retry | `retry_route(job_id)` persists `route.retry` and a fresh route on the job row (`core.py:908-913`; `engine.py:201`) | yes (job row + event) | job continues on the next route or the milestone exhausts | `test_engine*.py` |
++| Reviewer recovery | `review_runs.attempts` (persisted); after *two* interrupted reviews the engine records an UNCERTAIN verdict with 'Review was interrupted twice; automatic review recovery is exhausted.' (`engine.py:98-161`) | **yes** (review_runs + review record) | explicit exhausted verdict, no silent loop | `test_review_recovery.py` ('recovery budget does not repeat forever') |
++| Planning retry | planner failures settle the submission honestly (no unbounded loop); no automatic planner retry counter exists to restore | n/a | submission error surfaced to the user | `test_core.py` |
++| Broker restart / recovery | `brokers` rows joined to runs; recovery adopts an existing result and never re-dispatches (`engine.py:50`; `coding.py:286-298`) | yes (rows) | recover-or-honest-failure | `test_broker_recovery.py` |
++| Native transport recovery | receipts; 'dispatched work cannot be replayed' / 'do not replay it' (`coding_transport.py:81, 101`) | **yes** (receipts) | fail-closed with a plain sentence | `test_coding_recovery.py` |
++| Coding check recovery | `recover_checked_code` / `recover_pending_checks` re-verify recorded checks (`coding.py:273-298`) | yes (records) | recovered or honest failure | `test_coding_recovery.py` |
++| Mission lease recovery | `mission_leases` rows; a lapsed lease is `EXPIRED` and *reclaimed, never resurrected*; `reclaim_stale_leases` (`parallel.py:289-338, 708`) | **yes** (lease rows) | reclaimed lease; no second live holder | `test_workforce_parallel.py` |
++| Stream / supervisor recovery | session state rows (`parallel.py` streams; `engine` monitor); no automatic retry counter to restore | n/a | state transition or honest stop | `test_workforce_parallel.py` |
++| Restore/recovery attempts | `backup.py` restore outcome recorded durably (`restore-outcome.json` + `state()['restore']`, PER-02) | yes (record) | restore failure surfaces as boot-time status | `test_v16_restore_visibility.py` |
++| Tool-level automatic retries | none exist (each tool call is one attempt; the worker/engine layer owns retries) | n/a | n/a | code read |
++
++## Why no production change
++
++Every automatic retry budget is already stored on the entity that owns it — the job row (milestone
++attempts, route), the provider row (failure/circuit), the review record, the lease row, the receipt
++or the backup record. A restart re-reads those rows, so the spent budget cannot come back. The
++directive's R3.C preference ("retry state on the authoritative entity that owns the retry", "do not
++create a generic retry framework") is exactly what the repository already does; adding a framework
++would have been the wrong change.
++
++## Tests added (the discriminating restart evidence R3.E asks for)
++
++`tests/test_v16_r3_retry_durability.py` — **5 new**:
++
++1. The milestone attempt budget survives a restart (`claim` → attempts 1; spend to 4; reopen the
++   store; the next `claim` refuses and the counter still reads 4).
++2. A spent budget is not restored by a second restart (two reopen cycles, still 4).
++3. `reopen()` refuses once every milestone is exhausted ('No retryable milestones to resume').
++4. The provider failure counter survives a restart (three failures → `failures: 3`, status
++   `degraded`, circuit set).
++5. Only a success clears the provider circuit (a reopened store's success resets `failures` to 0).
++
++Focused suites green: `test_review_recovery` + `test_broker_recovery` + `test_coding_recovery` +
++R3 = **24 passed**.
++
++## Limitations / audit questions / repair hints
++
++- Token/wallclock reservation caps still have no job-envelope primitive (carried from R1); the
++  cost envelope is enforced (`reserve_budget`). R3 did not invent caps the repository does not have.
++- The provider circuit is *time-based* (60 s after 3 failures; 24 h after an auth failure) — an
++  audit question is whether a restart should also *extend* or *shorten* that window (it does not
++  change it today, which is the conservative reading).
++- Audit questions: (a) does any path reset `attempts` other than `reopen` (which only resets state,
++  not the counter) and a brand-new contract? (b) is the 2-interruption review budget persisted
++  across restarts (yes: review_runs.attempts + the recorded verdict)? (c) can a *new* run epoch for
++  the same milestone legitimately count as a fresh attempt (yes — `claim` increments attempt and
++  issues a new epoch, which is the explicit new-attempt identity the invariant allows)?
++- Repair hints: none open from this increment.
+diff --git a/runtime/tests/test_v16_r3_retry_durability.py b/runtime/tests/test_v16_r3_retry_durability.py
+new file mode 100644
+index 0000000..23c6ef6
+--- /dev/null
++++ b/runtime/tests/test_v16_r3_retry_durability.py
+@@ -0,0 +1,87 @@
++"""Round 2.5 R3 — RETRY-DURABLE: restarting Kel must not restore spent automatic retry budget.
++
++The inventory is recorded in `docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md`. These tests
++pin the durability of the two counters that gate *automatic* retries: the per-milestone attempt
++budget on the job row, and the provider failure/circuit state in the providers row.
++"""
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from workforce_fixtures import job_contract  # noqa: E402
++
++from kel.core import PolicyError, Store  # noqa: E402
++from kel.providers import Providers  # noqa: E402
++
++
++class RetryBudgetDurabilityTests(unittest.TestCase):
++    """A new Store over the same file is exactly what a process restart does."""
++
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._cleanup_tmp)
++        self.path = Path(self.tmp.name) / 'kel.sqlite3'
++        self.store = Store(self.path)
++        self.job_id = self.store.create(job_contract(), conversation='main')
++
++    def _cleanup_tmp(self):
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def _reopen(self):
++        return Store(self.path)
++
++    def test_the_milestone_attempt_budget_survives_a_restart(self):
++        claimed = self.store.claim(self.job_id, 'm1', provider='fixture', model='fixture')
++        self.assertEqual(claimed['attempt'], 1)
++        # Spend the rest of the budget the way history would: the counter lives on the job row.
++        with self.store.transaction() as db:
++            job = self.store._get(db, self.job_id)
++            job['milestones']['m1'].update(attempts=4, state='NEEDS_REPAIR')
++            self.store._save(db, job, 'attempts.spent')
++        reopened = self._reopen()
++        with self.assertRaises(PolicyError) as caught:
++            reopened.claim(self.job_id, 'm1', provider='fixture', model='fixture')
++        self.assertIn('Milestone cannot run', str(caught.exception))
++        self.assertEqual(reopened.get(self.job_id)['milestones']['m1']['attempts'], 4)
++
++    def test_a_spent_budget_is_not_restored_by_a_second_restart(self):
++        with self.store.transaction() as db:
++            job = self.store._get(db, self.job_id)
++            job['milestones']['m1'].update(attempts=4, state='NEEDS_REPAIR')
++            self.store._save(db, job, 'attempts.spent')
++        for _ in range(2):
++            reopened = self._reopen()
++            with self.assertRaises(PolicyError):
++                reopened.claim(self.job_id, 'm1', provider='fixture', model='fixture')
++        self.assertEqual(self._reopen().get(self.job_id)['milestones']['m1']['attempts'], 4)
++
++    def test_an_automatic_resume_refuses_once_every_milestone_is_exhausted(self):
++        with self.store.transaction() as db:
++            job = self.store._get(db, self.job_id)
++            job['milestones']['m1'].update(attempts=4, state='EXHAUSTED')
++            self.store._save(db, job, 'attempts.exhausted')
++        with self.assertRaises(PolicyError) as caught:
++            self._reopen().reopen(self.job_id)
++        self.assertIn('No retryable milestones', str(caught.exception))
++
++    def test_the_provider_failure_counter_survives_a_restart(self):
++        for _ in range(3):
++            self.store.provider_outcome('claude-code', {'outcome': 'FAILED', 'error': 'boom'})
++        status = Providers(self._reopen()).status('claude-code')
++        self.assertEqual(status['failures'], 3)
++        self.assertEqual(status['status'], 'degraded')
++        self.assertIsNotNone(status['circuit_until'])
++
++    def test_only_a_success_clears_the_provider_circuit(self):
++        for _ in range(3):
++            self.store.provider_outcome('claude-code', {'outcome': 'FAILED', 'error': 'boom'})
++        reopened = self._reopen()
++        self.assertEqual(Providers(reopened).status('claude-code')['failures'], 3)
++        reopened.provider_outcome('claude-code', {'outcome': 'SUCCESS', 'duration': 1.0})
++        self.assertEqual(Providers(reopened).status('claude-code')['failures'], 0)

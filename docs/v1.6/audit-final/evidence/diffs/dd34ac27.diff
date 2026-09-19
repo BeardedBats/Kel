@@ -1,0 +1,140 @@
+commit dd34ac27010c99b7b83ed288fdc28bec3a03fcce
+2026-09-18 16:55:11 -0400
+perf(v1.6): approval poll path stops running DDL once stamped (R0 / APR-05)
+
+
+diff --git a/runtime/kel/chat_approvals.py b/runtime/kel/chat_approvals.py
+index b0ee739..519f984 100644
+--- a/runtime/kel/chat_approvals.py
++++ b/runtime/kel/chat_approvals.py
+@@ -22,6 +22,8 @@ from .core import PolicyError
+ ACCESS = 'access'
+ ACTION = 'action'
+ ITEM_LIMIT = 200
++MIGRATION_VERSION = 20
++MIGRATION_NAME = 'chat_approval_announcements'
+ 
+ ANNOUNCE_DDL = """
+ CREATE TABLE IF NOT EXISTS approval_announcements(
+@@ -42,9 +44,18 @@ _ACCESS_SCOPE_TITLE = {
+ 
+ 
+ def ensure_schema(store):
+-    """Idempotent; every entry point that reads or writes announcements calls this."""
++    """Idempotent; every entry point that reads or writes announcements calls this.
++
++    Verified cheap after the first call (audit APR-05): the read path runs on every UI poll (the
++    approval card refreshes every 3 seconds), so once this module's migration row exists the call
++    returns before any DDL — announcements, leases/requests and the coding tables included. A
++    store written before this marker existed runs the idempotent body once and is then stamped.
++    """
++    from .memory import _table
+     with contextlib.closing(store.connect()) as db:
+-        db.executescript(ANNOUNCE_DDL)
++        if _table(db, 'schema_migrations') and db.execute(
++                'SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone():
++            return True
+     # The view reads leases/requests and conversation links, so it creates those schemas
+     # on the same entry point - a fresh store can always answer a chat read.
+     from .autonomy import ensure_schema as ensure_autonomy
+@@ -53,6 +64,10 @@ def ensure_schema(store):
+     ensure_autonomy(store)
+     ensure_continuation(store)
+     CodingAdapter(store)  # schema only; owns approval_actions
++    with contextlib.closing(store.connect()) as db:
++        db.executescript(ANNOUNCE_DDL)
++        db.execute('INSERT OR IGNORE INTO schema_migrations VALUES(?,?,?,?)',
++                   (MIGRATION_VERSION, MIGRATION_NAME, time.time(), 'tables=2'))
+     return True
+ 
+ 
+diff --git a/runtime/tests/test_v16_sweep_fixes.py b/runtime/tests/test_v16_sweep_fixes.py
+index f3d6577..9df0eab 100644
+--- a/runtime/tests/test_v16_sweep_fixes.py
++++ b/runtime/tests/test_v16_sweep_fixes.py
+@@ -5,13 +5,15 @@ Both findings were verified against the tree during the sweep: `_multipart` inte
+ caller's filename into `Content-Disposition` unescaped, and a `KEL_DATA_DIR` override can place
+ `kel-credentials.json` inside the data root that backups copy.
+ """
++import contextlib
+ import tempfile
+ import unittest
+ from pathlib import Path
+ 
+ import kel.backup as backup
+ from kel.backup import Backup, MARKER, NEVER_BACKUP, STAGING, apply_pending_restore
+-from kel.core import PolicyError
++from kel.chat_approvals import MIGRATION_VERSION, ensure_schema, items
++from kel.core import PolicyError, Store
+ from kel.service import Service
+ from kel.transcription import _header_safe, _multipart
+ 
+@@ -176,6 +178,68 @@ class DispatchRequiredFieldTests(unittest.TestCase):
+         self._refused('/api/approval', {'allow': True}, 'Permission request missing')
+ 
+ 
++class ApprovalPollDdlTests(unittest.TestCase):
++    """APR-05: the approval card polls `items()` every 3 seconds; a poll must not run DDL."""
++
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._cleanup_tmp)
++        self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
++
++    def _cleanup_tmp(self):
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def _adapter_builds(self, call):
++        """Count `CodingAdapter` constructions inside the call.
++
++        Every DDL statement in `ensure_schema` lives behind that construction (or behind the
++        sibling ensures it precedes), so a zero count proves the early return ran: a poll that
++        returns before the body cannot execute DDL.
++        """
++        import kel.coding as coding
++        builds = []
++        original = coding.CodingAdapter
++
++        class _Spy(original):
++            def __init__(self, store):
++                builds.append(1)
++                super().__init__(store)
++
++        coding.CodingAdapter = _Spy
++        try:
++            call()
++        finally:
++            coding.CodingAdapter = original
++        return len(builds)
++
++    def test_the_first_call_stamps_the_migration_and_creates_the_table(self):
++        ensure_schema(self.store)
++        with contextlib.closing(self.store.connect()) as db:
++            self.assertIsNotNone(db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
++                                            (MIGRATION_VERSION,)).fetchone())
++            self.assertIsNotNone(db.execute("SELECT name FROM sqlite_master WHERE type='table'"
++                                            " AND name='approval_announcements'").fetchone())
++
++    def test_the_poll_path_performs_no_ddl_once_stamped(self):
++        ensure_schema(self.store)
++        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 0)
++        self.assertEqual(self._adapter_builds(lambda: items(self.store, 'main')), 0)
++
++    def test_a_store_from_before_the_marker_is_stamped_on_the_next_call(self):
++        # Simulates an upgrade: the tables exist, the marker does not yet.
++        ensure_schema(self.store)
++        with self.store.transaction() as db:
++            db.execute('DELETE FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,))
++        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 1)
++        with contextlib.closing(self.store.connect()) as db:
++            self.assertIsNotNone(db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
++                                            (MIGRATION_VERSION,)).fetchone())
++        self.assertEqual(self._adapter_builds(lambda: ensure_schema(self.store)), 0)
++
++
+ class _Store:
+     """Minimal stand-in: the backup path reads `root` and `db_path` only."""
+ 

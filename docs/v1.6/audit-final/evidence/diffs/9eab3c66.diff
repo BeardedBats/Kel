@@ -1,0 +1,644 @@
+commit 9eab3c66d45cefb8f10b929c3651c9c9d2d8a3ff
+2026-09-18 14:55:57 -0400
+docs(v1.6): adopt Round 2.5 canonical roadmap (KEL_CANONICAL_ROADMAP_R2_5)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index f563502..fac6981 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -599,3 +599,28 @@ the finding asks for; TR-02 rides with the visual batches. Tests: 4 new; focused
+ **full engine suite 909 passed** (+10 subtests, was 905). Sweep status: **16/27 rows carry a final
+ disposition** (P2 6/10, P3 10/17); 11 remain undecided. Next: APR-02, SEC-01, TR-01/TR-02 and the
+ remaining P3s.
++
++## Round 2.5 canonical roadmap adopted (2026-09-18)
++
++**`docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` is now the forward execution authority for V1.6**
++(historical phase docs are untouched evidence). The Round 2.5 reconciliation concluded: the
++architecture is sound — no pivot, no rewrite, no duplicate authority/memory/workflow/recovery/
++evidence/orchestration systems. Its value is converting several distributed safety behaviors into
++explicit constitutional invariants with adversarial coverage before V1.6 freezes.
++
++New Campaign A critical path: **R0** finish the P2/P3 sweep → **R1** delegation authority ceiling
++(`child_effective_authority ⊆ delegator_effective_authority`) → **R2** logical-work/idempotency
++contract → **R3** durable retry/recovery budgets → **R4** canonical approval binding (absorbs
++APR-02) → **R5** persistence integrity contract → **R6** truthful state + liveness → **R7**
++credential/network boundary confirmation → **R8** packaged/migration assertions (+ REL-01) →
++**R9** Visual batches 6–8 + Needs Your Attention (derived-only) → **R10** engine-loss/recovery UX →
++**R11** Visual → Main integration → **R12** final Campaign A regression →
++**PRE_AUDIT_V1_6_HEAD**, then STOP. Explicitly rejected for V1.6: nested spawning, new RBAC/workflow
++engines, HMAC-everything receipts, second memory platforms/knowledge graphs, an OS network
++firewall, public A2A, one giant runtime enum, a new Advanced Worker View, adaptive staffing,
++Profiles, speculative Rust migration, agent-cockpit UI. Eleven new invariants are seeded in
++INVARIANT_LEDGER (AUTH-DELEGATION, EVENT-IDEMPOTENCY, EFFECT-REPLAY, RETRY-DURABLE,
++APPROVAL-EXACT, PERSIST-CANONICAL, COMPLETION-TRUTH, LIVENESS-SEPARATION,
++RECOVERY-CLASSIFICATION, CREDENTIAL-CONTAINMENT, LIVE-AUTHORITY) and the Round 2.5 hostile-test
++list is in AUDIT_TARGETS §61–80. Independent audit stays paused; nothing new here is audited or
++claimed as accepted.
+diff --git a/docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md b/docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md
+new file mode 100644
+index 0000000..12c1767
+--- /dev/null
++++ b/docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md
+@@ -0,0 +1,290 @@
++# KEL_CANONICAL_ROADMAP_R2_5 — the forward authority for V1.6
++
++adopted: 2026-09-18 · status: ACTIVE · supersedes nothing (historical phase docs remain evidence)
++owner: autonomous Main / Program Director (single writer; `AUTONOMOUS_OPERATION.md`)
++base: Main `ae4c5b0` (docs tip) / `84b5646` (production tip), `ux/v15-journeys`, clean, in sync
++source: Round 2.5 ecosystem reconciliation (repo-grounded audit) + the 2026-09-18 sprint directive
++
++**Repository truth beats this document.** If disk/git contradicts a line here, the disk wins and this
++file is corrected. This roadmap governs what happens NEXT; it never rewrites what was built.
++
++## 0. Strategy (unchanged, restated once)
++
++> IMPLEMENT EVERYTHING FIRST. BUILD PERFECT BREADCRUMBS. CREATE PRE_AUDIT_V1_6_HEAD. THEN STOP.
++> CAMPAIGN B WILL PERFORM THE 100% INDEPENDENT AUDIT. CAMPAIGN C WILL PERFORM THE 100% REPAIR.
++
++- Incremental independent audit cycles stay **PAUSED** (`audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC`).
++- Ordinary engineering quality control is **mandatory** (self-review, focused tests, full regression,
++  packaged verification, atomic commits, corpus updates in the same arc).
++- Nothing in this roadmap may present Campaign A evidence as independently accepted
++  (`INV-AUDIT-001`).
++
++## 1. Product North Star
++
++> ONE CAPABLE ASSISTANT WITH HIDDEN ORCHESTRATION.
++> LARGE BENCH. SMALL MISSION TEAM. CENTRAL COMMAND. INDEPENDENT VERIFICATION.
++
++Users control goals, meaningful decisions, model/capability preferences, meaningful memory and
++approvals. Users never need to understand workers, agents, leases, runtimes, queues, staffing graphs,
++orchestration topology, MCP plumbing, or internal event streams. **Round 2.5 must not turn Kel into
++an agent cockpit.**
++
++## 2. Round 2.5 verdict
++
++Kel's fundamental architecture is sound. **Do not pivot. Do not rewrite. Do not create duplicate
++authority, memory, workflow, recovery, evidence, or orchestration systems.** Round 2.5's value is
++converting distributed safety behaviour into explicit constitutional invariants with adversarial
++coverage before V1.6 freezes.
++
++Not invalidated: durable work engine · contracts · completion packets · capability leases ·
++provider/model routing · Workforce OS · memory architecture · evidence-bound completion · independent
++verification · continuation/recovery · worktree isolation · D0–D4 staffing.
++
++### Dispositions (hypotheses, validated against repository truth)
++
++| # | Topic | Disposition | Where |
++|---|---|---|---|
++| A | Delegation authority ceiling | **ADOPT** — extend the existing authority system; `child_effective ⊆ delegator_effective`; delegation may narrow, never create | R1 |
++| B | Logical-work / idempotency | **ADOPT** — one explicit matrix over existing primitives; fill only real gaps; no second queue/event framework | R2 |
++| C | Retry budgets survive restart | **ADOPT** — audit every autonomous retry class; persist only where restart could reset a loop | R3 |
++| D | Canonical approval binding | **ADOPT + MERGE APR-02** — approval authorizes one exact normalized action; re-prove immediately before execution | R4 |
++| E | Persistence integrity | **ADOPT** — system invariant + adversarial/property tests; do not rewrite storage | R5 |
++| F | Truthful runtime state | **ADOPT (invariant only)** — `IDLE/WAITING/PROCESS-ALIVE ≠ COMPLETED`; no universal enum | R6 |
++| G | Liveness separation | **ADOPT** — `process alive ≠ supervisor healthy ≠ mission progressing` | R6 |
++| H | Host-held credentials | **PROVE THE BOUNDARY** — no generic credential-proxy platform in V1.6 (post-V1.6 research) | R7 |
++| I | Network-aware sandbox | **REJECT for Campaign A** — record `host_runtime.py` as user-authorized high-authority native execution, not a sandbox | R7 |
++| J | Memory provenance | **ALREADY COMPLETE** — verify and keep; no new memory system | R6/R12 |
++| K | Resumption briefs | **ALREADY SOLVED** — Continuation/open-work machinery; reuse | — |
++| L | Deterministic procedures | **ALREADY SOLVED** — Recipes compile into the existing engine; no second workflow runtime | — |
++| M | Execution receipts | **STRENGTHEN TESTS ONLY** — effect ids/digests/receipts exist; no HMAC-everything without a real threat gap | R5/R6 |
++| N | Needs Your Attention | **ADOPT FOR V1.6** — derived-only aggregation over existing durable state | R9 |
++| O | Trust-tainted execution | **RESEARCH ONLY** (post-V1.6) | — |
++| P | Capability revision snapshots | **CLARIFY INVARIANT** — config changes never silently widen running work; user revocation may narrow immediately | R1/R6 |
++| Q | Narrow runtime ABI | **RESEARCH ONLY** unless current code shows costly coupling; no elegance rewrite | — |
++| R | Public A2A | **REJECT** (no V1.6 need) | — |
++| S | Complex memory platform | **REJECT** (knowledge graph / autonomous memory agents / universal vectors) | — |
++
++## 3. Campaign A critical path
++
++```
++R0  finish P2/P3 sweep          → every historical row has a final evidence-backed disposition
++R1  delegation authority ceiling
++R2  logical-work / idempotency invariant
++R3  durable retry / recovery budgets
++R4  canonical approval binding        (absorbs APR-02)
++R5  persistence integrity contract
++R6  truthful state + liveness          (absorbs RECOVERY-CLASSIFICATION, LIVE-AUTHORITY proof)
++R7  credential / network boundary confirmation
++R8  packaged / migration assertions   (REQ-PKG-ASSERT + REL-01 evidence)
++R9  Visual batches 6–8 + Needs Your Attention
++R10 engine-loss / recovery UX         (absorbs TR-02 where it fits; restore-outcome surface)
++R11 Visual → Main integration
++R12 final Campaign A regression
++    → PRE_AUDIT_V1_6_HEAD  → STOP Campaign A
++```
++
++Then: **Campaign B** 100% independent audit → **Campaign C** 100% repair → re-audit → human visual →
++final product review → release/freeze.
++
++## 4. Phase contracts
++
++### R0 — finish the P2/P3 sweep
++Every row in `P2_P3_DISPOSITION.md` ends with one of: **FIXED · STALE · NOT_APPLICABLE ·
++DEFERRED_NON_RELEASE · OPEN_RELEASE_BLOCKER** — evidence inline, no row silently disappears.
++At this checkpoint (16/27 done): P2 **APR-02** (resolution scope), **SEC-01** (vetting ownership),
++**TR-01** (`_STREAMS` lifecycle review), **TR-02** (renderer UX; coordinate with VIS), plus 7 P3 rows.
++**REL-01 stays `OPEN_RELEASE_BLOCKER`** until package/freeze-level evidence exists (R8).
++Exit: 27/27 rows decided.
++
++### R1 — delegation authority ceiling
++Enforce `effective_child_authority <= delegator_effective_authority` over the EXISTING system
++(`AUTHORITY_CLASSES`/`AUTHORITY_RANK`, role `authority_max`, TaskContract `authority` +
++`allowed_tools` + `write_boundaries`, capability leases, external-effect lists, assignment grants,
++provider/runtime binding, budgets). Child authority = intersection of delegator effective authority,
++delegation grant, role ceiling, runtime/profile limits, tool policy, write scope, external-effect
++scope, budget envelope. Child may receive LESS, never MORE. No nested spawning is introduced (D1/D2/D3
++stay Commander-mediated). Tests: discriminating attempts to widen authority class, tools, write paths,
++external effects, authority-relevant runtime class, budget limits (property-style where useful).
++Also record the LIVE-AUTHORITY clarification (config never silently widens; user revocation narrows).
++
++### R2 — logical-work / idempotency contract
++Build the matrix over existing primitives (unique event ids, dedupe, aggregate revisions,
++`job_intakes`, run epochs, unique inbox ids, one-active-milestone, effect operation ids, assessment/
++publication/approval-announcement ids, native coding-call identities). For each autonomous event
++family record logical-work identity, attempt identity, dedupe identity, authoritative state,
++duplicate behaviour, replay behaviour, side-effect behaviour. Families: submission/intake, worker
++result, native RPC, native permission reply, approval resolution, boundary grant, effect prepare,
++effect observe, continuation, recovery, publication, mission/team events where authoritative.
++Invariant: one logical event → at most one authoritative execution unless a NEW attempt identity is
++created. Side-effects: reconcile, never blindly replay. Fix only real gaps. Tests inject duplicates
++across restart boundaries where practical.
++
++### R3 — durable retry / recovery budgets
++Inventory autonomous retry domains (milestone execution, reviewer recovery, provider fallback, route
++retry, planning retries, broker restart, coding check recovery, mission/stream recovery, tool
++retries, scheduled/repeated work). Distinguish AUTOMATIC from EXPLICIT USER retry; automatic loops
++need a durable limit that survives restarting the app/runtime/worker/broker/machine. Prefer local
++persistence on authoritative entities — no global retry table unless the schemas genuinely cannot
++express the state. Tests: crash/restart between attempts; budget must not reset.
++
++### R4 — canonical approval binding (absorbs APR-02)
++An approval authorizes **one exact normalized runtime action** under explicit preconditions:
++operation, canonical target/resource, normalized arguments, relevant content digest, job,
++run/requester, authority scope, expiration, destructive snapshot/precondition. Immediately before
++execution, re-prove the match; a changed material action, a normalization that changes identity, a
++changed precondition, or a job/run/scope mismatch **invalidates** the approval. Resolution must be
++scoped to the owning conversation/project/job (APR-02's requirement) — as part of this same coherent
++path, not a second approval system. No signatures/HMAC without a genuine threat need.
++
++### R5 — persistence integrity contract
++Invariant: **only canonical, validated, reconstructable state may be committed durably.** Inventory
++externally influenced payloads (job state, events, inbox, worker results, task contracts, completion
++packets, memories, proposals, findings, team messages, recovery records, artifact metadata, provider
++observations, native receipts) and ensure validation before commit, deterministic serializability,
++size limits, enum validation, unknown-field refusal where schemas require it, transaction rollback on
++failure, and no half-valid projection/event combinations. Adversarial tests: malformed types, unknown
++enums, oversized data, invalid nesting, non-serializable input, malformed JSON, unexpected tool-result
++shapes, deep payloads; then verify later startup/rebuild.
++
++### R6 — truthful state + liveness
++No giant new enum; preserve layered state machines. Formalize three separate facts:
++**PROCESS LIVENESS** (OS process alive and identity-matched) · **EXECUTION/SUPERVISOR LIVENESS**
++(broker/controller/lease/heartbeat healthy) · **MISSION PROGRESS** (meaningful work advanced).
++Invariants: `process_alive != mission_progressing`; `idle != completed`; `waiting != failed`;
++`no recent event != automatically dead`; **completion requires evidence/assessment**. Reuse
++Diagnostics, `native_processes`, run expiry, controller lease, mission leases, heartbeat, stale-lease
++reclamation, pod stall detection, durable job/milestone state, review recovery. Derived states where
++useful (progressing, legitimately waiting, stalled, lost, recovering/reconciling, blocked on user,
++blocked on resource) must not become a competing authoritative machine. Interrupted work must resolve
++to exactly one of **RECOVERY-CLASSIFICATION**: safely resumable · safely retryable ·
++reconcile-first · user-blocked · failed/quarantined. Tests: live process + no progress; dead process
++with a durable RUNNING row; legitimate long-running work; stale mission lease; provider outage;
++approval wait; interrupted verifier; engine restart.
++
++### R7 — credential / network boundary (prove, do not platform-ize)
++Invariant: capability to use a provider must not imply arbitrary access to its raw credential.
++Inspect credential metadata, native adapter child environments, native-host, logs, prompts, completion
++packets, artifacts, test subprocesses, unrelated provider children. A trusted provider process
++receiving the credential it needs is acceptable — that is different from exposing it to arbitrary
++worker code, prompt content, unrelated tools, artifacts, tests, or other providers. Document the
++distinction; test the containment boundary. Network: **no OS-level egress sandbox in Campaign A**;
++record `host_runtime.py` as user-authorized native full-access execution (an authority-class fact),
++not a sandbox. Post-V1.6 may research network-aware execution.
++
++### R8 — packaged / migration assertions (REQ-PKG-ASSERT + REL-01)
++Verify migrations on a fresh DB, a supported upgrade DB, and the packaged application: schema
++versions, runtime engine identity, packaged engine hash, resources, provider discovery, Workforce
++tables, resolution-kind migration, any Round 2.5 migration if one was genuinely needed. **REL-01:**
++fix and *prove at package/freeze level* that the packaged engine the app loads is the intended runtime
++artifact — no source-level fake closure; the blocker stays until that evidence exists. Campaign A may
++create a **non-release validation fixture** but must not perform the final immutable freeze unless
++release policy explicitly permits it.
++
++### R9 — Visual batches 6–8 + Needs Your Attention
++Batch 6 engine loss / error translation / supervision-recovery states · Batch 7 composer, model, tools
++· Batch 8 readability, contrast, normalization, settings overlap. Re-read current Main before every
++batch; use active file ownership; never race Main. **NEW — Needs Your Attention:** a derived-only
++aggregation over EXISTING durable state (approval needed, permission/boundary decision, unrecoverable
++failure, verification failure, uncertain completion, blocked work needing input, results genuinely
++needing human review). Preferred model: "Needs your attention" / "What needs me?" — never worker
++topology, leases, assignment ids, runtimes, graphs and queue internals. Use Kel's established visual
++system and prefer existing Work/sidebar surfaces over a new dashboard. The surface owns no authority:
++it cannot invent or mutate task state except through the existing action paths behind its buttons.
++
++### R10 — engine-loss / recovery UX
++Prove on the packaged app: boot → engine dies → user acts → UI recognizes engine state → reconnect or
++restart → durable work reconciled → honest success/failure → no raw infrastructure error, no false
++success, state stays understandable. `TypeError: fetch failed` must never be ordinary UX. May absorb
++TR-02 and the restore-outcome renderer surface (PER-02's UI half) where appropriate.
++
++### R11 — Visual → Main integration
++Only after overlapping runtime/UI work stabilizes. Before: verify exact VIS base/head, branch clean,
++Main clean, ownership cleared, overlapping files inventoried, Batches 1–5 behaviour preserved,
++Batches 6–8 integrated, canonical logo preserved. After: tsc, vitest, engine regression if affected,
++packaged build, probes, screenshot regeneration + index refresh, console/error checks. **Do not mark
++the human visual gate passed.**
++
++### R12 — final Campaign A regression
++ENGINE: full suite, fresh DB, upgrade DB, migrations, event/idempotency attacks, retry persistence,
++approval binding, delegation authority, leases, recovery, Workforce, providers, memory, capabilities,
++evidence, lineage, effects, continuation. DESKTOP: tsc, vitest, Settings, Projects, Work, Permissions,
++Transcription, Sidebar, Team, Composer, Model/Tools, memory, capability recommendations, Needs Your
++Attention, engine-loss states. PACKAGED: build, boot, runtime identity, migration assertions, provider
++discovery, routes, failure states, persistence, transcription, Workforce, canonical icon/logo, About
++branding, update/restart, recovery. GIT/RELEASE: tree clean, intended branch, remote sync, no
++unintended tags, public-history scan, no secrets, frozen refs byte-identical.
++
++## 5. New canonical invariants (added to `INVARIANT_LEDGER.md`)
++
++Stable ids follow the ledger's format; the Round 2.5 short name is in parentheses.
++
++| ID (short name) | Statement | Phase |
++|---|---|---|
++| INV-AUTH-001 (AUTH-DELEGATION) | Delegated authority is never greater than the delegator's effective authority | R1 |
++| INV-IDEM-001 (EVENT-IDEMPOTENCY) | One logical event → at most one authoritative execution unless a new attempt identity exists | R2 |
++| INV-EFFECT-001 (EFFECT-REPLAY) | Unresolved external side effects are reconciled, never blindly replayed | R2 |
++| INV-RETRY-001 (RETRY-DURABLE) | Automatic retry history survives restart (app/runtime/worker/broker/machine) | R3 |
++| INV-APPROVAL-002 (APPROVAL-EXACT) | An approval authorizes one exact canonical runtime action under explicit scope and preconditions, re-proved before execution | R4 |
++| INV-PERSIST-001 (PERSIST-CANONICAL) | Only validated, serializable, reconstructable state is durably committed | R5 |
++| INV-COMPLETE-001 (COMPLETION-TRUTH) | Waiting/idle/process state never establishes completion; only the completion/evidence path does | R6 |
++| INV-LIVENESS-001 (LIVENESS-SEPARATION) | Process liveness, supervisor liveness and mission progress are separate facts | R6 |
++| INV-RECOVERY-001 (RECOVERY-CLASSIFICATION) | Interrupted work resolves to exactly one of: safely resumable · safely retryable · reconcile-first · user-blocked · failed/quarantined | R6/R10 |
++| INV-MEM-001b (MEMORY-PROVENANCE) | Durable memory stays attributable and project-scoped (existing INV-MEM-001/002/003 remain the operative rows) | verify in R6/R12 |
++| INV-CRED-001 (CREDENTIAL-CONTAINMENT) | Raw credentials do not become arbitrary worker/tool/prompt/artifact data | R7 |
++| INV-AUTH-002 (LIVE-AUTHORITY) | Runtime/config changes cannot silently widen running work; user revocation may narrow it immediately | R1/R6 |
++| INV-WF-002 (VERIFIER-INDEPENDENCE) | Builder cannot final-certify its own artifact (existing row stands) | R1–R12 |
++| INV-PACKAGE-001 (PACKAGE-IDENTITY) | Packaged Kel executes the runtime artifact declared by release evidence (existing row; REL-01 is its proof) | R8 |
++| INV-FREEZE-001 (FREEZE-IMMUTABLE) | Frozen releases are never modified (existing row stands; re-verified at open + RC) | continuous |
++
++## 6. Do NOT build in V1.6 (rejected / deferred)
++
++arbitrary nested agent spawning · a new RBAC system · a new workflow engine · a second recipe runtime ·
++HMAC-everything receipts · a second memory platform · universal vector DB · giant knowledge graph ·
++autonomous memory agents · trust-tainted dynamic authority · OS-level Windows network firewall ·
++public A2A · a giant unified runtime-state enum · a new Advanced Worker View · adaptive staffing ·
++Profiles · speculative Rust migration · generic agent cockpit UI.
++
++## 7. Post-V1.6 (recorded, not implemented)
++
++**Runtime security / resident autonomy:** generic credential mediation where integrations require it ·
++network-aware runtime authority · scheduled durable logical-work identity · trust-tainted execution
++research · capability/config revision provenance · stronger resident daemon/wake behaviour if needed.
++**Workforce:** run the deferred doc-13 evaluation campaign before any adaptive-staffing activation;
++5.7 stays shadow/deferred until evidence + Nick sign-off. **Advanced Worker View:** only after a
++product decision + usability evidence; Advanced/Details only. **Watchlist:** public A2A · narrow
++runtime ABI refactor if coupling becomes costly · richer memory only if product evidence demands it.
++
++## 8. Rules that bind every phase
++
++1. **Breadcrumbs in the same arc** (sprint §25): requirement id, invariant id, base/target commit,
++   files, symbols, user-visible + internal change, migration, security/privacy, failure paths,
++   self-review, focused/full/packaged tests, known limitation, audit target, repair hints.
++   **Campaign B must not need chat history.**
++2. **Audit honesty** (§26): incremental audit stays paused; never update AUDIT_STATUS as if Round 2.5
++   work were independently accepted; last genuine independent audit remains `8a2b25d`.
++3. **Commit truth beats prose**; corpus updated per increment; `git log <last-audited>..HEAD` must
++   reconcile with `COMMIT_LEDGER.md`.
++4. **Frozen refs and the public-safety scan** gate every push (explicit refspecs; never force).
++5. **Speed** (§27): do not stop at phase boundaries, after the roadmap, after R0/R1, after tests, or
++   after pushes; perform the next safe action; long records go to disk; chat stays compact.
++
++## 9. Stop conditions and completion format
++
++Campaign A stops only when the §28 checklist is true (Round 2.5 hardening complete, sweep complete,
++REL-01 correctly dispositioned, Visual integrated, engine-loss UX complete, packaged regression green,
++migrations proven, corpus complete, exact `PRE_AUDIT_V1_6_HEAD` recorded) or a genuine human gate
++occurs. On completion, report exactly the §29 format:
++
++```
++KEL V1.6 — CAMPAIGN A COMPLETE / PRE-AUDIT RELEASE CANDIDATE READY
++PRE_AUDIT_V1_6_HEAD: <sha>
++Last independently audited production: 8a2b25d
++Unaudited production range: 8a2b25d..<sha>
++Round 2.5 V1.6 hardening: COMPLETE
++Historical P2/P3 sweep: COMPLETE
++Automated regression: PASS    Packaged regression: PASS / documented explicit exception
++Visual automated implementation: COMPLETE    Visual integration: COMPLETE
++Human Visual: PENDING        100% Audit corpus: READY    100% Repair preparation: READY
++Release/freeze: NOT STARTED
++NEXT CAMPAIGN: CAMPAIGN B — 100% INDEPENDENT AUDIT    Nick required: YES — START CAMPAIGN B
++```
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 58a4e87..28c38f7 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -194,3 +194,54 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     APR-02 and SEC-01 remain OPEN: their fixes must add an ownership/scope parameter to the
+     session/approval lookups — verify the fix actually refuses a cross-scope id rather than only
+     documenting the intent.
++
++## Round 2.5 hardening (2026-09-18 additions — Campaign B hostile tests)
++
++61. Authority widening — authority class: a child TaskContract requests a higher class than the
++    delegator's effective authority and must be refused (AUTH-DELEGATION).
++62. Authority widening — write paths: a child requests broader `write_boundaries` than the parent
++    holds, including prefix/symlink/case tricks on Windows paths.
++63. Authority widening — tools: a child requests a higher-effect tool outside the parent's grant or
++    the role ceiling.
++64. Authority widening — policy/budget: a child requests a tool policy or budget envelope wider than
++    the delegator's (or a budget class that silently raises authority).
++65. Authority widening — provider/runtime: a child is bound to a provider/runtime class the parent
++    did not hold where that class is authority-relevant.
++66. Live authority: a configuration/capability change after work starts must not widen that work's
++    authority; user revocation must narrow it immediately and must never be blocked.
++67. Duplicate submission/intake id across a restart must not start a second authoritative run.
++68. Duplicate worker result event must not double-apply a milestone/effect transition.
++69. Duplicate native RPC / permission reply must not execute twice or bypass the wait state.
++70. Duplicate approval or boundary grant must not produce a second grant or a second resolution.
++71. Restart between automatic retries (app, runtime, worker, broker, machine) must not reset the
++    remaining automatic retry budget (RETRY-DURABLE); explicit user retry is a new attempt identity.
++72. Restart after a PREPARED external effect with unknown outcome must reconcile against the recorded
++    operation identity first — never blind replay (EFFECT-REPLAY).
++73. Approval target normalized differently at execution time (case, path, URL form) must invalidate
++    the approval (APPROVAL-EXACT).
++74. Approval action mutated after the user approved (arguments, digest, target) must invalidate.
++75. Approval used from the wrong conversation/project/job/run must be refused (absorbs APR-02).
++76. Malformed completion packet / tool output must be refused before commit — nothing half-valid is
++    written durably, and a later startup/rebuild still works (PERSIST-CANONICAL).
++77. Adversarial persistence payloads (wrong types, unknown enums, oversized text, deep nesting,
++    non-serializable values, malformed JSON) are refused at the write boundary, not at read time.
++78. Liveness separation: a live process with no progress; a stale process with a durable RUNNING row;
++    a legitimate long-running task declared stalled — each must land on the truth-telling side of
++    `process_alive != mission_progressing` (LIVENESS-SEPARATION).
++79. Completion truth: `idle != completed`, `waiting != failed`, `no recent event != automatically
++    dead`; only the evidence/assessment path establishes completion (COMPLETION-TRUTH).
++80. Recovery classification: every interrupted unit resolves explicitly to resumable / retryable /
++    reconcile-first / user-blocked / failed-quarantined — silence is a finding.
++81. Credential containment: a provider credential must not appear in a prompt, artifact, log, packet
++    or evidence record (CREDENTIAL-CONTAINMENT).
++82. Credential containment: an arbitrary test subprocess or unrelated provider child must not receive
++    provider keys; a trusted provider process receiving its own credential is expected behaviour.
++83. Native-host boundary: `host_runtime.py` must be documented and treated as a user-authorized,
++    full-access native runtime — not a sandbox; verify no grant implies otherwise.
++
++## Round 2.5 — Needs Your Attention (R9 additions)
++
++84. The attention surface must never display another project's item, invent an action that is not
++    actually available, or mutate state outside the existing action paths behind its buttons.
++85. The attention surface must be provably derived-only: with all durable sources drained, it shows
++    nothing, and it never becomes an authority of its own.
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index 216ba9d..216118c 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -16,6 +16,21 @@ it blocks V1.6, owner, and the revisit condition.
+ | DEF-008 | Provider 'web'/context tokens in evidence | Only evidence-backed tokens allowed; no evidence yet (Phase 10 had no real API-provider runs — remains deferred) | None | Evidence from real provider runs | NO | Main | First real API-provider run |
+ | DEF-009 | F16-3 — workforce guarantees stay engine-level (no production caller) | Wiring into live product flows is a product decision; guarantees hold engine-level | Documented limitation | A wiring increment decision | NO | Main | Sprint §30 "provider/Workforce real wiring" item — re-decide in Campaign A |
+ | DEF-010 | Human pixel review | Requires a human; no image perception in agent threads (honest limitation) | Release gate remains open by design | Human review of `packaged-visual5`/later captures via SCREENSHOT_REVIEW_INDEX | YES for release (not for RC) | Nick | At the pre-release human gate |
++| DEF-016 | Generic credential mediation platform | Round 2.5 H: no demonstrated gap requires a proxy platform; V1.6 proves the existing containment boundary instead | None | A demonstrated integration that needs mediated credentials | NO | Main | Post-V1.6, only if a real integration demands it |
++| DEF-017 | Network-aware runtime authority / OS egress firewall | Round 2.5 I: native-host execution is explicitly a user-authorized full-access runtime, not a sandbox; an OS firewall is a platform project | None (documented authority fact) | A product decision + platform research | NO | Main/product | Post-V1.6 research (recorded in the roadmap) |
++| DEF-018 | Trust-tainted execution | Round 2.5 O: research-only; no V1.6 need | None | Research findings + product decision | NO | Main | Post-V1.6 |
++| DEF-019 | Narrow runtime ABI refactor | Round 2.5 Q: no demonstrated costly coupling; no elegance rewrite | None | Evidence of real coupling cost | NO | Main | If coupling becomes demonstrably costly |
++| DEF-020 | Capability/config revision provenance | Round 2.5 P is satisfied for V1.6 by the LIVE-AUTHORITY invariant (no silent widening; revocation may narrow); full provenance history is post-V1.6 | None | A product need for revision history | NO | Main | Post-V1.6 |
++
++## Rejected for the current roadmap (not deferred — no plan exists)
++
++Round 2.5 §23/§24 items that are **rejected** rather than deferred, recorded so no future reader
++mistakes them for missing work: arbitrary nested agent spawning · a new RBAC system · a new workflow
++engine · a second recipe runtime · HMAC-everything receipt architecture · a second memory platform ·
++a universal vector database · a giant knowledge graph · autonomous memory agents · an OS-level
++Windows network firewall · public A2A · one giant unified runtime-state enum · a new Advanced Worker
++View · adaptive staffing (see DEF-001) · Profiles · a speculative Rust migration (see DEF-003) ·
++generic agent-cockpit UI. Each may only return through a new product decision with evidence.
+ | DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |
+ | DEF-012 | Memory stale-detection wiring (`source_digest` producers + a `revalidate` caller) | No producer/caller yet; mechanism is engine-ready and test-covered; staleness never gates anything | None (nothing depends on it) | Producer design (which source facts carry digests) + refresh loop + focused tests | NO | Main | First repo-fact producer needing staleness |
+ | DEF-013 | Localization of new v1.6 surfaces (knowledge UI + siblings) | Copy intentionally Kel-native English; the release program's locale pass owns translations (declared 2026-09-17) | Non-English users see English on new surfaces | Locale pass across 12 locales + parity checks | NO for RC (decide at release gates) | release program | Pre-release (localization gate) |
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+index c6459af..4b7259f 100644
+--- a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -251,6 +251,134 @@ OPEN_GAP (known open finding attacks it).
+   surface; confirm no false success.
+ - Status: OPEN_GAP (to close in Campaign A).
+ 
++## INV-AUTH-001 — Delegated authority is never greater than the delegator's (R2.5: AUTH-DELEGATION)
++- Definition: when a child TaskContract is created, its effective authority is the intersection of
++  the delegator's effective authority, the task grant, the role ceiling, runtime/profile
++  limitations, tool policy, write scope, external-effect scope and the budget envelope. Delegation
++  may narrow; it must never create authority. No second permission system may be introduced.
++- Owner: assignment/delegation (existing `AUTHORITY_CLASSES`/`AUTHORITY_RANK`, role `authority_max`,
++  TaskContract `authority`/`allowed_tools`/`write_boundaries`, capability leases, assignment grants).
++- Code paths: `kel/assignment.py`, `kel/contracts.py`, `kel/delegation.py`, `kel/pods.py` (R1).
++- Tests: discriminating widening attempts (authority class, tools, write paths, external effects,
++  provider/runtime class, budget) + property-style coverage (R1).
++- Edge cases: Commander-mediated D1–D3 today (no nested spawning); revocation must still narrow.
++- Audit target: AUDIT_TARGETS §61–§66 (child requests what the parent lacks).
++- Status: PLANNED (R1).
++
++## INV-IDEM-001 — One logical event, at most one authoritative execution (R2.5: EVENT-IDEMPOTENCY)
++- Definition: a logical event may cause no more than one authoritative execution unless an explicit
++  new attempt identity is created; duplicate delivery, replay and restart must not multiply effects.
++- Owner: the existing identity primitives (event ids/dedupe, aggregate revisions, `job_intakes`, run
++  epochs, inbox ids, one-active-milestone, effect/assessment/publication/announcement ids).
++- Code paths: `kel/core.py`, `kel/engine.py`, `kel/router.py`, `kel/chat_approvals.py`; matrix in the
++  R2 increment record (R2).
++- Tests: duplicate injection across restart boundaries for every event family in the matrix (R2).
++- Edge cases: native RPC retries vs duplicates; permission replies; boundary grants.
++- Audit target: AUDIT_TARGETS §67–§70.
++- Status: PLANNED (R2).
++
++## INV-EFFECT-001 — Unresolved external effects are reconciled, never blindly replayed (R2.5: EFFECT-REPLAY)
++- Definition: an external side effect with an unknown outcome is reconciled against its recorded
++  operation identity before any retry; blind replay is forbidden.
++- Owner: effects + native hosts + coding transport.
++- Code paths: `kel/effects.py`, `kel/host_runtime.py`, `kel/coding_transport.py` (R2/R3).
++- Tests: restart after PREPARED with unknown outcome must reconcile first (R2/R3).
++- Audit target: AUDIT_TARGETS §71–§72.
++- Status: PLANNED (R2).
++
++## INV-RETRY-001 — Automatic retry history survives restart (R2.5: RETRY-DURABLE)
++- Definition: restarting the app, runtime, worker, broker or machine never resets an automatic retry
++  budget; explicit user retry is a new, separately identified attempt.
++- Owner: every autonomous retry domain (milestone execution, reviewer recovery, provider fallback,
++  route retry, planning retries, broker restart, coding-check recovery, mission/stream recovery,
++  tool retries), persisted on its authoritative entity — no global retry table.
++- Code paths: `kel/engine.py`, `kel/assignment.py`, `kel/review.py`, `kel/router.py`,
++  `kel/continuation.py`, `kel/transcription.py` (R3).
++- Tests: crash/restart between attempts and prove remaining budget does not reset (R3).
++- Audit target: AUDIT_TARGETS §71.
++- Status: PLANNED (R3).
++
++## INV-APPROVE-002 — Approval authorizes one exact canonical runtime action (R2.5: APPROVAL-EXACT)
++- Definition: an approval authorizes the exact normalized runtime action (operation, canonical
++  target/resource, normalized arguments, relevant content digest, job, run/requester, authority
++  scope, expiration, destructive preconditions) and is revalidated immediately before execution; any
++  material change, target re-normalization, preconditions or scope mismatch invalidates it.
++- Owner: existing approval records (id, job, run, action digest, expiry, actor, wait state).
++- Code paths: `kel/service.py` (`/api/approval`), `kel/authorize.py`, `kel/effects.py`;
++  **absorbs APR-02** (conversation/project/job scoping) rather than creating a second system (R4).
++- Tests: mutate the action/target/scope between approval and execution; cross-scope ids (R4).
++- Audit target: AUDIT_TARGETS §73–§75.
++- Status: PLANNED (R4) — the `INV-APPROVE-001` resolver discipline stays as-is.
++
++## INV-PERSIST-001 — Only validated, serializable, reconstructable state is durably committed (R2.5: PERSIST-CANONICAL)
++- Definition: nothing externally influenced reaches durable storage without validation before
++  commit, deterministic serializability, size limits, enum/unknown-field discipline, transaction
++  rollback on failure, and no half-valid projections. SQLite/storage is not rewritten to achieve it.
++- Owner: persistence writers (`core` transactions, contracts packets, memory, workforce
++  `assert_safe`, artifact writing, recovery records, provider observations, native receipts).
++- Code paths: `kel/core.py`, `kel/contracts.py`, `kel/memory.py`, `kel/workforce.py`,
++  `kel/evidence.py`, `kel/backup.py` (R5).
++- Tests: adversarial payloads (types, enums, sizes, nesting, non-serializable, malformed JSON, tool
++  shapes) + later startup/rebuild (R5).
++- Audit target: AUDIT_TARGETS §76–§77.
++- Status: PLANNED (R5).
++
++## INV-STATE-001 — Waiting/idle/process state never establishes completion (R2.5: COMPLETION-TRUTH)
++- Definition: only the evidence/assessment path establishes completion; `idle != completed`,
++  `waiting != failed`, `no recent event != automatically dead`, `process alive != mission
++  progressing`. Existing job/run/milestone state machines stay as they are (no universal enum).
++- Owner: engine lifecycle + renderer surfaces that report state.
++- Code paths: `kel/engine.py`, `kel/continuation.py`, `KelService.ts`/renderer state surfaces; the
++  restore outcome (`state()['restore']`) follows the same rule (R6).
++- Tests: live process with no progress; dead process with durable RUNNING; long healthy work;
++  provider outage; user-approval wait; interrupted verifier; engine restart (R6).
++- Audit target: AUDIT_TARGETS §78–§79.
++- Status: PLANNED (R6).
++
++## INV-LIVENESS-002 — Process liveness, supervisor liveness and mission progress are separate facts (R2.5: LIVENESS-SEPARATION)
++- Definition: three layers are reported separately and never conflated — OS process alive and
++  identity-matched; durable supervisor (broker/controller/lease/heartbeat) healthy; mission progress
++  according to its own semantics. Derived labels (progressing, legitimately waiting, stalled, lost,
++  recovering/reconciling, blocked on user/resource) never become an authoritative state machine.
++- Owner: Diagnostics + the existing lease/heartbeat/stall machinery.
++- Code paths: `kel/diagnostics.py`, `kel/parallel.py`, `kel/host_runtime.py`, `kel/pods.py` (R6).
++- Audit target: AUDIT_TARGETS §78.
++- Status: PLANNED (R6).
++
++## INV-RECOVERY-002 — Interrupted work resolves to exactly one classification (R2.5: RECOVERY-CLASSIFICATION)
++- Definition: every interrupted unit resolves explicitly to one of: safely resumable; safely
++  retryable; reconcile-first; user-blocked; failed/quarantined. Silence is not a classification.
++- Owner: continuation/recovery + engine-loss UX.
++- Code paths: `kel/continuation.py`, `kel/engine.py`, `kel/review.py`; renderer recovery surfaces (R6/R10).
++- Audit target: AUDIT_TARGETS §80.
++- Status: PLANNED (R6/R10).
++
++## INV-CRED-001 — Raw credentials never become arbitrary worker/tool data (R2.5: CREDENTIAL-CONTAINMENT)
++- Definition: capability to use a provider/service never implies access to its raw credential. A
++  trusted provider process may receive the credential it requires; that is different from exposing
++  it to worker code, prompts, artifacts, logs, other providers or arbitrary test subprocesses.
++- Owner: credential custody (existing OS-backed storage; engine stores references only).
++- Code paths: `kelCredentials.ts`, engine provider metadata, native adapter child environments,
++  `kel/host_runtime.py`, `kel/evidence.py` (R7 verification).
++- Tests: credential-leak probes across prompt/artifact/log/subprocess/other-provider surfaces (R7).
++- Audit target: AUDIT_TARGETS §81–§83.
++- Status: PARTIAL (V1.5 designed the boundary; R7 proves it or records the honest gap).
++
++## INV-AUTH-002 — Runtime/config changes cannot silently widen running work (R2.5: LIVE-AUTHORITY)
++- Definition: configuration or capability changes never silently widen authority of already-running
++  work (contracts/grants/snapshots stay the authority); user revocation may narrow existing work
++  immediately, and must never be blocked by over-frozen authority.
++- Owner: capability/authority snapshots + revocation paths.
++- Code paths: `kel/authorize.py`, `kel/assignment.py`, `kel/capabilities.py`; boundary exercised by
++  R1/R4 (R1/R4).
++- Audit target: AUDIT_TARGETS §66.
++- Status: PLANNED (R1/R4 boundary).
++
++Mapping to invariants that already exist (Round 2.5 names them; no duplicates are created):
++VERIFIER-INDEPENDENCE → `INV-WF-002`; MEMORY-PROVENANCE → `INV-MEM-001`/`INV-MEM-003`;
++PACKAGE-IDENTITY → `INV-PACKAGE-001` (strengthened in R8/REL-01); FREEZE-IMMUTABLE →
++`INV-FREEZE-001` (re-verified at R12).
++
+ ---
+ 
+ ## Maintenance
+diff --git a/docs/v1.6/pre-audit/README.md b/docs/v1.6/pre-audit/README.md
+index 75cff7c..77f3de0 100644
+--- a/docs/v1.6/pre-audit/README.md
++++ b/docs/v1.6/pre-audit/README.md
+@@ -4,6 +4,9 @@ status: CAMPAIGN_A_IN_PROGRESS
+ opened: 2026-09-18T16:05Z, at Main HEAD `fd98cc4`
+ owner: autonomous Main / Program Director (single writer; see AUTONOMOUS_OPERATION.md)
+ scope: the whole V1.6 declared surface, emphasized on the post-audit range
++forward_roadmap: `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` — adopted 2026-09-18; governs R0–R12
++  (Round 2.5 hardening + the remaining Campaign A critical path). Historical phase docs stay as
++  evidence; the roadmap governs what happens next.
+ 
+ ## Purpose
+ 
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 0ef358f..6a41cb1 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,19 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 16/27 rows carry a final disposition (P2 6/10: PER-02, A1, APR-01, PER-03 fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 11 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3`; batch 3 `84b5646` | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | in progress — 16/27 rows carry a final disposition (P2 6/10: PER-02, A1, APR-01, PER-03 fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 11 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3`; batch 3 `84b5646` | — | P2_P3_DISPOSITION.md | pending |
++| REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | PENDING | — | — | `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` §R1 | — | pending |
++| REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
++| REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
++| REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | PENDING | — | — | roadmap §R4 | — | pending |
++| REQ-R25-R5 | roadmap R2.5 (Round 2.5 E; PERSIST-CANONICAL) | persistence integrity contract + adversarial tests | PENDING | — | — | roadmap §R5 | — | pending |
++| REQ-R25-R6 | roadmap R2.5 (Round 2.5 F/G; COMPLETION-TRUTH / LIVENESS-SEPARATION / RECOVERY-CLASSIFICATION) | truthful state + liveness separation | PENDING | — | — | roadmap §R6 | — | pending |
++| REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | PENDING | — | — | roadmap §R7 | — | pending |
++| REQ-R25-R8 | roadmap R2.5 §15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | PENDING | — | — | roadmap §R8 | — | pending |
++| REQ-R25-R9 | roadmap R2.5 (Round 2.5 N) | Visual batches 6–8 + Needs Your Attention (derived-only) | PENDING | — | — | roadmap §R9 | — | pending |
++| REQ-R25-R10 | roadmap R2.5 §17 (= REQ-ELOSS) | engine-loss/recovery UX | PENDING | — | — | roadmap §R10 | — | pending |
++| REQ-R25-R11 | roadmap R2.5 §18 | Visual → Main integration | PENDING | — | — | roadmap §R11 | — | pending |
++| REQ-R25-R12 | roadmap R2.5 §19 | final Campaign A regression | PENDING | — | — | roadmap §R12 | — | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/RISK_REGISTER.md b/docs/v1.6/pre-audit/RISK_REGISTER.md
+index ddee358..1824ddf 100644
+--- a/docs/v1.6/pre-audit/RISK_REGISTER.md
++++ b/docs/v1.6/pre-audit/RISK_REGISTER.md
+@@ -17,6 +17,14 @@ Auditor guidance: attack HIGH/CRITICAL first; a risk is not a finding until repr
+ | RISK-010 | Frozen releases | Any accidental touch of frozen folders/tags destroys the immutability story | LOW | CRITICAL | Wrong path in tooling (REL-01 class) | Verification at open + RC; scripts reviewed | CONTROLLED (verified 2026-09-18 at open) | Re-verify 4-hash manifests at RC; remote refs unchanged | freeze tooling; `Kel Releases\` |
+ | RISK-011 | Visual acceptance | Automated screenshot probes can pass while human pixel judgment remains open — risk of treating "packaged PASS" as visual sign-off | MEDIUM | MEDIUM | Release gate confusion | `human_visual_gate: OPEN` tracked; pixel review stays a human gate | OPEN (by design) | Check no document claims human visual approval | VISUAL_EVIDENCE_INDEX.md |
+ | RISK-012 | IPC | Sender-frame validation missing on at least one channel (INT-01); new channels could add more | LOW | MEDIUM | Malicious renderer content | Sweep adds the check; audit enumerates channels | OPEN | Enumerate all `kel:*` IPC channels vs frame checks | `KelService.ts` |
++| RISK-013 | Authority | Child work could in principle request authority its delegator never held (Round 2.5 A; not demonstrated as exploited) | MEDIUM | HIGH (authority) | Widening attempt on a child contract | R1 makes the ceiling an enforced invariant with discriminating tests | OPEN — R1 | AUDIT_TARGETS §61–§66 | `kel/assignment.py`; `kel/delegation.py` |
++| RISK-014 | Idempotency | Duplicate delivery/replay across a restart boundary could multiply an authoritative execution (identity primitives exist; the cross-family matrix does not) | MEDIUM | HIGH (correctness) | Duplicate event/result/RPC/approval | R2 builds the matrix and fills only real gaps | OPEN — R2 | AUDIT_TARGETS §67–§70 | `kel/core.py`; `kel/router.py`; `kel/chat_approvals.py` |
++| RISK-015 | Retry durability | A restart could reset an automatic retry budget where the counter is in memory | MEDIUM | MEDIUM | Crash between attempts | R3 reconciles every automatic retry domain with the durable entity | OPEN — R3 | AUDIT_TARGETS §71 | engine/review/router/continuation |
++| RISK-016 | Approvals | Approval could authorize a materially different action than the one shown (mutation/re-normalization) or be resolved cross-scope (APR-02) | MEDIUM | HIGH (authority) | Action mutated between approval and execution | R4 exact-binding + revalidation before execution; APR-02 absorbed | OPEN — R4 | AUDIT_TARGETS §73–§75 | `kel/service.py`; `kel/authorize.py` |
++| RISK-017 | Persistence | An externally influenced payload could reach durable storage unvalidated (half-valid projection/event pair) | LOW | HIGH (data) | Malformed/oversized/non-serializable input | R5 contract + adversarial tests; no storage rewrite | OPEN — R5 | AUDIT_TARGETS §76–§77 | core/contracts/memory/evidence writers |
++| RISK-018 | Credentials | A provider credential could leak into prompts/artifacts/logs/tests while the boundary is only designed, not proven | LOW | CRITICAL (credential) | Child/test environment construction | R7 proves containment or records the honest gap | OPEN — R7 | AUDIT_TARGETS §81–§83 | `kelCredentials.ts`; native adapters; `host_runtime.py` |
++| RISK-019 | Attention surface | A derived "Needs Your Attention" surface could show the wrong project's item or offer an action that is not actually available | MEDIUM | MEDIUM (trust) | Derivation bug or stale scope | R9 keeps it derived-only, scoped, and action-through-existing-paths | OPEN — R9 | AUDIT_TARGETS §84–§85 | renderer Work/sidebar surfaces |
++| RISK-020 | Truthful state | Liveness/state presentation could conflate process-alive with progressing or idle with completed | MEDIUM | HIGH (trust) | UI derived from one signal | R6 formalizes the three layers; R10 closes the engine-loss raw-error UX | OPEN — R6/R10 | AUDIT_TARGETS §78–§79 | engine state surfaces; renderer |
+ 
+ ## Maintenance rules
+ 
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 9233d42..884cf70 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -12,13 +12,14 @@ worktree_clean: true
+ state: IMPLEMENTATION_SPRINT
+ sprint_campaign: CAMPAIGN_A
+ audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
++roadmap: docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md (adopted 2026-09-18; governs R0-R12; Round 2.5 hardening + remaining Campaign A critical path)
+ pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
+ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+ current_increment: REQ-P2P3 IN PROGRESS — 16/27 docket rows carry a final disposition; **PER-03 fixed** (`84b5646`: pre-restore snapshots pruned on both paths) and **APR-01 closed** (guard verified present; the missing payload-actor test added); **A1 fixed** (`101d8c3`); **PER-02 fixed** (`df1997a`); **sweep batch 2 fixed** (`0596211`); **REL-01 = `OPEN_RELEASE_BLOCKER`**; APR-03 `DEFERRED_NON_RELEASE`. Prior: REQ-F4 DONE (081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: 11 sweep rows remain — P2 4 (APR-02, SEC-01, TR-01, TR-02) and P3 7.
+-current_phase: P2/P3 sweep (in progress; batch 3 closed PER-03 + APR-01 at 84b5646)
++current_phase: R0 — finish the P2/P3 sweep (roadmap R2.5 adopted 2026-09-18; next phases R1 delegation authority ceiling → R2 idempotency → R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909).
+ 
+ audit_requested_from: NONE
+@@ -51,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md`; 11 rows still undecided — P2 4: APR-02 (approval resolution not conversation-scoped), SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle review), TR-02 (abandoned-stream renderer UX); P3 7). APR-02 and SEC-01 need an ownership/scope parameter on the session/approval lookups plus the desktop payload contract checked; TR-01 needs the lifecycle review the finding asks for; TR-02 rides with the visual batches. REL-01 is already `OPEN_RELEASE_BLOCKER`: its fix is drafted in the row but its verification requires a real freeze, which Campaign A must not perform — the RC gate/human decides. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: **R0** — finish the P2/P3 sweep (`P2_P3_DISPOSITION.md`; 11 rows undecided — P2 4: APR-02, SEC-01, TR-01, TR-02; P3 7) so all 27 carry one of the five final dispositions; then **R1–R12** per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` (R1 delegation authority ceiling; R2 idempotency matrix; R3 durable retry budgets; R4 canonical approval binding, absorbing APR-02; R5 persistence integrity; R6 truthful state + liveness; R7 credential/network boundary proof; R8 packaged/migration assertions + REL-01; R9 Visual 6–8 + Needs Your Attention; R10 engine-loss/recovery UX; R11 Visual→Main integration; R12 final regression), then record **PRE_AUDIT_V1_6_HEAD** and STOP Campaign A. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

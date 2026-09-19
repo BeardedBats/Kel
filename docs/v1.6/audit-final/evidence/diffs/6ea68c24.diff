@@ -1,0 +1,169 @@
+commit 6ea68c248400533d1cdc8b0e83d2c5c7daecd007
+2026-09-18 12:32:46 -0400
+docs(v1.6): Phase 9 decision — no Profiles concept; Projects remain the single isolation concept
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index ac8c870..be89acd 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -406,8 +406,8 @@ focused tests, regression, packaged verification, atomic commits and records con
+ - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+ - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+-- **Phase 8/5.8 decided** 2026-09-18: Advanced Worker View deferred beyond V1.6 (see below).
+-  **Next**: Phase 9 — Profiles vs Projects; see `MAIN_STATUS.next_autonomous_action` for the full
++- **Phase 9 decided** 2026-09-18: no Profiles concept; Projects remain (see below). **Next**:
++  Phase 10 — real provider validation; see `MAIN_STATUS.next_autonomous_action` for the full
+   Campaign A queue.
+ 
+ ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+@@ -451,3 +451,14 @@ conditions recorded (post-V1.6 decision → bounded Advanced/Details-only increm
+ default). Phase 5.7 confirmed deferred per §34 (no fabrication; activation criteria already
+ recorded). Corpus updated: DEF-002, REQ-AWV-8, REQ-WF-5.8, CHANGE_LEDGER mapping. Next: Phase 9 —
+ Profiles vs Projects.
++
++## Phase 9 — Profiles vs Projects: decision (2026-09-18)
++
++**DECIDED — no Profiles concept in V1.6; Projects remain the single isolation concept.** Record:
++`docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`. Evidence: donor matrix item 21 (REJECT —
++Projects already scope conversations/files/knowledge/artifacts/recipes), donor remediation §4, and
++current-repo verification (no `/profiles` route/nav/locale surface; donor AssistantSettings hidden
++by `HIDE_DONOR_AGENT_SURFACES = true`; remaining "profile" strings are unrelated donor auth labels
++and engine internals). No code change required; held visual batch 3 keeps "Projects" language. New
++audit target 46 (AgentBadge assistantId path is donor-dead for Kel conversations). Corpus updated:
++REQ-PP-9, mapping row 9. Next: Phase 10 — real provider validation.
+diff --git a/docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md b/docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md
+new file mode 100644
+index 0000000..7149da6
+--- /dev/null
++++ b/docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md
+@@ -0,0 +1,55 @@
++# Phase 9 — Profiles vs Projects: V1.6 PRODUCT DECISION
++
++Date: 2026-09-18 · Decider: Program Director (Campaign A) · Status: **DECIDED — NO PROFILES CONCEPT
++IN V1.6; PROJECTS REMAIN THE SINGLE ISOLATION CONCEPT**
++
++## Decision
++
++V1.6 keeps ONE isolation concept: **Projects**. No "Profiles", no isolated-workspace sibling, no
++per-identity providers/theme container. Terminology across the product stays "Projects". Nothing is
++merged or renamed; nothing new is built for this phase.
++
++## Evidence considered
++
++- **Donor matrix item 21** (`docs/basic-ux-sweep/16_DONOR_PATTERN_MATRIX.md`): "Projects already
++  scope conversations, files, knowledge, artifacts and recipes. A Profile concept would mostly
++  duplicate Projects plus per-profile providers/theme; the justifying use case (two unrelated lives
++  with different provider accounts) is real but narrow." → decision **REJECT (Projects are the
++  simpler answer)**.
++- **Donor remediation** (`docs/basic-ux-sweep/18_DONOR_FEATURE_REMEDIATION.md` §4): profiles listed
++  under "deliberately not implemented (with reasons)" — optional/future; Projects provide the
++  isolation.
++- **Current-repo verification (2026-09-18):** no `/profiles` route, no Profiles nav or locale
++  surface. The only "profile" strings are unrelated: AWS-profile auth labels (donor legacy), the
++  Firefox/browser-profile guardrail line, the engine-internal lease `profile`, the WSL permission
++  profile. The donor `AssistantSettings` page is hidden by `HIDE_DONOR_AGENT_SURFACES = true`
++  (`Router.tsx:61,112` → `/guid` redirect).
++- **Sprint directive §35**: "Resolve semantics using actual product behavior. Prefer fewer concepts.
++  Implement bounded V1.6 decision. Record user-model reasoning in the breadcrumb corpus."
++
++## User-model reasoning (recorded for the audit corpus)
++
++Kel's user model: a **project** is the unit of "my work here" — it owns conversations, files,
++knowledge (memory), artifacts and recipes. Identities (who I am to the provider) are a
++provider-account concern, not a workspace concern; the narrow "two unrelated lives with different
++provider accounts" case does not justify a parallel container that duplicates project scoping.
++Fewer concepts win; if the case becomes real, the fix is per-project provider overrides later, not
++a second container.
++
++## Bounded V1.6 actions
++
++- **None required in code** — reality already matches the decision (verified above). The held visual
++  batch 3 (Work / Projects / Permissions) must keep "Projects" language (context recorded in
++  VISUAL_EVIDENCE_INDEX).
++- Keep the donor assistant surface hidden. The `AgentBadge` "navigate to the assistant editor when
++  `assistantId` is provided" path is donor-dead under the flag for Kel conversations — recorded as
++  audit target 46 (confirm it can never render for a Kel conversation).
++
++## Release impact
++
++None. This decision removes an optional concept from the release conversation; it blocks nothing.
++
++## Re-entry criteria (post-V1.6)
++
++A real, user-stated need for two provider identities in one install → design per-project provider
++overrides (reusing Projects), not a Profiles container; product decision required.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 8771613..2fbc61d 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -110,3 +110,9 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     milestone carries the same structured recommendation (currently untested end-to-end).
+ 45. Packaged card rendering (deferred evidence): seed a blocked milestone with a recommendation in a
+     packaged app; assert the card renders, actions hit the engine, and dismissal works.
++
++## Profiles / Projects (Phase 9 additions)
++
++46. Donor-dead paths: confirm no Kel conversation can render an `AgentBadge` that navigates to the
++    hidden donor assistant editor (`assistantId` path under `HIDE_DONOR_AGENT_SURFACES`); confirm
++    no `/profiles` route or Profiles terminology is reachable anywhere.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index dc9e37b..bcd1126 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -124,7 +124,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
+ | 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
+ | 8 — Advanced Worker View decision | none (decision only; FINAL: deferred beyond V1.6 — `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`) | DONE |
+-| 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
++| 9 — Profiles vs Projects decision/fixes | none (decision only; FINAL: no Profiles concept — Projects remain; `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md`) | DONE |
+ | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
+ | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
+ | F4 real-artifact binding wiring | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 1a00034..75d36a5 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -43,7 +43,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
+ | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
+ | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | decided — deferred beyond V1.6 | docs commit (2026-09-18) | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | pending (decision review) |
+-| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
++| REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | decided — no Profiles concept; Projects remain the single isolation concept | docs commit (2026-09-18) | — | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | pending (decision review) |
+ | REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
+ | REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 1881a2a..5b3edad 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,6 +1,6 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T17:20:00Z
++updated_utc: 2026-09-18T17:30:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+@@ -15,9 +15,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: Phase 8/5.8 DECIDED — Advanced Worker View deferred beyond V1.6 (docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md; DEF-002/REQ-AWV-8 updated). Next: Phase 9.
+-current_phase: Phase 9 — Profiles vs Projects decision/fixes (queued; Phase 8 decided)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/).
++current_increment: Phase 9 DECIDED — no Profiles concept; Projects remain the single isolation concept (docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md; REQ-PP-9 updated). Next: Phase 10.
++current_phase: Phase 10 — real provider validation (queued; Phase 9 decided)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -49,6 +49,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Phase 9 — Profiles vs Projects decision (sprint §35: resolve semantics using actual product behavior; prefer fewer concepts; implement the bounded V1.6 decision; record the user-model reasoning in the corpus). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 9: Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Phase 10 — real provider validation (sprint §36: validate every provider path current access allows; real calls where possible; record unavailable paths accurately; never leak credentials into evidence; build PROVIDER_VALIDATION_MATRIX continuously). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 10: Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

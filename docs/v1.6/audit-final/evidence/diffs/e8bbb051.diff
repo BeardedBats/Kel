@@ -1,0 +1,782 @@
+commit e8bbb051d58176174896ab505473ac7a0eaf9259
+2026-09-18 17:48:32 -0400
+docs(v1.6): R3–R6 breadcrumbs — retry durability, approval window, canonical persistence, liveness truth
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 408e474..ad44609 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -709,3 +709,37 @@ INV-AUTH-DELEGATION; REQ-R25-R1 implemented; TEST_EVIDENCE_INDEX A-21.
+ Next: **R2 — logical-work/idempotency matrix** (`EVENT-IDEMPOTENCY` + `EFFECT-REPLAY`): classify
+ every autonomous event family, prove what is already safe, repair only demonstrated
+ duplicate-execution gaps, hostile duplicate tests across restart where possible.
++
++## R2–R6 COMPLETE — invariants executable, evidence recorded (2026-09-18, marathon run)
++
++Five increments; three production commits plus two inventory+test increments:
++
++- **R2 `fde5bbb`** — the 17-family logical-work/idempotency matrix (`increments/R2-IDEMPOTENCY-MATRIX.md`):
++  submissions, intake, events/revisions, runs, epochs, inbox, native RPC/permission replies, approvals,
++  boundary grants, effects, change application, continuation, broker recovery, publication, workforce
++  messages, parallel announcements. 16 proven safe with code anchors; the one latent gap
++  (`Store.observe_effect` overwrote a recorded receipt) repaired minimally + 10 hostile-duplicate tests.
++- **R3 `1a9f538`** — retry/recovery budget inventory: every automatic family already stores its budget
++  on its owner entity (job row, provider row, review_runs, leases, receipts, restore record); 5
++  restart-durability tests; no production change justified.
++- **R4 `8c899c8`** — APPROVAL-EXACT: producer/consumer inventory + the consumer-side window check in
++  `Authorizer._approval_ok`; 7 hostile cases (exact action, other job, pending, outside window,
++  resolve-after-expiry, double resolution, grant scope/revoke).
++- **R5 `b2ffed1`** — PERSIST-CANONICAL: `encode` refuses NaN/Infinity (canonical JSON for durable state
++  *and* digests), provider metrics guarded, submit type guard; 7 hostile ingress tests.
++- **R6 tests+record** — LIVENESS-SEPARATION / COMPLETION-TRUTH / RECOVERY-CLASSIFICATION verified: an
++  expired run is ORPHANED with a fresh epoch, UNCERTAIN 'requires reconciliation', never auto-retried;
++  waiting ≠ completed/failed; liveness never completes work; 5 tests.
++
++Evidence: full engine **981 passed + 10 subtests** at `b2ffed1` (A-24); focused A-25; CHG-019..021;
++INV-EVENT-IDEMPOTENCY / INV-EFFECT-REPLAY / INV-RETRY-DURABLE / INV-APPROVAL-EXACT /
++INV-PERSIST-CANONICAL / INV-LIVENESS-SEPARATION / INV-COMPLETION-TRUTH / INV-RECOVERY-CLASSIFICATION;
++REQ-R25-R2..R6.
++
++Next: **R7 — credential/network boundary** (CREDENTIAL-CONTAINMENT): audit provider metadata,
++credential references/store, native child env, Claude/Codex env, DeepSeek/internal handling,
++native-host, test-command env, prompts, logs, artifacts, packets, diagnostics and error messages;
++synthetic-sentinel tests; document that `host_runtime.py` is user-authorized native execution, not an
++OS sandbox (no Windows egress filtering in Campaign A). Then R8 packaged/migration assertions +
++REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration →
++R12 final regression → PRE_AUDIT_V1_6_HEAD.
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+index 99c1bd9..32ed686 100644
+--- a/docs/v1.6/MARATHON_STATE.md
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -3,7 +3,7 @@
+ MARATHON_MODE: ACTIVE
+ 
+ start_head: 756218e (published docs tip; production 8a677d0)
+-current_head: `dc65fbc` + R1 docs commit (see `git log --oneline -8`)
++current_head: `b2ffed1` (R5) + R6 tests/breadcrumbs (see `git log --oneline -14`)
+ 
+ completed_this_run:
+ - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
+@@ -15,12 +15,17 @@ completed_this_run:
+   `validate_task_contract(parent_authority=…)` + D1/D2 wiring (verifier inside the mission envelope)
+   + `reserve_budget` job-envelope check; 21 new tests; evidence A-21 (**952 passed + 10 subtests**),
+   `increments/R1-AUTHORITY-CEILING.md`, INV-AUTH-DELEGATION, REQ-R25-R1 implemented.
+-- breadcrumbs kept current for R0 and R1: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
++- **R2–R6 COMPLETE** — R2 idempotency matrix + observed-effect receipt (`fde5bbb`), R3 retry
++  durability inventory + restart tests (`1a9f538`), R4 APPROVAL-EXACT window check (`8c899c8`),
++  R5 canonical persistence (`b2ffed1`), R6 truthful state/liveness (inventory + tests). Evidence:
++  A-22..A-25, `increments/R2…`–`R6…`, CHG-019..021, INV-RETRY-DURABLE / INV-APPROVAL-EXACT /
++  INV-PERSIST-CANONICAL / INV-LIVENESS-SEPARATION / INV-COMPLETION-TRUTH / INV-RECOVERY-CLASSIFICATION.
++- breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
+   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
+   MAIN_STATUS, AUTO_RESUME
+ 
+-current_phase: R2 — logical-work / idempotency matrix (EVENT-IDEMPOTENCY + EFFECT-REPLAY)
+-current_item: R2.A — build the real matrix for every authoritative event family (identity, dedupe, persistence, duplicate/restart/side-effect behavior) before changing anything
++current_phase: R7 — credential / network boundary (CREDENTIAL-CONTAINMENT)
++current_item: R7.A — inventory every place a credential could become prompt text, ambient env, artifact, packet, log or export; then sentinel tests
+ 
+ next_queue:
+ 1. R2 — matrix + repair only demonstrated duplicate-execution gaps + hostile duplicate tests
+@@ -35,13 +40,13 @@ next_queue:
+ 10. R11 — Visual → Main integration
+ 11. R12 — final Campaign A regression → PRE_AUDIT_V1_6_HEAD
+ 
+-last_focused_tests: R1 — `test_v16_r1_authority.py` 21; workforce family 269 together
+-last_full_engine: **952 passed + 10 subtests** (287.14s) at `dc65fbc` (was 931 at `594b8b4`)
++last_focused_tests: R6 liveness 5; R2–R5 + core 84 together
++last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` (was 974 at `8c899c8`)
+ last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`, R0 batch)
+ last_desktop_vitest: **93 passed** (8 files, R0 batch)
+ last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
+ 
+-last_push: `dc65fbc` → origin/ux/v15-journeys (R1 docs commit follows)
++last_push: `b2ffed1` → origin/ux/v15-journeys (R6 breadcrumbs follow)
+ last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
+ 
+ blocker: NONE
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index bcdd656..a098413 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -296,6 +296,35 @@ ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b
+ - **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
+   it into the engine-loss presentation.
+ 
++### CHG-021 — Only canonical JSON reaches durable state (R5 / PERSIST-CANONICAL)
++ID: CHG-021 · Phase: Campaign A — roadmap R5 · Commit: `b2ffed1` · Date: 2026-09-18
++New behavior: `core.encode` refuses non-finite floats (`allow_nan=False`) with a plain sentence, so
++`NaN`/`Infinity` can no longer be written as bare non-standard tokens (and digests stay canonical);
++`provider_outcome` ignores non-finite duration/cost reports while still recording the failure;
++`Service.submit` checks the text type before stripping. Previous: `NaN`/`Infinity` were persisted and
++strict JSON consumers could not parse them; a non-string text raised AttributeError. Primary files:
++`kel/core.py`, `kel/service.py`. Tests: `tests/test_v16_r5_persistence.py` (7). Risk: LOW (strictly
++canonical). Evidence: `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL; A-24.
++
++### CHG-020 — An approval authorizes only inside its window (R4 / APPROVAL-EXACT)
++ID: CHG-020 · Phase: Campaign A — roadmap R4 · Commit: `8c899c8` · Date: 2026-09-18
++New behavior: `Authorizer._approval_ok` requires the approval row to still be inside its window at
++the moment of execution (status APPROVED + exact action digest + matching job were already checked).
++Previous: an APPROVED row authorized its action indefinitely. Primary files: `kel/authorize.py`.
++Tests: `tests/test_v16_r4_approval_exact.py` (7 new hostile cases). Risk: LOW (strictly narrowing).
++Evidence: `increments/R4-APPROVAL-EXACT.md` (producer/consumer inventory); INV-APPROVAL-EXACT; A-23.
++
++### CHG-019 — An observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
++ID: CHG-019 · Phase: Campaign A — roadmap R2 · Commit: `fde5bbb` · Date: 2026-09-18
++New behavior: `Store.observe_effect` no longer overwrites a recorded receipt: an `OBSERVED` effect
++keeps its evidence, an identical re-observation is a no-op, a contradictory receipt is refused
++('Effect was already observed with a different receipt'). Previous: any second observation replaced
++the stored receipt silently. Primary files: `kel/core.py`. Tests:
++`tests/test_v16_r2_idempotency.py` (10 new; includes the full hostile-duplicate set for the families
++the directive names). Risk: LOW (latent path — no production caller existed). Evidence:
++`increments/R2-IDEMPOTENCY-MATRIX.md` (the 17-family matrix); INV-EVENT-IDEMPOTENCY;
++INV-EFFECT-REPLAY; A-22.
++
+ ### CHG-018 — Delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
+ ID: CHG-018 · Phase: Campaign A — roadmap R1 · Commit: `dc65fbc` · Date: 2026-09-18
+ New behavior: `workforce.authority_within(child, parent)` is the pure containment primitive over
+@@ -513,5 +542,10 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
+ | TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
+ | R1 delegation authority ceiling | CHG-018 delivered (`dc65fbc`); record `increments/R1-AUTHORITY-CEILING.md` | DONE |
++| R2 observed-effect receipt + idempotency matrix | CHG-019 delivered (`fde5bbb`); record `increments/R2-IDEMPOTENCY-MATRIX.md` | DONE |
++| R3 retry durability (inventory + restart tests) | inventory `increments/R3-RETRY-DURABILITY.md`; tests `1a9f538` | DONE |
++| R4 approval window (APPROVAL-EXACT) | CHG-020 delivered (`8c899c8`); record `increments/R4-APPROVAL-EXACT.md` | DONE |
++| R5 canonical persistence (PERSIST-CANONICAL) | CHG-021 delivered (`b2ffed1`); record `increments/R5-PERSISTENCE-INTEGRITY.md` | DONE |
++| R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+ | Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 15c1be2..b5bfadd 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -54,7 +54,12 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `dd34ac2` | `5950efb` | 2026-09-18 | R0 / APR-05 | approval poll path stops running DDL once stamped | `kel/chat_approvals.py`; `tests/test_v16_sweep_fixes.py` | +3 engine tests; file **15 passed** | migration marker **v20** (additive; no table/column change) | no | n/a | no | yes (marker row) | LOW | `increments/R0-SWEEP.md`; A-20 | pre-marker stores run the idempotent body once and are stamped |
+ | `594b8b4` | `dd34ac2` | 2026-09-18 | R0 / COR-03 + APR-06 + THM-01 | failure surfaces tell the truth (model pill reports, approval card distinguishes unreachable vs settled, theme delete prunes overrides) | `desktop/.../kel/KelModelControl.tsx`; `desktop/.../kel/KelApprovalCard.tsx`; `desktop/.../AppearanceSettings/CssThemeSettings.tsx` | desktop tsc 0; vitest **93 passed** | none | yes (message copy + delete handler) | n/a | no | no | LOW | `increments/R0-SWEEP.md`; A-20 | no renderer component harness (§58) — packaged probes at R8/R12 are the gate |
+ | `dc65fbc` | `4440a90` | 2026-09-18 | R1 / AUTH-DELEGATION | delegation authority ceiling is executable (child ⊆ delegator on class/scope/boundaries/effects/tools + budget envelope) | `kel/workforce.py`; `kel/contracts.py`; `kel/delegation.py`; `kel/pods.py`; `kel/assignment.py`; `tests/test_v16_r1_authority.py` | +21 engine tests; workforce family 269 passed; full suite A-21 | none | no | n/a | no | no | HIGH | `increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION; REQ-R25-R1 | token/wallclock caps lack a job-envelope primitive (R3); no nesting added by design |
+-| `HEAD` | `dc65fbc` | 2026-09-18 | R1 | R1 breadcrumbs (this commit) | docs only | engine full A-21 | none | no | — | no | no | LOW | corpus rows REQ-R25-R1 / INV-AUTH-DELEGATION / CHG-018 / A-21; `increments/R1-AUTHORITY-CEILING.md` | next: R2 idempotency matrix |
++| `fde5bbb` | `eea6503` | 2026-09-18 | R2 / EVENT-IDEMPOTENCY + EFFECT-REPLAY | observed external effect keeps its receipt; the 17-family idempotency matrix recorded (16 safe, 1 latent gap repaired) | `kel/core.py` (`observe_effect`); `tests/test_v16_r2_idempotency.py`; `docs/v1.6/pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md` | +10 engine tests; full suite A-22 | none | no | n/a | no | yes (effect receipt rule) | MEDIUM | `increments/R2-IDEMPOTENCY-MATRIX.md`; INV-EVENT-IDEMPOTENCY; INV-EFFECT-REPLAY; REQ-R25-R2 | `observe_effect` had no production caller (latent); reconciliation entry point for a legitimately revised observation is a recorded audit question |
++| `8c899c8` | `1a9f538` | 2026-09-18 | R4 / APPROVAL-EXACT | an approval authorizes only inside its window and for its exact action (consumer-side window check; producer inventory recorded) | `kel/authorize.py`; `tests/test_v16_r4_approval_exact.py`; `docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md` | +7 engine tests; authorization family 96 passed; full suite A-23 | none | no | yes (window semantics) | no | no | MEDIUM | `increments/R4-APPROVAL-EXACT.md`; INV-APPROVAL-EXACT; REQ-R25-R4 | producer side already digest-bound; no HMAC added by design |
++| `1a9f538` | `fde5bbb` | 2026-09-18 | R3 / RETRY-DURABLE | retry budgets proven durable across restarts (inventory + restart tests; no production change justified) | `tests/test_v16_r3_retry_durability.py`; `docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md` | +5 tests; recovery family 24 passed | none | no | n/a | no | no | MEDIUM | `increments/R3-RETRY-DURABILITY.md`; INV-RETRY-DURABLE; REQ-R25-R3 | token/wallclock caps still lack a job-envelope primitive |
++| `b2ffed1` | `8c899c8` | 2026-09-18 | R5 / PERSIST-CANONICAL | only canonical JSON reaches durable state (NaN/Infinity refused; finite provider metrics; submit type guard) | `kel/core.py`; `kel/service.py`; `tests/test_v16_r5_persistence.py`; record | +7 tests; focused R2–R5 + core 84 passed; full suite A-24 (**981**) | none | no | yes (encoding contract) | no | yes (canonical JSON) | MEDIUM | `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL; REQ-R25-R5 | corrupted stored JSON is an audit question |
++| R6 tests+record | `b2ffed1` | 2026-09-18 | R6 / LIVENESS-SEPARATION | liveness/state truth verified + 5 discriminating tests (no production change) | `tests/test_v16_r6_liveness.py`; `docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md` | +5 tests (A-25) | none | no | n/a | no | no | MEDIUM | `increments/R6-TRUTHFUL-STATE.md` | derived health status deliberately lives with R9.D |
++| `HEAD` | R6 tests+record | 2026-09-18 | R6 | R3–R6 breadcrumbs (this commit) | docs + one test file | full suite A-24; focused A-25 | none | no | — | no | no | LOW | corpus rows REQ-R25-R3/4/5/6, INV-RETRY-DURABLE/APPROVAL-EXACT/PERSIST-CANONICAL, CHG-019/020/021, A-23/24/25; `increments/R3…`–`R6…` | next: R7 credential/network boundary |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+index 017439e..c4561ed 100644
+--- a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -29,6 +29,126 @@ OPEN_GAP (known open finding attacks it).
+   issuance refuses it; confirm the D1 path is unchanged when no envelope is supplied; confirm the
+   budget check cannot be bypassed by pre-spending the job (`spent`/`reserved` arithmetic).
+ 
++## INV-EVENT-IDEMPOTENCY — One logical event, at most one authoritative execution
++- Definition: a duplicate delivery of the same logical event (same identity) causes no second
++  authoritative execution; a new attempt exists only under an explicit new attempt identity
++  (fresh run id/epoch, new operation id).
++- Owner: `kel.core` (submissions, intake, events, runs/epochs, inbox, effects, publication),
++  `kel.service` (request dispatch), `kel.continuation`, `kel.parallel`, `kel.workforce`,
++  `kel.apply_changes`, `kel.coding_transport` (native RPC).
++- Code paths (anchors in `increments/R2-IDEMPOTENCY-MATRIX.md`): `submissions.id` early return that
++  skips the executor; `job_intakes.job_id UNIQUE`; `events` `dedupe UNIQUE` +
++  `UNIQUE(aggregate_id,revision)`; `one_active_milestone`; epoch equality in `consume`/
++  `acknowledge_stop`; `inbox` `INSERT OR IGNORE` + `handled` in the same transaction; approvals
++  `PENDING`+digest+run state; boundary grant `request_id`+job state; change application
++  `already_applied`/resume; publication keyed by `digest([job_id, assessment])` with the message
++  written only on a real insert.
++- Tests: `tests/test_v16_r2_idempotency.py` (10). Evidence: `increments/R2-IDEMPOTENCY-MATRIX.md`;
++  TEST_EVIDENCE_INDEX A-22; commit `fde5bbb`.
++- Edge cases: a retried submission **without** a client id creates a new logical submission
++  (documented contract); native RPC replay is refused rather than resolved (fail-closed by design);
++  the matrix lists the directive's families plus what the code actually contains.
++- Audit target: re-derive the matrix independently, then attempt each hostile duplicate the record
++  lists (submission, intake, event revision, run epoch, inbox, RPC, permission reply, approval,
++  boundary grant, effect prepare/observe, continuation, publication, workforce message, parallel
++  announcement) and confirm no second authoritative execution.
++
++## INV-EFFECT-REPLAY — Unresolved effects are reconciled, never blindly replayed
++- Definition: an external effect carries an operation identity and a recorded observation; after
++  uncertain execution the runtime reconciles (refuses) rather than re-dispatches; a recorded
++  observation is evidence and is not silently rewritten.
++- Owner: `kel.core` (`prepare_effect` / `observe_effect`), `kel.apply_changes` (filesystem effects),
++  `kel.coding_transport` (native disposal), `kel.authorize` (granted boundary), `kel.guardrails`.
++- Code paths: `prepare_effect` returns the existing state for the same operation+digest and refuses a
++  reused identity for a different action; `observe_effect` keeps the first receipt (identical
++  re-observation is a no-op, a contradictory receipt is refused — repaired in `fde5bbb`);
++  `apply_changes` resumes PREPARED work with per-file manifest checks and returns `already_applied`;
++  `coding_transport` refuses to replay a dispatched RPC without a receipt.
++- Tests: `tests/test_v16_r2_idempotency.py` (effect subset); `tests/test_apply_changes.py`
++  (crash-resume family). Evidence: `increments/R2-IDEMPOTENCY-MATRIX.md`; A-22.
++- Edge cases: `observe_effect` had no production caller (latent hole now closed); a legitimately
++  revised observation has no in-product entry point — recorded as an audit question rather than
++  invented.
++- Audit target: confirm no code path can overwrite an observed receipt; confirm apply-changes
++  contradiction handling preserves backups; confirm the native transport cannot re-dispatch.
++
++## INV-APPROVAL-EXACT — An approval authorizes one exact action, inside its window
++- Definition: approval means *this exact runtime effect, under these exact relevant
++  preconditions*: status APPROVED, action digest equal to the action about to run, matching job, and
++  still inside the approval window. A materially different action (or a later execution outside the
++  window) needs a new decision.
++- Owner: `kel.core` (`request_approval` / `resolve_approval`), `kel.authorize` (`Authorizer._approval_ok`,
++  `_expansion`, `resume_after_grant`), `kel.coding` (`CodingAdapter.approval`), `kel.context`
++  (remembered grants), `kel.chat_approvals` (the decision surface).
++- Code paths: canonical action built from method/workspace/command/permissions/grantRoot/network with
++  delivery ids excluded; `unrepeatable_request` for patch-less file changes; digest re-check in
++  `resolve_approval` and `_approval_ok`; window check at resolution (EXPIRED) **and** at execution
++  (`8c899c8`); job binding; `grants(project_id, action_digest)` with expiry + revoke.
++- Tests: `tests/test_v16_r4_approval_exact.py` (7); `tests/test_v16_approvals.py`; the APR-02 scope
++  suite. Evidence: `increments/R4-APPROVAL-EXACT.md`; A-23; commits `8a677d0`, `8c899c8`.
++- Edge cases: no HMAC/signature by design (trusted local runtime — the directive's R4.D); clock jumps
++  out of scope; a denial is honoured for the same target until the scope changes.
++- Audit target: copy an approval across job/run/project; change the command or workspace after
++  approval; consume an approval just after its window closes; reuse an `unrepeatable_request`
++  approval for a different item.
++
++## INV-RETRY-DURABLE — Restart never restores spent automatic retry budget
++- Definition: an automatic retry budget lives on the entity that owns the retry and survives
++  restarts; repeated failure reaches an honest terminal state (exhausted, uncertain, paused,
++  blocked), never an infinite silent loop.
++- Owner: `kel.core` (milestone attempts, route retry), `kel.providers` (`core.provider_outcome`),
++  `kel.engine` (review recovery), `kel.parallel` (mission leases), `kel.coding`/`coding_transport`
++  (check recovery, receipts), `kel.backup` (restore record).
++- Code paths: `job['milestones'][mid]['attempts']` with `max_attempts=4` and the EXHAUSTED state;
++  `providers` row `failures`/`circuit_until`; `review_runs.attempts` + the explicit two-interruption
++  UNCERTAIN verdict; `reclaim_stale_leases` (EXPIRED, never resurrected); 'do not replay' receipts.
++- Tests: `tests/test_v16_r3_retry_durability.py` (5 restart-durability cases);
++  `test_review_recovery.py`, `test_broker_recovery.py`, `test_coding_recovery.py`. Evidence:
++  `increments/R3-RETRY-DURABILITY.md`; commit `1a9f538`; A-23.
++- Edge cases: token/wallclock reservation caps have no job-envelope primitive (only cost is
++  enforced); the provider circuit window is time-based and a restart does not change it.
++- Audit target: fail an attempt, restart, and confirm the next automatic attempt continues the count;
++  confirm no code path resets `attempts` except a brand-new contract.
++
++## INV-PERSIST-CANONICAL — Only canonical, reconstructable state is durably committed
++- Definition: every value that reaches the database is validated, JSON-serializable and readable
++  back by strict JSON consumers; a refused value leaves the store healthy with no half-written
++  authoritative row.
++- Owner: `kel.core` (`encode`/`digest` — the single serialization door), `kel.workforce`
++  (`assert_safe`), `kel.contracts` (schema validators), `kel.memory` (proposal schema + secret
++  scan), `kel.apply_changes` (manifest digests), `kel.service` (request ingress).
++- Code paths: `encode(..., allow_nan=False)` + plain refusal; `provider_outcome` finite guards;
++  `submit` type/length guards; `enqueue_result` object check; per-artifact 1 MiB byte cap;
++  `UNIQUE(aggregate_id, revision)` + optimistic revisions (events).
++- Tests: `tests/test_v16_r5_persistence.py` (7). Evidence: `increments/R5-PERSISTENCE-INTEGRITY.md`;
++  A-24; commit `b2ffed1`.
++- Edge cases: externally corrupted stored JSON is not repaired or masked (audit question);
++  `add_message` has no cap (internal trusted writers only); non-finite provider metrics are ignored,
++  not stored.
++- Audit target: attempt to persist NaN/Infinity through every ingress; confirm no half-written rows;
++  confirm a corrupted row is never silently rewritten.
++
++## INV-LIVENESS-SEPARATION · INV-COMPLETION-TRUTH · INV-RECOVERY-CLASSIFICATION (R6)
++- Definition: process liveness, execution/supervisor liveness and mission progress are separate
++  facts; none of them establishes completion, and completion requires the evidence-backed
++  assessment; interrupted work resolves to one of safely resumable / safely retryable /
++  reconcile-first / user-blocked / failed-quarantined.
++- Owner: `kel.core` (runs, `recover_expired`, `consume`, `close`), `kel.diagnostics`
++  (`native_processes` observations, `snapshot()['database']['problems']`), `kel.parallel`
++  (mission leases, reclaim), `kel.engine` (monitor, review recovery), `kel.runner`
++  (`native_processes`), `kel.assurance` (independent certification).
++- Code paths: a run past `expires` → `ORPHANED` + fresh `epoch` + milestone `UNCERTAIN` ('Expired run;
++  native state requires reconciliation') + job `WAITING_RESOURCE`/verdict `UNCERTAIN`; a dead recorded
++  PID is reported ('no longer alive') and nothing else; stale-epoch deliveries are discarded by
++  `consume`; closure requires the verified assessment; `reclaim_stale_leases` reclaims, never
++  resurrects.
++- Tests: `tests/test_v16_r6_liveness.py` (5). Evidence: `increments/R6-TRUTHFUL-STATE.md`; A-25.
++- Edge cases: the compact derived health status is deliberately not persisted (R9.D owns the one
++  surface); `snapshot()` reports but never acts.
++- Audit target: kill a process and confirm nothing completes or auto-retries; deliver a stale-epoch
++  result; check that waiting/idle never reads as complete; verify a legitimately long operation is
++  not stalled out.
++
+ ## INV-AUDIT-001 — Builder cannot independently final-certify production output
+ - Definition: the thread that writes production code never counts as its own independent reviewer;
+   independence is produced only by a separate fresh-context reviewer with its own record.
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 4518234..7c94993 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -56,11 +56,11 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-THEME-HYGIENE | R0 sweep (THM-01) | deleting a theme drops its saved colour overrides in the same operation | implemented | `594b8b4` | tsc 0; vitest 93 | `increments/R0-SWEEP.md` | — | pending |
+ | REQ-TR02-BINDING | R0 sweep (TR-02) | abandoned-stream transport-failure presentation is delivered by R9.A batch 6 / R10 | bound (no code in R0) | — | — | P2_P3_DISPOSITION.md (TR-02 row); `increments/R0-SWEEP.md` | must be honored before the PRE_AUDIT RC | pending |
+ | REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | **implemented** (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + issuance wiring (D1 `delegate`, D2 pods verifier inside the mission envelope) + `reserve_budget` envelope check | `dc65fbc` | `tests/test_v16_r1_authority.py` 21 new; workforce family 269; full suite A-21 | `docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION | token/wallclock caps have no job-envelope primitive (R3); no nesting added by design | pending |
+-| REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
+-| REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
+-| REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | PENDING | — | — | roadmap §R4 | — | pending |
+-| REQ-R25-R5 | roadmap R2.5 (Round 2.5 E; PERSIST-CANONICAL) | persistence integrity contract + adversarial tests | PENDING | — | — | roadmap §R5 | — | pending |
+-| REQ-R25-R6 | roadmap R2.5 (Round 2.5 F/G; COMPLETION-TRUTH / LIVENESS-SEPARATION / RECOVERY-CLASSIFICATION) | truthful state + liveness separation | PENDING | — | — | roadmap §R6 | — | pending |
++| REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | **implemented** (`fde5bbb`): 17-family matrix recorded (`increments/R2-IDEMPOTENCY-MATRIX.md`); 16 families proven safe with code anchors; the one latent gap (`observe_effect` overwrote a recorded receipt) repaired minimally + 10 hostile-duplicate tests | `fde5bbb` | `tests/test_v16_r2_idempotency.py` 10 new; full suite A-22 | `increments/R2-IDEMPOTENCY-MATRIX.md`; INV-EVENT-IDEMPOTENCY; INV-EFFECT-REPLAY | reconciliation entry point for a legitimately revised observation is an audit question; callers must supply a submission id to make retries idempotent (documented) | pending |
++| REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | **complete** (`1a9f538`): inventory found every automatic retry family already durable on its owner entity (job row, provider row, review_runs, lease rows, receipts, restore record); 5 restart-durability tests added; no production change justified | `1a9f538` | `tests/test_v16_r3_retry_durability.py` 5 new; recovery family 24 passed | `increments/R3-RETRY-DURABILITY.md`; INV-RETRY-DURABLE | token/wallclock reservation caps still have no job-envelope primitive (carried) | pending |
++| REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | **implemented** (`8c899c8`): producer/consumer inventory + consumer-side window check in `Authorizer._approval_ok`; 7 hostile cases | `8c899c8` | `tests/test_v16_r4_approval_exact.py` 7 new; authorization family 96 passed; full suite A-23 | `increments/R4-APPROVAL-EXACT.md`; INV-APPROVAL-EXACT | no HMAC by design (trusted local runtime, digest binding suffices) | pending |
++| REQ-R25-R5 | roadmap R2.5 (Round 2.5 E; PERSIST-CANONICAL) | persistence integrity contract + adversarial tests | **implemented** (`b2ffed1`): ingress inventory recorded; `encode` refuses non-finite values (canonical JSON for durable state + digests); provider metrics guarded; submit type guard; 7 hostile ingress tests | `b2ffed1` | `tests/test_v16_r5_persistence.py` 7 new; focused R2–R5 + core 84 passed; full suite A-24 | `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL | corrupted *stored* JSON (external edits) is an audit question; `add_message` uncapped for trusted writers | pending |
++| REQ-R25-R6 | roadmap R2.5 (Round 2.5 F/G; COMPLETION-TRUTH / LIVENESS-SEPARATION / RECOVERY-CLASSIFICATION) | truthful state + liveness separation | **complete** (no production change): three-layer inventory recorded; required invariants verified in code (expired run → ORPHANED + fresh epoch + UNCERTAIN 'requires reconciliation'; waiting ≠ completed/failed; liveness never completes; event silence never stalls); 5 discriminating tests | R6 tests+record | `tests/test_v16_r6_liveness.py` 5 new; A-25 | `increments/R6-TRUTHFUL-STATE.md`; INV-LIVENESS-SEPARATION; INV-COMPLETION-TRUTH; INV-RECOVERY-CLASSIFICATION | derived compact health status deliberately deferred to R9.D (one surface, no competing state) | pending |
+ | REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | PENDING | — | — | roadmap §R7 | — | pending |
+ | REQ-R25-R8 | roadmap R2.5 §15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | PENDING | — | — | roadmap §R8 | — | pending |
+ | REQ-R25-R9 | roadmap R2.5 (Round 2.5 N) | Visual batches 6–8 + Needs Your Attention (derived-only) | PENDING | — | — | roadmap §R9 | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 567e913..fa6ad10 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -31,6 +31,10 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-19 | engine full suite + desktop suite (R0 / APR-02 approval scope) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit && bun run test` | `8a677d0` | 2026-09-18 | PASS | **915 passed, 10 subtests passed** (264.24s; was 909 — +6 new tests, zero regressions); focused approvals + sweep-fix = 33 passed; desktop tsc 0, vitest 93 | APR-02 (R0) | INV-APPROVE-002 (partial) | `increments/R0-APR02-APPROVAL-SCOPE.md` | parent-executed |
+ | A-20 | engine full suite + desktop typecheck/suite (R0 sweep completion: SEC-01, TR-01, COR-06/ERR-01, APR-05, COR-03/APR-06/THM-01) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc -p tsconfig.json --noEmit && bunx vitest run` | `594b8b4` | 2026-09-18 | PASS | **931 passed, 10 subtests passed** (258.82s; was 915 — +16 new tests, zero regressions); focused: `test_vetting.py` 36, `test_transcription.py` 31, `test_v16_sweep_fixes.py` 15, approvals + restore-visibility green; desktop tsc 0 errors, **vitest 93 passed (8 files)** | SEC-01, TR-01, TR-02 (deferred-binding), APR-05, APR-06, COR-03, COR-06, THM-01, ERR-01 | INV-SWEEP4-001 | `increments/R0-SWEEP.md` | parent-executed (renderer rows verified by tsc + code read only — §58) |
+ | A-21 | engine full suite (R1 delegation authority ceiling / AUTH-DELEGATION) | `cd runtime && python -m pytest tests -q`; focused `tests/test_v16_r1_authority.py` + the workforce family | `dc65fbc` | 2026-09-18 | PASS | **952 passed, 10 subtests passed** (287.14s; was 931 — +21 new tests, zero regressions); focused: R1 21, workforce family (schemas/assignment/d1/d2/learning/parallel/assurance) 269 together | REQ-R25-R1 | INV-AUTH-DELEGATION | `increments/R1-AUTHORITY-CEILING.md` | parent-executed |
++| A-22 | engine full suite (R2 idempotency matrix + observed-effect receipt) | `cd runtime && python -m pytest tests -q` | `fde5bbb` | 2026-09-18 | PASS | **962 passed, 10 subtests passed** (264.89s; was 952 — +10 new tests, zero regressions) | REQ-R25-R2 | INV-EVENT-IDEMPOTENCY; INV-EFFECT-REPLAY | `increments/R2-IDEMPOTENCY-MATRIX.md` | parent-executed |
++| A-23 | engine full suite (R3 retry durability + R4 approval window) | `cd runtime && python -m pytest tests -q`; focused recovery + authorization families | `8c899c8` | 2026-09-18 | PASS | **974 passed, 10 subtests passed** (269.43s; was 962 — +12 new tests (5 R3 + 7 R4), zero regressions); focused: recovery family 24, authorization family 96 | REQ-R25-R3; REQ-R25-R4 | INV-RETRY-DURABLE; INV-APPROVAL-EXACT | `increments/R3-RETRY-DURABILITY.md`; `increments/R4-APPROVAL-EXACT.md` | parent-executed |
++| A-24 | engine full suite (R5 canonical persistence) | `cd runtime && python -m pytest tests -q`; focused R2–R5 + core | `b2ffed1` | 2026-09-18 | PASS | **981 passed, 10 subtests passed** (270.51s; was 974 — +7 new tests, zero regressions); focused: R2–R5 + `test_core` 84 passed | REQ-R25-R5 | INV-PERSIST-CANONICAL | `increments/R5-PERSISTENCE-INTEGRITY.md` | parent-executed |
++| A-25 | focused suites (R6 truthful state / liveness) | `tests/test_v16_r6_liveness.py` + diagnostics/core families | `b2ffed1`+R6 tests | 2026-09-18 | PASS | R6 suite **5 passed**; the R6 increment adds no production change, so the next full-suite row (A-26, R7 boundary) carries the end-to-end count | REQ-R25-R6 | INV-LIVENESS-SEPARATION; INV-COMPLETION-TRUTH; INV-RECOVERY-CLASSIFICATION | `increments/R6-TRUTHFUL-STATE.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md b/docs/v1.6/pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md
+new file mode 100644
+index 0000000..7530be4
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md
+@@ -0,0 +1,79 @@
++# Increment — R2: logical-work / idempotency matrix (EVENT-IDEMPOTENCY · EFFECT-REPLAY)
++
++increment_id: V16-R2-IDEMPOTENCY-MATRIX
++invariants: **EVENT-IDEMPOTENCY** (one logical event causes at most one authoritative execution
++unless a new attempt identity explicitly exists) · **EFFECT-REPLAY** (unresolved external effects are
++reconciled rather than blindly replayed)
++requirement: `REQ-R25-R2` (roadmap R2.5 §R2; marathon directive §10)
++phase: Campaign A — R2
++base_commit: `eea6503`
++production_commit: (this increment)
++status: complete — one real gap found and repaired; every other family proven safe with code anchors
++
++## The matrix (first, before any change)
++
++For each authoritative logical-work family: the identity it carries, its dedupe identity, what a
++duplicate does, what restart does, and whether it can cause an external side effect. Verified by
++reading the code (anchors are `runtime/kel/…`, line numbers at this commit).
++
++| Family | Logical work | Attempt/dedupe identity | Duplicate behavior | Restart behavior | Effects | Verdict |
++|---|---|---|---|---|---|---|
++| Submission | one user request | `submissions.id` (client-supplied `data['id']` or `token_hex(16)`) | identical content → the **same sid** is returned and the early return **skips the executor submit** (`service.py:195-199`), so no second planning run; different content on the same id → refused | row + state durable; planner work resumes from `submissions.state` | none | **SAFE** |
++| Job intake | one job per intake id | `job_intakes(id, job_id UNIQUE)` (`core.py:176`) | a second intake for the same id hits the UNIQUE row → refused (no second job) | durable | none | **SAFE** |
++| Events | one aggregate transition | `events.id UNIQUE` + `dedupe UNIQUE` + `UNIQUE(aggregate_id, revision)` (`core.py:138-141`) | a duplicate (aggregate, revision) is refused by the storage layer; `_save` re-reads the revision and raises `Conflict` on a stale writer (`core.py:229-235`) | ledger is durable and append-only | none | **SAFE** |
++| Runs | one milestone attempt | `runs.id` + `epoch` (fresh `uid()` per claim/orphan) + unique index `one_active_milestone(job_id, milestone_id)` (`core.py:148`) | a second active run for the same milestone is refused | durable | none | **SAFE** |
++| Run epochs | epoch-scoped receipts | epoch equality | **stale epoch results are refused**: `consume()` marks them handled and skips (`core.py:401-403`); `acknowledge_stop` epoch-checks (`core.py:664-668`); orphaning writes a fresh epoch (`core.py:688`) | durable | none | **SAFE (explicit guard)** |
++| Result inbox | one worker receipt | `inbox.id` (event id) + `INSERT OR IGNORE` (`core.py:313-319`) | duplicate delivery = no-op (row kept) | only unhandled rows are re-consumed after restart | none | **SAFE** |
++| Inbox reduction | one reduction per receipt | `handled` flag set in the **same transaction** as the state transition (`core.py:392-426`) | a second `consume()` finds nothing unhandled for that id | crash-safe: the transition and the flag commit together | none | **SAFE** |
++| Native RPC | one dispatched call | receipt per call; explicit no-replay contract (`coding_transport.py:1, 81, 101`) | a dispatched RPC without a receipt is **not** replayed ('do not replay it') | broker may reconnect; dispatched work never replays | remote effects gated | **SAFE (fail-closed)** |
++| Native permission replies | one reply | same transport family (receipts) | same no-replay contract | same | gated | **SAFE (fail-closed)** |
++| Approvals | one decision | `approvals.id` + `action_digest` + `status='PENDING'` + run `WAITING_APPROVAL` (`core.py:711-722`) | a second resolve is refused ('Approval does not match this action' / 'Run no longer awaits this approval') | durable | gates effects | **SAFE** |
++| Boundary grants | one expansion request | `boundary_expansion_requests.request_id` + `job.state == 'AWAITING_USER'` (`authorize.py:455-478`) | a second `resume_after_grant` after the first is refused (state moved) | durable | gated | **SAFE** |
++| External effects | one operation | `effects.id` (operation_id) + `action_digest` + `job_id` (`core.py:735-745`) | re-preparing with the same digest returns the existing state ('PREPARED'); a different digest/job is refused | durable PREPARED/OBSERVED | external | **GAP → FIXED** (see below) |
++| Change application | one apply per job | `change_applications.job_id` + destination + state (`apply_changes.py:40-99`) | already APPLIED → `already_applied` (no rewrite); PREPARED → crash-safe resume: staging-file recovery, per-file manifest verification, `actual == after` skip, contradiction → refused with backups preserved | resumable by construction | filesystem | **SAFE (strongest in the set)** |
++| Publication | one published assessment | `key = digest([job_id, assessment])` + `INSERT OR IGNORE` + `if cur.rowcount:` (`core.py:639-646`) | a duplicate publish is a no-op; the assistant message is written **only** when the row was actually inserted | durable | user-visible message | **SAFE** |
++| Continuation | one resume link | `job_links` via `INSERT OR IGNORE` (`continuation.py:151`) + resume plan state | a repeated link is a no-op | durable | none | **SAFE** |
++| Broker recovery | one broker result per run | `brokers` joined to `runs` (`engine.py:50`); adopt-only | recovery adopts an existing result; it never re-dispatches | durable | none | **SAFE** |
++| Workforce task/mission events | one message | `workforce_messages.id` PK + append-only triggers (`workforce.py:44-70`) | duplicate id refused by the PK | durable, append-only | none | **SAFE** |
++| Parallel stream announcements | one announcement | `stream_announces.announce_id` PK + append-only triggers (`parallel.py:60-68`) | duplicate id refused | durable, append-only | none | **SAFE** |
++
++## The one real gap (and the minimal repair)
++
++**`Store.observe_effect`** overwrote the stored receipt unconditionally: a second observation with a
++*different* receipt silently replaced the evidence of what the external effect actually did — the
++exact "blindly replaced after uncertain execution" failure `EFFECT-REPLAY` forbids. No production
++caller exercises it today (`observe_effect` is only defined in `core.py`), which makes this a latent
++correctness hole rather than a live duplicate execution.
++
++Repair (smallest correct): an already-`OBSERVED` effect keeps its receipt. Re-observing the
++**identical** receipt is a no-op; a **different** receipt is refused with a plain sentence
++('Effect was already observed with a different receipt') so a reconciliation path has to decide,
++rather than the storage layer quietly losing the first observation.
++
++## Hostile duplicate tests (this increment)
++
++`tests/test_v16_r2_idempotency.py` — **10 new**:
++
++1. Preparing the same effect operation twice keeps one row and returns `PREPARED`.
++2. Reusing an operation identity for a different action is refused.
++3. Re-observing the identical receipt is a no-op (state and receipt unchanged).
++4. A contradictory receipt is refused and the first observation is kept.
++5. A duplicate result delivery lands once (inbox `INSERT OR IGNORE`).
++6. A stale run-epoch delivery is consumed but never applied.
++7. An approval resolves once (second resolve refused).
++8. An event revision cannot be written twice (storage-level UNIQUE).
++9. A duplicate identical submission returns the same id and does **not** dispatch the planner twice
++   (executor stubbed and counted).
++10. A duplicate submission id with different content is refused.
++
++## Limitations / audit questions / repair hints
++
++- The matrix is built from the current tree; Campaign B should re-derive it independently and
++  challenge: (a) whether the submission contract requires the *caller* to supply an id (a retry
++  without an id creates a new logical submission — documented, not a bug); (b) whether
++  `observe_effect`'s new refusal needs a reconciliation entry point when the observation is
++  *legitimately* revised (the evidence model prefers a new record — no caller exists yet);
++  (c) whether `contact`-style families outside this list exist (the list is the directive's set plus
++  what the code actually contains).
++- No new framework, queue, or table was added — the repair is one guard in the existing function.
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md b/docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md
+new file mode 100644
+index 0000000..b875b21
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md
+@@ -0,0 +1,71 @@
++# Increment — R4: canonical approval binding (APPROVAL-EXACT)
++
++increment_id: V16-R4-APPROVAL-EXACT
++invariant: **APPROVAL-EXACT** — approval authorizes an exact canonical runtime action under
++explicit relevant preconditions (and only inside its window)
++requirement: `REQ-R25-R4` (roadmap R2.5 §R4; marathon directive §12)
++phase: Campaign A — R4
++base_commit: `1a9f538`
++production_commit: `8c899c8`
++status: complete
++
++## R4.A — the real approval producers and consumers (inventory first)
++
++Producers:
++
++| Producer | Canonical action it binds | Extra safety |
++|---|---|---|
++| `Store.request_approval(job_id, run_id, action, seconds=300)` (`core.py:698-708`) | `digest(action)` stored on the row + `approval.requested` event | requires a matching RUNNING run; sets the run `WAITING_APPROVAL`; the job goes `AWAITING_USER` |
++| `coding.CodingAdapter.approval(...)` (`coding.py:120-155`) | method + workspace + command + permissions + grantRoot + network, **delivery ids and timestamps excluded by construction**; file changes carry the patch | a file-change request without patch details is marked `unrepeatable_request` (no reusable wildcard); an identical prior action for the same run reuses its approval id; a lapsed wait resolves DENIED |
++| `Authorizer._expansion(...)` (`authorize.py:298+`) | `boundary_expansion_requests(request_id, lease_id, scope, target, status)` | outside the lease: reuse a pending request, honour a denial, or ask once |
++| `Context.grant(project_id, action, seconds=86400)` (`context.py:90-100`) | `(project_id, action_digest)` unique row with expiry + `revoked` | a remembered grant never outlives its window and is revocable per project |
++
++Consumers / execution-time revalidation:
++
++| Consumer | What it validates immediately before the effect |
++|---|---|
++| `Store.resolve_approval` (`core.py:711-722`) | actor is the user; row exists; status `PENDING`; `action_digest == digest(action)`; run is `WAITING_APPROVAL`; sets `EXPIRED` when the window already closed |
++| `Authorizer._approval_ok` (`authorize.py:275-296`) | status `APPROVED`; `action_digest == digest(action from the intent)`; matching job; **and (repaired here) still inside the approval window** |
++| `Context.allowed(project, action)` | grant row for the exact digest, not revoked, not expired |
++| `coding.approval` wait loop | re-reads the row; a non-PENDING status decides; expiry while waiting resolves DENIED |
++
++## The one gap (and the minimal repair)
++
++`Authorizer._approval_ok` checked status, digest and job but **not the window**: a decision taken
++shortly before `expires` kept authorizing the same action afterwards. The invariant says an approval
++authorizes an action *under its preconditions* — the window is one of them.
++
++Repair: the row must still be inside its window at the moment of execution. Nothing else changed: the
++digest binding, the job binding and the user-only resolution stay exactly as they were. No HMAC, no
++signature, no second approval system (the directive's R4.D: digest matching inside Kel's trusted
++local runtime is sufficient).
++
++## Hostile tests (this increment)
++
++`tests/test_v16_r4_approval_exact.py` — **7 new**:
++
++1. An approval authorizes only its exact action (a changed command is refused; a changed workspace —
++   the "equivalent path spelling" attack — is refused).
++2. An approval copied to another job is refused.
++3. A PENDING approval never authorizes execution.
++4. An approval outside its window is refused (the repaired check).
++5. Resolving after the window records `EXPIRED`, never `APPROVED`.
++6. A second resolution is refused.
++7. A remembered grant is project-scoped, digest-exact, and revocation takes effect immediately.
++
++Focused: the authorization family (authorize, coding boundaries, coding recovery, coding transport,
++approvals) + R4 = **96 passed**. Full engine: TEST_EVIDENCE_INDEX A-23.
++
++## Limitations / audit questions / repair hints
++
++- `_approval_ok` is the boundary/authorize consumer; the coding path consumes through
++  `resolve_approval` (window checked at resolution) and the wait loop (window checked while waiting).
++  Campaign B should attempt: an approval resolved 1 ms before expiry consumed 1 s after (refused
++  now); a remembered grant restored by re-approving the same action (by design — the grant is the
++  memory of an explicit decision, and it is revocable).
++- Expiry comparison uses wall-clock time in the same process; clock jumps are out of scope for V1.6.
++- Audit questions: (a) is `seconds=300` the right default for coding asks, and is the card's declared
++  window what the engine stores (yes — one field); (b) should a DENIED decision be re-askable
++  immediately (today a denial is honoured by `_expansion` for the same target); (c) is the
++  `approval_actions` table the only place the human-readable action lives (the card reads it)?
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/pre-audit/increments/R5-PERSISTENCE-INTEGRITY.md b/docs/v1.6/pre-audit/increments/R5-PERSISTENCE-INTEGRITY.md
+new file mode 100644
+index 0000000..9da5577
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R5-PERSISTENCE-INTEGRITY.md
+@@ -0,0 +1,75 @@
++# Increment — R5: persistence integrity contract (PERSIST-CANONICAL)
++
++increment_id: V16-R5-PERSISTENCE-INTEGRITY
++invariant: **PERSIST-CANONICAL** — only canonical, validated, serializable, reconstructable state may
++be durably committed
++requirement: `REQ-R25-R5` (roadmap R2.5 §R5; marathon directive §13)
++phase: Campaign A — R5
++base_commit: `8c899c8`
++production_commit: `b2ffed1`
++status: complete
++
++## R5.A — durable external input inventory (what reaches the database from outside the engine)
++
++| Ingress | External source | Existing control | Verdict |
++|---|---|---|---|
++| `submissions` (row + `submission_packets` + `message_files` + a user message) | the renderer/HTTP caller | text type + 1..20000 chars; at most ten attachments; duplicate id returns the same sid; **type check added here** | **FIXED** |
++| `inbox` result payloads | worker/broker processes | `isinstance(result, dict)`; `encode(...)`; duplicate id is a no-op; **non-finite payloads now refused** | **FIXED** |
++| `effects.receipt` | external effect observation | receipt required; identical re-observation is a no-op, a contradictory one is refused (R2) | SAFE |
++| `providers` row `data` (failures/latency/cost/observed_at) | provider processes and the engine's own observation | `provider_outcome` validates shapes; **non-finite reports are now ignored instead of persisted** | **FIXED** |
++| `native_progress` / `code_evidence` / `code_workspaces` manifests | the native coding process | manifest digests verified against the workspace before apply; evidence digests re-checked at apply time (`apply_changes.py`) | SAFE |
++| Task contracts / CompletionPackets / workforce records | mission workers | `contracts.validate_task_contract` / `validate_completion_packet` / `workforce.assert_safe` (schema, enums, size limits, secret-material refusal) | SAFE |
++| Memory proposals / memories | model-authored proposals | `memory` schemas + `scan_secret` + provenance; proposals are never auto-applied | SAFE |
++| Artifacts (`artifacts/…` files) | run outputs | explicit 1 MiB cap enforced before any write | SAFE |
++| Transcripts/attachments | user files | base64 decode validation, mime/size handling in the transcription path | SAFE |
++| Restore records / backup receipts | the backup subsystem | `restore-outcome.json` + durable state; PER-02 visibility | SAFE |
++| Events / aggregate revisions | the engine | `UNIQUE(aggregate_id, revision)` + optimistic `revision` check (R2 matrix) | SAFE |
++
++## The contract itself (what was missing)
++
++`core.encode` is the single serialization door for durable JSON, and it allowed Python's
++non-standard `NaN`/`Infinity` tokens: `json.loads` reads them back as non-finite floats, and any
++strict JSON consumer (the desktop renderer's `JSON.parse`, an external tool reading a packet) cannot
++parse them at all. That is exactly the "not reconstructable" class the invariant forbids, and because
++`digest()` is built on `encode`, it also made digests implementation-defined.
++
++Repairs (smallest correct):
++
++1. `core.encode`: `allow_nan=False`, with a plain refusal sentence
++   ('A value that cannot be stored in canonical JSON (NaN or Infinity) was refused').
++2. `core.provider_outcome`: ignore non-finite `duration`/`cost_usd` reports (still record the
++   failure itself) — so the new refusal can never lose a legitimate observation.
++3. `Service.submit`: check `text` is a string *before* `.strip()`, so a malformed request answers in
++   the intended plain sentence instead of an `AttributeError`.
++
++No storage rewrite, no new layer, no migration (the directive's R5 "do NOT rewrite SQLite" honoured).
++
++## Attacks exercised (R5.C / R5.D)
++
++`tests/test_v16_r5_persistence.py` — **7 new**:
++
++1. Non-finite values refused at `encode` (bare and nested).
++2. Ordinary values stay canonical (sorted keys, compact separators, unicode preserved).
++3. A malformed worker result (NaN member) is refused and **no inbox row** exists; the same
++   connection then accepts a well-formed result.
++4. A non-object worker result is refused with a plain sentence.
++5. A nonsense provider report leaves the provider state finite while the failure is still recorded.
++6. An oversized artifact is refused *before* any file is written.
++7. A malformed request type and an over-long request answer in plain sentences with **no
++   half-written submission or message row** (before/after counts equal).
++
++Focused: R2–R5 suites + `test_core` = **84 passed**. Full engine: TEST_EVIDENCE_INDEX A-24.
++
++## Limitations / audit questions / repair hints
++
++- Malformed *stored* JSON (a row corrupted outside Kel, e.g. hand-edited SQLite) is not covered:
++  readers such as `Providers._row` call `json.loads` directly. Recorded as an audit question rather
++  than invented behaviour (a repair would need a product decision about surfacing corruption).
++- `add_message` has no length cap (trusted internal writers only); the user-facing ingress is capped
++  at 20 000 chars.
++- UTF-8 artifact boundaries are enforced at 1 MiB per artifact (bytes, not characters).
++- Audit questions: (a) are there any remaining `json.dumps` call sites outside `encode` that write
++  durable state? (b) does any test fixture store non-finite floats today (none found)? (c) should
++  `encode`'s refusal also apply to *derived* metrics that a provider could poison (latency/cost are
++  guarded; scores are engine-computed integers)?
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md b/docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md
+new file mode 100644
+index 0000000..8ea794b
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md
+@@ -0,0 +1,60 @@
++# Increment — R6: truthful runtime state + liveness (LIVENESS-SEPARATION · COMPLETION-TRUTH · RECOVERY-CLASSIFICATION)
++
++increment_id: V16-R6-TRUTHFUL-STATE
++invariants: **LIVENESS-SEPARATION** (process liveness, execution liveness and mission progress are
++separate facts), **COMPLETION-TRUTH** (completion requires an evidence-backed assessment),
++**RECOVERY-CLASSIFICATION** (interrupted work resolves to safely resumable / safely retryable /
++reconcile-first / user-blocked / failed)
++requirement: `REQ-R25-R6` (roadmap R2.5 §R6; marathon directive §14)
++phase: Campaign A — R6
++base_commit: `b2ffed1`
++production_commit: none — the layers and invariants were verified in code; the increment adds the
++discriminating tests and this inventory (the honest outcome when the design is already truthful)
++status: complete
++
++## The three layers (what the repository actually models)
++
++| Layer | Facts | Where they live | Never implies |
++|---|---|---|---|
++| Process liveness | does the process exist; does the recorded PID still match its identity; native child alive; past deadline | `native_processes(run_id, pid, identity, stdout_path, deadline)` (created by `kel/runner.py:46`), observed by `diagnostics._pid_alive` + `snapshot()['processes']`; `native_group`/`coding_transport` process handles | completion, retryability, or a stalled *mission* |
++| Execution / supervisor liveness | controller lease, broker alive, heartbeat, run inside its fence, mission lease valid, transport alive, provider usable | `runs.state` + `runs.expires` + `runs.epoch`; `brokers`; `mission_leases` (+ heartbeats, `reclaim_stale_leases`); `capability_leases`; provider `circuit_until`/`quota`; `coding_transport` receipts | completion; a lapsed lease is *reclaimed*, never resurrected (`parallel.py`) |
++| Mission progress | meaningful transition, milestone advanced, evidence emitted, assignment activity, legitimately waiting | `jobs(data).state` + `milestones[].state` + `verdict`; `runs.state`; `inbox.handled`; `review_runs`; `workforce_messages`/`findings` | completion without the evidence-backed assessment (job CLOSED only via `close` with a verified assessment) |
++
++## Required invariants — verified in code
++
++| Invariant | Code evidence |
++|---|---|
++| `process_alive != mission_progressing` | a live PID with no inbox/event activity changes nothing (`snapshot` reports; no state writer reads liveness) |
++| `process_dead != automatically safe_to_retry` | a dead process is reported (`'N recorded process(es) are no longer alive'`) and nothing else; a run past its fence is **ORPHANED with a fresh epoch** and the milestone goes **UNCERTAIN** with 'Expired run; native state requires reconciliation' (reconcile-first) |
++| `idle != completed` | only `close(...)` with the evidence-backed assessment sets CLOSED; idle states leave the milestone untouched |
++| `waiting != completed` / `waiting != failed` | `AWAITING_USER` / `WAITING_RESOURCE` / `WAITING_APPROVAL` are distinct job/milestone states with their own verdicts; `waiting` never writes COMPLETE or FAILED |
++| `no_new_event != automatically stalled` | `recover_expired` acts on `expires`, not on event silence; the pod stall detector reads lease/heartbeat state, not quiet |
++| `completion == evidence-backed assessment` | job closure path verifies the milestone checks and the assessment; reviews/assurance gate independent certification (INV-AUDIT-001) |
++
++## Tests added
++
++`tests/test_v16_r6_liveness.py` — **5 new**:
++
++1. An expired run is ORPHANED in a fresh epoch, the milestone is UNCERTAIN with the reconciliation
++   sentence, the job is `WAITING_RESOURCE`/`UNCERTAIN`, and nothing retries it automatically.
++2. A late result from the orphaned epoch is discarded by `consume()` — the job stays UNCERTAIN (the
++   fence, not the delivery, is authoritative).
++3. No new events alone never orphans a live run (`recover_expired` before the fence does nothing).
++4. A dead recorded native process is reported in `database.problems` and never completes work.
++5. Waiting (`AWAITING_USER` after an approval request) is neither completion nor failure.
++
++Focused: R6 suite 5 passed (diagnostics + core families green in the full runs A-24/A-25).
++
++## Limitations / audit questions / repair hints
++
++- The Compact derived health status (progressing / waiting-for-user / recovering / stalled / lost /
++  reconciling / completed / failed) was **not** added here: R9.D's "Needs Your Attention" is the
++  product surface that consumes these facts, and deriving it twice would create competing state.
++  Recorded as a binding rather than duplicated work.
++- `snapshot()` reports but never *acts* — by design; the acting paths are `recover_expired`,
++  `reclaim_stale_leases`, the monitor and `orphan` handling.
++- Audit questions: (a) does any UI surface show raw `runs.state` without the milestone/job context
++  (would read as "completed" for a paused job)? (b) is `expires` always set before a run can be
++  observed (claim sets it; an externally inserted row is the only way to miss it)? (c) does the pod
++  stall detector have a test for a *legitimately long* operation (yes: `test_workforce_parallel`).
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 123b854..f51b06e 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,12 +1,12 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T17:35:00Z
++updated_utc: 2026-09-18T18:15:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: R1 complete — HEAD carries `dc65fbc` (R1 authority ceiling) + this docs commit; see `git log --oneline -8`
++head: R3–R6 complete — production tip `b2ffed1` (R5 canonical persistence) + the R6 tests/breadcrumbs; see `git log --oneline -14`
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,8 +18,8 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R1 COMPLETE** — the delegation authority ceiling is executable (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + D1/D2 issuance wiring (verifier inside the mission envelope) + `reserve_budget` job-envelope check. 21 new tests; full engine **952 passed + 10 subtests** (was 931). **Now starting R2** (logical-work / idempotency matrix).
+-current_phase: R2 — logical-work/idempotency matrix + real gaps only (then R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
++current_increment: **R3–R6 COMPLETE** — R3 RETRY-DURABLE (inventory + 5 restart tests), R4 APPROVAL-EXACT (`8c899c8` consumer-side window check + 7 hostile cases), R5 PERSIST-CANONICAL (`b2ffed1` canonical `encode` + 7 ingress tests), R6 truthful state/liveness (three-layer inventory + 5 tests, no production change). Full engine **981 passed + 10 subtests**. **Now starting R7** (credential/network boundary).  — the delegation authority ceiling is executable (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + D1/D2 issuance wiring (verifier inside the mission envelope) + `reserve_budget` job-envelope check. 21 new tests; full engine **952 passed + 10 subtests** (was 931). **Now starting R2** (logical-work / idempotency matrix).
++current_phase: R7 — credential/network boundary confirmation (CREDENTIAL-CONTAINMENT) (then R8 packaged/migration assertions + REL-01 → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R2** — logical-work/idempotency matrix: for every autonomous event family (submissions, job intake, events/aggregate revisions, runs + run epochs, result inbox, native RPC, native permission replies, approvals, boundary grants, external effects, continuation, broker recovery, publication, workforce task/mission events, parallel stream announcements) record logical-work identity, attempt identity, dedupe identity, persistence, authoritative state, duplicate behavior, restart behavior and side-effect behavior; prove `EVENT-IDEMPOTENCY`/`EFFECT-REPLAY` where already true, repair only the real duplicate-execution gaps, and add hostile duplicate tests (same submission/result/RPC/permission/approval/boundary grant/effect/continuation/publication; stale run epoch) including across restart where possible. Then R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
++next_autonomous_action: **R7** — credential/network boundary: audit every place a credential could have become prompt text, ambient environment, artifact, packet, log, diagnostic export or worker-readable context (provider metadata, native-host env, Claude/Codex child env, DeepSeek/internal handling, test-command env); add synthetic-sentinel tests proving the raw secret does not appear where it must not; document honestly that `host_runtime.py` is user-authorized native execution and NOT an OS sandbox (no Windows egress filtering in Campaign A; stronger network-aware sandboxing is post-V1.6 research). ` (superseded R2 text kept below) `next_autonomous_action (superseded): **R2** — logical-work/idempotency matrix: for every autonomous event family (submissions, job intake, events/aggregate revisions, runs + run epochs, result inbox, native RPC, native permission replies, approvals, boundary grants, external effects, continuation, broker recovery, publication, workforce task/mission events, parallel stream announcements) record logical-work identity, attempt identity, dedupe identity, persistence, authoritative state, duplicate behavior, restart behavior and side-effect behavior; prove `EVENT-IDEMPOTENCY`/`EFFECT-REPLAY` where already true, repair only the real duplicate-execution gaps, and add hostile duplicate tests (same submission/result/RPC/permission/approval/boundary grant/effect/continuation/publication; stale run epoch) including across restart where possible. Then R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
+ external_dependency: NONE
+ stop_reason: NONE
+diff --git a/runtime/tests/test_v16_r6_liveness.py b/runtime/tests/test_v16_r6_liveness.py
+new file mode 100644
+index 0000000..ca96440
+--- /dev/null
++++ b/runtime/tests/test_v16_r6_liveness.py
+@@ -0,0 +1,95 @@
++"""Round 2.5 R6 — LIVENESS-SEPARATION / COMPLETION-TRUTH / RECOVERY-CLASSIFICATION.
++
++The inventory is recorded in `docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md`. Process
++liveness, execution liveness and mission progress are separate facts: none of them establishes
++completion, and a dead process never becomes an automatic retry or a completed mission.
++"""
++import sys
++import tempfile
++import time
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from workforce_fixtures import job_contract  # noqa: E402
++
++from kel.core import Store  # noqa: E402
++from kel.diagnostics import Diagnostics, ensure_schema as ensure_diagnostics  # noqa: E402
++
++
++class LivenessTruthTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._cleanup_tmp)
++        self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
++        ensure_diagnostics(self.store)
++        self.job_id = self.store.create(job_contract(), conversation='main')
++        claim = self.store.claim(self.job_id, 'm1', provider='fixture', model='fixture')
++        self.run_id, self.epoch = claim['id'], claim['epoch']
++
++    def _cleanup_tmp(self):
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def _run(self):
++        with self.store.connect() as db:
++            return dict(db.execute('SELECT * FROM runs WHERE id=?', (self.run_id,)).fetchone())
++
++    def _fence_expired(self):
++        with self.store.transaction() as db:
++            db.execute('UPDATE runs SET expires=? WHERE id=?', (time.time() - 1, self.run_id))
++
++    def test_an_expired_run_is_orphaned_reconcile_first_never_auto_retried(self):
++        self._fence_expired()
++        self.store.recover_expired()
++        job = self.store.get(self.job_id)
++        self.assertEqual(job['state'], 'WAITING_RESOURCE')
++        self.assertEqual(job['verdict'], 'UNCERTAIN')
++        milestone = job['milestones']['m1']
++        self.assertEqual(milestone['state'], 'UNCERTAIN')
++        self.assertIn('reconciliation', milestone['error'])
++        run = self._run()
++        self.assertEqual(run['state'], 'ORPHANED')
++        self.assertNotEqual(run['epoch'], self.epoch)  # a fresh fence epoch for late deliveries
++
++    def test_a_late_result_from_the_orphaned_epoch_is_discarded(self):
++        self._fence_expired()
++        self.store.recover_expired()
++        self.store.enqueue_result('ev_late', self.run_id, self.epoch, {'outcome': 'completed'})
++        self.store.consume()
++        job = self.store.get(self.job_id)
++        self.assertEqual(job['milestones']['m1']['state'], 'UNCERTAIN')
++        self.assertEqual(job['state'], 'WAITING_RESOURCE')
++
++    def test_no_new_events_alone_never_orphans_a_live_run(self):
++        self.store.recover_expired(now=time.time() - 3600)
++        job = self.store.get(self.job_id)
++        self.assertEqual(job['milestones']['m1']['state'], 'RUNNING')
++        self.assertEqual(self._run()['state'], 'RUNNING')
++
++    def test_a_dead_observed_process_is_reported_never_completed(self):
++        # The liveness surface for native children is `native_processes` (created by the runner).
++        with self.store.transaction() as db:
++            db.execute('CREATE TABLE IF NOT EXISTS native_processes(run_id TEXT PRIMARY KEY,pid INTEGER,'
++                       'identity TEXT,stdout_path TEXT,deadline REAL)')
++            db.execute('INSERT INTO native_processes VALUES(?,?,?,?,?)',
++                       (self.run_id, 999999999, 'simulated', None, None))
++        snapshot = Diagnostics(self.store).snapshot()
++        row = [entry for entry in snapshot['processes'] if entry['pid'] == 999999999]
++        self.assertEqual(len(row), 1)
++        self.assertFalse(row[0]['alive'])
++        self.assertTrue(any('no longer alive' in problem
++                            for problem in snapshot['database']['problems']))
++        job = self.store.get(self.job_id)
++        self.assertEqual(job['milestones']['m1']['state'], 'RUNNING')  # liveness never completes work
++
++    def test_waiting_is_not_completion_and_not_failure(self):
++        self.store.request_approval(self.job_id, self.run_id,
++                                    {'method': 'command', 'command': 'echo hi'}, seconds=300)
++        job = self.store.get(self.job_id)
++        self.assertEqual(job['state'], 'AWAITING_USER')
++        self.assertNotEqual(job['milestones']['m1']['state'], 'COMPLETE')
++        self.assertIn(job.get('verdict', '') or '', ('', 'UNCERTAIN'))

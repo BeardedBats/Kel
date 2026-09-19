@@ -1,0 +1,25 @@
+commit edd50de3c5dd88f456b0ae0677f7baf665cb4753
+2026-09-18 12:35:56 -0400
+docs(v1.6): commit ledger completeness — Phase 6 docs row + Phases 8-11 docs row
+
+
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 21e541e..9bebc67 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -24,6 +24,7 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+ | `785df71` | `fd98cc4` | 2026-09-18 | A-entry | pre-audit corpus + IMPLEMENTATION_SPRINT mode (docs/state) | docs only; `.gitignore` scratch ignore | — | none | no | — | no | no | LOW | `increments/INIT-CAMPAIGN-A.md`; corpus README | — |
+ | `22f4a3e` | `785df71` | 2026-09-18 | Phase 6 | Work-panel knowledge actions follow record state; forget asks first | `KelWorkPanel.tsx`; `memoryRecordActions.ts` (new) | +7 unit tests (vitest 76→83) | none | yes (renderer) | pending (RC battery) | no | no | MEDIUM | `increments/PHASE6-MEMORY-REALITY.md`; `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md` | MEMR-1/2/3 |
++| `ac5e2a2` | `22f4a3e` | 2026-09-18 | Phase 6 | Phase 6 record + corpus updates (docs) | docs only | — | none | no | — | no | no | LOW | `increments/PHASE6-MEMORY-REALITY.md` | — |
+ | `df87903` | `ac5e2a2` | 2026-09-18 | Phase 7 | capability recommendations: engine vocabulary + refusal wiring + milestone retention + desktop card | `capabilities.py`; `research.py`; `coding.py`; `core.py`; `KelCapabilityCard.tsx` (new); `capabilityRecommendation.ts` (new); `KelWorkPanel.tsx` | +7 engine, +7 desktop tests (885; 90) | none | yes (Work panel) | pending (no provider; RC battery) | no | no | MEDIUM | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`; `docs/v1.6/phase7/` | coding-blocked discrimination (audit target 44) |
+ | `16de55f` | `df87903` | 2026-09-18 | Phase 7 | Phase 7 record + corpus updates (docs) | docs only | — | none | no | — | no | no | LOW | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | — |
+ | `7b32217` | `16de55f` | 2026-09-18 | Phase 7 | published-tip record + packaged pending item (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/status/MAIN_STATUS.md`; PACKAGED_EVIDENCE_INDEX | — |
+@@ -31,6 +32,7 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `fa31618` | `006159a` | 2026-09-18 | Phase 7/8 | commit ledger rows for Phase 7 docs + Phase 8 decision commits (docs) | docs only | — | none | no | — | no | no | LOW | COMMIT_LEDGER.md | — |
+ | `6ea68c2` | `fa31618` | 2026-09-18 | Phase 9 | Profiles vs Projects decision — no Profiles concept; Projects remain (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | decision to verify in Campaign B |
+ | `fed59dd` | `6ea68c2` | 2026-09-18 | Phases 10-11 | provider validation + Rust freshness recheck; Phase 12 closed (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | real-call evidence recorded (claude PASS; codex env-blocked) |
++| `24d775b` | `fed59dd` | 2026-09-18 | Phases 8-11 | ledger rows for Phase 8-11 docs + published-tip refresh + (this commit: missing Phase 6 docs row) | docs only | — | none | no | — | no | no | LOW | COMMIT_LEDGER.md; MAIN_STATUS.md | — |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 

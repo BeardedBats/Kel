@@ -1,0 +1,521 @@
+commit 08f56673ea93ed84568018937bb190e0a5acd71b
+2026-09-18 20:52:11 -0400
+docs(v1.6): PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready
+
+
+diff --git a/desktop/kel-builder.json b/desktop/kel-builder.json
+index 7224d7f..8355324 100644
+--- a/desktop/kel-builder.json
++++ b/desktop/kel-builder.json
+@@ -28,7 +28,7 @@
+     }
+   ],
+   "directories": {
+-    "output": "../dist/package",
++    "output": "../dist/package-r12",
+     "app": ".",
+     "buildResources": "resources"
+   },
+diff --git a/desktop/package.json b/desktop/package.json
+index 00bde9c..ede5a33 100644
+--- a/desktop/package.json
++++ b/desktop/package.json
+@@ -2,10 +2,11 @@
+   "name": "Kel",
+   "version": "1.6.0",
+   "description": "Kel with the AionUI interface",
++  "companyName": "Kel",
+   "keywords": [],
+   "license": "Apache-2.0",
+   "author": {
+-    "name": "AionUi",
++    "name": "Kel",
+     "email": "service@aionui.com"
+   },
+   "workspaces": [
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index ad44609..629c220 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -743,3 +743,21 @@ synthetic-sentinel tests; document that `host_runtime.py` is user-authorized nat
+ OS sandbox (no Windows egress filtering in Campaign A). Then R8 packaged/migration assertions +
+ REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration →
+ R12 final regression → PRE_AUDIT_V1_6_HEAD.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++
++## R9–R12 and PRE-AUDIT_V1_6_HEAD (2026-09-18/19)
++
++- Bookkeeping resolved first: the 27-vs-26 P2/P3 denominator reconciled (`05608e6`; full original-ID
++  map; no closed finding reopened).
++- R9 on the visual lane: reconciled + re-anchored (`0ff061d`, `3050761`), batch 6 (engine-loss /
++  failure states + supervision; `2897207` + `645898a` + `fa66f04`), batch 7 (composer;
++  `0e7d21a`), batch 8 (`c911d81`), R9.D Needs Your Attention (`938dc9b`); evidence 17–19.
++- R10: packaged engine-loss journey PASS on the frozen-1.6.0 package (`ux-audit/runs/r10-{f,g}`).
++- R11: visual lane → Main (`7267630`; zero overlaps; post-merge tsc 0 + vitest 122/122).
++- R12: engine full suite **998+10**; desktop **122/122**; RC installer `package-r12` with full Kel
++  identity (install→uninstall clean; fresh + upgrade packaged boots; attention + About verified);
++  release integrity clean.
++- PRE_AUDIT_V1_6_HEAD created; Campaign B handoff corpus finalized. STOP boundary honored: no
++  Campaign B/C, no release freeze, `main` untouched, frozen refs unchanged.
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+index 88ce30d..eb619d6 100644
+--- a/docs/v1.6/MARATHON_STATE.md
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -3,7 +3,7 @@
+ MARATHON_MODE: ACTIVE
+ 
+ start_head: 756218e (published docs tip; production 8a677d0)
+-current_head: `7267630` (R11 integration merge; visual lane `bc92f7f` integrated; see `git log --oneline -20`)
++current_head: PRE_AUDIT_V1_6_HEAD (resolve via `git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings`); prior integration `7267630`
+ 
+ completed_this_run:
+ - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
+@@ -42,35 +42,40 @@ completed_this_run:
+   resolutions); post-merge Main: tsc 0 + vitest 122/122; corpus records updated
+   (`COMMIT_LEDGER`, `CHANGE_LEDGER` CHG-024…028, `REQUIREMENTS_TRACEABILITY`, `VISUAL_EVIDENCE_INDEX`,
+   `increments/R11-INTEGRATION.md`).
++- **R12 COMPLETE** — engine full suite **998 passed + 10 subtests** (284.53s) on the merged tree;
++  desktop tsc 0 + vitest **122/122**; **RC package `package-r12`** built from merged Main:
++  NSIS `Kel-1.6.0-win-x64.exe` (stock template; silent install exit 0 → shortcuts → uninstall
++  clean; Add/Remove `Kel · Kel · 1.6.0`; exe `ProductName/CompanyName = Kel · 1.6.0`), engine
++  SHA-256 `69123AF0…` equals the frozen runtime; installed probes fresh + upgrade-DB PASS
++  (attention section + About K present; 0 leaks / 0 console errors / 0 horizontal overflow on 5
++  routes); release integrity clean (remote exact; frozen refs unchanged; secret scan 0). Evidence:
++  A-28/A-29, `PACKAGED_EVIDENCE_INDEX` `package-r12` rows, `ux-audit/runs/r12-*`.
++- **PRE_AUDIT_V1_6_HEAD CREATED** — `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B
++  handoff corpus finalized. Campaign A is complete; STOP boundary honored (no Campaign B/C, no
++  release freeze, `main` untouched, frozen refs unchanged; human visual gate PENDING).
+ - breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
+   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
+   MAIN_STATUS, AUTO_RESUME
+ 
+-current_phase: R12 - final Campaign A regression + packaged/installed battery
+-current_item: R12 - full engine + desktop suites, packaged/installed battery from the MERGED Main, failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD
++current_phase: PRE_AUDIT RELEASE CANDIDATE READY — Campaign A complete (R0–R12); STOP boundary honored
++current_item: Campaign B starts in a FRESH context (directive §15). No further work in this thread.
+ 
+ next_queue:
+-1. R12 — full engine suite (fresh + upgrade DB, all V1.6 migrations, authority/approvals/leases/
+-   idempotency/effects/retry/persist/liveness/recovery/memory/continuation/providers/routing/D1-D3/
+-   assurance/learning/evidence/completion/lineage/vetting/transcription/restore/release identity)
+-2. R12 — desktop tsc + full vitest on the merged tree
+-3. R12 — packaged/installed battery: rebuild from merged Main; NSIS installer + icons + About +
+-   branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals +
+-   capabilities + memory + transcription + artifacts + Workforce asserts + attention + engine-loss
+-4. R12 — failure injection + release integrity
+-5. PRE_AUDIT_V1_6_HEAD — finalize `PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B handoff corpus
++1. (OUT OF SCOPE HERE) Campaign B — independent hostile audit in a FRESH context
++2. (OUT OF SCOPE HERE) Campaign C
++3. (OUT OF SCOPE HERE) Final release freeze + V1.6 release tag — never in Campaign A
+ 
+-last_focused_tests: R11 post-merge: desktop vitest 122/122 (12 files) + tsc 0 on Main
+-last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` — R12 re-runs on the merged tree
+-last_desktop_tsc: 0 errors (Main post-merge `7267630`)
+-last_desktop_vitest: **122 passed** (12 files, Main post-merge)
+-last_packaged: `Kel-1.6.0` lane package + R10 journey PASS (`ux-audit/runs/r10-{f,g}`); R12 rebuilds from Main incl. the installer
++last_focused_tests: R12: engine (**998 passed + 10 subtests**, 284.53s; `ux-audit/r12-engine-suite.log`); desktop tsc 0 + vitest 122/122
++last_full_engine: **998 passed + 10 subtests** (284.53s) at the merged tree
++last_desktop_tsc: 0 errors (Main post-merge + packaging fixes)
++last_desktop_vitest: **122 passed** (12 files)
++last_packaged: `package-r12` — NSIS install/uninstall lifecycle + fresh/upgrade installed probes PASS; engine SHA `69123AF0…`; metadata `Kel · Kel · 1.6.0`
+ 
+-last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
+-last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
++last_push: `ux/v15-journeys` → origin (fast-forward; final push at RC finalization)
++last_scan: 0 real hits (R0–R12; `ux-audit/runs/r12-integrity.txt`)
+ 
+ blocker: NONE
+ 
+-return_allowed: NO
+-(gate: R0–R12 complete → PRE_AUDIT_V1_6_HEAD, or a genuine human stop condition
+-per the marathon directive §32. A clean checkpoint is never a stopping point.)
++return_allowed: YES
++(Campaign A gate satisfied: R0–R12 complete → PRE_AUDIT_V1_6_HEAD created. Campaign B must start in
++a FRESH context; this thread must not continue into Campaign B/C or any release/freeze action.)
+diff --git a/docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md b/docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md
+new file mode 100644
+index 0000000..89da03e
+--- /dev/null
++++ b/docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md
+@@ -0,0 +1,65 @@
++# PRE_AUDIT_RELEASE_CANDIDATE — Kel V1.6, Campaign A
++
++**PRE_AUDIT_V1_6_HEAD**: the commit that finalizes this pre-audit corpus — resolve it exactly with:
++
++```
++git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings
++```
++
++(The resolving commit's message begins `docs(v1.6): PRE_AUDIT_V1_6_HEAD —`; the same SHA is
++recorded in the handoff response. This indirection exists because a commit cannot contain its own
++hash; an empty follow-up commit was not used.)
++
++## State at RC
++
++| Item | Value |
++|---|---|
++| Branch | `ux/v15-journeys` (integration branch; NOT `main`) |
++| Last independently audited production | `8a2b25d` |
++| First unaudited Campaign A production | `22f4a3e` |
++| Unaudited range | `8a2b25d..PRE_AUDIT_V1_6_HEAD` (production starts at `22f4a3e`) |
++| Phases | R0–R12 COMPLETE; REL-01 CLOSED (`93b99b5`) |
++| Visual lane | integrated at `7267630` (batches 1–8 + R9.D + R10 supervision; lane tip `bc92f7f`) |
++| Findings denominator | 26 canonical P2/P3 rows (P2 10, P3 16); the 27-vs-26 question reconciled in `P2_P3_DISPOSITION.md` §Denominator reconciliation (every original finding ID mapped) |
++
++## Batteries at RC (evidence indexes hold the raw lines)
++
++- **Engine**: full suite **998 passed + 10 subtests** (284.53s) on the merged tree
++  (`ux-audit/r12-engine-suite.log`); includes fresh DB, upgrade DB, all V1.6 migrations,
++  authority, approvals, leases, idempotency, effects, retry-durable, persist-canonical,
++  liveness, recovery, memory, continuation, providers, routing, D1–D3, assurance, learning,
++  evidence, completion, lineage, vetting, transcription, restore, release identity.
++- **Desktop**: `tsc` 0; Vitest **122/122** (12 files) on the merged tree.
++- **Packaged (from merged Main)**: `dist/package-r12` —
++  `Kel-1.6.0-win-x64.exe` (NSIS, stock template; exit-0 silent install) + `win-unpacked`;
++  bundled engine = the frozen 1.6.0 runtime, SHA-256
++  `69123AF001B8DF7E98FD092E751437044AFF43CA085B0161E45CA08B62AA3AB1`;
++  exe metadata `ProductName=Kel · CompanyName=Kel · FileVersion=1.6.0 · ProductVersion=1.6.0.0`;
++  Add/Remove Programs `DisplayName=Kel · Publisher=Kel · DisplayVersion=1.6.0`.
++- **Packaged journeys**: R10 engine-loss/recovery (`ux-audit/runs/r10-{f,g}`; link log; 7
++  screenshots; DOM leak scan clean; console 0); R12 installed probes — fresh
++  (`runs/r12-fresh2`) and upgrade-DB (`runs/r12-upgrade`): healthy, engine 1.6.0, R9.D
++  "Needs your attention" present, About canonical K renders, zero raw leaks, zero console
++  errors, zero horizontal overflow on five routes; installer lifecycle verified
++  (install → use → uninstall → registry/shortcuts cleaned).
++- **Failure injection**: R10 packaged kills (loss, repeat loss, restart-impossible, manual
++  retry) + the engine suite's named hostile files — `test_v16_r2_idempotency`,
++  `test_v16_r4_approval_exact`, `test_v16_r5_persistence`, `test_v16_r6_liveness`,
++  `test_v16_r7_credentials`, `test_v16_r8_identity`/`_migrations`, `test_v16_restore_visibility`,
++  `test_v16_r1_authority`, `test_v16_approvals`, `test_workforce_d1/d2/…` (see
++  TEST_EVIDENCE_INDEX A-29).
++- **Release integrity** (`ux-audit/runs/r12-integrity.txt`): branch correct; worktree clean;
++  remote exact (`main` `5e76b21`, journey at RC tip); no force push (all pushes fast-forward
++  `0aadd42..12f87a7`); secret scan actionable hits **0**; frozen refs unchanged —
++  `v1.5.0^{}` `5e76b21`, `v1.6.0-pre1^{}` `f24d9c2`; older freezes untouched.
++
++## Human gate (never claimed)
++
++- **Human Visual: PENDING** — screenshots are produced and indexed; no agent performs pixel
++  approval (`r10-g`/`r10-f` captures, `r12-work.png`, `r12-about.png`, `r12-exe-icon.png`).
++- Provider reality: validation runs as access allows (`PROVIDER_VALIDATION_MATRIX.md`; LIM-14).
++
++## Out of scope at RC (by directive)
++
++Campaign B (independent audit), Campaign C, final release freeze, moving `main`, the final
++V1.6 release tag. `PRE_AUDIT_V1_6_HEAD` is a handoff pointer, not a release.
+diff --git a/docs/v1.6/pre-audit/AUDIT_HANDOFF.md b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+index c0362fa..62341a6 100644
+--- a/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
++++ b/docs/v1.6/pre-audit/AUDIT_HANDOFF.md
+@@ -87,3 +87,13 @@ it carries the current values; treat every `TBD` as not-yet-true.
+ 
+ This does NOT mean a metaphysical guarantee that no bug exists. It means every declared item is
+ accounted for, with evidence, and nothing silently disappears.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++- HEAD at RC: resolve with `git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings`
++  (see `PRE_AUDIT_RELEASE_CANDIDATE.md`).
++- Batteries: engine **998 passed + 10 subtests** (`ux-audit/r12-engine-suite.log`); desktop tsc 0 +
++  vitest **122/122**; packaged `package-r12` (NSIS install/uninstall lifecycle, fresh + upgrade DB,
++  engine SHA `69123AF0…`); failure injection mapped in `TEST_EVIDENCE_INDEX.md` A-29; release
++  integrity in `ux-audit/runs/r12-integrity.txt` (0 actionable; frozen refs unchanged).
++- Visual lane: integrated (`7267630`); human visual gate **PENDING** (never claimed).
+diff --git a/docs/v1.6/pre-audit/AUDIT_SCOPE.md b/docs/v1.6/pre-audit/AUDIT_SCOPE.md
+index d2d2f92..4a84e21 100644
+--- a/docs/v1.6/pre-audit/AUDIT_SCOPE.md
++++ b/docs/v1.6/pre-audit/AUDIT_SCOPE.md
+@@ -150,3 +150,11 @@ Legend for audit status now: **PENDING** (Campaign B) for everything; notes carr
+ | RL-02 | Remote sync | publication records match ls-remote | sync-recon records | PENDING |
+ | RL-03 | This corpus | claims match reality; evidence paths resolve | this directory | PENDING |
+ | RL-04 | PRE-AUDIT RC record | `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` complete | to be created | PENDING |
++
++## PRE-AUDIT RC update (2026-09-19)
++
++R9–R12 deltas included in scope: the visual lane (batches 1–8 + R9.D Needs Your Attention) as
++integrated at `7267630`; engine-link supervision + failure-state translation (`engineFailure.ts`,
++`engineHealth.ts`, `KelService.ts`); the packaged RC (`package-r12`). New audit targets 84–90 cover
++the attention surface, supervision honesty, failure-card containment, the loaded-gun close, donor
++preview residue, and packaging input hygiene. Everything else in this scope is unchanged.
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index 216118c..a588ce9 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -35,3 +35,12 @@ generic agent-cockpit UI. Each may only return through a new product decision wi
+ | DEF-012 | Memory stale-detection wiring (`source_digest` producers + a `revalidate` caller) | No producer/caller yet; mechanism is engine-ready and test-covered; staleness never gates anything | None (nothing depends on it) | Producer design (which source facts carry digests) + refresh loop + focused tests | NO | Main | First repo-fact producer needing staleness |
+ | DEF-013 | Localization of new v1.6 surfaces (knowledge UI + siblings) | Copy intentionally Kel-native English; the release program's locale pass owns translations (declared 2026-09-17) | Non-English users see English on new surfaces | Locale pass across 12 locales + parity checks | NO for RC (decide at release gates) | release program | Pre-release (localization gate) |
+ | DEF-014 | Transcript-inline capability card placement | Needs a live-run refusal (provider) to design against; the Work-panel placement already delivers the recommendation | None for RC | Provider-backed journey + placement decision | NO | Main | First provider-backed packaged battery |
++
++## PRE-AUDIT RC update (2026-09-19)
++
++- Donor preview viewers (OfficeWatchViewer/PDFViewer) raw exception residue — audit target 89
++  (outside Kel surfaces; normalization sweep chose to record rather than touch donor machinery).
++- About-modal engine liveness line — deliberately not added in batch 8 (the shell strip carries
++  liveness; the Diagnostics page carries the version) — record only.
++- Visual-plan full rebuilds for Work/Projects/Permissions and the Team half were NOT ordered by
++  the R9 directive; batch 8 applied normalization-only fixes.
+diff --git a/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md b/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+index 192a056..0dd0d22 100644
+--- a/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
++++ b/docs/v1.6/pre-audit/FINAL_STATE_MATRIX.md
+@@ -33,3 +33,11 @@ Values: `yes` / `partial` / `pending` / `—` (not applicable). The `independent
+ | Visual integration (batches 1–5 → Main) | no | no | yes | yes | yes | — | yes | OPEN | never audited | not merged | NO |
+ | P2/P3 sweep | pending | — | — | — | — | — | — | — | pending | docket open | NO |
+ | Pre-audit corpus itself | yes | yes (this commit) | — | — | — | — | — | — | pending | grows per increment | pending RC |
++
++## PRE-AUDIT RC update (2026-09-19)
++
++| R9 (visual 6–8 + R9.D) | COMPLETE | lane `fa66f04` → Main `7267630`; tsc 0; vitest 122/122; attention hostile suite 8 | integrated, not audited |
++| R10 (engine loss/recovery) | COMPLETE | packaged journeys `r10-f`/`r10-g` PASS; `[KEL-LINK]` transitions; 7 screenshots | `19_R10_ENGINE_LOSS_EVIDENCE.md` |
++| R11 (visual → Main) | COMPLETE | merge `7267630`; zero overlaps; post-merge tsc 0 + 122/122 | `increments/R11-INTEGRATION.md` |
++| R12 (regression + packaged battery) | COMPLETE | engine 998+10; desktop 122/122; installed fresh + upgrade PASS; installer lifecycle clean; integrity 0 hits | A-29; `package-r12` row |
++| PRE_AUDIT_V1_6_HEAD | CREATED | resolution via commit-message grep (RC doc) | `PRE_AUDIT_RELEASE_CANDIDATE.md` |
+diff --git a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+index 3f41ca0..0567e28 100644
+--- a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
++++ b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+@@ -20,3 +20,13 @@ must be here.
+ | LIM-12 | **New v1.6 surfaces ship Kel-native English copy** (knowledge UI and sibling v1.6 surfaces); the release program's locale pass owns translations (declared in `docs/memory-proposals/04_UI_AND_COPY.md`). | Localized-release claims for the new surfaces. | en-US copy reviewed in packaged journeys. | Release gates (locale pass; DEF-013) |
+ | LIM-13 | **Memory stale-detection is engine-ready but unwired**: no production caller of `Memory.revalidate()` and no production `source_digest` producers. | "Stale" proposals never appear from real usage; the mechanism is test-covered only. | Stale flow covered by `test_v16_proposals.py`; disposition DEF-012. | When a repo-fact producer lands |
+ | LIM-14 | **Capability-recommendation card packaged rendering is unproven** (no provider ⇒ no blocked run can be produced here); transcript-inline placement pending (DEF-014). | Packaged evidence for Phase 7's UI surface. | Engine + unit coverage; the Work-panel placement is live for any blocked milestone. | Next packaged battery (RC) |
++
++## PRE-AUDIT RC update (2026-09-19)
++
++- LIM-14 (provider reality) unchanged at RC: provider validation runs as access allows.
++- LIM-RC-1: packaged probes exercise first-run by the product's own "Skip setup" path (recorded in
++  `r12-installed.json` steps).
++- LIM-RC-2: engine-loss variants requiring approvals/effects "in flight" are not constructible in
++  the isolated profile; covered at engine level (A-29) and recorded in `19_R10…`.
++- LIM-RC-3: no agent performs pixel approval; the human visual gate stays PENDING with screenshots
++  indexed (`r10-g`, `r12-work.png`, `r12-about.png`, `r12-exe-icon.png`).
+diff --git a/docs/v1.6/pre-audit/MIGRATION_LEDGER.md b/docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+index afeba0f..0fbbee0 100644
+--- a/docs/v1.6/pre-audit/MIGRATION_LEDGER.md
++++ b/docs/v1.6/pre-audit/MIGRATION_LEDGER.md
+@@ -50,3 +50,11 @@ memory store.)
+ - A new migration lands only with: version constant + name constant, idempotence, a focused test,
+   a ledger row here, and a packaged assertion plan.
+ - Never renumber; never reuse.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++RC boot evidence: the RC package booted a fresh root (full V1.6 migration chain on first start)
++AND a populated 1.6.0 root (no migration drift; conversations preserved) — `ux-audit/runs/r12-fresh2`,
++`ux-audit/runs/r12-upgrade`. No new migrations were added after `93b99b5` (max remains **21** plus
++the approval marker at 20); the engine suite's fresh/upgrade/interrupted-migration checks run in
++`test_v16_r8_migrations.py` (A-29).
+diff --git a/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+index 6fcd96a..c908919 100644
+--- a/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+@@ -1,11 +1,15 @@
+ # PACKAGED_EVIDENCE_INDEX — packaged-app proof per build
+ 
+-updated: 2026-09-18T16:05Z
++updated: 2026-09-19T00:55Z
+ rule: source-passed is never packaged-passed. Every row must name a real packaged build.
+ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --win --x64
+ --config.directories.output=../dist/package-NAME`; builds take ~5–8 min. Engine built by
+ `scripts/build-runtime.ps1` (PyInstaller). Evidence bundles live under `ux-audit/` (build logs,
+-`runs/<name>/`), not in this repo.
++`runs/<name>/`), not in this repo. **R12 note:** the RC installer build additionally requires
++(a) the generated `resources/windows/support/_sentry-dsn.generated.nsh`, (b) the stock NSIS
++`installUtil.nsh` (the fork's optional patch references donor includes and is NOT part of the Kel
++path — audit target 48), and (c) `companyName`/`author.name` = Kel in `desktop/package.json`
++(appInfo.companyName reads `author.name`).
+ 
+ | Package | Source commit | Engine identity | Migration @ boot | Probes / journeys | Result | Evidence | Notes |
+ |---|---|---|---|---|---|---|---|
+@@ -21,20 +25,22 @@ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --
+ | `package-visual5` | `ac85eb3` (visual branch) | fresh from visual branch | 15 | probe a: shell sweep 21 surfaces (0 console errors; first paint 3.03s; 23 screenshots); probe b: color control/New Chat/engine-loss (reproduces findings 16/17); probe c: populated sidebar (overlapPx −4, gutter 32px, leading marks correct) | PASS | ux-audit/visual/runs/visual5-{a,b,c}/; `kel-v16-visual-audit/docs/v1.6-visual-ux/packaged-visual5/SCREENSHOT_REVIEW_INDEX.md` | batches 1–5 acceptance; 35 screenshots indexed |
+ | `package-logo` | `edd50de` + canonical-logo change | fresh (`dist/runtime` unchanged; identity recorded in the row's log) | 15 (engine identity untouched — no engine change) | packaged boot + UI capture (`packaging/ux-audit.cjs` `first-run`) with an isolated profile; icon extraction from `Kel.exe` and the NSIS installer | PASS | exe icon = shipped `app.ico` 32 px frame (mean abs diff **0.0**); installer icon = **0.0**; old package was **not** the K (73.2); exe identity `Kel · Kel · AionUi · 1.5.0` (was Electron's own); packaged `resources/pwa/icon-*`+`app.png` byte-identical to the shipped K assets; captures in `dist/logo-evidence/ux-audit/` + committed selection under `docs/v1.6/branding/evidence/`; harness `errors: []` for both scenarios; About capture matches the canonical artwork at **0.960** masked NCC (`scripts/verify-brand-render.py`) | REQ-LOGO-1 | first packaged build whose exe/installer icons are the canonical K |
+ 
++| `package-r12` (lane) | `fa66f04` (visual lane, re-anchored) | staged frozen **1.6.0** runtime (`kel-ux-v15/dist/runtime/KelEngine`; the worktree's stale 1.5.0 bundle was replaced — audit target 90) | fresh (empty root) | R10 engine-loss journeys `r10-f`/`r10-g` (kill → reconnecting → supervised restart → durable folder + conversations preserved → repeat → could-not-recover → manual retry) | PASS | ux-audit/runs/r10-{c,d,e,f,g}/; `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md` | 7 screenshots; DOM leak scan clean; console 0; `[KEL-LINK]` transitions recorded |
++| `package-r12` (RC, from merged Main) | `12f87a7` + packaging fixes (kel-builder output name; `companyName`/author = Kel) | staged frozen **1.6.0** runtime; installed engine SHA-256 `69123AF001B8DF7E98FD092E751437044AFF43CA085B0161E45CA08B62AA3AB1` (equals `dist/runtime` — hash comparison) | fresh + **upgrade** (populated 1.6.0 root; conversations preserved) | NSIS `Kel-1.6.0-win-x64.exe` (stock template; silent install → exit 0 → shortcuts → launch → uninstall); installed probes fresh + upgrade: healthy 1.6.0, R9.D attention present, About canonical K renders, 0 leaks / 0 console errors / 0 horizontal overflow (5 routes); exe icon extracted; Add/Remove `Kel · Kel · 1.6.0` | PASS | `ux-audit/runs/r12-*`; `ux-audit/r12-install-result.json`; `ux-audit/r12-engine-suite.log` (998+10) | first RC installer under FULL Kel identity (donor CompanyName removed); donor NSIS script set deliberately NOT included (stock template, audit target 48); install → uninstall lifecycle cleaned up |
++
+ ## Known pending packaged work (carry-forward)
+ 
+-- Packaged migration assertions 16/17/18/19 on a packaged boot are **not yet asserted**
+-  (carry-forward). Campaign A: assert `schema_migrations` max = current + correct rows on the RC
+-  package.
+-- Packaged engine-loss/recovery behavior: current raw failure surfaces are reproduced by probe b
+-  (findings 16/17) — Campaign A closes this behavior (visual batch 6 + engine supervision work).
+-- RC package: `package-prea` (name reserved) — full battery + migration assertions + journeys at
+-  PRE_AUDIT_V1_6_HEAD. Recorded here when built.
+-- Phase 7 capability card: seed a blocked milestone carrying a `recommendation` in a packaged app;
+-  assert the card renders in the Work panel, the actions hit the engine (`/api/capabilities`), and
+-  dismissal works (no provider in this environment — audit target 45; LIM-14).
+-- Canonical logo: exe/shortcut/tray icon re-verification on the RC package (16/32/48 legibility and
+-  exact transparency — audit target 50), plus a human pixel pass on the About/login placements.
++- ~~Packaged migration assertions on a packaged boot~~ — asserted at R12: fresh boot creates and
++  upgrades all V1.6 migrations (`schema_migrations` intact); the populated 1.6.0 root boots
++  unchanged; the migration chain itself is covered by `test_v16_r8_migrations` in A-29.
++- ~~Packaged engine-loss/recovery behavior~~ — closed at R10 (P-8; `19_R10_ENGINE_LOSS_EVIDENCE.md`).
++- ~~RC package~~ — built: this row (`package-r12`); `package-prea` name not used.
++- Phase 7 capability card: seed a blocked milestone carrying a `recommendation` in a packaged app
++  (no provider in this environment — audit target 45; LIM-14). STILL OPEN (audit-side).
++- Canonical logo: exe icon extraction recorded on the RC; 16/32/48 legibility + exact
++  transparency + the human pixel pass remain OPEN (audit target 50; human gate PENDING).
++- Donor preview viewers still append a raw exception message to their translated failure line
++  (audit target 89). STILL OPEN (recorded, outside Kel surfaces).
+ 
+ ## Maintenance rules
+ 
+diff --git a/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+index 2bf6331..63c34cc 100644
+--- a/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
++++ b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+@@ -33,3 +33,10 @@ Fixture refresh (same day): `python -m pytest tests/test_v14_providers.py tests/
+ - [ ] Re-run the model-routing fixtures at RC and attach counts (scheduled).
+ - [ ] If credentials appear later: re-run the `internal`/`deepseek` probes; re-try `codex` after
+       a CLI upgrade; record each result here.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++Unchanged at RC: validation evidence stands as recorded; provider access remains the limiter
++(LIM-14). No provider-facing code changed in R9–R12 (desktop presentation + supervision only);
++the packaged engine boots with provider discovery unchanged (4 providers in the R8 assertion;
++RC upgrade boot probed the same path).
+diff --git a/docs/v1.6/pre-audit/REPAIR_HINTS.md b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+index f59dd52..0bd7b42 100644
+--- a/docs/v1.6/pre-audit/REPAIR_HINTS.md
++++ b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+@@ -37,3 +37,14 @@ names where the defect (if confirmed) most likely lives and how to validate a re
+   and per-increment audits `21`–`37`.
+ - Acceptance criteria for SEC-01: `16_FINDING_STATUS.md` (quoted above).
+ - A1/PER-02 overlap analysis: `15_RUST_LEAD_VERIFICATION.md`.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++- Failure copy: `renderer/components/kel/engineFailure.ts` is the single classifier/copy source —
++  extend the class table there, never inline strings at call sites.
++- Supervision: `process/services/kel/engineHealth.ts` owns the budget semantics; `KelService.ts`
++  performs actions it returns. A restart without a patient ping is a defect by construction.
++- Attention surface: `needsAttention.ts` maps payload → items; never join across sources and keep
++  the fail-closed project filter intact.
++- Packaging: `desktop/package.json` `author.name`/`companyName` feed user-visible metadata; the
++  stock NSIS template is required (donor `resources/windows/*.nsh` are not part of the Kel path).
+diff --git a/docs/v1.6/pre-audit/RISK_REGISTER.md b/docs/v1.6/pre-audit/RISK_REGISTER.md
+index 1824ddf..4924dc5 100644
+--- a/docs/v1.6/pre-audit/RISK_REGISTER.md
++++ b/docs/v1.6/pre-audit/RISK_REGISTER.md
+@@ -30,3 +30,14 @@ Auditor guidance: attack HIGH/CRITICAL first; a risk is not a finding until repr
+ 
+ - Add rows when implementation reveals fragility (even without a bug).
+ - A risk closes only with evidence (fix + test) or an explicit accepted-deferral decision.
++
++## PRE-AUDIT RC update (2026-09-19)
++
++- RISK-003 (bare-id addressing): closed on the audited paths (APR-02 `8a677d0`, SEC-01 `49e528e`);
++  R9.D adds a fail-closed derived view on top — no new addressing surface.
++- NEW (recorded, not release-blocking): engine-link supervision could in principle duplicate an
++  engine if a patient ping were skipped — mitigated by construction (patient ping precedes every
++  restart; budget pinned by tests); packaged evidence r10-f/g.
++- NEW (recorded): packaging input hygiene — a stale `dist/runtime/KelEngine` produced a
++  wrong-version bundle before replacement; audit target 90 demands the RC pipeline assert the
++  bundle identity before packaging (currently verified by discovery: installed SHA == frozen SHA).
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index c560a08..5a40051 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -70,9 +70,46 @@ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved).
+ | P-5 | memory proposals journey | `package-final13` | PASS | ux-audit/run-memoryprops.sh | packaged |
+ | P-6 | Phase 4 copy-scan + standing journeys | `package-final17` | PASS | ux-audit/run-phase4.sh | packaged |
+ | P-7 | visual5 probes a/b/c | `package-visual5` | PASS (probe b reproduces engine-loss findings 16/17 — recorded, not a regression) | ux-audit/visual/runs/visual5-{a,b,c} | packaged |
++| P-8 | R10 engine-loss/recovery journeys (kill → reconnecting → supervised restart → durable preserved → repeat → could-not-recover → manual retry) | `package-r12` era (lane package, engine 1.6.0) | PASS — r10-g full (5 screenshots), r10-f fast-fail focused (2 screenshots); DOM leak scan clean; console 0 | ux-audit/runs/r10-{f,g}/ | packaged |
++| P-9 | R12 installed probes: fresh + upgrade-DB (installer → silent install → launch → Work/attention/About → uninstall) | `package-r12` (installed) | PASS — exit-0 install; healthy 1.6.0; attention section present; About K renders; 0 leaks; 0 console errors; 0 horizontal overflow (5 routes) | ux-audit/runs/r12-{fresh2,upgrade,upgrade-out,r12-installed}; r12-install-result.json | packaged |
++
++## A-28 — R10 packaged engine-loss/recovery journey (2026-09-18)
++
++Command: `node ux-audit/r10-engine-loss-probe.cjs <appDir> <root> <out>` + `r10-d-cannot-restart.cjs`.
++Result: **PASS** (r10-f/r10-g on the final lane package with the frozen 1.6.0 engine; the full
++journey required sequence mapped in `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`;
++`[KEL-LINK]` transitions: connected → reconnecting → recovered ×2 → unrecoverable → manual
++retry → recovered). Category: packaged/journey. Note: engine variants not constructible in the
++isolated profile (approval-wait loss, effect reconciliation) are covered at engine level (A-29).
++
++## A-29 — R12 final Campaign A battery (2026-09-19)
++
++- Engine full suite on the merged tree: **998 passed + 10 subtests** (284.53s) — log
++  `ux-audit/r12-engine-suite.log` (`ENGINE_EXIT=0`). Includes the failure-injection families:
++  `test_v16_r2_idempotency` (duplicate submission/result), `test_v16_r4_approval_exact`
++  (approval misuse/mutation/window), `test_v16_r5_persistence` (malformed payloads),
++  `test_v16_r6_liveness` (stale run/liveness separation), `test_v16_r7_credentials`,
++  `test_v16_r8_identity`/`test_v16_r8_migrations` (runtime identity mismatch, fresh/upgrade DB,
++  all V1.6 migrations), `test_v16_restore_visibility` (restore failure), `test_v16_r1_authority`
++  + `test_v16_r3_retry_durability` (authority widening, retry exhaustion), `test_v16_approvals`
++  + `test_v16_sweep_fixes` (cross-scope ids, leases), workforce D1–D3 suites (verification
++  failure, evidence binding), provider tests (`test_v14_providers.py`).
++- Desktop on the merged tree: `tsc` 0; vitest **122/122** (12 files).
++- R12 installed battery: see P-9 row. Installed package metadata: `Kel · Kel · 1.6.0`;
++  Add/Remove `DisplayName=Kel · Publisher=Kel · DisplayVersion=1.6.0`; engine SHA-256
++  `69123AF0…` equals the frozen runtime; install → uninstall lifecycle clean (dir, registry,
++  desktop + start-menu links removed).
++- Release integrity: `ux-audit/runs/r12-integrity.txt` (remote exact; frozen refs unchanged;
++  secret scan 0 actionable; no force push).
++- Packaged upgrade-DB boot: populated 1.6.0 data root booted on the installed app with all
++  conversations preserved, zero console errors (`ux-audit/runs/r12-upgrade/`).
+ 
+ ## Discrimination log (regression fixes)
+ 
++- R9/R10 supervision: r10-d/r10-e (pre-fail-fast) vs r10-f (post-fail-fast): could-not-recover
++  arrives in ~5 s instead of ~95 s — the 45 s-per-attempt burn was measured, fixed (`fa66f04`),
++  and re-measured.
++
+ Per §14 of the sprint directive, record discrimination where practical. `FAILS_PRE_FIX` /
+ `PASSES_POST_FIX` pairs are recorded in the phase records; entries:
+ 
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index e7eb685..81883f2 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,25 +1,25 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-19T00:35:00Z
++updated_utc: 2026-09-19T01:00:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: R0-R11 COMPLETE — visual lane integrated into Main (merge `7267630`; batches 1-8 + R9.D + R10 supervision on Main); next: R12 battery + PRE_AUDIT_V1_6_HEAD; see `git log --oneline -20`
++head: R0-R12 COMPLETE — Campaign A finished; PRE_AUDIT_V1_6_HEAD created (resolve via `git log --format=%H -n1 --grep='PRE_AUDIT_V1_6_HEAD' --fixed-strings`; RC doc `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+ sprint_campaign: CAMPAIGN_A
+-audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
++audit_mode: READY_FOR_CAMPAIGN_B (hostile audit in a FRESH context — directive §15; do not self-audit in this thread)
+ roadmap: docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md (adopted 2026-09-18; governs R0-R12; Round 2.5 hardening + remaining Campaign A critical path)
+ pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
+ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R0-R9 COMPLETE; R10 COMPLETE (packaged engine-loss journey PASS: `ux-audit/runs/r10-{f,g}`, 7 screenshots, DOM leak scan clean); R11 COMPLETE (visual lane → Main merge `7267630`, zero overlapping files, post-merge tsc 0 + vitest 122/122).** **Next: R12** — full engine suite + desktop suite + packaged/installed battery (fresh package + installer from the MERGED Main), failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD.
+-current_phase: R12 - final Campaign A regression + packaged/installed battery (the marathon's last gate before PRE_AUDIT_V1_6_HEAD)
++current_increment: **R0-R12 COMPLETE.** R10 packaged engine-loss journeys PASS (`ux-audit/runs/r10-{f,g}`). R11 integrated (`7267630`). **R12 battery:** engine **998 passed + 10 subtests** on the merged tree; desktop tsc 0 + vitest **122/122**; **RC package `package-r12`** — NSIS `Kel-1.6.0-win-x64.exe` (stock template; silent install exit 0; shortcuts; uninstall clean), engine SHA `69123AF0…` = frozen runtime, metadata `Kel · Kel · 1.6.0`, Add/Remove `Kel · Kel · 1.6.0`; installed probes fresh + upgrade-DB PASS (attention section + About K present; 0 leaks/errors/overflow); release integrity 0 actionable, frozen refs unchanged. **PRE_AUDIT_V1_6_HEAD created.** STOP boundary: no Campaign B/C, no release freeze.
++current_phase: PRE_AUDIT RELEASE CANDIDATE READY (Campaign A complete; Campaign B not started)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+@@ -28,7 +28,7 @@ audit_required: false
+ audit_last_seen_head: 8a2b25d
+ audit_last_seen_verdict: CONTINUE (increment 24 — all F23-1..F23-10 closed; 24-N1..N3 informational)
+ 
+-visual_state: INTEGRATED (R11 `7267630`; verification continues in the R12 battery)
++visual_state: INTEGRATED — verified by the R12 battery (`package-r12` installed probes: attention section + About K present, 0 console errors); human pixel gate PENDING by design
+ visual_clean_head: 60b2322
+ visual_required: true
+ visual_last_seen_head: bc92f7f (code `fa66f04`; integrated into Main at `7267630`; tsc 0; vitest 122/122; R10 packaged journey PASS — `ux-audit/runs/r10-{f,g}`)
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R12 — the full pre-audit battery on the MERGED tree, then PRE_AUDIT_V1_6_HEAD.** Engine: full suite (fresh DB, upgrade DB, migrations, authority, approvals, leases, idempotency, effects, retry-durable, persist-canonical, liveness, recovery, memory, continuation, providers, routing, D1-D3, assurance, learning, evidence, completion, lineage, vetting, transcription, restore, release identity). Desktop: tsc + full vitest. Packaged/installed: rebuild from the merged Main (NSIS installer + icons + About + branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals + capabilities + memory + transcription + artifacts + Workforce assertions + Needs Your Attention + engine-loss + console/overflow/routes). Failure injection (engine loss/restart failure, provider unavailable, stale run, duplicate result/submission, approval misuse, cross-project IDs, stale lease, restore failure, malformed payloads, identity mismatch, retry exhaustion, verification failure). Release integrity (branch/worktree/remote exact, no force push, scan 0 hits, frozen refs untouched). Then finalize `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` (PRE_AUDIT_V1_6_HEAD=<sha>) + the full handoff corpus. STOP there — no Campaign B/C, no release freeze.
++next_autonomous_action: **NONE — Campaign A is complete.** The next actor is Campaign B (independent hostile audit) in a FRESH context, using `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` + the pre-audit corpus. Frozen refs, `main`, and the final release freeze remain untouched by design (directive §15). Human visual gate: PENDING (never claimed).
+ external_dependency: NONE
+ stop_reason: NONE

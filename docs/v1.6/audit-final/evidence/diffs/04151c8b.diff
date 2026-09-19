@@ -1,0 +1,2356 @@
+commit 04151c8b5062c6d5f8bf91bb19526649d62a513c
+2026-09-17 14:07:48 -0400
+docs(v1.6-visual): carry the Visual UX plan set onto the implementation branch
+
+
+diff --git a/docs/v1.6-visual-ux/00_STATUS.md b/docs/v1.6-visual-ux/00_STATUS.md
+new file mode 100644
+index 0000000..9d791d8
+--- /dev/null
++++ b/docs/v1.6-visual-ux/00_STATUS.md
+@@ -0,0 +1,104 @@
++# Kel V1.6 — Human Visual UX Audit · 00 STATUS
++
++Audit performed by the independent Human Visual UX reviewer thread.
++**Production code was NOT modified in this phase.** The only new worktree is the isolated audit worktree below.
++
++| | |
++|---|---|
++| Audit baseline (source of truth) | `ffeef73` — `feat(lineage): every generated artifact can say where it came from (v1.6)` |
++| Audit worktree | `C:\Users\Nick\Desktop\Kel\kel-v16-visual-audit` on branch `audit/v16-visual-ux` |
++| Runnable artifact inspected | `C:\Users\Nick\Desktop\Kel\kel-ux-v15\dist\package-final16\win-unpacked\Kel.exe` (built 09:27, i.e. **after** `ffeef73` 03:08 and **before** the Phase 3 commit 09:44 — so it is `ffeef73` + Phase 3 work-in-progress) |
++| Immutable checkpoint | `v1.6.0-pre1` → `f24d9c2`. Not touched. |
++| `kel-ux-v15` (active main worktree) | **Not written to.** Read only. |
++| Status | **VISUAL AUDIT COMPLETE — WAITING FOR PHASE 3 INTEGRATION HEAD** |
++
++## Why this audit exists
++
++Mechanical verification passed repeatedly while obvious human UX problems remained. This audit therefore
++optimises for *what a person sees*, not for whether a check went green. Findings are split into:
++
++* **Reproduced** — observed in the running packaged app, with a measurement or DOM text capture.
++* **Source-mapped** — deterministic from code with file:line (a read of the code that renders it).
++* **Judgement** — a design opinion, explicitly labelled, with the reasoning given.
++
++## Method, and one important limitation (stated plainly)
++
++**No vision channel was available to this reviewer.** Screenshots returned as raw base64/artifact data that
++could not be perceived as images, so this audit does **not** claim to have "looked at" any screenshot.
++Instead it established what the user sees by four measurable routes:
++
++1. **Live DOM measurement** of the running packaged app (geometry, computed styles, font-size histograms per
++   surface, WCAG contrast ratios per text node, element identity across interactions).
++2. **Source reading** of the exact components that render each surface (file:line throughout these docs).
++3. **Reproduction** of the reported failures (engine loss, settings navigation, hover overlap) with the
++   observed output pasted in.
++4. **Screenshots retained as evidence** for a human reviewer — in `docs/v1.6-visual-ux/screenshots/` (35 files).
++
++Where the mechanism could not be observed end-to-end (e.g. an OS colour dialog closing, which cannot be
++driven from outside), the doc says so and gives the measured proxy plus the source-level cause.
++
++**Theme labelling of the retained screenshots:** the app's default theme is **light**. Files suffixed
++`-light-1440` were captured in **light**; files suffixed `-dark-1440` were captured after the in-app theme
++toggle switched to dark. The shell screenshot `shell-1440-light.png` is the post-onboarding default state.
++
++## Evidence index
++
++| Evidence | Location |
++|---|---|
++| Full DOM/contrast/geometry sweep, 23 surfaces | `evidence-visual-a.json`, readable digest `evidence-visual-a.txt` |
++| Interaction + engine-loss reproduction | `evidence-visual-b.json`, digest `evidence-visual-b.txt` |
++| Populated sidebar, hover overlap, hex field | `evidence-visual-c.json` (full), `evidence-visual-c.json` |
++| Screenshots (35) | `screenshots/` |
++| Probe scripts (scratch, outside the repos) | `C:\Users\Nick\Desktop\Kel\ux-audit\visual\probe-{a,b,c}.cjs`, `summarize.cjs`, `dbprobe.py` |
++| Raw probe output | `C:\Users\Nick\Desktop\Kel\ux-audit\runs\visual-{a,b,c}\` |
++
++Reproduction commands (re-runnable, isolated profile, off-screen window):
++
++```bash
++export NODE_PATH="C:\Users\Nick\Desktop\Kel\kel-ux-v15\desktop\node_modules"
++node probe-a.cjs "<appDir>" "C:/Users/Nick/Desktop/Kel/ux-audit/roots/visual-a" "<outDir>"
++```
++
++## Headline results
++
++**Three of the user's reported problems were reproduced exactly; one was corrected against the evidence.**
++
++* **Reproduced:** engine loss produces raw `TypeError: fetch failed` on all five engine screens (Work,
++  Projects, Permissions, Team, Transcription). See `09_ERROR_STATES.md`.
++* **Reproduced:** Settings → Agents / Team roles / Tools throws the user out of the Settings shell into the
++  main application sidebar. See `04_SIDEBAR_AND_NAVIGATION.md`.
++* **Reproduced by measurement:** the conversation-row hover action overlaps the title's box by exactly
++  **12px**. See `03_CHAT_AND_COMPOSER.md`.
++* **Corrected:** New Chat does **not** create a temporary conversation — it creates nothing at all, so there
++  is nothing to auto-remove. The *related* complaint (empty conversations linger) is real but has a
++  different cause: message-less conversations exist in the store and render as sidebar rows.
++  See `01_HUMAN_FINDINGS.md` items 11–12.
++
++**Also measured and worth stating up front:** the Kel "Desk" token system itself is contrast-clean — Work,
++Projects, Permissions, Team, Providers and Diagnostics produced **zero** WCAG AA offenders in both themes.
++Every contrast failure found sits in **donor surfaces** (settings, theme gallery, transcription page) or in
++one native-control case. So the readability problem is *not* the Kel palette; it is the places that never
++adopted it. See `08_DARK_LIGHT_READABILITY.md`.
++
++## Files in this set
++
++| File | Contents |
++|---|---|
++| `00_STATUS.md` | This file |
++| `01_HUMAN_FINDINGS.md` | All 17 reported problems, checked one by one, with severity |
++| `02_VISUAL_SYSTEM.md` | Token audit vs the stated visual direction; proposed design-system changes |
++| `03_CHAT_AND_COMPOSER.md` | Chat surface, composer, model/tool placement, hover actions, New Chat |
++| `04_SIDEBAR_AND_NAVIGATION.md` | Sidebar semantics, folders vs Projects, Settings shell, nav inventory |
++| `05_WORK_PROJECTS_PERMISSIONS.md` | The three Kel "console" pages |
++| `06_TRANSCRIPTION.md` | Donor IA vs current Kel IA, and the exact target structure |
++| `07_TEAM_AND_AGENTS.md` | Agent/Team/Roster/Office/Studio terminology and what actually exists |
++| `08_DARK_LIGHT_READABILITY.md` | Measured contrast ratios, light and dark |
++| `09_ERROR_STATES.md` | Engine launch/reachability audit and error-state design |
++| `10_IMPLEMENTATION_OWNERSHIP.md` | Ownership, sequence, Phase-3 conflict analysis, branch plan |
++| `AUTO_RESUME.md` | Resume state for whoever picks this up |
++
++## Stop point
++
++Per the brief: **no production-code remediation has started.** The next action is to receive the Phase 3
++Integration Coordinator's committed HEAD, re-base `audit/v16-visual-ux` onto it, and begin at the sequence in
++`10_IMPLEMENTATION_OWNERSHIP.md`.
+diff --git a/docs/v1.6-visual-ux/01_HUMAN_FINDINGS.md b/docs/v1.6-visual-ux/01_HUMAN_FINDINGS.md
+new file mode 100644
+index 0000000..c95000f
+--- /dev/null
++++ b/docs/v1.6-visual-ux/01_HUMAN_FINDINGS.md
+@@ -0,0 +1,369 @@
++# 01 — Human Findings (the 17 reported problems, checked one by one)
++
++Severity: **S1** blocks or misleads a normal user · **S2** major friction/credibility · **S3** moderate ·
++**S4** polish. "Reproduced" = observed in the packaged app. "Source-mapped" = deterministic from code.
++"Judgement" = design opinion, labelled.
++
++---
++
++## 1. Theme colour picker closes while interacting with it — **S2 · source-mapped + measured proxy**
++
++**What actually happens.** `AppearanceSettings` → `AppearanceModalContent` → `ThemeColorsSection`
++(`components/kel/ThemeColorsSection.tsx`). Each row renders a native `<input type="color">`
++(`ThemeColorsSection.tsx:107-120`) and the whole list is keyed on a counter:
++
++```tsx
++// ThemeColorsSection.tsx:154,196-199
++const [refresh, setRefresh] = useState(0);
++const handleChanged = useCallback(() => setRefresh((value) => value + 1), []);
++...
++<div className='divide-y divide-border-2' key={`${themeId}:${refresh}`}>
++  {FEATURED.map((row) => (
++    <ThemeColorRow key={`${themeId}:${row.token}:${refresh}`} ... onChanged={handleChanged} />
++```
++
++and each change both bumps local state and notifies the parent:
++
++```tsx
++// ThemeColorsSection.tsx:97-101
++const apply = useCallback(async (value) => {
++  await setThemeOverride(activeThemeId(), token, value);
++  setRev((n) => n + 1);
++  onChanged?.();          // -> setRefresh -> new keys -> row subtree re-created
++}, [onChanged, token]);
++```
++
++**Measured evidence.** Driving the sibling hex field on the same row (`[data-testid="theme-hex-bg-base"]`),
++150 ms after the first change event: `focused: false`, `document.activeElement === BODY`, while the
++override *did* apply (`--bg-base` became `#123456`). The control loses its element identity on the very
++first change — the mechanism that would dismiss an OS colour dialog whose owner element is replaced.
++`evidence-visual-c.json → hexField`.
++
++**Honest limitation.** The OS colour dialog itself cannot be driven from outside the app, so the closure was
++not observed directly. The two facts that stand on their own: a change event re-creates the row subtree, and
++the change event immediately moves focus to `<body>`.
++
++**Also here.** `apply()` writes config on **every** `change` event (the native picker fires continuously
++while dragging), so this is also unnecessary write amplification.
++
++**Fix direction.** Remove `refresh` from the React keys (or isolate the swatch in a non-keyed child), apply
++on `change` (committed value) rather than on every `input` event, and keep the row's DOM identity stable.
++
++---
++
++## 2. Model/tool selection belongs in the composer, not detached at the top — **S2 · source-mapped**
++
++The control is passed to the conversation header, not the composer:
++
++```tsx
++// pages/conversation/components/ChatConversation.tsx:443-465
++const headerExtraNode = ( <div className='flex items-center gap-8px'> ...
++    {modelSelector && <div className='shrink-0'>{modelSelector}</div>} ... </div> );
++return ( <ChatLayout ... headerExtra={headerExtraNode} ...> );
++```
++
++`modelSelector` renders `KelModelPill`, `KelToolsControl`, `KelMemoryProposalControl`
++(`ChatConversation.tsx:395-403`). So the three controls a user reaches while *composing* sit in the window
++title/header strip, far from the text they affect. Mobile already moved model choice into the composer's
++`+` sheet (`ChatConversation.tsx:373-374`), which is the pattern the desktop should follow.
++
++**Fix direction.** Move the pill/tools/memory controls into the composer row (SendBox), keeping the header
++for the conversation title. Keep the invisible `AcpModelSelector` warm-up mount where it is for readiness.
++
++---
++
++## 3. Settings navigation unexpectedly falls back into the main application sidebar — **S1 · reproduced**
++
++**Reproduced output** (`evidence-visual-b.json → settingsNav`, and `evidence-visual-a.json → settingsNav`):
++
++```
++#/settings/appearance  hasSettingsSider: true   hasMainNavWork: false
++#/team/roster          hasSettingsSider: false  hasMainNavWork: true     <-- clicked "Agents"
++#/team/roster          hasSettingsSider: false  hasMainNavWork: true     <-- clicked "Team roles"
++#/autonomy             hasSettingsSider: false  hasMainNavWork: true     <-- clicked "Tools"
++```
++
++**Root cause.** `Sider` swaps the sidebar by URL prefix only — `pathname.startsWith('/settings')`
++(`components/layout/Sider/index.tsx:44`). But the settings sider still advertises entries whose routes
++redirect *outside* that prefix (`components/layout/Router.tsx:113-140`):
++
++| Settings entry (label the user sees) | Route | Redirects to |
++|---|---|---|
++| Agents | `/settings/agent` | `/team/roster` |
++| Team roles | `/settings/skills` | `/team/roster` |
++| (legacy) Assistants / Capabilities / Skills hub | `/settings/assistants`, `/settings/capabilities`, `/settings/skills-hub` | `/team/roster` |
++| Tools | `/settings/tools` | `/autonomy` |
++
++`SettingsSider` still builds menu items for `agent`, `skills` and `tools`
++(`pages/settings/components/SettingsSider.tsx:34-40, 88-110`). The user is in Settings, clicks a Settings
++row, and the Settings sidebar is replaced by Work/Projects/Permissions/Transcription with no transition or
++explanation. There is no back affordance to Settings other than the footer row.
++
++**Fix direction.** Either keep those destinations inside the Settings shell (render the Team/Tools surfaces
++at `/settings/team-roles`, `/settings/tools`) or remove/rename the settings rows so no Settings entry
++navigates out of `/settings`. Preference: **name the destination, don't silently teleport** — if Team roles
++lives in Team, the Settings row should say "Team roles → opens Team", or the page should move.
++
++---
++
++## 4. Dark-mode readability problems — **S2 · measured**
++
++Measured WCAG ratios (all below the AA threshold for their size; `evidence-visual-a.json`):
++
++| Surface | Text | px | Ratio | Need |
++|---|---|---|---|---|
++| Transcription (light) | "Folders", "Recent Transcriptions" | 12 | **3.24** | 4.5 |
++| Transcription (light) | "Group recordings into folders…", "Nothing here yet.", "Practice mode" | 11 | **3.24** | 4.5 |
++| Transcription (dark) | "Source" (the key/settings entry point) | 12 | **2.21** | 4.5 |
++| Settings → Appearance (light) | "Light" / "Dark" / "Follow System" theme-card labels | 13 | **1.06** | 4.5 |
++| Settings → Appearance (both) | "Reset" (colour override) | 14 | 1.7 / **2.13** | 4.5 |
++| Settings → Model | "Needs setup" chip | 11 | **2.92** | 4.5 |
++| Settings → System | "Back up now" (a **button**) | 14 | **1.23** | 4.5 |
++| Settings → System | "Restore from this backup" | 14 | **1.5** | 4.5 |
++| Settings → System | "Clear" | 14 | 3.25 | 4.5 |
++
++Contrast failures are **not** in the Kel token system — Work/Projects/Permissions/Team/Providers/Diagnostics
++measured **zero** offenders in both themes. They are in donor surfaces that never adopted the Kel palette,
++plus the theme gallery's white-on-light preview labels. Details and the mechanism in
++`08_DARK_LIGHT_READABILITY.md`.
++
++---
++
++## 5. Hover actions overlap conversation titles — **S2 · reproduced and measured**
++
++```
++hover = { rowHeight: 34, rowRight: 252, nameRight: 236, actionLeft: 224, actionWidth: 20,
++          overlapPx: 12, rowPaddingRight: "16px" }
++```
++(`evidence-visual-c.json → hover`)
++
++**Root cause.** `ConversationRow` reserves 16px for its end actions (`pe-16px`,
++`GroupedHistory/ConversationRow.tsx:206`) but the action cluster is absolutely positioned at `end-8px` and
++is 20px wide (`ConversationRow.tsx:314-318, 370-377`) — occupying 28px. The title's flex box therefore
++extends 12px underneath the button. Short titles are unaffected; any title long enough to fill the
++available width is covered on hover, exactly when the user is trying to read it.
++
++**Fix direction.** Reserve the real action width (`pe-28px`/`pe-32px`, or a hover-revealed gutter with a
++fade mask), so the title ellipsises *before* the button instead of under it.
++
++---
++
++## 6. Transcription UI diverged too far from the standalone Transcriptions app — **S2 · source-mapped**
++
++Full comparison in `06_TRANSCRIPTION.md`. Summary of the divergence: the left column lost its
++`Transcriptions` title and its `API Key` entry (replaced by a bottom-of-column `Source` text button that
++measures 2.21:1 in dark), section titles became `FOLDERS` / `RECENT TRANSCRIPTIONS`, the main action row
++moved to the **top-left** and reordered to `Record · Upload Audio` (donor: `Upload Audio · Record More ·
++Record`, right-aligned), the transcript title is 16px body weight with a `Rename` button, and the action
++footer grew from 4 actions to **8** (Copy, Download Transcript, Download Audio, Combine with…, Send to chat,
++Use as vetting answers, Think out loud, Delete) inside a bordered top rule. Both columns are wrapped in
++bordered rounded "cards" over a page background, where the donor used full-height panel surfaces.
++
++---
++
++## 7. Permissions is too technical and too large — **S2 · measured + source-mapped**
++
++Measured text volume per surface (characters of visible text): **Permissions 3,615** · System 2,285 ·
++Diagnostics 1,851 · Providers 1,775 · Appearance 695 · **Work 605** · Transcription 401 · Projects 383 ·
++Team 333. Permissions is the single most text-heavy surface in the product — **6× Work, 11× Team**.
++
++On screen it contains: `Reload` and `Emergency stop` side by side in the header; a three-line paragraph
++explaining emergency stop; "Capability leases" (columns `Job · State · Review · Expires · Scope` showing raw
++job ids, `review_ref` values and `kind: value` scope strings); "Boundary requests" with each request wrapped
++in a **nested card** (a `kel-card` inside a `kel-card`, `pages/kel/autonomy/index.tsx:190`); "Ask the engine
++about a scope" — a policy-checker debug tool with kind tabs (write/repo/browser/tool/destructive), a target
++input and an `Ask the engine` button; and "Locked guardrails · digest <12 hex chars>" with `kel-code` test
++identifiers. Copy such as *"Issue a lease first; the check needs a scope to test against."* is engine jargon
++in a user-facing sentence.
++
++---
++
++## 8. Projects is too vague/large — **S1 (mis-titled, not merely vague) · source-mapped**
++
++`/projects` → `Navigate to /projects/knowledge` → `pages/kel/projects/index.tsx`, which reads
++`kelWork('main')` and shows tabs **Knowledge / Map / Recipes** for a single implicit project. The header
++renders literally:
++
++> `Projects` — *"General · 0 knowledge records · map — · 5 recipes"*
++
++There is no project list, no project switcher, no way to create or open a project. Meanwhile the **sidebar**
++"Projects" section is a different concept entirely (workspace folders — see `04_SIDEBAR_AND_NAVIGATION.md`).
++So the same word labels two unrelated things, and the page a user expects (their projects) does not exist.
++Confirmed live: `textHead` for `#/projects/knowledge` begins `Projects General · 0 knowledge records · map — · 5 recipes`.
++
++---
++
++## 9. Work is too card-heavy and oversized — **S2 · measured + source-mapped**
++
++The page renders **four stacked bordered cards** unconditionally (`pages/kel/work/index.tsx:150-330`):
++`Jobs`, `Verification — …`, `Waiting to continue`, `Team assignments`. Two of them render their empty state
++*inside* a card, so a single sentence is framed by two nested rounded rectangles (`kel-card` border 1px +
++radius 10 + pad 24 → `kel-empty` dashed border + radius 10 + pad 32).
++
++Font histogram for Work (`evidence-visual-a.json → work`): `{14:127, 16:438, 24:35, 32:4, 48:1}` — 438
++characters at 16px body, 3 card headings at 24px, one 32px page title, on a page whose total information
++content is one sentence.
++
++---
++
++## 10. Sparse information at enormous visual scale — **S2 · measured**
++
++The scale comes from the token layer, not from individual components: `--kel-type-h1: 32px`,
++`--kel-type-h2: 24px`, `--kel-type-body: 16px`, `--kel-space-4: 24px` card padding,
++`--kel-space-5/6: 32/48px` page padding, `--kel-gutter: 32px`
++(`renderer/styles/kel-tokens.css:51-74`). A desktop app shell with a ~250px sidebar renders an empty
++"Waiting to continue" card at 24px heading inside 24px padding and 24px gaps. Projects is the clearest case:
++`map —` and `0 knowledge records` occupy a 32px page title with an 8-character 32px heading above a 24px
++card heading above a 16px sentence.
++
++---
++
++## 11. New Chat should create a temporary conversation immediately and remove it if abandoned empty — **S3 · reproduced; the premise is wrong**
++
++`New Chat` → `handleNewChat` → `navigate('/guid', { state: { resetAssistant: true } })`
++(`components/layout/Sider/index.tsx:54-66`). Measured on a populated profile: `rowsBefore: 5`,
++`clicked: true`, `hashAfterClick: '#/guid'`, `rowsAfterClick: 5`, `afterRoundTrip: 5`
++(`evidence-visual-c.json → newChat`).
++
++**So nothing is created.** There is no optimistic conversation and therefore nothing to garbage-collect.
++The user's *intent* (New Chat should feel like it started something real) is still unmet — the composer
++opens with no conversational identity, and the first message is what creates the thread. That is a legitimate
++design choice, but it is the opposite of what the user asked for, so it needs an explicit decision rather
++than a silent fix. **Recommendation: keep the current behaviour** (no empty conversation is better than a
++conversation that must be swept up) and instead make the empty composer read as a real starting point.
++
++---
++
++## 12. Empty abandoned conversations remain in the sidebar — **S2 · reproduced (different cause than #11)**
++
++The engine store in the audited profile holds **9 conversations, 6 of them with zero messages** (including
++`main`); the sidebar rendered 5 rows, two of which show the generic robot leading icon and correspond to
++seed/empty threads (`evidence-visual-c.json → sidebar.inventory`; store query in
++`C:\Users\Nick\Desktop\Kel\ux-audit\visual\dbprobe.py` output).
++
++So empty conversations are not created by New Chat — they exist because something created a conversation
++row without content (work/`main` conversations, seeding paths, an aborted first send). The sidebar lists
++them with the same weight as real conversations.
++
++**Fix direction.** Decide the rule once: either filter message-less conversations out of the sidebar, or mark
++them visually as empty drafts. `reconcileHistory.ts` is the place where engine history becomes sidebar rows.
++
++---
++
++## 13. Conversation robot/agent icons may be redundant — **S3 · source-mapped + measured**
++
++`ConversationRow.renderLeadingIcon` → `resolveConversationLeadingMark`
++(`pages/conversation/utils/conversationAssistantIdentity.ts:71-129`) resolves in this order: preset-assistant
++emoji → assistant avatar → **`assistant_fallback` (a generic `Robot` icon)** → backend logo → generic
++`MessageOne` icon. Measured on a real sidebar: **2 of 5 rows render `i-icon-robot`**, 3 render a round
++backend logo image.
++
++In Kel's stated one-assistant framing (`docs/v1.5/11_DESIGN_SYSTEM.md`: "the normal conversation does not
++expose model, worker, provider, or agent selection"), the leading mark distinguishes nothing for a normal
++chat: it is either the same backend logo on every row or a generic robot/message glyph. It costs 22px of
++row width on every row and competes with the unread dot and the hover actions.
++
++**Fix direction.** Keep the mark only where it carries information (an actual different assistant/backend,
++or a cron/waiting/generating state that already replaces it). Otherwise drop the leading slot and keep the
++row to title + state.
++
++---
++
++## 14. Project/folder semantics are unclear — **S1 · source-mapped**
++
++Three different things are called "project":
++
++| Name in UI | What it is in the code | Where |
++|---|---|---|
++| Sidebar **Projects** section | workspace groups — a filesystem workspace + its conversations | `GroupedHistory/index.tsx:221-238,416-420` |
++| Sidebar **Projects** nav entry (`/projects`) | the single engine project (`project_id: 'default'`, displayed as "General") knowledge/map/recipes console | `pages/kel/projects/index.tsx` |
++| `conversation.project_id` | an engine project id used to host the preview panel | `ChatConversation.tsx:229` |
++
++Groups in the sidebar are not user-created folders: they materialise from `workspaceGroup` data, and the
++only per-group affordances are expand/collapse, "start a new conversation here" and archive. There is no
++"create folder", no rename, no drag-to-move. Full inventory and recommendation in
++`04_SIDEBAR_AND_NAVIGATION.md`.
++
++---
++
++## 15. Add Agent / agent management is not discoverable or may not exist — **S2 · source-mapped**
++
++**It does not exist as user-facing creation.** The Team page's only creation path is seeding built-in role
++templates (`kelTeam.seed()`), and `kelApi.ts` exposes no create/define/update-role call — only
++`office`, `roster`, `seed`, `role`, `history`, `rollback`, `timeline` (`components/kel/kelApi.ts:331-352`).
++Studio renders role fields as **read-only text** with a "Locked guardrails — read-only" card and an
++append-only version history whose only mutation is rollback (`pages/kel/team/index.tsx:280-350`).
++
++The donor team-creation UI still exists in source (`TeamSiderSection.tsx`, including
++`TeamCreateModal` and pin/rename/archive) but **is never mounted** — nothing imports it (`grep -rn
++TeamSiderSection` finds only its own definition), and the donor team route is hard-disabled
++(`Router.tsx:61` `HIDE_DONOR_AGENT_SURFACES = true`, route `/team/:id` → `Navigate to '/guid'`).
++
++**Defect found while checking this:** in the Office empty state the button labelled **"Seed the default
++roster"** calls only `load()` — it can never seed (`pages/kel/team/index.tsx:191-196`). The Roster empty
++state calls `kelTeam.seed().then(load)` correctly (`:236-240`). A button that promises an action and does
++nothing.
++
++---
++
++## 16. Raw engine errors such as `TypeError: fetch failed` appear in user-facing surfaces — **S1 · reproduced**
++
++Every Kel page passes the raw JS error straight into user copy:
++
++```tsx
++// pages/kel/work/index.tsx:55-60
++setError({ cause: err instanceof Error ? err.message : 'The engine did not answer.',
++           fix: 'Check that the Kel engine is running, then press Reload.' });
++```
++
++Same pattern at `projects/index.tsx:50`, `autonomy/index.tsx:58`, `team/index.tsx:81`,
++`diagnostics/index.tsx:70`, `providers/index.tsx:76`, `onboarding/index.tsx:75`; and into action notes
++(`setNote(`${label} failed: ${...}`)`) at `work:73`, `projects:67`, `autonomy:75`, `providers:91,108,125`.
++
++Reproduced output (`evidence-visual-b.json → engineLoss`), captured verbatim:
++
++```
++Work could not be loaded / TypeError: fetch failed / Fix: Check that the Kel engine is running, then press Reload.
++Project context could not be loaded / TypeError: fetch failed
++Autonomy state could not be loaded / TypeError: fetch failed
++Kel could not read the team state / TypeError: fetch failed
++Kel could not load the transcript library / TypeError: fetch failed
++```
++
++Note also that on Work the error card renders **alongside** the empty-state cards ("Nothing waiting to
++continue.", "No specialist has been assigned yet."), so the page simultaneously says "failed" and "nothing
++here", which is worse than either alone.
++
++---
++
++## 17. Several engine-dependent screens failed on ordinary launch — **S1 · reproduced with a stated trigger**
++
++**Reproduced:** with the app running and the engine process stopped, all five engine screens show the errors
++in item 16 (screenshots `b-030-engine-lost-*.png`). **On a clean launch the engine is fine:** two independent
++fresh launches spawned `KelEngine.exe`, wrote `desktop-session.json` (`http://127.0.0.1:50850/`, pid 31296),
++and produced **0 console errors and 0 error surfaces across 23 inspected surfaces**.
++
++So this is **not** a deterministic fresh-launch race, and not a stale build. The product defect is the
++absence of engine supervision: `initializeKel` validates the descriptor once at boot (`/api/state`), spawns
++if needed with a 45s deadline, and thereafter **never re-checks, never re-spawns, and never degrades
++gracefully** (`process/services/kel/KelService.ts:23-122`). Any later engine exit — crash, a second instance
++quitting and calling `/api/shutdown-idle`, a stale descriptor, a locked database file — leaves a live window
++whose every engine request fails with a raw JS error and a "press Reload" instruction that cannot work.
++
++Full mechanism, ranked causes and the fix list: `09_ERROR_STATES.md`.
++
++---
++
++## Severity roll-up
++
++| Sev | Items |
++|---|---|
++| **S1** | 3 (settings nav leaves the shell) · 8 (Projects is not projects) · 14 (three meanings of "project") · 16 (raw engine errors) · 17 (no engine supervision) |
++| **S2** | 1 (picker) · 2 (model/tool placement) · 4 (readability) · 5 (hover overlap) · 6 (transcription divergence) · 7 (Permissions) · 9 (Work cards) · 10 (visual scale) · 12 (empty conversations) · 15 (no agent creation + dead seed button) |
++| **S3** | 11 (New Chat premise) · 13 (leading icons) |
++| **S4** | — |
++
++**Corrections to the reported list, for the record:** #11's premise is wrong (nothing is created, so nothing
++needs removing) and #12's cause is not New Chat. #13 is real but milder than stated — the icon is not
++meaningless, it is *undifferentiated* for normal chats. #5 is real and measurable but only bites titles long
++enough to fill the row. #4 is not a Kel-palette problem; it is a donor-surface problem.
+diff --git a/docs/v1.6-visual-ux/02_VISUAL_SYSTEM.md b/docs/v1.6-visual-ux/02_VISUAL_SYSTEM.md
+new file mode 100644
+index 0000000..6d295e8
+--- /dev/null
++++ b/docs/v1.6-visual-ux/02_VISUAL_SYSTEM.md
+@@ -0,0 +1,184 @@
++# 02 — Visual System: current state vs the stated Kel V1.6 direction
++
++Source of truth today: `desktop/packages/desktop/src/renderer/styles/kel-tokens.css` (429 lines).
++It is genuinely good work — one token file, one focus ring, a global reduced-motion fallback, a skip link,
++and it measures **AA-clean on every Kel page in both themes** (see `08`). The problem is not its quality; it is
++its **reach** and its **scale**.
++
++## 2.1 There are two design languages in the product
++
++| Language | Consumed by | Variable family | Radii seen |
++|---|---|---|---|
++| **Kel "Desk"** | `pages/kel/**` (Work, Projects, Permissions, Team, Transcription shell), `components/kel/**` | `--kel-*` | 10px card, 8px control, 999px chip |
++| **Donor / Arco** | sidebar, chat, settings shell, appearance, system, transcription internals, dialogs | `--color-*`, `--bg-*`, `--fill-*`, `text-t-*` | 6px, 7px, 8px, 12px, 16px |
++
++Evidence of the split:
++
++* `components/layout/Sider/SiderNav/KelNavEntries.tsx:47` — the primary nav uses Arco utilities
++  (`h-34px`, `rd-8px`, `text-t-primary`, `bg-fill-3`), not Kel tokens.
++* `pages/kel/transcription/index.module.css` — the transcription page uses `--color-border-2`, `--color-bg-2`,
++  `--color-text-3`, `--color-fill-1/2`, `--color-primary-light-*` (donor), **never** `--kel-*`.
++* `components/settings/SettingsModal/contents/AppearanceModalContent/index.tsx:73,82,109` — settings blocks are
++  `bg-2 rd-16px`.
++* `components/kel/ThemeColorsSection.tsx:190` and `components/kel/KelDataCard.tsx:32` — even *Kel*-owned
++  components adopt the donor `bg-2 rd-16px` block instead of `--kel-radius-*`.
++
++**Measured consequence:** six distinct radii are in live use — **6, 7, 8, 10, 12, 16px** (plus pills). The user's
++direction asks for *approximately 8px* button radius. Today the "New Chat" button measures **7px**
++(`shell-1440-light.png`; DOM `border-radius: 7px`), Kel buttons 8px, Kel cards 10px, theme cards 12px, settings
++blocks 16px, colour swatch 6px.
++
++## 2.2 Direction → gap, one line each
++
++| Direction (user) | Current | Verdict |
++|---|---|---|
++| dim navy / bluer slate-navy foundation | dark = `#101418 / #161b22 / #1c232c` — near-neutral charcoal with a faint blue cast | **Needs shift** to a deliberate bluer slate-navy |
++| slightly off-white primary text | dark text-1 `#e6edf3` | Close (slightly cool white) — keep, do not go pure `#fff` |
++| restrained pale sky/red/orange/pink/green/purple, semantic use | accent is a **saturated** green `#2fa37c`; chips pair *three* colour signals per chip | **Needs restraint** (see 2.4) |
++| avoid rainbow visual noise | Kel pages: 6 chip variants × (bg + fg + dot) + dashed borders | **Violated in chips** |
++| compact controls | h1 **32px**, body **16px**, rows 44px, card pad 24px, page padding 32/48px | **Violated** — see 2.3 |
++| ~8px button radius | 6/7/8/10/12/16px in use | **Needs one rule** |
++| strongly reduce rectangles/cards | `KelCard` + `KelSection` wrap every block; cards nested inside cards; empty states inside cards | **Violated** — see 2.5 |
++| never a card merely because information exists | `KelSection` is *always* a card; Work renders 4 cards unconditionally | **Violated** |
++| typography/spacing/dividers/hierarchy/disclosure first | partly there (`.kel-divider`, `.kel-meta`) but always inside a bordered box | **Partially met** |
++| no single-side coloured accent borders | only instance is a blockquote rule (`styles/markdown.css:81`) | **Met — keep it** |
++| normal assistant prose not in cards | chat renders assistant rows full-width (`MessageList.tsx:158` skeleton `bubbleWidth: '100%'`), user rows 78–84% | **Met in chat** |
++| special interaction cards only for meaningful structure | approvals cards (Phase 3) + `KelCard` everywhere | **Partially met** |
++| hover-reveal secondary actions | already the pattern (conversation rows, project rows, section "+") | **Met — keep** |
++
++## 2.3 Scale is the single biggest visual problem
++
++Measured per surface (`evidence-visual-a.json`, font-size histogram = characters rendered at each px):
++
++| Surface | 11px | 12px | 13px | 14px | 16px | 24px | 32px | Total chars | Reading |
++|---|---|---|---|---|---|---|---|---|---|
++| Work | 0 | 0 | 0 | 127 | **438** | 35 | 4 | 605 | sparse content, large type |
++| Projects | 0 | 42 | 0 | 146 | 168 | 18 | 8 | 383 | same |
++| Team (office) | 0 | 21 | 0 | 162 | 139 | 6 | 4 | 333 | same |
++| Team (roster) | 0 | 6 | 0 | 162 | 96 | 6 | 4 | 275 | same |
++| Transcription | **89** | 34 | 0 | 248 | 29 | 0 | 0 | 401 | uneven |
++| Settings · Appearance | 0 | 177 | 128 | 386 | 3 | 0 | 0 | 695 | donor scale |
++| Settings · Model | 171 | 0 | 434 | 233 | 23 | 22 | 0 | 884 | donor scale |
++| Providers | 0 | 280 | 0 | 449 | **878** | 158 | 9 | 1775 | large |
++| Diagnostics | 0 | 279 | 0 | 1088 | 386 | 86 | 11 | 1851 | large |
++| Settings · System | 0 | **1259** | 416 | 582 | 3 | 24 | 0 | 2285 | dense small |
++| **Permissions** | 0 | 255 | 0 | **2037** | 1210 | 101 | 11 | **3615** | **largest, most technical** |
++
++So: **Permissions renders 6× the text of Work and 13× Team**, at 12–16px, on a 32px-titled page with 48px of
++bottom padding. The pages with the least information (Work, Team, Projects) are laid out at the largest scale;
++the page with the most information (Permissions) is the least scannable. That is the "sparse information at
++enormous visual scale" complaint, quantified.
++
++Concrete cause: `--kel-type-h1: 32px`, `--kel-type-h2: 24px`, `--kel-type-body: 16px`, `--kel-gutter: 32px`,
++`--kel-space-5/6: 32/48px`, `--kel-card-pad: 24px`, `--kel-row-height: 44px`. Those are marketing-web values
++applied inside a desktop shell with a ~250px sidebar.
++
++## 2.4 Status chips carry three colour signals
++
++`components/kel/KelPrimitives.tsx:23-30,49-56` + `kel-tokens.css` render, per chip: a tinted **background**, a
++coloured **text**, and a coloured **dot** — plus a dashed border for `uncertain` and a red border for `blocked`.
++Seven states (`running, waiting, verified, uncertain, failed, blocked, queued`) × 3 signals = visual noise that
++competes with the accent colour, and the copy inside them is a sentence, not a state
++("Uncertain — needs evidence", "Failed — see cause", "Blocked by guardrail").
++
++**Proposed:** one signal (a 6px dot or a single-colour text), the state word in plain language, and the
++explanatory clause moved out of the chip into the row's meta line. Reserve the tinted pill for the two states
++that actually need attention (`waiting`, `failed`).
++
++## 2.5 Card policy (the biggest structural change)
++
++Today: `KelCard` = bordered + shadowed + 24px padding + 10px radius; `KelSection` = *always* a card; `KelEmpty`
++= dashed bordered box with 32px padding. Consequences seen in source:
++
++* Work renders **four** cards unconditionally, two of which contain only an empty state
++  (`pages/kel/work/index.tsx:146-330`).
++* Permissions nests a `.kel-card` **inside** another `.kel-card` for each boundary request
++  (`pages/kel/autonomy/index.tsx:174`).
++* Work nests `KelSection` (a card) inside a `KelCard` for the receipt (`pages/kel/work/index.tsx:296`).
++* Empty states are rendered *inside* cards, so a single sentence is drawn inside two nested rectangles.
++
++**Proposed rule set (to be encoded in `kel-tokens.css` and the primitives):**
++
++1. A page has **one** primary surface. Everything else is typography + dividers.
++2. `.kel-card` is reserved for *interactive or self-contained* content (a form, a receipt, an approval). A list
++   or table is **not** a card — it gets a section heading and dividers.
++3. **No nesting.** `.kel-card` inside `.kel-card` is forbidden; use a divider and a label.
++4. Empty states never render inside a card, and never render two nested boxes: empty = one line of muted text
++   plus, at most, one quiet action.
++5. A section that is empty is **not rendered at all** on a page whose whole purpose is that section; on a
++   mixed page it collapses to a single line.
++6. Shadows: keep `--kel-shadow-card` only for surfaces that float (menus, popovers, modals). Flat pages get
++   borders only, or nothing.
++
++## 2.6 Proposed token changes (concrete)
++
++```css
++/* Suggested direction — dim navy / bluer slate-navy. Values are proposals, to be judged on screen. */
++[data-theme='dark'] {
++  --kel-surface-0: #0f1620;   /* app background: slate-navy, not charcoal */
++  --kel-surface-1: #16202c;   /* panels */
++  --kel-surface-2: #1d2a38;   /* raised / hover */
++  --kel-border:    #26374a;
++  --kel-border-strong: #35485f;
++  --kel-text-1:    #e9eef5;   /* slightly off-white, cool, never #fff */
++  --kel-text-2:    #a7b6c8;
++  --kel-text-3:    #7f8fa3;
++  --kel-accent:    #6ea8d8;   /* restrained pale sky — replaces saturated green as the primary accent */
++  --kel-accent-soft: #16283a;
++  --kel-accent-ink: #0f1620;  /* text sitting ON the accent */
++}
++
++/* Scale: desktop-app scale, not marketing scale */
++:root {
++  --kel-type-h1: 24px;   /* was 32 */
++  --kel-type-h2: 16px;   /* was 24 — card headings should read as labels, not headlines */
++  --kel-type-body: 15px; /* was 16 */
++  --kel-space-5: 24px;   /* was 32 */
++  --kel-space-6: 32px;   /* was 48 */
++  --kel-gutter: 24px;    /* was 32 */
++  --kel-card-pad: 16px;  /* was 24 */
++  --kel-row-height: 36px;/* was 44 */
++  --kel-radius-card: 8px;/* was 10 — one radius for surfaces and controls */
++}
++```
++
++**Semantic accent use.** The direction asks for restrained pale sky/red/orange/pink/green/purple *used
++semantically*. Proposed mapping, with pale (not saturated) values in both themes:
++
++| Meaning | Token | Use |
++|---|---|---|
++| neutral / informational | sky `--kel-accent` | links, quiet buttons, selected tab underline |
++| needs you | orange | `waiting` chip, the one attention colour |
++| failed / destructive | red | `failed`, destructive buttons (text-coloured, not filled) |
++| verified | green | `verified` chip only |
++| blocked by rule | purple | `blocked` chip only |
++| uncertain | pink/amber | `uncertain` |
++
++Red/orange/green/purple should appear as **text or a dot**, and be filled only when they are the primary action
++on that surface (e.g. "Emergency stop" confirmation, "Allow once" in an approval).
++
++## 2.7 Radii — one rule
++
++* Controls (buttons, inputs, rows, tabs): **8px**.
++* Surfaces (cards, panels, modals): **8px**. Menus/popovers may use 10px.
++* Chips/pills: 999px (unchanged) **or** 8px — but not both across surfaces.
++* Retire 6px, 7px, 12px, 16px from the product. The 16px settings blocks
++  (`AppearanceModalContent`, `ThemeColorsSection`, `KelDataCard`) become 8px and lose the `bg-2` fill in favour
++  of a section heading + divider.
++
++## 2.8 What to keep (do not regress)
++
++* `kel-tokens.css` single-file token discipline; components must not hard-code values.
++* The global focus ring (`:where(a, button, …):focus-visible`) — verified present.
++* `.kel-skip` skip link as the first tab stop on every Kel surface.
++* The global `prefers-reduced-motion` fallback.
++* The AA-clean text/border pairs measured in `08_DARK_LIGHT_READABILITY.md`.
++* Hover-reveal for secondary row actions (fix the geometry, keep the pattern).
++* The blockquote's `border-inline-start` — it is semantic, not decorative chrome.
++
++## 2.9 Deliverable for this section
++
++A single `DESIGN.md` is *not* requested here; the concrete proposal is: **edit `kel-tokens.css` in place** (it is
++already the designated source of truth, and its header comment still says "Direction Desk" — it should be
++re-labelled to the V1.6 direction), then migrate the donor-language surfaces listed in 2.1 to `--kel-*` tokens
++in the order given in `10_IMPLEMENTATION_OWNERSHIP.md`.
+diff --git a/docs/v1.6-visual-ux/03_CHAT_AND_COMPOSER.md b/docs/v1.6-visual-ux/03_CHAT_AND_COMPOSER.md
+new file mode 100644
+index 0000000..9567425
+--- /dev/null
++++ b/docs/v1.6-visual-ux/03_CHAT_AND_COMPOSER.md
+@@ -0,0 +1,151 @@
++# 03 — Chat and Composer
++
++Scope: conversation surface, composer, model/tool placement, hover actions, New Chat / empty conversations,
++per-row icons. Source: audit worktree @ `ffeef73`; runtime evidence from `package-final16` + Phase 3 WIP.
++
++Measured shell facts (1440×900, populated profile, `evidence-visual-c.json`):
++
++* conversation rows: **34px high, 244px wide, x=8, padding-left 10px**, 2px vertical gap
++* primary nav buttons: **34px high**, 36px vertical pitch (Work 127 → Projects 163 → Permissions 199 → Transcription 235)
++* titlebar row (y=3): Collapse / Search messages / Back / Forward, each 36×36, radius 6px
++* "New Chat": **34px high, 208px wide, radius 7px**, 14px label
++
++---
++
++## 1. Model and tool selection are detached from the composer — **S2 · source-mapped**
++
++`pages/conversation/components/ChatConversation.tsx:443–462` builds `headerExtraNode` containing, in order:
++
++1. `CronJobManager` (only when the assistant is not `kel`)
++2. `modelSelector` — which for Kel conversations resolves to a fragment containing
++   `KelModelPill`, `KelToolsControl`, `KelMemoryProposalControl` (`ChatConversation.tsx:377–411`)
++3. `AcpRuntimeRestartButton`
++
++That node is passed to `ChatLayout` as **`headerExtra`** (`ChatConversation.tsx:462–466`). So model, tools
++and the memory-proposal control all live in the conversation **header**, not the composer.
++
++Two further details matter:
++
++* **Mobile already does what the user wants.** `modelSelector` returns `undefined` when `isMobile`
++  (`ChatConversation.tsx:369–370`, comment: *"Mobile: model selection moves into the sendbox `+` action
++  sheet, so the header selector is suppressed to free up vertical space"*). The composer already owns a
++  model entry point on mobile — desktop is the inconsistent platform, not the reverse.
++* **The donor selector stays mounted but invisible** to warm the runtime: *"The donor selector stays mounted
++  (invisible): its warmup drives the sendbox/mic readiness. The Kel pill replaces it visually"*
++  (`ChatConversation.tsx:380–391`, `display:none` + `aria-hidden`). Any relocation must preserve that warmup
++  side-effect or the mic/readiness signal breaks. This is the single largest hidden risk in this change.
++
++**Recommendation.** Move `KelModelPill` + `KelToolsControl` (+ memory proposal) into the composer's tool row
++(`components/chat/SendBox/index.tsx`, `sendbox-tools` container around lines 2119–2127), keeping the header
++for the conversation title only. Keep the hidden warmup selector mounted exactly as is. This is a
++*relocation*, not a rewrite: same components, same handlers, no new state.
++
++## 2. Hover actions overlap conversation titles — **S2 · reproduced by measurement**
++
++`pages/conversation/GroupedHistory/ConversationRow.tsx`:
++
++* the row is `... pe-16px` (line ~199) — **16px reserved** on the end side
++* the actions container is `absolute end-8px top-1/2 -translate-y-1/2` holding a **20px** menu button
++  (`ConversationRow.tsx:307–312`, `size-20px`) plus the `Dropdown` trigger (`:352–380`)
++
++20 + 8 = **28px needed vs 16px reserved**. Measured on a real row:
++
++```
++rowRight 252 · nameRight 236 · actionLeft 224 · actionWidth 20 · rowPaddingRight "16px"
++overlapPx = nameRight − actionLeft = 12
++```
++
++So the hover-revealed menu covers the last **12px** of the title's box. In this capture the row's title was
++short enough (text ended at 177) that the collision was not visible; **any title long enough to use its
++available width is occluded on hover**, which is exactly when the user is reaching for the menu.
++
++**Recommendation.** Reserve the action area unconditionally: change the row's end padding to
++`pe-32px` (8 + 20 + 4) whenever the row can show actions, and/or wrap the title in a container whose right
++edge stops at the action area, and add a short horizontal fade on the title edge so truncation reads
++deliberately. Do not "fix" it by hiding the menu — the menu is the only rename/pin/archive path.
++
++## 3. New Chat creates nothing; empty conversations still exist in the store — **S2 · reproduced + measured**
++
++Measured on a populated profile (`evidence-visual-c.json`):
++
++```
++rows before New Chat : 5
++click New Chat       : hash → #/guid
++rows after click     : 5
++rows after round trip: 5
++```
++
++`Sider/index.tsx:60–75` (`handleNewChat`) only navigates: it cleans tooltips, blurs, closes the preview and
++`navigate('/guid', { state: { resetAssistant: true } })`. **No conversation is created, so there is nothing
++to auto-remove.** The user's proposed solution ("create a temporary conversation immediately, remove it if
++abandoned") therefore addresses a mechanism that does not exist in this build.
++
++The *related* complaint is real, with a different cause. The engine store for the audited profile held:
++
++```
++conversations: 9 · with 0 messages: 6  (including 'main')
++```
++
++and 2 of the 5 rendered sidebar rows carried the generic robot fallback icon, i.e. rows exist for
++conversations that never received a message. So message-less conversations **do** accumulate and render.
++
++**Recommendation.**
++1. Keep New Chat as a navigation (it is honest and cheap) — but **label the empty state so the user knows
++   nothing exists yet**, and make the composer the obvious first step.
++2. Fix the real defect: **do not render sidebar rows for conversations with zero messages**, or create the
++   conversation row lazily on first message. Filtering on the engine's message count is the smallest correct
++   change and needs no new lifecycle.
++3. If the product *wants* eager creation (the user's model), that is a deliberate behaviour change: create a
++   local draft on New Chat, never persist it, and drop it on leave/blur with no message. That is acceptable,
++   but it is a new state machine and should be sequenced *after* the cheap filter.
++
++## 4. Per-row robot/agent icons — **S3 · reproduced by measurement, icon is largely redundant**
++
++`ConversationRow.renderLeadingIcon()` (`:75–122`) resolves through
++`resolveConversationLeadingMark` (`pages/conversation/utils/conversationAssistantIdentity.ts:75–129`), which
++returns, in priority order: preset-assistant **emoji** → preset-assistant **image** → `assistant_fallback`
++(renders `<Robot>`) → agent **logo image** keyed by backend → `fallback` (renders `<MessageOne>`).
++
++Measured in a populated sidebar of 5 rows: **2 rows rendered `i-icon-robot`, 3 rendered a 16px round image
++logo** (`role="img"`). So the column carries a mix of: a per-backend logo (identical for every conversation
++on the same backend) and a generic robot/message glyph (identical for all rows in that branch).
++
++In Kel's documented one-assistant framing (*"The normal conversation does not expose model, worker, provider,
++or agent selection"*, `docs/v1.5/11_DESIGN_SYSTEM.md`), that icon distinguishes nothing a user cares about:
++it is either the same logo repeated or a generic glyph.
++
++**Recommendation.** Keep icons only where they carry information:
++* Hide the leading icon for plain single-assistant conversations (reclaim 22px + 8px gap of title width —
++  which also relieves finding #2's pressure).
++* Keep it for genuinely different kinds of row: scheduled/cron (`CronJobIndicator`), presence/status
++  (generating `Spin`, `Attention` waiting), fork lineage badge, team rows.
++* Do **not** delete the resolver: the emoji/image branches are meaningful for preset assistants and must
++  keep working.
++
++## 5. Composer — what is actually there (for the relocation in §1)
++
++`components/chat/SendBox/index.tsx` is 2248 lines and already renders a tool row:
++`sendbox-tools` / `sendbox-tools-mobile-compact` / `sendbox-tools-scroll-mobile` (~2119–2127). Voice input is
++a real control (`KelMicButton` replaces the donor browser-speech control —
++`pages/guid/components/KelMicButton.tsx`, wired at `SendBox/index.tsx:1659–1665, 1871`).
++
++**Judgement (labelled).** The composer is the one place in this app that already has correct tool density:
++a row of compact 8px-radius controls directly under the input. Moving the model pill and tools control there
++removes the header clutter *and* makes the header title the dominant element, which is what a desktop user
++expects. Nothing about the Kel model pill's semantics changes — "Automatic (Kel routing) plus an optional
++per-chat model choice" (`ChatConversation.tsx:382–384`) reads fine in a composer.
++
++## 6. Assistant prose is **not** carded — no change needed here
++
++The direction says normal assistant prose must not be wrapped in cards. Chat does not violate this: the
++message skeleton models assistant rows as **full-width** blocks (`bubbleWidth: '100%'`) and user rows at
++78–84% (`pages/conversation/Messages/MessageList.tsx:158–166`). Keep it that way when the composer is
++reworked. The card-everything problem is in the Kel console pages — see `05_WORK_PROJECTS_PERMISSIONS.md`.
++
++## Phase 3 conflict note
++
++Phase 3 touches exactly this area: `components/chat/KelWorkPanel.tsx`, `components/kel/KelApprovalCard.tsx`,
++`Messages/MessageList.tsx`, `Messages/hooks.ts`, `common/chat/chatLib.ts`. Section 1 (headerExtra) and
++section 2 (ConversationRow) are **orthogonal** to those files, but `KelWorkPanel` is mounted *inside*
++`Sider/index.tsx` (line ~180) — any sidebar restructuring must not drop it. Sequence this work **after**
++the Phase 3 HEAD lands and re-read those five files before editing.
+diff --git a/docs/v1.6-visual-ux/04_SIDEBAR_AND_NAVIGATION.md b/docs/v1.6-visual-ux/04_SIDEBAR_AND_NAVIGATION.md
+new file mode 100644
+index 0000000..976bf37
+--- /dev/null
++++ b/docs/v1.6-visual-ux/04_SIDEBAR_AND_NAVIGATION.md
+@@ -0,0 +1,141 @@
++# 04 — Sidebar and Navigation
++
++Everything below is measured from the running packaged build (`visual-a.json` shell capture) or read from the
++audit baseline `ffeef73`. The sidebar is 268px wide in the default (expanded) state; rows are 34px tall with a
++36px pitch.
++
++## 4.1 What the sidebar actually contains (measured, top → bottom)
++
++| y (px) | Item | Type | Evidence |
++|---|---|---|---|
++| 0–39 | Minimize / Maximize / Close | window controls | `visual-a.json` shell.nav |
++| 3 | Collapse, Search messages, Back, Forward | titlebar icon buttons, 36×36, radius 6px | shell.nav |
++| 91 | **New Chat** | button, **208×34, radius 7px** | shell.nav |
++| 127 | **Work** | primary nav row, 34px | `SiderNav/KelNavEntries.tsx:18` |
++| 163 | **Projects** | primary nav row | same |
++| 199 | **Permissions** | primary nav row | same |
++| 235 | **Transcription** | primary nav row | same |
++| — | *divider* | 1px `--color-border-2` | `Sider/index.tsx:196` |
++| — | **Pinned** | section label (only when non-empty) | `GroupedHistory/index.tsx:394` |
++| — | *(Team slot)* | **rendered empty** | `Sider/index.tsx:206` passes `afterPinnedContent={<></>}` |
++| — | **Projects** | section label; workspace folders | `GroupedHistory/index.tsx:417-419` |
++| — | **Conversations** | section label; today/yesterday/… | `GroupedHistory/index.tsx:241-249` |
++| bottom | **Back to Chat** / **Settings**, theme toggle (settings only) | footer | `SiderFooter.tsx:83-140` |
++
++Conversation rows measured at 34px height, 244px wide, `padding-left: 10px`; project-grouped rows indent to
++`ps-34px` (`ConversationRow.tsx:170`).
++
++## 4.2 Semantics — what each thing means (item 14 of the report)
++
++**The word "Projects" means two different things in the same application.** This is the single largest
++source of confusion in the sidebar, and it is not a styling problem.
++
++| Where | What "Project" means there | Evidence |
++|---|---|---|
++| Sidebar → **Projects** section | a **workspace folder on disk**, grouped with the conversations that ran in it | `GroupedHistory/index.tsx:221-238` — groups built from `item.workspaceGroup.workspace` / `display_name` |
++| Primary nav → **Projects** page | the engine's **knowledge / map / recipes console for the single implicit `default` project** | `pages/kel/projects/index.tsx:36` reads `/api/work`; header prints `project_id === 'default' ? 'General' : project_id` |
++| Engine | a real `projects` table exists | `roots/*/kel.sqlite3` — `projects` table present in every audited store |
++
++So a user who clicks **Projects** expecting their folders gets "General · 0 knowledge records · map — ·
++5 recipes" — a memory console. A user who sees a folder in the sidebar labelled as a project group cannot open
++it as a place at all.
++
++**Folders vs Projects:** they are not the same concept and neither is user-managed in the sidebar. Groups are
++derived from the workspace recorded on each conversation; the only per-group actions are "new chat in this
++workspace" and "archive project" (`GroupedHistory/index.tsx:426`, `460-490`). There is **no** create-folder,
++rename-folder, or move-conversation affordance anywhere in the main sidebar.
++
++**What a Project owns today.** From the engine store and the renderer: conversations (grouped by workspace),
++and — on the `/projects` page — memory records, the project map, and recipes, all for `project_id` `default`.
++The renderer never passes a project id to those calls: `kelWork('main')` and `kelMemoryAction(...)` default to
++`'main'`/`'default'` (`components/kel/kelApi.ts:170,178`). **Therefore a user cannot select, create, or scope a
++project from the UI at all**, and every Projects/Work surface silently reads the one implicit project.
++
++**How a user enters a Project from the sidebar: they cannot.** There is no project home surface and no route
++that opens a project. Documented plainly because the brief asked for exactly this determination.
++
++**Conversation robot/agent icons (item 13).** Measured on a populated profile: 5 rows → **2 rows show the
++generic `i-icon-robot` outline icon**, 3 show a round 16px agent logo image. The resolution logic
++(`utils/conversationAssistantIdentity.ts:74-127`) branches: preset-assistant emoji → emoji; preset-assistant
++image → image; `conversation.assistant` without avatar → **`assistant_fallback` → generic Robot**
++(`ConversationRow.tsx:104-112`); otherwise backend logo, else generic message icon
++(`ConversationRow.tsx:115-124`). In Kel's one-assistant framing (V1.5 G7 record: "the normal conversation does
++not expose model, worker, provider, or agent selection") this leading mark is decoration: it either repeats the
++same backend logo on every row or shows a generic robot/message glyph that distinguishes nothing. It is not
++misleading, but it is redundant — and it costs 22px + 8px of every row.
++
++## 4.3 Defect — Settings navigation ejects the user into the main sidebar (item 3) — **S1, reproduced**
++
++Clicking **Agents**, **Team roles** or **Tools** in the Settings sidebar replaces the settings sidebar with the
++main application sidebar, because those entries redirect *out of* the `/settings` prefix and the shell switches
++on the prefix only (`Sider/index.tsx:52`, `203-208`).
++
++| Settings entry (label the user sees) | Route | Redirect target | Result |
++|---|---|---|---|
++| Agents (`SettingsSider.tsx:87`) | `/settings/agent` | `/team/roster` | settings sidebar disappears |
++| Team roles (`SettingsSider.tsx:92`, `defaultValue: 'Team roles'`) | `/settings/skills` | `/team/roster` | settings sidebar disappears |
++| Tools (`SettingsSider.tsx:97`) | `/settings/tools` | `/autonomy` | settings sidebar disappears |
++
++Redirects: `components/layout/Router.tsx:129-141`.
++
++Measured, by clicking the entries in the running app:
++
++```
++#/settings/appearance  hasSettingsSider=true   hasMainNavWork=false
++#/team/roster          hasSettingsSider=false  hasMainNavWork=true
++#/team/roster          hasSettingsSider=false  hasMainNavWork=true
++#/autonomy             hasSettingsSider=false  hasMainNavWork=true
++```
++
++Two further consequences: the Settings footer entry flips from "Back to Chat" to **"Settings"**
++(`SiderFooter.tsx:83`), so the way back is not obvious; and because `/team/roster` and `/autonomy` are not
++settings routes, the user's next Settings click lands on **Appearance** again
++(`Sider/index.tsx:70-72` navigates to a fixed `/settings/appearance`, not the last settings tab).
++
++**Fix options (in preference order):** (a) give these three destinations real settings routes that render the
++same components inside the settings shell (e.g. `/settings/team`, `/settings/permissions`); (b) keep the
++redirects but render the Kel pages inside the settings shell when reached from settings; (c) if they are not
++settings, remove them from `SettingsSider` and put Team/Permissions in the primary nav where they belong.
++Do **not** fix this by making the main sidebar appear less often — the destinations are correct, the
++shell-switch trigger is wrong.
++
++## 4.4 Settings shell inventory and dead entries
++
++`SettingsSider` renders `model, agent, skills, tools, appearance, webui, pet, system, archived, about`
++(`SettingsSider.tsx:39-49`) with group headers AI Core / Application / Archived conversations / Other.
++`/settings/assistants`, `/settings/capabilities`, `/settings/skills-hub` are legacy redirects to
++`/team/roster` and should either be deleted or given an explicit "opens Team" affordance so the hop is
++intentional rather than a shell failure.
++
++## 4.5 Dead code found while tracing (not user-visible, worth knowing)
++
++`components/layout/Sider/TeamSiderSection.tsx` (327 lines: team list, pin, rename, archive, and the
++**create-team modal**) is **not imported or rendered anywhere** — `Sider/index.tsx` never mounts it, and
++`afterPinnedContent` is an empty fragment. The donor team route is disabled at the router
++(`Router.tsx:61` `HIDE_DONOR_AGENT_SURFACES = true` → `/team/:id` redirects to `/guid`). So the sidebar "Teams"
++feature is unreachable in V1.6 while its source remains in the tree. This is also why "Add Agent" cannot be
++found (see `07_TEAM_AND_AGENTS.md`).
++
++## 4.6 Empty / sparse sidebar states (items 10, 12)
++
++With no conversations the scroll area renders Arco's `Empty` with `t('conversation.history.noHistory')`
++(`GroupedHistory/index.tsx:258`) — a bare centred empty block inside a large white area; the four nav rows
++above it are 34px tall against a 900px viewport, so the sidebar reads as mostly whitespace. Recommend a
++one-line, left-aligned hint plus the New Chat affordance, not a centred illustration-style empty.
++
++## 4.7 Recommendation (minimum coherent model)
++
++1. **Rename the nav entry** `Projects` → **Knowledge** (or "Project knowledge"), because that is what the page
++   contains. Keep the word "Projects" for the sidebar folder groups — or rename those to **Workspaces**.
++   One word must not mean two things.
++2. **Promote the sidebar section labels to real structure**: Pinned / Workspaces / Conversations, with the
++   workspace disclosure showing "N conversations" and an explicit "Open project" action once such a surface
++   exists.
++3. **Make Permissions and Team reachable from the primary nav** (or from Settings, correctly staged — see
++   4.3). Today Team is reachable *only* through the settings entry that breaks the shell.
++4. **Drop the per-row leading icon** in the single-assistant case (keep it where a conversation genuinely
++   belongs to a different assistant), and reclaim the 30px for the title.
++5. **Reserve action space properly**: the row must reserve `end-8px + 20px + 8px gap = 36px`, not 16px
++   (see `03_CHAT_AND_COMPOSER.md` §3.4).
++6. **Never create a conversation that has no turn** (see `03_CHAT_AND_COMPOSER.md` §3.5) so the sidebar
++   cannot accumulate rows that say nothing.
+diff --git a/docs/v1.6-visual-ux/05_WORK_PROJECTS_PERMISSIONS.md b/docs/v1.6-visual-ux/05_WORK_PROJECTS_PERMISSIONS.md
+new file mode 100644
+index 0000000..c82ca94
+--- /dev/null
++++ b/docs/v1.6-visual-ux/05_WORK_PROJECTS_PERMISSIONS.md
+@@ -0,0 +1,155 @@
++# 05 — Work, Projects, Permissions
++
++These three surfaces are the heart of “sparse information presented at enormous visual scale”, “too
++card-heavy and oversized”, and “Permissions is too technical and too large”.
++
++All three share one page shell (`styles/kel-tokens.css` → `.kel-page`): **padding 32px top / 32px sides /
++48px bottom, 24px gap, `h1` at 32px, body at 16px**, then a stack of `.kel-card` sections (24px padding,
++1px border, 10px radius, shadow).
++
++## Measured text volume and type mix per surface (light theme, 1440×900)
++
++Character counts of rendered text by font size, from `evidence-visual-a.txt`:
++
++| Surface | 11px | 12px | 13px | 14px | 16px | 24px | 32px | Total |
++|---|---|---|---|---|---|---|---|---|
++| Work | – | – | – | 127 | 438 | 35 | 4 | **605** |
++| Projects | – | 42 | – | 146 | 168 | 18 | 8 | **383** |
++| **Permissions** | – | 255 | – | **2037** | **1210** | 101 | 11 | **3615** |
++| Team (office) | – | 21 | – | 162 | 139 | 6 | 4 | 333 |
++| Team (roster) | – | 6 | – | 162 | 96 | 6 | 4 | 275 |
++| Providers | – | 280 | – | 449 | 878 | 158 | 9 | 1775 |
++| Diagnostics | – | 279 | – | 1088 | 386 | 86 | 11 | 1851 |
++| Settings · System | – | 1259 | 416 | 582 | 3 | 24 | 48→ | 2285 |
++| Transcription | 89 | 34 | – | 248 | 29 | – | – | 401 |
++
++Read that as: **Permissions renders ~3,615 characters of prose and table text — 6× Work, 11× Team** — on a
++page whose only *actions* are Reload, Emergency stop, Revoke, Allow/Deny. Work and Projects are the
++opposite: large type, few words. Both extremes are the same underlying mistake — the page structure is
++inherited from an internal console rather than designed around a task.
++
++Contrast note: **every one of these pages measured zero WCAG AA offenders in both themes** (the `kel-*`
++tokens are AA-clean). Their problem is scale, density and vocabulary — not colour.
++
++---
++
++## 5.1 Work — `pages/kel/work/index.tsx` (356 lines) · S2
++
++Structure as rendered (verified live; `evidence-visual-a.txt` → `work`):
++
++1. `h1` “Work” (32px) + sub “0 active · 0 waiting to continue · 0 need you” + **Reload**
++2. `KelErrorState` (only on failure)
++3. `KelEmpty` “No unfinished work in this project.”
++4. `KelCard title="Jobs"` → `KelTable`
++5. `KelCard title="Verification — …"` — rendered whenever any job exists, with Pause/Resume/Cancel,
++   a progress sentence, a milestone table, `note`, and a nested **`KelSection` “Receipt — …”** wrapping a
++   `<pre class="kel-code">` of up to 4000 characters
++6. `KelCard title="Waiting to continue"` — **always rendered**; when empty it contains a `KelEmpty`
++7. `KelCard title="Team assignments"` — **always rendered**; when empty it contains a `KelEmpty`
++
++Defects, in order of how a user feels them:
++
++* **Four cards render unconditionally on an empty account.** Two of them contain nothing but a dashed
++  `KelEmpty` box *inside* a bordered card *inside* a page — a rectangle inside a rectangle inside a page,
++  for one sentence. This is the literal “never use a card merely because information exists” violation.
++  *Fix:* render a card only when it has content; when a section is empty and the page is otherwise empty,
++  show **one** page-level empty state that names the two ways to get work (start a task in chat; open Work
++  from a running job).
++* **Two of the three 24px card headings are for empty sections** (“Waiting to continue”, “Team
++  assignments”). Large headings with no content read as broken rather than as calm.
++  *Fix:* section headings become 14–15px labels above a divider, not `h2` at 24px.
++* **An empty Work page is ~600 characters.** That is not too little information — it is too little
++  information delivered at the wrong scale, with a 32px title and a 48px bottom pad.
++* **Vocabulary is engine-facing:** “Jobs”, “Current step”, “Budget”, “steps used”, “Milestone”, “Worker
++  state”, “Attempts”, “Checks”, “v1 · 8-char digest”, “provider / model”, “blocker”. The subtitle alone
++  (“0 active · 0 waiting to continue · 0 need you”) is three numbers the user has no handle on.
++* `KelMeter` is a **fixed 180px** progress bar plus “N of M steps used” inside table cells — the widest
++  thing in the table, for the least important column.
++* Selecting a job is invisible: `activeJob` defaults to `jobs[0]`, so the Verification card silently
++  describes the first job. There is no row selection affordance.
++
++**Direction:** Work should answer “what is happening, and does anything need me?” — a single list of work
++items ordered by “needs you first”, each row one line: *what it is · what state · when · one action*. The
++detail (milestones, attempts, checks, receipts) belongs behind row disclosure, and the receipt belongs
++behind a disclosure control, not in a permanently rendered `<pre>`.
++
++## 5.2 Projects — `pages/kel/projects/index.tsx` (292 lines) · S1 (mis-titled)
++
++`/projects` renders a **single implicit project** (`project_id` defaults to `default`) with three tabs:
++**Knowledge / Map / Recipes**. The header literally reads “General · 0 knowledge records · map — · 5
++recipes” (`work.project_id === 'default' ? 'General' : work.project_id`).
++
++So the nav item is labelled **Projects** but there is no project list, no project chooser, no create, and
++no per-project scoping: `kelWork('main')` hard-codes the conversation and `project_id` is never chosen by
++the user. What the page actually is: *the knowledge/memory console of one implicit project.*
++
++Additional problems inside the page:
++
++* The page title promises projects; the content delivers memory maintenance. A first-time user cannot
++  reconcile them.
++* `KelCard "Knowledge"` holds a **7-column table** (Topic, Type, Trust, Status, Source, Updated, Actions)
++  where **every row has three buttons** — Confirm / Retract / Forget — as text buttons. That is a database
++  admin grid.
++* “Trust 7/10 · confirmed”, “type”, “status”, “source_type: source_ref.slice(0,28)” are internal fields.
++* **Conflicts** prints raw JSON in a `<pre class="kel-code">`; **Recipes → Preview (dry run)** prints raw
++  JSON too.
++* Empty state copy is good (“Kel records what it learns while working — with its source and a trust
++  score.”) — the *copy* is the strongest part of the page; the *structure* around it is not.
++
++**Direction (do not delete capability):** keep Knowledge/Map/Recipes but (a) re-title the surface to what
++it is, or make it genuinely project-scoped with a project chooser; (b) move per-row actions into a hover
++menu with the destructive one separated; (c) render conflicts as a sentence (“2 notes disagree about X”)
++with the JSON behind a “details” disclosure; (d) make trust a two-word label (“trusted / unverified”)
++rather than `7/10`.
++
++## 5.3 Permissions — `pages/kel/autonomy/index.tsx` (305 lines) · S2 (largest offender)
++
++Rendered structure:
++
++1. `h1` “Permissions” (32px) + “0 active permissions · 0 waiting on you”
++2. **Two header buttons: `Reload` and `Emergency stop`** — a global destructive action sitting next to a
++   refresh control, with no confirmation and no separation.
++3. A **3-line `kel-meta` paragraph** explaining what Emergency stop does *before* anything else on the
++   page. Explanation of a panic button is not the most important content on a permissions page.
++4. `KelCard "Capability leases"` — table: Job / State / Review / Expires / Scope / Actions. Cells hold raw
++   job ids, lowercase raw states, `review_ref` literals, and `kind: value · kind: value` scope strings
++   truncated at 120 characters — on a line that already carries a `Revoke` button.
++5. `KelCard "Boundary requests"` — the approval surface. Each pending request is rendered as a **nested
++   `.kel-card` inside the outer `.kel-card`**, containing what/why/benefit/if-denied/risk lines and three
++   buttons (Allow once / Allow for this project / Deny).
++6. `KelCard "Ask the engine about a scope"` — an **engine policy checker**: kind tabs
++   (`write/repo/browser/tool/destructive`), a free-text “Scope target” input, and “Ask the engine”. Above
++   it, a 5-line paragraph (“The policy checker Kel exposes for a scope. It fails closed on its inputs…”).
++7. `KelSection "Locked guardrails · digest <12 hex chars>"` — rule/meaning/test table with `kel-code` test
++   identifiers.
++
++Defects:
++
++* **A developer tool is a first-class, always-visible panel** (item 6). It is the clearest example of “too
++  technical”. Nothing on the page tells a user which of these five check kinds they would ever want.
++* **Card-in-card** at item 5 (a bordered request box inside a bordered section box) — for a single
++  approval. The pending approval is also the one thing that must be *loud*, and it is currently the most
++  nested.
++* **Jargon without a definition:** lease, scope, boundary request, guardrail, digest, revoke, fails closed.
++  Even the empty state explains leases with a 51-word sentence
++  (`Autonomy state could not be loaded` / “A lease is created only after a reviewed plan is approved…”).
++* **`Emergency stop` placement** (item 2): adjacent to Reload, before any context. It is also described as
++  not undoing completed effects — information a user needs *in* the confirmation, not in a paragraph above.
++* **Permissions duplicates Phase 3.** Phase 3 (`85e99fb`) puts approvals in the conversation. This page
++  renders the same `boundary_expansion_requests` with Allow/Deny. Two surfaces, two vocabularies, one
++  decision — a user who approves in chat and then opens Permissions sees a second, differently-worded
++  instance of the same thing. **This must be resolved deliberately, not left to coexist.**
++* **Scope strings are the product's core promise** (“Kel only does what you allowed”) and they are the
++  least readable thing on the page: `write: C:\… · repo: …`.
++
++**Direction:** Permissions should read like a receipt of trust, not a policy console:
++
++* Row = **one sentence**: “Kel can write files in *this project* until *4:20 pm* (you allowed this 12 min
++  ago)” + one **Revoke**.
++* Pending requests go **above** everything else, as the only card on the page, with plain-language
++  consequences short enough to read in one glance; “Allow once / Allow for this project / Deny” stays.
++* The policy checker becomes a “Why was this blocked?” detail reachable from a decision or from a job —
++  not a permanent tab of buttons.
++* Locked guardrails move behind “What Kel will never do” — same content, plain framing, JSON/test ids
++  behind disclosure.
++* Emergency stop moves into an overflow (⋯) with a confirm dialog that states the consequence plainly.
+diff --git a/docs/v1.6-visual-ux/06_TRANSCRIPTION.md b/docs/v1.6-visual-ux/06_TRANSCRIPTION.md
+new file mode 100644
+index 0000000..1863e97
+--- /dev/null
++++ b/docs/v1.6-visual-ux/06_TRANSCRIPTION.md
+@@ -0,0 +1,110 @@
++# 06 — Transcription
++
++The user has chosen the standalone Transcriptions information architecture as the target for Kel's transcription
++surface. This doc audits the donor **from source**, audits the current Kel page **from source + measurement**, and
++states the exact target structure. It does not change any code.
++
++## The decision (taken as given)
++
++* Keep the standalone information architecture: left column (library) + main (document).
++* **API Key is clickable text**, not a gear — it replaces the donor's gear button.
++* It opens the *Meta API key* modal with no helper paragraph below *Save and Verify*.
++* Ignore the donor's light-mode styling; use Kel's dark design.
++* Preserve the proven interaction architecture.
++
++## The donor, from source
++
++Extracted tree: `C:\Users\Nick\Desktop\Kel\ux-audit\transcription-src` (from
++`C:\Users\Nick\Desktop\Kel\Transcription App\Transcriptions-Source.zip`, a Tauri `muse-transcribe-desktop` app).
++
++| Donor file | What it establishes |
++|---|---|
++| `src/components/Sidebar.tsx` (87 lines) | Left column: `<h1>Transcriptions</h1>` + one header button (`aria-label="Preferences"`, gear icon) → then `FolderSection` → divider → `TranscriptList`. Drag-to-folder uses `document.elementFromPoint` + `data-folder-id` with a floating drag ghost. |
++| `src/components/FolderSection.tsx` (144) | FOLDERS section, New Folder, expand/reveal, rename, drop targets. |
++| `src/components/TranscriptList.tsx` (36) | RECENT: a compact chronological list. |
++| `src/components/ActionBar.tsx` (36) | Top-right actions in a fixed order: **Upload Audio · Record More · Record**. Record is a stateful button: `Starting…`, `Stop Recording · mm:ss`, `Saving…`, `Retry Save`. |
++| `src/components/TranscriptWorkspace.tsx` (85) | Main: `h2.document-title`, a status chip (`Saved` / `Recording` / `Saving` / `Save failed` with spinner/dot/check), an edit (pencil) button, the transcript body (`aria-live`), and a footer of exactly four actions: **Copy Transcript · Download Transcript · Download Audio · Combine**. Empty state: mic mark + "Start a transcription" + one explanatory line. |
++| `src/components/SettingsSheet.tsx` (63) | The key modal, verbatim: title **"Meta API key"**, body **"Replace the key used for Muse transcription."** (when a key exists) or "Add a Model API key to begin transcribing.", label **"API key"**, password input placeholder **"Paste your Meta Model API key"**, button **"Save and Verify"** (→ `Verifying…` → `Verified`), then a `<small>` helper line. |
++| `src/App.tsx` (365) | Autosave on stop (`showToast('success','Transcription saved')`), auto-open of the key sheet when no key is configured, one `messageFromError()` mapper that turns raw failures into plain language. |
++
++## The target structure (from the decision)
++
++```
++LEFT COLUMN
++  Transcriptions                API Key      <- plain clickable text, not a gear
++  FOLDERS
++    New Folder
++  RECENT
++    compact chronological transcript list
++
++MAIN
++  top-right:  Upload Audio   Record More   Record
++  content:    large title · Saved/edit state · readable transcript (scrollable body)
++  bottom:     Copy Transcript · Download Transcript · Download Audio · Combine
++
++API KEY MODAL (from the API Key text button)
++  Meta API key
++  Replace the key used for Muse transcription.
++  API key
++  [ Paste your Meta Model API key ]
++  Save and Verify
++  (no helper paragraph below Save and Verify)
++```
++
++## Current Kel: measured divergence
++
++Files: `desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx` (1109 lines) and
++`index.module.css` (173 lines). Live text captured from the running build:
++
++> `FOLDERS` / "Group recordings into folders — drag a transcript onto one." / `Add` / `RECENT TRANSCRIPTIONS` /
++> "Nothing here yet." / "Practice mode" `Source` / `Record` `Upload Audio` / "Your transcripts live here…"
++
++| # | Divergence | Severity | Where |
++|---|---|---|---|
++| T1 | **No "Transcriptions" column title.** The column starts directly with `FOLDERS`. | S3 | `index.tsx:618` |
++| T2 | **The key entry point is a bottom "Source" text button**, not a top-right **API Key** affordance, and it opens a modal titled **"Transcription source"** with a "Connect" button and a Muse/practice-mode paragraph. | S2 | `index.tsx:930-960` (Modal), `:849` (`Source`) |
++| T3 | Section titles are `FOLDERS` / `RECENT TRANSCRIPTIONS` (uppercase via CSS `text-transform`), not `FOLDERS` / `RECENT`. | S4 | `index.module.css:24-31`, `index.tsx:714` |
++| T4 | Main action order is **Record (primary, filled) → Upload Audio → Record more**, i.e. reversed from the donor, and `Record more` appears only when the selected transcript has `source_type === 'recording'`. | S2 | `index.tsx:759-777` |
++| T5 | The document title is `<strong class='text-16px'>` + a `Rename` button — not a large title with a Saved/edit state. | S2 | `index.tsx:826-856` |
++| T6 | Actions row is **eight wrapping buttons**: Copy Transcript, Download Transcript, Download Audio, "Combine with…", **Send to chat**, **Use as vetting answers**, **Think out loud**, **Delete** (danger). The donor's four are buried among Kel-specific additions. | S2 | `index.tsx:884-929` |
++| T7 | A **folder `<Select>` ("move-select")** and a metadata line sit between the title and the transcript — the donor moved transcripts by dragging in the sidebar. | S3 | `index.tsx:858-882` |
++| T8 | Everything is a rounded panel **inside** the page: `.sidebar` and `.workspace` are both `border 1px + radius 10px + bg-2`, plus a bordered `.recordBar` — i.e. panels-in-a-page rather than a column + a document. | S2 | `index.module.css:9-23, 90-104` |
++| T9 | Styling uses **donor tokens** (`--color-bg-2`, `--color-border-2`, `--color-text-3`, `--color-fill-*`, `--color-primary-light-*`), not the Kel dark set. | S2 | `index.module.css` throughout |
++| T10 | **Measured contrast failures** on this page: light `3.24:1` for section titles and meta text (needs 4.5); dark `2.21:1` for the `Source` button. | S1/S2 | see `08_DARK_LIGHT_READABILITY.md` |
++| T11 | Folder rows expose always-visible `✎` and `✕` glyph buttons, and the "New folder" input + `Add` button sits at the **bottom of the folder scroll area** rather than under the FOLDERS header. | S3 | `index.tsx:668-712` |
++
++**What is already right and must be preserved:** the data layer (`library`, `folders`, `recent`, `status`,
++`keyDraft`, drag-to-folder with `data-folder-id`, upload/record/live-text, restart-visible rows), the
++autosave/live-text behaviour measured green in the main thread's own scenario, `aria-live` on the live bar,
++`prefers-reduced-motion` handling for the recording dot, and the drag drop overlay.
++
++## What to change (implementation view — no code written yet)
++
++1. `index.tsx`: add the column header row — `Transcriptions` (title) + a plain **API Key** text button that opens
++   the key modal; delete the bottom `Source` row (`index.tsx:845-853`) and keep the connection status as a
++   quiet line only where it is actionable.
++2. `index.tsx`: replace the whole `Modal title='Transcription source'` block with the donor's key modal copy
++   (title **Meta API key**, body **Replace the key used for Muse transcription.**, label **API key**,
++   placeholder **Paste your Meta Model API key**, submit **Save and Verify**) and **no helper paragraph**.
++3. `index.tsx`: move the main action row to the top-right of the workspace and reorder to
++   **Upload Audio · Record More · Record**; make `Record More` always present but disabled when there is no
++   recording to append to (donor behaviour), instead of appearing conditionally.
++4. `index.tsx`: promote the document title to a large title with the saved/edit state beside it, and
++   demote rename to a hover/secondary action.
++5. `index.tsx`: keep Copy / Download Transcript / Download Audio / Combine as the primary bottom group, and
++   move **Send to chat · Use as vetting answers · Think out loud · Delete** into a secondary group
++   (hover-revealed or an overflow menu) so the donor's four read first.
++6. `index.module.css`: retarget every donor variable to the Kel token set, and reduce the page to
++   **column + document** (one border between them, not two floating panels).
++7. Rename the second section title to **RECENT**.
++
++## Risk notes
++
++* The transcription page is **renderer-only** for this change: the engine API (`/api/transcription`), the
++  store, and the composer mic hand-off are untouched, so the blast radius is one page + one CSS module.
++* The page carries the main thread's E2E selectors (`data-testid='transcription-page'`, `record-button`,
++  `upload-button`, `folder-create`, `transcript-row`, `live-text`, `stop-button`, …). Every rename/move above
++  must keep those test ids or update the scenario in the same change — otherwise the 'transcription'
++  scenario in `packaging/ux-audit.cjs` breaks.
++* `--color-primary-light-*` is the donor blue; Kel's accent is green. Any element still using it (drop
++  targets, `rowActive`) will look like a different product until retargeted.
+diff --git a/docs/v1.6-visual-ux/07_TEAM_AND_AGENTS.md b/docs/v1.6-visual-ux/07_TEAM_AND_AGENTS.md
+new file mode 100644
+index 0000000..868e0c6
+--- /dev/null
++++ b/docs/v1.6-visual-ux/07_TEAM_AND_AGENTS.md
+@@ -0,0 +1,87 @@
++# 07 — Team and Agents
++
++The question was: what does Kel currently mean by *Agent, Specialist, Team, Roster, Office, Studio, Worker,
++Role* — and does V1.6 actually support user-created agents?
++
++## Answer in one line
++
++V1.6 supports **engine-seeded role templates only**. There is **no user-created agent, no role editor, and no
++"Add Agent" affordance anywhere in the UI.** Several of the eight words are synonyms for one of two objects,
++and two of them ("Team", "Agent") currently point at *disabled donor surfaces*.
++
++## What exists, with evidence
++
++| Word | What it actually is | Where the user sees it |
++|---|---|---|
++| **Role / Role template** | Engine object `role_templates` / `role_versions`, seeded from `SEED_ROLES` | `KelTeam` Roster list: `role.name`, `v{version}`, `{assignments} assignments` |
++| **Specialist** | A role *bound to a milestone*, i.e. a live `team_assignments` row (`role`, `role_version`, `snapshot_digest`) | Work → "Team assignments" table, column header `Specialist`; Team → Office; copy "No specialist has been assigned yet." |
++| **Worker** | Engine-side executor of a milestone. Not a user-manageable object | Work → milestone table column `Worker state` (raw engine state string) |
++| **Team** | The page at `/team/office|roster|studio`, `h1` = "Team" | Main nav → Settings → Agents/Team roles (see below) |
++| **Office** | Tab + card: live assignments only, chip `real assignments only` | `/team/office` |
++| **Roster** | Tab + card: role templates grouped by `department`, each row `Open in Studio` | `/team/roster` |
++| **Studio** | Tab + card: read-only role detail + `Locked guardrails` + `Version history` with rollback | `/team/studio` |
++| **Agent / Assistant** | Donor concept. **Disabled in Kel** | `HIDE_DONOR_AGENT_SURFACES = true` (`components/layout/Router.tsx:61`) makes `/assistants` and `/team/:id` redirect to `/guid` |
++
++Source: `pages/kel/team/index.tsx` (352 lines — tabs, cards, FIELD_LABELS, rollback), `components/kel/kelApi.ts`
++(`kelTeam` = `office | roster | seed | role | history | rollback | timeline`), `components/settings/SettingsSider.tsx`
++(settings entries).
++
++## Creation is not possible from the UI — confirmed
++
++`kelTeam` exposes exactly two mutations: `seed()` and `rollback(templateId, to)`.
++The role editor (Studio) renders `detail.fields` as **text**, not inputs, and its guardrail block is labelled
++`read-only — not editable by any role`. The only "create" affordance in the whole surface is the empty-state
++button `Seed the default roster`.
++
++**Recommendation: do not invent Add Agent in this pass.** Two options are honest:
++
++1. **Rename to match reality** (preferred, cheap): the surface is a *roster of Kel's built-in roles plus a
++   version history*, so label it as such and stop implying a staffing feature. Suggested: page title
++   **"Team"** stays; tabs become **Working now** (`office`), **Roles** (`roster`), **Role detail** (`studio`).
++   Drop the word "Studio" from the user's vocabulary — it implies authoring that does not exist.
++2. **Add authoring later** (a real V1.7 feature): a *New role* action that copies an existing template into a
++   new version (the engine already versions append-only and supports rollback, so "copy-forward" is the
++   natural first authoring step).
++
++## Defect found (real, cheap to fix)
++
++`pages/kel/team/index.tsx`, Office empty state:
++
++```tsx
++actionLabel="Seed the default roster"
++onAction={() => void load()}        // ← reloads; never seeds
++```
++
++versus the Roster empty state, which is correct:
++
++```tsx
++onAction={() => { void kelTeam.seed().then(load); }}
++```
++
++So the button offered in Office is a **no-op that can never do what it says**. Either call `kelTeam.seed()` or
++remove the button and point at the Roster tab.
++
++## The "Team" collision, and how a user reaches this page at all
++
++Two different objects are both called "Team":
++
++* the **page** above (roles/assignments), and
++* the **donor Team groups** — `components/layout/Sider/TeamSiderSection.tsx` (327 lines: create team modal,
++  pin, rename, archive). **It is never mounted**: `Sider/index.tsx` does not import it, and passes
++  `afterPinnedContent={<></>}` where the team slot used to be. Its create path is therefore dead code, and
++  `/team/:id` redirects away.
++
++That means the *only* way a user reaches `/team/*` is through Settings entries labelled **Agents** and
++**Team roles** (`SettingsSider`, ids `agent` and `skills`) — which redirect to `/team/roster` and, in doing so,
++break the Settings shell (see `04_SIDEBAR_AND_NAVIGATION.md`). Team has no entry in the primary sidebar
++(`KelNavEntries` = Work, Projects, Permissions, Transcription).
++
++**Recommended coherent model:**
++
++* Primary nav: keep **Work, Projects, Permissions, Transcription**.
++* Settings → replace the two entries `Agents` and `Team roles` with **one** entry, **Team**, that stays inside
++  the Settings shell and does not eject the sidebar.
++* Retire the word "Agent" from user-facing copy until agents are creatable. "Specialist" is good and already
++  used consistently for a working role instance — keep it.
++* Delete or wire up `TeamSiderSection`; today it is dead code that costs maintenance and misleads anyone
++  reading the sidebar implementation.
+diff --git a/docs/v1.6-visual-ux/08_DARK_LIGHT_READABILITY.md b/docs/v1.6-visual-ux/08_DARK_LIGHT_READABILITY.md
+new file mode 100644
+index 0000000..57f4752
+--- /dev/null
++++ b/docs/v1.6-visual-ux/08_DARK_LIGHT_READABILITY.md
+@@ -0,0 +1,98 @@
++# 08 — Dark / Light Readability (measured)
++
++## Method
++
++For every visible text node on each surface, a WCAG 2.x ratio was computed against the nearest ancestor with an
++opaque background, in **both** themes, and compared with the AA threshold (4.5:1 for normal text, 3:1 for
++large/bold ≥18.66px). Raw output: `evidence-visual-a.json` → `surfaces.*.offenders`;
++per-text font-size histograms in the same file.
++
++## Result 1 — the Kel "Desk" surfaces are clean
++
++**Zero contrast offenders** were found in both themes on:
++
++`Work` · `Projects` · `Permissions` · `Team (office, roster)` · `Providers` · `Diagnostics`
++
++That is a real strength and it should be stated before anything else: `styles/kel-tokens.css` is
++contrast-disciplined, and its own comments show two prior fixes for exactly this class of bug. The readability
++problems are **not** the Kel palette.
++
++## Result 2 — every failure sits in donor surfaces, or in one native control
++
++| Surface | Text | px | Colour on background | Ratio | Need | Theme |
++|---|---|---|---|---|---|---|
++| Theme gallery (`CssThemeSettings` card label) | `Light` | 13 | `#ffffff` on `#f7f8fa` | **1.06** | 4.5 | light |
++| Theme gallery (same element) | `Dark`, `Follow System` | 13 | `#ffffff` on `#f7f8fa` | **1.06** | 4.5 | light |
++| System settings (`settings_system`) | `Back up now` (**button label**) | 14 | `#ffffff` on `#e5e7f0` | **1.23** | 4.5 | light |
++| System settings | `Restore from this backup` | 14 | `#c9cdd4` on `#f7f8fa` | **1.50** | 4.5 | light |
++| Appearance (`ThemeColorsSection`) | `Reset` | 14 | `#94bfff` on `#f2f3f5` | **1.70** | 4.5 | light |
++| Appearance (dark capture) | `Reset` | 14 | `rgba(78,89,105,.5)` on `#262626` | **2.13** | 4.5 | dark |
++| Transcription sidebar | `Source` (the settings/key entry point) | 12 | `#4e5969` on `#232324` | **2.21** | 4.5 | dark |
++| Model settings (`settings_model`) | `Needs setup` chip | 11 | `#86909c` on `#f2f3f5` | **2.92** | 4.5 | light |
++| Transcription sidebar | `FOLDERS`, `RECENT TRANSCRIPTIONS`, meta lines | 11–12 | `#86909c` on `#ffffff` | **3.24** | 4.5 | light |
++| System settings | `Clear` | 14 | `#f53f3f` on `#ffece8` | **3.25** | 4.5 | light |
++
++Observations that matter more than the individual numbers:
++
++1. **`--color-text-3` / `text-t-tertiary` (`#86909c`) is the single biggest offender** (transcription 3.24:1,
++   model chip 2.92:1). It fails on light backgrounds and is used for the labels a user scans most: section
++   headers and metadata.
++2. **White text on a light/near-white surface appears three times** (theme gallery labels at 1.06:1, the
++   `Back up now` primary button at 1.23:1, and `Restore from this backup` at 1.50:1). This is a *token leak*:
++   a dark-theme foreground applied on a light background, or a disabled button that kept its white label.
++   The backup button is the worst of these because it is an **action**, not decoration.
++3. **`kel-tokens.css` already solved this exact class of bug and the donor surfaces never adopted the fix.**
++   The file overrides `--bg-5`/`--bg-6` in dark with the comment *"the light value measures 2.13:1 on these
++   dark surfaces, and these are the labels a user scans most"*. The same discipline needs to be applied to the
++   **light** theme's muted token and to the donor surfaces.
++4. The transcription page's `Reset`/`Source` failures are downstream of it not using Kel tokens at all
++   (it uses `--color-*` donor variables — see `06_TRANSCRIPTION.md`).
++
++## Result 3 — scale and small-text distribution
++
++Total visible characters per surface, with the font-size actually used (from the live histogram):
++
++| Surface | Total chars | Distribution |
++|---|---|---|
++| **Permissions** | **3615** | 14px × 2037 · 16px × 1210 · 12px × 255 · 24px × 101 |
++| System settings | 2285 | **12px × 1259** · 14px × 582 · 13px × 416 |
++| Diagnostics | 1851 | 14px × 1088 · 16px × 386 |
++| Providers | 1775 | 16px × 878 · 14px × 449 |
++| Settings → Model | 884 | 13px × 434 · 14px × 233 · 11px × 171 |
++| Settings → Appearance | 695 | 14px × 386 · 12px × 177 |
++| **Work** | **605** | 16px × 438 · 14px × 127 · 24px × 35 (3 card headings) |
++| Transcription | 401 | 14px × 248 · 11px × 89 |
++| Projects | 383 | 16px × 168 · 14px × 146 |
++| Team (office) | 333 | 14px × 162 · 16px × 139 |
++
++Two conclusions:
++
++* **Permissions carries ~6× the text of Work and ~11× Team.** It is the single most text-heavy screen in the
++  product, at 12–16px, with ~2000 characters at 14px. "Too technical and too large" is literally measurable.
++* **The sparse surfaces are also the ones using the largest type.** Work renders 605 characters, of which 438
++  are 16px body and three card headings are 24px, inside 24px-padded cards on a 32px-gutter page. That is the
++  "sparse information at enormous visual scale" complaint in numbers: the *scale* is fixed and generous while
++  the *content* is nearly empty.
++
++## Result 4 — text smaller than 12px
++
++11px text is present on the transcription sidebar (`89` chars), Settings → Model (`171` chars) and elsewhere
++via donor components. At 11px the muted colours above are unreadable regardless of contrast, and on a
++1920×1080 laptop with display scaling this is below comfortable.
++
++## Proposed fixes (concrete)
++
++1. **Raise the muted token floor.** In light, `--color-text-3: #86909c` → at least `#6b7280`-class (≥4.5:1 on
++   `#ffffff` and on `#f2f3f5`). In dark, keep the existing overrides and extend them to every donor
++   `--color-text-3` usage, not just `--bg-5/6`.
++2. **Ban white-on-light.** The theme-gallery card label must not be `text-white`; put the theme name **outside**
++   the preview swatch (it is a label, not part of the preview) in `text-t-primary`. Never give a disabled or
++   secondary button a white label on a light surface.
++3. **Fix `Back up now`** to use the Kel primary button treatment (accent fill + `--kel-accent-ink`), and re-tone
++   `Restore from this backup` / `Clear` to `--kel-text-2` / a 4.5:1 red.
++4. **Floor the type scale at 12px** for any text a user must read; 11px only for purely numeric metadata.
++5. **Add a shipped-surface contrast gate.** `ThemeColorsSection` already computes WCAG ratios at runtime for
++   user-chosen colours — reuse that maths in CI over the shipped surfaces so this class of regression cannot
++   return. The audit probe (`probe-a.cjs`, `probeReadability`) is a working prototype of exactly that check.
++6. **Density:** reduce the fixed scale that makes sparse pages feel enormous — see `02_VISUAL_SYSTEM.md`
++   (h1 32→20–22px, card heading 24→15–16px, card padding 24→16, page gutter 32→24, row height 44→32–34).
+diff --git a/docs/v1.6-visual-ux/09_ERROR_STATES.md b/docs/v1.6-visual-ux/09_ERROR_STATES.md
+new file mode 100644
+index 0000000..b8683b6
+--- /dev/null
++++ b/docs/v1.6-visual-ux/09_ERROR_STATES.md
+@@ -0,0 +1,131 @@
++# 09 — Error States and Engine Reachability
++
++The user reported that ordinary launch produced, on five screens:
++
++> Work could not be loaded · Projects could not be loaded · Permissions/Autonomy could not be loaded ·
++> Transcription could not be loaded · Team could not be loaded — each with `TypeError: fetch failed`
++
++Question asked of this audit: stale build, startup race, engine failure, port/descriptor issue, renderer route,
++bridge issue, isolated-environment artefact, or a real current defect?
++
++## Verdict
++
++**A real current defect, in two separable halves.**
++
++1. **The raw string is leaked into user-facing copy by construction.** Every Kel page passes the raw JS error
++   text straight into the failure card. That is a product defect regardless of what caused the failure.
++2. **There is no engine supervision, readiness gate, or recovery.** The descriptor is read **once** at
++   startup; if the engine is unavailable at that moment, or stops later, nothing re-checks, re-connects,
++   re-spawns, or tells the user what is actually wrong. Every engine screen simply fails forever until the app
++   is restarted.
++
++It is **not** a stale build and **not** a deterministic fresh-launch bug: a clean isolated cold launch was
++verified green twice (engine spawned, all surfaces loaded, **0 console errors, 0 error surfaces**).
++
++## Reproduction (performed)
++
++Environment: `package-final16` (ffeef73 + Phase 3 WIP), isolated profile root, off-screen window.
++
++```
++boot → engine descriptor: {"url":"http://127.0.0.1:59960/","pid":9704,...}
++kill that engine pid  (simulates: engine crashed / was stopped / another instance drained it)
++navigate to the five surfaces
++```
++
++Observed DOM text (verbatim, `evidence-visual-b.json` → `engineLoss`):
++
++| Surface | Card title rendered to the user | Raw leak | Fix line rendered |
++|---|---|---|---|
++| `/work` | `Work could not be loaded` | `TypeError: fetch failed` | `Check that the Kel engine is running, then press Reload.` |
++| `/projects/knowledge` | `Project context could not be loaded` | `TypeError: fetch failed` | `Check that the Kel engine is running, then press Reload.` |
++| `/autonomy` | `Autonomy state could not be loaded` | `TypeError: fetch failed` | `Check that the Kel engine is running, then press Reload.` |
++| `/team/office` | `Kel could not read the team state` | `TypeError: fetch failed` | `Check that the engine is running, then retry.` |
++| `/transcription` | `Kel could not load the transcript library` | `TypeError: fetch failed` | `Reopen this page or check that Kel is running.` |
++
++This is the user's report, reproduced exactly, on the same five screens. Screenshots:
++`screenshots/b-030-engine-lost-*.png`.
++
++## Where each half comes from, with file:line
++
++**The leak.** The engine is reached through the preload bridge → main process → local HTTP:
++
++* `process/services/kel/KelService.ts:12-21` — `kelRequest()` wraps `fetch(new URL(route, descriptor.url), …)`.
++  When nothing is listening, undici throws `TypeError: fetch failed`; `String(err)` is exactly
++  `"TypeError: fetch failed"`.
++* Each page then renders the message verbatim:
++  `pages/kel/work/index.tsx:58` (`cause: err instanceof Error ? err.message : …`) rendered at `:146`;
++  `pages/kel/projects/index.tsx:50` → `:117`; `pages/kel/autonomy/index.tsx:58` → `:122`;
++  `pages/kel/team/index.tsx:81/95/108/121`; `pages/kel/transcription/index.tsx:754`.
++* There is **no error classification anywhere** — no distinction between "engine not started", "engine
++  stopped", "request timed out", "engine returned a policy refusal", or "bad response". All of them become the
++  same card with an engine string in it.
++
++**The lack of supervision.** `KelService.initializeKel(port)` (`:23`):
++
++1. reads `desktop-session.json` and calls `/api/state` once (`:43-49`) → `connected = true` ("reused running
++   engine"). **Note: the liveness check is correct and does exist** — a stale descriptor pointing at a dead
++   port is handled by spawning a new engine.
++2. otherwise spawns `KelEngine.exe --data <root>` detached and polls every 250 ms for up to **45 s**
++   (`:99-121`); on timeout it throws `'Kel engine did not start. See desktop.log.'`.
++3. after that, nothing watches the engine. There is no health poll, no re-spawn, no `descriptor` refresh, and
++   no renderer-side state for "engine down". A `Reload` button re-issues the same fetch and fails identically.
++
++**A plausible trigger the user actually hit.** `KelService.ts:31-40` registers a `before-quit` hook that calls
++`/api/shutdown-idle` — i.e. **quitting one Kel window asks the shared engine to stop.** Combined with the
++absence of a single-instance guard on the data root, this makes "second launch / previous instance closed"
++a realistic path to a live UI with a dead engine. This audit reproduced the *symptom* deterministically by
++killing the engine; attributing the user's exact trigger would need a reproduction with two instances and is
++listed as an open item below.
++
++## Second problem visible in the same capture
++
++While the error card was shown, Work **still rendered its neutral empty-state cards**:
++
++> `Nothing waiting to continue.` / `No specialist has been assigned yet.`
++
++A user looking at a failure sees "Work could not be loaded" *and* two confident statements that there is
++nothing to do. That is worse than either alone. **When a load fails, neutral/empty sections must be suppressed**
++and replaced by the single failure card.
++
++## What the user should see instead (design)
++
++Replace the single generic card with a classified, human state:
++
++| Situation | Title | Detail | Action |
++|---|---|---|---|
++| Engine not started yet (during boot) | `Kel is starting…` | — (a spinner, not an error) | none |
++| Engine stopped / unreachable | `Kel's engine isn't running` | `Your work is safe. Kel couldn't reach its local engine on port N.` | **Start Kel's engine** (primary) · `Copy diagnostics` (quiet) |
++| Engine reachable, request refused | the engine's own plain-language reason | the refusal, in the user's terms | context action |
++| Unexpected request failure | `Something went wrong loading this page` | one sentence | `Try again` · `Copy diagnostics` |
++
++Rules:
++
++* **The raw string never renders as body copy.** `TypeError: fetch failed` belongs behind `Copy diagnostics`,
++  together with the port, the engine version, and the last 50 lines of `desktop.log` (`<data>/desktop.log` is
++  already written by the spawn).
++* **One card, one action.** `Fix: …` as a paragraph is not an affordance.
++* **Never render empty-state sections under a failure** (see above).
++* **Never say "press Reload" for a condition Reload cannot fix.**
++
++## Reliability fixes (the part that matters more than the copy)
++
++1. **Readiness gate:** do not let engine-dependent screens issue their first request until the bridge reports
++   ready; show `Kel is starting…` in the shell. `initializeKel` already knows the exact moment (`:122`).
++2. **Supervise:** a light health poll of `/api/state`; on N consecutive failures mark the engine down, show one
++   shell-level notice, attempt one re-spawn, and reconnect using the refreshed descriptor.
++3. **Single-instance guard per data root** (or make the drain hook *not* stop an engine another live instance
++   is using). Today `before-quit` → `/api/shutdown-idle` is a loaded gun in a multi-window world.
++4. **Surface engine state** where a user can act on it (Settings → Diagnostics already shows the engine version;
++   add liveness).
++5. **Classify errors at the bridge** (`engine-unreachable`, `engine-timeout`, `engine-refused`,
++   `bridge-unavailable` — the last already exists as `'Kel bridge unavailable — restart Kel and try again'` in
++   `components/kel/kelApi.ts:call()`), and let the UI map classes to copy.
++
++## Honest limitations
++
++* The clean-launch result (green, twice) means this defect does **not** fire on every launch. Its severity comes
++  from what happens when the engine is unavailable, which is: five screens of engine jargon and no way back.
++* The exact 45 s deadline was not exercised end-to-end; the reproduction used a stopped engine rather than one
++  that never started.
++* `desktop.log` for the failing session was not captured in the probe; a follow-up run should copy it into the
++  evidence set so the engine-side cause of any real-world failure is available.
+diff --git a/docs/v1.6-visual-ux/10_IMPLEMENTATION_OWNERSHIP.md b/docs/v1.6-visual-ux/10_IMPLEMENTATION_OWNERSHIP.md
+new file mode 100644
+index 0000000..f8522a7
+--- /dev/null
++++ b/docs/v1.6-visual-ux/10_IMPLEMENTATION_OWNERSHIP.md
+@@ -0,0 +1,88 @@
++# 10 — Implementation Ownership, Sequence, and Phase-3 Conflict Analysis
++
++This audit stops before touching production code. What follows is the exact plan to execute once the
++Integration Coordinator provides the committed Phase 3 HEAD.
++
++## Branch / worktree
++
++| Item | Value |
++|---|---|
++| Audit branch (already exists) | `audit/v16-visual-ux` @ `ffeef73`, worktree `C:\Users\Nick\Desktop\Kel\kel-v16-visual-audit` — holds these docs |
++| **Proposed implementation branch** | `ux/v16-visual-remediation` |
++| **Proposed implementation worktree** | `C:\Users\Nick\Desktop\Kel\kel-v16-visual-fix` |
++| Base commit | **The Phase 3 committed HEAD** (not `ffeef73`) |
++| Why not `ffeef73` | Phase 3 already changed four files this work also needs to touch (see below). Branching from Phase 3 means one clean merge instead of a conflict resolution. |
++| Docs carry-over | `git checkout audit/v16-visual-ux -- docs/v1.6-visual-ux` in the new worktree |
++
++Do not write to `kel-ux-v15`, do not touch `Kel Releases/*`, and keep `v1.6.0-pre1` byte-identical.
++
++## Phase 3 conflict analysis (this is the important part)
++
++Phase 3 (`85e99fb`, *"feat(approvals): decisions answer in the conversation, on one durable record"*) touches:
++
++```
++common/chat/chatLib.ts                              ← shared
++process/services/kel/KelService.ts                  ← SHARED, high risk
++process/services/kel/reconcileHistory.ts
++renderer/components/chat/KelWorkPanel.tsx           ← SHARED
++renderer/components/kel/KelApprovalCard.tsx         (new)
++renderer/pages/conversation/Messages/MessageList.tsx ← SHARED
++renderer/pages/conversation/Messages/hooks.ts       ← shared
++runtime/kel/** (chat_approvals.py, authorize.py, service.py, core.py, engine.py, apply_changes.py, coding.py)
++runtime/tests/test_v16_approvals.py
++docs/in-chat-approvals/**, docs/product/**
++```
++
++**Direct overlaps with this audit's recommendations:**
++
++| Shared file | Why both need it | Protocol |
++|---|---|---|
++| `process/services/kel/KelService.ts` | Phase 3 added 34 lines here. My engine-supervision + error-classification work (`09_ERROR_STATES.md`) also lives here. | **Serialize.** Land Phase 3 first; my changes go on top in a separate, small, reviewable commit. Never edit this file in parallel. |
++| `components/chat/KelWorkPanel.tsx` | Phase 3 added 104 lines (approval surface in the Work & context panel). I propose replacing that panel's visual treatment. | **Serialize**, same rule. Whoever holds it, says so. |
++| `pages/conversation/Messages/MessageList.tsx` + `hooks.ts` | Phase 3 adds the in-chat approval card; I propose the assistant-prose/composer changes and card policy. | **Serialize.** Card policy must be agreed once so the approval card is designed *as* a special interaction card (which the direction explicitly allows) rather than reverting to a generic card. |
++| `common/chat/chatLib.ts` | Phase 3 added the approval message kind; I would touch types only if needed. | Coordinate; likely no change needed from me. |
++
++**No overlap at all** (safe to do in parallel, they are untouched by Phase 3): the sidebar (`components/layout/Sider/**`),
++the settings shell (`components/layout/Router.tsx`, `pages/settings/**`, `components/settings/SettingsSider.tsx`),
++all five `pages/kel/**` surfaces, the transcription page + CSS, `styles/kel-tokens.css`, and
++`pages/conversation/GroupedHistory/**`.
++
++## Exact implementation sequence
++
++Ordered by severity, and deliberately front-loading work with **zero** Phase-3 overlap.
++
++| # | Step | Files | Severity | Verification |
++|---|---|---|---|---|
++| 0 | Rebase onto Phase 3 HEAD; create worktree; re-run `probe-a` on the Phase-3 build to refresh the baseline | — | — | probe JSON diff vs this audit's baseline |
++| 1 | **Design tokens + density.** Dim navy/slate-navy dark surfaces, off-white primary text, restrained pale semantic accents, 8px control radius, one surface radius, type scale floor and reduction (h1 32→20–22, card heading 24→15–16, body 16→14 in panels), spacing (card pad 24→16, gutter 32→24, row 44→32–34) | `styles/kel-tokens.css`, `styles/arco-override.css` | **S1** (it is the root cause of two complaints) | re-run `probe-a`: same-or-better contrast, font histograms shifted down, no offenders added |
++| 2 | **Settings shell fix.** `/settings/agent`, `/settings/skills`, `/settings/assistants`, `/settings/capabilities`, `/settings/skills-hub` must not leave `/settings`; `/settings/tools` → `/autonomy` must be reconsidered. Replace the two Team entries with one. | `components/layout/Router.tsx`, `components/settings/SettingsSider.tsx` | **S1** | `settingsNav` step in `probe-a`: every settings entry keeps the settings sider (`hasSettingsSider:true, hasMainNavWork:false`) |
++| 3 | **Hover/title overlap.** Reserve the action affordance in the row's padding (`pe-16px` → space for 8px + 20px + gap) or move actions to a non-overlapping slot | `pages/conversation/GroupedHistory/ConversationRow.tsx` | **S2** | `probe-c` `overlapPx` must be ≤ 0 |
++| 4 | **Error states.** Classify bridge failures (engine-not-started / engine-stopped / refused / HTTP error), map to human copy, one recovery action, raw detail behind a disclosure with "Copy diagnostics". Suppress neutral empty-state cards while an error is showing. | `components/kel/kelApi.ts` + the five `pages/kel/**` error sites | **S1** | re-run `probe-b` engine-loss scenario: **no** `TypeError:` string in any alert |
++| 5 | **Engine supervision & startup.** Readiness gate (or an explicit "starting Kel" state) before engine-dependent surfaces claim failure; supervision to re-spawn/re-attach a dead engine; single-instance guard so one process quitting cannot stop a shared engine (`/api/shutdown-idle`). | `process/services/kel/KelService.ts` + main entry | **S1** | kill the engine with the app open → screens recover without restart |
++| 6 | **Work / Projects / Permissions rebuild.** De-card (sections + dividers instead of 4 always-rendered cards), remove card-in-card, drop the raw `kel-code` JSON from user surfaces, retitle Projects to what it is, move Emergency stop out of the header, hide/relocate the policy checker, cut the prose. | `pages/kel/work/index.tsx`, `pages/kel/projects/index.tsx`, `pages/kel/autonomy/index.tsx`, `components/kel/KelPrimitives.tsx` | **S2** | `probe-a` char counts per surface must drop materially (Permissions 3615 → target < 1200); no card nesting |
++| 7 | **Transcription IA** per the user's decision (see `06_TRANSCRIPTION.md`). | `pages/kel/transcription/index.tsx` (1109), `index.module.css` (173) | **S2** | `probe-a` transcription surface: title + API Key text present, `Record` right-most, 4 bottom actions, Kel tokens only (zero `--color-*` donor vars) |
++| 8 | **Chat / composer relocation + card policy.** Model + tools into the composer; assistant prose unstyled by cards; approval card as a deliberate special card. | `pages/conversation/components/ChatConversation.tsx`, `components/chat/SendBox/index.tsx`, `KelModelPill`, `KelToolsControl`, `Messages/MessageList.tsx` | **S2** | composer contains the controls; header no longer does; both themes |
++| 9 | **Readability sweep on donor surfaces** (theme gallery labels, System backup buttons, Model chips, Transcription muted text) + add the contrast gate over shipped surfaces. | `CssThemeSettings.tsx`, `SystemSettings.tsx`, `ThemeColorsSection.tsx`, transcription CSS | **S2** | zero offenders in `probe-a` for both themes |
++| 10 | **Team/agents terminology** + the no-op "Seed the default roster" button. | `pages/kel/team/index.tsx`, `SettingsSider.tsx`, i18n `en-US` | **S3** | Office button either seeds or is gone |
++| 11 | **Final full pass.** probe A + B + C, both themes, 1440/1280/1024, populated and empty profiles; regenerate screenshots; **a human must look at the screenshots** (this audit could not). | — | — | acceptance record in `docs/v1.6-visual-ux/` |
++
++## Definition of done for the remediation
++
++* No raw exception string is reachable in any user-facing copy.
++* Every Settings navigation entry keeps the user inside the Settings shell.
++* No hover affordance overlaps a title; no action needs a hover to be discoverable on touch-sized targets.
++* No card exists that is not carrying structure; no card-in-card.
++* Every shipped surface passes AA for body text in both themes at 1024×768 and above.
++* A human reviewer signs off on the screenshots — explicitly as the step the mechanical checks cannot replace.
++
++## Risks
++
++1. **Token change blast radius.** `kel-tokens.css` is consumed by every Kel surface; the density change will
++   reflow all of them. Mitigate by doing it in step 1 alone and re-measuring before anything else lands.
++2. **Phase 3 serialization.** If step 4/5 is started while Phase 3 still holds `KelService.ts`, the merge will
++   be painful. Enforce the protocol above.
++3. **Transcription rewrite risk.** 1109 lines is a large single file; the donor's interaction architecture
++   (drag-to-folder, autosave, live text, sheets) is the proven part — restructure the *shell*, not the wiring.
++   The engine API is already correct and needs no change.
++4. **Density vs readability.** Reducing page scale can push text below comfortable size; the 12px floor and the
++   contrast gate must be enforced in the same step.
+diff --git a/docs/v1.6-visual-ux/11_CONFLICT_MAP.md b/docs/v1.6-visual-ux/11_CONFLICT_MAP.md
+new file mode 100644
+index 0000000..1f32e69
+--- /dev/null
++++ b/docs/v1.6-visual-ux/11_CONFLICT_MAP.md
+@@ -0,0 +1,104 @@
++# 11 — Conflict Map (per-file, measured against the live integration worktree)
++
++All statements below were **measured read-only** on `C:\Users\Nick\Desktop\Kel\kel-ux-v15` at the moment of
++writing. They are not assumptions.
++
++## 11.1 What Main has actually changed since the audit baseline
++
++Integration worktree HEAD at recon time:
++
++```
++70d68e4 docs(v1.6): Phase 4 recon notes + continuation state (from the Phase 3 thread)
++85e99fb feat(approvals): decisions answer in the conversation, on one durable record (v1.6)
++ffeef73  <- audit baseline
++```
++
++**Committed since `ffeef73` (21 files):**
++
++| File | Δ | Region |
++|---|---|---|
++| `desktop/.../common/chat/chatLib.ts` | +19 | approval message kind |
++| `desktop/.../process/services/kel/KelService.ts` | +34 | hunks at `@@ -245` (inside `initializeKel`) and `@@ -338/370` (route allowlist) |
++| `desktop/.../process/services/kel/reconcileHistory.ts` | +3 | history reconciliation |
++| `desktop/.../renderer/components/chat/KelWorkPanel.tsx` | +104 | approval surface in the Work & context panel |
++| `desktop/.../renderer/components/kel/KelApprovalCard.tsx` | **new** (291) | in-chat approval card |
++| `desktop/.../pages/conversation/Messages/MessageList.tsx` | +11 | renders the approval card |
++| `desktop/.../pages/conversation/Messages/hooks.ts` | +8 | approval wiring |
++| `runtime/kel/{apply_changes,authorize,coding,core,engine,service}.py` | small | approval engine |
++| `runtime/kel/chat_approvals.py` | **new** (314) | approvals |
++| `runtime/tests/{test_v15_authorize,test_v16_approvals}.py` | +13 / **new** 403 | approvals |
++| `docs/in-chat-approvals/**`, `docs/v1.6/AUTO_RESUME.md`, `docs/product/**` | — | records |
++
++**In-flight, uncommitted (this is the P1 capability remediation):**
++
++```
++runtime/kel/acp_host.py
++runtime/kel/capabilities.py
++runtime/kel/research.py
++```
++
++→ **The P1 remediation currently touches the Python runtime only. No renderer file.** That is why nothing in
++the visual plan is blocked *today* by P1 — but the coordinator's instruction stands: resolve against a clean
++Main HEAD, because P1 is not finished and the renderer may be touched before it lands.
++
++**Declared next Main phase (Phase 4 = i18n / donor-string cleanup)** will touch, per its own recon note:
++
++* `renderer/services/i18n/locales/<12 languages>/*.json` (~20 files each)
++* the **Butler** entry points in *Model / Tools / Skills / Assistants / Cron* settings (flagged for likely
++  **removal**)
++
++## 11.2 Measured status of every file this audit plans to edit
++
++Every one of these was scanned against `ffeef73` and against the working tree:
++
++```
++TOUCHED committed=… uncommitted=… : <file>        -> printed for nothing below
++```
++
++**Result: none of the 18 planned files has changed since `ffeef73`.** They are clean today. The map below
++therefore distinguishes *today's* state from *risk before landing*.
++
++| # | Planned change | Exact file(s) | Components / functions | Main may touch? | Risk & rule |
++|---|---|---|---|---|---|
++| 1 | Design tokens + density | `renderer/styles/kel-tokens.css`, `styles/arco-override.css` | `:root`, `[data-theme='dark']`, `.kel-*` primitives | **No** (Phase 4 is i18n; no token work declared) | Low, but **global blast radius**: every Kel surface reflows. Must be its own commit and re-measured before anything else. |
++| 2 | Settings shell fix | `renderer/components/layout/Router.tsx`, `components/settings/SettingsSider.tsx` | `SettingsSider` `BUILTIN_TAB_IDS`/`builtinMap`, `Routes` (`/settings/agent`, `/settings/skills`, `/settings/tools`, `/settings/capabilities`, `/settings/skills-hub`, `/settings/assistants`) | **YES — Phase 4** targets the *same settings entries* (Butler removal in Tools/Skills/Assistants; `settings.json` strings) | **Coordinate before editing.** Decide with the coordinator: does the settings entry keep existing? If Phase 4 removes Butler from Tools/Skills, do it in the same pass as the nav fix so the sider is edited once. |
++| 3 | Hover overlap | `pages/conversation/GroupedHistory/ConversationRow.tsx` | row padding (`pe-16px`), action cluster (`absolute end-8px`, `size-20px`) | No | **Isolated, safe, cheap.** |
++| 4 | Error translation | `components/kel/kelApi.ts` (new classifier), `pages/kel/{work,projects,autonomy,team,transcription}/index.tsx` error sites | `call<T>()` in `kelApi.ts`; `setError(...)` in each page; `KelErrorState` | **No** (Phase 4 owns *locale catalogs*; these strings are hard-coded English, see 11.3) | Renderer-only except the raw string's origin. Coordinate only on copy style with Phase 4. |
++| 5 | Engine supervision / readiness | `process/services/kel/KelService.ts` (+ main entry) | `kelRequest()`, `initializeKel()`, descriptor handling, `before-quit` drain | **YES — Phase 3 already edited this file** (+34, `@@245`, `@@338`) | **Lifecycle-sensitive. Serialize.** My target regions (`kelRequest` at 12–21, descriptor/readiness at 43–122) are *different* hunks from Phase 3's, so a merge should be clean — but the file must be taken from the clean HEAD and re-read first. |
++| 6 | Work de-carding | `pages/kel/work/index.tsx`, `components/kel/KelPrimitives.tsx` | 4 unconditional `KelCard`s, `KelEmpty` inside cards, `KelSection` nesting | No | Isolated. Interacts with the approval work only via **card policy** (agreement needed so the Phase 3 approval card stays a deliberate special card). |
++| 7 | Projects de-carding + retitle | `pages/kel/projects/index.tsx` | 7-column table w/ 3 row actions, raw-JSON `<pre>`, page title | No | Isolated. Title change is a **semantics flag** (see `15_SEMANTICS_FLAGS.md`). |
++| 8 | Permissions rebuild | `pages/kel/autonomy/index.tsx` | header actions, nested `.kel-card`, policy-checker card, guardrails `KelSection` | **Adjacency risk:** Phase 3 puts approvals *in chat*; this page renders the same requests | Agreement needed on which surface owns approvals, or the two will diverge in wording. Content work is independent; **the overlap decision is not**. |
++| 9 | Transcription IA | `pages/kel/transcription/index.tsx`, `index.module.css` | whole page shell, key modal, action row, bottom actions | No | **Isolated renderer-only** (engine API untouched). Watch the E2E `data-testid` set. |
++| 10 | Composer relocation | `pages/conversation/components/ChatConversation.tsx`, `components/chat/SendBox/index.tsx`, `KelModelPill`/`KelToolsControl` | `headerExtraNode` (`ChatConversation.tsx:443-465`), `sendbox-tools` row | **YES — adjacent:** Phase 3 added `KelApprovalCard` into `MessageList` and the Work panel; the header/pill area itself is untouched | Do it **after** Phase 3/4 land. Preserve the invisible warm-up `AcpModelSelector`. |
++| 11 | Readability sweep | `pages/settings/AppearanceSettings/CssThemeSettings.tsx`, `pages/settings/SystemSettings.tsx`, `components/kel/ThemeColorsSection.tsx`, transcription CSS | theme-gallery card label, backup buttons, colour rows | **No Butler in these files** (verified: Butler appears in `ModelModalContent`, `ToolsModalContent`, `AgentSettings`, `AssistantSettings`, `SkillsSettings`, `FeedbackReportModal`, `WebuiModalContent`, `LocalAgents` — none of which this item touches) | Safe. But the **theme-gallery fix is the colour-picker file** — items 11 and 12 overlap each other and should be one commit. |
++| 12 | Colour-picker remount | `components/kel/ThemeColorsSection.tsx` | `ThemeColorRow` keys `${token}:${hexValue}:${saved}:${rev}`, parent `key={`${themeId}:${refresh}`}`, `apply()` | No | Same file as item 11 → **one commit**. |
++| 13 | Team terminology + no-op seed | `pages/kel/team/index.tsx`, `components/settings/SettingsSider.tsx` (shared with item 2), i18n | Office empty `onAction`, tab labels | **YES — Phase 4**: locale catalogs + Butler in Skills/Assistants settings | Coordinate the sider part with item 2 and Phase 4; the Office-button fix is independent. |
++
++## 11.3 New finding from this recon (for Main, not for me to fix)
++
++**The five Kel console pages are not localised.** Their user-facing copy — `"Work could not be loaded"`,
++`"Autonomy state could not be loaded"`, `"Project context could not be loaded"`, `"Your transcripts live
++here"`, `"Seed the default roster"`, `"No specialist has been assigned yet."` — is **hard-coded English
++inside `pages/kel/**`**. Verified: none of these strings exists in
++`renderer/services/i18n/locales/en-US/*` (20 catalog files).
++
++Consequence for sequencing: Phase 4's "audit ALL supported locales and every normal user-facing surface" will
++**not** reach these pages through the catalogs. Either Main adds them to the catalogs (making my copy edits a
++locale-key change instead of a literal change), or the Kel pages stay English-only by decision. **The
++coordinator should choose, because it decides whether my copy work lands inside or outside Phase 4's lane.**
++
++## 11.4 Safest implementation order (conflict-aware)
++
++1. **Isolated, zero-overlap, highest severity first:** items 4 (error translation) → 3 (hover overlap).
++2. **Coordinated once, never twice:** items 2 + 13's sider half + Phase 4's settings/Butler decisions
++   → single coordinated edit of `SettingsSider.tsx` + `Router.tsx`.
++3. **Global token/density pass:** item 1 alone, its own commit, re-measure before proceeding.
++4. **Page rebuilds:** items 6, 7, 8 (Work, Projects, Permissions) — independent of Main, but the
++   approvals-ownership question (item 8) must be answered first.
++5. **Transcription:** item 9 — independent, largest single-file rewrite, do when nothing else is in flight.
++6. **Shared-file items last, from the clean HEAD:** item 5 (`KelService.ts`) and item 10 (composer), each
++   re-read and re-validated against the HEAD before editing.
++7. **Readability/contrast gate:** items 11 + 12 together, then wire the gate.
++
++**Never in parallel with Main:** `KelService.ts`, `KelWorkPanel.tsx`, `MessageList.tsx`, `Messages/hooks.ts`,
++`common/chat/chatLib.ts`, and (new) the 12 locale directories.
+diff --git a/docs/v1.6-visual-ux/12_ACCEPTANCE_CRITERIA.md b/docs/v1.6-visual-ux/12_ACCEPTANCE_CRITERIA.md
+new file mode 100644
+index 0000000..ed447d7
+--- /dev/null
++++ b/docs/v1.6-visual-ux/12_ACCEPTANCE_CRITERIA.md
+@@ -0,0 +1,60 @@
++# 12 — Acceptance Criteria per Finding
++
++Four evidence classes are used, and **all four are required** for a finding to close:
++
++* **A — automated/engine**: a repeatable command whose failure is unambiguous (engine tests, tsc, the repo's
++  own suites).
++* **P — packaged app**: measured in the running packaged build (the `probe-{a,b,c}.cjs` harness in
++  `C:\Users\Nick\Desktop\Kel\ux-audit\visual`, which writes JSON + PNG).
++* **D — DOM/measurement**: a numeric assertion on the rendered DOM (geometry, computed style, contrast ratio,
++  char count, element identity).
++* **H — human/pixel**: a person (or a vision-capable reviewer) looking at a specified screenshot and confirming
++  the described state. **This class cannot be satisfied by this audit thread** — it is the open gate.
++
++Baseline values to compare against are the ones recorded in `evidence-visual-{a,b,c}.json` and summarised in
++`00_STATUS.md`.
++
++## S1 findings
++
++| # | Finding | Observable behaviour (done = ) | A | P | D | H |
++|---|---|---|---|---|---|---|
++| 3 | Settings nav ejects from Settings | Clicking **every** Settings entry keeps the Settings sidebar and never shows the main nav | n/a (no engine path) | `probe-a` → `settingsNav` disabled/short-circuited | for every settings route: `hasSettingsSider === true && hasMainNavWork === false` | `appearance-light-1440.png` vs the corrected capture: footer still reads "Back to Chat"… and sidebar still lists settings groups |
++| 16 | Raw engine error text reaches the user | No screen ever renders an exception string; failures read as sentences | `grep -rn "err.message\|String(err)" renderer/pages/kel` shows no direct render into copy | `probe-b` engine-loss scenario | no alert text matching `/TypeError\|fetch failed\|ECONNREFUSED\|Error invoking/`; a `role=alert` exists with human copy | `b-030-engine-lost-*.png` (5) replaced by corrected captures |
++| 17 | No post-launch engine supervision | After the engine stops, the UI recovers (or states the condition and offers one working action) without restarting the app | engine suite green; new supervision unit path tested | `probe-b` kill-engine then revisit all five screens | previously-failing surfaces become non-error **and** a single clear state appears | `b-030-engine-lost-*.png` (5) after the fix |
++
++## S2 findings
++
++| # | Finding | Observable behaviour (done = ) | A | P | D | H |
++|---|---|---|---|---|---|---|
++| 1 | Colour picker closes mid-interaction | The colour/hex control keeps identity and focus across a change | n/a | `probe-c` → `hexField` | `focused === true` after a change; the queried node is the **same** node (`document.querySelector(sel) === window.__prev`); override still applies | `c-030-appearance-hex.png` / `appearance-after-colour-change-light-1440.png` |
++| 5 | Hover actions overlap titles | Hovering a row never covers the title | n/a | `probe-c` → `hover` | `overlapPx <= 0` (baseline **12**) | `c-010-sidebar-hover.png` |
++| 7 | Permissions too technical/large | The page leads with what needs the user; no policy-checker panel; no nested cards; vocabulary is plain | n/a | `probe-a` → `autonomy` | visible char count materially below **3615** (target < 1200); no `.kel-card` inside `.kel-card`; zero occurrences of `lease`/`guardrail`/`digest` in body copy | `permissions-light-1440.png` / `permissions-dark-1440.png` |
++| 9 | Work oversized/card-heavy | Only sections with content render; no empty-in-card; no 24px headings over empty areas | n/a | `probe-a` → `work` | ≤1 card rendered on an empty account; **0** nested `kel-empty` inside `kel-card`; max heading px ≤ 22 | `work-light-1440.png`, `work-dark-1440.png` |
++| 8 | Projects oversized / mis-titled | The surface names what it actually contains; no 7-column admin grid; no raw JSON in body copy | n/a | `probe-a` → `projects` | no `<pre class="kel-code">` in the knowledge/conflicts/recipes bodies; per-row action count ≤ 1 visible + menu | `projects-light-1440.png`, `projects-dark-1440.png` |
++| 6 | Transcription diverges from the authoritative IA | Column titled *Transcriptions* with an **API Key** text action; actions top-right as *Upload Audio · Record More · Record*; four bottom actions; Kel tokens only | n/a | `probe-a` → `transcription` | title text present; button order matches; **0** `--color-*` donor vars in `index.module.css`; `Record` is right-most | `transcription-{light,dark}-1440.png` + 1280/1024 |
++| 4 | Readability on donor surfaces | Every readable string ≥ 4.5:1 (3:1 large) in both themes | n/a | `probe-a` offenders arrays | **0** offenders on transcription / settings-model / settings-system / appearance, both themes (baseline: 1.06, 1.23, 1.5, 1.7, 2.13, 2.21, 2.92, 3.24, 3.25) | the same four surfaces, both themes |
++| 2 | Model/Tools detached from composer | The model pill and tools control render inside the composer, not the header | tsc clean | `probe-a` on `#/guid` + a conversation route | the pill/tools nodes are descendants of the sendbox container; header `headerExtra` contains neither | `shell-1440-light.png` + a conversation capture (see gap note) |
++
++## S3 findings and verified extra defects
++
++| # | Finding | Observable behaviour (done = ) | A | P | D | H |
++|---|---|---|---|---|---|---|
++| 13 | Redundant row icons | Rows that carry no distinguishing information show no leading icon | n/a | `probe-c` → `sidebar.inventory[].lead` | for single-assistant conversations `lead` is empty/absent; cron/status/fork marks still present | `c-020-after-newchat.png` |
++| 14 | Project/folder semantics collide | One word means one thing; the nav entry that opens a knowledge console is not called "Projects" | n/a | `probe-a` → nav labels + `projects.textHead` | nav label and page title agree; the word "Projects" no longer appears on both the group section and the console page | `shell-1440-light.png`, `projects-light-1440.png` |
++| 12 | Lingering empty conversations | No sidebar row exists for a conversation with zero messages | n/a | `probe-c` → `sidebar.rowCount` vs store query | rendered rows == conversations with ≥1 message (baseline: 5 rows vs 9 conversations / 6 empty) | `c-020-after-newchat.png` |
++| X1 | Team → Office "Seed the default roster" does nothing | The button either seeds or is absent | engine `seed` path covered by tests | `probe-a` → `team` | clicking it changes `roster.roles.length` from 0 to >0, or the button is gone | `team-office-light-1440.png` |
++| X2 | `TeamSiderSection.tsx` dead code | Either mounted and reachable, or removed | tsc/lint clean after change | n/a | no unreferenced component remains | n/a |
++| 11 | New Chat behaviour (S4/design) | **Requires a coordinator decision** — see `15_SEMANTICS_FLAGS.md` | — | — | — | — |
++
++## Evidence gaps that block full acceptance today
++
++1. **No conversation-route screenshots exist.** My sweep covered `/guid` and the five Kel pages; the chat
++   surface with a live conversation (`#/conversation/<id>`, where the header pills actually render — Main's own
++   note in `docs/v1.6/AUTO_RESUME.md` records this) was **not** captured. Findings **2, 5 (row actions in
++   context) and the Phase 3 approval card** therefore have no packaged screenshot. **Action for the
++   implementation phase: capture `conversation-*` screenshots first, before touching the composer.**
++2. **Dense/populated states** (many jobs, long transcripts, many roles) were not exercised; the density
++   criteria above are stated on empty/small states. Accept them as necessary-but-not-sufficient.
++3. **`desktop.log` from a failed-engine session** was not collected; add it to the acceptance pack for #17.
++4. Every row above with an **H** cell requires a human or vision-capable reviewer. **This audit cannot close
++   the Human Visual UX gate.**
+diff --git a/docs/v1.6-visual-ux/13_IMPLEMENTATION_DEPENDENCIES.md b/docs/v1.6-visual-ux/13_IMPLEMENTATION_DEPENDENCIES.md
+new file mode 100644
+index 0000000..46c0a5b
+--- /dev/null
++++ b/docs/v1.6-visual-ux/13_IMPLEMENTATION_DEPENDENCIES.md
+@@ -0,0 +1,62 @@
++# 13 — Implementation Dependency Map and Commit Grouping
++
++## 13.1 Classes of work
++
++| Class | Definition | Members |
++|---|---|---|
++| **Independent** | No other planned fix and no Main/P1/Phase-4 work touches the region. Can land first, in any order among themselves. | hover/title overlap (#5) · Projects retitle + de-grid (#8) · Team seed-button defect (X1) · sidebar icon policy (#13) · readability sweep on donor surfaces (#4) · contrast gate |
++| **Settings-routing dependent** | Anything that decides *where* Team / Permissions / Tools live must follow the routing decision, not precede it. | the settings-shell fix (#3) itself · Team terminology + settings entries (#14, #15) · any "render Team inside Settings" variant · Phase 4's Butler entry removal (same files) |
++| **Engine/lifecycle sensitive** | Touches boot, spawn, descriptor, or the error path. Must come from the clean Main HEAD and must not race P1. | error translation (#16) · supervision/recovery (#17) · the `KelService.ts` readiness gate · boot-failure copy (also Phase 4 `common.json`) |
++| **Renderer-only, but token-coupled** | Purely visual, but every pixel shifts when the token layer changes, so they must land *after* the density pass or be re-verified. | Work / Projects / Permissions de-carding (#7, #9, #10) · transcription IA (#6) · empty-state policy |
++| **Shared-with-Main** | Main has committed changes here since `ffeef73`; re-read before editing and serialize. | `process/services/kel/KelService.ts` · `components/chat/KelWorkPanel.tsx` · `pages/conversation/Messages/MessageList.tsx` · `pages/conversation/Messages/hooks.ts` · `common/chat/chatLib.ts` (+ new `components/kel/KelApprovalCard.tsx`) |
++
++## 13.2 Dependency edges (what must exist before what)
++
++```
++tokens + density (batch 1, alone)
++   ├─> Work / Projects / Permissions rework (batch 3)
++   ├─> transcription IA (batch 4)
++   └─> any new "empty state" policy
++
++settings routing decision (batch 2)
++   ├─> Team terminology + settings entries (batch 5)
++   ├─> Permissions/Team placement in nav
++   └─> must be agreed WITH Phase 4 (Butler entry removal touches the same settings areas)
++
++clean Main HEAD  +  P1 (runtime) landed
++   ├─> error translation (batch 6)
++   └─> engine supervision (batch 6)   [isolated; lifecycle code]
++
++Phase 3 HEAD stable  +  conversation screenshots captured
++   └─> composer/model relocation (batch 7)
++
++independent → can go immediately after batch 1: hover overlap, sidebar icons, readability sweep
++```
++
++## 13.3 Commit grouping (each batch = one reviewable change set)
++
++| Batch | Name | Contains | Must NOT contain | Pre-condition | Verify with |
++|---|---|---|---|---|---|
++| **1** | **Design tokens + density** | `styles/kel-tokens.css`, `styles/arco-override.css`, radius/scale consolidation | any component restructuring | clean HEAD | `probe-a` all surfaces: contrast not worse, histograms shifted down, screenshots regenerated |
++| **2** | **Settings shell routing** | `components/layout/Router.tsx`, `components/settings/SettingsSider.tsx`, `pages/settings/components/SettingsPageWrapper.tsx` | token values, Team page internals | routing decision recorded; Phase 4 Butler scope agreed | `probe-a` → `settingsNav` for every settings entry |
++| **3** | **Kel console pages** | `pages/kel/work/index.tsx`, `projects/index.tsx`, `autonomy/index.tsx`, `components/kel/KelPrimitives.tsx` (card/empty/chip primitives) | `KelService.ts`, any lifecycle code | batch 1 | `probe-a` char counts + nesting + heading sizes |
++| **4** | **Transcription IA** | `pages/kel/transcription/index.tsx`, `index.module.css` | engine API, composer mic path | batch 1 + the API-Key semantics flag resolved | `probe-a` transcription assertions; the main thread's `transcription` scenario must still pass |
++| **5** | **Sidebar + row ergonomics** | `pages/conversation/GroupedHistory/ConversationRow.tsx`, `Sider/index.tsx` (icon policy only), `pages/kel/team/index.tsx` (seed button), i18n keys if any | `KelWorkPanel` (Main owns it) | batch 2 decision | `probe-c` → `hover.overlapPx <= 0`, `newChat`, `sidebar.inventory` |
++| **6** | **Engine reachability UX + supervision** | `process/services/kel/KelService.ts`, `components/kel/kelApi.ts`, the five `pages/kel/**` error sites, a new error-class module | anything else | clean HEAD + P1 landed; Phase 4 boot-copy coordination | `probe-b` kill-engine scenario; `desktop.log` collected |
++| **7** | **Composer ergonomics** | `pages/conversation/components/ChatConversation.tsx`, `components/chat/SendBox/index.tsx`, the pill/tools components | `MessageList.tsx` / `KelWorkPanel.tsx` / `chatLib.ts` unless re-read post-Phase-3 | Phase 3 stable + conversation screenshots exist | `probe-a` on a conversation route; header/composer node assertions |
++| **8** | **Readability sweep + contrast gate** | `CssThemeSettings.tsx`, `SystemSettings.tsx`, `ThemeColorsSection.tsx`, transcription CSS (if not done in 4) | token values | batch 1 (to avoid double reflow) | `probe-a` offenders === 0 on those surfaces, both themes |
++
++**Must remain isolated (never bundled):** engine supervision (lifecycle; a bad merge here breaks startup),
++transcription (1109-line file; large diff), tokens (global reflow), settings routing (changes navigation).
++Bundling any of these with another batch makes bisecting a regression impractical.
++
++## 13.4 Re-validation checklist before the first edit (per the hold conditions)
++
++1. `git rev-parse <CLEAN_MAIN_HEAD>` matches the coordinator's value.
++2. Confirm `KelService.ts`, `KelWorkPanel.tsx`, `MessageList.tsx`, `hooks.ts`, `chatLib.ts` are byte-identical
++   to the versions read here; if not, re-read **and re-validate the root cause** of findings 2/5/16/17.
++3. Confirm `pages/kel/**`, `styles/kel-tokens.css`, `Sider/**`, `Router.tsx`, `SettingsSider.tsx` are still
++   unchanged since `ffeef73` (they were clean at the time of writing).
++4. Re-run `probe-a` against a package built from that HEAD to refresh every baseline number in
++   `12_ACCEPTANCE_CRITERIA.md` before claiming any improvement.
++5. Re-check whether Phase 4 (i18n) has started; if it has, take the settings copy/entries coordination first.
+diff --git a/docs/v1.6-visual-ux/14_SCREENSHOT_REVIEW_INDEX.md b/docs/v1.6-visual-ux/14_SCREENSHOT_REVIEW_INDEX.md
+new file mode 100644
+index 0000000..f64c3e9
+--- /dev/null
++++ b/docs/v1.6-visual-ux/14_SCREENSHOT_REVIEW_INDEX.md
+@@ -0,0 +1,60 @@
++# 14 — Screenshot Review Index
++
++**Location:** `docs/v1.6-visual-ux/screenshots/` (35 PNG files, all captured from
++`package-final16` = `ffeef73` + Phase 3 WIP, off-screen 1440×900 unless the filename says otherwise).
++
++**Theme labelling:** the app's default is **light**. `*-light-1440.png` = light theme; `*-dark-1440.png` =
++after the in-app theme toggle. Files prefixed `b-` are from the engine/interaction probe, `c-` from the
++populated-sidebar probe.
++
++Every row requires a **human or vision-capable reviewer**; this audit did not see the pixels. The
++"expected corrected state" column is the acceptance target for the remediation phase — do not check it before
++the corresponding batch lands.
++
++| # | File | Finding(s) | Route / surface | What the reviewer must inspect | Expected corrected state |
++|---|---|---|---|---|---|
++| 1 | `shell-1440-light.png` | 2, 3, 13, 14 | `/guid` (shell) | Nav list and its wording; the **New Chat** button's radius (7px now); sidebar section labels; per-row leading icons; footer entries | Nav uses one vocabulary; New Chat matches the 8px control radius; no leading icon on plain conversations; section labels read as structure |
++| 2 | `work-light-1440.png` | 9, 10 | `/work` | How many bordered cards render on an empty account; the 32px title over one sentence; dashed empty boxes nested inside cards; 24px card headings | Only sections with content render; no card-in-card; headings ≤22px; page reads as a short list, not a stack of panels |
++| 3 | `work-dark-1440.png` | 9, 10 | `/work` (dark) | Same as above + dark surfaces are slate-navy, not charcoal | Same as above, in the new dark foundation |
++| 4 | `work-1280x720.png` | 9, 10 | `/work` small laptop | Whether the four cards force scrolling for no content | Fits comfortably; no scroll for an empty state |
++| 5 | `work-1024x768.png` | 9, 10 | `/work` narrow | Card width, gutter, text measure | Gutters hold; content stays left-aligned and readable |
++| 6 | `projects-light-1440.png` | 8, 10, 14 | `/projects/knowledge` | The **title says "Projects" but the subtitle says "General · N knowledge records · map — · N recipes"**; the 7-column table; three action buttons per row; raw JSON under Conflicts | Title matches the content; no admin grid; one action + menu; JSON behind a disclosure |
++| 7 | `projects-dark-1440.png` | 8, 10, 14 | `/projects/knowledge` (dark) | Same | Same |
++| 8 | `permissions-light-1440.png` | 7, 10 | `/autonomy` | **`Emergency stop` sitting next to `Reload`** (and no confirmation); the 3-line explanatory paragraph; `Capability leases` columns (`review_ref`, `kind: value`); the nested card per boundary request; **"Ask the engine about a scope"** panel; `Locked guardrails · digest …` | Pending items lead; one card, no nesting; no policy-checker panel; plain vocabulary; Emergency stop behind an overflow with a confirm |
++| 9 | `permissions-dark-1440.png` | 7, 10 | `/autonomy` (dark) | Same | Same |
++| 10 | `team-office-light-1440.png` | 15, X1 | `/team/office` | The empty-state button **"Seed the default roster"** (it currently only reloads); the word "Office" | The button seeds or is gone; wording matches what the tab shows |
++| 11 | `team-roster-light-1440.png` | 15 | `/team/roster` | "Roster" grouping by department; `Open in Studio` (Studio implies authoring that does not exist) | Plain labels ("Roles", "Role detail"); no invented authoring affordance |
++| 12 | `team-dark-1440.png` | 15, X1 | `/team/*` (dark) | Same as above in dark | Same |
++| 13 | `transcription-light-1440.png` | 6, 4, 10 | `/transcription` | **No "Transcriptions" title, no API Key entry** (a `Source` text button sits at the bottom); section titles `FOLDERS`/`RECENT TRANSCRIPTIONS`; action row top-**left** in the order `Record · Upload Audio`; 16px `<strong>` title with a `Rename` button; **eight** bottom buttons; two floating bordered panels | Column titled *Transcriptions* + **API Key** text action; actions top-right as `Upload Audio · Record More · Record`; large title + saved state; four primary bottom actions; column + document, not two cards |
++| 14 | `transcription-dark-1440.png` | 6, 4, 10 | `/transcription` (dark) | **The `Source` button contrast (measured 2.21:1)** and the donor-blue drop/active tints against Kel's accent | `API Key` readable at ≥4.5:1; no donor-primary tints |
++| 15 | `transcription-1280x720.png` | 6, 10 | small laptop | Whether the two panels squeeze the transcript body | Transcript keeps a comfortable measure |
++| 16 | `transcription-1024x768.png` | 6, 10 | narrow | The stacked (column-above-workspace) fallback at ≤980px | Still readable and ordered |
++| 17 | `settings-system-light-1440.png` | 4, 10 | `/settings/system` | **`Back up now` (white on near-white, 1.23:1)**, `Restore from this backup` (1.5:1), `Clear` (3.25:1); 1,259 characters at 12px | Buttons readable; density reduced |
++| 18 | `settings-model-light-1440.png` | 4, 10 | `/settings/model` | **`Needs setup` chip (2.92:1)**; 434 chars at 13px | Chip readable; scale reduced |
++| 19 | `appearance-light-1440.png` | 1, 4, 10 | `/settings/appearance` | **Theme-gallery labels `Light`/`Dark`/`Follow System` at 1.06:1**; `Reset` at 1.7:1; the 16px-radius `bg-2` blocks; the colour rows | Labels readable and outside the preview swatch; `Reset` ≥4.5:1; 8px surfaces; stable colour rows |
++| 20 | `appearance-dark-1440.png` | 1, 4, 10 | `/settings/appearance` (dark) | `Reset` at 2.13:1; the swatch/hex row layout | `Reset` readable; rows stable across changes |
++| 21 | `appearance-after-colour-change-light-1440.png` | 1 | `/settings/appearance` after a colour change | Whether the row the user just changed looks consistent (swatch, hex, "changed" marker) | No visual glitch; control keeps identity |
++| 22 | `c-030-appearance-hex.png` | 1, 4 | after typing into the hex field | Whether the typed value survives and the field is still focused | Value kept; focus retained; override applied |
++| 23 | `c-010-sidebar-hover.png` | 5, 13 | populated sidebar, row hovered | **Whether the hover menu sits over the title's tail**; which rows show a leading icon | Title ellipsised *before* the button; plain chats show no icon |
++| 24 | `c-020-after-newchat.png` | 11, 12, 13 | sidebar after New Chat | Whether a new/empty row appeared; how many rows are real conversations | No phantom row; rows equal conversations with ≥1 message |
++| 25 | `b-000-boot.png` | baseline | post-onboarding default | What a first launch actually presents (reference image) | Reference only |
++| 26 | `b-020-after-new-chat.png` | 11 | `/guid` after New Chat | The empty composer state — does it read as "a new conversation started"? | An explicit, honest empty state |
++| 27 | `b-021-sidebar-after-roundtrip.png` | 11, 12 | after leaving/returning | Whether anything accumulated | Nothing accumulated |
++| 28 | `b-010-appearance-after-color.png` | 1 | appearance after a programmatic change | Row integrity after change | Stable |
++| 29 | `b-030-engine-lost-work.png` | 16, 17 | `/work` with the engine stopped | **The literal `TypeError: fetch failed` in body copy**, the `Fix:` paragraph, **and the coexisting "Nothing waiting to continue." / "No specialist has been assigned yet." cards** | One human state, one action, raw detail behind a disclosure, no contradictory empty sections |
++| 30 | `b-030-engine-lost-projects.png` | 16, 17 | `/projects/knowledge` engine stopped | Same raw leak | Same |
++| 31 | `b-030-engine-lost-autonomy.png` | 16, 17 | `/autonomy` engine stopped | Same raw leak | Same |
++| 32 | `b-030-engine-lost-team.png` | 16, 17 | `/team/office` engine stopped | Same raw leak | Same |
++| 33 | `b-030-engine-lost-transcription.png` | 16, 17 | `/transcription` engine stopped | Same raw leak (note: the page still offers "Upload audio" while the library failed) | Same |
++| 34 | `diagnostics-light-1440.png` | 10 | `/diagnostics` | 1,088 chars at 14px + 86 at 24px — the "too large" pattern on an internal surface | Reduced scale |
++| 35 | `providers-light-1440.png` | 10 | `/providers` | 878 chars at 16px; provider cards | Reduced scale; card policy applied |
++
++## Not covered by these 35 files (must be captured in the remediation phase)
++
++| Gap | Why it matters | Capture needed |
++|---|---|---|
++| `#/conversation/<id>` (any platform) | The chat header pills (**finding 2**) render only on a conversation route — Main's own note in `docs/v1.6/AUTO_RESUME.md` records this. The **Phase 3 approval card** also has no screenshot. | `conversation-light/dark-1440.png`, one with an approval pending |
++| Dense/populated states | Density claims are stated on empty/small states | A profile with several jobs, a long transcript, several roles |
++| `Follow system` theme + third-party theme | Untested | One capture each |
++| Widths < 1024px and > 1440px | Only 1024/1280/1440 exist | 900px and 1920px for Work + Transcription |
++| `desktop.log` of a failed-engine session | Needed for finding 17 root-cause closure | Copy into the acceptance pack |
+diff --git a/docs/v1.6-visual-ux/15_SEMANTICS_FLAGS.md b/docs/v1.6-visual-ux/15_SEMANTICS_FLAGS.md
+new file mode 100644
+index 0000000..45bf58e
+--- /dev/null
++++ b/docs/v1.6-visual-ux/15_SEMANTICS_FLAGS.md
+@@ -0,0 +1,121 @@
++# 15 — Semantics-Altering Proposals (flagged for coordinator review)
++
++Everything in this file **changes product behaviour, capability, or vocabulary** rather than visual
++presentation. None of it should be implemented inside a visual pass without an explicit decision. Each item
++states the proposal, why it is semantic, the options, and a recommendation with reasoning.
++
++---
++
++## F1 — New Chat: eager draft conversation (finding 11)
++
++**Proposal (from the user's report):** create a temporary conversation immediately on New Chat, remove it if
++abandoned empty.
++**Why semantic:** it introduces a conversation lifecycle with create-and-garbage-collect semantics that does not
++exist today (measured: New Chat creates nothing — rows 5 → 5 → 5). It changes what the store contains, what the
++sidebar shows, and what `reconcileHistory` will import on the next boot.
++**Options:** (a) keep navigation-only; (b) local draft that is never persisted until the first message;
++(c) eager persisted conversation with an abandonment sweep.
++**Recommendation:** (a) + make the empty composer state explicit ("Nothing here yet — your first message starts
++the conversation"), then revisit (b) as its own change with its own tests. (b) is the only option that gives the
++user the "something started" feel without creating garbage; (c) is what produced finding 12.
++**Do not implement in the visual pass.**
++
++## F2 — Hiding message-less conversations from the sidebar (finding 12)
++
++**Proposal:** do not render sidebar rows for conversations with zero messages.
++**Why semantic:** it changes *visibility of user data*. The audited store holds 6 of 9 conversations with zero
++messages, **including `main`** — the conversation the Work surfaces use (`kelWork('main')`). A naive filter could
++hide a conversation the product itself depends on, or hide a conversation a user believes exists.
++**Options:** (a) filter rows where `message_count === 0` **and** the id is not a system conversation;
++(b) mark them ("empty draft") instead of hiding; (c) leave as-is.
++**Recommendation:** (a) with an explicit allow-list/deny-list for system conversations, or (b) if any doubt.
++**Needs:** confirmation of the rule from the coordinator before editing the sidebar.
++
++## F3 — Permissions: the "Ask the engine about a scope" panel (finding 7)
++
++**Why semantic:** it is a **capability**, not decoration — the only user-reachable way to ask the policy engine
++about a scope (`kelAutonomy.check`).
++**Options:** (a) delete; (b) relocate to Diagnostics; (c) collapse behind a disclosure on Permissions.
++**Recommendation:** (b) or (c). Deleting a capability to make a page look calmer is out of scope for a visual
++pass. Relocating keeps the ability while removing the jargon from the primary surface.
++
++## F4 — Permissions: Emergency stop placement (finding 7)
++
++**Why semantic:** moving a global safety control into an overflow menu changes its **availability under stress**.
++**Options:** (a) keep in the header, visually separated and confirmed; (b) overflow menu with a confirm; (c) leave.
++**Recommendation:** (a) — separate it from `Reload`, add a confirmation that states the consequence
++("revokes every active permission and pauses all work; completed effects are not undone"). Hiding a stop control
++is a safety decision, not a spacing decision.
++
++## F5 — Where Team / Permissions / Tools live (findings 3, 14, 15)
++
++**Why semantic:** the settings entries `Agents`, `Team roles`, `Tools` are currently the *only* route to those
++surfaces, and they eject the user from Settings. Any fix chooses an information architecture.
++**Options:** (a) keep the destinations inside the Settings shell; (b) move Team/Permissions into the primary
++nav; (c) remove the settings entries and add a "Team" entry to the sidebar.
++**Recommendation:** (a) for Tools/Permissions-as-settings, and (b) for **Team**, because Team is a workspace
++(a place you use) rather than a preference. **Must be decided together with Phase 4**, which proposes removing
++the **Butler** entry points that live in exactly these settings areas
++(`ModelModalContent.tsx`, `ToolsModalContent.tsx`, `AgentSettings`, `AssistantSettings`, `SkillsSettings` —
++measured present in those files).
++
++## F6 — Retiring the word "Agent" (finding 15)
++
++**Why semantic:** it is user-facing vocabulary, and it overlaps Phase 4's donor-string cleanup.
++**Options:** (a) retire "Agent" until agents are creatable; (b) keep it and add creation later.
++**Recommendation:** (a) — the only "agent" objects reachable today are engine-seeded role templates. Route the
++wording decision through Phase 4 so one lane owns terminology.
++
++## F7 — Removing per-row conversation icons (finding 13)
++
++**Why semantic:** the leading mark is not purely decorative — it carries preset-assistant emoji/logo,
++cron status, waiting state, generating spinner, and fork lineage.
++**Options:** (a) remove the whole leading slot; (b) remove only the undifferentiated branches (generic robot /
++generic message) and keep every informative one.
++**Recommendation:** (b). (a) would silently drop real state signals; (b) reclaims the 30px for titles without
++losing information.
++
++## F8 — Transcription "Source" → "API Key" (finding 6)
++
++**Status: already decided by the user** ("API Key is clickable TEXT, not a gear. It opens the Meta API key
++modal") — no new decision needed. Recorded here only because the label makes a claim: it names the provider.
++If Kel ever transcribes through a second provider, the label must generalise. Note also that Kel's current
++modal has *no helper paragraph* either way, matching the decision.
++
++## F9 — Not rendering empty sections on Work (finding 9)
++
++**Why semantic (mild):** the "Team assignments" section teaches a new user that specialists exist; removing it
++entirely on an empty account removes that discovery.
++**Recommendation:** remove the *cards*, keep the teaching as one line of plain text inside the page-level empty
++state ("Kel assigns a specialist only when a step actually runs"). Presentation-level, listed for completeness.
++
++## F10 — `TeamSiderSection.tsx`: delete vs wire (extra defect X2)
++
++**Why semantic:** *wiring* it introduces user-created teams (a new feature, out of scope). *Deleting* it removes
++dead code (no user-visible change).
++**Recommendation:** deletion in a **separate, clearly-scoped** cleanup commit — **not** inside the visual pass,
++and never wired without a product decision.
++
++## F11 — System page buttons: contrast vs disabled state (finding 4)
++
++**Why semantic:** `Back up now` measured 1.23:1 and `Restore from this backup` 1.50:1. If those states are
++intentionally *disabled*, "fixing" the colours could imply an available action.
++**Recommendation:** first confirm whether the controls are disabled (read `SystemSettings.tsx` state), then fix
++the **disabled** treatment to be legible-but-clearly-inactive rather than making it look primary. Flag to the
++coordinator because it touches apparent capability.
++
++## F12 — Two approval surfaces (finding 7 vs Phase 3)
++
++**Why semantic:** Permissions (Allow once / Allow for this project / Deny) and the Phase 3 in-chat approval card
++are two UIs for the same decision on the same durable record.
++**Options:** (a) chat is primary and Permissions shows a read-only decision log; (b) both interactive;
++(c) Permissions is primary and chat links to it.
++**Recommendation:** (a) — with the Phase 3 owner in the room, since Phase 3 was just committed. A visual pass must
++not decide where approval authority lives.
++
++## F13 — Kel console pages are not localized
++
++**Observation, not a proposal:** every string I propose changing in `pages/kel/**` is a **hard-coded English
++literal** (`grep` of `en-US/*.json` finds none of: "could not be loaded", "Autonomy state", "Projects"). The rest
++of the app carries 12 locale catalogs. Phase 4 owns localization; the visual pass should avoid *adding* new
++hard-coded copy, and should not attempt localization (scope).
+diff --git a/docs/v1.6-visual-ux/16_PHASE4_DELTA.md b/docs/v1.6-visual-ux/16_PHASE4_DELTA.md
+new file mode 100644
+index 0000000..0ee261a
+--- /dev/null
++++ b/docs/v1.6-visual-ux/16_PHASE4_DELTA.md
+@@ -0,0 +1,121 @@
++# 16 — Phase 4 Delta / Revalidation Prep (read-only, standby)
++
++**Purpose:** satisfy the standby instruction "revalidate before editing": classify every original Visual finding
++against the current **committed** Main head so that implementation can begin immediately and correctly when
++`visual_clean_head` is published.
++
++| | |
++|---|---|
++| Audit baseline (my evidence set) | `ffeef73` |
++| Main committed head examined | `60b2322` (`ux/v15-journeys`) — `docs(v1.6): MAIN_STATUS — Worktree reviewed state` |
++| Phase 4 production commit | `fd04c00` — *"Phase 4 complete — donor identity out of the product, all 12 locales clean"* |
++| Method | read-only `git diff`/`git show` against the integration worktree; **no files written in Main** |
++| Date of this pass | 2026-09-17 (standby) |
++
++## Repo-truth verification (the 7 start conditions)
++
++| # | Condition | Result |
++|---|---|---|
++| 1 | `visual_clean_head` exists | **NO — `visual_clean_head: NONE`** → start condition **not met** |
++| 2 | Reachable from `ux/v15-journeys` | `60b2322` YES · `fd04c00` YES |
++| 3 | Main worktree clean when published | `git status --porcelain` → **0 entries** (clean) |
++| 4 | Contains every Visual integration dependency | Cannot be assessed until a clean head is published |
++| 5 | Not revoked/superseded by a later status | Status currently reads `state: WAITING_FOR_AUDIT`, `visual_required: true` |
++| 6 | Main not actively modifying my files | Clean tree, but Main is **gated on the Independent Audit's CONTINUE** before Phase 5, so renderer work may resume at any time |
++| 7 | Frozen releases untouched | Zero files under `Kel Releases/` modified since 12:00; `v1.6.0-pre1` still peels to `f24d9c2` (see note) |
++
++**Annotated-tag note (checked, not assumed):** `git rev-parse v1.6.0-pre1` returns `ceac727…`, which is the
++**annotated tag object**, not a moved tag. It still targets commit `f24d9c28…` = `f24d9c2`. No integrity issue.
++
++## What Phase 4 actually changed (evidence, not assumption)
++
++* **142 files, +1517 / −2142.** The overwhelming majority are the 12 locale catalogs
++  (`i18n/locales/<lang>/{common,settings,conversation,cron,login,preview,team,update}.json`).
++* **Butler surfaces were DELETED** (status `D`): `components/base/ButlerDiagnoseButton.tsx`,
++  `components/base/TalkToButlerButton.tsx`, `hooks/assistant/useTalkToButler.ts`.
++* Butler references were also edited in `ModelModalContent.tsx`, `ToolsModalContent.tsx`, `LocalAgents.tsx`,
++  `AssistantListPanel.tsx`, `AssistantHomeTabs.tsx`, `MyAssistantsList.tsx`, `OfficialAssistantsGrid.tsx`,
++  `SkillDetailPage.tsx`, `SkillsHubSettings.tsx`.
++* **Not touched by Phase 4:** `pages/settings/components/SettingsSider.tsx`, `components/layout/Router.tsx`,
++  `styles/kel-tokens.css`, all five `pages/kel/**` surfaces, transcription page + CSS,
++  `GroupedHistory/**`, `ConversationRow.tsx`, `Sider/**`, `components/kel/**`,
++  `AppearanceSettings/CssThemeSettings.tsx`, `SystemSettings.tsx`, `ThemeColorsSection.tsx`,
++  `ChatConversation.tsx`, `SendBox/index.tsx`.
++
++**Consequence:** my conflict-map concern about a *Butler-removal race* in the Settings entries is **resolved** —
++Main already did that work. The remaining coordination item is the routing decision itself (below).
++
++## ERrata — path correction carried forward (important for implementation)
++
++In `11_CONFLICT_MAP.md` and `13_IMPLEMENTATION_DEPENDENCIES.md` the settings sider is written in two places as
++`components/settings/SettingsSider.tsx`. **That path does not exist at either commit.** The correct file is:
++
++```
++desktop/packages/desktop/src/renderer/pages/settings/components/SettingsSider.tsx
++```
++
++Same for its siblings (`SettingsPageWrapper.tsx`, `SettingsPageHeader.tsx`) — they live under
++`pages/settings/components/`. (Verified with `git cat-file -e` at both `ffeef73` and `60b2322`.)
++
++## Per-finding revalidation classification
++
++Legend: **STILL_PRESENT** (governing file unchanged → root cause stands) · **CHANGED_ROOT_CAUSE** (the file that
++produces the defect was edited upstream) · **FIXED_UPSTREAM** · **STALE** · **NEEDS_NEW_EVIDENCE** (cannot be
++classified from source alone; must re-measure at the clean head).
++
++| # | Finding | Governing file(s) at `60b2322` | Class | Note |
++|---|---|---|---|---|
++| S1-1 | Settings navigation ejects from Settings | `Router.tsx` (unchanged — redirects to `/team/roster`, `/autonomy` verified present at lines 114–132), `pages/settings/components/SettingsSider.tsx` (unchanged) | **STILL_PRESENT** | Root cause intact at the new head. Phase 4 did not fix it. |
++| S1-2 | Engine loss / raw errors / no supervision | `KelService.ts` **CHANGED** (+34/−2 since `ffeef73`); `kelApi.ts` + the five Kel pages unchanged | **STILL_PRESENT (copy layer) + NEEDS_NEW_EVIDENCE (transport layer)** | The raw-string leak in page copy is unchanged; the boot/spawn/descriptor path **must be re-read at the clean head** and re-reproduced before implementing batch 6. |
++| S2-3 | Theme colour picker remount/focus loss | `ThemeColorsSection.tsx` (unchanged) | **STILL_PRESENT** | Keys `${token}:…:${rev}` / `${themeId}:${refresh}` unchanged. |
++| S2-4 | Hover actions overlap titles | `ConversationRow.tsx` (unchanged) | **STILL_PRESENT** | `pe-16px` vs 28px occupied — unchanged. |
++| S2-5 | Permissions technical/oversized | `pages/kel/autonomy/index.tsx` (unchanged) | **STILL_PRESENT** | 3 615-char baseline still valid pending a fresh measure. |
++| S2-6 | Work oversized/card-heavy | `pages/kel/work/index.tsx` (unchanged) | **STILL_PRESENT** | |
++| S2-7 | Projects oversized/card-heavy | `pages/kel/projects/index.tsx` (unchanged) | **STILL_PRESENT** | |
++| S2-8 | Transcription diverges from authoritative IA | `pages/kel/transcription/*` (unchanged) | **STILL_PRESENT** | |
++| S2-9 | Readability/contrast on donor surfaces | `CssThemeSettings.tsx`, `SystemSettings.tsx`, `ThemeColorsSection.tsx` (all unchanged) | **STILL_PRESENT (3 of 4 surfaces)** | **Exception:** the `/settings/model` "Needs setup" chip lives in `ModelModalContent.tsx`, which Phase 4 **CHANGED** → that one offender is **NEEDS_NEW_EVIDENCE**; re-measure before editing. |
++| S2-10 | Model/Tools detached from composer | `ChatConversation.tsx`, `SendBox/index.tsx`, `KelModelPill`/`KelToolsControl` (unchanged) | **STILL_PRESENT** | |
++| S3-11 | Projects naming/semantics mismatch | `pages/kel/projects/index.tsx` + nav labels (unchanged) | **STILL_PRESENT** | |
++| S3-12 | Redundant conversation-row icons | `ConversationRow.tsx`, `conversationAssistantIdentity.ts` (both unchanged) | **STILL_PRESENT** | |
++| S3-13 | Project/folder semantics collide | `GroupedHistory/index.tsx`, `KelNavEntries.tsx` (unchanged) | **STILL_PRESENT** | |
++| S3-14 | "Add Agent" terminology/behaviour | `pages/kel/team/index.tsx` (unchanged); settings area **changed** by Phase 4 | **STILL_PRESENT + NEEDS_NEW_EVIDENCE** | No creation path exists in the Team page. Settings-area wording shifted in Phase 4 (Butler removal + locale values) → re-read the rendered settings entries before changing terminology. |
++| X-15 | Team → Office "Seed the default roster" no-op | `pages/kel/team/index.tsx` (unchanged) | **STILL_PRESENT** | `onAction={() => void load()}` unchanged. |
++| X-16 | `TeamSiderSection` dead/unmounted | `components/layout/Sider/TeamSiderSection.tsx`, `Sider/index.tsx` (unchanged) | **STILL_PRESENT** | Still no importer. |
++| D-17 | New Chat temporary-conversation behaviour | `Sider/index.tsx` (unchanged) | **STILL_PRESENT** | Awaiting the semantics decision (see `15_SEMANTICS_FLAGS.md` F1). |
++| D-18 | Empty-conversation cleanup | `GroupedHistory/**`, `Sider/index.tsx` (unchanged) | **STILL_PRESENT** | Awaiting the rule decision (F2). |
++
++**Nothing was FIXED_UPSTREAM** and **nothing is STALE** — every visual root cause survived Phase 4 intact,
++because Phase 4 was strictly donor-string/locale work and none of it reached my surfaces.
++
++## Indirect-effect watchlist (re-measure, do not assume)
++
++1. **Rendered strings on settings surfaces changed** (12 locales × `settings.json`, `common.json`). Any
++   readability/contrast claim that was tied to a *label's* presence or width must be re-measured
++   (`/settings/model`, `/settings/system`, `/settings/appearance`).
++2. **`SettingsSider` labels resolve through `settings.*` keys** whose values just changed in Phase 4 → capture
++   the rendered Settings list again before deciding the routing fix (the entries are the same; the text may not be).
++3. **Desktop is still `1.5.0`** in the packaged build I audited; a fresh package must be built from the
++   eventual `visual_clean_head` before any packaged acceptance claim.
++4. `KelService.ts` carries Phase 3 + later changes; batch 6 must re-read it fully and re-run the kill-engine
++   reproduction rather than trusting the recorded mechanism.
++
++## Readiness checklist for the moment `READY_FOR_VISUAL` appears
++
++1. `git rev-parse visual_clean_head` == value in MAIN_STATUS; reachable from `ux/v15-journeys`.
++2. Re-run the `git cat-file -e` existence + `git diff` clean test used above, over the **full** planned file list
++   (this pass covered 19 files; the batch plans reference ~25).
++3. Re-read `KelService.ts`, `KelWorkPanel.tsx`, `MessageList.tsx`, `Messages/hooks.ts`, `chatLib.ts` at that head.
++4. Build a fresh package from that head (baseline), then run `probe-a/b/c` to refresh every recorded baseline
++   number in `12_ACCEPTANCE_CRITERIA.md`.
++5. Capture the two missing baseline states (findings 2 and 3) **before** touching those surfaces.
++6. Create `kel-v16-visual-fix` on `ux/v16-visual-fix` at exactly that commit; carry `docs/v1.6-visual-ux/`.
++7. Write `active_owned_files` into `VISUAL_STATUS.md` **before** the first production edit.
++
++## Standby state
++
++`VISUAL_STATUS.md` records `state: STANDBY`, `base_main_head: NONE`, `implementation_worktree: NONE`.
++A read-only dependency watch runs at the **30-second cadence** (the earlier 300-second watcher was retired):
++script `C:\Users\Nick\Desktop\Kel\ux-audit\visual\watch-main-status.sh`, log
++`...\visual\main-status-watch-30s.log`, handoff marker `...\visual\READY_FOR_VISUAL.detected`.
++It stops the waiting loop the moment `READY_FOR_VISUAL` + a real `visual_clean_head` are published, treats a
++partial signal as PARTIAL (never as readiness), and writes nothing in Main.
+diff --git a/docs/v1.6-visual-ux/AUTO_RESUME.md b/docs/v1.6-visual-ux/AUTO_RESUME.md
+new file mode 100644
+index 0000000..610c83a
+--- /dev/null
++++ b/docs/v1.6-visual-ux/AUTO_RESUME.md
+@@ -0,0 +1,97 @@
++# AUTO_RESUME — V1.6 Visual UX Audit
++
++State file for whoever picks this up next. Read this first, then `00_STATUS.md`.
++
++## CURRENT STATE: VISUAL UX HOLD READY — implementation frozen by the coordinator
++
++**Audit worktree:** `C:\Users\Nick\Desktop\Kel\kel-v16-visual-audit`
++**Branch:** `audit/v16-visual-ux` **Baseline:** `ffeef73`
++**Status:** audit accepted as the current Visual UX evidence set; **implementation NOT started** on the
++coordinator's instruction. The **Human Visual UX gate remains OPEN** (see the vision limitation below).
++
++### Hold conditions in force
++
++* Do **not** create the implementation worktree yet (proposed name, for later: `kel-v16-visual-fix` /
++  `ux/v16-visual-fix`).
++* Do **not** write to `kel-ux-v15` (the authoritative integration worktree).
++* Do **not** cherry-pick, merge, rebase, or port production changes.
++* Do **not** touch frozen releases (`Kel Releases/*`, tag `v1.6.0-pre1`).
++* Do **not** edit the shared files (`KelService.ts`, `KelWorkPanel.tsx`, `MessageList.tsx`,
++  `Messages/hooks.ts`, `chatLib.ts`) against a stale HEAD.
++
++## Measured state of Main at the time of writing (read-only recon)
++
++| Fact | Value |
++|---|---|
++| Main integration worktree HEAD | `70d68e4` — `docs(v1.6): Phase 4 recon notes + continuation state` (on top of Phase 3 `85e99fb`) |
++| Committed since `ffeef73` | 21 files: `chatLib.ts`, `KelService.ts` (+34, hunks at `@@245` and `@@338`), `reconcileHistory.ts`, `KelWorkPanel.tsx` (+104), **new** `components/kel/KelApprovalCard.tsx` (291), `MessageList.tsx` (+11), `Messages/hooks.ts` (+8), `runtime/kel/{apply_changes,authorize,coding,core,engine,service}.py`, `runtime/tests/*`, docs |
++| In-flight P1 remediation (uncommitted) | **`runtime/kel/acp_host.py`, `runtime/kel/capabilities.py`, `runtime/kel/research.py` only** — Python runtime, no renderer files |
++| Main's next phase (Phase 4) | **i18n / donor-string cleanup** across 12 locales × ~20 JSON files, plus a possible **removal of the Butler entry points** in Model / Tools / Skills / Assistants / Cron settings |
++| My 18 planned files | **unchanged since `ffeef73`** (verified file by file) |
++| `KelWorkPanel` mount point | still `Sider/index.tsx:198` — must be preserved by any sidebar work |
++| `TeamSiderSection` | still **unmounted** (no importer outside its own file) — the dead-code finding holds at the new HEAD |
++
++**Do not assume `70d68e4` is the base.** Wait for the coordinator's `CLEAN_MAIN_HEAD=<commit>`.
++
++## Next action when the hold lifts
++
++1. `git rev-parse <CLEAN_MAIN_HEAD>` == the coordinator's value.
++2. Create the fresh worktree from that exact commit; carry `docs/v1.6-visual-ux/` across as the spec.
++3. Run the re-validation checklist in `13_IMPLEMENTATION_DEPENDENCIES.md` §13.4 (re-read every shared file,
++   re-validate every root cause, refresh the baselines with a new `probe-a` run).
++4. Execute batches 1→8 from that document; **batch 1 is the settings-shell routing fix** (S1).
++
++## Preparation documents added during the hold (all read-only work)
++
++| File | Purpose |
++|---|---|
++| `11_CONFLICT_MAP.md` | Per-file conflict map: shared with Main / independent / lifecycle-sensitive / renderer-only, with the measured evidence |
++| `12_ACCEPTANCE_CRITERIA.md` | Per-finding acceptance: observable behaviour + automated + packaged + DOM + human/pixel evidence, and the evidence gaps |
++| `13_IMPLEMENTATION_DEPENDENCIES.md` | Dependency classes, edges, the 8 implementation batches, and what must stay isolated |
++| `14_SCREENSHOT_REVIEW_INDEX.md` | All 35 screenshots: finding(s), route, what to inspect, expected corrected state, plus the capture gaps |
++| `15_SEMANTICS_FLAGS.md` | Proposals that change behaviour/capability/vocabulary rather than presentation — for coordinator decision, not silent implementation |
++
++## Hard constraints carried forward
++
++See the hold conditions above. In addition: coordinate (never race) the shared files listed in the recon
++table, and treat the **engine-loss behaviour as a PRODUCT defect** — it must not be dismissed because clean
++startup passes.
++
++## Vision limitation — the gate is still open
++
++This reviewer had **no visual perception** of the 35 captured screenshots. Every finding is derived from
++measured DOM geometry, computed styles, contrast maths, source inspection, and live reproduction. Those
++measurements remain valid evidence, but **they do not replace a pixel-level human review**. The eventual
++Visual UX gate must include a human (or vision-capable) review of the rendered pixels in
++`docs/v1.6-visual-ux/screenshots/`, using `14_SCREENSHOT_REVIEW_INDEX.md` as the checklist.
++
++## Verification that already exists and should be re-run after every batch
++
++```bash
++export NODE_PATH="C:\Users\Nick\Desktop\Kel\kel-ux-v15\desktop\node_modules"
++cd C:/Users/Nick/Desktop/Kel/ux-audit/visual
++node probe-a.cjs "<appDir>" "C:/Users/Nick/Desktop/Kel/ux-audit/roots/visual-a" "<outDir>"   # surfaces, contrast, geometry, screenshots
++node probe-b.cjs "<appDir>" "C:/Users/Nick/Desktop/Kel/ux-audit/roots/visual-a" "<outDir>"   # colour control, New Chat, engine-loss
++node probe-c.cjs "<appDir>" "C:/Users/Nick/Desktop/Kel/ux-audit/roots/visual-c" "<outDir>"   # populated sidebar, hover overlap
++node ../../visual/summarize.cjs <outDir>/visual-a.json <outDir>/summary.txt
++```
++
++Baselines recorded by this audit: `work` text 605 chars · `permissions` 3615 chars · hover `overlapPx` 12 ·
++`newChat` rows 5/5/5 · transcription light 3.24:1 · theme-gallery label 1.06:1 · System `Back up now` 1.23:1 ·
++sidebar rows 5 vs 9 conversations (6 with zero messages).
++
++## Known gaps — do not treat as verified
++
++* **No `/conversation/<id>` screenshots** (the header pills for finding 2 and the Phase 3 approval card were
++  never captured). Capture these **before** the composer batch.
++* Dense/populated states not exercised; widths below 1024px not captured; `Follow system` and third-party
++  themes untested.
++* The OS colour-dialog closing was inferred from a measured focus loss plus the source-level remount; confirm
++  once with a real mouse on Windows.
++* `desktop.log` from a failed-engine session was not collected; add it to the #17 acceptance pack.
++
++## Scratch artifacts (outside both repos, safe to delete)
++
++`C:\Users\Nick\Desktop\Kel\ux-audit\visual\` (probes + summariser + dbprobe),
++`C:\Users\Nick\Desktop\Kel\ux-audit\runs\visual-{a,b,c}\`, `C:\Users\Nick\Desktop\Kel\ux-audit\roots\visual-{a,c}\`.
++No root belonging to other work was modified; `visual-c` is a copy of `final11-sessiontools`.

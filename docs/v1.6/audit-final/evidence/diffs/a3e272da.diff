@@ -1,0 +1,341 @@
+commit a3e272da909124f9213508ac611714673f2b2ea7
+2026-09-18 14:00:23 -0400
+docs(v1.6): sweep batch 2 breadcrumbs (11/27 rows dispositioned)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index f7b510f..e796d42 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -544,3 +544,20 @@ that would *show* the outcome belongs to REQ-ELOSS (audit target 57) and was del
+ invented here. Sweep status after this increment: **7/27 rows dispositioned** (P2 1/10, P3 6/17).
+ Next: continue the sweep (P2 rows need their source records read; A1 and REL-01 remain the
+ release-relevant ones).
++
++## Sweep batch 2 — INT-01, SEC-01-multipart, PER-04 fixed (2026-09-18)
++
++**Three audit P3s fixed (`0596211`), each verified live in the tree first, each small enough to fix
++correctly now.** (1) **INT-01** — `kel:artifact-reveal` was the only privileged IPC handler without
++the sender-frame guard its four siblings carry; it now requires the main frame and a `file:` URL
++before touching the OS. (2) **SEC-01-multipart** — `_multipart` interpolated the caller's filename
++raw into `Content-Disposition`; every parameter now passes `_header_safe`, so a crafted name cannot
++start a header line while clean names stay byte-identical. (3) **PER-04** — a `KEL_DATA_DIR`
++override can put `kel-credentials.json` inside the backup root; `Backup.create` now skips and
++reports `NEVER_BACKUP`. Also recorded: **DEAD-05** → `DEFERRED_NON_RELEASE` (internal coupling only),
++and **TR-01** stays OPEN (still module-level `_STREAMS`; the lifecycle review the finding asks for
++has not been done — the row explicitly says it is not cleared). Tests: 5 new + 41 focused passed;
++desktop `tsc` 0; **full engine suite 905 passed** (+10 subtests, was 900). The IPC guard has no
++automated test (no Electron/IPC harness here) — recorded as audit target §58 rather than claimed.
++Sweep status: **11/27 rows dispositioned** (P2 1/10, P3 10/17). Next: the remaining P2s, starting
++with A1 and REL-01.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 3c5b3d5..6e155e5 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -164,3 +164,12 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     failed attempt keeps `restore-pending.json`, and that a renderer surface (REQ-ELOSS) reads the
+     existing payload instead of a new endpoint. Also confirm `state()['restore']` cannot report a
+     stale outcome after a later clean start (PER-02) and is not confused by PER-03's snapshot path.
++
++## Sweep batch 2 (2026-09-18 additions)
++
++58. Sweep batch 2 verification: (a) the `kel:artifact-reveal` IPC guard has no automated test here
++    (no Electron/IPC harness) — challenge it by reading the handler against its four siblings and by
++    attempting a call from a non-main frame; (b) confirm no multipart parameter can reach the socket
++    unsanitised (`_header_safe` is applied to *every* parameter, not just the filename); (c) confirm
++    `NEVER_BACKUP` is consulted on every backup path, including the hot-database copy, and that the
++    credentials sidecar is reported as skipped rather than silently absent.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index dea7a1e..2e34c87 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,39 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-008 — Sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups
++
++ID: CHG-008 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
++
++- **User-visible impact:** none intended (three hardening fixes).
++- **Internal impact:** the `kel:artifact-reveal` IPC handler now carries the same sender-frame guard
++  as its four siblings (INT-01); `_multipart` sanitises every header parameter through a new
++  `_header_safe` (SEC-01-multipart); `Backup.create` skips and reports
++  `NEVER_BACKUP = ('kel-credentials.json',)` so a `KEL_DATA_DIR` override can no longer put an
++  encrypted credentials file inside a backup (PER-04).
++- **Previous behavior:** one privileged handler accepted any frame; a crafted upload filename could
++  close the header early; the credentials sidecar travelled in backups under the override layout.
++- **New behavior:** uniform IPC surface, injection-proof headers, credentials never in a backup
++  (reported in `skipped`/`notes`).
++- **Primary files:** `desktop/packages/desktop/src/process/services/kel/KelService.ts`,
++  `runtime/kel/transcription.py`, `runtime/kel/backup.py`,
++  `runtime/tests/test_v16_sweep_fixes.py`.
++- **Primary symbols:** listed in the increment record.
++- **Data/schema changes:** none.
++- **Failure paths:** unchanged (the IPC rejection keeps the `Unknown Kel window` shape).
++- **Security/privacy implications:** three fail-closed hardenings; the backup note already promised
++  credentials are excluded, and now the sidecar gap is closed too.
++- **Persistence implications:** a backup contains one fewer file and says so.
++- **Expected invariants:** INV-SWEEP2-001 (a sanitised header parameter can never start a header
++  line; no backup contains the credentials sidecar).
++- **Tests:** `tests/test_v16_sweep_fixes.py` (5 new) + desktop `tsc` 0 + full suite (A-16).
++- **Packaged evidence:** n/a.
++- **Known concerns:** the IPC guard has no automated test (no Electron/IPC harness in this repo) —
++  verified by typecheck and parity with four sibling guards (AUDIT_TARGETS §58).
++- **Audit questions:** can any header parameter reach the socket unsanitised? Is `NEVER_BACKUP`
++  consulted on every backup path (including the hot-database copy)?
++- **Repair hints:** `_header_safe` for headers, `NEVER_BACKUP` for backup exclusions.
++
+ ### CHG-007 — A failed or partial restore is recorded and surfaced (audit PER-02)
+ 
+ ID: CHG-007 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 5931e95..a480ccc 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -40,7 +40,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `081a6ef` | `a7c7aa4` | 2026-09-18 | REQ-F4 / WF-12 | real-artifact binding: closure verifies the artifact the assignment delivered | `kel/core.py`; `kel/delegation.py`; `kel/evaluation.py`; `tests/test_workforce_d1.py`; `tests/test_workforce_d2.py` | +4 engine tests; full suite **895 passed** (+10 subtests); D1+D2+parallel 126 | none (existing `assignment_artifacts` gains its first reader) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | no | MEDIUM | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; TEST_EVIDENCE_INDEX A-14 | on-disk check needs an `artifact_root` (`run_d1` does not pass one yet); non-content-bound contracts unchanged |
+ | `c1bb980` | `820ee3e` | 2026-09-18 | REQ-P2P3 | P2/P3 sweep first batch (6 rows dispositioned against the tree) | docs only | — | none | no | — | no | no | LOW | `P2_P3_DISPOSITION.md`; REQUIREMENTS_TRACEABILITY REQ-P2P3 | 21 rows still OPEN (sweep pending) |
+ | `df1997a` | `c1bb980` | 2026-09-18 | PER-02 (P2 sweep) | a failed or partial restore is recorded and surfaced | `kel/backup.py`; `kel/service.py`; `tests/test_v16_restore_visibility.py` | +5 engine tests; full suite **900 passed** (+10 subtests) | none (sidecar `restore-outcome.json`) | additive `state()['restore']`; renderer surface → REQ-ELOSS | n/a (RC battery can assert on a staged restore) | yes (additive payload key) | no | MEDIUM | `increments/PER-02-RESTORE-VISIBILITY.md`; TEST_EVIDENCE_INDEX A-15 | renderer does not show it yet (target 57); PER-03 shares the path |
+-| `HEAD` | `df1997a` | 2026-09-18 | PER-02 | PER-02 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows PER-02 / CHG-007 / §57; AUTO_RESUME section | — |
++| `cbd0430` | `df1997a` | 2026-09-18 | PER-02 | PER-02 breadcrumbs | docs only | — | none | no | — | no | no | LOW | corpus rows PER-02 / CHG-007 / §57; AUTO_RESUME section | — |
++| `0596211` | `cbd0430` | 2026-09-18 | INT-01 / SEC-01-multipart / PER-04 | sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups | `desktop/.../kel/KelService.ts`; `kel/transcription.py`; `kel/backup.py`; `tests/test_v16_sweep_fixes.py` | +5 engine tests; full suite **905 passed** (+10 subtests); desktop tsc 0 | none (`NEVER_BACKUP` guard) | no (hardening) | n/a | no | no | MEDIUM | `increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md`; TEST_EVIDENCE_INDEX A-16 | IPC guard has no automated test (no harness) — §58 |
++| `HEAD` | `0596211` | 2026-09-18 | sweep batch 2 | sweep batch 2 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows INT-01 / SEC-01-multipart / PER-04 / DEAD-05 / TR-01 / CHG-008 / §58; AUTO_RESUME section | — |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 4760392..8f31adc 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -20,7 +20,7 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | cross-scope session attack | TBD | pending |
+ | PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | **FIXED** (engine half, 2026-09-18): `backup._record_outcome` writes `restore-outcome.json` beside the data on both decisive paths (the DB is what a restore replaces) and the failure path keeps `restore-pending.json`; `service._restore_outcome` surfaces it as `state()['restore']` — boot never aborts. The renderer surface stays with REQ-ELOSS (audit target 57) | `df1997a` | `tests/test_v16_restore_visibility.py` (5 new; full suite 900) | none (no UI claim made) | pending |
+ | PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | retention test | TBD | pending |
+-| TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | OPEN (sweep pending) | — | shutdown cleanup test | TBD | pending |
++| TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | OPEN (sweep pending — verified 2026-09-18 that it is still module-level: `transcription.py:36` `_STREAMS = {}`, `:528` `self._streams = _STREAMS`; the lifecycle review the finding asks for has **not** been done, so this row stays unverified-clear) | — | shutdown cleanup test | TBD | pending |
+ | TR-02 | Abandoned-stream UX in the transcription renderer (residual) | P2 | `02_FILE_REVIEW_LEDGER.md` | OPEN (sweep pending) | — | renderer state test | TBD | pending |
+ 
+ ## P3 — open at corpus open
+@@ -32,16 +32,16 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | APR-06 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
+ | DEAD-06 | `packaging/ux-audit.cjs` unwired and misfiled (referenced by nothing outside docs) | P3 | `08_DEAD_CODE.md` | **NOT_APPLICABLE** (verified 2026-09-18: it is the packaged-UI evidence tool — PACKAGED_EVIDENCE_INDEX `package-logo` + phases 6–7 + the visual batches; referenced by the pre-audit corpus, not dead) | — | none | pending |
+ | CAP2-LONGTEXT | `directive_clauses()` returns `[]` above 2000 chars — reserved directives in long pastes silently ignored (fails safe) | P3 | `19_CAP2_RESIDUAL_REAUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `capabilities.py:437-448`: >2000 chars → `[]`; the message is forwarded byte-for-byte, so no capability is silently enabled) | — | none | pending |
+-| INT-01 | Inconsistent sender-frame validation (`kel:artifact-reveal` lacks the check) | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| PER-04 | `KEL_DATA_DIR` puts `kel-credentials.json` inside the backup root (override path only) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| INT-01 | Inconsistent sender-frame validation (`kel:artifact-reveal` lacks the check) | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `0596211`): the handler now requires `event.senderFrame === event.sender.mainFrame` and a `file:` URL, byte-for-byte the guard its four siblings carry (verified in `KelService.ts`) | `0596211` | desktop `tsc` 0; no IPC harness exists (audit target §58) | none (parity hardening) | pending |
++| PER-04 | `KEL_DATA_DIR` puts `kel-credentials.json` inside the backup root (override path only) | P3 | `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `0596211`): `Backup.create` skips `NEVER_BACKUP = ('kel-credentials.json',)` and reports it in `skipped`/`notes`; the in-database secrets were already stripped | `0596211` | `tests/test_v16_sweep_fixes.py` (2) | none (override-only path, now closed) | pending |
+ | COR-03 | `KelModelControl.setConversation` has no error path | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | COR-04 | `set_conversation` accepts a non-existent conversation | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `model_prefs.py:107-110`: only non-empty is validated; callers pass the open conversation, and a stranded preference is inert) | — | none | pending |
+ | COR-05 | `search.py` bare `except` per section | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `search.py:51,72,91`: per-section `except Exception: pass`; fails soft, sections independent, no data loss) | — | none | pending |
+ | COR-06 | KeyError leaks from vetting/transcription dispatch | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
+ | MDL-01 | `set_conversation` accepts a non-existent conversation (with COR-04) | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (same evidence as COR-04) | — | none | pending |
+ | THM-01 | Theme overrides keyed by theme id survive theme deletion | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| SEC-01-multipart | Caller-supplied filename interpolated into a multipart header unescaped (transcription) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
+-| DEAD-05 | `service.py` calls `Vetting` privates (`_questions`, `_format_resurface`) | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| SEC-01-multipart | Caller-supplied filename interpolated into a multipart header unescaped (transcription) | P3 | `11_FINDINGS.md` | **FIXED** (2026-09-18, `0596211`): every header parameter now goes through `_header_safe` (CR/LF folded, quotes normalised, backslashes neutralised); a crafted filename can no longer start a header line, and clean names round-trip unchanged | `0596211` | `tests/test_v16_sweep_fixes.py` (3) | none (header-injection hardening) | pending |
++| DEAD-05 | `service.py` calls `Vetting` privates (`_questions`, `_format_resurface`) | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `service.py:744-745` still call the privates): internal coupling only — no user-visible effect, and a public wrapper is cosmetic; deferred rather than refactored for its own sake | — | none | none | pending |
+ | ERR-01 | KeyError leaks from dispatch (with COR-06) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
+ 
+ ## Closed / retracted in the audited range (for completeness — do not re-open without cause)
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 36d3f06..b6422c1 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 7/27 rows dispositioned with inline evidence (P2 1/10: PER-02 fixed engine-side; P3 6/17 `DEFERRED_NON_RELEASE`/`NOT_APPLICABLE`); the rest stay `OPEN (sweep pending)` | PER-02 fix commit | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 11/27 rows dispositioned with inline evidence (P2 1/10: PER-02 fixed; P3 10/17: 7 `DEFERRED_NON_RELEASE`/`NOT_APPLICABLE`, 3 fixed — INT-01, SEC-01-multipart, PER-04); the rest stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211` | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 8514441..c59b5a9 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -25,6 +25,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-13 | engine full suite (REQ-RK resolution kinds) | `cd runtime && python -m pytest tests -q` | `a547936` | 2026-09-18 | PASS | **891 passed, 10 subtests passed** (250.14s; was 885 — +6 new tests, zero regressions) | REQ-RK | INV-RK-001 | `increments/REQ-RK-RESOLUTION-KIND.md` | parent-executed |
+ | A-14 | engine full suite (REQ-F4 real-artifact binding) | `cd runtime && python -m pytest tests -q` | `081a6ef` | 2026-09-18 | PASS | **895 passed, 10 subtests passed** (255.90s; was 891 — +4 new tests, zero regressions). First run of the new gate flagged 8 failures + 5 errors in fixture harnesses (`test_workforce_d2.py`, `test_workforce_parallel.py`) which now record their deliveries | REQ-F4 | INV-F4-001 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | parent-executed |
+ | A-15 | engine full suite (PER-02 restore visibility) | `cd runtime && python -m pytest tests -q` | `df1997a` | 2026-09-18 | PASS | **900 passed, 10 subtests passed** (253.45s; was 895 — +5 new tests, zero regressions); focused `test_v16_restore_visibility.py` + `test_backup.py` = 14 passed | PER-02 | INV-PER02-001 | `increments/PER-02-RESTORE-VISIBILITY.md` | parent-executed |
++| A-16 | engine full suite + desktop typecheck (sweep batch 2) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit` | `0596211` | 2026-09-18 | PASS | **905 passed, 10 subtests passed** (251.00s; was 900 — +5 new tests, zero regressions); focused sweep-fix + backup + transcription = 41 passed; tsc 0 | INT-01, SEC-01-multipart, PER-04 | INV-SWEEP2-001 | `increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md` | parent-executed (IPC guard by parity, no harness — §58) |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md b/docs/v1.6/pre-audit/increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md
+new file mode 100644
+index 0000000..317738d
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md
+@@ -0,0 +1,136 @@
++# Increment — P2/P3 sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups
++
++increment_id: V16-SWEEP-BATCH2
++phase: Campaign A — P2/P3 sweep (audit docket) · INT-01, SEC-01-multipart, PER-04 (+ DEAD-05, TR-01 dispositions)
++base_commit: cbd0430 (PER-02 docs)
++target_commit: `0596211` (implementation) + this docs commit
++status: complete
++
++## Objective
++
++Continue the sweep with the three findings the current tree still proves live and that are small
++enough to fix correctly now, and record honest dispositions for two more.
++
++## Requirement Sources
++
++- `INT-01` — `11_FINDINGS.md`, `16_FINDING_STATUS.md` (P3): "Inconsistent sender-frame validation
++  (`kel:artifact-reveal` lacks the check)".
++- `SEC-01-multipart` — `11_FINDINGS.md` (P3): caller-supplied filename interpolated into a multipart
++  header unescaped (transcription).
++- `PER-04` — `16_FINDING_STATUS.md` (P3): `KEL_DATA_DIR` puts `kel-credentials.json` inside the
++  backup root (override path only).
++- `DEAD-05`, `TR-01` — `16_FINDING_STATUS.md`, `02_FILE_REVIEW_LEDGER.md` (P3): recorded here with
++  the verification result; TR-01 stays OPEN because the finding's own claim ("shutdown/cleanup not
++  reviewed") has not been discharged.
++
++## Implementation Summary
++
++1. **INT-01 (desktop main)** — `kel:artifact-reveal` was the only privileged IPC handler without the
++   sender-frame guard used by its four siblings (`kel:request`, the credential handlers, the
++   project/backup handlers). It now checks `event.senderFrame === event.sender.mainFrame` and a
++   `file:` URL before touching the OS; the path-containment check it already had is unchanged.
++2. **SEC-01-multipart (engine)** — `_multipart` interpolated the caller's filename raw into
++   `Content-Disposition`. A new `_header_safe` folds CR/LF to spaces, quotes to apostrophes and
++   backslashes to slashes, so a crafted filename can no longer end the header early or start a part
++   of its own.
++3. **PER-04 (engine)** — a backup now never captures the credentials sidecar: `NEVER_BACKUP =
++   ('kel-credentials.json',)` is skipped in `Backup.create` and reported in the backup's `skipped`
++   list and notes (the existing notes already promise credentials are excluded, and secrets inside
++   the database were already stripped — this closes the sidecar gap the override creates).
++
++## Files Changed
++
++- `desktop/packages/desktop/src/process/services/kel/KelService.ts` (frame guard)
++- `runtime/kel/transcription.py` (`_header_safe` + `_multipart`)
++- `runtime/kel/backup.py` (`NEVER_BACKUP` + skip/report)
++- `runtime/tests/test_v16_sweep_fixes.py` (new, 5 tests)
++
++## Symbols Changed
++
++`_header_safe`, `_multipart`, `backup.NEVER_BACKUP`, `Backup.create`, the `kel:artifact-reveal`
++handler.
++
++## Schema/Migrations
++
++None.
++
++## User-Facing Behavior
++
++No intended change. A crafted upload filename no longer shapes the request headers, a backup no
++longer contains the credentials sidecar, and the IPC surface is uniform.
++
++## Internal Behavior
++
++`_multipart` output is byte-identical for ordinary names (a clean filename round-trips — tested).
++Backups add the credentials file to `skipped`/`notes` and omit it from the folder.
++
++## Error Paths
++
++Unchanged: a rejected IPC call throws `Unknown Kel window` exactly like its siblings.
++
++## Lifecycle Considerations
++
++None.
++
++## Persistence / Isolation
++
++Backup contents change (one fewer file) and its manifest reports it.
++
++## Security / Privacy
++
++Three hardening changes, all fail-closed: fewer privileged callers, no header injection, no
++credential capture in a backup.
++
++## Self-Review Findings
++
++- The first multipart test asserted `count('Content-Disposition:') == 1`, which failed because the
++  sanitised text legitimately survives *inline* in the filename parameter. The corrected test
++  asserts what actually matters: the injected text cannot start a header **line** (lines starting
++  with `Content-Disposition:` == 1) and the part count is unchanged. Recorded because the first
++  version was wrong, not the product.
++- The IPC frame guard has no automated test: this repository has no IPC/Electron harness, and
++  inventing one for a five-line parity fix would be a bigger change than the fix. Verification is
++  `tsc` 0 plus byte-level parity with the four sibling guards; recorded in AUDIT_TARGETS §58 so an
++  auditor can challenge it.
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_v16_sweep_fixes.py tests/test_backup.py
++  tests/test_transcription.py -q` → **41 passed** (5 new).
++- `cd desktop && bunx tsc --noEmit` → 0 errors.
++- Full engine suite: see TEST_EVIDENCE_INDEX A-16.
++
++## Results
++
++PASS.
++
++## Packaged Verification
++
++Not applicable to this increment (engine + main-process hardening); the RC packaged battery re-runs
++the engine suite and the desktop typecheck.
++
++## Known Weaknesses
++
++- The IPC guard is verified by typecheck and parity, not by an automated test (no harness exists).
++- TR-01 (`_STREAMS` module-level stream sessions) remains OPEN: the code is still module-level
++  (`transcription.py:36`, `:528`) and the lifecycle review the finding asks for has not been done.
++
++## Deferred Questions
++
++- DEAD-05 (`service.py` calling `Vetting` privates) — deferred as cosmetic coupling; a public wrapper
++  is possible but is not release-relevant.
++
++## Audit Targets
++
++AUDIT_TARGETS § 58.
++
++## Repair Hints
++
++`_header_safe` is the single place to extend if the multipart builder ever gains more parameters;
++`NEVER_BACKUP` is the single place for files that must never travel in a backup.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md` (this file)
++- corpus rows: P2_P3_DISPOSITION (INT-01, SEC-01-multipart, PER-04, DEAD-05, TR-01), CHANGE_LEDGER
++  CHG-008, TEST_EVIDENCE_INDEX A-16
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 64876cb..f453f60 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: df1997a (PER-02 production commit; docs commit follows — see `git log --oneline -8`)
++head: 0596211 (sweep batch 2 production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -17,9 +17,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-P2P3 IN PROGRESS — 7/27 docket rows dispositioned with inline evidence; **PER-02 (silent restore failure) FIXED engine-side** (`df1997a`; `restore-outcome.json` + `state()['restore']`; full engine suite 900). Prior: REQ-F4 DONE (real-artifact binding; 081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: continue the sweep — A1 and REL-01 are the remaining release-relevant P2s.
+-current_phase: P2/P3 sweep (in progress; PER-02 fixed at df1997a)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900).
++current_increment: REQ-P2P3 IN PROGRESS — 11/27 docket rows dispositioned with inline evidence; PER-02 fixed (`df1997a`) and sweep batch 2 fixed (`0596211`: IPC frame guard INT-01, multipart header hygiene SEC-01-multipart, credentials out of backups PER-04; full engine suite 905, desktop tsc 0). Prior: REQ-F4 DONE (081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: continue the sweep — A1 and REL-01 are the remaining release-relevant P2s.
++current_phase: P2/P3 sweep (in progress; batch 2 fixed at 0596211)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -51,6 +51,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md` is the live table; 20 rows still `OPEN (sweep pending)`). Read the source records in the audit worktree `kel-v16-code-audit/docs/code-audit/` for the remaining P2s (APR-01/02/03, A1, REL-01, SEC-01, PER-03, TR-01/02) and P3s (APR-05/06, INT-01, PER-04, COR-06, THM-01, SEC-01-multipart, DEAD-05, ERR-01), then set one of the five dispositions or fix the release-relevant ones. A1 (`engine_version` on the detached-engine reuse path) and REL-01 (freeze staging is a no-op for the load path) are the release-relevant pair — A1 is fixable with a desktop test; REL-01's full verification needs a real freeze, which Campaign A must not perform. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — now also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md` is the live table; 16 rows still `OPEN (sweep pending)` — P2 9/10, P3 7/17). Read the source records in the audit worktree `kel-v16-code-audit/docs/code-audit/` for the remaining P2s (APR-01/02/03, A1, REL-01, SEC-01, PER-03, TR-01/02) and P3s (APR-05/06, COR-03, COR-06, THM-01, ERR-01), then set one of the five dispositions or fix the release-relevant ones. A1 (`engine_version` on the detached-engine reuse path) and REL-01 (freeze staging is a no-op for the load path) are the release-relevant pair — A1 is fixable with a desktop test; REL-01's full verification needs a real freeze, which Campaign A must not perform. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — now also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

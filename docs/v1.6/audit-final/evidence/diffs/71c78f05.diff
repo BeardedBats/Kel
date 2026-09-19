@@ -1,0 +1,399 @@
+commit 71c78f05186efb48bb5448c442a51e5d9a16faf8
+2026-09-18 13:00:07 -0400
+branding(v1.6): canonical Kel logo across all production-reachable surfaces
+
+
+diff --git a/desktop/kel-builder.json b/desktop/kel-builder.json
+index 58b9423..7224d7f 100644
+--- a/desktop/kel-builder.json
++++ b/desktop/kel-builder.json
+@@ -8,6 +8,7 @@
+   "linux": {
+     "maintainer": "Kel",
+     "vendor": "Kel",
++    "icon": "resources/app.png",
+     "desktop": {
+       "entry": {
+         "Name": "Kel",
+@@ -37,7 +38,17 @@
+     "target": [
+       "dir"
+     ],
+-    "signAndEditExecutable": false
++    "icon": "resources/app.ico",
++    "signAndEditExecutable": true
++  },
++  "nsis": {
++    "installerIcon": "resources/app.ico",
++    "uninstallerIcon": "resources/app.ico",
++    "installerHeaderIcon": "resources/app.ico",
++    "shortcutName": "Kel"
++  },
++  "mac": {
++    "icon": "resources/app.icns"
+   },
+   "extraResources": [
+     {
+diff --git a/desktop/packages/desktop/src/renderer/assets/logos/brand/app.png b/desktop/packages/desktop/src/renderer/assets/logos/brand/app.png
+index b5edaff..ec42e13 100644
+Binary files a/desktop/packages/desktop/src/renderer/assets/logos/brand/app.png and b/desktop/packages/desktop/src/renderer/assets/logos/brand/app.png differ
+diff --git a/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx b/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx
+index c0e67b3..8ae2be4 100644
+--- a/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx
++++ b/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx
+@@ -13,6 +13,7 @@ import { useSettingsViewMode } from '../settingsViewContext';
+ import { isElectronDesktop, openExternalUrl } from '@/renderer/utils/platform';
+ import FeedbackReportModal from './FeedbackReportModal';
+ import { ipcBridge } from '@/common';
++import brandMark from '@renderer/assets/logos/brand/app.png';
+ import { getIncludePrerelease, runUpdateCheck } from '@/renderer/components/settings/checkForUpdatesShared';
+ import { UPDATE_AVAILABLE_EVENT } from '@/renderer/components/settings/useUpdateNotificationController';
+ import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
+@@ -134,6 +135,13 @@ const AboutModalContent: React.FC = () => {
+         <div className='flex flex-col max-w-500px mx-auto'>
+           {/* App Info Section */}
+           <div className='flex flex-col items-center pb-24px'>
++            <img
++              src={brandMark}
++              alt=''
++              aria-hidden='true'
++              className='w-64px h-64px object-contain mb-12px'
++              data-testid='kel-about-logo'
++            />
+             <Typography.Title heading={3} className='text-24px font-bold text-t-primary mb-8px'>
+               Kel
+             </Typography.Title>
+diff --git a/desktop/public/pwa/icon-180.png b/desktop/public/pwa/icon-180.png
+index c7e2292..e73f1df 100644
+Binary files a/desktop/public/pwa/icon-180.png and b/desktop/public/pwa/icon-180.png differ
+diff --git a/desktop/public/pwa/icon-192.png b/desktop/public/pwa/icon-192.png
+index e380706..b48eadf 100644
+Binary files a/desktop/public/pwa/icon-192.png and b/desktop/public/pwa/icon-192.png differ
+diff --git a/desktop/public/pwa/icon-512.png b/desktop/public/pwa/icon-512.png
+index 3f620d5..0f004f3 100644
+Binary files a/desktop/public/pwa/icon-512.png and b/desktop/public/pwa/icon-512.png differ
+diff --git a/desktop/resources/app.icns b/desktop/resources/app.icns
+index 0bf42fc..9a26377 100644
+Binary files a/desktop/resources/app.icns and b/desktop/resources/app.icns differ
+diff --git a/desktop/resources/app.ico b/desktop/resources/app.ico
+index ba0bf79..5c9ab32 100644
+Binary files a/desktop/resources/app.ico and b/desktop/resources/app.ico differ
+diff --git a/desktop/resources/app.png b/desktop/resources/app.png
+index b5edaff..ec42e13 100644
+Binary files a/desktop/resources/app.png and b/desktop/resources/app.png differ
+diff --git a/desktop/resources/app_dev.png b/desktop/resources/app_dev.png
+index b5887f3..865d91f 100644
+Binary files a/desktop/resources/app_dev.png and b/desktop/resources/app_dev.png differ
+diff --git a/desktop/resources/branding/kel-logo.png b/desktop/resources/branding/kel-logo.png
+new file mode 100644
+index 0000000..8acb24e
+Binary files /dev/null and b/desktop/resources/branding/kel-logo.png differ
+diff --git a/desktop/resources/icon.png b/desktop/resources/icon.png
+index be47dee..9c06f9c 100644
+Binary files a/desktop/resources/icon.png and b/desktop/resources/icon.png differ
+diff --git a/scripts/make-brand-assets.py b/scripts/make-brand-assets.py
+new file mode 100644
+index 0000000..901bfe0
+--- /dev/null
++++ b/scripts/make-brand-assets.py
+@@ -0,0 +1,167 @@
++#!/usr/bin/env python3
++"""Generate every Kel brand asset from the ONE canonical logo image.
++
++The canonical source is the exact Nick-supplied folded-ribbon K
++(`Kel Logo.png`, sha256 7418a42f…). This script never redraws, recolors, crops the mark,
++or distorts it: it only (a) trims fully transparent margin, (b) scales uniformly, and
++(c) recenters on a transparent square canvas with a uniform inset. All resampling is done
++in premultiplied alpha so no dark/black fringe appears on the soft edges.
++
++Usage:
++    python scripts/make-brand-assets.py <path-to-canonical.png> [--check]
++
++`--check` verifies the recorded hashes of the generated files without rewriting them.
++"""
++from __future__ import annotations
++
++import hashlib
++import struct
++import sys
++from pathlib import Path
++
++try:
++    from PIL import Image
++except ImportError:  # pragma: no cover
++    print("ERROR: Pillow is required (pip install pillow)")
++    raise SystemExit(2)
++
++try:
++    import numpy as np
++except ImportError:  # pragma: no cover
++    print("ERROR: numpy is required for premultiplied resizing")
++    raise SystemExit(2)
++
++REPO = Path(__file__).resolve().parents[1]
++CANON_SHA256 = "7418a42fc06267707c1e1aa4ab0d8822e8d636a687a81f200788a7b3e50ec71f"
++
++# canvas size + per-side inset fraction (uniform; aspect ratio is never changed)
++ICON_INSET = 0.06
++DEV_INSET = 0.15
++PWA_INSET = 0.08
++
++OUTPUTS: list[tuple[str, int, float]] = [
++    # (repo-relative path, canvas px, inset)
++    ("desktop/resources/app.png", 1024, ICON_INSET),
++    ("desktop/resources/app_dev.png", 1024, DEV_INSET),
++    ("desktop/resources/icon.png", 800, ICON_INSET),
++    ("desktop/public/pwa/icon-180.png", 180, PWA_INSET),
++    ("desktop/public/pwa/icon-192.png", 192, PWA_INSET),
++    ("desktop/public/pwa/icon-512.png", 512, PWA_INSET),
++    ("desktop/packages/desktop/src/renderer/assets/logos/brand/app.png", 1024, ICON_INSET),
++]
++
++ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
++ICNS_CHUNKS = [("ic11", 32), ("ic12", 64), ("ic07", 128), ("ic13", 256),
++               ("ic08", 256), ("ic14", 512), ("ic09", 512), ("ic10", 1024)]
++
++
++def sha256(path: Path) -> str:
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def art_crop(im: Image.Image) -> Image.Image:
++    """Trim fully transparent margin only — never any part of the mark itself."""
++    bbox = im.getchannel("A").getbbox()
++    return im.crop(bbox) if bbox else im
++
++
++def render(art: Image.Image, canvas: int, inset: float) -> Image.Image:
++    """Uniform scale into a transparent square canvas, premultiplied resampling."""
++    inner = max(1, int(round(canvas * (1 - 2 * inset))))
++    src = np.asarray(art.convert("RGBA"), dtype=np.float32)
++    alpha = src[..., 3:4] / 255.0
++    premult = np.concatenate([src[..., :3] * alpha, src[..., 3:4]], axis=-1)
++    h, w = premult.shape[:2]
++    scale = min(inner / w, inner / h)
++    tw, th = max(1, int(round(w * scale))), max(1, int(round(h * scale)))
++    resized = np.asarray(
++        Image.fromarray(premult.clip(0, 255).astype(np.uint8), "RGBA").resize((tw, th), Image.LANCZOS),
++        dtype=np.float32,
++    )
++    a = resized[..., 3:4] / 255.0
++    rgb = np.where(a > 0, resized[..., :3] / np.maximum(a, 1e-6), 0.0).clip(0, 255)
++    tile = Image.fromarray(np.concatenate([rgb, resized[..., 3:4]], axis=-1).astype(np.uint8), "RGBA")
++    out = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
++    out.paste(tile, ((canvas - tw) // 2, (canvas - th) // 2), tile)
++    return out
++
++
++def write_ico(path: Path, frames: list[Image.Image]) -> None:
++    """Minimal PNG-based ICO (Windows Vista+) — full control, no fringe."""
++    import io
++
++    payloads = []
++    for frame in frames:
++        buf = io.BytesIO()
++        frame.save(buf, format="PNG", optimize=True)
++        payloads.append((frame.width, buf.getvalue()))
++    header = struct.pack("<HHH", 0, 1, len(payloads))
++    offset = len(header) + 16 * len(payloads)
++    directory, body = b"", b""
++    for size, data in payloads:
++        directory += struct.pack("<BBBBHHII", size if size < 256 else 0, size if size < 256 else 0,
++                                 0, 0, 1, 32, len(data), offset)
++        body += data
++        offset += len(data)
++    path.write_bytes(header + directory + body)
++
++
++def write_icns(path: Path, frames: list[tuple[str, Image.Image]]) -> None:
++    """Minimal ICNS writer using PNG chunks (macOS 10.7+)."""
++    import io
++
++    body = b""
++    for ctype, frame in frames:
++        buf = io.BytesIO()
++        frame.save(buf, format="PNG", optimize=True)
++        data = buf.getvalue()
++        body += ctype.encode("ascii") + struct.pack(">I", len(data) + 8) + data
++    path.write_bytes(b"icns" + struct.pack(">I", len(body) + 8) + body)
++
++
++def main() -> int:
++    if len(sys.argv) < 2:
++        print(__doc__)
++        return 2
++    source = Path(sys.argv[1]).resolve()
++    check = "--check" in sys.argv[2:]
++    digest = sha256(source)
++    if digest != CANON_SHA256:
++        print(f"REFUSED: {source} sha256 {digest}\n         expected {CANON_SHA256}")
++        print("         (only the exact canonical Kel logo may generate brand assets)")
++        return 1
++    art = art_crop(Image.open(source).convert("RGBA"))
++
++    produced: list[tuple[str, str]] = []
++    if not check:
++        # 1) preserve the canonical source unchanged inside the repo
++        canon = REPO / "desktop/resources/branding/kel-logo.png"
++        canon.parent.mkdir(parents=True, exist_ok=True)
++        canon.write_bytes(source.read_bytes())
++        produced.append(("desktop/resources/branding/kel-logo.png", digest))
++        # 2) raster derivatives
++        for rel, canvas, inset in OUTPUTS:
++            out = REPO / rel
++            out.parent.mkdir(parents=True, exist_ok=True)
++            render(art, canvas, inset).save(out, format="PNG", optimize=True)
++        # 3) Windows ICO
++        ico = REPO / "desktop/resources/app.ico"
++        write_ico(ico, [render(art, s, ICON_INSET) for s in ICO_SIZES])
++        # 4) macOS ICNS
++        write_icns(REPO / "desktop/resources/app.icns",
++                   [(t, render(art, s, ICON_INSET)) for t, s in ICNS_CHUNKS])
++
++    for rel, canvas, _ in OUTPUTS:
++        produced.append((rel, sha256(REPO / rel)))
++    produced.append(("desktop/resources/app.ico", sha256(REPO / "desktop/resources/app.ico")))
++    produced.append(("desktop/resources/app.icns", sha256(REPO / "desktop/resources/app.icns")))
++    print(f"canonical : {source}  sha256 {digest}")
++    width = max(len(rel) for rel, _ in produced)
++    for rel, dg in produced:
++        print(f"  {rel.ljust(width)}  {dg}")
++    print("check mode — no files written" if check else f"wrote {len(produced)} files")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/verify-brand-render.py b/scripts/verify-brand-render.py
+new file mode 100644
+index 0000000..60bef92
+--- /dev/null
++++ b/scripts/verify-brand-render.py
+@@ -0,0 +1,127 @@
++#!/usr/bin/env python3
++"""Verify that the canonical Kel logo actually renders in captured UI screenshots.
++
++Masked normalized cross-correlation of the canonical mark against every PNG in a directory:
++the mark is rendered at several sizes on both light and dark backgrounds (the UI themes), and each
++screenshot is scored at each size. A high score means the exact artwork is present, not a similar
++shape.
++
++Usage:
++    python scripts/verify-brand-render.py <dir-with-pngs> [--min-score 0.55] [--sizes 32,48,64,96,128]
++
++Exit code 0 if at least one screenshot matched at/above the threshold, 1 otherwise.
++"""
++from __future__ import annotations
++
++import argparse
++import sys
++from pathlib import Path
++
++try:
++    import numpy as np
++    from PIL import Image
++except ImportError:  # pragma: no cover
++    print("ERROR: numpy + Pillow required")
++    raise SystemExit(2)
++
++REPO = Path(__file__).resolve().parents[1]
++CANON = REPO / "desktop/resources/branding/kel-logo.png"
++
++
++def correlate(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
++    """'valid' cross-correlation via FFT."""
++    fh, fw = img.shape[0] - kernel.shape[0] + 1, img.shape[1] - kernel.shape[1] + 1
++    if fh <= 0 or fw <= 0:
++        return np.zeros((0, 0), dtype=np.float64)
++    shape = (img.shape[0] + kernel.shape[0] - 1, img.shape[1] + kernel.shape[1] - 1)
++    fi = np.fft.rfft2(img, shape)
++    fk = np.fft.rfft2(kernel[::-1, ::-1], shape)
++    full = np.fft.irfft2(fi * fk, shape)
++    return full[kernel.shape[0] - 1 : kernel.shape[0] - 1 + fh,
++                kernel.shape[1] - 1 : kernel.shape[1] - 1 + fw]
++
++
++def templates(sizes: list[int]) -> list[tuple[int, str, np.ndarray, np.ndarray]]:
++    art = Image.open(CANON).convert("RGBA")
++    bbox = art.getchannel("A").getbbox()
++    art = art.crop(bbox) if bbox else art
++    out = []
++    for size in sizes:
++        s = art.copy()
++        s.thumbnail((size, size), Image.LANCZOS)
++        for bg_name, bg in (("light", (255, 255, 255)), ("dark", (26, 26, 26))):
++            canvas = Image.new("RGB", (size, size), bg)
++            canvas.paste(s, ((size - s.width) // 2, (size - s.height) // 2), s)
++            gray = np.asarray(canvas.convert("L"), dtype=np.float64)
++            mask = np.zeros((size, size), dtype=np.float64)
++            alpha = np.asarray(Image.new("L", (size, size), 0), dtype=np.float64)
++            alpha_box = Image.new("L", (size, size), 0)
++            alpha_box.paste(s.getchannel("A"), ((size - s.width) // 2, (size - s.height) // 2))
++            alpha = np.asarray(alpha_box, dtype=np.float64) / 255.0
++            mask = (alpha > 0.35).astype(np.float64)
++            if mask.sum() < 16:
++                continue
++            out.append((size, bg_name, gray, mask))
++    return out
++
++
++def score_template(image: np.ndarray, tmpl_gray: np.ndarray, mask: np.ndarray) -> float:
++    n = mask.sum()
++    t = tmpl_gray * mask
++    t_mean = t.sum() / n
++    tc = (tmpl_gray - t_mean) * mask
++    t_var = float((tc * tc).sum())
++    if t_var <= 1e-6:
++        return 0.0
++    s_a = correlate(image, mask)
++    s_a2 = correlate(image * image, mask)
++    cov = correlate(image, tc)
++    mean_a = s_a / n
++    var_a = np.maximum(s_a2 - n * mean_a * mean_a, 0.0)
++    denom = np.sqrt(var_a * t_var)
++    with np.errstate(divide="ignore", invalid="ignore"):
++        ncc = np.where(denom > 1e-6, cov / denom, 0.0)
++    return float(ncc.max()) if ncc.size else 0.0
++
++
++def main() -> int:
++    ap = argparse.ArgumentParser()
++    ap.add_argument("directory")
++    ap.add_argument("--min-score", type=float, default=0.55)
++    ap.add_argument("--sizes", default="32,48,64,96,128")
++    args = ap.parse_args()
++    if not CANON.exists():
++        print(f"canonical logo missing: {CANON}")
++        return 2
++    sizes = [int(s) for s in args.sizes.split(",") if s.strip()]
++    tmpls = templates(sizes)
++    files = sorted(Path(args.directory).glob("*.png"))
++    if not files:
++        print(f"no PNGs in {args.directory}")
++        return 1
++    print(f"canonical: {CANON.name}  templates: {len(tmpls)} (sizes {sizes} x light/dark)")
++    hits, best_overall = [], (0.0, None)
++    for f in files:
++        img = np.asarray(Image.open(f).convert("L"), dtype=np.float64)
++        best = (0.0, None, None)
++        for size, bg, gray, mask in tmpls:
++            if size + 4 > min(img.shape):
++                continue
++            s = score_template(img, gray, mask)
++            if s > best[0]:
++                best = (s, size, bg)
++        flag = "MATCH" if best[0] >= args.min_score else "     "
++        print(f"  {flag} {f.name:38s} best={best[0]:.3f} size={best[1]} bg={best[2]}")
++        if best[0] >= args.min_score:
++            hits.append(f.name)
++        if best[0] > best_overall[0]:
++            best_overall = (best[0], f.name)
++    print(f"\nbest overall: {best_overall[0]:.3f} ({best_overall[1]})")
++    print(f"matches >= {args.min_score}: {len(hits)}/{len(files)}")
++    for h in hits:
++        print(f"  - {h}")
++    return 0 if hits else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

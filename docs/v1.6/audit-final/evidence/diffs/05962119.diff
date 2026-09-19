@@ -1,0 +1,155 @@
+commit 0596211938c8db879c3b6e6609da1e0174a1f907
+2026-09-18 13:59:30 -0400
+fix(v1.6): sweep batch 2 — IPC frame guard, multipart header hygiene, credentials out of backups
+
+
+diff --git a/desktop/packages/desktop/src/process/services/kel/KelService.ts b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+index 7d49635..7d677d7 100644
+--- a/desktop/packages/desktop/src/process/services/kel/KelService.ts
++++ b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+@@ -381,7 +381,12 @@ export async function initializeKel(port: number): Promise<void> {
+   // store-relative path; main resolves it against the engine root and refuses anything that
+   // escapes - the renderer never builds an absolute path.
+   ipcMain.removeHandler('kel:artifact-reveal');
+-  ipcMain.handle('kel:artifact-reveal', (_event, relpath: string) => {
++  ipcMain.handle('kel:artifact-reveal', (event, relpath: string) => {
++    // Same frame guard as the other privileged handlers: only the app's own main frame may ask the
++    // OS to reveal a path (audit INT-01 - this handler was the one that skipped the check).
++    const url = event.senderFrame?.url || '';
++    if (event.senderFrame !== event.sender.mainFrame || !url.startsWith('file:'))
++      throw new Error('Unknown Kel window');
+     if (typeof relpath !== 'string' || !relpath) throw new Error('Missing artifact path');
+     const root = path.resolve(dataRoot());
+     const target = path.resolve(root, relpath);
+diff --git a/runtime/kel/backup.py b/runtime/kel/backup.py
+index 4d65ddb..07632cc 100644
+--- a/runtime/kel/backup.py
++++ b/runtime/kel/backup.py
+@@ -24,6 +24,9 @@ OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the da
+ SECRET_TABLE = 'transcription_settings'
+ SECRET_KEYS = ('meta_api_key',)
+ SKIP_ENTRIES = (STAGING, MARKER)
++# Credential custody lives in the OS keychain/app-data, but `KEL_DATA_DIR` can place the encrypted
++# credentials file inside the data root; a backup must never capture it (audit PER-04).
++NEVER_BACKUP = ('kel-credentials.json',)
+ # Runtime state the app keeps open while it runs: never part of a backup.
+ VOLATILE_ENTRIES = ('logs', 'desktop.log', 'desktop-session.json', 'controller.lock')
+ # Everything under `host` is Chromium's user-data tree - caches, storage and locks the running
+@@ -144,6 +147,9 @@ class Backup:
+             for entry in self.root.iterdir():
+                 if entry.name in SKIP_ENTRIES or entry.name in VOLATILE_ENTRIES:
+                     continue
++                if entry.name in NEVER_BACKUP:
++                    skipped.append(entry.name)  # credentials never travel in a backup (PER-04)
++                    continue
+                 if entry.name.lower().endswith(('-wal', '-shm', '-journal', '.wal', '.shm', '.journal')):
+                     # Live SQLite sidecar files are locked and never copied; the hot database
+                     # copy below carries a consistent snapshot of their contents.
+diff --git a/runtime/kel/transcription.py b/runtime/kel/transcription.py
+index 2698473..8579753 100644
+--- a/runtime/kel/transcription.py
++++ b/runtime/kel/transcription.py
+@@ -355,11 +355,25 @@ class MuseProvider(TranscriptionProvider):
+         return _MuseStream(self)
+ 
+ 
++def _header_safe(value):
++    """One multipart header parameter, safe to interpolate (audit SEC-01-multipart).
++
++    The filename originates from the caller's upload: unsanitised it could close the header early
++    and inject a new part. CR/LF are folded to spaces, quotes (which would end the parameter) are
++    normalised, and backslashes cannot start an escape.
++    """
++    text = str(value or '')
++    for bad, good in (('\r', ' '), ('\n', ' '), ('"', "'"), ('\\', '/')):
++        text = text.replace(bad, good)
++    return text
++
++
+ def _multipart(boundary, parts):
+     lines = []
+     for name, filename, content_type, data in parts:
+         lines.append(('--%s\r\n' % boundary).encode())
+-        lines.append(('Content-Disposition: form-data; name="%s"; filename="%s"\r\n' % (name, filename)).encode())
++        lines.append(('Content-Disposition: form-data; name="%s"; filename="%s"\r\n'
++                      % (_header_safe(name), _header_safe(filename))).encode())
+         lines.append(('Content-Type: %s\r\n\r\n' % content_type).encode())
+         lines.append(data)
+         lines.append(b'\r\n')
+diff --git a/runtime/tests/test_v16_sweep_fixes.py b/runtime/tests/test_v16_sweep_fixes.py
+new file mode 100644
+index 0000000..cb16df2
+--- /dev/null
++++ b/runtime/tests/test_v16_sweep_fixes.py
+@@ -0,0 +1,71 @@
++"""V1.6 P2/P3 sweep fixes: multipart header hygiene (SEC-01-multipart) and credentials kept out of
++backups (PER-04).
++
++Both findings were verified against the tree during the sweep: `_multipart` interpolated the
++caller's filename into `Content-Disposition` unescaped, and a `KEL_DATA_DIR` override can place
++`kel-credentials.json` inside the data root that backups copy.
++"""
++import tempfile
++import unittest
++from pathlib import Path
++
++from kel.backup import Backup, NEVER_BACKUP
++from kel.transcription import _header_safe, _multipart
++
++
++class MultipartHeaderTests(unittest.TestCase):
++    def test_a_malicious_filename_cannot_inject_a_part(self):
++        evil = 'ok.wav"\r\nContent-Disposition: form-data; name="injected"\r\n\r\npwned'
++        body = _multipart('BOUNDARY', [('file', evil, 'audio/wav', b'AUDIO')])
++        # The injected text survives as *inline* text inside the parameter, but it can never start a
++        # header line of its own, and the part count is unchanged.
++        self.assertNotIn(b'\r\nContent-Disposition: form-data; name="injected"', body)
++        headers = [line for line in body.split(b'\r\n') if line.startswith(b'Content-Disposition:')]
++        self.assertEqual(len(headers), 1)
++        self.assertIn(b'name="file"', headers[0])
++        self.assertEqual(body.count(b'--BOUNDARY\r\n'), 1)
++        self.assertIn(b'AUDIO', body)
++
++    def test_a_clean_filename_still_round_trips(self):
++        body = _multipart('BOUNDARY', [('file', 'note.wav', 'audio/wav', b'AUDIO')])
++        self.assertIn(b'name="file"; filename="note.wav"', body)
++        self.assertTrue(body.endswith(b'--BOUNDARY--\r\n'))
++
++    def test_header_safe_folds_line_breaks_quotes_and_backslashes(self):
++        self.assertEqual(_header_safe('a"\r\nb\\c'), "a'  b/c")
++        self.assertEqual(_header_safe(None), '')
++
++
++class BackupCredentialTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name) / 'data'
++        self.root.mkdir()
++        (self.root / 'kel-credentials.json').write_text('{"openai": "encrypted"}', encoding='utf-8')
++        (self.root / 'notes.txt').write_text('keep me', encoding='utf-8')
++        self.dest = Path(self.tmp.name) / 'dest'
++        self.dest.mkdir()
++
++    def test_a_backup_never_captures_the_credentials_file(self):
++        result = Backup(_Store(self.root)).create(self.dest)
++        names = {entry.name for entry in Path(result['folder']).iterdir()}
++        self.assertNotIn('kel-credentials.json', names)
++        self.assertIn('notes.txt', names)
++        self.assertIn('kel-credentials.json', result['skipped'])
++        self.assertIn('kel-credentials.json', result['notes'])
++
++    def test_the_guard_is_named_for_the_credentials_file(self):
++        self.assertIn('kel-credentials.json', NEVER_BACKUP)
++
++
++class _Store:
++    """Minimal stand-in: the backup path reads `root` and `db_path` only."""
++
++    def __init__(self, root):
++        self.root = Path(root)
++        self.db_path = Path(root) / 'kel.sqlite3'
++
++
++if __name__ == '__main__':
++    unittest.main()

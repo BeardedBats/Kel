@@ -1,0 +1,579 @@
+commit 83af16fca140a6a1a6438535f3ca6f7ce3ff3eae
+2026-09-17 14:31:12 -0400
+feat(v1.6-visual): BATCH 4 — transcription adopts the authoritative standalone IA
+
+
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.module.css b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.module.css
+index b5576c0..1cae352 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.module.css
++++ b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.module.css
+@@ -1,10 +1,14 @@
+-/* Transcription page layout: sidebar (Folders above Recents) + workspace, Kel spacing tokens. */
++/* Transcription page — authoritative standalone IA in Kel's visual language (finding 6).
++   One column, one document: the library keeps its own surface, the transcript sits directly on the
++   page instead of inside a second floating panel. Tokens come from kel-tokens.css only — the donor
++   --color-* / --bg-* variables are deliberately not used here any more. */
++
+ .shell {
+   display: flex;
+   height: 100%;
+   min-height: 0;
+-  gap: 12px;
+-  padding: 12px 16px 16px;
++  gap: var(--kel-space-3);
++  padding: var(--kel-space-3) var(--kel-space-4) var(--kel-space-4);
+ }
+ 
+ .sidebar {
+@@ -13,18 +17,58 @@
+   width: 264px;
+   min-width: 220px;
+   min-height: 0;
+-  border: 1px solid var(--color-border-2);
+-  border-radius: 10px;
+-  background: var(--color-bg-2);
++  border: 1px solid var(--kel-border);
++  border-radius: var(--kel-radius-card);
++  background: var(--kel-surface-1);
+   overflow: hidden;
+ }
+ 
++.sidebarHeader {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: var(--kel-space-2);
++  padding: 10px 12px 4px;
++}
++
++.sidebarTitle {
++  margin: 0;
++  font-size: 15px;
++  font-weight: 620;
++  letter-spacing: -0.1px;
++  color: var(--kel-text-1);
++}
++
++/* Plain-text entry to the key sheet — the donor used a gear; a labelled action is easier to find. */
++.apiKeyAction {
++  border: none;
++  background: transparent;
++  padding: 3px 6px;
++  border-radius: var(--kel-radius-control);
++  font-size: 12.5px;
++  font-weight: 600;
++  color: var(--kel-text-2);
++  cursor: pointer;
++  transition: color var(--kel-dur-state) var(--kel-ease), background-color var(--kel-dur-state) var(--kel-ease);
++}
++.apiKeyAction:hover {
++  color: var(--kel-text-1);
++  background: var(--kel-surface-2);
++}
++
++.sidebarFooterNote {
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-3);
++  padding: 6px 12px 10px;
++  border-top: 1px solid var(--kel-border);
++}
++
+ .sectionTitle {
+-  font-size: 12px;
++  font-size: 11px;
+   font-weight: 600;
+-  letter-spacing: 0.02em;
+-  color: var(--color-text-3);
+-  padding: 10px 12px 6px;
++  letter-spacing: 0.06em;
++  color: var(--kel-text-3);
++  padding: 10px 12px 4px;
+   text-transform: uppercase;
+ }
+ 
+@@ -38,37 +82,37 @@
+ .divider {
+   height: 1px;
+   margin: 6px 10px;
+-  background: var(--color-border-2);
++  background: var(--kel-border);
+ }
+ 
+ .folderRow,
+ .transcriptRow {
+   display: flex;
+   align-items: center;
+-  gap: 8px;
++  gap: var(--kel-space-2);
+   width: 100%;
+   border: none;
+   background: transparent;
+-  border-radius: 8px;
+-  padding: 6px 8px;
++  border-radius: var(--kel-radius-control);
++  padding: 5px 8px;
+   cursor: pointer;
+   text-align: left;
+-  color: var(--color-text-1);
++  color: var(--kel-text-1);
+ }
+ 
+ .folderRow:hover,
+ .transcriptRow:hover {
+-  background: var(--color-fill-2);
++  background: var(--kel-surface-2);
+ }
+ 
+ .folderRow.dropTarget {
+-  outline: 2px dashed var(--color-primary-light-4);
++  outline: 2px dashed var(--kel-accent);
+   outline-offset: -2px;
+-  background: var(--color-primary-light-1);
++  background: var(--kel-accent-soft);
+ }
+ 
+ .rowActive {
+-  background: var(--color-primary-light-1);
++  background: var(--kel-accent-soft);
+ }
+ 
+ .rowName {
+@@ -81,21 +125,19 @@
+ }
+ 
+ .rowMeta {
+-  font-size: 11px;
+-  color: var(--color-text-3);
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-3);
+ }
+ 
++/* The document sits on the page: no border, no raised panel — spacing and dividers do the work. */
+ .workspace {
+   flex: 1;
+   min-width: 0;
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+-  gap: 10px;
+-  border: 1px solid var(--color-border-2);
+-  border-radius: 10px;
+-  background: var(--color-bg-2);
+-  padding: 16px;
++  gap: var(--kel-space-3);
++  padding: var(--kel-space-2) var(--kel-space-2) 0;
+   overflow: hidden;
+ }
+ 
+@@ -105,21 +147,30 @@
+   overflow-y: auto;
+ }
+ 
++/* Actions top-right, in the standalone app's order. */
++.actionRow {
++  display: flex;
++  align-items: center;
++  justify-content: flex-end;
++  gap: var(--kel-space-2);
++  min-height: 32px;
++}
++
+ .recordBar {
+   display: flex;
+   align-items: center;
+-  gap: 12px;
+-  border: 1px solid var(--color-border-2);
+-  border-radius: 10px;
+-  padding: 10px 12px;
+-  background: var(--color-fill-1);
++  gap: var(--kel-space-3);
++  border: 1px solid var(--kel-border);
++  border-radius: var(--kel-radius-card);
++  padding: 8px 10px;
++  background: var(--kel-surface-1);
+ }
+ 
+ .liveDot {
+-  width: 10px;
+-  height: 10px;
++  width: 9px;
++  height: 9px;
+   border-radius: 50%;
+-  background: rgb(217, 69, 69);
++  background: var(--kel-failed-fg);
+   animation: kelPulse 1.4s ease-in-out infinite;
+ }
+ 
+@@ -145,29 +196,114 @@
+   display: flex;
+   align-items: center;
+   justify-content: center;
+-  border: 2px dashed var(--color-primary-light-4);
+-  border-radius: 10px;
+-  background: color-mix(in srgb, var(--color-bg-2) 82%, transparent);
+-  font-size: 14px;
+-  color: var(--color-text-2);
++  border: 2px dashed var(--kel-accent);
++  border-radius: var(--kel-radius-card);
++  background: color-mix(in srgb, var(--kel-surface-1) 86%, transparent);
++  font-size: var(--kel-type-body);
++  color: var(--kel-text-2);
+   pointer-events: none;
+ }
+ 
++.documentHeader {
++  display: flex;
++  align-items: baseline;
++  gap: var(--kel-space-2);
++  flex-wrap: wrap;
++}
++
++.documentTitle {
++  margin: 0;
++  font-size: 20px;
++  font-weight: 650;
++  letter-spacing: -0.2px;
++  color: var(--kel-text-1);
++}
++
++.documentStatus {
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-3);
++  white-space: nowrap;
++}
++
++.grow {
++  flex: 1;
++}
++
+ .transcriptText {
+   white-space: pre-wrap;
+-  line-height: 1.7;
+-  font-size: 14px;
+-  color: var(--color-text-1);
++  line-height: 1.65;
++  font-size: var(--kel-type-body);
++  color: var(--kel-text-1);
++}
++
++/* The donor's four actions hold the weight; the rest stay available but quiet. */
++.documentActions {
++  display: flex;
++  gap: var(--kel-space-2);
++  flex-wrap: wrap;
++  padding-top: 10px;
++  margin-top: var(--kel-space-3);
++  border-top: 1px solid var(--kel-border);
++}
++
++.secondaryActions {
++  display: flex;
++  gap: var(--kel-space-1);
++  flex-wrap: wrap;
++  align-items: center;
++  margin-top: var(--kel-space-2);
++}
++
++.secondaryAction,
++.dangerAction {
++  border: none;
++  background: transparent;
++  padding: 4px 8px;
++  border-radius: var(--kel-radius-control);
++  font-size: 13px;
++  color: var(--kel-text-2);
++  cursor: pointer;
++  transition: color var(--kel-dur-state) var(--kel-ease), background-color var(--kel-dur-state) var(--kel-ease);
++}
++.secondaryAction:hover {
++  color: var(--kel-text-1);
++  background: var(--kel-surface-2);
++}
++.dangerAction {
++  color: var(--kel-failed-fg);
++}
++.dangerAction:hover {
++  background: var(--kel-failed-bg);
++}
++
++.keySheetBody {
++  margin-bottom: var(--kel-space-3);
++  font-size: 13px;
++  color: var(--kel-text-2);
++}
++
++.keySheetForm {
++  margin-top: var(--kel-space-1);
++}
++
++.keySheetLabel {
++  display: block;
++  margin-bottom: 4px;
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-3);
+ }
+ 
+ @media (max-width: 980px) {
+   .shell {
+     flex-direction: column;
+-    padding: 8px 10px 12px;
++    padding: var(--kel-space-2);
+   }
+   .sidebar {
+     width: auto;
+     min-width: 0;
+     max-height: 220px;
+   }
++  .actionRow {
++    justify-content: flex-start;
++  }
+ }
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+index 7b401be..9f08e6b 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+@@ -615,6 +615,20 @@ const statusCopy =
+         onDrop={onDrop}
+       >
+         <aside className={styles.sidebar} aria-label='Transcript library'>
++          {/* Authoritative standalone IA (finding 6): the column keeps the donor's own title and a
++              plain-text API Key entry — not a gear — because that is where a user looks for the
++              transcription credential. */}
++          <div className={styles.sidebarHeader}>
++            <h1 className={styles.sidebarTitle}>Transcriptions</h1>
++            <button
++              type='button'
++              className={styles.apiKeyAction}
++              onClick={() => setSettingsOpen(true)}
++              data-testid='transcription-settings'
++            >
++              API Key
++            </button>
++          </div>
+           <div className={styles.sectionTitle}>Folders</div>
+           <div className={styles.scrollArea}>
+             {library.folders.length === 0 && (
+@@ -711,7 +725,7 @@ const statusCopy =
+             </div>
+           </div>
+           <div className={styles.divider} />
+-          <div className={styles.sectionTitle}>Recent Transcriptions</div>
++          <div className={styles.sectionTitle}>Recent</div>
+           <div className={styles.scrollArea} data-testid='recent-list'>
+             {recent.length === 0 && (
+               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
+@@ -737,14 +751,9 @@ const statusCopy =
+               </button>
+             ))}
+           </div>
+-          <div className={styles.divider} />
+-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px 10px' }}>
+-            <span className={styles.rowMeta} data-testid='transcription-mode'>
+-              {status?.label || 'Checking…'}
+-            </span>
+-            <Button size='mini' type='text' style={{ marginLeft: 'auto' }} onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>
+-              Source
+-            </Button>
++          {/* The connection state stays one quiet line; the entry point moved to the column header. */}
++          <div className={styles.sidebarFooterNote} data-testid='transcription-mode'>
++            {status?.label || 'Checking…'}
+           </div>
+         </aside>
+ 
+@@ -756,20 +765,27 @@ const statusCopy =
+               fix='Reopen this page or check that Kel is running.'
+             />
+           )}
+-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
++          {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
++              Record — with Record last and primary. Record More is always present (disabled when there is
++              nothing to append to) instead of appearing conditionally. */}
++          <div className={styles.actionRow}>
+             {recState === 'idle' && (
+               <>
+-                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
+-                  Record
+-                </Button>
+                 <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
+                   Upload Audio
+                 </Button>
+-                {selected?.source_type === 'recording' && (
+-                  <Button onClick={() => void beginRecording(selected.id)} data-testid='record-more'>
+-                    Record more
+-                  </Button>
+-                )}
++                <Button
++                  disabled={selected?.source_type !== 'recording'}
++                  onClick={() => {
++                    if (selected) void beginRecording(selected.id);
++                  }}
++                  data-testid='record-more'
++                >
++                  Record More
++                </Button>
++                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
++                  Record
++                </Button>
+               </>
+             )}
+             <input
+@@ -826,7 +842,7 @@ const statusCopy =
+             )}
+             {selected && (
+               <>
+-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
++                <div className={styles.documentHeader}>
+                   {renaming ? (
+                     <Input
+                       value={nameDraft}
+@@ -838,12 +854,18 @@ const statusCopy =
+                       data-testid='transcript-rename'
+                     />
+                   ) : (
+-                    <strong className='text-16px' data-testid='transcript-name'>
++                    <h2 className={styles.documentTitle} data-testid='transcript-name'>
+                       {selected.name}
+-                    </strong>
++                    </h2>
+                   )}
+-                  <Button
+-                    size='mini'
++                  {/* Saved / recording state reads beside the title, as in the standalone app. */}
++                  <span className={styles.documentStatus} data-testid='transcript-status'>
++                    {statusCopy}
++                  </span>
++                  <span className={styles.grow} />
++                  <button
++                    type='button'
++                    className={styles.secondaryAction}
+                     onClick={() => {
+                       setRenaming(true);
+                       setNameDraft(selected.name);
+@@ -851,10 +873,7 @@ const statusCopy =
+                     data-testid='rename-button'
+                   >
+                     Rename
+-                  </Button>
+-                  <span className={styles.rowMeta} data-testid='transcript-status'>
+-                    {statusCopy}
+-                  </span>
++                  </button>
+                 </div>
+                 <div className={styles.rowMeta}>
+                   {selected.source_type === 'recording' ? 'Recording' : `Upload: ${selected.source_filename || 'audio'}`}
+@@ -880,16 +899,9 @@ const statusCopy =
+                 <p className={styles.transcriptText} data-testid='transcript-text'>
+                   {(selected.text || '').trim() || '(No speech was recognized.)'}
+                 </p>
+-                <div
+-                  style={{
+-                    display: 'flex',
+-                    gap: 8,
+-                    flexWrap: 'wrap',
+-                    paddingTop: 10,
+-                    marginTop: 10,
+-                    borderTop: '1px solid var(--color-border-2)',
+-                  }}
+-                >
++                {/* Authoritative IA: the donor's four actions come first and keep the weight; Kel's
++                    additions stay available but quieter, so the document footer still reads as before. */}
++                <div className={styles.documentActions}>
+                   <Button onClick={() => void copyTranscript()} data-testid='copy-transcript'>
+                     Copy Transcript
+                   </Button>
+@@ -907,20 +919,37 @@ const statusCopy =
+                     }}
+                     data-testid='combine-open'
+                   >
+-                    Combine with…
++                    Combine
+                   </Button>
+-                  <Button onClick={sendToChat} data-testid='send-to-chat'>
++                </div>
++                <div className={styles.secondaryActions}>
++                  <button type='button' className={styles.secondaryAction} onClick={sendToChat} data-testid='send-to-chat'>
+                     Send to chat
+-                  </Button>
+-                  <Button type='primary' onClick={() => void openReview('answers')} data-testid='use-vetting'>
++                  </button>
++                  <button
++                    type='button'
++                    className={styles.secondaryAction}
++                    onClick={() => void openReview('answers')}
++                    data-testid='use-vetting'
++                  >
+                     Use as vetting answers
+-                  </Button>
+-                  <Button onClick={() => void openReview('freethink')} data-testid='think-out-loud'>
++                  </button>
++                  <button
++                    type='button'
++                    className={styles.secondaryAction}
++                    onClick={() => void openReview('freethink')}
++                    data-testid='think-out-loud'
++                  >
+                     Think out loud
+-                  </Button>
+-                  <Button status='danger' onClick={() => removeTranscript(selected)} data-testid='delete-transcript'>
++                  </button>
++                  <button
++                    type='button'
++                    className={styles.dangerAction}
++                    onClick={() => removeTranscript(selected)}
++                    data-testid='delete-transcript'
++                  >
+                     Delete
+-                  </Button>
++                  </button>
+                 </div>
+               </>
+             )}
+@@ -930,27 +959,38 @@ const statusCopy =
+ 
+       {dragging && <div className={styles.dropOverlay}>Drop audio or video to transcribe</div>}
+ 
++      {/* The user's explicit decision: the standalone app's key sheet, in Kel's words — a plain
++          "Meta API key" modal with no helper paragraph under the button. */}
+       <Modal
+-        title='Transcription source'
++        title='Meta API key'
+         visible={settingsOpen}
+         footer={null}
+         onCancel={() => setSettingsOpen(false)}
+         style={{ maxWidth: 480 }}
+       >
+-        <p style={{ marginBottom: 8 }}>{status?.detail || 'Checking the transcription source…'}</p>
++        <p className={styles.keySheetBody}>
++          {status?.has_key
++            ? 'Replace the key used for Muse transcription.'
++            : 'Add a Model API key to begin transcribing.'}
++        </p>
+         {status && !status.has_key && (
+-          <>
+-            <p style={{ fontSize: 13, color: 'var(--color-text-2)', marginBottom: 8 }}>
+-              Kel uses Muse (Meta) for live and file transcription when a Meta API key is connected. Without a
+-              key, practice mode records exactly the same way and writes clear practice text.
+-            </p>
++          <div className={styles.keySheetForm}>
++            <label className={styles.keySheetLabel} htmlFor='meta-api-key'>
++              API key
++            </label>
+             <div style={{ display: 'flex', gap: 8 }}>
+-              <Input.Password value={keyDraft} onChange={setKeyDraft} placeholder='Meta API key' data-testid='key-input' />
++              <Input.Password
++                id='meta-api-key'
++                value={keyDraft}
++                onChange={setKeyDraft}
++                placeholder='Paste your Meta Model API key'
++                data-testid='key-input'
++              />
+               <Button type='primary' onClick={() => void saveKey()} disabled={!keyDraft.trim()} data-testid='key-save'>
+-                Connect
++                Save and Verify
+               </Button>
+             </div>
+-          </>
++          </div>
+         )}
+         {status?.has_key && (
+           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>

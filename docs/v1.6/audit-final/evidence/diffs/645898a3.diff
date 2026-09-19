@@ -1,0 +1,66 @@
+commit 645898a3580face7501001e280de6484c969fa6f
+2026-09-18 19:57:57 -0400
+fix(v1.6-visual): batch 6 follow-up — fail fast when a supervised engine spawn dies outright
+
+
+diff --git a/desktop/packages/desktop/src/process/services/kel/KelService.ts b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+index 54a9585..78bebda 100644
+--- a/desktop/packages/desktop/src/process/services/kel/KelService.ts
++++ b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+@@ -1,6 +1,6 @@
+ /** Kel integration: connect the donor UI host to the durable Kel engine. */
+ import { app, BrowserWindow, ipcMain, shell } from 'electron';
+-import { spawn } from 'child_process';
++import { spawn, type ChildProcess } from 'child_process';
+ import fs from 'fs';
+ import path from 'path';
+ import { recoverHistory, type HistoryMessage } from './reconcileHistory';
+@@ -91,7 +91,7 @@ async function expectedEngineAnswered(): Promise<boolean> {
+   return engineVersionAccepted(state?.engine_version, expectedEngineVersion());
+ }
+ 
+-function spawnEngine(root: string): void {
++function spawnEngine(root: string): ChildProcess {
+   const spec = engineLaunchSpec();
+   const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
+   // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
+@@ -110,11 +110,15 @@ function spawnEngine(root: string): void {
+   child.unref();
+   fs.closeSync(log);
+   spawnedByUs = true;
++  return child;
+ }
+ 
+-async function waitForEngineReady(descriptorPath: string): Promise<boolean> {
++async function waitForEngineReady(child: ChildProcess | null, descriptorPath: string): Promise<boolean> {
+   const deadline = Date.now() + ENGINE_WAIT_MS;
+   while (Date.now() < deadline) {
++    // A spawn that failed outright (missing binary, refused start) must be reported fast — the
++    // person should not wait out a full deadline for a process that never existed.
++    if (child && child.exitCode !== null) return false;
+     try {
+       descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+       // The descriptor file is shared with any leftover engine: keep waiting until the engine
+@@ -185,8 +189,8 @@ async function performEngineRestart(root: string, descriptorPath: string): Promi
+     } catch {
+       // Confirmed unreachable — fall through to the restart.
+     }
+-    spawnEngine(root);
+-    const ok = await waitForEngineReady(descriptorPath);
++    const child = spawnEngine(root);
++    const ok = await waitForEngineReady(child, descriptorPath);
+     healthMachine?.restartFinished(ok);
+     broadcastEngineState(true);
+   } finally {
+@@ -273,9 +277,9 @@ export async function initializeKel(port: number): Promise<void> {
+   const command = launch.command;
+   const baseArgs = launch.baseArgs;
+   if (!connected) {
+-    spawnEngine(root);
++    const child = spawnEngine(root);
+     console.log('[KEL-BOOT] initializeKel spawned engine child');
+-    if (!(await waitForEngineReady(descriptorPath))) throw new Error('Kel engine did not start. See desktop.log.');
++    if (!(await waitForEngineReady(child, descriptorPath))) throw new Error('Kel engine did not start. See desktop.log.');
+   }
+   console.log('[KEL-BOOT] initializeKel engine ready');
+   startEngineSupervision(root, descriptorPath);

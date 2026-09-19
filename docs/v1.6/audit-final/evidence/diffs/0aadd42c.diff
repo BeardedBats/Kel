@@ -1,0 +1,403 @@
+commit 0aadd42c19e632d1b15c9453da7a879aed4b8d5e
+2026-09-18 18:27:17 -0400
+docs(v1.6): R7–R8 breadcrumbs — credential containment, package identity, REL-01 CLOSED
+
+
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+index 32ed686..0a47dab 100644
+--- a/docs/v1.6/MARATHON_STATE.md
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -3,7 +3,7 @@
+ MARATHON_MODE: ACTIVE
+ 
+ start_head: 756218e (published docs tip; production 8a677d0)
+-current_head: `b2ffed1` (R5) + R6 tests/breadcrumbs (see `git log --oneline -14`)
++current_head: `93b99b5` + R7/R8 breadcrumbs (see `git log --oneline -20`)
+ 
+ completed_this_run:
+ - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
+@@ -24,8 +24,8 @@ completed_this_run:
+   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
+   MAIN_STATUS, AUTO_RESUME
+ 
+-current_phase: R7 — credential / network boundary (CREDENTIAL-CONTAINMENT)
+-current_item: R7.A — inventory every place a credential could become prompt text, ambient env, artifact, packet, log or export; then sentinel tests
++current_phase: R9 - Visual batches 6-8 + Needs Your Attention (derived-only)
++current_item: R9.A - reconcile the Visual lane (base/tip/overlap/ownership) before writing any batch-6 renderer change
+ 
+ next_queue:
+ 1. R2 — matrix + repair only demonstrated duplicate-execution gaps + hostile duplicate tests
+@@ -46,7 +46,7 @@ last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`, R0 batch)
+ last_desktop_vitest: **93 passed** (8 files, R0 batch)
+ last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
+ 
+-last_push: `b2ffed1` → origin/ux/v15-journeys (R6 breadcrumbs follow)
++last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
+ last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
+ 
+ blocker: NONE
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index a098413..dabc849 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -314,6 +314,23 @@ Previous: an APPROVED row authorized its action indefinitely. Primary files: `ke
+ Tests: `tests/test_v16_r4_approval_exact.py` (7 new hostile cases). Risk: LOW (strictly narrowing).
+ Evidence: `increments/R4-APPROVAL-EXACT.md` (producer/consumer inventory); INV-APPROVAL-EXACT; A-23.
+ 
++### CHG-023 - REL-01 closed: hashed runtime == loaded runtime; identity 1.6.0 (R8)
++ID: CHG-023 / Phase: Campaign A - roadmap R8 / Commits: `2468b16`, `93b99b5` / Date: 2026-09-18
++New behavior: unique module migration markers (assignment 21); `freeze-release.ps1` lands the staged
++runtime at the load path (no nesting) and refuses a package whose bundled engine differs; engine and
++desktop share the 1.6.0 identity. Previous: the freeze nested the fresh runtime under
++`resources/kel-engine/KelEngine/` while the app loaded the package's stale engine (REL-01 live), and
++the engine self-reported 1.5.0. Tests: `test_v16_r8_migrations.py`, `test_v16_r8_identity.py`,
++`engineVersion.test.ts`; fixture `scripts/validate-freeze.ps1`. Evidence:
++`increments/R8-PACKAGE-ASSERTIONS.md`; A-27.
++
++### CHG-022 - Provider children receive only their own credential (R7 / CREDENTIAL-CONTAINMENT)
++ID: CHG-022 / Phase: Campaign A - roadmap R7 / Commit: `b6c4eff` / Date: 2026-09-18
++New behavior: `internal.child_env(keep=...)`; the Codex child keeps only `OPENAI_API_KEY`; the coding
++test command clears all three provider keys. Previous: the appserver copied the whole environment
++(only Anthropic removed) and the test command missed the DeepSeek key. Tests:
++`tests/test_v16_r7_credentials.py` (5 sentinel cases). Evidence: `increments/R7-CREDENTIAL-BOUNDARY.md`; A-26.
++
+ ### CHG-019 — An observed external effect keeps its receipt (R2 / EFFECT-REPLAY)
+ ID: CHG-019 · Phase: Campaign A — roadmap R2 · Commit: `fde5bbb` · Date: 2026-09-18
+ New behavior: `Store.observe_effect` no longer overwrites a recorded receipt: an `OBSERVED` effect
+@@ -547,5 +564,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | R4 approval window (APPROVAL-EXACT) | CHG-020 delivered (`8c899c8`); record `increments/R4-APPROVAL-EXACT.md` | DONE |
+ | R5 canonical persistence (PERSIST-CANONICAL) | CHG-021 delivered (`b2ffed1`); record `increments/R5-PERSISTENCE-INTEGRITY.md` | DONE |
+ | R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
++| R7 credential containment | CHG-022 delivered (`b6c4eff`); record `increments/R7-CREDENTIAL-BOUNDARY.md` | DONE |
++| R8 migrations + package identity + REL-01 | CHG-023 delivered (`2468b16`, `93b99b5`); record `increments/R8-PACKAGE-ASSERTIONS.md` | DONE |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+ | Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index b5bfadd..76078aa 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -59,7 +59,10 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `1a9f538` | `fde5bbb` | 2026-09-18 | R3 / RETRY-DURABLE | retry budgets proven durable across restarts (inventory + restart tests; no production change justified) | `tests/test_v16_r3_retry_durability.py`; `docs/v1.6/pre-audit/increments/R3-RETRY-DURABILITY.md` | +5 tests; recovery family 24 passed | none | no | n/a | no | no | MEDIUM | `increments/R3-RETRY-DURABILITY.md`; INV-RETRY-DURABLE; REQ-R25-R3 | token/wallclock caps still lack a job-envelope primitive |
+ | `b2ffed1` | `8c899c8` | 2026-09-18 | R5 / PERSIST-CANONICAL | only canonical JSON reaches durable state (NaN/Infinity refused; finite provider metrics; submit type guard) | `kel/core.py`; `kel/service.py`; `tests/test_v16_r5_persistence.py`; record | +7 tests; focused R2–R5 + core 84 passed; full suite A-24 (**981**) | none | no | yes (encoding contract) | no | yes (canonical JSON) | MEDIUM | `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL; REQ-R25-R5 | corrupted stored JSON is an audit question |
+ | R6 tests+record | `b2ffed1` | 2026-09-18 | R6 / LIVENESS-SEPARATION | liveness/state truth verified + 5 discriminating tests (no production change) | `tests/test_v16_r6_liveness.py`; `docs/v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md` | +5 tests (A-25) | none | no | n/a | no | no | MEDIUM | `increments/R6-TRUTHFUL-STATE.md` | derived health status deliberately lives with R9.D |
+-| `HEAD` | R6 tests+record | 2026-09-18 | R6 | R3–R6 breadcrumbs (this commit) | docs + one test file | full suite A-24; focused A-25 | none | no | — | no | no | LOW | corpus rows REQ-R25-R3/4/5/6, INV-RETRY-DURABLE/APPROVAL-EXACT/PERSIST-CANONICAL, CHG-019/020/021, A-23/24/25; `increments/R3…`–`R6…` | next: R7 credential/network boundary |
++| `b6c4eff` | `e8bbb05` | 2026-09-18 | R7 / CREDENTIAL-CONTAINMENT | provider children receive only the credential they require; sentinel tests | `kel/internal.py`; `kel/appserver.py`; `kel/coding.py`; `tests/test_v16_r7_credentials.py`; record | +5 tests; focused 85 passed; full suite A-26 (**991**) | none | no | yes (child env) | no | yes (containment) | MEDIUM | `increments/R7-CREDENTIAL-BOUNDARY.md`; INV-CREDENTIAL-CONTAINMENT; REQ-R25-R7 | engine-local helper subprocesses inherit the user env (disclosed); network sandboxing = post-V1.6 |
++| `2468b16` | `b6c4eff` | 2026-09-18 | R8.A / migrations | unique module migration markers (workforce and assignment both claimed 17 -> assignment 21) | `kel/assignment.py`; `tests/test_v16_r8_migrations.py` | +4 tests | **21** (new max; existing stores stamped once) | no | no | no | yes (marker) | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; A-27 | DDL always ran before the marker; the defect was identity/accounting |
++| `93b99b5` | `2468b16` | 2026-09-18 | R8.B/C/D / PACKAGE-IDENTITY + REL-01 | frozen load path carries the staged runtime (no nesting); the freeze refuses divergence; engine/desktop version identity = 1.6.0 | `scripts/freeze-release.ps1`; `scripts/validate-freeze.ps1`; `kel/__init__.py`; `kel/service.py`; `desktop/package.json`; `tests/test_v16_r8_identity.py`; `engineVersion.test.ts`; record | +3 engine + 3 desktop tests; packaged probe (1.6.0, 4 providers); full suite A-26 | none | yes (version strings) | no | no | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 fixture evidence | installer battery + real-package freeze remain R12 |
++| `HEAD` | `93b99b5` | 2026-09-18 | R7+R8 | R7/R8 breadcrumbs (this commit) | docs only | engine full A-26; desktop A-27 | none | no | - | no | no | LOW | corpus rows REQ-R25-R7/R8, INV-CREDENTIAL-CONTAINMENT/PACKAGE-IDENTITY, CHG-022/023, A-26/27; `increments/R7...`, `R8...` | next: R9 Visual 6-8 + Needs Your Attention |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+index c4561ed..3e7b538 100644
+--- a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -149,6 +149,41 @@ OPEN_GAP (known open finding attacks it).
+   result; check that waiting/idle never reads as complete; verify a legitimately long operation is
+   not stalled out.
+ 
++## INV-CREDENTIAL-CONTAINMENT (R7)
++- Definition: the capability to use a provider does not imply arbitrary worker or tool access to the
++  raw credential; a trusted provider process receives only the credential it needs.
++- Owner: `kel.internal` (`child_env`, `redact`), `kel.appserver`, `kel.coding`, `kel.host_runtime`,
++  `kel.memory` (`scan_secret`), `kel.workforce` (`assert_safe`), `kel.backup`, `kel.diagnostics`.
++- Code paths: `child_env(keep=...)` for the Codex child; the coding test command clears all three
++  provider keys with `networkAccess: False`; `redact`/`scan_secret`/`assert_safe` keep secrets out of
++  durable content; diagnostics excludes env dumps; backups never carry the credentials file.
++- Tests: `tests/test_v16_r7_credentials.py` (5 sentinel cases). Evidence:
++  `increments/R7-CREDENTIAL-BOUNDARY.md`; A-26; commit `b6c4eff`.
++- Edge cases: the engine process and its local helper subprocesses inherit the user environment
++  (documented); `host_runtime.py` is user-authorized native execution, not an OS sandbox.
++- Audit target: attempt to read a provider key from an unrelated child env, a prompt, an artifact, a
++  packet, a log or a diagnostics export.
++
++## INV-PACKAGE-IDENTITY - INV-FREEZE-IMMUTABLE (R8)
++- Definition: packaged Kel executes the runtime artifact the release evidence identifies (the hashed
++  runtime is the loaded runtime and the engine/desktop identities agree); frozen releases stay
++  byte-untouched.
++- Owner: `scripts/build-runtime.ps1`, `freeze-release.ps1`, `verify-release.ps1`,
++  `scripts/validate-freeze.ps1`, `desktop/kel-builder.json` (extraResources -> `resources/kel-engine`),
++  `runtime/kel/__init__.py` + `service.ENGINE_VERSION`, `desktop/package.json` (`app.getVersion()`),
++  the desktop `engineVersionAccepted` guard.
++- Code paths: the load-path directory is re-created from the staged runtime; SHA-256 equality is
++  enforced between staged and load-path runtime and against the package's bundled engine; unique
++  module migration markers; the version identity is asserted by tests on both ends.
++- Tests/evidence: `tests/test_v16_r8_migrations.py` (4), `test_v16_r8_identity.py` (3), desktop
++  `engineVersion.test.ts` (3), `scripts/validate-freeze.ps1` (positive + negative), the packaged boot
++  probe (`engine_version 1.6.0`, 4 providers). Record `increments/R8-PACKAGE-ASSERTIONS.md`; A-27;
++  commits `2468b16`, `93b99b5`. Frozen refs re-verified untouched (`v1.5.0`, `v1.6.0-pre1`).
++- Edge cases: the installer battery and the real-package freeze re-run at R12; `Kel.exe`/`app.asar`
++  are synthetic stubs in the fixture.
++- Audit target: rebuild + refreeze independently and confirm the manifest hash matches the binary the
++  packaged app launches; confirm the version guard refuses a stale engine.
++
+ ## INV-AUDIT-001 — Builder cannot independently final-certify production output
+ - Definition: the thread that writes production code never counts as its own independent reviewer;
+   independence is produced only by a separate fresh-context reviewer with its own record.
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index afb08c6..ce9010c 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -22,7 +22,7 @@ the only row awaiting R8-level package evidence.
+ | APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | **FIXED** (2026-09-18, `8a677d0`): `chat_approvals._require_owned` refuses a resolution whose record's job is not in `_job_ids_for(declared conversation)` — the same ownership set the read path uses — and the desktop now declares its conversation on both resolve call sites. Additive by contract (a caller that declares nothing behaves as before); the digest binding from V1.5 is untouched, and Round 2.5 APPROVAL-EXACT (normalization + pre-execution revalidation) stays with **R4**. Bonus: a latent read-path bug fixed (`_job_ids_for` assumed `job_links` exists) | `8a677d0` | `tests/test_v16_approvals.py` (6 new; full suite 915) | none (scope hardening) | pending |
+ | APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on crash/restart between commit and flush (`vetting_session.py:95`) | P2 | `13_PHASE3_DELTA_AUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18: still instance state; Phase 6 reviewed it as a bounded crash-window only, and the durable-drain direction is a feature rather than a release condition) | — | — | none | pending |
+ | A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | **FIXED** (2026-09-18, `101d8c3`): `engineVersionAccepted(live, expected)` compares the live `/api/state` `engine_version` with the version this build shipped, and the check runs in **both** places that used to trust the answer — the reuse path and the spawn-wait loop (a leftover engine can keep the shared descriptor alive). An unpackaged dev run passes an empty expectation (its `app.getVersion()` is Electron's) and is deliberately not enforced | `101d8c3` | `desktop/tests/unit/kelEngineVersion.test.ts` (3); tsc 0; vitest 93 | none (upgrade-correctness) | pending |
+-| REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | **OPEN_RELEASE_BLOCKER** (verified open 2026-09-18: `kel-builder.json`/`kel-runtime-builder.json` declare `{"from": "../dist/runtime/KelEngine", "to": "kel-engine"}` — the load path the app stages from (`process.resourcesPath/kel-engine`) — while the freeze tool's staging step does not affect that path, so a freeze can ship an engine older than what `dist/runtime` holds. **Not fixed here on purpose:** the only honest verification is a real freeze, which Campaign A is forbidden to perform; the fix (stage into the packaged `resources/kel-engine` and hash *that*) plus its freeze-level verification belong to the RC gate/human. Mitigation available at RC time: the packaged battery can assert the packaged engine identity without freezing) | — | freeze tooling test (gated) | **release-relevant** | pending |
++| REL-01 | Freeze staging vs packaged runtime path can diverge (evidence hashes one runtime, the app loads another) | P2 | `13_PHASE3_DELTA_AUDIT.md` | **FIXED** (2026-09-18, `93b99b5`): the divergence was live - `freeze-release.ps1` nested the staged runtime at `resources/kel-engine/KelEngine/...` while the load path kept the package's own engine. The load-path directory is now re-created from the staged runtime and the freeze refuses (SHA-256) a staged copy that did not land, or a package bundling a different engine. Fixture `scripts/validate-freeze.ps1`: positive (freeze + verify against the frozen tree, `OK resources/kel-engine/KelEngine.exe`) and negative (tampered package refused); the frozen load-path engine boots and reports `engine_version 1.6.0` | `93b99b5` | `tests/test_v16_r8_identity.py` (the identity ends are pinned) + the fixture evidence in `increments/R8-PACKAGE-ASSERTIONS.md` | the release freeze itself is a future release step (Campaign A must not perform it); the installer battery re-runs at R12 | pending |
+ | SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `49e528e`): `Vetting(store, conversation=…)` carries the acting scope and `session()` — the single load point all by-id actions (ingest/process/finish/help/greybox/apply_pending/_control) already funnel through — refuses a row whose `conversation_id` differs. `panel()` stays the marked display surface (existing `cross_conversation` behaviour preserved). The service builds the Vetting with the conversation it is acting in. Direct callers that declare no conversation are unchanged (additive) | `49e528e` | `tests/test_vetting.py` (7 new: foreign-conversation refusal for every by-id action with the session unchanged, unscoped-instance compatibility, unknown id still null, service-route scope, panel behaviour) | none (scope hardening) | pending |
+ | PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | **FIXED** (engine half, 2026-09-18): `backup._record_outcome` writes `restore-outcome.json` beside the data on both decisive paths (the DB is what a restore replaces) and the failure path keeps `restore-pending.json`; `service._restore_outcome` surfaces it as `state()['restore']` — boot never aborts. The renderer surface stays with REQ-ELOSS (audit target 57) | `df1997a` | `tests/test_v16_restore_visibility.py` (5 new; full suite 900) | none (no UI claim made) | pending |
+ | PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `84b5646`): `SNAPSHOT_KEEP = 2` + `_prune_snapshots(root)` keep only the newest snapshots and run on **both** the success and the failure path (repeated failed attempts accumulate too); the snapshot the current attempt wrote always survives and pruning is best-effort. The "silently aborts" half was already closed by CHG-007 (recorded + surfaced) | `84b5646` | `tests/test_v16_sweep_fixes.py` (2 new) | none (bounded growth) | pending |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 7c94993..a870785 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -61,8 +61,8 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | **implemented** (`8c899c8`): producer/consumer inventory + consumer-side window check in `Authorizer._approval_ok`; 7 hostile cases | `8c899c8` | `tests/test_v16_r4_approval_exact.py` 7 new; authorization family 96 passed; full suite A-23 | `increments/R4-APPROVAL-EXACT.md`; INV-APPROVAL-EXACT | no HMAC by design (trusted local runtime, digest binding suffices) | pending |
+ | REQ-R25-R5 | roadmap R2.5 (Round 2.5 E; PERSIST-CANONICAL) | persistence integrity contract + adversarial tests | **implemented** (`b2ffed1`): ingress inventory recorded; `encode` refuses non-finite values (canonical JSON for durable state + digests); provider metrics guarded; submit type guard; 7 hostile ingress tests | `b2ffed1` | `tests/test_v16_r5_persistence.py` 7 new; focused R2–R5 + core 84 passed; full suite A-24 | `increments/R5-PERSISTENCE-INTEGRITY.md`; INV-PERSIST-CANONICAL | corrupted *stored* JSON (external edits) is an audit question; `add_message` uncapped for trusted writers | pending |
+ | REQ-R25-R6 | roadmap R2.5 (Round 2.5 F/G; COMPLETION-TRUTH / LIVENESS-SEPARATION / RECOVERY-CLASSIFICATION) | truthful state + liveness separation | **complete** (no production change): three-layer inventory recorded; required invariants verified in code (expired run → ORPHANED + fresh epoch + UNCERTAIN 'requires reconciliation'; waiting ≠ completed/failed; liveness never completes; event silence never stalls); 5 discriminating tests | R6 tests+record | `tests/test_v16_r6_liveness.py` 5 new; A-25 | `increments/R6-TRUTHFUL-STATE.md`; INV-LIVENESS-SEPARATION; INV-COMPLETION-TRUTH; INV-RECOVERY-CLASSIFICATION | derived compact health status deliberately deferred to R9.D (one surface, no competing state) | pending |
+-| REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | PENDING | — | — | roadmap §R7 | — | pending |
+-| REQ-R25-R8 | roadmap R2.5 §15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | PENDING | — | — | roadmap §R8 | — | pending |
++| REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | **implemented** (`b6c4eff`): channel inventory; `child_env` containment at the spawn sites; the coding test command clears all provider keys; sentinel tests; native-host network reality documented (no OS sandbox; egress filtering = post-V1.6) | `b6c4eff` | `tests/test_v16_r7_credentials.py` 5 new; focused 85 passed; full A-26 | `increments/R7-CREDENTIAL-BOUNDARY.md`; INV-CREDENTIAL-CONTAINMENT | engine-local helper subprocesses inherit the user env (disclosed) | pending |
++| REQ-R25-R8 | roadmap R2.5 15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | **implemented** (`2468b16`, `93b99b5`): unique migration markers (max 21; fresh/idempotent/upgrade proven); the freeze lands the staged runtime at the load path and refuses divergence (REL-01 fixture, positive + negative); engine/desktop identity 1.6.0; frozen load-path engine booted with fresh migrations, 4 providers, connected and guardrails_ok | `2468b16`; `93b99b5` | `test_v16_r8_migrations.py` 4; `test_v16_r8_identity.py` 3; desktop `engineVersion.test.ts` 3; packaged probe | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 row | installer battery + real-package freeze re-run at R12 | pending |
+ | REQ-R25-R9 | roadmap R2.5 (Round 2.5 N) | Visual batches 6–8 + Needs Your Attention (derived-only) | PENDING | — | — | roadmap §R9 | — | pending |
+ | REQ-R25-R10 | roadmap R2.5 §17 (= REQ-ELOSS) | engine-loss/recovery UX | PENDING | — | — | roadmap §R10 | — | pending |
+ | REQ-R25-R11 | roadmap R2.5 §18 | Visual → Main integration | PENDING | — | — | roadmap §R11 | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index fa6ad10..c560a08 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -35,6 +35,8 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-23 | engine full suite (R3 retry durability + R4 approval window) | `cd runtime && python -m pytest tests -q`; focused recovery + authorization families | `8c899c8` | 2026-09-18 | PASS | **974 passed, 10 subtests passed** (269.43s; was 962 — +12 new tests (5 R3 + 7 R4), zero regressions); focused: recovery family 24, authorization family 96 | REQ-R25-R3; REQ-R25-R4 | INV-RETRY-DURABLE; INV-APPROVAL-EXACT | `increments/R3-RETRY-DURABILITY.md`; `increments/R4-APPROVAL-EXACT.md` | parent-executed |
+ | A-24 | engine full suite (R5 canonical persistence) | `cd runtime && python -m pytest tests -q`; focused R2–R5 + core | `b2ffed1` | 2026-09-18 | PASS | **981 passed, 10 subtests passed** (270.51s; was 974 — +7 new tests, zero regressions); focused: R2–R5 + `test_core` 84 passed | REQ-R25-R5 | INV-PERSIST-CANONICAL | `increments/R5-PERSISTENCE-INTEGRITY.md` | parent-executed |
+ | A-25 | focused suites (R6 truthful state / liveness) | `tests/test_v16_r6_liveness.py` + diagnostics/core families | `b2ffed1`+R6 tests | 2026-09-18 | PASS | R6 suite **5 passed**; the R6 increment adds no production change, so the next full-suite row (A-26, R7 boundary) carries the end-to-end count | REQ-R25-R6 | INV-LIVENESS-SEPARATION; INV-COMPLETION-TRUTH; INV-RECOVERY-CLASSIFICATION | `increments/R6-TRUTHFUL-STATE.md` | parent-executed |
++| A-26 | engine full suite (R7 credential containment + R8 migrations/identity/REL-01) | `cd runtime && python -m pytest tests -q`; focused R7 + R8 suites; the freeze fixture and the packaged probe | `022f3ac` | 2026-09-18 | PASS | **998 passed, 10 subtests passed** (was 981 at `b2ffed1`); focused: R7 5, R8 migrations 4, R8 identity 3, boundaries 13 with the identity fix; plus the frozen load-path engine boot probe (`engine_version 1.6.0`, 4 providers, `connected`/`guardrails_ok`) and `scripts/validate-freeze.ps1` (positive + negative) | REQ-R25-R7; REQ-R25-R8; REL-01 | INV-CREDENTIAL-CONTAINMENT; INV-PACKAGE-IDENTITY; INV-FREEZE-IMMUTABLE | `increments/R7-CREDENTIAL-BOUNDARY.md`; `increments/R8-PACKAGE-ASSERTIONS.md` | parent-executed |
++| A-27 | desktop typecheck + unit suite (R8.B engine identity) | `cd desktop && bunx tsc -p tsconfig.json --noEmit && bunx vitest run` | `022f3ac` | 2026-09-18 | PASS | tsc 0 errors; vitest **8 files / 93 tests passed**, including the new `engineVersion.test.ts` (verified separately: 1 file, 3 tests) | REQ-R25-R8 | INV-PACKAGE-IDENTITY | `increments/R8-PACKAGE-ASSERTIONS.md` | parent-executed (composition note for Campaign B: the pre-R8 runs also reported 8 files / 93 tests at A-20; the engine-version file is confirmed collected and green by a filtered run) |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/R7-CREDENTIAL-BOUNDARY.md b/docs/v1.6/pre-audit/increments/R7-CREDENTIAL-BOUNDARY.md
+new file mode 100644
+index 0000000..b9a60f0
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R7-CREDENTIAL-BOUNDARY.md
+@@ -0,0 +1,70 @@
++# Increment — R7: credential / network boundary (CREDENTIAL-CONTAINMENT)
++
++increment_id: V16-R7-CREDENTIAL-BOUNDARY
++invariant: **CREDENTIAL-CONTAINMENT** — the capability to use a provider does not imply arbitrary
++worker or tool access to the raw credential
++requirement: `REQ-R25-R7` (roadmap R2.5 §R7; marathon directive §15)
++phase: Campaign A — R7
++base_commit: `e8bbb05`
++production_commit: `b6c4eff`
++status: complete
++
++## Inventory (code-verified)
++
++| Channel | Where | Control | Verdict |
++|---|---|---|---|
++| Trusted provider process (Claude/Codex/DeepSeek/internal) | `host_runtime.py` (harness `params['apiKey']`), `coding.py` (Claude run), `appserver.py` (Codex child), `internal.py` | reads the key from the environment at call time and passes it to the provider process only | allowed by R7.C |
++| Model prompt text | prompts sent to providers | no prompt builder interpolates a credential; the harness receives `apiKey` as a *parameter*, never inside the prompt | SAFE |
++| Ambient child environment | `appserver.py` (Codex child), `coding.py` (test command), `internal.child_env` | **fixed here**: a child receives only the credentials named in `keep`; the coding test command clears all three provider keys and runs with `networkAccess: False` | **FIXED** |
++| Durable content (events, packets, memories, workforce records, artifacts) | `internal.redact` (live values + `sk-` tokens), `memory.scan_secret`, `workforce.assert_safe` | redaction at error paths, refusal at record/proposal boundaries | SAFE |
++| Diagnostics / exports | `diagnostics.py` (excludes 'credentials, tokens and API keys' and 'environment dumps'; `SECRET_MARKERS` masking in redaction paths) | refuses to enumerate or dump secrets | SAFE |
++| Logs | engine logs carry state names and plain sentences; `redact` wraps provider errors | no key material found in log-producing paths | SAFE |
++| Backups | `backup.py` | the credentials file never travels in a backup (PER-04); `SECRET_KEYS` stripped | SAFE |
++| Guardrail vocabulary | `guardrails.py` 'credential-boundary' | 'Kel reads or writes only its own namespaced credential entries; unrelated secrets are never enumerated, exported, or logged' | SAFE |
++| Autonomy refusals | `autonomy.py` | credential-kind actions are refused unconditionally | SAFE |
++
++## Gaps closed
++
++1. `appserver.py` copied the whole environment and removed only `ANTHROPIC_API_KEY`; the Codex child
++   therefore also received the DeepSeek key (and any other unrelated provider key). New
++   `internal.child_env(*, keep=())` returns an environment containing only the named credentials.
++2. `coding.py`'s test-command env cleared Anthropic/OpenAI but not `DEEPSEEK_API_KEY`.
++
++## Network boundary — the honest statement (R7.D)
++
++`host_runtime.py` is **user-authorized native execution**: it is not an OS sandbox and does not
++pretend to be one. A full-access native process can reach the network as the user can; domain policy
++inside Kel is a convenience guard, not a firewall. Campaign A therefore does **not** implement Windows
++egress filtering; enforceable network-aware runtime grants are recorded as **post-V1.6 research**
++(roadmap §21 watchlist). What Campaign A does guarantee: provider children get only their own
++credential (fixed here), the coding test command runs with the provider keys cleared and
++`networkAccess: False`, and no credential becomes prompt text, artifact, packet, log or diagnostics
++content.
++
++## Tests (R7.E, synthetic sentinels)
++
++`tests/test_v16_r7_credentials.py` — **5 new**: a child receives only the credential it requires
++(Anthropic child has no OpenAI/DeepSeek key and vice versa); a child needing no provider credential
++receives none; `redact` masks a live sentinel value and `sk-` tokens while leaving ordinary text
++alone; a secret-shaped value is detected by `scan_secret` and refused by `assert_safe`; the
++containment is wired at the spawn sites (no `os.environ.copy()` in `appserver.py`, the coding
++test-command env names all three keys).
++
++Focused: workforce-schemas, coding transport/recovery, memory suites + R7 = **85 passed**. Full
++engine: TEST_EVIDENCE_INDEX A-26.
++
++## Limitations / audit questions / repair hints
++
++- The engine process itself necessarily holds the credential in memory (it calls providers) and its
++  own local helper subprocesses (e.g. `git` in `coding.py`) inherit the engine environment. That is
++  the user's own machine-local execution, not worker-visible data; an audit question is whether any
++  future *untrusted* helper should be spawned through `child_env()` instead.
++- `host_runtime.py` hands the user's environment to the native host by design (it runs user-approved
++  commands); this is disclosed, not hidden.
++- Prompts: no builder interpolates a credential; the audit should still grep for any future
++  `apiKey`-into-prompt path.
++- Audit questions: (a) does any provider adapter log its own request headers? (b) does the desktop
++  renderer ever receive a credential (it should not — the engine owns them)? (c) is the harness
++  parameter channel audited for length/content limits? (d) are third-party CLI credential stores
++  (`claude`, `codex` own configs) in scope for a future credential proxy (post-V1.6 watchlist)?
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/pre-audit/increments/R8-PACKAGE-ASSERTIONS.md b/docs/v1.6/pre-audit/increments/R8-PACKAGE-ASSERTIONS.md
+new file mode 100644
+index 0000000..c1bb195
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R8-PACKAGE-ASSERTIONS.md
+@@ -0,0 +1,106 @@
++# Increment — R8: packaged / migration assertions + REL-01
++
++increment_id: V16-R8-PACKAGE-ASSERTIONS
++invariants: **PACKAGE-IDENTITY** (packaged Kel executes the runtime artifact the release evidence
++identifies) · **FREEZE-IMMUTABLE** (frozen releases stay byte-untouched)
++requirements: `REQ-R25-R8` (= REQ-PKG-ASSERT + REL-01), marathon directive §16
++phase: Campaign A — R8 (the minimum marathon return gate)
++base_commit: `e8bbb05`
++production_commits: `2468b16` (R8.A migrations), `93b99b5` (R8.B/C/D package identity + REL-01)
++status: complete
++
++## R8.A — migrations
++
++Exercised the whole module migration set (19 modules, markers 1–21) on a fresh database and on an
++existing one:
++
++- **Fresh**: every module's `ensure_schema` runs; `schema_migrations` reaches the intended maximum
++  **exactly once**, with unique module markers and the expected names (20 =
++  `chat_approval_announcements`, 21 = `v16-budget-reservations`).
++- **Idempotent**: a second full run changes nothing.
++- **Upgrade**: an existing database keeps its rows; deleting the newest marker and re-running stamps
++  it again without touching data (no downgrade, no rewrite).
++- **Defect found and fixed**: `workforce` and `assignment` both claimed version **17**. Because
++  `version` is the primary key, the row could not say which migration had been applied (diagnostics
++  misattributed it, and the number was unusable for a future migration). `assignment` moved to 21;
++  the module-constant uniqueness test is the direct guard.
++- Tests: `tests/test_v16_r8_migrations.py` (4).
++
++## R8.B — package identity
++
++- **Defect found and fixed**: the engine self-reported `1.5.0` on the V1.6 branch
++  (`kel/__init__.py` plus a duplicated `service.ENGINE_VERSION` literal) while the desktop's reuse
++  guard compares `app.getVersion()` (the packaged `desktop/package.json` version) to the engine's
++  reported version. A V1.6 desktop would have refused its own fresh engine (or the pair would ship
++  mislabeled). Now `__version__ = "1.6.0"` is the single source, `ENGINE_VERSION` derives from it,
++  and `desktop/package.json` matches (asserted by test, so the two ends can never drift silently).
++- Tests: `tests/test_v16_r8_identity.py` (3); desktop `engineVersion.test.ts` (3).
++
++## R8.C — REL-01: the runtime that is hashed is the runtime that loads
++
++The real path chain: `build-runtime.ps1` → `dist/runtime/KelEngine` → electron-builder
++`extraResources` → `resources/kel-engine` (the load path; `verify-release.ps1` hashes exactly
++`resources/kel-engine/KelEngine.exe`) → `freeze-release.ps1` → sums/manifest.
++
++**REL-01 was live**: the freeze copied the staged runtime with `Copy-Item -Recurse <dir> <existing
++dir>`, which nests the fresh build at `resources/kel-engine/KelEngine/…` and leaves the package's own
++(possibly stale) engine at the path the app loads — evidence could hash one runtime while the app
++loads another. Reproduced while writing the fixture (the half-nested destination even reported
++"being used by another process").
++
++Fix: the load-path directory is removed and re-created from the staged runtime, and the freeze now
++**refuses** (SHA-256 comparisons) to assemble a release when the staged copy did not land at the load
++path or when the package bundles a different engine than the runtime being frozen. The manifest notes
++that the load-path hash equals the staged hash by construction.
++
++**Non-release validation fixture** (`scripts/validate-freeze.ps1`, per the directive): builds a
++synthetic package carrying the freshly built runtime, freezes into `dist/validation-freeze`, verifies
++with `verify-release.ps1` against the freeze's own sums, then tampers the package's bundled engine
++and asserts the freeze is refused.
++
++Evidence (this run):
++
++```
++-- positive: freeze
++Release assembled at .../dist/validation-freeze
++-- positive: verify
++OK    Kel.exe
++OK    resources/app.asar
++OK    resources/kel-engine/KelEngine.exe
++Release verification passed.
++-- negative: a package bundling a different engine must be refused
++REL-01 validation passed: load-path hash == staged runtime hash; divergence refused (exit 1).
++```
++
++No nested runtime in the frozen tree (grep count 0).
++
++## R8.D — packaged assertions
++
++Executed against the **frozen load-path binary** with a fresh data dir:
++
++- **basic launch**: the frozen `KelEngine.exe` boots, writes its descriptor and serves HTTP;
++- **migrations inside the packaged app**: the fresh data dir received `kel.sqlite3`, backups dir,
++  controller lock and `desktop-session.json` (the packaged engine ran the full schema itself);
++- **runtime identity**: `desktop-session.json` → `{"engine_version":"1.6.0", …}`; authenticated
++  `/api/state` → `engine_version 1.6.0`, `connected true`, `guardrails_ok true`;
++- **provider discovery**: `/api/state` lists 4 providers;
++- **no old donor engine path / no stale runtime nesting**: the frozen tree has no nested
++  `resources/kel-engine/KelEngine/`, and the load path is the only engine binary;
++- **canonical logo resources**: the desktop package's branding was verified in the branding
++  increment (`docs/v1.6/branding/CANONICAL_LOGO.md`, `scripts/make-brand-assets.py` +
++  `verify-brand-render.py`); the packaged-icon battery re-runs at R12's full package.
++- **REL-01**: closed by the fixture above (positive + negative); the *release freeze itself* remains a
++  future release step that Campaign A must not perform.
++
++## Limitations / audit questions / repair hints
++
++- The electron-builder **installer** battery (NSIS run, Start-Menu icon, uninstaller) is scheduled
++  with R12's full packaged regression; this increment proves the runtime-carrying artifacts and the
++  freeze/verify chain. The R12 run must re-run `validate-freeze.ps1` against the real package.
++- `Kel.exe`/`app.asar` in the fixture are synthetic stubs (the freeze only copies and hashes them);
++  the real package's asar/executable enter the chain at R12.
++- Audit questions: (a) does any prior frozen release directory differ from its recorded sums (spot
++  check)? (b) does the electron-builder package step itself copy the runtime *before* or *after*
++  `build-runtime.ps1` (ordering assumption documented here)? (c) should `verify-release.ps1` also
++  verify the nested-path absence (the negative fixture covers the freeze side)?
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index f51b06e..1a1bf58 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,12 +1,12 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T18:15:00Z
++updated_utc: 2026-09-18T18:45:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: R3–R6 complete — production tip `b2ffed1` (R5 canonical persistence) + the R6 tests/breadcrumbs; see `git log --oneline -14`
++head: R0-R8 COMPLETE - production tip `93b99b5` (REL-01 closed, package identity 1.6.0); see `git log --oneline -20`
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,8 +18,8 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R3–R6 COMPLETE** — R3 RETRY-DURABLE (inventory + 5 restart tests), R4 APPROVAL-EXACT (`8c899c8` consumer-side window check + 7 hostile cases), R5 PERSIST-CANONICAL (`b2ffed1` canonical `encode` + 7 ingress tests), R6 truthful state/liveness (three-layer inventory + 5 tests, no production change). Full engine **981 passed + 10 subtests**. **Now starting R7** (credential/network boundary).  — the delegation authority ceiling is executable (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + D1/D2 issuance wiring (verifier inside the mission envelope) + `reserve_budget` job-envelope check. 21 new tests; full engine **952 passed + 10 subtests** (was 931). **Now starting R2** (logical-work / idempotency matrix).
+-current_phase: R7 — credential/network boundary confirmation (CREDENTIAL-CONTAINMENT) (then R8 packaged/migration assertions + REL-01 → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
++current_increment: **R0-R8 COMPLETE** (marathon minimum gate). R7 credential containment (`b6c4eff`); R8 migrations unique (max 21) + package identity 1.6.0 + **REL-01 CLOSED** (`2468b16`, `93b99b5`) with the non-release freeze fixture proving the load-path runtime is the hashed runtime; the frozen load-path engine boots at 1.6.0 with 4 providers. **Next: R9** (Visual batches 6-8 + Needs Your Attention).
++current_phase: R9 - Visual batches 6-8 + Needs Your Attention (derived-only), then R10 engine-loss/recovery UX -> R11 Visual->Main integration -> R12 final Campaign A regression -> PRE_AUDIT_V1_6_HEAD
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R7** — credential/network boundary: audit every place a credential could have become prompt text, ambient environment, artifact, packet, log, diagnostic export or worker-readable context (provider metadata, native-host env, Claude/Codex child env, DeepSeek/internal handling, test-command env); add synthetic-sentinel tests proving the raw secret does not appear where it must not; document honestly that `host_runtime.py` is user-authorized native execution and NOT an OS sandbox (no Windows egress filtering in Campaign A; stronger network-aware sandboxing is post-V1.6 research). ` (superseded R2 text kept below) `next_autonomous_action (superseded): **R2** — logical-work/idempotency matrix: for every autonomous event family (submissions, job intake, events/aggregate revisions, runs + run epochs, result inbox, native RPC, native permission replies, approvals, boundary grants, external effects, continuation, broker recovery, publication, workforce task/mission events, parallel stream announcements) record logical-work identity, attempt identity, dedupe identity, persistence, authoritative state, duplicate behavior, restart behavior and side-effect behavior; prove `EVENT-IDEMPOTENCY`/`EFFECT-REPLAY` where already true, repair only the real duplicate-execution gaps, and add hostile duplicate tests (same submission/result/RPC/permission/approval/boundary grant/effect/continuation/publication; stale run epoch) including across restart where possible. Then R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
++next_autonomous_action: **R9** - reconcile the Visual lane (branch `ux/v16-visual-fix`, tip `ac85eb3`, batches 1-5 accepted but not integrated): implement batches 6 (engine loss / failure states / error translation), 7 (Composer/Model/Tools/capability hierarchy), 8 (readability/contrast/density/Settings completion) and the derived **Needs Your Attention** surface (a view over existing durable facts only: approval waiting, capability/boundary decision, blocked question, unrecoverable failure, failed verification, work needing review; no worker ids/leases/queues; project isolation hostile tests). Then R10 engine-loss/recovery packaged journey; R11 Visual->Main integration; R12 final regression + packaged battery (installer, icons, About, no console errors) -> PRE_AUDIT_V1_6_HEAD. REL-01 is CLOSED; the final release freeze remains out of scope for Campaign A. Marathon: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO` until Campaign A completes or a genuine human gate exists).
+ external_dependency: NONE
+ stop_reason: NONE

@@ -1,0 +1,81 @@
+commit 594b8b4ad54d7ed40513807ea53d6e93d1e925d5
+2026-09-18 16:57:51 -0400
+fix(v1.6): model/approval/theme failure surfaces tell the truth (R0 / COR-03 + APR-06 + THM-01)
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+index 06ade73..b19b637 100644
+--- a/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx
+@@ -145,8 +145,16 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
+     try {
+       await kelApprovalRequest({ kind, id: refId, allow, conversation: engineCid || conversationId, ...extra });
+       await refresh();
+-    } catch {
+-      setNotice('That request was already settled — Kel refreshed the latest state.');
++    } catch (error) {
++      // Audit APR-06: every failure used to be reported as "already settled" — an incorrect claim
++      // about the state of the user's approval. The engine's sentence is the truth when it arrived;
++      // a transport failure says so instead of guessing, and the refresh still self-corrects.
++      const detail = String((error as Error)?.message || '').trim();
++      const unreachable = !detail
++        || /fetch failed|failed to fetch|NetworkError|ECONNREFUSED|ECONNRESET|socket|timed out|timeout|invoking remote method/i.test(detail);
++      setNotice(unreachable
++        ? 'Kel could not reach its engine just now, so that decision was not recorded — it refreshed the latest state.'
++        : detail);
+       await refresh();
+     } finally {
+       setBusy(false);
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelModelControl.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelModelControl.tsx
+index 1b3237e..3f57634 100644
+--- a/desktop/packages/desktop/src/renderer/components/kel/KelModelControl.tsx
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelModelControl.tsx
+@@ -88,12 +88,20 @@ export const useKelModelState = (conversationId?: string) => {
+   const setConversation = useCallback(
+     async (choice: Choice | null) => {
+       if (!conversationId) return;
+-      if (!choice || !choice.provider) {
+-        await request({ action: 'clear_conversation', conversation: cid ?? undefined });
+-        Message.success('This chat follows the default model again.');
+-      } else {
+-        await request({ action: 'set_conversation', conversation: cid ?? undefined, choice });
+-        Message.success('Saved. This chat will use that model.');
++      try {
++        if (!choice || !choice.provider) {
++          await request({ action: 'clear_conversation', conversation: cid ?? undefined });
++          Message.success('This chat follows the default model again.');
++        } else {
++          await request({ action: 'set_conversation', conversation: cid ?? undefined, choice });
++          Message.success('Saved. This chat will use that model.');
++        }
++      } catch (error) {
++        // Audit COR-03: the engine's own sentence (e.g. 'Open a conversation before choosing its
++        // model.') is the honest message; a transport failure gets a plain fallback instead of an
++        // unhandled rejection with no feedback.
++        const detail = String((error as Error)?.message || '').trim();
++        Message.error(detail || 'Kel could not change the model just now.');
+       }
+       await refresh();
+     },
+diff --git a/desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/CssThemeSettings.tsx b/desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/CssThemeSettings.tsx
+index 74ce119..801e453 100644
+--- a/desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/CssThemeSettings.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/CssThemeSettings.tsx
+@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
+ import CssThemeModal from './CssThemeModal.tsx';
+ import { BUILTIN_THEMES, DEFAULT_THEME_ID } from './presets.ts';
+ import { BACKGROUND_BLOCK_START, injectBackgroundCssBlock } from './backgroundUtils.ts';
++import { clearThemeOverrides } from '@renderer/utils/theme/applyTheme';
+ import { resolveExtensionAssetUrl } from '@renderer/utils/platform.ts';
+ import { LIGHT_THEME_ID, SYSTEM_THEME_ID } from '@/common/theme/constants';
+ 
+@@ -415,6 +416,9 @@ const CssThemeSettings: React.FC = () => {
+             const updatedThemes = themes.filter((t) => t.id !== themeId);
+             const userThemes = updatedThemes.filter((t) => !t.builtin);
+             await configService.set('theme.userThemes', userThemes);
++            // Audit THM-01: the theme's saved colour overrides are dropped in the same operation, so
++            // a later theme reusing this id cannot silently inherit the old colours.
++            await clearThemeOverrides(themeId);
+ 
+             // 如果删除的是当前激活主题，回退到 Light / If deleting active theme, fall back to Light
+             if (activeThemeId === themeId) {

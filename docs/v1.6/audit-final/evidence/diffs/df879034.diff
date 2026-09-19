@@ -1,0 +1,441 @@
+commit df879034eb2c5889a8022c1eaa7b3b8c21ed7ccf
+2026-09-18 12:28:39 -0400
+feat(v1.6): capability recommendations — real capabilities, real actions, no nagging
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+index e1e6e0e..1f2e74f 100644
+--- a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
++++ b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+@@ -6,6 +6,8 @@ import { useLocation } from 'react-router-dom';
+ import Markdown from '@/renderer/components/Markdown';
+ import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
+ import { memoryRecordActions } from '@/renderer/components/kel/memoryRecordActions';
++import { KelCapabilityCard } from '@/renderer/components/kel/KelCapabilityCard';
++import type { CapabilityRecommendation } from '@/renderer/components/kel/capabilityRecommendation';
+ import type { ApprovalItem as WaitingItem } from '@/renderer/components/kel/KelApprovalCard';
+ type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
+ type Job = {
+@@ -13,7 +15,7 @@ type Job = {
+   state: string;
+   verdict: string;
+   contract: { request: string; kind: string; milestones: { id: string; filename: string }[] };
+-  milestones: Record<string, { state: string }>;
++  milestones: Record<string, { state: string; error?: string; recommendation?: CapabilityRecommendation | null }>;
+ };
+ type ContinuationEntry = {
+   job_id: string;
+@@ -140,6 +142,7 @@ export default function KelWorkPanel() {
+     [draft, setDraft] = useState<{ id: string; summary: string } | null>(null);
+   const [history, setHistory] = useState<{ at: number; text: string }[] | null>(null);
+   const [lineage, setLineage] = useState<{ request: string; versions: LineageVersion[] } | null>(null);
++  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+   const [vetting, setVetting] = useState<VettingPanelData>(),
+     [vettingTopic, setVettingTopic] = useState(''),
+     [vettingSpec, setVettingSpec] = useState(''),
+@@ -411,6 +414,17 @@ export default function KelWorkPanel() {
+                       </React.Fragment>
+                     ))}
+                 </Space>
++                {Object.entries(job.milestones || {})
++                  .filter(([mid, m]) => m.recommendation && !dismissed[job.id + ':' + mid])
++                  .map(([mid, m]) => (
++                    <KelCapabilityCard
++                      key={job.id + ':' + mid}
++                      conversation={cid}
++                      recommendation={m.recommendation as CapabilityRecommendation}
++                      detail={m.error}
++                      onDone={() => setDismissed((d) => ({ ...d, [job.id + ':' + mid]: true }))}
++                    />
++                  ))}
+               </section>
+             ))}
+             {waiting.map((item) => (
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelCapabilityCard.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelCapabilityCard.tsx
+new file mode 100644
+index 0000000..c2128a0
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelCapabilityCard.tsx
+@@ -0,0 +1,85 @@
++/**
++ * A capability conflict card: Kel was paused because a capability is off here.
++ *
++ * Renders exactly the actions the engine recommended (real capabilities, real effects — see
++ * `runtime/kel/capabilities.recommendation`). Acting refreshes the Work panel; keeping it off
++ * dismisses the card so it never nags.
++ */
++import React, { useState } from 'react';
++import { Button, Message } from '@arco-design/web-react';
++import {
++  capabilityActionRequest,
++  capabilityCardActions,
++  capabilityConfirmation,
++  type CapabilityCardActionId,
++  type CapabilityRecommendation,
++} from './capabilityRecommendation';
++
++const request = async <T,>(route: string, body?: unknown): Promise<T> => {
++  const bridge = (window as unknown as { kelAPI?: { request: (route: string, payload?: unknown) => Promise<T> } }).kelAPI;
++  if (!bridge) throw new Error('Kel connection is unavailable');
++  return bridge.request(route, body);
++};
++
++export const KelCapabilityCard: React.FC<{
++  conversation: string;
++  recommendation: CapabilityRecommendation;
++  detail?: string;
++  onDone?: () => void;
++}> = ({ conversation, recommendation, detail, onDone }) => {
++  const [busy, setBusy] = useState(false);
++  const [done, setDone] = useState('');
++  const actions = capabilityCardActions(recommendation);
++  if (!actions.length) return null;
++
++  const act = async (id: CapabilityCardActionId) => {
++    if (id === 'keep_disabled') {
++      setDone(capabilityConfirmation(id, recommendation.label));
++      onDone?.();
++      return;
++    }
++    const call = capabilityActionRequest(id, conversation, recommendation.capability);
++    if (!call) return;
++    setBusy(true);
++    try {
++      await request(call.route, call.body);
++      const line = capabilityConfirmation(id, recommendation.label);
++      setDone(line);
++      Message.success(line);
++    } catch {
++      Message.error('Kel could not change that just now.');
++    } finally {
++      setBusy(false);
++      onDone?.();
++    }
++  };
++
++  return (
++    <section className='mt-8px p-12px bg-2 rd-12px' data-testid='kel-capability-card'>
++      <div className='text-13px text-t-primary leading-20px'>
++        {`Kel paused something that needs ${recommendation.label}.`}
++      </div>
++      {detail ? <div className='text-12px text-t-secondary leading-18px mt-2px'>{detail}</div> : null}
++      <div className='text-12px text-t-secondary leading-18px mt-2px'>{recommendation.reason}</div>
++      {done ? (
++        <div className='text-12px text-t-secondary mt-6px' data-testid='kel-capability-done'>
++          {done}
++        </div>
++      ) : (
++        <div className='mt-8px flex flex-wrap gap-8px'>
++          {actions.map((a) => (
++            <Button
++              key={a.id}
++              size='small'
++              disabled={busy}
++              data-testid={'kel-capability-' + a.id}
++              onClick={() => void act(a.id)}
++            >
++              {a.label}
++            </Button>
++          ))}
++        </div>
++      )}
++    </section>
++  );
++};
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/capabilityRecommendation.ts b/desktop/packages/desktop/src/renderer/components/kel/capabilityRecommendation.ts
+new file mode 100644
+index 0000000..c666ea5
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/capabilityRecommendation.ts
+@@ -0,0 +1,50 @@
++/**
++ * Capability recommendations — the engine's refusal payload, mapped to card actions.
++ *
++ * The engine only ever recommends real capabilities with real next steps (see
++ * `runtime/kel/capabilities.recommendation`): a capability disabled for this conversation can be
++ * allowed once, enabled for the chat, or explicitly kept off. Unknown action ids are dropped
++ * (fail-closed rendering) so a stale engine cannot invent UI.
++ */
++export type CapabilityRecommendation = {
++  capability: string;
++  label: string;
++  reason: string;
++  actions: string[];
++};
++
++export type CapabilityCardActionId = 'allow_once' | 'enable' | 'keep_disabled';
++export type CapabilityCardAction = { id: CapabilityCardActionId; label: string };
++
++const ACTION_LABELS: Record<CapabilityCardActionId, string> = {
++  allow_once: 'Allow once',
++  enable: 'Enable for this chat',
++  keep_disabled: 'Keep it off',
++};
++
++export function capabilityCardActions(rec: CapabilityRecommendation | null | undefined): CapabilityCardAction[] {
++  if (!rec || !Array.isArray(rec.actions)) return [];
++  return rec.actions
++    .filter((id): id is CapabilityCardActionId => id in ACTION_LABELS)
++    .map((id) => ({ id, label: ACTION_LABELS[id] }));
++}
++
++export function capabilityActionRequest(
++  action: CapabilityCardActionId,
++  conversation: string,
++  capability: string
++): { route: string; body: Record<string, unknown> } | null {
++  if (action === 'allow_once') {
++    return { route: '/api/capabilities', body: { action: 'allow_once', conversation, capability } };
++  }
++  if (action === 'enable') {
++    return { route: '/api/capabilities', body: { action: 'set', conversation, capability, state: 'on' } };
++  }
++  return null; // Keep it off only dismisses the card — no state change.
++}
++
++export function capabilityConfirmation(action: CapabilityCardActionId, label: string): string {
++  if (action === 'allow_once') return `Allowed once — Kel can use ${label} for the next request that needs it.`;
++  if (action === 'enable') return `${label} is on for this conversation.`;
++  return `${label} stays off for this conversation.`;
++}
+diff --git a/desktop/tests/unit/capability-recommendation.test.ts b/desktop/tests/unit/capability-recommendation.test.ts
+new file mode 100644
+index 0000000..bd8fd28
+--- /dev/null
++++ b/desktop/tests/unit/capability-recommendation.test.ts
+@@ -0,0 +1,67 @@
++/**
++ * Capability recommendation helpers: only real actions map to requests; unknown ids drop.
++ */
++import { describe, expect, it } from 'vitest';
++import {
++  capabilityActionRequest,
++  capabilityCardActions,
++  capabilityConfirmation,
++  type CapabilityRecommendation,
++} from '@/renderer/components/kel/capabilityRecommendation';
++
++const rec = (over: Partial<CapabilityRecommendation> = {}): CapabilityRecommendation => ({
++  capability: 'web',
++  label: 'Web',
++  reason: 'Web is disabled for this conversation.',
++  actions: ['allow_once', 'enable', 'keep_disabled'],
++  ...over,
++});
++
++describe('capabilityCardActions', () => {
++  it("maps the engine's three real actions, in order", () => {
++    expect(capabilityCardActions(rec())).toEqual([
++      { id: 'allow_once', label: 'Allow once' },
++      { id: 'enable', label: 'Enable for this chat' },
++      { id: 'keep_disabled', label: 'Keep it off' },
++    ]);
++  });
++
++  it('drops unknown action ids instead of inventing UI', () => {
++    expect(capabilityCardActions(rec({ actions: ['allow_once', 'deploy_everything'] }))).toEqual([
++      { id: 'allow_once', label: 'Allow once' },
++    ]);
++  });
++
++  it('renders nothing without a recommendation or without actions', () => {
++    expect(capabilityCardActions(null)).toEqual([]);
++    expect(capabilityCardActions(rec({ actions: [] }))).toEqual([]);
++  });
++});
++
++describe('capabilityActionRequest', () => {
++  it('allow_once grants a single-use allowance for the conversation', () => {
++    expect(capabilityActionRequest('allow_once', 'chat-1', 'web')).toEqual({
++      route: '/api/capabilities',
++      body: { action: 'allow_once', conversation: 'chat-1', capability: 'web' },
++    });
++  });
++
++  it('enable turns the capability on for the conversation only', () => {
++    expect(capabilityActionRequest('enable', 'chat-1', 'web')).toEqual({
++      route: '/api/capabilities',
++      body: { action: 'set', conversation: 'chat-1', capability: 'web', state: 'on' },
++    });
++  });
++
++  it('keep it off changes no state at all', () => {
++    expect(capabilityActionRequest('keep_disabled', 'chat-1', 'web')).toBeNull();
++  });
++});
++
++describe('capabilityConfirmation', () => {
++  it('states the scope in plain words', () => {
++    expect(capabilityConfirmation('allow_once', 'Web')).toContain('Web');
++    expect(capabilityConfirmation('enable', 'Web')).toBe('Web is on for this conversation.');
++    expect(capabilityConfirmation('keep_disabled', 'Web')).toBe('Web stays off for this conversation.');
++  });
++});
+diff --git a/runtime/kel/capabilities.py b/runtime/kel/capabilities.py
+index cefba7e..838bc35 100644
+--- a/runtime/kel/capabilities.py
++++ b/runtime/kel/capabilities.py
+@@ -280,6 +280,24 @@ def resolve(store, capability, conversation=None, job=None, consume=False):
+             'reason': why}
+ 
+ 
++def recommendation(capability, decision):
++    """A structured, actionable recommendation for a refused capability decision.
++
++    Only real capabilities with a real next step are ever recommended: a capability the user
++    disabled for this conversation can be allowed once, enabled for the conversation, or
++    explicitly kept off. Everything else (not available on this computer, needs setup with no
++    connector) returns None — a suggestion nobody could act on would be a no-op surface.
++    """
++    if not isinstance(decision, dict) or decision.get('allowed'):
++        return None
++    entry = BY_ID.get(capability)
++    if not entry or decision.get('rule') != 'capability-conversation-off':
++        return None
++    return {'capability': capability, 'label': entry['label'],
++            'reason': decision.get('reason') or ('%s is disabled for this conversation.' % entry['label']),
++            'actions': ['allow_once', 'enable', 'keep_disabled']}
++
++
+ def snapshot(store, conversation):
+     """Everything a surface needs to draw the control, with plain words and honest states."""
+     ensure_schema(store)
+diff --git a/runtime/kel/coding.py b/runtime/kel/coding.py
+index 7c0fcdb..a5d5c26 100644
+--- a/runtime/kel/coding.py
++++ b/runtime/kel/coding.py
+@@ -162,7 +162,7 @@ class CodingAdapter:
+         # V1.5: the real effect point. A worker cannot start repository work or run the configured
+         # test command without a valid lease and role policy; a revoked lease stops it here.
+         from .authorize import authorize,role_for
+-        from .capabilities import capability_for_tool
++        from .capabilities import capability_for_tool, recommendation
+         role_info=role_for(self.store,run['job_id'],run['milestone_id'])
+         for tool in ('git','run_tests','write'):
+             decision=authorize(self.store,{'actor':'worker','worker':run_id,'job':run['job_id'],
+@@ -174,9 +174,13 @@ class CodingAdapter:
+                             'why':'the task needs repository changes',
+                             'fallback':'stop before any change and report'}})
+             if decision['outcome']!='ALLOW':
++                tool_capability=capability_for_tool(tool)
+                 return {'outcome':'BLOCKED','error':'Kel paused this work before any change: '+
+                         str(decision.get('reason') or decision.get('rule') or 'authorization required'),
+-                        'authorization':decision.get('outcome')}
++                        'authorization':decision.get('outcome'),
++                        'capability':tool_capability,
++                        'recommendation':recommendation(tool_capability,{'allowed':False,
++                            'rule':decision.get('rule'),'reason':decision.get('reason')})}
+         if row:
+             workspace=Path(row['path']);base=row['base'];baseline=json.loads(row['manifest'])
+         else:
+diff --git a/runtime/kel/core.py b/runtime/kel/core.py
+index 58d440d..a313285 100644
+--- a/runtime/kel/core.py
++++ b/runtime/kel/core.py
+@@ -413,9 +413,10 @@ class Store:
+                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
+                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
+                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
+-                    m.update(state='CHECKING', error=None)
++                    m.update(state='CHECKING', error=None, recommendation=None)
+                 else:
+-                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'))
++                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
++                             recommendation=result.get('recommendation'))
+                 held = 1 if m['state'] == 'CHECKING' else 0
+                 job['reserved'] -= run['reservation'] - held
+                 job['spent'] += 1  # The other reserved unit remains available for immediate verification.
+diff --git a/runtime/kel/research.py b/runtime/kel/research.py
+index 9c85cc7..6ba7bb9 100644
+--- a/runtime/kel/research.py
++++ b/runtime/kel/research.py
+@@ -58,10 +58,13 @@ class ResearchAdapter:
+             with contextlib.closing(self.store.connect()) as db:
+                 run=db.execute('SELECT * FROM runs WHERE id=?',(run_id,)).fetchone()
+             if run:
+-                from .capabilities import capability_for_tool, resolve
+-                control=resolve(self.store,capability_for_tool('research'),job=run['job_id'],consume=True)
++                from .capabilities import capability_for_tool, recommendation, resolve
++                capability=capability_for_tool('research')
++                control=resolve(self.store,capability,job=run['job_id'],consume=True)
+                 if not control.get('allowed'):
+                     return {'outcome':'BLOCKED','authorization':control.get('rule'),
++                            'capability':capability,
++                            'recommendation':recommendation(capability,control),
+                             'error':'Kel paused this research before any external request: '+
+                                     str(control.get('reason') or 'Web is not allowed in this conversation.')}
+         try:
+diff --git a/runtime/tests/test_capabilities.py b/runtime/tests/test_capabilities.py
+index feb7d4c..7ba102b 100644
+--- a/runtime/tests/test_capabilities.py
++++ b/runtime/tests/test_capabilities.py
+@@ -504,6 +504,69 @@ class ResearchEffectTests(CapabilityBase):
+         current = self.store.get(job)
+         self.assertNotEqual(current['milestones']['research']['state'], 'ACCEPTED')
+ 
++    def test_blocked_effect_carries_a_structured_recommendation(self):
++        calls = []
++        adapter = self._adapter(calls)
++        set_override(self.store, 'chat-a', 'web', 'off')
++        job, run = self._run()
++        result = adapter.execute('Search the latest news.', run_id=run['id'])
++        self.assertEqual(result['outcome'], 'BLOCKED')
++        self.assertEqual(result['capability'], 'web')
++        self.assertEqual(result['recommendation'], {
++            'capability': 'web', 'label': 'Web',
++            'reason': 'Web is disabled for this conversation.',
++            'actions': ['allow_once', 'enable', 'keep_disabled']})
++        self._settle(run, result)
++
++    def test_settled_blocked_effect_exposes_the_recommendation_in_job_state(self):
++        calls = []
++        adapter = self._adapter(calls)
++        set_override(self.store, 'chat-a', 'web', 'off')
++        job, run = self._run()
++        result = adapter.execute('Search the latest news.', run_id=run['id'])
++        self.assertEqual(result['outcome'], 'BLOCKED')
++        self._settle(run, result)
++        current = self.store.get(job)
++        rec = current['milestones']['research'].get('recommendation')
++        self.assertTrue(rec)
++        self.assertEqual(rec['capability'], 'web')
++        self.assertEqual(rec['actions'], ['allow_once', 'enable', 'keep_disabled'])
++        self.assertTrue(current['milestones']['research'].get('error'))
++
++
++class RecommendationTests(CapabilityBase):
++    """Recommendations must never be no-op surfaces: only real capabilities, only real actions."""
++
++    def test_disabled_capability_recommends_the_three_real_actions(self):
++        from kel.capabilities import recommendation
++        set_override(self.store, 'chat-a', 'web', 'off')
++        decision = resolve(self.store, 'web', 'chat-a')
++        self.assertEqual(recommendation('web', decision), {
++            'capability': 'web', 'label': 'Web',
++            'reason': 'Web is disabled for this conversation.',
++            'actions': ['allow_once', 'enable', 'keep_disabled']})
++
++    def test_allowed_decisions_never_carry_a_recommendation(self):
++        from kel.capabilities import recommendation
++        self.assertIsNone(recommendation('web', resolve(self.store, 'web', 'chat-a')))
++
++    def test_unavailable_capabilities_offer_nothing_to_do(self):
++        from kel.capabilities import recommendation
++        self.assertIsNone(recommendation('terminal', {
++            'allowed': False, 'rule': 'capability-unavailable',
++            'reason': 'Terminal is not available on this computer.'}))
++
++    def test_unknown_ids_are_never_recommended(self):
++        from kel.capabilities import recommendation
++        set_override(self.store, 'chat-a', 'web', 'off')
++        self.assertIsNone(recommendation('mcp', resolve(self.store, 'web', 'chat-a')))
++
++    def test_a_live_grant_stops_the_recommendation(self):
++        from kel.capabilities import recommendation
++        set_override(self.store, 'chat-a', 'web', 'off')
++        grant_once(self.store, 'chat-a', 'web')
++        self.assertIsNone(recommendation('web', resolve(self.store, 'web', 'chat-a')))
++
+ 
+ if __name__ == '__main__':
+     unittest.main()

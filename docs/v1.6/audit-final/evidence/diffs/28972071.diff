@@ -1,0 +1,1939 @@
+commit 28972071f5b35626c4eed347c1f6950996455fb8
+2026-09-18 19:25:36 -0400
+feat(v1.6-visual): BATCH 6 — engine loss and failure states become honest and human
+
+
+diff --git a/desktop/packages/desktop/src/preload/main.ts b/desktop/packages/desktop/src/preload/main.ts
+index 1828763..4c9aaf6 100644
+--- a/desktop/packages/desktop/src/preload/main.ts
++++ b/desktop/packages/desktop/src/preload/main.ts
+@@ -110,6 +110,19 @@ contextBridge.exposeInMainWorld('kelAPI', {
+   history: (id: string) => ipcRenderer.invoke('kel:history', id),
+   conversation: (id: string) => ipcRenderer.invoke('kel:conversation', id),
+   historySearch: (query: string) => ipcRenderer.invoke('kel:history-search', query),
++  // Batch 6 (findings 16/17): the engine-link state for the shell's reconnecting / recovered /
++  // could-not-recover surfaces, the manual retry action, and the diagnostics bundle the failure
++  // card copies. Presentation support only — no durable state is owned here.
++  engineState: () => ipcRenderer.invoke('kel:engine-state'),
++  engineRetry: () => ipcRenderer.invoke('kel:engine-retry'),
++  diagnostics: () => ipcRenderer.invoke('kel:diagnostics'),
++  onEngineState: (callback: (frame: unknown) => void) => {
++    const handler = (_event: unknown, frame: unknown) => callback(frame);
++    ipcRenderer.on('kel:engine-state', handler);
++    return () => {
++      ipcRenderer.off('kel:engine-state', handler);
++    };
++  },
+   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
+   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
+   // Credential custody: store, list field names, delete. Deliberately no value getter, so a secret
+diff --git a/desktop/packages/desktop/src/process/services/kel/KelService.ts b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+index d6a95a2..406d7fb 100644
+--- a/desktop/packages/desktop/src/process/services/kel/KelService.ts
++++ b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+@@ -1,19 +1,20 @@
+ /** Kel integration: connect the donor UI host to the durable Kel engine. */
+-import { app, ipcMain, shell } from 'electron';
++import { app, BrowserWindow, ipcMain, shell } from 'electron';
+ import { spawn } from 'child_process';
+ import fs from 'fs';
+ import path from 'path';
+ import { recoverHistory, type HistoryMessage } from './reconcileHistory';
+ import { engineVersionAccepted } from './engineVersion';
++import { EngineHealthMachine } from './engineHealth';
+ import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
+ type Descriptor = { url: string; token: string; engine_version: string };
+ let descriptor: Descriptor;
+ const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
+-async function kelRequest(route: string, body?: unknown) {
++async function kelRequest(route: string, body?: unknown, timeoutMs = 30000) {
+   const address = new URL(descriptor.url);
+   if (address.protocol !== 'http:' || address.hostname !== '127.0.0.1') throw new Error('Invalid local Kel address');
+   const response = await fetch(new URL(route, descriptor.url), {
+-    signal: AbortSignal.timeout(30000),
++    signal: AbortSignal.timeout(timeoutMs),
+     method: body === undefined ? 'GET' : 'POST',
+     headers: { Authorization: 'Bearer ' + descriptor.token, 'Content-Type': 'application/json' },
+     body: body === undefined ? undefined : JSON.stringify(body),
+@@ -21,46 +22,25 @@ async function kelRequest(route: string, body?: unknown) {
+   if (!response.ok) throw new Error((await response.json()).error || 'Kel request failed');
+   return response.headers.get('content-type')?.includes('application/json') ? response.json() : response.text();
+ }
+-export async function initializeKel(port: number): Promise<void> {
+-  console.log(`[KEL-BOOT] initializeKel entry (aioncorePort=${port})`);
+-  const root = dataRoot();
+-  fs.mkdirSync(root, { recursive: true });
+-  // Register the drain hook FIRST: if anything below fails, a quit must still
+-  // ask the engine to stop so a failed startup never orphans KelEngine.
+-  // The hook blocks the quit briefly so the HTTP drain cannot race process exit.
+-  // Registered without removeAllListeners: other before-quit handlers (e.g. the
+-  // config flush) must keep running.
+-  let drained = false;
+-  app.on('before-quit', (event) => {
+-    if (drained || !descriptor) return;
+-    event.preventDefault();
+-    drained = true;
+-    kelRequest('/api/shutdown-idle', {})
+-      .catch((): undefined => undefined)
+-      .finally(() => {
+-        setTimeout(() => app.quit(), 50);
+-      });
+-  });
+-  const descriptorPath = path.join(root, 'desktop-session.json');
+-  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
+-  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
+-  // version must not be reused. A packaged build knows its own version; an unpackaged dev run
+-  // reports Electron's through `app.getVersion()`, so it passes an empty expectation and the check
+-  // is not enforced there.
+-  const expectedEngineVersion = process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
+-  const expectedEngineAnswered = async () => {
+-    const state = (await kelRequest('/api/state')) as { engine_version?: string } | undefined;
+-    return engineVersionAccepted(state?.engine_version, expectedEngineVersion);
+-  };
+-  let connected = false;
+-  try {
+-    descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+-    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
+-    connected = true;
+-    console.log('[KEL-BOOT] initializeKel reused running engine');
+-  } catch {
+-    console.log('[KEL-BOOT] initializeKel no live engine; spawning');
+-  }
++
++// --------------------------------------------------------------------------------------------
++// Batch 6 (visual findings 16/17): engine launch helpers + honest supervision.
++// The launch helpers are shared by the first boot and by the supervised restart; the health
++// machine (./engineHealth) decides when a restart is due and never claims success it has not
++// observed. States are presentation-only — durable truth stays in the engine's own records.
++// --------------------------------------------------------------------------------------------
++const HEALTH_INTERVAL_MS = 5000;
++const HEALTH_TIMEOUT_MS = 4000;
++const PATIENT_PING_TIMEOUT_MS = 20000;
++const ENGINE_WAIT_MS = 45000;
++let spawnedByUs = false;
++let quitRequested = false;
++let healthMachine: EngineHealthMachine | undefined;
++let healthTimer: NodeJS.Timeout | undefined;
++let restartInFlight = false;
++let lastBroadcastState = '';
++
++function engineLaunchSpec() {
+   const packed = path.join(process.resourcesPath, 'kel-engine', 'KelEngine.exe');
+   const source = process.env.KEL_SOURCE_ROOT || path.resolve(process.cwd(), '../runtime');
+   // AionCore validates the ACP agent's CLI via its whitespace-split `binary_name`
+@@ -68,7 +48,7 @@ export async function initializeKel(port: number): Promise<void> {
+   // space-free application-data directory so agent registration and ACP spawn
+   // never depend on the install path. Falls back to the packed path when it is
+   // already space-free or when even the data dir contains spaces.
+-  const engineCommand = (() => {
++  const command = (() => {
+     if (!fs.existsSync(packed)) {
+       return { command: process.env.KEL_PYTHON || 'python', baseArgs: ['-m', 'kel.service'], cwd: source };
+     }
+@@ -97,42 +77,198 @@ export async function initializeKel(port: number): Promise<void> {
+     }
+     return { command: packed, baseArgs: [], cwd: path.dirname(packed) };
+   })();
+-  const command = engineCommand.command;
+-  const baseArgs = engineCommand.baseArgs;
++  return { ...command, packed, source };
++}
++
++function expectedEngineVersion(): string {
++  return process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
++}
++
++async function expectedEngineAnswered(): Promise<boolean> {
++  const state = (await kelRequest('/api/state', undefined, HEALTH_TIMEOUT_MS)) as
++    | { engine_version?: string }
++    | undefined;
++  return engineVersionAccepted(state?.engine_version, expectedEngineVersion());
++}
++
++function spawnEngine(root: string): void {
++  const spec = engineLaunchSpec();
++  const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
++  // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
++  // spawn and passed only through this child's environment. Values never enter the renderer, the
++  // engine database, exports, or logs; native children and test commands strip them again.
++  const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
++  const anthropicKey = getCredential('anthropic', 'api_key');
++  if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
++  const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
++    cwd: spec.cwd,
++    detached: true,
++    windowsHide: true,
++    env: injectedEnv,
++    stdio: ['ignore', log, log],
++  });
++  child.unref();
++  fs.closeSync(log);
++  spawnedByUs = true;
++}
++
++async function waitForEngineReady(descriptorPath: string): Promise<boolean> {
++  const deadline = Date.now() + ENGINE_WAIT_MS;
++  while (Date.now() < deadline) {
++    try {
++      descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
++      // The descriptor file is shared with any leftover engine: keep waiting until the engine
++      // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
++      if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
++      return true;
++    } catch {
++      await new Promise((r) => setTimeout(r, 250));
++    }
++  }
++  return false;
++}
++
++function engineStateFrame() {
++  const snap = healthMachine?.snapshot();
++  return {
++    state: snap?.state ?? 'starting',
++    attempts: snap?.restarts ?? 0,
++    maxAttempts: snap?.maxRestarts ?? 2,
++    at: snap?.at ?? Date.now(),
++  };
++}
++
++function broadcastEngineState(force = false): void {
++  const frame = engineStateFrame();
++  const key = `${frame.state}:${frame.attempts}`;
++  if (!force && key === lastBroadcastState) return;
++  lastBroadcastState = key;
++  for (const window of BrowserWindow.getAllWindows()) {
++    try {
++      window.webContents.send('kel:engine-state', frame);
++    } catch {
++      // Window disposed mid-broadcast: nothing to do.
++    }
++  }
++}
++
++async function healthPing(): Promise<boolean> {
++  try {
++    await kelRequest('/api/state', undefined, HEALTH_TIMEOUT_MS);
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++async function performEngineRestart(root: string, descriptorPath: string): Promise<void> {
++  if (restartInFlight || quitRequested) return;
++  restartInFlight = true;
++  try {
++    // Give a slow-but-alive engine a patient chance to answer first: it must never be duplicated
++    // (two engines would share one data root). Only a confirmed unreachable engine is re-spawned.
++    try {
++      await kelRequest('/api/state', undefined, PATIENT_PING_TIMEOUT_MS);
++      healthMachine?.alive();
++      broadcastEngineState(true);
++      return;
++    } catch {
++      // Confirmed unreachable — fall through to the restart.
++    }
++    spawnEngine(root);
++    const ok = await waitForEngineReady(descriptorPath);
++    healthMachine?.restartFinished(ok);
++    broadcastEngineState(true);
++  } finally {
++    restartInFlight = false;
++  }
++}
++
++async function engineHealthTick(root: string, descriptorPath: string): Promise<void> {
++  if (restartInFlight || quitRequested) return;
++  const machine = healthMachine;
++  if (!machine) return;
++  const ok = await healthPing();
++  const decision = ok ? machine.alive() : machine.missed();
++  broadcastEngineState();
++  if (decision.action === 'restart') await performEngineRestart(root, descriptorPath);
++}
++
++function startEngineSupervision(root: string, descriptorPath: string): void {
++  healthMachine = new EngineHealthMachine();
++  lastBroadcastState = '';
++  broadcastEngineState(true);
++  if (healthTimer) clearInterval(healthTimer);
++  healthTimer = setInterval(() => {
++    void engineHealthTick(root, descriptorPath);
++  }, HEALTH_INTERVAL_MS);
++  healthTimer.unref?.();
++}
++
++function readLogTail(root: string, lines = 40): string {
++  try {
++    const file = path.join(root, 'desktop.log');
++    const size = fs.statSync(file).size;
++    const start = Math.max(0, size - 16 * 1024);
++    const fd = fs.openSync(file, 'r');
++    const buffer = Buffer.alloc(size - start);
++    fs.readSync(fd, buffer, 0, buffer.length, start);
++    fs.closeSync(fd);
++    return buffer.toString('utf8').split(/\r?\n/).slice(-lines).join('\n');
++  } catch {
++    return '';
++  }
++}
++
++export async function initializeKel(port: number): Promise<void> {
++  console.log(`[KEL-BOOT] initializeKel entry (aioncorePort=${port})`);
++  const root = dataRoot();
++  fs.mkdirSync(root, { recursive: true });
++  // Register the drain hook FIRST: if anything below fails, a quit must still
++  // ask the engine to stop so a failed startup never orphans KelEngine.
++  // The hook blocks the quit briefly so the HTTP drain cannot race process exit.
++  // Registered without removeAllListeners: other before-quit handlers (e.g. the
++  // config flush) must keep running.
++  let drained = false;
++  app.on('before-quit', (event) => {
++    quitRequested = true;
++    // Batch 6 (findings 16/17) — the loaded gun: only the instance that SPAWNED the engine may
++    // ask it to stop. An instance that merely reused a running engine (second window, second
++    // launch) must never stop an engine someone else is using when it quits.
++    if (drained || !descriptor || !spawnedByUs) return;
++    event.preventDefault();
++    drained = true;
++    kelRequest('/api/shutdown-idle', {})
++      .catch((): undefined => undefined)
++      .finally(() => {
++        setTimeout(() => app.quit(), 50);
++      });
++  });
++  const descriptorPath = path.join(root, 'desktop-session.json');
++  let connected = false;
++  try {
++    descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
++    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
++    connected = true;
++    console.log('[KEL-BOOT] initializeKel reused running engine');
++  } catch {
++    console.log('[KEL-BOOT] initializeKel no live engine; spawning');
++  }
++  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
++  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
++  // version must not be reused. `expectedEngineAnswered` (module scope) enforces this at every
++  // connect, including supervised restarts.
++  const launch = engineLaunchSpec();
++  const { packed, source } = launch;
++  const command = launch.command;
++  const baseArgs = launch.baseArgs;
+   if (!connected) {
+-    const log = fs.openSync(path.join(root, 'desktop.log'), 'a');
+-    // V1.5 credential injection: Kel-managed values are decrypted in the main process at engine
+-    // spawn and passed only through this child's environment. Values never enter the renderer, the
+-    // engine database, exports, or logs; native children and test commands strip them again.
+-    const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
+-    const anthropicKey = getCredential('anthropic', 'api_key');
+-    if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
+-    const child = spawn(command, [...baseArgs, '--data', root], {
+-      cwd: engineCommand.cwd,
+-      detached: true,
+-      windowsHide: true,
+-      env: injectedEnv,
+-      stdio: ['ignore', log, log],
+-    });
+-    child.unref();
+-    fs.closeSync(log);
++    spawnEngine(root);
+     console.log('[KEL-BOOT] initializeKel spawned engine child');
+-    const deadline = Date.now() + 45000;
+-    while (Date.now() < deadline) {
+-      try {
+-        descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+-        // The descriptor file is shared with any leftover engine: keep waiting until the engine
+-        // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
+-        if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
+-        connected = true;
+-        break;
+-      } catch {
+-        await new Promise((r) => setTimeout(r, 250));
+-      }
+-    }
+-    if (!connected) throw new Error('Kel engine did not start. See desktop.log.');
++    if (!(await waitForEngineReady(descriptorPath))) throw new Error('Kel engine did not start. See desktop.log.');
+   }
+   console.log('[KEL-BOOT] initializeKel engine ready');
++  startEngineSupervision(root, descriptorPath);
+   async function core(route: string, body?: unknown, method?: string) {
+     const r = await fetch(`http://127.0.0.1:${port}${route}`, {
+       method: method || (body === undefined ? 'GET' : 'POST'),
+@@ -390,6 +526,38 @@ export async function initializeKel(port: number): Promise<void> {
+       throw new Error('Unknown Kel action');
+     return kelRequest(route, body);
+   });
++  // Batch 6 (findings 16/17): the shell's honest view of the engine link, plus the support
++  // actions the failure surfaces offer. Presentation-only — no durable state is owned here.
++  const guardKelWindow = (event: Electron.IpcMainInvokeEvent) => {
++    const url = event.senderFrame?.url || '';
++    if (event.senderFrame !== event.sender.mainFrame || (!url.startsWith('file:') && !url.startsWith('http://localhost:')))
++      throw new Error('Unknown Kel window');
++  };
++  ipcMain.removeHandler('kel:engine-state');
++  ipcMain.handle('kel:engine-state', (event) => {
++    guardKelWindow(event);
++    return engineStateFrame();
++  });
++  ipcMain.removeHandler('kel:engine-retry');
++  ipcMain.handle('kel:engine-retry', async (event) => {
++    guardKelWindow(event);
++    const machine = healthMachine;
++    if (!machine) return engineStateFrame();
++    const decision = machine.manualRetry();
++    broadcastEngineState(true);
++    if (decision.action === 'restart') await performEngineRestart(root, descriptorPath);
++    return engineStateFrame();
++  });
++  ipcMain.removeHandler('kel:diagnostics');
++  ipcMain.handle('kel:diagnostics', (event) => {
++    guardKelWindow(event);
++    return {
++      engineVersion: descriptor?.engine_version,
++      address: descriptor?.url,
++      state: engineStateFrame(),
++      logTail: readLogTail(root),
++    };
++  });
+   // Artifact lineage: reveal a produced artifact in the OS file manager. The renderer sends the
+   // store-relative path; main resolves it against the engine root and refuses anything that
+   // escapes - the renderer never builds an absolute path.
+diff --git a/desktop/packages/desktop/src/process/services/kel/engineHealth.ts b/desktop/packages/desktop/src/process/services/kel/engineHealth.ts
+new file mode 100644
+index 0000000..78560be
+--- /dev/null
++++ b/desktop/packages/desktop/src/process/services/kel/engineHealth.ts
+@@ -0,0 +1,110 @@
++/**
++ * Batch 6 (visual findings 16/17): the supervision state machine for the Kel engine link.
++ *
++ * Pure logic — no timers, no IPC, no Electron. `KelService` drives it from a health poll and
++ * performs the actions it returns. The machine exists so the reconnection behaviour is testable
++ * and honest:
++ *  - it never claims success it has not observed (only `alive()` after a restart retires an
++ *    incident);
++ *  - automatic restart attempts are budgeted per incident and that budget is NOT reset by a failed
++ *    attempt, only by the engine actually answering again (or an explicit user action, which
++ *    starts a new user-authorized incident).
++ */
++
++export type EngineHealthState = 'connected' | 'reconnecting' | 'recovered' | 'unrecoverable';
++
++export interface EngineHealthConfig {
++  /** Consecutive missed beats before the link is considered down. */
++  failureThreshold: number;
++  /** Automatic restart attempts allowed per incident before asking the person. */
++  maxRestarts: number;
++}
++
++export interface EngineHealthSnapshot {
++  state: EngineHealthState;
++  failures: number;
++  restarts: number;
++  maxRestarts: number;
++  at: number;
++}
++
++export type HealthDecisionAction = 'none' | 'restart' | 'manual';
++
++export interface HealthDecision {
++  state: EngineHealthState;
++  action: HealthDecisionAction;
++}
++
++export const DEFAULT_ENGINE_HEALTH: EngineHealthConfig = { failureThreshold: 2, maxRestarts: 2 };
++
++export class EngineHealthMachine {
++  private state: EngineHealthState = 'connected';
++  private failures = 0;
++  private restarts = 0;
++  private at = Date.now();
++  private readonly config: EngineHealthConfig;
++
++  constructor(config: Partial<EngineHealthConfig> = {}) {
++    this.config = { ...DEFAULT_ENGINE_HEALTH, ...config };
++  }
++
++  /** A heartbeat was answered. */
++  alive(now = Date.now()): HealthDecision {
++    this.failures = 0;
++    this.at = now;
++    if (this.state !== 'connected') {
++      this.state = 'connected';
++      this.restarts = 0; // the incident is over: the engine answered again
++    }
++    return this.decision('none');
++  }
++
++  /** A heartbeat was missed. */
++  missed(now = Date.now()): HealthDecision {
++    this.failures += 1;
++    this.at = now;
++    if (this.failures < this.config.failureThreshold) return this.decision('none');
++    if (this.state === 'unrecoverable') return this.decision('manual');
++    if (this.restarts >= this.config.maxRestarts) {
++      this.state = 'unrecoverable';
++      return this.decision('manual');
++    }
++    this.state = 'reconnecting';
++    this.restarts += 1;
++    return this.decision('restart');
++  }
++
++  /** A restart attempt finished. `ok` means the engine is answering again. */
++  restartFinished(ok: boolean, now = Date.now()): HealthDecision {
++    this.at = now;
++    if (ok) {
++      this.state = 'recovered';
++      this.failures = 0;
++      return this.decision('none');
++    }
++    if (this.restarts >= this.config.maxRestarts) {
++      this.state = 'unrecoverable';
++      return this.decision('manual');
++    }
++    this.state = 'reconnecting';
++    return this.decision('restart');
++  }
++
++  /** The person asked for another attempt after the automatic budget was spent. */
++  manualRetry(now = Date.now()): HealthDecision {
++    this.at = now;
++    this.restarts = 0;
++    this.failures = this.config.failureThreshold;
++    this.state = 'reconnecting';
++    this.restarts += 1;
++    return this.decision('restart');
++  }
++
++  snapshot(): EngineHealthSnapshot {
++    return { state: this.state, failures: this.failures, restarts: this.restarts, maxRestarts: this.config.maxRestarts, at: this.at };
++  }
++
++  private decision(action: HealthDecisionAction): HealthDecision {
++    return { state: this.state, action };
++  }
++}
+diff --git a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+index e946d2b..a383f11 100644
+--- a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
++++ b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+@@ -96,6 +96,11 @@ declare global {
+       history: (id: string) => Promise<unknown>;
+       conversation: (id: string) => Promise<unknown>;
+       historySearch: (query: string) => Promise<unknown>;
++      /** Batch 6: the shell's honest engine-link view + support actions. */
++      engineState?: () => Promise<unknown>;
++      engineRetry?: () => Promise<unknown>;
++      diagnostics?: () => Promise<unknown>;
++      onEngineState?: (callback: (frame: unknown) => void) => () => void;
+       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
+       credentials?: {
+         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelEngineNotice.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelEngineNotice.tsx
+new file mode 100644
+index 0000000..ffd834d
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelEngineNotice.tsx
+@@ -0,0 +1,64 @@
++/**
++ * Batch 6 (visual findings 16/17): the shell-level engine-link strip.
++ *
++ * In-flow (never a floating island), hidden while connected; shows the honest supervision state —
++ * reconnecting / restarted-and-work-preserved / could-not-recover — with the one action that
++ * really works in that state. Durable truth stays in the engine's records; this owns no workflow.
++ */
++import React, { useEffect, useState } from 'react';
++import { engineStateCopy, type EngineStateFrame } from './engineFailure';
++import { engineRetry, engineState, onEngineState } from './kelApi';
++import { KelButton } from './KelPrimitives';
++
++export const KelEngineNotice: React.FC = () => {
++  const [frame, setFrame] = useState<EngineStateFrame | null>(null);
++  const [recoveredHidden, setRecoveredHidden] = useState(false);
++  const [retrying, setRetrying] = useState(false);
++
++  useEffect(() => {
++    let alive = true;
++    void engineState().then((next) => {
++      if (alive) setFrame(next);
++    });
++    const off = onEngineState((next) => setFrame(next));
++    return () => {
++      alive = false;
++      off();
++    };
++  }, []);
++
++  // A recovery notice retires itself; the incident is over and the strip must not become furniture.
++  useEffect(() => {
++    setRecoveredHidden(false);
++    if (frame?.state !== 'recovered') return;
++    const timer = setTimeout(() => setRecoveredHidden(true), 8000);
++    return () => clearTimeout(timer);
++  }, [frame?.state, frame?.at]);
++
++  const copy = engineStateCopy(frame);
++  if (!copy) return null;
++  if (frame?.state === 'recovered' && recoveredHidden) return null;
++
++  return (
++    <div className={`kel-engine-notice kel-engine-notice--${copy.tone}`} role='status' aria-live='polite'>
++      <div className='kel-engine-notice__text'>
++        <strong>{copy.title}</strong>
++        <span>{copy.detail}</span>
++      </div>
++      {frame?.state === 'unrecoverable' && (
++        <KelButton
++          variant='secondary'
++          disabled={retrying}
++          onClick={() => {
++            setRetrying(true);
++            void engineRetry()
++              .then(setFrame)
++              .finally(() => setRetrying(false));
++          }}
++        >
++          {retrying ? 'Trying…' : "Try to restart Kel's engine"}
++        </KelButton>
++      )}
++    </div>
++  );
++};
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelFailureCard.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelFailureCard.tsx
+new file mode 100644
+index 0000000..a47ab1c
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelFailureCard.tsx
+@@ -0,0 +1,81 @@
++/**
++ * Batch 6 (visual findings 16/17): one shared failure card for every Kel surface.
++ *
++ * Design: one state, one primary action, one quiet action; the raw detail exists only behind the
++ * "Technical details" disclosure and the diagnostics copy. No infrastructure vocabulary ever
++ * renders as visible copy.
++ */
++import React, { useCallback, useMemo, useState } from 'react';
++import { KelButton } from './KelPrimitives';
++import { classifyEngineFailure, diagnosticsText, failureCopy, stripTransportEnvelope } from './engineFailure';
++import { engineDiagnostics } from './kelApi';
++
++export interface KelFailureCardProps {
++  /** The raw failure exactly as caught. Classification and copy happen here. */
++  error: unknown;
++  /** The safe retry for this surface (reloads from authoritative state — never a replay). */
++  onRetry?: () => void;
++  retryLabel?: string;
++  className?: string;
++}
++
++export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, retryLabel = 'Try again', className }) => {
++  const raw = useMemo(
++    () => (error instanceof Error ? `${error.name}: ${error.message}` : String(error ?? '')),
++    [error]
++  );
++  const kind = useMemo(() => classifyEngineFailure(error), [error]);
++  const copy = useMemo(() => failureCopy(kind, stripTransportEnvelope(raw)), [kind, raw]);
++  const [details, setDetails] = useState('');
++  const [copied, setCopied] = useState(false);
++
++  const buildDetails = useCallback(async () => {
++    const bundle = await engineDiagnostics();
++    return diagnosticsText({
++      title: copy.title,
++      raw,
++      engineVersion: bundle.engineVersion,
++      address: bundle.address,
++      logTail: bundle.logTail,
++    });
++  }, [copy.title, raw]);
++
++  const copyDiagnostics = useCallback(async () => {
++    const text = await buildDetails();
++    setDetails(text);
++    try {
++      await navigator.clipboard.writeText(text);
++      setCopied(true);
++      setTimeout(() => setCopied(false), 2500);
++    } catch {
++      // Clipboard refused: the disclosure below still carries the same text.
++      setCopied(false);
++    }
++  }, [buildDetails]);
++
++  return (
++    <section className={`kel-failure${className ? ` ${className}` : ''}`} role='alert'>
++      <h2 className='kel-failure__title'>{copy.title}</h2>
++      <p className='kel-failure__detail'>{copy.detail}</p>
++      <div className='kel-failure__actions'>
++        {onRetry && (
++          <KelButton variant='primary' onClick={onRetry}>
++            {retryLabel}
++          </KelButton>
++        )}
++        <KelButton variant='quiet' onClick={() => void copyDiagnostics()}>
++          {copied ? 'Diagnostics copied' : 'Copy diagnostics'}
++        </KelButton>
++      </div>
++      <details
++        className='kel-failure__details'
++        onToggle={(event) => {
++          if ((event.target as HTMLDetailsElement).open && !details) void buildDetails().then(setDetails);
++        }}
++      >
++        <summary>Technical details</summary>
++        <pre className='kel-failure__raw'>{details || 'Loading details…'}</pre>
++      </details>
++    </section>
++  );
++};
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/engineFailure.ts b/desktop/packages/desktop/src/renderer/components/kel/engineFailure.ts
+new file mode 100644
+index 0000000..be484b1
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/engineFailure.ts
+@@ -0,0 +1,175 @@
++/**
++ * Batch 6 (visual findings 16/17): one truthful classifier + copy source for engine failures.
++ *
++ * Pure module — no React, no IPC, no DOM. The renderer uses it to translate whatever crossed the
++ * bridge (engine sentences, transport failures, unexpected shapes) into sentences a person can
++ * read, while the raw text is kept only for the "Technical details" disclosure and "Copy
++ * diagnostics". Normal users must never see `TypeError: fetch failed`, module/stack traces, IPC
++ * envelopes, or broker/daemon vocabulary.
++ */
++
++export type EngineFailureClass =
++  | 'bridge-unavailable' // the preload bridge itself is missing
++  | 'engine-unreachable' // nothing is listening (fetch failed / refused / reset)
++  | 'engine-timeout' // the engine accepted the socket but did not answer in time
++  | 'engine-starting' // the engine is still coming up (startup gate)
++  | 'engine-sentence' // a plain-language sentence written by the engine itself
++  | 'unexpected'; // anything else — honest generic copy, raw behind diagnostics only
++
++const IPC_ENVELOPE = /^Error invoking remote method '[^']*':\s*/;
++const ERROR_PREFIX = /^(?:TypeError|Error|UnhandledPromiseRejection):\s*/;
++// Markers of implementation detail that must never render as user copy.
++const RAW_MARKERS =
++  /(error invoking remote|typeerror|traceback|\bat\s+\w+\s+\(|econnrefused|econnreset|ehostunreach|enetunreach|epipe|socket hang up|fetch failed|node_modules|[a-z]:\\|\.py[:)]|\bipc\b|\brpc\b|\bdaemon\b|\bbroker\b|\bstack\b)/i;
++
++/** Strip Electron/IPC wrappers so classification sees the actual failure text. */
++export function stripTransportEnvelope(raw: string): string {
++  let text = (raw || '').trim();
++  text = text.replace(IPC_ENVELOPE, '');
++  for (let i = 0; i < 2; i += 1) {
++    const next = text.replace(ERROR_PREFIX, '');
++    if (next === text) break;
++    text = next;
++  }
++  return text.trim();
++}
++
++export function classifyEngineFailure(error: unknown): EngineFailureClass {
++  const raw = typeof error === 'string' ? error : String((error as Error)?.message ?? error ?? '');
++  const lower = raw.toLowerCase();
++  if (/kel bridge unavailable|window\.kelapi|kelapi is undefined/.test(lower)) return 'bridge-unavailable';
++  if (/fetch failed|econnrefused|econnreset|ehostunreach|enetunreach|epipe|socket hang up|network error|err_connection/.test(lower)) return 'engine-unreachable';
++  if (/etimedout|timed out|timeout|abort(error)?\b|operation was aborted/.test(lower)) return 'engine-timeout';
++  if (/did not start|is starting|still starting|not ready yet|starting up/.test(lower)) return 'engine-starting';
++  const text = stripTransportEnvelope(raw);
++  if (text && !RAW_MARKERS.test(text)) return 'engine-sentence';
++  return 'unexpected';
++}
++
++export interface EngineFailureCopy {
++  title: string;
++  detail: string;
++}
++
++/** Copy for a failure, from the person's point of view. `sentence` carries engine text when the
++ *  engine wrote something a person can read; it is the detail only for `engine-sentence`. */
++export function failureCopy(kind: EngineFailureClass, sentence = ''): EngineFailureCopy {
++  switch (kind) {
++    case 'bridge-unavailable':
++      return {
++        title: 'Kel needs a restart',
++        detail: "Kel's interface can't be reached right now. Close and open Kel again — your work is safe on disk.",
++      };
++    case 'engine-unreachable':
++      return {
++        title: "Kel's engine isn't running",
++        detail: "Kel couldn't reach its local engine. Your work is preserved, and Kel will try to bring the engine back.",
++      };
++    case 'engine-timeout':
++      return {
++        title: 'Kel is taking too long to answer',
++        detail: 'The engine is running but did not answer in time. Nothing was lost — try again in a moment.',
++      };
++    case 'engine-starting':
++      return {
++        title: 'Kel is still starting',
++        detail: 'The engine is coming up. This usually takes a few seconds.',
++      };
++    case 'engine-sentence':
++      return {
++        title: "Kel couldn't complete that",
++        detail: sentence || 'The request was not completed. Try again.',
++      };
++    case 'unexpected':
++    default:
++      return {
++        title: 'Something went wrong',
++        detail: "Kel hit an unexpected problem and did not finish. Try again — if it keeps happening, the technical details below help Kel's team.",
++      };
++  }
++}
++
++/** One-line replacement for the raw `ErrorMessage` sites: never leak transport text. Plain
++ *  engine sentences pass through unchanged; transport failures get the local-engine sentence. */
++export function failureSentence(error: unknown, fallback: string): string {
++  const kind = classifyEngineFailure(error);
++  if (kind === 'engine-sentence') return failureCopy(kind, stripTransportEnvelope(String((error as Error)?.message ?? error ?? ''))).detail;
++  const copy = failureCopy(kind);
++  if (kind === 'unexpected') return copy.detail || fallback;
++  return copy.detail;
++}
++
++export type EngineLinkState = 'starting' | 'connected' | 'reconnecting' | 'recovered' | 'unrecoverable';
++
++export interface EngineStateFrame {
++  state: EngineLinkState;
++  attempts: number;
++  maxAttempts: number;
++  at: number;
++  detail?: string;
++}
++
++export interface EngineStateCopy {
++  title: string;
++  detail: string;
++  tone: 'info' | 'ok' | 'failed';
++}
++
++/** Shell strip copy. `null` when there is nothing to say (fully connected, no incident). */
++export function engineStateCopy(frame: EngineStateFrame | undefined | null): EngineStateCopy | null {
++  if (!frame) return null;
++  switch (frame.state) {
++    case 'starting':
++      return { title: 'Kel is starting', detail: 'The engine is coming up. This usually takes a few seconds.', tone: 'info' };
++    case 'reconnecting':
++      return {
++        title: 'Kel is reconnecting',
++        detail: 'The engine stopped answering. Kel is bringing it back — your work is preserved.',
++        tone: 'info',
++      };
++    case 'recovered':
++      return {
++        title: 'Kel restarted successfully',
++        detail: 'The engine is back and your work is preserved. You can continue where you left off.',
++        tone: 'ok',
++      };
++    case 'unrecoverable':
++      return {
++        title: "Kel couldn't recover on its own",
++        detail:
++          frame.attempts > 0
++            ? `The engine did not come back after ${frame.attempts} attempt${frame.attempts === 1 ? '' : 's'}. Close and open Kel, or try a restart below.`
++            : 'The engine did not come back. Close and open Kel, or try a restart below.',
++        tone: 'failed',
++      };
++    case 'connected':
++    default:
++      return null;
++  }
++}
++
++/** Text for the diagnostics disclosure / clipboard. Raw detail lives ONLY here. */
++export function diagnosticsText(input: {
++  title: string;
++  raw?: string;
++  route?: string;
++  engineVersion?: string;
++  address?: string;
++  logTail?: string;
++  at?: number;
++}): string {
++  const lines = [
++    `Kel diagnostics — ${input.title}`,
++    `time: ${new Date(input.at ?? Date.now()).toISOString()}`,
++    input.engineVersion ? `engine: ${input.engineVersion}` : '',
++    input.address ? `engine address: ${input.address}` : '',
++    input.route ? `request: ${input.route}` : '',
++    '',
++    'raw detail:',
++    (input.raw || '').trim() || '(none captured)',
++  ].filter((line) => line !== '');
++  if (input.logTail) {
++    lines.push('', 'desktop.log (tail):', input.logTail.trimEnd());
++  }
++  return lines.join('\n');
++}
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/kelApi.ts b/desktop/packages/desktop/src/renderer/components/kel/kelApi.ts
+index 3915e71..91de197 100644
+--- a/desktop/packages/desktop/src/renderer/components/kel/kelApi.ts
++++ b/desktop/packages/desktop/src/renderer/components/kel/kelApi.ts
+@@ -2,6 +2,8 @@
+  * Typed access to the Kel engine through the preload bridge (`window.kelAPI.request`).
+  * Only allowlisted routes reach the engine — see process/services/kel/KelService.ts.
+  */
++import { type EngineStateFrame } from './engineFailure';
++
+ export interface KelAssignment {
+   assignment_id: string;
+   job_id: string;
+@@ -90,6 +92,11 @@ declare global {
+       history: (id: string) => Promise<unknown>;
+       conversation: (id: string) => Promise<unknown>;
+       historySearch: (query: string) => Promise<unknown>;
++      /** Batch 6: the shell's honest engine-link view + support actions. */
++      engineState?: () => Promise<unknown>;
++      engineRetry?: () => Promise<unknown>;
++      diagnostics?: () => Promise<unknown>;
++      onEngineState?: (callback: (frame: unknown) => void) => () => void;
+       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
+       credentials?: {
+         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
+@@ -110,6 +117,58 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
+   return (await api.request(route, body)) as T;
+ }
+ 
++// ---------------------------------------------------------------------------------------------
++// Batch 6 (findings 16/17): engine-link helpers for the failure surfaces. When the bridge does not
++// expose them (older preload), the helpers degrade honestly to "connected, nothing to report"
++// rather than inventing an incident.
++// ---------------------------------------------------------------------------------------------
++const DEFAULT_ENGINE_FRAME = (): EngineStateFrame => ({ state: 'connected', attempts: 0, maxAttempts: 2, at: Date.now() });
++
++export async function engineState(): Promise<EngineStateFrame> {
++  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
++  if (!api?.engineState) return DEFAULT_ENGINE_FRAME();
++  try {
++    return (await api.engineState()) as EngineStateFrame;
++  } catch {
++    return DEFAULT_ENGINE_FRAME();
++  }
++}
++
++export async function engineRetry(): Promise<EngineStateFrame> {
++  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
++  if (!api?.engineRetry) return DEFAULT_ENGINE_FRAME();
++  try {
++    return (await api.engineRetry()) as EngineStateFrame;
++  } catch {
++    return { ...DEFAULT_ENGINE_FRAME(), state: 'unrecoverable' };
++  }
++}
++
++export interface KelDesktopDiagnostics {
++  engineVersion?: string;
++  address?: string;
++  state?: EngineStateFrame;
++  logTail?: string;
++}
++
++export async function engineDiagnostics(): Promise<KelDesktopDiagnostics> {
++  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
++  if (!api?.diagnostics) return {};
++  try {
++    return (await api.diagnostics()) as KelDesktopDiagnostics;
++  } catch {
++    return {};
++  }
++}
++
++export function onEngineState(listener: (frame: EngineStateFrame) => void): () => void {
++  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
++  if (!api?.onEngineState) return () => undefined;
++  return api.onEngineState((frame) => {
++    if (frame && typeof frame === 'object') listener(frame as EngineStateFrame);
++  });
++}
++
+ export interface KelMemoryRecord {
+   id: string;
+   type: string;
+diff --git a/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx b/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+index 4ec67ff..72ca8c6 100644
+--- a/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
++++ b/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
+ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+ import { setGlobalNavigate } from '@/renderer/utils/navigation';
+ import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
++import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
+ import { configService } from '@/common/config/configService';
+ import { usePreviewContext } from '@renderer/pages/conversation/Preview';
+ import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
+@@ -533,6 +534,7 @@ const Layout: React.FC<{
+                       : undefined
+                 }
+               >
++                <KelEngineNotice />
+                 <Outlet />
+                 <PwaPullToRefresh />
+                 <Suspense fallback={null}>
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx
+index 0959976..8da366b 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx
+@@ -8,13 +8,14 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelSection,
+   KelTable,
+   KelTabs,
+   formatWhen,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import { kelAutonomy, type KelBoundaryRequest, type KelLease } from '@renderer/components/kel/kelApi';
+ 
+ const STATE_CLASS: Record<string, string> = {
+@@ -39,7 +40,7 @@ export default function KelAutonomyPage() {
+   );
+   const [busy, setBusy] = useState(false);
+   const [note, setNote] = useState<string | null>(null);
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+ 
+   const load = useCallback(async () => {
+     try {
+@@ -55,7 +56,7 @@ export default function KelAutonomyPage() {
+       setError(null);
+     } catch (err) {
+       setLeases([]);
+-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
++      setError(err);
+     }
+   }, []);
+ 
+@@ -72,7 +73,7 @@ export default function KelAutonomyPage() {
+         setNote(`${label} recorded.`);
+         await load();
+       } catch (err) {
+-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
++        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(false);
+       }
+@@ -117,13 +118,7 @@ export default function KelAutonomyPage() {
+           their next cancellation check. It does not undo completed effects.
+         </p>
+ 
+-        {error && (
+-          <KelErrorState
+-            title="Autonomy state could not be loaded"
+-            cause={error}
+-            fix="Check that the Kel engine is running, then press Reload."
+-          />
+-        )}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && leases === null && <KelLoading rows={3} />}
+         {note && <p className="kel-meta">{note}</p>}
+ 
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/diagnostics/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/diagnostics/index.tsx
+index 81e477b..46686a3 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/diagnostics/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/diagnostics/index.tsx
+@@ -9,12 +9,13 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelSection,
+   KelTable,
+   formatWhen,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import { kelDiagnostics, type KelDiagnosticsSnapshot } from '@renderer/components/kel/kelApi';
+ 
+ interface Span {
+@@ -50,7 +51,7 @@ const Diagnostics: React.FC = () => {
+   const [report, setReport] = useState<{ path: string; redacted: boolean; bytes: number } | null>(null);
+   const [busy, setBusy] = useState<string | null>(null);
+   const [message, setMessage] = useState<string | null>(null);
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+ 
+   const load = useCallback(async () => {
+     try {
+@@ -67,7 +68,7 @@ const Diagnostics: React.FC = () => {
+       setError(null);
+     } catch (err) {
+       setSnapshot(null);
+-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
++      setError(err);
+     }
+   }, []);
+ 
+@@ -84,7 +85,7 @@ const Diagnostics: React.FC = () => {
+         setMessage(`${label}: ${JSON.stringify(result).slice(0, 220)}`);
+         await load();
+       } catch (err) {
+-        setMessage(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
++        setMessage(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(null);
+       }
+@@ -120,13 +121,7 @@ const Diagnostics: React.FC = () => {
+           </KelButton>
+         </div>
+ 
+-        {error && (
+-          <KelErrorState
+-            title='Diagnostics could not be read'
+-            cause={error}
+-            fix='Check that the Kel engine is running, then press Reload.'
+-          />
+-        )}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && !snapshot && <KelLoading rows={4} />}
+         {message && <p className='kel-meta'>{message}</p>}
+ 
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/onboarding/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/onboarding/index.tsx
+index a4550e7..838714c 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/onboarding/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/onboarding/index.tsx
+@@ -13,6 +13,7 @@ import {
+   KelSection,
+   KelStatusChip,
+ } from '@renderer/components/kel/KelPrimitives';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
+ 
+ const STEPS = ['Welcome', 'Providers', 'Project', 'Autonomy', 'Ready'] as const;
+@@ -49,7 +50,7 @@ export default function KelOnboardingPage() {
+   const [rules, setRules] = useState<Array<{ rule: string; text: string }>>([]);
+   const [digest, setDigest] = useState('');
+   const [engine, setEngine] = useState<string>('');
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+ 
+   useEffect(() => {
+     void (async () => {
+@@ -72,7 +73,7 @@ export default function KelOnboardingPage() {
+         setRules((guardrailPayload.rules ?? []).slice(0, 6));
+         setDigest(guardrailPayload.digest ?? '');
+       } catch (err) {
+-        setError(err instanceof Error ? err.message : 'The engine did not answer.');
++        setError(err);
+       }
+     })();
+   }, []);
+@@ -109,7 +110,11 @@ export default function KelOnboardingPage() {
+           </KelButton>
+         </div>
+ 
+-        {error && <p className='kel-meta'>Heads-up: {error}</p>}
++        {error && (
++          <p className='kel-meta'>
++            Heads-up: {failureSentence(error, 'Setup could not read the engine just now — try again.')}
++          </p>
++        )}
+ 
+         {step === 'Welcome' && (
+           <KelCard title='Kel runs on this machine'>
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx
+index 07719e9..fc40764 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx
+@@ -8,13 +8,14 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelSection,
+   KelTable,
+   KelTabs,
+   formatWhen,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import { kelMapAction, kelMemoryAction, kelRecipePreview, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
+ 
+ type View = 'knowledge' | 'map' | 'recipes';
+@@ -34,7 +35,7 @@ export default function KelProjectsPage() {
+   }, [pathname]);
+ 
+   const [work, setWork] = useState<KelWork | null>(null);
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+   const [busy, setBusy] = useState<string | null>(null);
+   const [note, setNote] = useState<string | null>(null);
+   const [preview, setPreview] = useState<{ recipe: string; payload: Record<string, unknown> } | null>(
+@@ -47,7 +48,7 @@ export default function KelProjectsPage() {
+       setError(null);
+     } catch (err) {
+       setWork(null);
+-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
++      setError(err);
+     }
+   }, []);
+ 
+@@ -64,7 +65,7 @@ export default function KelProjectsPage() {
+         setNote(`${label} recorded.`);
+         await load();
+       } catch (err) {
+-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
++        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(null);
+       }
+@@ -112,13 +113,7 @@ export default function KelProjectsPage() {
+         />
+ 
+         {note && <p className="kel-meta">{note}</p>}
+-        {error && (
+-          <KelErrorState
+-            title="Project context could not be loaded"
+-            cause={error}
+-            fix="Check that the Kel engine is running, then press Reload."
+-          />
+-        )}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && !work && <KelLoading rows={4} />}
+ 
+         {!error && work && view === 'knowledge' && (
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx
+index 735b47d..e32c96a 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx
+@@ -8,12 +8,13 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelSection,
+   KelTable,
+   formatWhen,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import {
+   kelProviders,
+   type KelCredentialMetadata,
+@@ -47,7 +48,7 @@ const Providers: React.FC = () => {
+     reasons: string[];
+     reason: string;
+   } | null>(null);
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+   const [note, setNote] = useState<string | null>(null);
+   const [busy, setBusy] = useState(false);
+   const [secure, setSecure] = useState<{ available: boolean; providers: Record<string, string[]> } | null>(
+@@ -73,7 +74,7 @@ const Providers: React.FC = () => {
+       setError(null);
+     } catch (err) {
+       setProviders([]);
+-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
++      setError(err);
+     }
+   }, []);
+ 
+@@ -88,7 +89,7 @@ const Providers: React.FC = () => {
+       const result = await kelProviders.readiness(capability, prefer);
+       setReadiness(result);
+     } catch (err) {
+-      setNote(`Readiness failed: ${err instanceof Error ? err.message : String(err)}`);
++      setNote(`Readiness didn't go through. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+     } finally {
+       setBusy(false);
+     }
+@@ -105,7 +106,7 @@ const Providers: React.FC = () => {
+           `Recorded credential metadata for ${provider}. The value itself lives in the OS store, never in the engine.`
+         );
+       } catch (err) {
+-        setNote(`Could not record metadata: ${err instanceof Error ? err.message : String(err)}`);
++        setNote(`Couldn't record the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(false);
+       }
+@@ -122,7 +123,7 @@ const Providers: React.FC = () => {
+         await load();
+         setNote(`Removed credential metadata for ${provider}.`);
+       } catch (err) {
+-        setNote(`Could not remove metadata: ${err instanceof Error ? err.message : String(err)}`);
++        setNote(`Couldn't remove the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(false);
+       }
+@@ -151,13 +152,7 @@ const Providers: React.FC = () => {
+           </KelButton>
+         </div>
+ 
+-        {error && (
+-          <KelErrorState
+-            title="Provider state could not be read"
+-            cause={error}
+-            fix="Check that the Kel engine is running, then press Reload."
+-          />
+-        )}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && providers === null && <KelLoading rows={4} />}
+         {note && <p className="kel-meta">{note}</p>}
+ 
+@@ -322,9 +317,7 @@ const Providers: React.FC = () => {
+                     await load();
+                   } catch (err) {
+                     setNote(
+-                      `Could not store the credential: ${
+-                        err instanceof Error ? err.message : String(err)
+-                      }`
++                      `Couldn't store the credential. ${failureSentence(err, 'The engine did not answer — try again.')}`
+                     );
+                   } finally {
+                     setBusy(false);
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/team/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/team/index.tsx
+index d29622a..d64d6b9 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/team/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/team/index.tsx
+@@ -12,7 +12,6 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelMeter,
+   KelStatusChip,
+@@ -21,6 +20,7 @@ import {
+   formatWhen,
+   statusFromDerived,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+ import {
+   KelAssignment,
+   KelRole,
+@@ -63,7 +63,7 @@ export default function KelTeamPage() {
+   const [assignments, setAssignments] = useState<KelAssignment[] | null>(null);
+   const [roles, setRoles] = useState<KelRole[]>([]);
+   const [departments, setDepartments] = useState<string[]>([]);
+-  const [error, setError] = useState<string | null>(null);
++  const [error, setError] = useState<unknown>(null);
+   const [selected, setSelected] = useState<string | null>(null);
+   const [events, setEvents] = useState<KelTeamEvent[]>([]);
+   const [detail, setDetail] = useState<KelRoleDetail | null>(null);
+@@ -78,7 +78,7 @@ export default function KelTeamPage() {
+       setRoles(roster.roles);
+       setDepartments(roster.departments);
+     } catch (err) {
+-      setError(String(err instanceof Error ? err.message : err));
++      setError(err);
+     }
+   }, []);
+ 
+@@ -92,7 +92,7 @@ export default function KelTeamPage() {
+       const timeline = await kelTeam.timeline(assignmentId);
+       setEvents(timeline.events);
+     } catch (err) {
+-      setError(String(err instanceof Error ? err.message : err));
++      setError(err);
+       setEvents([]);
+     }
+   }, []);
+@@ -105,7 +105,7 @@ export default function KelTeamPage() {
+       setHistory(versions.versions);
+       setView('studio');
+     } catch (err) {
+-      setError(String(err instanceof Error ? err.message : err));
++      setError(err);
+     } finally {
+       setBusy(false);
+     }
+@@ -118,7 +118,7 @@ export default function KelTeamPage() {
+         await kelTeam.rollback(templateId, to);
+         await openRole(templateId);
+       } catch (err) {
+-        setError(String(err instanceof Error ? err.message : err));
++        setError(err);
+       } finally {
+         setBusy(false);
+       }
+@@ -163,13 +163,7 @@ export default function KelTeamPage() {
+           />
+         </div>
+ 
+-        {error && (
+-          <KelErrorState
+-            title="Kel could not read the team state"
+-            cause={error}
+-            fix="Check that the engine is running, then retry."
+-          />
+-        )}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+ 
+         {!error && assignments === null && <KelLoading rows={4} />}
+ 
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+index 9f08e6b..d18e38f 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx
+@@ -9,10 +9,19 @@
+ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
+ import { useNavigate } from 'react-router-dom';
+-import { KelCard, KelEmpty, KelErrorState, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
++import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
+ import styles from './index.module.css';
+ 
++/**
++ * Batch 6 (TR-02 residual): every failure toast goes through the classifier, so transport and
++ * infrastructure text never reaches a person. Engine sentences (already plain language) pass
++ * through unchanged.
++ */
++const failMessage = (error: unknown): string => failureSentence(error, 'That did not go through — try again.');
++
+ type Folder = { id: string; name: string; created: number };
+ type Transcript = {
+   id: string;
+@@ -78,7 +87,7 @@ const TranscriptionPage: React.FC = () => {
+   const [status, setStatus] = useState<ProviderStatus>();
+   const [library, setLibrary] = useState<Library>({ folders: [], transcripts: [] });
+   const [selectedId, setSelectedId] = useState<string | null>(null);
+-  const [loadError, setLoadError] = useState('');
++  const [loadError, setLoadError] = useState<unknown>(null);
+   const [busy, setBusy] = useState(false);
+   const [progress, setProgress] = useState('');
+   const [dragging, setDragging] = useState(false);
+@@ -124,9 +133,9 @@ const TranscriptionPage: React.FC = () => {
+       ]);
+       setStatus(state);
+       setLibrary(data);
+-      setLoadError('');
++      setLoadError(null);
+     } catch (error) {
+-      setLoadError(String((error as Error)?.message || error));
++      setLoadError(error);
+     }
+   }, []);
+ 
+@@ -201,7 +210,7 @@ const TranscriptionPage: React.FC = () => {
+         if (/NotAllowed|NotFound|NotReadable|Overconstrained|Security|Permission/i.test(name + message)) {
+           Message.error(friendlyMicError(error));
+         } else {
+-          Message.error(message);
++          Message.error(failureSentence(error, 'The microphone did not start. Check the audio device and try again.'));
+         }
+       }
+     },
+@@ -262,7 +271,7 @@ const TranscriptionPage: React.FC = () => {
+         setSelectedId(saved.id);
+         Message.success(appended ? 'Recording added to the transcript.' : 'Recording saved to Recents.');
+       } catch (error) {
+-        Message.error(String((error as Error)?.message || error));
++        Message.error(failMessage(error));
+       } finally {
+         setSeconds(0);
+         setLiveText('');
+@@ -289,7 +298,7 @@ const TranscriptionPage: React.FC = () => {
+         setSelectedId(saved.id);
+         Message.success('Transcript ready.');
+       } catch (error) {
+-        Message.error(String((error as Error)?.message || error));
++        Message.error(failMessage(error));
+       } finally {
+         setProgress('');
+         setBusy(false);
+@@ -320,7 +329,7 @@ const TranscriptionPage: React.FC = () => {
+       if (transcriptId && folderId) {
+         void transcription({ action: 'assign', id: transcriptId, folder: folderId })
+           .then(() => refresh())
+-          .catch((error) => Message.error(String((error as Error)?.message || error)));
++          .catch((error) => Message.error(failMessage(error)));
+         return;
+       }
+       const file = event.dataTransfer.files?.[0];
+@@ -338,7 +347,7 @@ const TranscriptionPage: React.FC = () => {
+       setExpanded((current) => new Set(current).add(folder.id));
+       await refresh();
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [folderDraft, refresh]);
+ 
+@@ -350,7 +359,7 @@ const TranscriptionPage: React.FC = () => {
+         await transcription({ action: 'folder_rename', id, name: name.trim() });
+         await refresh();
+       } catch (error) {
+-        Message.error(String((error as Error)?.message || error));
++        Message.error(failMessage(error));
+       }
+     },
+     [refresh]
+@@ -368,7 +377,7 @@ const TranscriptionPage: React.FC = () => {
+             await transcription({ action: 'folder_delete', id: folder.id });
+             await refresh();
+           } catch (error) {
+-            Message.error(String((error as Error)?.message || error));
++            Message.error(failMessage(error));
+           }
+         },
+       });
+@@ -388,7 +397,7 @@ const saveName = useCallback(async () => {
+       setRenaming(false);
+       await refresh();
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [nameDraft, refresh, selected]);
+ 
+@@ -405,7 +414,7 @@ const saveName = useCallback(async () => {
+             if (selectedId === item.id) setSelectedId(null);
+             await refresh();
+           } catch (error) {
+-            Message.error(String((error as Error)?.message || error));
++            Message.error(failMessage(error));
+           }
+         },
+       });
+@@ -421,7 +430,7 @@ const saveName = useCallback(async () => {
+         if (folderId) setExpanded((current) => new Set(current).add(folderId));
+         await refresh();
+       } catch (error) {
+-        Message.error(String((error as Error)?.message || error));
++        Message.error(failMessage(error));
+       }
+     },
+     [refresh, selected]
+@@ -453,7 +462,7 @@ const saveName = useCallback(async () => {
+       for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+       downloadBlob(exported.name, bytes, exported.mime || 'audio/wav');
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [selected]);
+ 
+@@ -466,7 +475,7 @@ const saveName = useCallback(async () => {
+       await refresh();
+       Message.success('Merged into this transcript.');
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [combineSource, refresh, selected]);
+ 
+@@ -505,7 +514,7 @@ const saveName = useCallback(async () => {
+           setExpanded((current) => new Set(current).add(folderId));
+           await refresh();
+         } catch (error) {
+-          Message.error(String((error as Error)?.message || error));
++          Message.error(failMessage(error));
+         }
+       },
+     }),
+@@ -522,7 +531,7 @@ const saveName = useCallback(async () => {
+       Message.success('Muse is connected. New recordings and uploads use it.');
+       await refresh();
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [keyDraft, refresh]);
+ 
+@@ -533,7 +542,7 @@ const saveName = useCallback(async () => {
+       Message.success('Back to practice mode.');
+       await refresh();
+     } catch (error) {
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, [refresh]);
+ 
+@@ -547,7 +556,7 @@ const saveName = useCallback(async () => {
+       setReview((current) => ({ ...current, busy: false, payload, editing: false }));
+     } catch (error) {
+       setReview((current) => ({ ...current, busy: false }));
+-      Message.error(String((error as Error)?.message || error));
++      Message.error(failMessage(error));
+     }
+   }, []);
+ 
+@@ -585,7 +594,7 @@ const saveName = useCallback(async () => {
+         setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false });
+       } catch (error) {
+         setReview((current) => ({ ...current, busy: false }));
+-        Message.error(String((error as Error)?.message || error));
++        Message.error(failMessage(error));
+       }
+     },
+     [review.mode, review.text, selected]
+@@ -758,13 +767,7 @@ const statusCopy =
+         </aside>
+ 
+         <main className={styles.workspace}>
+-          {loadError && (
+-            <KelErrorState
+-              title='Kel could not load the transcript library'
+-              cause={loadError}
+-              fix='Reopen this page or check that Kel is running.'
+-            />
+-          )}
++          {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
+           {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
+               Record — with Record last and primary. Record More is always present (disabled when there is
+               nothing to append to) instead of appearing conditionally. */}
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+index 1120559..a55fdc7 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+@@ -7,7 +7,6 @@ import {
+   KelButton,
+   KelCard,
+   KelEmpty,
+-  KelErrorState,
+   KelLoading,
+   KelMeter,
+   KelSection,
+@@ -16,6 +15,8 @@ import {
+   formatWhen,
+   statusFromDerived,
+ } from '@renderer/components/kel/KelPrimitives';
++import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import {
+   kelArtifact,
+   kelControl,
+@@ -43,7 +44,7 @@ const WorkCenter: React.FC = () => {
+   const [artifact, setArtifact] = useState<{ milestone: string; text: string } | null>(null);
+   const [busy, setBusy] = useState(false);
+   const [note, setNote] = useState<string | null>(null);
+-  const [error, setError] = useState<{ cause: string; fix: string } | null>(null);
++  const [error, setError] = useState<unknown>(null);
+ 
+   const load = useCallback(async () => {
+     try {
+@@ -54,10 +55,7 @@ const WorkCenter: React.FC = () => {
+       setError(null);
+     } catch (err) {
+       setJobs([]);
+-      setError({
+-        cause: err instanceof Error ? err.message : 'The engine did not answer.',
+-        fix: 'Check that the Kel engine is running, then press Reload.',
+-      });
++      setError(err);
+     }
+   }, []);
+ 
+@@ -70,7 +68,7 @@ const WorkCenter: React.FC = () => {
+         setNote(`${label} sent to the engine.`);
+         await load();
+       } catch (err) {
+-        setNote(`${label} failed: ${err instanceof Error ? err.message : String(err)}`);
++        setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+       } finally {
+         setBusy(false);
+       }
+@@ -143,7 +141,7 @@ const WorkCenter: React.FC = () => {
+           </KelButton>
+         </div>
+ 
+-        {error && <KelErrorState title="Work could not be loaded" cause={error.cause} fix={error.fix} />}
++        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && jobs === null && <KelLoading rows={4} />}
+ 
+         {!error && jobs !== null && jobs.length === 0 && continuation.length === 0 && (
+diff --git a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+index 4eeacac..12b6ddd 100644
+--- a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
++++ b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+@@ -442,3 +442,104 @@
+   color: var(--kel-accent-ink);
+   border-color: var(--kel-accent);
+ }
++
++/* ----------------------------------------------------------------------------------------------
++   Batch 6 (findings 16/17): failure card + engine-link strip. Hierarchy through typography and
++   spacing on the existing surfaces — no eyebrows, no colored side borders, no new card style.
++   ---------------------------------------------------------------------------------------------- */
++.kel-failure {
++  border: 1px solid var(--kel-border);
++  border-radius: var(--kel-radius-card);
++  background: var(--kel-surface-1);
++  padding: var(--kel-card-pad);
++  max-width: 560px;
++}
++.kel-failure__title {
++  margin: 0 0 var(--kel-space-2);
++  font-size: var(--kel-type-h2);
++  font-weight: 600;
++  color: var(--kel-text-1);
++}
++.kel-failure__detail {
++  margin: 0;
++  font-size: var(--kel-type-body);
++  color: var(--kel-text-2);
++  line-height: 1.5;
++}
++.kel-failure__actions {
++  display: flex;
++  align-items: center;
++  gap: var(--kel-space-3);
++  margin-top: var(--kel-space-3);
++}
++.kel-failure__details {
++  margin-top: var(--kel-space-3);
++  border-top: 1px solid var(--kel-border);
++  padding-top: var(--kel-space-2);
++}
++.kel-failure__details > summary {
++  cursor: pointer;
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-3);
++}
++.kel-failure__raw {
++  margin: var(--kel-space-2) 0 0;
++  font-family: var(--kel-font-mono);
++  font-size: var(--kel-type-meta);
++  color: var(--kel-text-2);
++  background: var(--kel-surface-0);
++  border: 1px solid var(--kel-border);
++  border-radius: var(--kel-radius-control);
++  padding: 8px 10px;
++  white-space: pre-wrap;
++  overflow: auto;
++  max-height: 220px;
++}
++
++.kel-engine-notice {
++  display: flex;
++  align-items: center;
++  gap: var(--kel-space-3);
++  padding: 6px var(--kel-gutter);
++  font-size: var(--kel-type-label);
++  border-bottom: 1px solid var(--kel-border);
++}
++.kel-engine-notice__text {
++  display: flex;
++  align-items: baseline;
++  gap: var(--kel-space-2);
++  min-width: 0;
++  flex: 1;
++}
++.kel-engine-notice__text strong {
++  color: var(--kel-text-1);
++  font-weight: 600;
++  white-space: nowrap;
++}
++.kel-engine-notice__text span {
++  color: var(--kel-text-2);
++  overflow: hidden;
++  text-overflow: ellipsis;
++  white-space: nowrap;
++}
++.kel-engine-notice--info {
++  background: var(--kel-wait-bg);
++}
++.kel-engine-notice--info .kel-engine-notice__text strong,
++.kel-engine-notice--info .kel-engine-notice__text span {
++  color: var(--kel-wait-fg);
++}
++.kel-engine-notice--ok {
++  background: var(--kel-ok-bg);
++}
++.kel-engine-notice--ok .kel-engine-notice__text strong,
++.kel-engine-notice--ok .kel-engine-notice__text span {
++  color: var(--kel-ok-fg);
++}
++.kel-engine-notice--failed {
++  background: var(--kel-failed-bg);
++}
++.kel-engine-notice--failed .kel-engine-notice__text strong,
++.kel-engine-notice--failed .kel-engine-notice__text span {
++  color: var(--kel-failed-fg);
++}
+diff --git a/desktop/tests/unit/engine-failure.test.ts b/desktop/tests/unit/engine-failure.test.ts
+new file mode 100644
+index 0000000..9782520
+--- /dev/null
++++ b/desktop/tests/unit/engine-failure.test.ts
+@@ -0,0 +1,106 @@
++/**
++ * Batch 6 (visual findings 16/17) — pins for the failure classifier and copy.
++ *
++ * The hard requirement under test: nothing a person can see may contain transport or
++ * infrastructure text (TypeError / fetch failed / ECONN* / traceback / IPC envelopes / daemon
++ * vocabulary). Raw detail is allowed only in the diagnostics text.
++ */
++import { describe, expect, it } from 'vitest';
++import {
++  classifyEngineFailure,
++  diagnosticsText,
++  engineStateCopy,
++  failureCopy,
++  failureSentence,
++  stripTransportEnvelope,
++} from '@renderer/components/kel/engineFailure';
++
++describe('stripTransportEnvelope', () => {
++  it('removes the Electron IPC envelope and Error prefixes', () => {
++    expect(stripTransportEnvelope("Error invoking remote method 'kel:request': Error: Web is off for this conversation.")).toBe(
++      'Web is off for this conversation.'
++    );
++    expect(stripTransportEnvelope("Error invoking remote method 'kel:request': TypeError: fetch failed")).toBe('fetch failed');
++  });
++
++  it('leaves plain engine sentences untouched', () => {
++    expect(stripTransportEnvelope('That conversation is still running.')).toBe('That conversation is still running.');
++  });
++});
++
++describe('classifyEngineFailure', () => {
++  it('classifies transport failures', () => {
++    expect(classifyEngineFailure(new Error('TypeError: fetch failed'))).toBe('engine-unreachable');
++    expect(classifyEngineFailure(new Error('connect ECONNREFUSED 127.0.0.1:5173'))).toBe('engine-unreachable');
++    expect(classifyEngineFailure(new Error('The operation was aborted due to timeout'))).toBe('engine-timeout');
++    expect(classifyEngineFailure(new Error('Kel bridge unavailable — restart Kel and try again'))).toBe('bridge-unavailable');
++  });
++
++  it('keeps plain-language engine sentences as their own class', () => {
++    expect(classifyEngineFailure(new Error('Web is off for this conversation'))).toBe('engine-sentence');
++    expect(classifyEngineFailure('That approval was already resolved.')).toBe('engine-sentence');
++  });
++
++  it('routes everything unrecognisable to unexpected, never to a raw rendering', () => {
++    expect(classifyEngineFailure(new Error('Traceback (most recent call last): File "x.py"'))).toBe('unexpected');
++    expect(classifyEngineFailure(undefined)).toBe('unexpected');
++  });
++});
++
++describe('copy never leaks infrastructure text', () => {
++  const raws = [
++    'TypeError: fetch failed',
++    "Error invoking remote method 'kel:request': TypeError: fetch failed",
++    'Traceback (most recent call last): File "service.py", line 1',
++    'connect ECONNREFUSED 127.0.0.1:5173',
++    'C:\\Users\\Nick\\AppData\\Local\\Programs\\Kel\\resources\\kel-engine\\KelEngine.exe did not start',
++  ];
++
++  it('every visible sentence is clean for every class', () => {
++    for (const raw of raws) {
++      const kind = classifyEngineFailure(raw);
++      const copy = failureCopy(kind, stripTransportEnvelope(raw));
++      const visible = `${copy.title} ${copy.detail}`.toLowerCase();
++      expect(visible).not.toMatch(/typeerror|fetch failed|econnrefused|traceback|remote method|\bipc\b|\bdaemon\b|\bbroker\b|\.py\b/);
++    }
++  });
++
++  it('the raw text survives only in the diagnostics bundle', () => {
++    const text = diagnosticsText({ title: 'Kel is taking too long to answer', raw: 'TypeError: fetch failed', engineVersion: '1.6.0' });
++    expect(text).toContain('TypeError: fetch failed');
++    expect(text).toContain('engine: 1.6.0');
++  });
++});
++
++describe('failureSentence', () => {
++  it('maps transport failures to the local-engine sentence', () => {
++    expect(failureSentence(new Error('TypeError: fetch failed'), 'x')).toBe(
++      "Kel couldn't reach its local engine. Your work is preserved, and Kel will try to bring the engine back."
++    );
++  });
++
++  it('passes engine sentences through', () => {
++    expect(failureSentence(new Error('That recording is still transcribing.'), 'x')).toBe('That recording is still transcribing.');
++  });
++
++  it('falls back honestly for unexpected failures', () => {
++    expect(failureSentence(new Error('Traceback (most recent call last)'), 'x')).toMatch(/unexpected problem/);
++  });
++});
++
++describe('engineStateCopy', () => {
++  it('says nothing while connected', () => {
++    expect(engineStateCopy({ state: 'connected', attempts: 0, maxAttempts: 2, at: 0 })).toBeNull();
++    expect(engineStateCopy(null)).toBeNull();
++  });
++
++  it('describes reconnecting, recovered and unrecoverable states truthfully', () => {
++    expect(engineStateCopy({ state: 'reconnecting', attempts: 1, maxAttempts: 2, at: 0 })?.title).toBe('Kel is reconnecting');
++    const recovered = engineStateCopy({ state: 'recovered', attempts: 1, maxAttempts: 2, at: 0 });
++    expect(recovered?.tone).toBe('ok');
++    expect(recovered?.detail).toMatch(/preserved/);
++    const failed = engineStateCopy({ state: 'unrecoverable', attempts: 2, maxAttempts: 2, at: 0 });
++    expect(failed?.tone).toBe('failed');
++    expect(failed?.detail).toMatch(/2 attempts/);
++  });
++});
+diff --git a/desktop/tests/unit/engine-health.test.ts b/desktop/tests/unit/engine-health.test.ts
+new file mode 100644
+index 0000000..7e54494
+--- /dev/null
++++ b/desktop/tests/unit/engine-health.test.ts
+@@ -0,0 +1,64 @@
++/**
++ * Batch 6 (visual findings 16/17) — pins for the supervision state machine.
++ *
++ * The invariants under test (they back the R10 requirements): a restart only happens after
++ * consecutive missed beats; the automatic budget is spent, never silently reset by a failed
++ * attempt; success is only ever claimed after the engine answered again; and a person's explicit
++ * retry starts a fresh user-authorised incident.
++ */
++import { describe, expect, it } from 'vitest';
++import { EngineHealthMachine } from '@process/services/kel/engineHealth';
++
++describe('EngineHealthMachine', () => {
++  it('stays connected below the failure threshold', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 2, maxRestarts: 2 });
++    expect(machine.missed()).toEqual({ state: 'connected', action: 'none' });
++    expect(machine.alive()).toEqual({ state: 'connected', action: 'none' });
++  });
++
++  it('asks for one restart once the link is down, and claims recovery only after success', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 2, maxRestarts: 2 });
++    machine.missed();
++    expect(machine.missed()).toEqual({ state: 'reconnecting', action: 'restart' });
++    expect(machine.restartFinished(true)).toEqual({ state: 'recovered', action: 'none' });
++    // The incident retires only when the engine actually answers again.
++    expect(machine.snapshot().state).toBe('recovered');
++    expect(machine.alive()).toEqual({ state: 'connected', action: 'none' });
++    expect(machine.snapshot().restarts).toBe(0);
++  });
++
++  it('does not reset the automatic budget on a failed restart', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 1, maxRestarts: 2 });
++    expect(machine.missed()).toEqual({ state: 'reconnecting', action: 'restart' }); // attempt 1
++    expect(machine.restartFinished(false)).toEqual({ state: 'reconnecting', action: 'restart' }); // next attempt is still allowed
++    expect(machine.missed()).toEqual({ state: 'reconnecting', action: 'restart' }); // attempt 2
++    expect(machine.restartFinished(false)).toEqual({ state: 'unrecoverable', action: 'manual' }); // budget spent, never reset
++    expect(machine.snapshot().restarts).toBe(2);
++  });
++
++  it('goes unrecoverable after the budget is spent and asks the person', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 1, maxRestarts: 1 });
++    machine.missed();
++    expect(machine.restartFinished(false)).toEqual({ state: 'unrecoverable', action: 'manual' });
++    // Further missed beats keep asking for the person; no silent extra attempts.
++    expect(machine.missed()).toEqual({ state: 'unrecoverable', action: 'manual' });
++  });
++
++  it('a person-started retry is a new incident and can recover', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 1, maxRestarts: 1 });
++    machine.missed();
++    machine.restartFinished(false);
++    expect(machine.snapshot().state).toBe('unrecoverable');
++    expect(machine.manualRetry()).toEqual({ state: 'reconnecting', action: 'restart' });
++    expect(machine.restartFinished(true)).toEqual({ state: 'recovered', action: 'none' });
++    expect(machine.alive()).toEqual({ state: 'connected', action: 'none' });
++  });
++
++  it('an answered heartbeat during reconnecting retires the incident without a restart', () => {
++    const machine = new EngineHealthMachine({ failureThreshold: 2, maxRestarts: 2 });
++    machine.missed();
++    machine.missed(); // reconnecting, one restart authorised
++    expect(machine.alive()).toEqual({ state: 'connected', action: 'none' });
++    expect(machine.snapshot().restarts).toBe(0);
++  });
++});

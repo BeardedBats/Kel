@@ -1,0 +1,296 @@
+commit 756218e456841643ec83964a2319d0697446f11f
+2026-09-18 15:07:46 -0400
+docs(v1.6): R0/APR-02 breadcrumbs (17/27 sweep rows decided)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index fac6981..1f21eff 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -624,3 +624,22 @@ APPROVAL-EXACT, PERSIST-CANONICAL, COMPLETION-TRUTH, LIVENESS-SEPARATION,
+ RECOVERY-CLASSIFICATION, CREDENTIAL-CONTAINMENT, LIVE-AUTHORITY) and the Round 2.5 hostile-test
+ list is in AUDIT_TARGETS §61–80. Independent audit stays paused; nothing new here is audited or
+ claimed as accepted.
++
++## R0 — APR-02 fixed: approval resolution is conversation-scoped (2026-09-18)
++
++**APR-02 FIXED (`8a677d0`).** The approvals READ path was conversation-scoped (`chat_approvals.items`
++via `_job_ids_for`) while the resolve path settled by id alone — an id from another conversation
++could settle work the user was not looking at. `_require_owned(store, kind, ref_id, conversation)`
++now resolves the record's owning job (`approvals.job_id`, or `boundary_expansion_requests →
++capability_leases.job_id`) and refuses when it is not in the *same* ownership set the read path
++uses, so read and write cannot drift; `resolve(..., conversation=None)` keeps the HTTP contract
++additive, and both desktop resolve call sites (in-chat card, Work panel) now declare their
++conversation. A latent read-path bug surfaced while sharing the helper — `_job_ids_for` assumed
++`job_links` exists, which bare stores do not have — and is fixed. Tests: 6 new (other-conversation
++refusal for a step approval and a boundary grant, a foreign-conversation job, unknown id, unchanged
++no-conversation behaviour, the service route); focused 33 passed; desktop tsc 0 + vitest 93;
++**full engine suite 915 passed** (+10 subtests, was 909). Digest binding untouched; Round 2.5's
++APPROVAL-EXACT completion (target normalization + revalidation immediately before execution) stays
++with **R4**. Sweep: **17/27 rows carry a final disposition** (P2 7/10, P3 10/17); 10 remain — SEC-01,
++TR-01, TR-02 and 7 P3 rows. Next: SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle
++review), then the P3 rows; R1 follows R0.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index 3e5a372..a90d997 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,35 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
++
++ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
++
++- **User-visible impact:** none; resolution can no longer settle an item the user is not looking at.
++- **Internal impact:** `chat_approvals._require_owned` + `resolve(..., conversation)` scope the write
++  path to the same ownership set as the read path; `service._approvals_action` passes the declared
++  conversation; both desktop resolve call sites now declare theirs.
++- **Previous behavior:** the resolve path settled by `id` alone (the read path was scoped).
++- **New behavior:** a declared conversation that does not own the record is refused
++  (`That request belongs to another conversation`); an undeclared conversation keeps the old
++  behaviour (additive contract).
++- **Primary files:** `runtime/kel/chat_approvals.py`, `runtime/kel/service.py`,
++  `runtime/tests/test_v16_approvals.py`, `desktop/.../KelApprovalCard.tsx`,
++  `desktop/.../KelWorkPanel.tsx`.
++- **Primary symbols:** `_require_owned`, `resolve`, `_job_ids_for`, `Service._approvals_action`,
++  `KelApprovalCard.act`, `KelWorkPanel.approvalAct`.
++- **Data/schema changes:** none. **Failure paths:** refusals are `PolicyError`s on the existing
++  route; the item stays pending and resolvable from its own conversation.
++- **Security/privacy implications:** closes the release-relevant half of RISK-003 (bare-id
++  addressing) for approvals; digest binding unchanged.
++- **Persistence implications:** none. **Known concern:** Round 2.5 R4 should make the declared
++  conversation mandatory for in-app routes and add normalization/pre-execution revalidation.
++- **Expected invariants:** `INV-APPROVE-002` (partial — scope half); `INV-APPROVE-001` untouched.
++- **Tests:** 6 new (A-19). **Packaged evidence:** n/a.
++- **Audit questions:** can any resolve path still settle without a scope? Does a refused attempt
++  ever mutate the record? Is the ownership set identical to the read path's?
++- **Repair hints:** `_require_owned` and `_job_ids_for` are the single gates; R4 extends them.
++
+ ### CHG-010 — Pre-restore snapshots are pruned; the actor-identity guard is pinned by a test
+ 
+ ID: CHG-010 · Phase: Campaign A — P2/P3 sweep · Commit: `84b5646` · Date: 2026-09-18
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 3883e9b..0d20264 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -46,7 +46,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `101d8c3` | `a3e272d` | 2026-09-18 | A1 / ENG-01 | detached-engine reuse validates `engine_version` (both trust sites) | `desktop/.../kel/engineVersion.ts` (new); `KelService.ts`; `tests/unit/kelEngineVersion.test.ts` (new) | +3 desktop tests; vitest **93 passed**; tsc 0 | none | no (upgrade correctness) | n/a | no | no | MEDIUM | `increments/A1-ENGINE-VERSION-BINDING.md`; TEST_EVIDENCE_INDEX A-17 | end-to-end spawn fallback has no Electron harness — §59 |
+ | `11e1525` | `101d8c3` | 2026-09-18 | A1 | A1 breadcrumbs + REL-01 flagged as a release blocker | docs only | — | none | no | — | no | no | LOW | corpus rows A1 / REL-01 / CHG-009 / §59; AUTO_RESUME section | REL-01 recorded OPEN_RELEASE_BLOCKER |
+ | `84b5646` | `11e1525` | 2026-09-18 | PER-03 / APR-01 | pre-restore snapshots pruned; actor guard pinned by tests | `kel/backup.py`; `tests/test_v16_sweep_fixes.py` | +4 engine tests; full suite **909 passed** (+10 subtests) | none (`SNAPSHOT_KEEP` retention) | no (bounded growth) | n/a | no | no | LOW | `increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md`; TEST_EVIDENCE_INDEX A-18 | APR-02 + SEC-01 verified OPEN with fix sketches |
+-| `HEAD` | `84b5646` | 2026-09-18 | sweep batch 3 | sweep batch 3 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows PER-03 / APR-01/02/03 / SEC-01 / TR-02 / CHG-010 / §60; AUTO_RESUME section | 11 sweep rows still OPEN |
++| `9eab3c6` | `ae4c5b0` | 2026-09-18 | Round 2.5 | adopt the canonical roadmap (KEL_CANONICAL_ROADMAP_R2_5) + invariants, audit targets, risks, deferrals, R25 requirement rows | docs only | — | none | no | — | no | no | LOW | `KEL_CANONICAL_ROADMAP_R2_5.md`; corpus pointers | audit_mode stays PAUSED_UNTIL_PRE_AUDIT_RC |
++| `8a677d0` | `9eab3c6` | 2026-09-18 | R0 / APR-02 | approval resolution is conversation-scoped (write path matches the read path) | `kel/chat_approvals.py`; `kel/service.py`; `tests/test_v16_approvals.py`; `desktop/.../KelApprovalCard.tsx`; `desktop/.../KelWorkPanel.tsx` | +6 engine tests; full suite **915 passed** (+10 subtests); tsc 0, vitest 93 | none | no (scope hardening) | n/a | no | no | MEDIUM | `increments/R0-APR02-APPROVAL-SCOPE.md`; TEST_EVIDENCE_INDEX A-19 | R4 makes the declaration mandatory + adds normalization/revalidation |
++| `HEAD` | `8a677d0` | 2026-09-18 | R0 / APR-02 | R0/APR-02 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows APR-02 / CHG-011 / A-19; AUTO_RESUME section | 10 sweep rows still OPEN |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 0a0f75f..4da0a73 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -13,7 +13,7 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Test | Release relevance | Audit confirm |
+ |---|---|---|---|---|---|---|---|---|
+ | APR-01 | `/api/approvals` payload-actor rejection implicit; comment claims a guard that is absent | P2 | `13_PHASE3_DELTA_AUDIT.md`, `17_P1_REMEDIATION_REAUDIT.md` | **FIXED** (2026-09-18, `84b5646`): verification showed the guard **is** explicit — `service._action` raises `PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')` on the generic path *and* again on `/api/approval` — and the docket's own remedy was a missing **test**, now added (approval route + other action families) | `84b5646` | `tests/test_v16_sweep_fixes.py` (2 new) | none (guard existed; test was the gap) | pending |
+-| APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending — verified 2026-09-18 as still open: `/api/approval` resolves by `data['id']` alone (`self.store.resolve_approval(id, action, allow)`) while the read path *is* scoped (`chat_approvals._job_ids_for`). Fix sketch: resolve through the job's conversation and require the caller's conversation to match; needs the desktop payload contract checked first, so not marked fixed) | — | cross-scope resolution test | TBD | pending |
++| APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | **FIXED** (2026-09-18, `8a677d0`): `chat_approvals._require_owned` refuses a resolution whose record's job is not in `_job_ids_for(declared conversation)` — the same ownership set the read path uses — and the desktop now declares its conversation on both resolve call sites. Additive by contract (a caller that declares nothing behaves as before); the digest binding from V1.5 is untouched, and Round 2.5 APPROVAL-EXACT (normalization + pre-execution revalidation) stays with **R4**. Bonus: a latent read-path bug fixed (`_job_ids_for` assumed `job_links` exists) | `8a677d0` | `tests/test_v16_approvals.py` (6 new; full suite 915) | none (scope hardening) | pending |
+ | APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on crash/restart between commit and flush (`vetting_session.py:95`) | P2 | `13_PHASE3_DELTA_AUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18: still instance state; Phase 6 reviewed it as a bounded crash-window only, and the durable-drain direction is a feature rather than a release condition) | — | — | none | pending |
+ | A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | **FIXED** (2026-09-18, `101d8c3`): `engineVersionAccepted(live, expected)` compares the live `/api/state` `engine_version` with the version this build shipped, and the check runs in **both** places that used to trust the answer — the reuse path and the spawn-wait loop (a leftover engine can keep the shared descriptor alive). An unpackaged dev run passes an empty expectation (its `app.getVersion()` is Electron's) and is deliberately not enforced | `101d8c3` | `desktop/tests/unit/kelEngineVersion.test.ts` (3); tsc 0; vitest 93 | none (upgrade-correctness) | pending |
+ | REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | **OPEN_RELEASE_BLOCKER** (verified open 2026-09-18: `kel-builder.json`/`kel-runtime-builder.json` declare `{"from": "../dist/runtime/KelEngine", "to": "kel-engine"}` — the load path the app stages from (`process.resourcesPath/kel-engine`) — while the freeze tool's staging step does not affect that path, so a freeze can ship an engine older than what `dist/runtime` holds. **Not fixed here on purpose:** the only honest verification is a real freeze, which Campaign A is forbidden to perform; the fix (stage into the packaged `resources/kel-engine` and hash *that*) plus its freeze-level verification belong to the RC gate/human. Mitigation available at RC time: the packaged battery can assert the packaged engine identity without freezing) | — | freeze tooling test (gated) | **release-relevant** | pending |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 6a41cb1..04972f8 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | in progress — 16/27 rows carry a final disposition (P2 6/10: PER-02, A1, APR-01, PER-03 fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 11 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3`; batch 3 `84b5646` | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | in progress — **17/27** rows carry a final disposition (P2 7/10: PER-02, A1, APR-01, PER-03, **APR-02** fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 10 rows stay `OPEN (sweep pending)` (P2: SEC-01, TR-01, TR-02; P3 7) | APR-02 `8a677d0`; earlier `84b5646`/`101d8c3`/`0596211`/`df1997a` | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | PENDING | — | — | `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` §R1 | — | pending |
+ | REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
+ | REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 453dafc..04079ed 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -28,6 +28,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-16 | engine full suite + desktop typecheck (sweep batch 2) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit` | `0596211` | 2026-09-18 | PASS | **905 passed, 10 subtests passed** (251.00s; was 900 — +5 new tests, zero regressions); focused sweep-fix + backup + transcription = 41 passed; tsc 0 | INT-01, SEC-01-multipart, PER-04 | INV-SWEEP2-001 | `increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md` | parent-executed (IPC guard by parity, no harness — §58) |
+ | A-17 | desktop typecheck + unit suite (A1 engine-version binding) | `cd desktop && bunx tsc --noEmit && bun run test` | `101d8c3` | 2026-09-18 | PASS | tsc 0 errors; **93 passed / 8 files** (was 90 — +3 new tests) | A1 / ENG-01 | INV-A1-001 | `increments/A1-ENGINE-VERSION-BINDING.md` | parent-executed (decision unit-tested; spawn wiring typecheck-only — §59) |
+ | A-18 | engine full suite (sweep batch 3: snapshots + actor guard) | `cd runtime && python -m pytest tests -q` | `84b5646` | 2026-09-18 | PASS | **909 passed, 10 subtests passed** (252.08s; was 905 — +4 new tests, zero regressions); focused sweep-fix + backup + transcription = 45 passed | PER-03, APR-01 | INV-PER03-001 | `increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md` | parent-executed |
++| A-19 | engine full suite + desktop suite (R0 / APR-02 approval scope) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit && bun run test` | `8a677d0` | 2026-09-18 | PASS | **915 passed, 10 subtests passed** (264.24s; was 909 — +6 new tests, zero regressions); focused approvals + sweep-fix = 33 passed; desktop tsc 0, vitest 93 | APR-02 (R0) | INV-APPROVE-002 (partial) | `increments/R0-APR02-APPROVAL-SCOPE.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/R0-APR02-APPROVAL-SCOPE.md b/docs/v1.6/pre-audit/increments/R0-APR02-APPROVAL-SCOPE.md
+new file mode 100644
+index 0000000..d201ee8
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R0-APR02-APPROVAL-SCOPE.md
+@@ -0,0 +1,140 @@
++# Increment — R0 / APR-02: approval resolution is conversation-scoped (round 2.5 APPROVAL-EXACT groundwork)
++
++increment_id: V16-R0-APR02-APPROVAL-SCOPE
++phase: Campaign A — roadmap R0 (finish the P2/P3 sweep) · APR-02
++base_commit: 9eab3c6 (round 2.5 roadmap checkpoint)
++target_commit: the implementation commit + this docs commit
++status: complete
++
++## Objective
++
++Close APR-02 — "approval resolution is not conversation-scoped while the read is" — inside the
++existing approval system, with no second approval path and no contract break. Round 2.5 §D
++(APPROVAL-EXACT) absorbs this row into R4's exact-binding work; R0 closes the scoping half now.
++
++## Verification before the change (current tree)
++
++- `chat_approvals.items()` (the READ path) is conversation-scoped through `_job_ids_for(db,
++  conversation)` — jobs by their `conversation` field plus continuation `job_links`.
++- `chat_approvals.resolve()` (the WRITE path) took only `kind` + `ref_id`; the id alone decided
++  which approval row settled, so an id from another conversation could settle work the caller was
++  not looking at. `Store.resolve_approval` already re-validates actor, status and the action
++  **digest** — but not scope.
++- The desktop sent `{kind, id, allow}` with no conversation on both call sites (Work panel and the
++  in-chat approval card).
++
++## Implementation Summary
++
++1. **Engine scope gate** (`kel/chat_approvals.py`): new `_require_owned(store, kind, ref_id,
++   conversation)` resolves the record's owning job (`approvals.job_id`, or
++   `boundary_expansion_requests → capability_leases.job_id`) and refuses when that job is not in
++   `_job_ids_for(conversation)` — the *same* ownership set the read path uses, so the two paths
++   cannot drift. `resolve(..., conversation=None)` applies it only when the caller declares a
++   conversation, keeping the HTTP contract additive (callers that declare nothing behave exactly as
++   before).
++2. **Route** (`kel/service.py`): `_approvals_action` passes `conversation=data.get('conversation')`.
++3. **Desktop declares its conversation**: the in-chat card sends the engine conversation it resolved
++   (`engineCid || conversationId`); the Work panel sends its `cid`. Both already fetched their
++   items with the same conversation id, so list and resolve now agree by construction.
++4. **Latent read-path bug fixed**: `_job_ids_for` assumed `job_links` exists; bare stores (engine
++   tests, very early boots) have no such table, which broke the shared helper once the write path
++   started using it. It is now guarded, which also protects `items()` on those stores.
++
++## Files Changed
++
++- `runtime/kel/chat_approvals.py` (`_require_owned`, `resolve(..., conversation)`, guarded
++  `_job_ids_for`)
++- `runtime/kel/service.py` (`_approvals_action` passes the declared conversation)
++- `runtime/tests/test_v16_approvals.py` (6 new scope tests)
++- `desktop/packages/desktop/src/renderer/components/kel/KelApprovalCard.tsx`,
++  `desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx` (send the conversation)
++
++## Symbols Changed
++
++`chat_approvals._require_owned` (new), `chat_approvals.resolve`, `chat_approvals._job_ids_for`,
++`Service._approvals_action`, `KelApprovalCard.act`, `KelWorkPanel.approvalAct`.
++
++## Schema/Migrations
++
++None.
++
++## User-Facing Behavior
++
++No visible change. A resolution can no longer settle an item the user is not looking at.
++
++## Internal Behavior
++
++`/api/approvals` (resolve) now refuses with `That request belongs to another conversation` when a
++declared conversation does not own the record; an unknown id still refuses with
++`Approval request missing`.
++
++## Error Paths
++
++Refusals are `PolicyError`s on the existing route; the item stays pending and resolvable from its own
++conversation (asserted by the first test).
++
++## Lifecycle Considerations
++
++None (no new state).
++
++## Persistence / Isolation
++
++None beyond the scope check; isolation *improves* (cross-conversation settlement impossible when the
++caller declares its conversation).
++
++## Security / Privacy
++
++This is the release-relevant half of a systemic pattern (RISK-003: bare-id addressing). The digest
++binding from V1.5 stays untouched; Round 2.5's full APPROVAL-EXACT work (target normalization,
++preconditions, revalidation immediately before execution) remains **R4**.
++
++## Self-Review Findings
++
++- The first version of the service-level test used `self.service`, which `ApprovalBase` does not
++  define; the test now constructs its own `Service` over the same data root. Test bug, not product.
++- The `job_links` guard was found *because* the write path started sharing the read helper — a real
++  latent fragility in the read path, now covered by the same tests that exercise both.
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_v16_approvals.py tests/test_v16_sweep_fixes.py -q`
++  → **33 passed** (6 new: other-conversation refusal for a step approval and for a boundary grant, a
++  foreign-conversation job, unknown id, additive no-conversation behaviour, and the service route).
++- `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → **93 passed**.
++- Full engine suite: see TEST_EVIDENCE_INDEX A-19.
++
++## Results
++
++PASS.
++
++## Packaged Verification
++
++Not applicable to this increment (engine + renderer payload change); the RC packaged battery
++re-runs the engine suite and the packaged journeys.
++
++## Known Weaknesses
++
++- The scope gate only applies when the caller declares a conversation; a hypothetical future caller
++  could omit it (the desktop never does). Round 2.5's R4 work should make the declaration mandatory
++  for the in-app routes rather than optional — recorded as an R4 input.
++- The remaining R0 rows (SEC-01, TR-01, TR-02, 7 P3s) stay OPEN until their own increments.
++
++## Deferred Questions
++
++- Should the engine *require* `conversation` on `/api/approvals` once no legacy caller exists?
++  (R4 decision; the additive path keeps old clients working meanwhile.)
++
++## Audit Targets
++
++AUDIT_TARGETS §75 (approval from the wrong conversation must be refused) — now covered by tests;
++§73–§74 (normalization/mutation invalidation) remain R4.
++
++## Repair Hints
++
++`_require_owned` is the single scope gate; `_job_ids_for` is the single ownership set. R4 should
++extend both rather than adding a parallel check.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/R0-APR02-APPROVAL-SCOPE.md` (this file)
++- corpus rows: P2_P3_DISPOSITION (APR-02), CHANGE_LEDGER CHG-011, TEST_EVIDENCE_INDEX A-19
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 884cf70..f743a57 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 84b5646 (sweep batch 3 production commit; docs commit follows — see `git log --oneline -8`)
++head: 8a677d0 (R0/APR-02 production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,9 +18,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-P2P3 IN PROGRESS — 16/27 docket rows carry a final disposition; **PER-03 fixed** (`84b5646`: pre-restore snapshots pruned on both paths) and **APR-01 closed** (guard verified present; the missing payload-actor test added); **A1 fixed** (`101d8c3`); **PER-02 fixed** (`df1997a`); **sweep batch 2 fixed** (`0596211`); **REL-01 = `OPEN_RELEASE_BLOCKER`**; APR-03 `DEFERRED_NON_RELEASE`. Prior: REQ-F4 DONE (081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: 11 sweep rows remain — P2 4 (APR-02, SEC-01, TR-01, TR-02) and P3 7.
++current_increment: **R0** — P2/P3 sweep at 17/27 (P2 7/10); **APR-02 FIXED** (`8a677d0`: approval resolution is conversation-scoped on both sides, additive contract; full engine suite 915, tsc 0, vitest 93); roadmap R2.5 adopted (`9eab3c6`). Still OPEN: SEC-01, TR-01, TR-02 + 7 P3 rows. REL-01 = `OPEN_RELEASE_BLOCKER`.
+ current_phase: R0 — finish the P2/P3 sweep (roadmap R2.5 adopted 2026-09-18; next phases R1 delegation authority ceiling → R2 idempotency → R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909).
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
