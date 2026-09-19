@@ -37,6 +37,20 @@ const WAIT_REASON: Record<string, string> = {
   BLOCKED: 'Blocked by a safety rule; the reason is recorded.',
 };
 
+// Human-visual repair: verdicts and milestone states in user language — no raw engine enums.
+const VERDICT_TEXT: Record<string, string> = {
+  VERIFIED: 'verified',
+  FAILED: 'failed — see the checks',
+  UNCERTAIN: 'not confirmed yet — needs evidence',
+};
+const MILESTONE_STATE_TEXT: Record<string, string> = {
+  QUEUED: 'Waiting to start',
+  RUNNING: 'In progress',
+  ACCEPTED: 'Accepted',
+  BLOCKED: 'Blocked',
+  FAILED: 'Failed',
+};
+
 const WorkCenter: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [assignments, setAssignments] = useState<KelAssignment[]>([]);
@@ -187,33 +201,41 @@ const WorkCenter: React.FC = () => {
             chip={<KelStatusChip status={statusFromDerived(activeJob.state)} />}
             actions={
               <span className="kel-row">
-                <KelButton
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void act('Pause', () => kelControl(activeJob.id, 'pause'))}
-                >
-                  Pause
-                </KelButton>
-                <KelButton
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void act('Resume', () => kelControl(activeJob.id, 'resume'))}
-                >
-                  Resume
-                </KelButton>
-                <KelButton
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => void act('Cancel', () => kelControl(activeJob.id, 'cancel'))}
-                >
-                  Cancel
-                </KelButton>
+                {(activeJob.state === 'RUNNING' || activeJob.state === 'QUEUED' || activeJob.state === 'READY') && (
+                  <KelButton
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void act('Pause', () => kelControl(activeJob.id, 'pause'))}
+                  >
+                    Pause
+                  </KelButton>
+                )}
+                {activeJob.state === 'PAUSED' && (
+                  <KelButton
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void act('Resume', () => kelControl(activeJob.id, 'resume'))}
+                  >
+                    Resume
+                  </KelButton>
+                )}
+                {!['CLOSED', 'CANCELLED'].includes(activeJob.state) && (
+                  <KelButton
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => void act('Cancel', () => kelControl(activeJob.id, 'cancel'))}
+                  >
+                    Cancel
+                  </KelButton>
+                )}
               </span>
             }
           >
             <p className="kel-sub">
-              {`Progress: ${accepted.length} of ${activeMilestones.length} steps verified · Kel verified: `}
-              {activeJob.verdict ?? 'not yet — verification runs after the checks pass'}
+              {`Progress: ${accepted.length} of ${activeMilestones.length} steps verified · `}
+              {activeJob.verdict
+                ? VERDICT_TEXT[activeJob.verdict] ?? `verification status: ${activeJob.verdict.toLowerCase().replace(/_/g, ' ')}`
+                : 'verification runs after the checks pass'}
             </p>
             {activeMilestones.length === 0 ? (
               <KelEmpty
@@ -228,7 +250,8 @@ const WorkCenter: React.FC = () => {
                     {m.spec?.objective ?? m.id}
                   </span>,
                   <span className="kel-meta" key={`${m.id}-s`}>
-                    {m.runtime.state ?? 'unknown'}
+                    {MILESTONE_STATE_TEXT[m.runtime.state] ??
+                      (m.runtime.state ? m.runtime.state.toLowerCase().replace(/_/g, ' ') : 'unknown')}
                   </span>,
                   <span className="kel-meta" key={`${m.id}-a`}>
                     {`${m.runtime.attempts ?? 0}${(m.runtime.attempts ?? 0) > 1 ? ' · retried' : ''}`}
