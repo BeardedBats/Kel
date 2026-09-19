@@ -62,4 +62,11 @@ How to re-run (from `runtime/`):
 - Script hashes: `evidence/mi4-script-hashes.txt`.
 - Remaining executions (build log, gated installed probe, uninstall log, final integrity re-run) tracked in `04_PACKAGE_EVIDENCE.md`.
 
+## AUD-MINOR-005 — corpus reconciliation (REPAIRED, `8ca6231`)
+
+- Pre-fix: `evidence/mi5-lint-prefix-fail.txt` — `CORPUS LINT: FAIL (source: HEAD)` with 25 stale/missing markers across the six corpus files.
+- Post-fix: `evidence/mi5-lint-postfix-pass.txt` — `CORPUS LINT: PASS (6 files checked)`.
+- Regression gates re-run: ledger gate `PASS — 73 commits … 1:1`; corpus gate `PASS`.
+- Gate script: `docs/v1.6/audit-final/tools/check-corpus-staleness.py` (`--source <rev>` discriminator).
+
 (Results appended per finding as repairs complete.)

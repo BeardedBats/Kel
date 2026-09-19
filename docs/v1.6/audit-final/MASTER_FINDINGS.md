@@ -93,7 +93,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Evidence:** direct reads at RC; `assignment.py:39` (v21); packaged DB queries (fresh/upgrade max 21). **Confidence:** HIGH.
 - **Repair criteria:** every status/table row reconciled to the RC tree or marked historical; zero unchecked satisfied claims.
 - **Regression test:** corpus-lint (grep-able stale-marker denylist) run at RC head.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `8ca6231` · re-test: corpus lint FAIL at HEAD (25 markers) → PASS on the reconciled tree (6 files); ledger gate re-run 1:1 · final re-audit: `PENDING`
 
 ## AUD-MINOR-006 — Delegation containment primitive does not resolve `..`: `src/../secrets` counts as within `src`
 
