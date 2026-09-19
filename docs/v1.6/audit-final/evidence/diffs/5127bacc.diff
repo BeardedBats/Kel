@@ -1,0 +1,157 @@
+commit 5127bacca293f9a483167665506eb434e8c4f1ca
+2026-09-18 09:12:35 -0400
+docs(v1.6): Phase 5.6 accepted - audit 24 CONTINUE; Phase 5.7/5.8 decisions deferred
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index c6536ba..1cae2e7 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -32,7 +32,7 @@ branch; its full record is in `docs/session-tools/` and the sections below.
+ | 5.3 D2 small pod + verification | DONE + audit-accepted — commit `48dacb3` + follow-up `5747567` | `docs/v1.6/phase5/5.3_IMPLEMENTATION_RECORD.md`; engine 767 (+43); audits 14-15 CONTINUE (F14 closed) |
+ | 5.4 Assurance army + Sentinel + Oracle | **ACCEPTED** — `932db33` + remediations `27e3720`, `d394649`, `71122ef`, plus the acceptance patch `f25a4bf` | `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`; engine 791 → 805 (+24 phase tests, then +3 and +3 remediation tests); audits 16/17/18 **REVISE** → remediated, audit 19 **CONTINUE** (F17-1 answered clean); published `0fcd9ed..f25a4bf`; disk-backed review handoffs adopted |
+ | 5.5 Parallel mission teams + mission worktrees | **ACCEPTED** — `5f77f42` + remediations `b1141c4`, `2a12b77` + acceptance patch `d8880f3` | `docs/v1.6/phase5/5.5_IMPLEMENTATION_RECORD.md`; engine 842 (+37) → 851 → 853; migration 19; audits 20/21 **REVISE** → remediated, audit 22 **CONTINUE**; published `9a2965d..d8880f3` |
+-| 5.6 Learning loop (shadow) | IMPLEMENTED + audit-requested — commit `ba52869` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 (+23; zero regressions); no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audit 23 pending |
++| 5.6 Learning loop (shadow) | **ACCEPTED** — `ba52869` + remediation `8a2b25d` | `docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md`; engine 853 → 876 → 878; no migration (learnings ride the memory store; history rides team_events); flag `workforce.learning.shadow` default off; audits 23 REVISE → 24 CONTINUE; 5.7/5.8 decisions deferred (`5.7_DECISION_DEFERRED.md`, `5.8_DECISION_DEFERRED.md`) |
+ 
+ Latest verified candidate: `dist/package-final17/win-unpacked` (Phase 4 completion evidence; copy-scan
+ probe over the reachable routes plus the standing approvals/lineage journeys). `dist/package-p1cap3`
+@@ -330,11 +330,14 @@ staffing enablement stays deferred unless the doc-13 campaign metrics and user s
+ Update (audit 23 → 24): the delta re-audit returned **REVISE** (`36_PHASE5_6_AUDIT.md`;
+ F23-1..F23-10 — an ungated writer, store-wide lens scope claiming project scope, decay/hygiene).
+ Remediated in `8a2b25d` (focused 25; full 878; zero regressions; see the record's follow-up
+-section); delta re-audit requested (`ba52869..8a2b25d`; cumulative `2236881..8a2b25d`).
++section). Delta re-audit (24): **CONTINUE** — all closed; **Phase 5.6 accepted through
++`8a2b25d`**. Phase 5.7 DEFERRED (entry unmet: doc-13 campaign + user sign-off) and Phase 5.8
++DEFERRED (product decision) — decision records in `docs/v1.6/phase5/`. Next: publish, Visual
++screenshot-index refresh, then Phase 6 (memory reality audit).
+ 
+ ## Verify quickly (any resume)
+ 
+-1. `cd runtime && python -m pytest tests -q` → **876 passed** (+10 subtests; zero regressions).
++1. `cd runtime && python -m pytest tests -q` → **878 passed** (+10 subtests; zero regressions).
+ 2. `cd desktop && bunx tsc --noEmit` → 0; `bun run test` → 76.
+ 3. Packaged journeys (edit `APP` inside each to the current candidate first):
+    `bash ux-audit/run-cap2-residual.sh` (needs `package-p1cap3`; sessiontools reserved + residual
+diff --git a/docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md b/docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md
+index 22b19a8..57250e8 100644
+--- a/docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md
++++ b/docs/v1.6/phase5/5.6_IMPLEMENTATION_RECORD.md
+@@ -129,6 +129,10 @@ Evidence: focused **25 passed** (was 23; +2 regressions); full runtime suite **8
+ (+10 subtests; baseline 876)** with zero regressions; delta re-audit requested
+ (`ba52869..8a2b25d`; cumulative `2236881..8a2b25d`).
+ 
++Delta re-audit (increment 24, `37_PHASE5_6_REMEDIATION_REAUDIT.md`): **CONTINUE** — all
++F23-1..F23-10 closed (24-N1..N3 informational residuals only). **Phase 5.6 accepted through
++`8a2b25d`.**
++
+ ## Rollback
+ 
+ Flag off (`KEL_WORKFORCE_LEARNING_SHADOW` unset — the default) leaves every stream untouched;
+diff --git a/docs/v1.6/phase5/5.7_DECISION_DEFERRED.md b/docs/v1.6/phase5/5.7_DECISION_DEFERRED.md
+new file mode 100644
+index 0000000..5a361de
+--- /dev/null
++++ b/docs/v1.6/phase5/5.7_DECISION_DEFERRED.md
+@@ -0,0 +1,22 @@
++# Phase 5.7 — adaptive staffing enablement: DECISION (deferred)
++
++Date: 2026-09-18. Decision: **DEFERRED — entry conditions are not met.**
++
++Spec entry conditions (`15_PHASE5_IMPLEMENTATION_SPEC.md` §5.7; doc 11 §5): the 5.6 validation
++metrics over a full campaign window, the doc-13 evaluation campaign pass, and explicit user
++sign-off.
++
++Current evidence: Phase 5.6 (shadow) is accepted (through `8a2b25d`) and its metric views exist
++(gating precision, false-skip by recomputed gating plans; performance stats with small-sample
++labels), but **no campaign window exists** — the doc-13 full matrix (10 classes × 3 configs ×
++≥3 seeds; pilot classes 2/3/6/8 only so far) is a carried item, and there is no user sign-off.
++Enabling adaptive gating now would fabricate readiness.
++
++Disposition: nothing enables. `workforce.gating.adaptive` stays off; the shadow loop keeps
++recording observations so a future campaign window can be evaluated. Re-entry checklist:
++
++1. run the doc-13 campaign (classes 3/5/9 gains; baseline-B conflict rate);
++2. evaluate the pre-registered H1-H5 outcomes plus the 5.6 metrics over the campaign window;
++3. bring the results to the user for explicit sign-off;
++4. only then open the §5.7 implementation (non-insurance gating + ceremony adaptation,
++   changelog + single-flag rollback; never-gate insurance is untouchable).
+diff --git a/docs/v1.6/phase5/5.8_DECISION_DEFERRED.md b/docs/v1.6/phase5/5.8_DECISION_DEFERRED.md
+new file mode 100644
+index 0000000..724af49
+--- /dev/null
++++ b/docs/v1.6/phase5/5.8_DECISION_DEFERRED.md
+@@ -0,0 +1,17 @@
++# Phase 5.8 — Advanced Worker View (program Phase 8): DECISION (deferred)
++
++Date: 2026-09-18. Decision: **DEFERRED pending the Phase 8 product decision.**
++
++Spec entry (`15_PHASE5_IMPLEMENTATION_SPEC.md` §5.8 / doc 12): the 5.2-5.4 data endpoints
++already exist; what is missing is the product decision (is the Advanced Worker View in V1.6
++scope?) and user research; the exit gate is a usability review with the zero-visit default
++preserved.
++
++Current evidence: no product decision has been made; Kel's normal UX remains one capable
++assistant with hidden orchestration, and the workforce surfaces stay read-mostly engine-level
++(no live caller). Implementing panels now would violate the program rules "do not implement
++merely because the phase number exists" (bootstrap §30) and the spec's "no UI-first".
++
++Disposition: nothing builds. The endpoints stay available for a future decision; if the product
++decision is to ship it, re-entry is a bounded UI increment behind a setting (Advanced/Details
++only, exportable mission report), with the zero-visit default preserved.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 98fb71e..bc1ad79 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,23 +1,23 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T13:22:00Z
++updated_utc: 2026-09-18T13:45:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 8a2b25d (plus this docs/state commit on top; see `git log --oneline -4`)
++head: 8a2b25d (plus docs/state commits on top; see `git log --oneline -5`)
+ worktree_clean: true
+ 
+-state: WAITING_FOR_AUDIT
++state: PHASE_5_6_ACCEPTED
+ 
+-current_increment: Phase 5.6 REMEDIATED — audit 23 returned **REVISE** (F23-1 major: the "every write path is gated" claim was false, `correct_learning` read no flag; F23-2 major: curator lens evidence was store-wide while the insight claimed project scope; F23-3..F23-6 decay/view/tier-join fixes; F23-7..F23-10 hygiene and boundary coverage). Remediation commit `8a2b25d`: the dead `flags` parameter is gone and explicit user corrections are documented as user actions, never gated; `curate(..., missions=...)` scopes lens evidence (wording no longer claims project scope without it); decay runs from each record's own creation (a losing weaker write cannot reset the winner's clock); only `no such table` degrades a read; the view identity is (type, key); NULL-assignment tier rows are skipped; unused constants/parameters removed; two new regressions + boundary assertions. Focused 25 passed; full runtime suite 878 passed (+10 subtests; baseline 876; zero regressions). Delta re-audit requested for `ba52869..8a2b25d` (cumulative `2236881..8a2b25d`). Next after CONTINUE: publish, a safe Visual slice, then the Phase 5.7 decision.
+-current_phase: Phase 5 — 5.6 remediated (delta re-audit pending); 5.7 decision next
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (commit cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), and the Phase 5.5 parallel-mission arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3)
++current_increment: Phase 5.6 ACCEPTED — learning loop (shadow). Audit 23 REVISE (F23-1 major: an ungated writer under a false "every write path is gated" claim; F23-2 major: store-wide lens evidence claiming project scope; plus decay/view/tier/hygiene findings) → remediation `8a2b25d` → audit 24 **CONTINUE** (all F23-1..F23-10 closed; 24-N1..N3 informational residuals only). Learned guarantees: learnings are memory records with workforce source types (no second memory system, no new storage surface, no migration); dedup/supersede ride the memory chains and never fork a (type, key) identity; decay is computed from each record's own creation; preferences only from explicit user confirmation; confidence caps + promotion queue (nothing promotes); retros, shadow staffing proposals (with predictions) and performance/validation metrics are recorded/derived with small-sample honesty; every automatic write path is gated by `workforce.learning.shadow` (default off; explicit user corrections are user actions, never gated). Phase 5.7 DEFERRED (entry unmet: no doc-13 campaign window, no user sign-off — `5.7_DECISION_DEFERRED.md`); Phase 5.8 DEFERRED (Phase 8 product decision — `5.8_DECISION_DEFERRED.md`). Next: publish this accepted checkpoint, refresh the Visual screenshot index, then Phase 6 — the memory reality audit.
++current_phase: Phase 5 — CLOSED (5.0-5.6 accepted; 5.7/5.8 deferred decisions recorded); Phase 6 next
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; acceptance pending publication)
+ 
+-audit_requested_from: 2236881
+-audit_requested_through: 8a2b25d
+-audit_required: true
+-audit_last_seen_head: ba52869
+-audit_last_seen_verdict: REVISE (increment 23 — F23-1..F23-10, all remediated in 8a2b25d; delta re-audit requested)
++audit_requested_from: NONE (5.6 accepted through increment 24)
++audit_requested_through: NONE
++audit_required: false
++audit_last_seen_head: 8a2b25d
++audit_last_seen_verdict: CONTINUE (increment 24 — all F23-1..F23-10 closed; 24-N1..N3 informational)
+ 
+ visual_state: READY_FOR_VISUAL
+ visual_clean_head: 60b2322
+@@ -37,12 +37,12 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
+ known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
+ 
+ github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
+-github_remote_integration: 2236881e4ce56f6d06b44673c45ef8d3442f7763 (verified by ls-remote earlier this session; Phase 5.6 unpublished until accepted)
+-github_publication_current: true
++github_remote_integration: 2236881e4ce56f6d06b44673c45ef8d3442f7763 (Phase 5.6 publication in flight this session — see `ux-audit/github-sync-recon/19_PHASE5_6_PUBLICATION.md`)
++github_publication_current: false (accepted 5.6 checkpoint pending publication)
+ 
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Awaiting Audit 1.6 increment 24 — the delta re-audit of the Phase 5.6 remediation (`ba52869..8a2b25d`; cumulative `2236881..8a2b25d`), review package at `kel-v16-code-audit/docs/code-audit/increment-24/`. On CONTINUE: publish per GITHUB_SYNC_POLICY, refresh the Visual screenshot index (safe slice), then the Phase 5.7 decision per §5.7 (entry: 5.6 metrics + doc-13 campaign pass + explicit user sign-off — defer honestly if the campaign has not run; nothing enables without it). Carry-forward: F20-6 (ignored paths are neither integrated nor counted), F20-14 (no conflict-resolution timing), N21-5 (undeclared writes reported but not counted in the conflict rate), R22-3 (evidence-package nits), and the 5.6 limitations (lens-evidence mission scoping without a findings->project link; identical-value re-observation multiplicity; rate denominator deviation — audit 23 F23-2/F23-8/F23-9) as recorded limitations; F4 real-artifact binding + F17-4/F18-5 evidence-bound review rows + a resolution-kind column (wiring increment); F16-3 (no production caller — workforce guarantees stay engine-level); doc-13 full campaign (classes 3/5/9, baseline-B conflict rate) when the matrix runs; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Review handoffs must stay disk-backed (AUTONOMOUS_OPERATION.md).
+-external_dependency: AUDIT 1.6 (ba52869..8a2b25d; cumulative 2236881..8a2b25d)
++next_autonomous_action: Publish the accepted Phase 5.6 checkpoint per GITHUB_SYNC_POLICY (explicit refspec, scan first, verify after; record in `19_PHASE5_6_PUBLICATION.md`), then refresh the Visual screenshot index with the packaged-visual5 captures (safe, non-overlapping), then begin **Phase 6 — the memory reality audit** (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed; the memory proposal surface itself was Phase 1, commit a8c3511). Phase 5.7 stays deferred until the doc-13 campaign runs and the user signs off; Phase 5.8 waits on the Phase 8 product decision. Carry-forward: F20-6 (ignored paths are neither integrated nor counted), F20-14 (no conflict-resolution timing), N21-5 (undeclared writes reported but not counted in the conflict rate), R22-3 (evidence-package nits), and the 5.6 limitations (lens-evidence mission scoping without a findings->project link; identical-value re-observation multiplicity — 24-N2 suggests `(created, rowid)` ordering if ever tightened; rate denominator deviation — audit 23 F23-2/F23-8/F23-9) as recorded limitations; F4 real-artifact binding + F17-4/F18-5 evidence-bound review rows + a resolution-kind column (wiring increment); F16-3 (no production caller — workforce guarantees stay engine-level); doc-13 full campaign (classes 3/5/9, baseline-B conflict rate) when the matrix runs; packaged battery assertions 16/17/18; provider 'web'/context tokens when evidence-backed; per-project flag storage; overlay content at calibration. Review handoffs must stay disk-backed (AUTONOMOUS_OPERATION.md).
++external_dependency: NONE
+ stop_reason: NONE

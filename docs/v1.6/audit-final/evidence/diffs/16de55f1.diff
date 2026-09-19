@@ -1,0 +1,433 @@
+commit 16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d
+2026-09-18 12:29:53 -0400
+docs(v1.6): Phase 7 record + pre-audit corpus updates (capability recommendations)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 7e57a6d..627399c 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -406,8 +406,8 @@ focused tests, regression, packaged verification, atomic commits and records con
+ - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+ - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+-- **Phase 6** completed 2026-09-18 (see below). **Next**: Phase 7 — smart capability
+-  recommendations; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
++- **Phase 7** completed 2026-09-18 (see below). **Next**: Phase 8/5.8 — Advanced Worker View
++  decision; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
+ 
+ ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+ 
+@@ -425,3 +425,16 @@ tsc 0; vitest 83 (76→83).
+ Reports: `docs/v1.6/pre-audit/` corpus updated (COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
+ TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS,
+ P2_P3_DISPOSITION, REPAIR_HINTS, VISUAL_EVIDENCE_INDEX).
++
++## Phase 7 — capability recommendations (2026-09-18)
++
++Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`;
++record: `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`). The engine now emits a structured,
++real-only recommendation when a capability refusal happens (`capabilities.recommendation`;
++research + coding blocked outcomes; retained on the job milestone so `/api/state` carries it), and
++the desktop renders it in the Work panel (`KelCapabilityCard`: Allow once / Enable for this chat /
++Keep it off — fail-closed rendering, real endpoints, dismissal without state change). Invariant
++INV-CAPREC-001 added; audit targets 40–45 added. Tests: engine focused 83; **full 885 passed**
++(+10 subtests; was 878); tsc 0; vitest **90** (was 83). Packaged card evidence deferred — no
++provider in this environment (LIM-14); transcript-inline placement = DEF-014. Next: Phase 8/5.8
++decision.
+diff --git a/docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md b/docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md
+new file mode 100644
+index 0000000..d6d538d
+--- /dev/null
++++ b/docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md
+@@ -0,0 +1,64 @@
++# Phase 7 — Smart capability recommendations
++
++date: 2026-09-18
++increment: PHASE7-CAPABILITY-RECOMMENDATIONS
++scope (sprint directive §32): only recommend real capabilities · no no-op UX · preserve capability
++safety · verify production effect · record every new recommendation path.
++sources: sprint directive §32; docket in `docs/session-tools/` (01 non-goal note; 08 limitation #2
++— "no message-level card; next increment per the docket"); `docs/basic-ux-sweep/17_DONOR_FEATURE_
++FINDINGS.md` §8 and `18_DONOR_FEATURE_REMEDIATION.md` §4; the CAP2-remediation decision that the
++removed connector capabilities (Drive / Connected apps) are never offered as switches.
++
++## What was implemented
++
++1. **Engine — the one recommendation vocabulary.** `capabilities.recommendation(capability,
++   decision)` returns a structured suggestion or `None`. A capability the user disabled for this
++   conversation refuses with three real next steps: `allow_once`, `enable`, `keep_disabled`.
++   Everything else returns `None` — not-available-here, needs-setup-with-no-connector, unknown ids,
++   allowed decisions. No heuristics, no detectors, no nagging: a recommendation exists only where a
++   real refusal already happened and a real action exists.
++2. **Refusal producers attach it.** The real web effect (`kel.research`) and the real repository
++   effect (`kel.coding`) now return `capability` + `recommendation` next to their existing plain
++   refusal text. The actions themselves are the unchanged session-tools machinery
++   (`grant_once` / `set_override`) — no new policy, no widening (INV-CAP-001 preserved).
++3. **Durable to the shell.** `kel.core` records the recommendation on the job milestone when a
++   blocked result settles (and clears it on success), so `/api/state` carries it to the desktop.
++4. **Desktop card.** `KelCapabilityCard` + `capabilityRecommendation.ts` render exactly the
++   engine's actions — unknown action ids are dropped (fail-closed rendering) — wired to
++   `/api/capabilities` (`allow_once`, `set on`). "Keep it off" changes nothing and dismisses the
++   card; dismissed cards stay dismissed (no re-nag). Mounted in the Work panel's job section where
++   blocked milestones appear.
++
++## Recommendation paths (the §32 record)
++
++| Path | Trigger | Emits | Consumed by | Discriminating test |
++|---|---|---|---|---|
++| Research refusal | a research task attempts the web effect while Web is disabled here | `capability: web` + 3-action recommendation | milestone → `/api/state` → Work-panel card | `test_blocked_effect_carries_a_structured_recommendation` |
++| Milestone settle | the blocked result is recorded by the engine | milestone carries `recommendation` (cleared on success) | `/api/state` consumers | `test_settled_blocked_effect_exposes_the_recommendation_in_job_state` |
++| Coding refusal | a coding run attempts repo effects while Files/Terminal/GitHub is disabled here | same fields (same helper) | same | mapping covered by `RecommendationTests`; dedicated coding-blocked discrimination is an audit target |
++
++## Verification (parent-executed)
++
++- Engine focused (`test_capabilities`, `test_research`, `test_acp_host`, `test_v13_work_context`,
++  `test_v15_completion`): **83 passed** — includes the new recommendation matrix (allowed → None,
++  unavailable → None, unknown id → None, live grant → None) and the two research-blocked tests.
++- Engine full suite: recorded in `TEST_EVIDENCE_INDEX.md` (Campaign A baseline 878).
++- Desktop: `bunx tsc --noEmit` → 0 errors; `bun run test` → **90 passed** (was 83; +7 helper tests
++  for action mapping, request bodies, and confirmations).
++
++## Production effect — what is proven, what is honestly not
++
++- The card's actions hit the same endpoints the Tools control uses; the one-shot grant being spent
++  by the real effect and the per-conversation override persisting are already proven by
++  session-tools packaged evidence + engine tests (unchanged by this increment).
++- **Bound (honest):** this environment has no model provider, so a blocked *run* cannot be produced
++  end-to-end in a packaged app. The card's packaged rendering is deferred to the first packaged
++  battery that can seed a blocked milestone (recorded: PACKAGED_EVIDENCE_INDEX + LIM-14). The
++  Work-panel placement is the first surface; a transcript-inline placement is DEF-014.
++
++## Safety notes
++
++- Recommendations never change state; only the user's action does. Unknown/removed capabilities are
++  never recommended. Unavailable capabilities produce a plain sentence and no action (nothing real
++  to offer). The card cannot widen anything: grants remain single-use + TTL-bound, overrides remain
++  conversation-scoped, and the lease/approval gates still run after both.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 49b8798..8771613 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -94,3 +94,19 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+ 38. Knowledge-tab tombstone: forgotten record renders "Content removed.", offers no actions; the
+     forget confirmation cannot be bypassed (keyboard/programmatic paths).
+ 39. Packaged Knowledge-tab pass (recorded gap): records list, actions, tombstones, forget confirm.
++
++## Capability recommendations (Phase 7)
++
++40. Forge a recommendation: unknown capability id, fake action (`"deploy"`), or a non-refused
++    decision — the card must render nothing / act on nothing, and `/api/capabilities` must refuse
++    unknown capabilities/actions plainly.
++41. Stale card: leave a card visible, change the policy elsewhere (Tools control), click Allow
++    once / Enable — assert the result matches the *current* policy and the confirmation is truthful.
++42. Nagging: keep-it-off dismissal persists across panel refreshes; a resolved milestone (success)
++    never re-shows a cleared recommendation.
++43. Grant semantics via the card: Allow once is spent by the real effect exactly once; Enable is
++    conversation-scoped only; both fail closed when the capability is unavailable/removed.
++44. Coding-path attachment: produce a BLOCKED coding run (files/terminal/github off) — assert the
++    milestone carries the same structured recommendation (currently untested end-to-end).
++45. Packaged card rendering (deferred evidence): seed a blocked milestone with a recommendation in a
++    packaged app; assert the card renders, actions hit the engine, and dismissal works.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index 9228a88..b77e4c9 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -86,12 +86,43 @@ ID: CHG-002 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
+ - **Audit questions:** verify no bypass path purges without confirmation; verify copy truthfulness.
+ - **Repair hints:** `KelWorkPanel.tsx` forget button.
+ 
++### CHG-003 — Capability recommendations (real capabilities, real actions, no nagging)
++
++ID: CHG-003 · Phase: 7 · Commit: `df87903` · Date: 2026-09-18
++
++- **User-visible impact:** when Kel is blocked because a capability is off here, the Work panel
++  shows a card: what was paused, why, and Allow once / Enable for this chat / Keep it off. Keeping
++  it off changes nothing and dismisses (no re-nag).
++- **Internal impact:** new `capabilities.recommendation()` vocabulary; research + coding blocked
++  outcomes carry `capability` + `recommendation`; `core` records it on the job milestone (cleared on
++  success); `/api/state` carries it to the shell; `KelCapabilityCard` + helpers render/act.
++- **Previous behavior:** refusals were a plain sentence; the three actions existed only in the
++  Tools control.
++- **New behavior:** refusals from the two real effect paths carry the structured recommendation; the
++  card renders exactly the engine's actions and nothing else.
++- **Primary files:** `runtime/kel/capabilities.py`, `research.py`, `coding.py`, `core.py`;
++  `desktop/.../kel/capabilityRecommendation.ts`, `KelCapabilityCard.tsx`, `chat/KelWorkPanel.tsx`.
++- **Primary symbols:** `recommendation()`, `capabilityCardActions`, `capabilityActionRequest`.
++- **Data/schema changes:** none.
++- **Failure paths:** unknown action ids drop; failed API call shows one plain sentence; unavailable
++  capabilities produce no card; a live grant suppresses the recommendation.
++- **Security/privacy implications:** none added — no state change without the user's action; the
++  session-tools gates are unchanged.
++- **Persistence implications:** recommendations are milestone data only; nothing new at the policy layer.
++- **Expected invariants:** INV-CAPREC-001 (new); INV-CAP-001/002 preserved.
++- **Tests:** engine focused 83; engine full 885 (+10 subtests, was 878); tsc 0; vitest 90 (was 83).
++- **Packaged evidence:** — deferred (no provider in this environment; LIM-14; audit target 45).
++- **Known concerns:** coding-path attachment lacks a dedicated blocked-run test (audit target 44).
++- **Audit questions:** can a forged recommendation create a fake action? Does dismissal persist? Does
++  the card ever change state without a click?
++- **Repair hints:** guard drift vs `capabilities.recommendation`; card request wiring.
++
+ Planned Phase-to-CHG mapping (kept current as work lands):
+ 
+ | Phase | Expected CHGs | Status |
+ |---|---|---|
+ | 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
+-| 7 — smart capability recommendations | CHG-0xx | PENDING |
++| 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
+ | 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
+ | 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
+ | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 9cb49b5..3ff1967 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -24,6 +24,7 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+ | `785df71` | `fd98cc4` | 2026-09-18 | A-entry | pre-audit corpus + IMPLEMENTATION_SPRINT mode (docs/state) | docs only; `.gitignore` scratch ignore | — | none | no | — | no | no | LOW | `increments/INIT-CAMPAIGN-A.md`; corpus README | — |
+ | `22f4a3e` | `785df71` | 2026-09-18 | Phase 6 | Work-panel knowledge actions follow record state; forget asks first | `KelWorkPanel.tsx`; `memoryRecordActions.ts` (new) | +7 unit tests (vitest 76→83) | none | yes (renderer) | pending (RC battery) | no | no | MEDIUM | `increments/PHASE6-MEMORY-REALITY.md`; `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md` | MEMR-1/2/3 |
++| `df87903` | `ac5e2a2` | 2026-09-18 | Phase 7 | capability recommendations: engine vocabulary + refusal wiring + milestone retention + desktop card | `capabilities.py`; `research.py`; `coding.py`; `core.py`; `KelCapabilityCard.tsx` (new); `capabilityRecommendation.ts` (new); `KelWorkPanel.tsx` | +7 engine, +7 desktop tests (885; 90) | none | yes (Work panel) | pending (no provider; RC battery) | no | no | MEDIUM | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md`; `docs/v1.6/phase7/` | coding-blocked discrimination (audit target 44) |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index 8b5c25a..434f287 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -19,3 +19,4 @@ it blocks V1.6, owner, and the revisit condition.
+ | DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |
+ | DEF-012 | Memory stale-detection wiring (`source_digest` producers + a `revalidate` caller) | No producer/caller yet; mechanism is engine-ready and test-covered; staleness never gates anything | None (nothing depends on it) | Producer design (which source facts carry digests) + refresh loop + focused tests | NO | Main | First repo-fact producer needing staleness |
+ | DEF-013 | Localization of new v1.6 surfaces (knowledge UI + siblings) | Copy intentionally Kel-native English; the release program's locale pass owns translations (declared 2026-09-17) | Non-English users see English on new surfaces | Locale pass across 12 locales + parity checks | NO for RC (decide at release gates) | release program | Pre-release (localization gate) |
++| DEF-014 | Transcript-inline capability card placement | Needs a live-run refusal (provider) to design against; the Work-panel placement already delivers the recommendation | None for RC | Provider-backed journey + placement decision | NO | Main | First provider-backed packaged battery |
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+index 004ed4a..c6459af 100644
+--- a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -57,6 +57,21 @@ OPEN_GAP (known open finding attacks it).
+ - Audit target: enumerate every probe id in production; confirm each resolves closed.
+ - Status: DELIVERED (DEAD-08 closure).
+ 
++## INV-CAPREC-001 — Recommendations are real or absent; acting is the user's
++- Definition: capability recommendations are emitted only for a real refusal of a real capability
++  and only with real next actions (`allow_once` / `enable` / `keep_disabled` for
++  conversation-disabled; nothing for unavailable / unknown / allowed). Emitting never changes
++  state; only the user's action does, through the unchanged session-tools machinery.
++- Owner: `capabilities.recommendation`; producers `research.py` / `coding.py`; carrier `core.py`;
++  card `KelCapabilityCard.tsx` / `capabilityRecommendation.ts`.
++- Tests: `RecommendationTests` matrix; research-blocked + milestone-retention tests;
++  `capability-recommendation.test.ts` (fail-closed rendering, request bodies).
++- Edge cases: a live one-shot grant suppresses the recommendation (tested); coding-path attachment
++  lacks a dedicated blocked-run test (audit target 44).
++- Audit target: forge a payload (unknown id, fake action) — the card must drop it; confirm acting
++  goes through `/api/capabilities` scope checks.
++- Status: DELIVERED (Phase 7, `df87903`).
++
+ ## INV-APPROVE-001 — Approval resolution only through canonical resolvers
+ - Definition: chat/UI approval resolution always delegates to `Autonomy.resolve_expansion` /
+   `Store.resolve_approval`; expiry, one-shot and scope semantics cannot be bypassed.
+diff --git a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+index 61242c8..3f41ca0 100644
+--- a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
++++ b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+@@ -19,3 +19,4 @@ must be here.
+ | LIM-11 | Conversation transcripts/chat history are NOT authoritative evidence. | This corpus is the evidence layer; chat is control-plane only. | AUTONOMOUS_OPERATION.md disk-backed handoffs. | Always |
+ | LIM-12 | **New v1.6 surfaces ship Kel-native English copy** (knowledge UI and sibling v1.6 surfaces); the release program's locale pass owns translations (declared in `docs/memory-proposals/04_UI_AND_COPY.md`). | Localized-release claims for the new surfaces. | en-US copy reviewed in packaged journeys. | Release gates (locale pass; DEF-013) |
+ | LIM-13 | **Memory stale-detection is engine-ready but unwired**: no production caller of `Memory.revalidate()` and no production `source_digest` producers. | "Stale" proposals never appear from real usage; the mechanism is test-covered only. | Stale flow covered by `test_v16_proposals.py`; disposition DEF-012. | When a repo-fact producer lands |
++| LIM-14 | **Capability-recommendation card packaged rendering is unproven** (no provider ⇒ no blocked run can be produced here); transcript-inline placement pending (DEF-014). | Packaged evidence for Phase 7's UI surface. | Engine + unit coverage; the Work-panel placement is live for any blocked milestone. | Next packaged battery (RC) |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 9825f8d..8bc714b 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -41,7 +41,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | Req ID | Source | Section | Status | Commit(s) | Tests | Evidence | Audit |
+ |---|---|---|---|---|---|---|---|
+ | REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
+-| REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | PENDING | — | — | — | pending |
++| REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
+ | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
+ | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
+ | REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 78dca8f..4eea371 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -13,6 +13,9 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-1 | engine full suite | `cd runtime && python -m pytest tests -q` (Python 3.14.3) | `fd98cc4` | 2026-09-18 | PASS | **878 passed, 10 subtests passed** (251.55s) | all engine reqs | INV-CAP/MEM/WF | `evidence/campaign-a-baseline/engine-suite-20260918.txt` | parent-executed |
+ | A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `22f4a3e` | 2026-09-18 | PASS | tsc 0 errors; **83 passed / 6 files** (was 76; +7 Phase-6 gating tests) | desktop reqs; REQ-MEM-6 | — | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
+ | A-3 | engine focused memory suites | `cd runtime && python -m pytest tests/test_v13_memory.py tests/test_v15_memory_packets.py tests/test_v16_proposals.py tests/test_workforce_learning.py -q` | `22f4a3e` (engine unchanged since `fd98cc4`) | 2026-09-18 | PASS | **68 passed** | REQ-MEM-1/6; INV-MEM-001..003 | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
++| A-4 | engine focused capabilities suites (Phase 7) | `cd runtime && python -m pytest tests/test_capabilities.py tests/test_research.py tests/test_acp_host.py tests/test_v13_work_context.py tests/test_v15_completion.py -q` | `df87903` | 2026-09-18 | PASS | **83 passed** (26.03s) | REQ-CAPREC-7; INV-CAP-001/002, INV-CAPREC-001 | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
++| A-5 | desktop typecheck + unit (Phase 7) | `cd desktop && bunx tsc --noEmit && bun run test` | `df87903` | 2026-09-18 | PASS | tsc 0 errors; **90 passed / 7 files** (was 83; +7 recommendation tests) | desktop reqs; REQ-CAPREC-7 | — | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
++| A-6 | engine full suite (Phase 7) | `cd runtime && python -m pytest tests -q` | `df87903` | 2026-09-18 | PASS | **885 passed, 10 subtests passed** (249.57s; was 878 — +7 new tests, zero regressions) | all engine reqs | INV-CAP-001/002, INV-CAPREC-001 | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md b/docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md
+new file mode 100644
+index 0000000..f9844f1
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md
+@@ -0,0 +1,128 @@
++# Increment — PHASE7-CAPABILITY-RECOMMENDATIONS
++
++increment_id: PHASE7-CAPABILITY-RECOMMENDATIONS
++phase: 7 — smart capability recommendations (sprint §32)
++base_commit: ac5e2a2 (Phase 6 record; published checkpoint)
++target_commit: the Phase 7 implementation commit + this docs commit
++status: complete (code) / packaged evidence deferred (documented)
++
++## Objective
++
++Turn capability refusals into real, actionable recommendations — only real capabilities, only real
++actions, no nagging, no no-op surfaces — reusing the session-tools policy unchanged.
++
++## Requirement Sources
++
++- Sprint directive §32.
++- `docs/session-tools/08_KNOWN_LIMITATIONS.md` #2 (the docketed next increment).
++- `docs/basic-ux-sweep/17…` §8 / `18…` §4 (decision trail: no detector, no nagging).
++
++## Implementation Summary
++
++- `runtime/kel/capabilities.py`: new `recommendation(capability, decision)` (the single vocabulary).
++- `runtime/kel/research.py` + `runtime/kel/coding.py`: blocked outcomes carry `capability` +
++  `recommendation` (same helper).
++- `runtime/kel/core.py`: milestone retains the recommendation on blocked settles; cleared on success.
++- Desktop: `renderer/components/kel/capabilityRecommendation.ts` (mapping/request/confirmation
++  helpers), `renderer/components/kel/KelCapabilityCard.tsx` (fail-closed action rendering; real
++  endpoints; keep-it-off dismisses without state change), mounted in `KelWorkPanel` job section
++  with per-job/milestone dismissal.
++
++## Files Changed
++
++- `runtime/kel/capabilities.py`, `runtime/kel/research.py`, `runtime/kel/coding.py`,
++  `runtime/kel/core.py`
++- `runtime/tests/test_capabilities.py` (+7 tests)
++- `desktop/packages/desktop/src/renderer/components/kel/capabilityRecommendation.ts` (new)
++- `desktop/packages/desktop/src/renderer/components/kel/KelCapabilityCard.tsx` (new)
++- `desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx`
++- `desktop/tests/unit/capability-recommendation.test.ts` (new, 7 tests)
++
++## Symbols Changed
++
++`recommendation()` (new); ResearchAdapter.execute / coding execute blocked returns; Store.consume
++milestone settle; `KelCapabilityCard`; `capabilityCardActions` / `capabilityActionRequest` /
++`capabilityConfirmation` (new).
++
++## Schema/Migrations
++
++None (max applied migration remains 19).
++
++## User-Facing Behavior
++
++A blocked capability now carries a card in the Work panel: "Kel paused something that needs Web."
+++ reason + Allow once / Enable for this chat / Keep it off. Acting uses the existing machinery;
++keeping it off changes nothing and dismisses.
++
++## Internal Behavior
++
++Blocked run results gain machine-readable `capability` + `recommendation`; job milestones retain
++them so `/api/state` consumers can render them; success clears them.
++
++## Error Paths
++
++Unknown action ids drop (fail-closed); failed `/api/capabilities` call shows one plain sentence
++("Kel could not change that just now."); unavailable capabilities get no card (None).
++
++## Lifecycle Considerations
++
++None (no lifecycle surface touched).
++
++## Persistence / Isolation
++
++None changed — same tables, same scoping; recommendations are data on the milestone only.
++
++## Security / Privacy
++
++No widening: recommendations never change state; grants stay single-use + TTL; overrides stay
++conversation-scoped; lease/approval gates still run after.
++
++## Self-Review Findings
++
++- Coding-refusal attachment is mechanically identical to research but has no dedicated
++  blocked-run discrimination test (fixture cost) — recorded as an audit target.
++- Work-panel placement chosen over transcript-inline: the transcript variant needs a live-run
++  refusal this environment cannot produce (recorded DEF-014 + LIM-14).
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_capabilities.py tests/test_research.py tests/test_acp_host.py tests/test_v13_work_context.py tests/test_v15_completion.py -q` → **83 passed**.
++- `cd runtime && python -m pytest tests -q` → see TEST_EVIDENCE_INDEX (full-suite row A-6).
++- `cd desktop && bunx tsc --noEmit` → **0 errors**; `bun run test` → **90 passed** (was 83).
++
++## Results
++
++PASS (source + focused). Packaged evidence deferred (no provider; see bound above).
++
++## Packaged Verification
++
++Not run for this increment; recorded in PACKAGED_EVIDENCE_INDEX as the next battery's item.
++
++## Known Weaknesses
++
++- Card packaged rendering unproven in this environment (recorded).
++- No dedicated coding-blocked discrimination test (recorded).
++
++## Deferred Questions
++
++- Should the transcript-inline placement reuse this payload via a chat notice once live refusals
++  exist? Recorded as DEF-014.
++
++## Audit Targets
++
++See AUDIT_TARGETS.md §"Capability recommendations (Phase 7)".
++
++## Repair Hints
++
++See REPAIR_HINTS.md rows for guard drift and the card.
++
++## Evidence Paths
++
++- `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`
++- `docs/v1.6/pre-audit/` corpus rows (COMMIT_LEDGER, CHANGE_LEDGER CHG-003, TEST_EVIDENCE_INDEX,
++  REQUIREMENTS_TRACEABILITY, INVARIANT_LEDGER INV-CAP-002, KNOWN_LIMITATIONS, DEFERRED_ITEMS,
++  AUDIT_TARGETS)
++
++## Commit Chain
++
++`ac5e2a2` → Phase 7 implementation commit → this docs commit.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 7b977c5..a9a8e9e 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,10 +1,10 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T16:45:00Z
++updated_utc: 2026-09-18T17:05:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 22f4a3e (latest production commit; see `git log --oneline -6`)
++head: df87903 (latest production commit; see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -15,8 +15,8 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: Phase 6 DONE — memory reality audit + bounded fixes (22f4a3e; record docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md; increment PHASE6-MEMORY-REALITY). Next: Phase 7.
+-current_phase: Phase 7 — smart capability recommendations (queued; Phase 6 complete)
++current_increment: Phase 7 DONE — capability recommendations (df87903; record docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md; increment PHASE7-CAPABILITY-RECOMMENDATIONS). Next: Phase 8/5.8 decision.
++current_phase: Phase 8/5.8 — Advanced Worker View decision (queued; Phase 7 complete)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
+ 
+ audit_requested_from: NONE
+@@ -49,6 +49,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Phase 7 — smart capability recommendations (sprint §32: only real capabilities; no no-op UX; capability safety preserved; production effect verified; recorded in CHANGE_LEDGER / REQUIREMENTS_TRACEABILITY / INVARIANT_LEDGER / AUDIT_TARGETS). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 7: Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Phase 8/5.8 — Advanced Worker View decision (sprint §33: resolve as one decision; North Star ONE assistant; if deferred record exact rationale; if implemented keep Advanced/Details only; do not block the sprint). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 8: Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

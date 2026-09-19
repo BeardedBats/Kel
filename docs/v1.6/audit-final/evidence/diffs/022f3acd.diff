@@ -1,0 +1,21 @@
+commit 022f3acdf7635c1f3952f4bbee4a996a3b6de246
+2026-09-18 18:20:22 -0400
+test(v1.6): engine-version assertion follows the single source (R8.B follow-up)
+
+
+diff --git a/runtime/tests/test_v141_boundaries.py b/runtime/tests/test_v141_boundaries.py
+index cd5b837..463dd59 100644
+--- a/runtime/tests/test_v141_boundaries.py
++++ b/runtime/tests/test_v141_boundaries.py
+@@ -208,7 +208,10 @@ class ActorBoundaryTests(unittest.TestCase):
+ 
+     def test_state_reports_engine_version_and_guardrails(self):
+         state = self.service.state('main')
+-        self.assertEqual(state['engine_version'], '1.5.0')
++        # The engine's identity comes from its single source (`kel.__version__`); R8.B made the
++        # desktop's reuse guard compare exactly this value against `app.getVersion()`.
++        from kel.service import ENGINE_VERSION
++        self.assertEqual(state['engine_version'], ENGINE_VERSION)
+         self.assertTrue(state['guardrails_ok'])
+ 
+ 

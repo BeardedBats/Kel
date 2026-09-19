@@ -1,0 +1,307 @@
+commit 081a6ef67900410d2c4d5d8731500c793e56e54c
+2026-09-18 13:33:14 -0400
+assurance(v1.6): real-artifact binding — closure verifies the delivered artifact (REQ-F4 / WF-12)
+
+
+diff --git a/runtime/kel/core.py b/runtime/kel/core.py
+index a313285..fedd1bb 100644
+--- a/runtime/kel/core.py
++++ b/runtime/kel/core.py
+@@ -370,6 +370,28 @@ class Store:
+             db.execute('UPDATE artifact_lineage SET superseded_by=? WHERE id=?', (lineage_id, previous['id']))
+         return lineage_id
+ 
++    def _record_assignment_artifact(self, db, job_id, milestone_id, info):
++        """Bind a produced artifact to the assignment that delivered it (audit F4 / WF-12).
++
++        `assignment_artifacts` is what closure verification reads, so the binding has to happen
++        where the artifact lands rather than being claimed by the closing packet. Bare stores that
++        have no team tables (or no assignment for this milestone) are skipped: the close path then
++        refuses the unbound claim instead of accepting a digest nothing produced.
++        """
++        table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table'"
++                           " AND name='assignment_artifacts'").fetchone()
++        if not table:
++            return None
++        row = db.execute('SELECT assignment_id FROM team_assignments WHERE job_id=?'
++                         ' AND milestone_id=? ORDER BY created DESC LIMIT 1',
++                         (job_id, milestone_id)).fetchone()
++        if row is None:
++            return None
++        db.execute('INSERT OR IGNORE INTO assignment_artifacts VALUES(?,?,?,?,?)',
++                   (row['assignment_id'], 'sha256:%s' % (info.get('sha256') or ''),
++                    Path(info['path']).name, 'artifact', time.time()))
++        return row['assignment_id']
++
+     def consume(self):
+         """Idempotent inbox reduction. Worker claims never assign a verdict."""
+         count = 0
+@@ -413,6 +435,7 @@ class Store:
+                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
+                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
+                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
++                    self._record_assignment_artifact(db, job['id'], run['milestone_id'], m['artifact'])
+                     m.update(state='CHECKING', error=None, recommendation=None)
+                 else:
+                     m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
+diff --git a/runtime/kel/delegation.py b/runtime/kel/delegation.py
+index 145fd83..92a0376 100644
+--- a/runtime/kel/delegation.py
++++ b/runtime/kel/delegation.py
+@@ -17,8 +17,10 @@ Boundaries:
+ - Ledger projections are read-only; no new persistence beyond migration 18's column.
+ """
+ import contextlib
++import hashlib
+ import json
+ import time
++from pathlib import Path
+ 
+ from .assignment import (assign_worker, flags_snapshot, registry_ceilings,
+                          reserve_budget, validate_role_fields_v2)
+@@ -286,7 +288,48 @@ def _already_closed(store, assignment_id):
+     return row is not None
+ 
+ 
+-def _evidence_violations(store, contract, packet, *, assignment_id=None, now=None):
++def _normalise_digest(value):
++    """Digests compare as bare lowercase hex: 'sha256:ABC…' and 'ABC…' are the same artifact."""
++    text = str(value or '').strip().lower()
++    return text.split(':', 1)[1] if ':' in text else text
++
++
++def _artifact_violations(store, packet, *, assignment_id, artifact_root=None):
++    """Real-artifact binding (audit F4 / WF-12): a claim must rest on a delivered artifact.
++
++    (a) Ownership: the digest has to be recorded for this assignment (`assignment_artifacts`,
++        written when the artifact lands), so a content-bound close cannot be satisfied by a digest
++        that nothing produced — the packet used to be checked only against its own artifact list.
++    (b) On disk: when the caller supplies `artifact_root` and the artifact declares a path, the file
++        must exist and, for a full-length sha256 claim, hash to the claimed digest.
++    """
++    violations = []
++    with contextlib.closing(store.connect()) as db:
++        rows = db.execute('SELECT digest FROM assignment_artifacts WHERE assignment_id=?',
++                          (assignment_id,)).fetchall()
++    recorded = {_normalise_digest(row['digest']) for row in rows}
++    for item in packet.get('artifacts', []):
++        claimed = _normalise_digest(item.get('digest'))
++        if claimed not in recorded:
++            violations.append('artifact %s (%s) was never recorded as delivered by this assignment'
++                              % (item.get('id'), item.get('digest')))
++            continue
++        path = item.get('path')
++        if artifact_root is None or not path:
++            continue
++        target = Path(artifact_root) / path
++        if not target.is_file():
++            violations.append('artifact %s is not on disk at %s' % (item.get('id'), path))
++            continue
++        actual = hashlib.sha256(target.read_bytes()).hexdigest()
++        if len(claimed) == 64 and actual != claimed:
++            violations.append('artifact %s digest %s does not match sha256:%s on disk'
++                              % (item.get('id'), item.get('digest'), actual))
++    return violations
++
++
++def _evidence_violations(store, contract, packet, *, assignment_id=None, now=None,
++                         artifact_root=None):
+     """Every stale, unbound or foreign evidence reference behind the packet's claims."""
+     requirements = contract.get('evidence_requirements', {})
+     contract_window = requirements.get('fresh_within', 24 * 60)
+@@ -324,11 +367,19 @@ def _evidence_violations(store, contract, packet, *, assignment_id=None, now=Non
+                 if requirements.get('command_bound') and not record.get('command'):
+                     violations.append('claim %s: evidence %s has no command for a '
+                                       'command-bound contract' % (claim.get('claim_id'), ref))
++    if assignment_id is not None and requirements.get('content_bound'):
++        violations.extend(_artifact_violations(store, packet, assignment_id=assignment_id,
++                                               artifact_root=artifact_root))
+     return violations
+ 
+ 
+-def close_d1(store, task_id, packet, *, now=None):
+-    """Evidence-bound close: a clean close is impossible on any stale or unbound evidence."""
++def close_d1(store, task_id, packet, *, now=None, artifact_root=None):
++    """Evidence-bound close: a clean close is impossible on any stale or unbound evidence.
++
++    `artifact_root` (when supplied) also binds every claimed artifact to a real file on disk;
++    the ownership binding against `assignment_artifacts` is always enforced for content-bound
++    contracts (audit F4 / WF-12).
++    """
+     contract_row = _contract_row(store, task_id)
+     contract = json.loads(contract_row['data'])
+     validate_completion_packet(packet)
+@@ -339,7 +390,8 @@ def close_d1(store, task_id, packet, *, now=None):
+     if _already_closed(store, assignment['assignment_id']):
+         raise PolicyError('Task %s is already closed' % task_id)
+     violations = _evidence_violations(store, contract, packet,
+-                                      assignment_id=assignment['assignment_id'], now=now)
++                                      assignment_id=assignment['assignment_id'], now=now,
++                                      artifact_root=artifact_root)
+     outcome = packet['outcome']
+     if outcome == 'completed':
+         verified = {claim['claim_id'] for claim in packet['completion_claims']
+diff --git a/runtime/kel/evaluation.py b/runtime/kel/evaluation.py
+index 7f6014f..d3e5fc8 100644
+--- a/runtime/kel/evaluation.py
++++ b/runtime/kel/evaluation.py
+@@ -21,6 +21,7 @@ from kel.delegation import run_d1
+ from kel.evidence import write_evidence
+ from kel.pods import VERIFICATION_LENSES, run_d2
+ from kel.router import Candidate
++from kel.team import Team
+ from kel.workforce import ensure_schema as ensure_workforce_schema
+ 
+ INTERRUPTION_BUDGET = 1  # one planning gate per mission; clean fixture runs stay inside
+@@ -150,6 +151,10 @@ def _make_builder(store, class_id, seeds):
+                                 command='kel check %s' % prepared['milestone_id'],
+                                 exit_code=0, output='ok', artifact_digest=artifact_digest,
+                                 ran_at=stamp, produced_by=prepared['assignment_id'])
++        # F4/WF-12: the fixture builder records what it delivered, exactly as the real worker
++        # wiring does — closure verification reads `assignment_artifacts`, never the packet's claim.
++        Team(store).add_artifact(prepared['assignment_id'], artifact_digest,
++                                 'artifact_%s.md' % class_id, 'artifact')
+         return _packet(task_id=prepared['task_id'],
+                        artifacts=[{'id': 'art_%s' % class_id, 'digest': artifact_digest,
+                                    'kind': 'document'}],
+@@ -187,6 +192,8 @@ def _make_verifier(store, class_id, seeds):
+                                 produced_by=prepared['assignment_id'],
+                                 output='verdict %s' % verdict,
+                                 artifact_digest=artifact_digest, ran_at=stamp)
++        Team(store).add_artifact(prepared['assignment_id'], artifact_digest,
++                                 'art_verified_%s.md' % class_id, 'artifact')
+         completed = verdict == 'VERIFIED'
+         return {'findings': findings, 'verdict': verdict,
+                 'packet': _packet(task_id=prepared['task_id'],
+diff --git a/runtime/tests/test_workforce_d1.py b/runtime/tests/test_workforce_d1.py
+index 9ff5620..16eced3 100644
+--- a/runtime/tests/test_workforce_d1.py
++++ b/runtime/tests/test_workforce_d1.py
+@@ -22,6 +22,8 @@ from kel.core import PolicyError, Store
+ from kel.delegation import (D1_BUDGET_DEFAULTS, close_d1, delegate, progress_ledger, run_d1,
+                             task_ledger)
+ from kel.delegation import ensure_schema as ensure_delegation_schema
++import hashlib
++
+ from kel.evidence import write_evidence
+ from kel.staffing import decide, score
+ from kel.team import Team
+@@ -213,6 +215,8 @@ class CloseTests(Base):
+                                 label='milestone checks green', command='kel check m1',
+                                 exit_code=0, output='ok', artifact_digest=artifact_digest,
+                                 ran_at=ran_at, produced_by=prepared['assignment_id'])
++        # F4/WF-12: the claimed artifact must be the one this assignment really delivered.
++        self.team.add_artifact(prepared['assignment_id'], artifact_digest, 'export.py', 'artifact')
+         body = packet(
+             task_id=prepared['task_id'],
+             evidence=[{'id': record['id'], 'class': 'check_result', 'command': 'kel check m1',
+@@ -463,5 +467,86 @@ class FollowUpF8Tests(Base):
+         self.assertEqual(registry_ceilings(self.store).get('builder'), 'leased-write')
+ 
+ 
++class RealArtifactBindingTests(Base):
++    """F4 / WF-12: a content-bound close binds to an artifact the assignment really delivered.
++
++    The close path used to compare the evidence's artifact digest against the packet's own artifact
++    list, so a self-asserted digest satisfied a content-bound contract.
++    """
++
++    def _prepared(self):
++        return delegate(self.store, self.job_id, 'm1', {'objective': 'Draft'},
++                        features=small_features(), enabled=True, candidates=candidates())
++
++    def _packet(self, prepared, *, digest, path=None, ran_at=None):
++        ran_at = time.time() if ran_at is None else ran_at
++        record = write_evidence(self.store, mission_id=prepared['job_id'],
++                                task_id=prepared['task_id'], evidence_class='check_result',
++                                label='artifact binding', command='kel check m1', exit_code=0,
++                                output='ok', artifact_digest=digest, ran_at=ran_at,
++                                produced_by=prepared['assignment_id'])
++        artifact = {'id': 'art_e51', 'digest': digest, 'kind': 'code', 'bytes': 12}
++        if path is not None:
++            artifact['path'] = path
++        return packet(
++            task_id=prepared['task_id'],
++            artifacts=[artifact],
++            evidence=[{'id': record['id'], 'class': 'check_result', 'command': 'kel check m1',
++                       'exit_code': 0, 'output_digest': record['output_digest'],
++                       'artifact_digest': digest, 'ran_at': ran_at,
++                       'freshness_ok': True, 'produced_by': prepared['assignment_id']}],
++            completion_claims=[{'claim_id': 'c1', 'status': 'verified',
++                                'evidence_refs': [record['id']]},
++                               {'claim_id': 'artifact', 'status': 'verified',
++                                'evidence_refs': [record['id']]}])
++
++    def _record(self, prepared, digest):
++        self.team.add_artifact(prepared['assignment_id'], digest, 'export.py', 'artifact')
++
++    def test_a_claimed_artifact_nothing_delivered_cannot_close(self):
++        prepared = self._prepared()
++        body = self._packet(prepared, digest='sha256:77bb')  # never recorded for the assignment
++        with self.assertRaises(PolicyError) as caught:
++            close_d1(self.store, prepared['task_id'], body)
++        self.assertIn('never recorded as delivered', str(caught.exception))
++
++    def test_a_recorded_artifact_with_a_real_file_closes(self):
++        prepared = self._prepared()
++        root = Path(self.tmp.name) / 'work'
++        target = root / 'src' / 'api' / 'export.py'
++        target.parent.mkdir(parents=True)
++        target.write_text('print("export")\n', encoding='utf-8')
++        digest = 'sha256:' + hashlib.sha256(target.read_bytes()).hexdigest()
++        self._record(prepared, digest)
++        body = self._packet(prepared, digest=digest, path='src/api/export.py')
++        result = close_d1(self.store, prepared['task_id'], body, artifact_root=root)
++        self.assertTrue(result['closed'])
++        self.assertEqual(result['violations'], [])
++
++    def test_a_recorded_artifact_missing_on_disk_is_refused(self):
++        prepared = self._prepared()
++        root = Path(self.tmp.name) / 'work'
++        root.mkdir(parents=True, exist_ok=True)
++        digest = 'sha256:' + 'a' * 64
++        self._record(prepared, digest)
++        body = self._packet(prepared, digest=digest, path='src/api/export.py')
++        with self.assertRaises(PolicyError) as caught:
++            close_d1(self.store, prepared['task_id'], body, artifact_root=root)
++        self.assertIn('is not on disk', str(caught.exception))
++
++    def test_a_digest_that_does_not_match_the_file_is_refused(self):
++        prepared = self._prepared()
++        root = Path(self.tmp.name) / 'work'
++        target = root / 'src' / 'api' / 'export.py'
++        target.parent.mkdir(parents=True)
++        target.write_text('print("export")\n', encoding='utf-8')
++        claimed = 'sha256:' + 'b' * 64  # recorded, but not what is on disk
++        self._record(prepared, claimed)
++        body = self._packet(prepared, digest=claimed, path='src/api/export.py')
++        with self.assertRaises(PolicyError) as caught:
++            close_d1(self.store, prepared['task_id'], body, artifact_root=root)
++        self.assertIn('does not match', str(caught.exception))
++
++
+ if __name__ == '__main__':
+     unittest.main()
+diff --git a/runtime/tests/test_workforce_d2.py b/runtime/tests/test_workforce_d2.py
+index 6fadab0..cfe3016 100644
+--- a/runtime/tests/test_workforce_d2.py
++++ b/runtime/tests/test_workforce_d2.py
+@@ -294,6 +294,9 @@ class PodFlowTests(Base):
+                                     label='builder checks', command='kel check m1',
+                                     exit_code=0, output='ok', artifact_digest=digest,
+                                     ran_at=now, produced_by=prepared['assignment_id'])
++            # F4/WF-12: the builder records what it delivered; closure verification reads the
++            # delivery ledger, never the packet's own artifact list.
++            self.team.add_artifact(prepared['assignment_id'], digest, 'out.md', 'artifact')
+             return packet(task_id=prepared['task_id'],
+                           artifacts=[{'id': 'art_delivered', 'digest': digest, 'kind': 'code'}],
+                           evidence=[{'id': record['id'], 'class': 'check_result',
+@@ -318,6 +321,8 @@ class PodFlowTests(Base):
+                                     produced_by=prepared['assignment_id'],
+                                     output='verdict %s' % verdict, artifact_digest=digest,
+                                     ran_at=now)
++            self.team.add_artifact(prepared['assignment_id'], digest, 'verification.md',
++                                   'artifact')
+             items = []
+             for index, seed in enumerate(seeds):
+                 items.append({'schema_version': 1, 'mission_id': prepared['job_id'],

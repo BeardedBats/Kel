@@ -1,0 +1,207 @@
+commit 22f4a3e7f94dd1a8a1c94961a75e0807a2a4bc94
+2026-09-18 12:15:24 -0400
+fix(v1.6): Work-panel knowledge actions follow record state; forget asks first
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+index fa4442a..e1e6e0e 100644
+--- a/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
++++ b/desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx
+@@ -1,10 +1,11 @@
+ /** Kel work controls, using AionUI's Arco components and theme tokens. */
+ import React, { useEffect, useState } from 'react';
+-import { Badge, Button, Drawer, Modal, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
++import { Badge, Button, Drawer, Modal, Popconfirm, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
+ import { useTranslation } from 'react-i18next';
+ import { useLocation } from 'react-router-dom';
+ import Markdown from '@/renderer/components/Markdown';
+ import { MemoryProposal, MemoryProposalReview } from '@/renderer/components/kel/KelMemoryProposal';
++import { memoryRecordActions } from '@/renderer/components/kel/memoryRecordActions';
+ import type { ApprovalItem as WaitingItem } from '@/renderer/components/kel/KelApprovalCard';
+ type Project = { id: string; name: string; root: string; context: string; test_command?: string[] };
+ type Job = {
+@@ -768,7 +769,9 @@ export default function KelWorkPanel() {
+             {(extras?.memory.records || []).length === 0 && (
+               <Typography.Paragraph>{t('common.kel.knowledgeEmpty')}</Typography.Paragraph>
+             )}
+-            {(extras?.memory.records || []).map((r) => (
++            {(extras?.memory.records || []).map((r) => {
++              const acts = memoryRecordActions(r);
++              return (
+               <section key={r.id} className='py-12px border-b border-solid border-[var(--color-border-2)]'>
+                 <Typography.Paragraph>
+                   <Typography.Text bold>{r.topic}</Typography.Text> · {r.type} · {t('common.kel.trust')} {r.trust} · {r.status}
+@@ -796,30 +799,45 @@ export default function KelWorkPanel() {
+                   </>
+                 ) : (
+                   <>
+-                    <Typography.Paragraph>{r.summary}</Typography.Paragraph>
++                    <Typography.Paragraph>{r.summary || 'Content removed.'}</Typography.Paragraph>
+                     <Typography.Paragraph type='secondary'>
+                       {t('common.kel.source')}: {r.source_type}{r.source_ref ? ' · ' + r.source_ref : ''}
+                     </Typography.Paragraph>
+                     <Space wrap>
+-                      {!r.user_confirmed && r.trust > 2 && r.trust < 7 && (
++                      {acts.confirm && (
+                         <Button disabled={busy} onClick={() => action('/api/memory', { action: 'confirm', conversation: cid, id: r.id })}>
+                           {t('common.kel.confirmMemory')}
+                         </Button>
+                       )}
+-                      <Button disabled={busy} onClick={() => setDraft({ id: r.id, summary: r.summary })}>
+-                        {t('common.kel.editMemory')}
+-                      </Button>
+-                      <Button disabled={busy} onClick={() => action('/api/memory', { action: 'retract', conversation: cid, id: r.id, reason: 'work context' })}>
+-                        {t('common.kel.retractMemory')}
+-                      </Button>
+-                      <Button disabled={busy} status='danger' onClick={() => action('/api/memory', { action: 'forget', conversation: cid, id: r.id })}>
+-                        {t('common.kel.forgetMemory')}
+-                      </Button>
++                      {acts.edit && (
++                        <Button disabled={busy} onClick={() => setDraft({ id: r.id, summary: r.summary })}>
++                          {t('common.kel.editMemory')}
++                        </Button>
++                      )}
++                      {acts.retract && (
++                        <Button disabled={busy} onClick={() => action('/api/memory', { action: 'retract', conversation: cid, id: r.id, reason: 'work context' })}>
++                          {t('common.kel.retractMemory')}
++                        </Button>
++                      )}
++                      {acts.forget && (
++                        <Popconfirm
++                          title='Forget this record?'
++                          content='Its saved content is removed and cannot be recovered. A blank placeholder stays in the history.'
++                          okText='Forget'
++                          cancelText='Cancel'
++                          onOk={() => action('/api/memory', { action: 'forget', conversation: cid, id: r.id })}
++                        >
++                          <Button disabled={busy} status='danger'>
++                            {t('common.kel.forgetMemory')}
++                          </Button>
++                        </Popconfirm>
++                      )}
+                     </Space>
+                   </>
+                 )}
+               </section>
+-            ))}
++              );
++            })}
+             <Typography.Title heading={6} style={{ marginTop: 16 }}>
+               {'What changed'}
+             </Typography.Title>
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/memoryRecordActions.ts b/desktop/packages/desktop/src/renderer/components/kel/memoryRecordActions.ts
+new file mode 100644
+index 0000000..587558e
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/memoryRecordActions.ts
+@@ -0,0 +1,31 @@
++/**
++ * Which knowledge-record actions apply, given the record's own state.
++ *
++ * Mirrors the engine's guards so the Work panel never offers an action the engine will refuse:
++ * `Memory.confirm` and `Memory.correct` require an active record, `Memory.retract` also accepts
++ * stale ones, and `Memory.forget` purges content on any record — except an already-purged
++ * tombstone, which has nothing left to remove.
++ */
++export type MemoryRecordLike = {
++  status: string;
++  user_confirmed: number;
++  trust: number;
++  summary: string;
++};
++
++export type MemoryRecordActions = {
++  confirm: boolean;
++  edit: boolean;
++  retract: boolean;
++  forget: boolean;
++};
++
++export function memoryRecordActions(r: MemoryRecordLike): MemoryRecordActions {
++  const active = r.status === 'active';
++  return {
++    confirm: active && !r.user_confirmed && r.trust > 2 && r.trust < 7,
++    edit: active,
++    retract: active || r.status === 'stale',
++    forget: !(r.status === 'retracted' && !r.summary),
++  };
++}
+diff --git a/desktop/tests/unit/memory-record-actions.test.ts b/desktop/tests/unit/memory-record-actions.test.ts
+new file mode 100644
+index 0000000..b08f844
+--- /dev/null
++++ b/desktop/tests/unit/memory-record-actions.test.ts
+@@ -0,0 +1,73 @@
++/**
++ * Knowledge-record action gating: the Work panel must offer only what the engine accepts.
++ *
++ * The engine refuses `correct`/`retract` on records that are not active (retract also accepts
++ * stale) and confirms only active records; a forgotten tombstone has no content to purge. These
++ * tests pin the panel's action matrix to those guards.
++ */
++import { describe, expect, it } from 'vitest';
++import { memoryRecordActions, type MemoryRecordLike } from '@/renderer/components/kel/memoryRecordActions';
++
++const record = (over: Partial<MemoryRecordLike> = {}): MemoryRecordLike => ({
++  status: 'active',
++  user_confirmed: 0,
++  trust: 3,
++  summary: 'A saved fact',
++  ...over,
++});
++
++describe('memoryRecordActions', () => {
++  it('offers confirm/edit/retract/forget on an active unconfirmed record', () => {
++    expect(memoryRecordActions(record())).toEqual({
++      confirm: true,
++      edit: true,
++      retract: true,
++      forget: true,
++    });
++  });
++
++  it('hides confirm once the user has confirmed the record', () => {
++    expect(memoryRecordActions(record({ user_confirmed: 1, trust: 2 })).confirm).toBe(false);
++  });
++
++  it('hides confirm for trust levels that are already authoritative or untrusted', () => {
++    expect(memoryRecordActions(record({ trust: 2 })).confirm).toBe(false);
++    expect(memoryRecordActions(record({ trust: 7 })).confirm).toBe(false);
++  });
++
++  it('never offers edit/confirm/retract on a superseded record, but still allows purge', () => {
++    expect(memoryRecordActions(record({ status: 'superseded' }))).toEqual({
++      confirm: false,
++      edit: false,
++      retract: false,
++      forget: true,
++    });
++  });
++
++  it('allows retracting a stale record but not editing or confirming it', () => {
++    expect(memoryRecordActions(record({ status: 'stale' }))).toEqual({
++      confirm: false,
++      edit: false,
++      retract: true,
++      forget: true,
++    });
++  });
++
++  it('offers nothing on a forgotten tombstone', () => {
++    expect(memoryRecordActions(record({ status: 'retracted', summary: '' }))).toEqual({
++      confirm: false,
++      edit: false,
++      retract: false,
++      forget: false,
++    });
++  });
++
++  it('still allows purging a retracted record whose content was kept', () => {
++    expect(memoryRecordActions(record({ status: 'retracted' }))).toEqual({
++      confirm: false,
++      edit: false,
++      retract: false,
++      forget: true,
++    });
++  });
++});

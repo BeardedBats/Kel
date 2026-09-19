@@ -1,0 +1,122 @@
+commit 2468b16f6d9be13c36a5dd81bd5847d624cd1515
+2026-09-18 17:57:55 -0400
+fix(v1.6): migration markers are unique; R8.A assertions (R8 / PACKAGE-IDENTITY prep)
+
+
+diff --git a/runtime/kel/assignment.py b/runtime/kel/assignment.py
+index 02741fe..465c644 100644
+--- a/runtime/kel/assignment.py
++++ b/runtime/kel/assignment.py
+@@ -32,7 +32,11 @@ from .staffing import BUDGET_CLASSES
+ from .team import TOOLS, Team
+ from .workforce import AUTHORITY_CLASSES, AUTHORITY_RANK
+ 
+-MIGRATION_VERSION = 17
++# Free number (max in the set is 20 — chat_approvals): 17 was shared with the workforce migration,
++# so the schema_migrations row could not say which module was applied (audit R8.A, fixed
++# 2026-09-18). Existing databases have no 21 row; the next ensure_schema re-runs the idempotent DDL
++# and stamps the accurate row without touching data.
++MIGRATION_VERSION = 21
+ MIGRATION_NAME = 'v16-budget-reservations'
+ 
+ DDL = """
+diff --git a/runtime/tests/test_v16_r8_migrations.py b/runtime/tests/test_v16_r8_migrations.py
+new file mode 100644
+index 0000000..0a92076
+--- /dev/null
++++ b/runtime/tests/test_v16_r8_migrations.py
+@@ -0,0 +1,94 @@
++"""Round 2.5 R8.A — migration assertions.
++
++Every module owns a numbered marker in `schema_migrations`; the set must be unique, idempotent and
++reach the intended maximum on a fresh database while preserving an existing one. The inventory and
++the R8.B/R8.C package work are recorded in
++`docs/v1.6/pre-audit/increments/R8-PACKAGE-ASSERTIONS.md`.
++"""
++import importlib
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from kel.core import Store  # noqa: E402
++
++MODULES = ('memory', 'projectmap', 'continuation', 'recipes', 'solution', 'team', 'providers',
++           'autonomy', 'diagnostics', 'authorize', 'vetting', 'transcription', 'model_prefs',
++           'capabilities', 'workforce', 'delegation', 'parallel', 'chat_approvals', 'assignment')
++EXPECTED_MAX = 21
++
++
++def run_all(store):
++    for name in MODULES:
++        module = importlib.import_module('kel.' + name)
++        module.ensure_schema(store)
++
++
++def markers(store):
++    with store.connect() as db:
++        return [dict(row) for row in
++                db.execute('SELECT version, name FROM schema_migrations ORDER BY version').fetchall()]
++
++
++class MigrationSetTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._cleanup_tmp)
++        self.path = Path(self.tmp.name) / 'kel.sqlite3'
++
++    def _cleanup_tmp(self):
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def test_a_fresh_database_reaches_the_intended_maximum_exactly_once(self):
++        store = Store(self.path)
++        run_all(store)
++        rows = markers(store)
++        versions = [row['version'] for row in rows]
++        self.assertEqual(len(versions), len(set(versions)), 'duplicate migration markers: %r' % versions)
++        self.assertEqual(max(versions), EXPECTED_MAX)
++        names = {row['version']: row['name'] for row in rows}
++        self.assertEqual(names[EXPECTED_MAX], 'v16-budget-reservations')
++        self.assertEqual(names[20], 'chat_approval_announcements')
++        for required in (1, 14, 17, 18, 19, 21):
++            self.assertIn(required, versions)
++
++    def test_the_migration_set_is_idempotent(self):
++        store = Store(self.path)
++        run_all(store)
++        first = markers(store)
++        run_all(store)
++        self.assertEqual(markers(store), first)
++
++    def test_an_existing_database_keeps_its_state_and_is_stamped(self):
++        store = Store(self.path)
++        run_all(store)
++        store.add_message('hello migration', 'user', conversation='main')
++        with store.transaction() as db:
++            db.execute('DELETE FROM schema_migrations WHERE version=?', (EXPECTED_MAX,))
++        store2 = Store(self.path)
++        run_all(store2)
++        self.assertEqual(markers(store2)[-1]['version'], EXPECTED_MAX)
++        with store2.connect() as db:
++            kept = db.execute("SELECT text FROM messages WHERE text='hello migration'").fetchone()
++        self.assertIsNotNone(kept, 'existing state was lost by the migration set')
++
++    def test_module_migration_constants_are_unique(self):
++        # The direct guard for the R8.A finding: two modules once claimed version 17, so the
++        # schema_migrations row could not say which migration was applied.
++        claimed = {}
++        for name in MODULES:
++            module = importlib.import_module('kel.' + name)
++            version = getattr(module, 'MIGRATION_VERSION', None)
++            if version is None:
++                continue
++            self.assertNotIn(version, claimed,
++                             '%s and %s both claim migration %s' % (name, claimed.get(version), version))
++            claimed[version] = name
++        self.assertEqual(max(claimed), EXPECTED_MAX)
++        self.assertEqual(claimed[EXPECTED_MAX], 'assignment')

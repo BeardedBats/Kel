@@ -1,0 +1,138 @@
+commit 8c899c8316d886af373dc51ca902d5b4968b033a
+2026-09-18 17:35:53 -0400
+fix(v1.6): an approval authorizes only inside its window and for its exact action (R4 / APPROVAL-EXACT)
+
+
+diff --git a/runtime/kel/authorize.py b/runtime/kel/authorize.py
+index 6e333f6..d946713 100644
+--- a/runtime/kel/authorize.py
++++ b/runtime/kel/authorize.py
+@@ -273,7 +273,13 @@ class Authorizer:
+         return dict(row) if row else None
+ 
+     def _approval_ok(self, approval_id, intent):
+-        """A destructive action is approved only by a matching APPROVED approval row."""
++        """A destructive action is approved only by a matching APPROVED approval row.
++
++        APPROVAL-EXACT (Round 2.5 R4): the row must still be inside its approval window, carry the
++        digest of the exact action the caller is about to perform, and belong to the same job. A
++        resolution that happened before the window closed does not authorize a *later* execution
++        outside that window.
++        """
+         action = (intent.get('metadata') or {}).get('action')
+         if not approval_id or action is None:
+             return False
+@@ -281,6 +287,8 @@ class Authorizer:
+             row = db.execute('SELECT * FROM approvals WHERE id=?', (str(approval_id),)).fetchone()
+         if not row or row['status'] != 'APPROVED' or row['action_digest'] != digest(action):
+             return False
++        if row['expires'] is not None and float(row['expires']) < time.time():
++            return False  # the approval window closed before this execution
+         if intent.get('job') and str(row['job_id']) != str(intent.get('job')):
+             return False  # an approval for another job is not this job's approval
+         return True
+diff --git a/runtime/tests/test_v16_r4_approval_exact.py b/runtime/tests/test_v16_r4_approval_exact.py
+new file mode 100644
+index 0000000..57b12ba
+--- /dev/null
++++ b/runtime/tests/test_v16_r4_approval_exact.py
+@@ -0,0 +1,99 @@
++"""Round 2.5 R4 — APPROVAL-EXACT: an approval authorizes one exact runtime action, under its
++preconditions, inside its window.
++
++The inventory is recorded in `docs/v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md`. The producers
++(`Store.request_approval`, `coding.CodingAdapter.approval`, `Authorizer._expansion`) already bind a
++digest of a canonical action; these tests pin the consumer side — the checks a hostile caller hits
++immediately before an effect runs.
++"""
++import sys
++import tempfile
++import time
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from workforce_fixtures import job_contract  # noqa: E402
++
++from kel.authorize import Authorizer  # noqa: E402
++from kel.context import Context  # noqa: E402
++from kel.core import Store  # noqa: E402
++
++
++class ApprovalExactTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._cleanup_tmp)
++        self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
++        self.job_id = self.store.create(job_contract(), conversation='main')
++        claim = self.store.claim(self.job_id, 'm1', provider='fixture', model='fixture')
++        self.run_id = claim['id']
++        self.action = {'method': 'command', 'workspace': 'proj', 'command': 'python -m pytest -q',
++                       'permissions': None, 'grantRoot': None, 'network': None}
++        self.approval_id = self.store.request_approval(self.job_id, self.run_id, self.action,
++                                                       seconds=300)
++        self.authorizer = Authorizer(self.store)
++
++    def _cleanup_tmp(self):
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def _intent(self, action=None, job=None):
++        return {'metadata': {'action': action or self.action},
++                'job': job or self.job_id}
++
++    def _row(self):
++        with self.store.connect() as db:
++            return dict(db.execute('SELECT * FROM approvals WHERE id=?',
++                                   (self.approval_id,)).fetchone())
++
++    def test_an_approval_authorizes_only_its_exact_action(self):
++        self.store.resolve_approval(self.approval_id, self.action, True)
++        self.assertTrue(self.authorizer._approval_ok(self.approval_id, self._intent()))
++        changed = dict(self.action, command='rm -rf /')
++        self.assertFalse(self.authorizer._approval_ok(self.approval_id, self._intent(changed)))
++        # Equivalent-looking but materially different arguments are refused too.
++        self.assertFalse(self.authorizer._approval_ok(
++            self.approval_id, self._intent(dict(self.action, workspace='other'))))
++
++    def test_an_approval_copied_to_another_job_is_refused(self):
++        self.store.resolve_approval(self.approval_id, self.action, True)
++        other_job = self.store.create(job_contract(), conversation='main')
++        self.assertFalse(self.authorizer._approval_ok(self.approval_id,
++                                                      self._intent(job=other_job)))
++
++    def test_a_pending_approval_never_authorizes_execution(self):
++        self.assertFalse(self.authorizer._approval_ok(self.approval_id, self._intent()))
++
++    def test_an_approval_outside_its_window_is_refused(self):
++        self.store.resolve_approval(self.approval_id, self.action, True)
++        with self.store.transaction() as db:
++            db.execute('UPDATE approvals SET expires=? WHERE id=?',
++                       (time.time() - 1, self.approval_id))
++        self.assertFalse(self.authorizer._approval_ok(self.approval_id, self._intent()))
++
++    def test_resolving_after_the_window_records_expired_not_approved(self):
++        with self.store.transaction() as db:
++            db.execute('UPDATE approvals SET expires=? WHERE id=?',
++                       (time.time() - 1, self.approval_id))
++        status = self.store.resolve_approval(self.approval_id, self.action, True)
++        self.assertEqual(status, 'EXPIRED')
++        self.assertEqual(self._row()['status'], 'EXPIRED')
++        self.assertFalse(self.authorizer._approval_ok(self.approval_id, self._intent()))
++
++    def test_a_second_resolution_is_refused(self):
++        self.store.resolve_approval(self.approval_id, self.action, True)
++        with self.assertRaises(Exception):
++            self.store.resolve_approval(self.approval_id, self.action, True)
++
++    def test_a_remembered_grant_is_scoped_expiring_and_revocable(self):
++        context = Context(self.store)
++        project = context.project('r4-project')
++        context.grant(project, self.action, seconds=300)
++        self.assertTrue(context.allowed(project, self.action))
++        self.assertFalse(context.allowed(project, dict(self.action, command='other')))
++        context.revoke(project)
++        self.assertFalse(context.allowed(project, self.action))

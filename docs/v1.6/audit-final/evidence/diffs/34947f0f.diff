@@ -1,0 +1,26 @@
+commit 34947f0f6e2224c57afc93702fdfb264b1ed4258
+2026-09-18 19:33:57 -0400
+feat(v1.6-visual): R10 prep — [KEL-LINK] transition log beside the engine log (packaged evidence)
+
+
+diff --git a/desktop/packages/desktop/src/process/services/kel/KelService.ts b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+index 406d7fb..54a9585 100644
+--- a/desktop/packages/desktop/src/process/services/kel/KelService.ts
++++ b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+@@ -143,6 +143,16 @@ function broadcastEngineState(force = false): void {
+   const key = `${frame.state}:${frame.attempts}`;
+   if (!force && key === lastBroadcastState) return;
+   lastBroadcastState = key;
++  // Packaged evidence + support: link transitions land beside the engine log (the packaged app
++  // has no console). Best-effort only — logging must never break supervision.
++  try {
++    fs.appendFileSync(
++      path.join(dataRoot(), 'desktop-link.log'),
++      `[KEL-LINK] ${new Date().toISOString()} state=${frame.state} attempts=${frame.attempts}\n`
++    );
++  } catch {
++    // Best effort.
++  }
+   for (const window of BrowserWindow.getAllWindows()) {
+     try {
+       window.webContents.send('kel:engine-state', frame);

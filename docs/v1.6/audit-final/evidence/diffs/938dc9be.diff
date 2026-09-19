@@ -1,0 +1,412 @@
+commit 938dc9be2570a56a0c76117a54654e493594945a
+2026-09-18 19:32:08 -0400
+feat(v1.6-visual): R9.D — "Needs your attention" derived-only view
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/KelNeedsAttention.tsx b/desktop/packages/desktop/src/renderer/components/kel/KelNeedsAttention.tsx
+new file mode 100644
+index 0000000..d23c6fc
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/KelNeedsAttention.tsx
+@@ -0,0 +1,73 @@
++/**
++ * R9.D — "Needs your attention" (derived-only view).
++ *
++ * Reads the same authoritative endpoints the rest of the shell reads; renders a compact list of
++ * things that genuinely need a person, each with the one action that opens the existing surface
++ * which owns the decision. Owns no workflow truth: no mutations are invented here, and nothing
++ * is rendered while the source cannot be read (the surrounding surface already reports failure).
++ */
++import React, { useCallback, useEffect, useState } from 'react';
++import { useNavigate } from 'react-router-dom';
++import { kelAutonomy, kelState } from './kelApi';
++import { collectAttention, type AttentionItem } from './needsAttention';
++import { KelButton } from './KelPrimitives';
++
++export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) => {
++  const navigate = useNavigate();
++  const [items, setItems] = useState<AttentionItem[] | null>(null);
++
++  const load = useCallback(async () => {
++    try {
++      const [state, boundary] = await Promise.all([kelState(), kelAutonomy.requests()]);
++      setItems(
++        collectAttention(
++          {
++            jobs: state.jobs ?? [],
++            continuation: state.continuation ?? [],
++            boundaryRequests: boundary.requests ?? [],
++          },
++          { projectId }
++        )
++      );
++    } catch {
++      // Honest silence: the host surface shows the failure; this derived view never invents.
++      setItems(null);
++    }
++  }, [projectId]);
++
++  useEffect(() => {
++    void load();
++  }, [load]);
++
++  if (items === null) return null;
++
++  return (
++    <section className='kel-card' data-testid='needs-attention' aria-label='Needs your attention'>
++      <div className='kel-row'>
++        <h2 className='kel-h2'>Needs your attention</h2>
++        <span className='kel-grow' />
++        {items.length > 0 && <span className='kel-meta'>{items.length}</span>}
++      </div>
++      <div className='kel-divider' />
++      {items.length === 0 ? (
++        <p className='kel-meta' style={{ margin: 0 }}>
++          Nothing needs you right now.
++        </p>
++      ) : (
++        items.map((item) => (
++          <div className='kel-attention__row' key={item.id}>
++            <div className='kel-attention__text'>
++              <strong>{item.title}</strong>
++              <span className='kel-meta'>{item.detail}</span>
++            </div>
++            {item.action && (
++              <KelButton variant='quiet' onClick={() => navigate(item.action!.to)}>
++                {item.action.label}
++              </KelButton>
++            )}
++          </div>
++        ))
++      )}
++    </section>
++  );
++};
+diff --git a/desktop/packages/desktop/src/renderer/components/kel/needsAttention.ts b/desktop/packages/desktop/src/renderer/components/kel/needsAttention.ts
+new file mode 100644
+index 0000000..8a11274
+--- /dev/null
++++ b/desktop/packages/desktop/src/renderer/components/kel/needsAttention.ts
+@@ -0,0 +1,148 @@
++/**
++ * R9.D — "Needs your attention": a DERIVED-ONLY view over existing authoritative state.
++ *
++ * This module owns no workflow truth. It reads exactly what the shell already reads
++ * (`/api/state` jobs + continuation, `/api/autonomy` boundary requests), maps each entry to a
++ * plain-language item, and attaches only actions that open the surface that already owns the
++ * decision. It never invents a mutation, never joins across projects, and never renders worker
++ * ids, leases, assignments, runtimes, routing or queue internals.
++ *
++ * Scoping contract (hostile-project-isolation): when a `projectId` filter is given, an item is
++ * kept only if the PAYLOAD itself binds it to that project. Unbound items (or items bound
++ * elsewhere) are excluded — fail-closed, never guessed. Items whose referenced entities cannot
++ * be resolved are surfaced honestly as `stale` with no action.
++ */
++
++import type { KelBoundaryRequest, KelContinuationCandidate, KelWorkJob } from './kelApi';
++
++export type AttentionKind = 'approval' | 'input' | 'permission' | 'failure' | 'review' | 'continuation' | 'stale';
++
++export interface AttentionItem {
++  /** Stable, derived key — built only from authoritative ids present in the payload. */
++  id: string;
++  kind: AttentionKind;
++  title: string;
++  detail: string;
++  /** The project this item is BOUND to by the payload (never inferred). */
++  projectId?: string;
++  /** Where the existing authoritative decision lives; absent = no action may be shown. */
++  action?: { label: string; to: string };
++  at: number;
++}
++
++export interface AttentionPayload {
++  jobs?: KelWorkJob[];
++  continuation?: KelContinuationCandidate[];
++  boundaryRequests?: KelBoundaryRequest[];
++}
++
++export interface AttentionFilter {
++  projectId?: string;
++}
++
++const jobConversation = (job: KelWorkJob): string | undefined => job.conversation;
++export const jobProject = (job: KelWorkJob): string | undefined => job.contract?.project_id;
++
++const requestTitle = (job: KelWorkJob): string => job.contract?.request?.trim() || 'Untitled work';
++
++function openAction(conversation: string | undefined, label: string): { label: string; to: string } {
++  // Both targets are existing surfaces that already own the follow-up: the chat that hosts the
++  // approval/result, or the Work list when the payload cannot name a conversation.
++  return conversation ? { label, to: `/chat/${conversation}` } : { label, to: '/work' };
++}
++
++export function collectAttention(payload: AttentionPayload, filter: AttentionFilter = {}): AttentionItem[] {
++  const jobs = payload.jobs ?? [];
++  const byId = new Map<string, KelWorkJob>();
++  for (const job of jobs) byId.set(job.id, job);
++  const items: AttentionItem[] = [];
++
++  for (const job of jobs) {
++    if (job.state === 'AWAITING_USER') {
++      items.push({
++        id: `approval-${job.id}`,
++        kind: 'approval',
++        title: 'An approval is waiting',
++        detail: `${requestTitle(job)} — Kel is holding until you decide.`,
++        projectId: jobProject(job),
++        action: openAction(jobConversation(job), 'Open the chat'),
++        at: job.updated ?? 0,
++      });
++    } else if (job.state === 'BLOCKED') {
++      items.push({
++        id: `input-${job.id}`,
++        kind: 'input',
++        title: 'Kel needs a decision to continue',
++        detail: `${requestTitle(job)} — a safety rule stopped it; the reason is recorded with the work.`,
++        projectId: jobProject(job),
++        action: openAction(jobConversation(job), 'Open the chat'),
++        at: job.updated ?? 0,
++      });
++    } else if (job.state === 'CLOSED') {
++      const verdict = (job.verdict || '').toUpperCase();
++      if (verdict === 'FAILED') {
++        items.push({
++          id: `failure-${job.id}`,
++          kind: 'failure',
++          title: 'Finished with a failure',
++          detail: `${requestTitle(job)} — the recorded result did not pass. Nothing was retried silently.`,
++          projectId: jobProject(job),
++          action: openAction(jobConversation(job), 'Open the chat'),
++          at: job.updated ?? 0,
++        });
++      } else if (verdict && verdict !== 'VERIFIED') {
++        items.push({
++          id: `review-${job.id}`,
++          kind: 'review',
++          title: 'Finished without a clean verification',
++          detail: `${requestTitle(job)} — the result needs a human eye before it counts.`,
++          projectId: jobProject(job),
++          action: openAction(jobConversation(job), 'Open the chat'),
++          at: job.updated ?? 0,
++        });
++      }
++    }
++  }
++
++  for (const candidate of payload.continuation ?? []) {
++    const jobId = candidate.job_id || candidate.job?.id;
++    const job = jobId ? byId.get(jobId) : undefined;
++    if (!job) {
++      items.push({
++        id: `stale-continuation-${jobId ?? 'unknown'}`,
++        kind: 'stale',
++        title: 'This item is no longer available',
++        detail: 'The work it pointed to is gone from the current view. Refresh to see what is current.',
++        at: 0,
++      });
++      continue;
++    }
++    items.push({
++      id: `continuation-${job.id}`,
++      kind: 'continuation',
++      title: 'Ready to continue when you are',
++      detail: `${requestTitle(job)} — Kel can pick this up where it stopped.`,
++      projectId: jobProject(job),
++      action: openAction(jobConversation(job), 'Open the chat'),
++      at: job.updated ?? 0,
++    });
++  }
++
++  for (const request of payload.boundaryRequests ?? []) {
++    if (request.status !== 'PENDING') continue;
++    items.push({
++      id: `permission-${request.request_id}`,
++      kind: 'permission',
++      title: 'A permission decision is waiting',
++      detail: `${request.what?.trim() || request.scope} — Kel asked before acting; only you can grant it.`,
++      // The boundary payload binds to a scope, not to a project; when a project filter is active
++      // this item is therefore excluded below (fail-closed) rather than attributed by guess.
++      projectId: undefined,
++      action: { label: 'Review the request', to: '/autonomy' },
++      at: request.created,
++    });
++  }
++
++  const filtered = filter.projectId ? items.filter((item) => item.projectId === filter.projectId) : items;
++  return filtered.sort((a, b) => b.at - a.at);
++}
+diff --git a/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx b/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+index a55fdc7..9997171 100644
+--- a/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
++++ b/desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx
+@@ -16,6 +16,7 @@ import {
+   statusFromDerived,
+ } from '@renderer/components/kel/KelPrimitives';
+ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
++import { NeedsAttention } from '@renderer/components/kel/KelNeedsAttention';
+ import { failureSentence } from '@renderer/components/kel/engineFailure';
+ import {
+   kelArtifact,
+@@ -141,6 +142,8 @@ const WorkCenter: React.FC = () => {
+           </KelButton>
+         </div>
+ 
++        <NeedsAttention />
++
+         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+         {!error && jobs === null && <KelLoading rows={4} />}
+ 
+diff --git a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+index cd6d651..7a0c865 100644
+--- a/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
++++ b/desktop/packages/desktop/src/renderer/styles/kel-tokens.css
+@@ -546,3 +546,27 @@
+ .kel-engine-notice--failed .kel-engine-notice__text span {
+   color: var(--kel-failed-fg);
+ }
++
++/* R9.D — "Needs your attention": derived rows, one line of ownership each, no chrome. */
++.kel-attention__row {
++  display: flex;
++  align-items: baseline;
++  gap: var(--kel-space-3);
++  padding: 8px 0;
++  border-top: 1px solid var(--kel-border);
++}
++.kel-attention__row:first-of-type {
++  border-top: none;
++}
++.kel-attention__text {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  min-width: 0;
++  flex: 1;
++}
++.kel-attention__text strong {
++  color: var(--kel-text-1);
++  font-weight: 600;
++  font-size: var(--kel-type-label);
++}
+diff --git a/desktop/tests/unit/needs-attention.test.ts b/desktop/tests/unit/needs-attention.test.ts
+new file mode 100644
+index 0000000..c73a853
+--- /dev/null
++++ b/desktop/tests/unit/needs-attention.test.ts
+@@ -0,0 +1,115 @@
++/**
++ * R9.D — hostile tests for the "Needs your attention" aggregator.
++ *
++ * These pin the directive's §9 requirements: derived-only mapping; actions only to existing
++ * authoritative surfaces; project isolation fail-closed (Project A items can never appear under
++ * Project B, and unbound items are excluded when a project filter is active); unknown/stale
++ * items fail honestly with no action; and no worker/lease/routing vocabulary ever appears.
++ */
++import { describe, expect, it } from 'vitest';
++import { collectAttention } from '@renderer/components/kel/needsAttention';
++import type { KelBoundaryRequest, KelWorkJob } from '@renderer/components/kel/kelApi';
++
++const job = (over: Partial<KelWorkJob> & { id: string }): KelWorkJob => ({
++  state: 'RUNNING',
++  contract: { request: 'Tidy the notes', project_id: 'P-A' },
++  conversation: 'conv-a',
++  updated: 100,
++  ...over,
++});
++
++const boundary = (over: Partial<KelBoundaryRequest>): KelBoundaryRequest => ({
++  request_id: 'br-1',
++  lease_id: 'lease-1',
++  scope: 'web',
++  target: 'example.com',
++  what: 'Look something up on the web',
++  status: 'PENDING',
++  created: 50,
++  ...over,
++});
++
++describe('collectAttention — mapping', () => {
++  it('maps waiting states to plain-language items with existing-surface actions only', () => {
++    const items = collectAttention({
++      jobs: [
++        job({ id: 'j1', state: 'AWAITING_USER' }),
++        job({ id: 'j2', state: 'BLOCKED' }),
++        job({ id: 'j3', state: 'CLOSED', verdict: 'FAILED' }),
++        job({ id: 'j4', state: 'CLOSED', verdict: 'UNVERIFIED' }),
++        job({ id: 'j5', state: 'CLOSED', verdict: 'VERIFIED' }),
++        job({ id: 'j6', state: 'RUNNING' }),
++      ],
++      continuation: [{ job_id: 'j1' }],
++      boundaryRequests: [boundary({}), boundary({ request_id: 'br-2', status: 'GRANTED' })],
++    });
++    const kinds = items.map((item) => item.kind).sort();
++    expect(kinds).toEqual(['approval', 'continuation', 'failure', 'input', 'permission', 'review']);
++    for (const item of items) {
++      if (item.action) {
++        expect(['/chat/conv-a', '/work', '/autonomy']).toContain(item.action.to);
++      }
++    }
++  });
++
++  it('renders no vocabulary from the machinery', () => {
++    const items = collectAttention({
++      jobs: [job({ id: 'j1', state: 'AWAITING_USER' }), job({ id: 'j2', state: 'BLOCKED' })],
++      continuation: [{ job_id: 'j1' }],
++      boundaryRequests: [boundary({})],
++    });
++    const visible = JSON.stringify(items).toLowerCase();
++    for (const banned of ['lease', 'assignment', 'worker', 'runtime', 'router', 'queue', 'agent_id', 'provider']) {
++      expect(visible).not.toContain(banned);
++    }
++  });
++});
++
++describe('collectAttention — hostile project isolation', () => {
++  it('never lets a Project A item appear under a Project B filter (fail-closed)', () => {
++    const items = collectAttention(
++      {
++        jobs: [job({ id: 'jA', state: 'AWAITING_USER' }), job({ id: 'jB', state: 'AWAITING_USER', contract: { request: 'B work', project_id: 'P-B' }, conversation: 'conv-b' })],
++        boundaryRequests: [boundary({})], // unbound to any project
++      },
++      { projectId: 'P-B' }
++    );
++    expect(items.length).toBe(1);
++    expect(items[0].id).toBe('approval-jB');
++    for (const item of items) expect(item.projectId).toBe('P-B');
++  });
++
++  it('excludes items with no project binding when a project filter is active', () => {
++    const items = collectAttention({ boundaryRequests: [boundary({})] }, { projectId: 'P-A' });
++    expect(items).toEqual([]);
++  });
++
++  it('keeps the same payload unattributed when no filter is given (the global view)', () => {
++    const items = collectAttention({ boundaryRequests: [boundary({})] });
++    expect(items.length).toBe(1);
++    expect(items[0].kind).toBe('permission');
++  });
++});
++
++describe('collectAttention — unknown/stale items fail honestly', () => {
++  it('a continuation pointing at missing work becomes a stale item with no action', () => {
++    const items = collectAttention({ continuation: [{ job_id: 'missing' }] });
++    expect(items.length).toBe(1);
++    expect(items[0].kind).toBe('stale');
++    expect(items[0].action).toBeUndefined();
++    expect(items[0].title).toMatch(/no longer available/i);
++  });
++
++  it('a waiting job without a conversation still opens the Work list, never a guessed chat', () => {
++    const items = collectAttention({ jobs: [job({ id: 'j1', state: 'AWAITING_USER', conversation: undefined })] });
++    expect(items[0].action?.to).toBe('/work');
++  });
++
++  it('drops closed-and-verified work and non-pending boundary requests entirely', () => {
++    const items = collectAttention({
++      jobs: [job({ id: 'j1', state: 'CLOSED', verdict: 'VERIFIED' })],
++      boundaryRequests: [boundary({ status: 'DENIED' })],
++    });
++    expect(items).toEqual([]);
++  });
++});

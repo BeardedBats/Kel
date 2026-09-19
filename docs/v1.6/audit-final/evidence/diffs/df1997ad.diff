@@ -1,0 +1,203 @@
+commit df1997ade8f783a8049b38f1d3e742a534ae0beb
+2026-09-18 13:49:43 -0400
+engine(v1.6): a failed or partial restore is recorded and surfaced (PER-02)
+
+
+diff --git a/runtime/kel/backup.py b/runtime/kel/backup.py
+index 0458507..4d65ddb 100644
+--- a/runtime/kel/backup.py
++++ b/runtime/kel/backup.py
+@@ -20,6 +20,7 @@ from .core import PolicyError
+ MARKER = 'restore-pending.json'
+ STAGING = '.restore-staging'
+ INFO = 'BACKUP-INFO.json'
++OUTCOME = 'restore-outcome.json'  # last restore attempt, recorded beside the data (PER-02)
+ SECRET_TABLE = 'transcription_settings'
+ SECRET_KEYS = ('meta_api_key',)
+ SKIP_ENTRIES = (STAGING, MARKER)
+@@ -258,6 +259,21 @@ def _restore_entry(source, destination):
+     _copy_with_retries(source, destination)
+ 
+ 
++def _record_outcome(root, ok, detail=''):
++    """Durable, database-independent record of the last restore attempt (audit PER-02).
++
++    A restore is what replaces the database, so its outcome cannot live inside it: the record is a
++    sidecar next to the data. `Service` reads it and surfaces a failure in `state()` instead of
++    discarding it. Recording never raises — a failed restore must still return its verdict.
++    """
++    try:
++        (Path(root) / OUTCOME).write_text(
++            json.dumps({'ok': bool(ok), 'detail': str(detail)[:200], 'at': time.time()}),
++            encoding='utf-8')
++    except Exception:
++        pass
++
++
+ def apply_pending_restore(store):
+     """Called at engine start, before any connection touches the databases.
+ 
+@@ -291,6 +307,11 @@ def apply_pending_restore(store):
+             _restore_entry(entry, root / entry.name)
+         shutil.rmtree(staging, ignore_errors=True)
+         marker.unlink(missing_ok=True)
++        _record_outcome(root, True)
+         return True
+-    except Exception:
++    except Exception as exc:
++        # Audit PER-02: a failed or partial restore used to vanish into `False` while the marker
++        # stayed behind. The outcome is now recorded (and surfaced by the service) while the
++        # marker keeps its meaning: the restore is still pending.
++        _record_outcome(root, False, type(exc).__name__)
+         return False
+diff --git a/runtime/kel/service.py b/runtime/kel/service.py
+index 4c53dbf..e77af29 100644
+--- a/runtime/kel/service.py
++++ b/runtime/kel/service.py
+@@ -28,6 +28,16 @@ ENGINE_VERSION='1.5.0'
+ # separately and never prompts.
+ CODING_VERBS=('fix','build','implement','change','add','remove','update','refactor','test')
+ 
++def _restore_outcome(root):
++    """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
++    path=Path(root)/'restore-outcome.json'
++    try:
++        data=json.loads(path.read_text(encoding='utf-8'))
++    except Exception:
++        return None
++    return {'ok':bool(data.get('ok')),'detail':data.get('detail') or '','at':data.get('at')}
++
++
+ class Service:
+     def __init__(self,root):
+         started=time.time()
+@@ -36,10 +46,12 @@ class Service:
+         # A staged restore (chosen by the user in Settings) applies before anything opens
+         # the databases; the previous data is kept beside it as .pre-restore-*.
+         try:
+-            from .backup import apply_pending_restore
++            from .backup import _record_outcome,apply_pending_restore
+             apply_pending_restore(self.store)
+-        except Exception:
+-            pass
++        except Exception as exc:
++            # PER-02 (audit): boot must survive a restore that cannot even start, and the failure
++            # must not be silent — it is recorded beside the data and surfaced in `state()`.
++            _record_outcome(self.store.root,False,type(exc).__name__)
+         self.context=Context(self.store)
+         CodingAdapter(self.store)  # Schema only; actual execution lives in detached brokers.
+         self.model=InternalAdapter() if os.environ.get('ANTHROPIC_API_KEY') else None
+@@ -559,7 +571,8 @@ class Service:
+         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
+         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
+                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
+-                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining}
++                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
++                'restore':_restore_outcome(self.store.root)}
+ 
+     def action(self,path,data):
+         with self.lifecycle_lock:
+diff --git a/runtime/tests/test_v16_restore_visibility.py b/runtime/tests/test_v16_restore_visibility.py
+new file mode 100644
+index 0000000..adeb54e
+--- /dev/null
++++ b/runtime/tests/test_v16_restore_visibility.py
+@@ -0,0 +1,98 @@
++"""V1.6 PER-02: a failed or partial restore is recorded and surfaced, never silent.
++
++The engine used to discard `apply_pending_restore`'s boolean inside `try/except: pass`, so a
++restore that could not even start (or that failed halfway) left no trace the user or the app could
++see. The outcome now lands in `restore-outcome.json` beside the data (the database is what a
++restore replaces, so the record cannot live in it) and is exposed through `Service.state()`.
++"""
++import contextlib
++import json
++import tempfile
++import time
++import unittest
++from pathlib import Path
++
++from kel import backup
++from kel.backup import MARKER, OUTCOME, STAGING, apply_pending_restore
++from kel.service import Service
++
++
++class RestoreOutcomeTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.root = Path(self.tmp.name) / 'data'
++        self.root.mkdir(parents=True)
++
++    def _pending_restore(self):
++        """A staged restore with one file to merge back."""
++        staging = self.root / STAGING
++        staging.mkdir(parents=True, exist_ok=True)
++        (staging / 'notes.txt').write_text('restored\n', encoding='utf-8')
++        (self.root / MARKER).write_text(json.dumps({'at': time.time()}), encoding='utf-8')
++
++    def _recorded_outcome(self):
++        # Not `_outcome`: that name is unittest.TestCase's own bookkeeping attribute.
++        path = self.root / OUTCOME
++        return json.loads(path.read_text(encoding='utf-8')) if path.exists() else None
++
++    def test_nothing_pending_records_nothing(self):
++        self.assertFalse(apply_pending_restore(_Store(self.root)))
++        self.assertIsNone(self._recorded_outcome())
++
++    def test_a_successful_restore_is_recorded(self):
++        self._pending_restore()
++        self.assertTrue(apply_pending_restore(_Store(self.root)))
++        outcome = self._recorded_outcome()
++        self.assertTrue(outcome['ok'])
++        self.assertFalse((self.root / MARKER).exists())  # the marker still means "applied"
++
++    def test_a_failed_restore_is_recorded_and_keeps_its_marker(self):
++        self._pending_restore()
++        original = backup._restore_entry
++
++        def explode(source, destination):
++            raise OSError('disk went away')
++
++        backup._restore_entry = explode
++        self.addCleanup(setattr, backup, '_restore_entry', original)
++        self.assertFalse(apply_pending_restore(_Store(self.root)))
++        outcome = self._recorded_outcome()
++        self.assertFalse(outcome['ok'])
++        self.assertEqual(outcome['detail'], 'OSError')
++        self.assertTrue((self.root / MARKER).exists(), 'a half-applied restore must keep its marker')
++
++    def test_the_service_survives_a_restore_that_cannot_start_and_surfaces_it(self):
++        original = backup.apply_pending_restore
++
++        def explode(store):
++            raise RuntimeError('staging is unreadable')
++
++        # `Service.__init__` imports the symbol at call time, so patching the module is enough.
++        backup.apply_pending_restore = explode
++        self.addCleanup(setattr, backup, 'apply_pending_restore', original)
++        service = Service(str(self.root))
++        self.addCleanup(service.shutdown)
++        state = service.state()
++        self.assertIn('restore', state)
++        self.assertFalse(state['restore']['ok'])
++        self.assertEqual(state['restore']['detail'], 'RuntimeError')
++
++    def test_a_clean_start_reports_no_restore_attempt(self):
++        service = Service(str(self.root))
++        self.addCleanup(service.shutdown)
++        self.assertIsNone(service.state()['restore'])
++
++
++class _Store:
++    """Minimal stand-in: the restore path only needs `.root`."""
++
++    def __init__(self, root):
++        self.root = Path(root)
++
++    def connect(self):
++        raise AssertionError('the restore path must not open the databases')
++
++
++if __name__ == '__main__':
++    unittest.main()

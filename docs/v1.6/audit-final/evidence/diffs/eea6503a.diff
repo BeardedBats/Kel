@@ -1,0 +1,392 @@
+commit eea6503a48d73a089d259f2f9fb3bf7262a7fb76
+2026-09-18 17:20:36 -0400
+docs(v1.6): R1 complete — delegation authority ceiling breadcrumbs
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 3486b89..408e474 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -678,8 +678,34 @@ transcription 31 / sweep-fixes 15; desktop tsc 0 + vitest 93; TEST_EVIDENCE_INDE
+ `increments/R0-SWEEP.md`; CHG-012…017; REQ-P2P3/OWNERSHIP-PARITY/POLL-CHEAP/TRUTHFUL-SURFACES/
+ ERROR-SENTENCES/THEME-HYGIENE/TR02-BINDING.
+ 
+-Next: **R1 — delegation authority ceiling** (`effective_child ⊆ delegator`, existing primitives only),
+-then R2 idempotency matrix → R3 retry durability → R4 approval binding → R5 persistence → R6
++Next: **R2 idempotency matrix** → R3 retry durability → R4 approval binding → R5 persistence → R6
+ state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs
+ Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression →
+ PRE_AUDIT_V1_6_HEAD. REL-01 stays `OPEN_RELEASE_BLOCKER` until R8 evidence exists.
++
++## R1 COMPLETE — the delegation authority ceiling is executable (2026-09-18, marathon run)
++
++Commit `dc65fbc` (parent `4440a90`). Round 2.5 **AUTH-DELEGATION**: *delegation may narrow
++authority, never create it* — implemented with existing primitives only (no RBAC, no second ACL).
++
++- **R1.A audit found the real gaps**: only the role→class ceiling was enforced; write
++  scope/boundaries/effects/tools had no delegator dimension; a contract could contradict itself
++  (`write_scope` outside `write_boundaries`); `reserve_budget` never compared against the job
++  envelope. `parent_task` is None everywhere by design (no nesting) — preserved.
++- **Primitive**: `workforce.authority_within(child, parent)` over class rank, write scope, write
++  boundaries (path containment), external effects, tool grants; absent parent dimension = no
++  ceiling; empty delegator scope = a real ceiling.
++- **Enforcement**: `contracts.validate_task_contract(..., parent_authority=…)` refuses a child
++  outside the envelope ('Delegation may narrow authority but never create it: <dimension>'),
++  refuses a self-contradictory scope/boundaries pair, and refuses a nested contract with no
++  delegator. `delegate()`/`issue_task_contract()` pass the envelope; `pods.run_d2` issues the
++  verifier inside the builder's frozen envelope; `assignment.reserve_budget` refuses a reservation
++  beyond the remaining job budget.
++
++Evidence: `tests/test_v16_r1_authority.py` 21 new; workforce family 269 together; full engine
++**952 passed + 10 subtests** (was 931); record `increments/R1-AUTHORITY-CEILING.md`; CHG-018;
++INV-AUTH-DELEGATION; REQ-R25-R1 implemented; TEST_EVIDENCE_INDEX A-21.
++
++Next: **R2 — logical-work/idempotency matrix** (`EVENT-IDEMPOTENCY` + `EFFECT-REPLAY`): classify
++every autonomous event family, prove what is already safe, repair only demonstrated
++duplicate-execution gaps, hostile duplicate tests across restart where possible.
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+index 739afac..99c1bd9 100644
+--- a/docs/v1.6/MARATHON_STATE.md
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -3,45 +3,46 @@
+ MARATHON_MODE: ACTIVE
+ 
+ start_head: 756218e (published docs tip; production 8a677d0)
+-current_head: `594b8b4` + R0 docs commit (see `git log --oneline -8`)
++current_head: `dc65fbc` + R1 docs commit (see `git log --oneline -8`)
+ 
+ completed_this_run:
+ - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
+-- MARATHON_STATE created; engine suite re-run at the R0 boundary: **931 passed + 10 subtests**
+ - **R0 COMPLETE** — P2/P3 sweep 100% dispositioned (26 rows in-table: P2 10, P3 16; directive's 27
+-  recorded for Campaign B). Commits: SEC-01 `49e528e` (vetting acting scope), TR-01 `8ab7699`
+-  (stream lifecycle closes + optional scope), COR-06/ERR-01 `5950efb` (dispatch plain sentences),
+-  APR-05 `dd34ac2` (poll path DDL-free, migration v20), COR-03/APR-06/THM-01 `594b8b4` (truthful
+-  failure surfaces); TR-02 bound to R9.A/R10; REL-01 stays the only OPEN_RELEASE_BLOCKER (R8)
+-- breadcrumbs: P2_P3_DISPOSITION (26/26 + completion record), increments/R0-SWEEP.md, COMMIT_LEDGER,
+-  CHANGE_LEDGER (CHG-012..017), REQUIREMENTS_TRACEABILITY (7 REQ rows), TEST_EVIDENCE_INDEX (A-20),
++  recorded for Campaign B). Commits: SEC-01 `49e528e`, TR-01 `8ab7699`, COR-06/ERR-01 `5950efb`,
++  APR-05 `dd34ac2`, COR-03/APR-06/THM-01 `594b8b4`; TR-02 bound to R9.A/R10; REL-01 stays the only
++  OPEN_RELEASE_BLOCKER (R8). Evidence: A-20 (**931 passed**), `increments/R0-SWEEP.md`.
++- **R1 COMPLETE** — delegation authority ceiling executable (`dc65fbc`): `authority_within` +
++  `validate_task_contract(parent_authority=…)` + D1/D2 wiring (verifier inside the mission envelope)
++  + `reserve_budget` job-envelope check; 21 new tests; evidence A-21 (**952 passed + 10 subtests**),
++  `increments/R1-AUTHORITY-CEILING.md`, INV-AUTH-DELEGATION, REQ-R25-R1 implemented.
++- breadcrumbs kept current for R0 and R1: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
++  (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
+   MAIN_STATUS, AUTO_RESUME
+ 
+-current_phase: R1 — delegation authority ceiling
+-current_item: R1.A — audit the real current issuance path (D1/D2/D3, assignment grants, role ceilings, leases, runtime/provider binding, tool filtering) before writing any narrowing check
++current_phase: R2 — logical-work / idempotency matrix (EVENT-IDEMPOTENCY + EFFECT-REPLAY)
++current_item: R2.A — build the real matrix for every authoritative event family (identity, dedupe, persistence, duplicate/restart/side-effect behavior) before changing anything
+ 
+ next_queue:
+-1. R1 — narrowing function + discriminating widen-attempt tests (existing primitives only; no nesting)
+-2. R2 — logical-work/idempotency matrix + real gaps
+-3. R3 — durable retry/recovery budgets
+-4. R4 — canonical approval binding (APPROVAL-EXACT; absorbs declared-conversation hardening)
+-5. R5 — persistence integrity contract + adversarial tests
+-6. R6 — truthful state + liveness separation (+ RECOVERY-CLASSIFICATION)
+-7. R7 — credential/network boundary proof (CREDENTIAL-CONTAINMENT)
+-8. R8 — packaged/migration assertions + REL-01 (minimum marathon return gate)
+-9. R9 — Visual batches 6–8 + Needs Your Attention (derived-only)
+-10. R10 — engine-loss/recovery UX
+-11. R11 — Visual → Main integration
+-12. R12 — final Campaign A regression → PRE_AUDIT_V1_6_HEAD
+-
+-last_focused_tests: R0 row-level suites — vetting 36, transcription 31, sweep-fixes 15, approvals + restore green
+-last_full_engine: **931 passed + 10 subtests** (258.82s) at `594b8b4` (was 915 at `8a677d0`)
+-last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`)
+-last_desktop_vitest: **93 passed** (8 files)
++1. R2 — matrix + repair only demonstrated duplicate-execution gaps + hostile duplicate tests
++2. R3 — durable retry/recovery budgets
++3. R4 — canonical approval binding (APPROVAL-EXACT; absorbs declared-conversation hardening)
++4. R5 — persistence integrity contract + adversarial tests
++5. R6 — truthful state + liveness separation (+ RECOVERY-CLASSIFICATION)
++6. R7 — credential/network boundary proof (CREDENTIAL-CONTAINMENT)
++7. R8 — packaged/migration assertions + REL-01 (minimum marathon return gate)
++8. R9 — Visual batches 6–8 + Needs Your Attention (derived-only)
++9. R10 — engine-loss/recovery UX
++10. R11 — Visual → Main integration
++11. R12 — final Campaign A regression → PRE_AUDIT_V1_6_HEAD
++
++last_focused_tests: R1 — `test_v16_r1_authority.py` 21; workforce family 269 together
++last_full_engine: **952 passed + 10 subtests** (287.14s) at `dc65fbc` (was 931 at `594b8b4`)
++last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`, R0 batch)
++last_desktop_vitest: **93 passed** (8 files, R0 batch)
+ last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
+ 
+-last_push: `594b8b4` → origin/ux/v15-journeys (R0 docs commit follows)
+-last_scan: 0 real hits (R0 commits — no secrets/private data; docs-only additions)
++last_push: `dc65fbc` → origin/ux/v15-journeys (R1 docs commit follows)
++last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
+ 
+ blocker: NONE
+ 
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index dde7dfe..bcdd656 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -296,6 +296,25 @@ ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b
+ - **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
+   it into the engine-loss presentation.
+ 
++### CHG-018 — Delegation authority ceiling is executable (R1 / AUTH-DELEGATION)
++ID: CHG-018 · Phase: Campaign A — roadmap R1 · Commit: `dc65fbc` · Date: 2026-09-18
++New behavior: `workforce.authority_within(child, parent)` is the pure containment primitive over
++class rank, write scope, write boundaries, external effects and tool grants;
++`validate_task_contract(..., parent_authority=…)` refuses a child outside the delegator envelope,
++refuses a self-contradictory `write_scope`/`write_boundaries` pair, and refuses a nested contract
++that declares no delegator; `delegate()`/`issue_task_contract()` pass the envelope through;
++`pods.run_d2` issues the verifier inside the builder's frozen envelope; `assignment.reserve_budget`
++refuses a reservation beyond the remaining job budget. Previous: only the role→class ceiling was
++enforced. Primary files: `kel/workforce.py`, `kel/contracts.py`, `kel/delegation.py`,
++`kel/pods.py`, `kel/assignment.py`. Tests: `tests/test_v16_r1_authority.py` (21).
++Risk: LOW (strictly narrowing; no schema, no new authority path). Evidence:
++`increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION; A-21.
++
++### CHG-017 — TR-02 renderer binding recorded (R0)
++ID: CHG-017 · Phase: Campaign A — R0 · Commit: docs only · Date: 2026-09-18
++New behavior: none (a binding): abandoned-stream transport-failure presentation is delivered by
++R9.A batch 6 / R10; the fallback path is already honest. Primary files: none.
++
+ ### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
+ 
+ ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
+@@ -493,5 +512,6 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | APR-05 approval poll DDL | CHG-015 delivered (`dd34ac2`); record `increments/R0-SWEEP.md` | DONE |
+ | COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
+ | TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
++| R1 delegation authority ceiling | CHG-018 delivered (`dc65fbc`); record `increments/R1-AUTHORITY-CEILING.md` | DONE |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+ | Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 7fcf275..15c1be2 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -53,7 +53,8 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `5950efb` | `8ab7699` | 2026-09-18 | R0 / COR-06 + ERR-01 | dispatch layers answer missing request fields with plain sentences | `kel/service.py`; `tests/test_v16_sweep_fixes.py` | +3 engine tests; file **12 passed** | none | no (error-surface honesty) | n/a | no | no | LOW | `increments/R0-SWEEP.md`; A-20 | ERR-01 alias note recorded in the disposition table for Campaign B |
+ | `dd34ac2` | `5950efb` | 2026-09-18 | R0 / APR-05 | approval poll path stops running DDL once stamped | `kel/chat_approvals.py`; `tests/test_v16_sweep_fixes.py` | +3 engine tests; file **15 passed** | migration marker **v20** (additive; no table/column change) | no | n/a | no | yes (marker row) | LOW | `increments/R0-SWEEP.md`; A-20 | pre-marker stores run the idempotent body once and are stamped |
+ | `594b8b4` | `dd34ac2` | 2026-09-18 | R0 / COR-03 + APR-06 + THM-01 | failure surfaces tell the truth (model pill reports, approval card distinguishes unreachable vs settled, theme delete prunes overrides) | `desktop/.../kel/KelModelControl.tsx`; `desktop/.../kel/KelApprovalCard.tsx`; `desktop/.../AppearanceSettings/CssThemeSettings.tsx` | desktop tsc 0; vitest **93 passed** | none | yes (message copy + delete handler) | n/a | no | no | LOW | `increments/R0-SWEEP.md`; A-20 | no renderer component harness (§58) — packaged probes at R8/R12 are the gate |
+-| `HEAD` | `594b8b4` | 2026-09-18 | R0 | R0 sweep complete: 26/26 dispositions final + breadcrumbs (this commit) | docs only | engine full **931 passed, 10 subtests**; desktop tsc 0, vitest 93 | none | no | — | no | no | LOW | corpus rows SEC-01 / TR-01 / TR-02 / APR-05 / APR-06 / COR-03 / COR-06 / THM-01 / ERR-01; `increments/R0-SWEEP.md`; A-20 | REL-01 remains `OPEN_RELEASE_BLOCKER` until R8; 26-vs-27 row count left for Campaign B |
++| `dc65fbc` | `4440a90` | 2026-09-18 | R1 / AUTH-DELEGATION | delegation authority ceiling is executable (child ⊆ delegator on class/scope/boundaries/effects/tools + budget envelope) | `kel/workforce.py`; `kel/contracts.py`; `kel/delegation.py`; `kel/pods.py`; `kel/assignment.py`; `tests/test_v16_r1_authority.py` | +21 engine tests; workforce family 269 passed; full suite A-21 | none | no | n/a | no | no | HIGH | `increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION; REQ-R25-R1 | token/wallclock caps lack a job-envelope primitive (R3); no nesting added by design |
++| `HEAD` | `dc65fbc` | 2026-09-18 | R1 | R1 breadcrumbs (this commit) | docs only | engine full A-21 | none | no | — | no | no | LOW | corpus rows REQ-R25-R1 / INV-AUTH-DELEGATION / CHG-018 / A-21; `increments/R1-AUTHORITY-CEILING.md` | next: R2 idempotency matrix |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+index 4b7259f..017439e 100644
+--- a/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
++++ b/docs/v1.6/pre-audit/INVARIANT_LEDGER.md
+@@ -9,6 +9,26 @@ OPEN_GAP (known open finding attacks it).
+ 
+ ---
+ 
++## INV-AUTH-DELEGATION — Delegation may narrow authority, never create it
++- Definition: `effective_child_authority ⊆ effective_delegator_authority` over every dimension a
++  task contract carries: authority class, write scope, write boundaries, external effects, tool
++  grants, and (where the delegator has one) the budget envelope.
++- Owner: `kel.workforce` (vocabulary + primitive), `kel.contracts` (issuance validation),
++  `kel.delegation` / `kel.pods` (issuers), `kel.assignment` (grants + budget reservation).
++- Code paths: `workforce.authority_within`; `contracts.validate_task_contract(*,
++  parent_authority=…, ceilings=…)`; `delegation.delegate(..., parent_authority=…)`;
++  `delegation.issue_task_contract(..., parent_authority=…)`; `pods.run_d2` (verifier inside the
++  builder's frozen envelope); `assignment.reserve_budget` (job envelope ceiling).
++- Tests: `tests/test_v16_r1_authority.py` (21); workforce family (269 together). Evidence:
++  `increments/R1-AUTHORITY-CEILING.md`; TEST_EVIDENCE_INDEX A-21; commit `dc65fbc`.
++- Edge cases: `parent_task` is None in every production path today (no nesting by design — the
++  refusal for a nested contract without an envelope is future-proofing, not a live path); tool
++  grants stay role-local for the verifier (only class/scope/effects inherit the mission envelope);
++  token/wallclock reservation caps have no job-envelope primitive yet (R3 budget accounting).
++- Audit target: construct a contract wider than its delegator on each dimension and confirm
++  issuance refuses it; confirm the D1 path is unchanged when no envelope is supplied; confirm the
++  budget check cannot be bypassed by pre-spending the job (`spent`/`reserved` arithmetic).
++
+ ## INV-AUDIT-001 — Builder cannot independently final-certify production output
+ - Definition: the thread that writes production code never counts as its own independent reviewer;
+   independence is produced only by a separate fresh-context reviewer with its own record.
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 05191a6..4518234 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -55,7 +55,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-ERROR-SENTENCES | R0 sweep (COR-06/ERR-01) | a missing request field answers with a plain sentence, never a raw exception string | implemented | `5950efb` | 3 focused; full see A-20 | `increments/R0-SWEEP.md` | — | pending |
+ | REQ-THEME-HYGIENE | R0 sweep (THM-01) | deleting a theme drops its saved colour overrides in the same operation | implemented | `594b8b4` | tsc 0; vitest 93 | `increments/R0-SWEEP.md` | — | pending |
+ | REQ-TR02-BINDING | R0 sweep (TR-02) | abandoned-stream transport-failure presentation is delivered by R9.A batch 6 / R10 | bound (no code in R0) | — | — | P2_P3_DISPOSITION.md (TR-02 row); `increments/R0-SWEEP.md` | must be honored before the PRE_AUDIT RC | pending |
+-| REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | PENDING | — | — | `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` §R1 | — | pending |
++| REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | **implemented** (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + issuance wiring (D1 `delegate`, D2 pods verifier inside the mission envelope) + `reserve_budget` envelope check | `dc65fbc` | `tests/test_v16_r1_authority.py` 21 new; workforce family 269; full suite A-21 | `docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md`; INV-AUTH-DELEGATION | token/wallclock caps have no job-envelope primitive (R3); no nesting added by design | pending |
+ | REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
+ | REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
+ | REQ-R25-R4 | roadmap R2.5 (Round 2.5 D; APPROVAL-EXACT) | canonical approval binding (absorbs APR-02) | PENDING | — | — | roadmap §R4 | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 6334972..567e913 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -30,6 +30,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-18 | engine full suite (sweep batch 3: snapshots + actor guard) | `cd runtime && python -m pytest tests -q` | `84b5646` | 2026-09-18 | PASS | **909 passed, 10 subtests passed** (252.08s; was 905 — +4 new tests, zero regressions); focused sweep-fix + backup + transcription = 45 passed | PER-03, APR-01 | INV-PER03-001 | `increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md` | parent-executed |
+ | A-19 | engine full suite + desktop suite (R0 / APR-02 approval scope) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit && bun run test` | `8a677d0` | 2026-09-18 | PASS | **915 passed, 10 subtests passed** (264.24s; was 909 — +6 new tests, zero regressions); focused approvals + sweep-fix = 33 passed; desktop tsc 0, vitest 93 | APR-02 (R0) | INV-APPROVE-002 (partial) | `increments/R0-APR02-APPROVAL-SCOPE.md` | parent-executed |
+ | A-20 | engine full suite + desktop typecheck/suite (R0 sweep completion: SEC-01, TR-01, COR-06/ERR-01, APR-05, COR-03/APR-06/THM-01) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc -p tsconfig.json --noEmit && bunx vitest run` | `594b8b4` | 2026-09-18 | PASS | **931 passed, 10 subtests passed** (258.82s; was 915 — +16 new tests, zero regressions); focused: `test_vetting.py` 36, `test_transcription.py` 31, `test_v16_sweep_fixes.py` 15, approvals + restore-visibility green; desktop tsc 0 errors, **vitest 93 passed (8 files)** | SEC-01, TR-01, TR-02 (deferred-binding), APR-05, APR-06, COR-03, COR-06, THM-01, ERR-01 | INV-SWEEP4-001 | `increments/R0-SWEEP.md` | parent-executed (renderer rows verified by tsc + code read only — §58) |
++| A-21 | engine full suite (R1 delegation authority ceiling / AUTH-DELEGATION) | `cd runtime && python -m pytest tests -q`; focused `tests/test_v16_r1_authority.py` + the workforce family | `dc65fbc` | 2026-09-18 | PASS | **952 passed, 10 subtests passed** (287.14s; was 931 — +21 new tests, zero regressions); focused: R1 21, workforce family (schemas/assignment/d1/d2/learning/parallel/assurance) 269 together | REQ-R25-R1 | INV-AUTH-DELEGATION | `increments/R1-AUTHORITY-CEILING.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md b/docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md
+new file mode 100644
+index 0000000..9d0e2db
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R1-AUTHORITY-CEILING.md
+@@ -0,0 +1,115 @@
++# Increment — R1: the delegation authority ceiling is executable
++
++increment_id: V16-R1-AUTHORITY-CEILING
++invariant: **AUTH-DELEGATION** — delegation may narrow authority; delegation must never create
++authority (`effective_child_authority ⊆ effective_delegator_authority`)
++requirement: `REQ-R25-R1` (roadmap R2.5 §R1; marathon directive §9)
++phase: Campaign A — R1
++base_commit: `4440a90`
++production_commit: `dc65fbc`
++status: complete (full engine regression at this increment — TEST_EVIDENCE_INDEX A-21)
++
++## R1.A — audit of the real current issuance path (before any check was written)
++
++What actually exists (verified in code, not assumed):
++
++- `workforce.py` owns the vocabulary: `AUTHORITY_CLASSES = (read-only, workspace-write,
++  leased-write, external-effect)` and `AUTHORITY_RANK`.
++- `Team.resolve_role(...)` resolves the role fields (`authority_max`, `tool_policy`) per
++  project/task; `assignment.registry_ceilings(...)` turns the seeded archetype registry into a
++  role→class table that `validate_task_contract(ceilings=…)` uses.
++- `contracts.ROLE_MAX_AUTHORITY` is the static fallback table (`builder` leased-write,
++  `verifier` read-only, `release` external-effect, …), and `_enum` refuses a class above the role
++  ceiling ('Role X may not hold Y authority (ceiling Z)').
++- `delegation._authority_for(role_fields, scope)` derives the contract authority **from the role**;
++  `allowed_tools` come from `role_fields['tool_policy']['allow']`; `write_boundaries` = the request
++  scope; `parent_task` is **always None** — the design deliberately has no nesting (doc 03; R1.C).
++- `assignment.grants_for` / `require_grants` refuse any tool above the authority ceiling via the
++  `TOOL_AUTHORITY` mapping (fail-closed, every denial named).
++- D1 `delegate()` and D2 `pods.run_d2` are the two issuers; both call `issue_task_contract(...)`
++  which validates and appends the frozen row.
++- Budget: `core.py` refuses a new milestone when the job envelope is nearly exhausted, and
++  `reserve_budget` created the delegation's reservation — but the reservation was never compared
++  against the envelope.
++
++Gaps found (each one is a dimension of the invariant that was *not* executable):
++
++1. Nothing tied a child issuance to the issuing context's authority beyond the **class** ceiling:
++   write scope, write boundaries, external effects and tool grants had no delegator dimension.
++2. A contract could contradict itself: `write_scope` was never checked against `write_boundaries`.
++3. `reserve_budget` accepted a cost reservation larger than the remaining job budget, so a
++   delegated mission could create budget authority the delegator did not hold.
++
++## Implementation (existing primitives only — no RBAC, no second ACL, no delegation database)
++
++- **`workforce.authority_within(child, parent)`** — pure containment over the contract-carried
++  dimensions: authority class rank, write scope, write boundaries (path-prefix containment with
++  `./`/backslash normalization; a `.` root contains everything), external effects (`'none'` is the
++  empty set), allowed tools (set containment). Absent parent dimensions place no ceiling; an empty
++  delegator write scope is a real ceiling. Returns the offending dimension as a human sentence.
++- **`contracts.validate_task_contract(..., parent_authority=None)`** — refuses a child that is not
++  contained ('Delegation may narrow authority but never create it: <dimension>'), refuses a
++  self-contradictory `write_scope`/`write_boundaries` pair, and refuses a contract that declares a
++  `parent_task` without a delegator envelope (R1.C: the ceiling survives the day nesting exists).
++- **Issuance wiring** — `delegate()` and `issue_task_contract()` accept `parent_authority` and pass
++  it through; `pods.run_d2` issues the **verifier inside the mission envelope** (class, write scope
++  and effects taken from the builder's frozen authority; tool grants stay role-local so the verifier
++  keeps its own read-only tool set). Callers that pass nothing keep the previous behavior exactly.
++- **`assignment.reserve_budget`** — refuses a reservation whose cost exceeds
++  `job.budget − job.spent − job.reserved` (the budget dimension of the same invariant).
++
++## Previous vs new behavior
++
++| Situation | Before | After |
++|---|---|---|
++| Child contract class above the issuing context | refused by the **role** ceiling only | refused by role ceiling **and** delegator envelope |
++| Child write scope outside the delegator's | accepted | refused (path containment) |
++| Child external effect the delegator does not hold | accepted (class permitting) | refused |
++| Tool grant outside the delegator's | accepted | refused at issuance (grants path unchanged) |
++| `write_scope` outside the contract's own `write_boundaries` | accepted | refused (self-contradiction) |
++| Nested contract (`parent_task` set) without a delegator envelope | accepted | refused |
++| Reservation larger than the remaining job budget | accepted (caught later at a milestone boundary) | refused at reservation time |
++
++## Failure mode addressed
++
++A delegated mission (or a future nested one) could hold authority its delegator never held —
++class, scope, effects, tools or budget — and the only guard was the static role ceiling. Now the
++invariant is enforced where authority is actually issued, and the protection survives the addition
++of nesting: a `parent_task` cannot be issued without naming the envelope it stays inside.
++
++## Security / privacy / persistence / migration impact
++
++- Security: strictly narrowing — three new refusal classes; no new authority path, no new secret,
++  no new network surface.
++- Persistence: none (no schema change, no new table, no new column). Frozen contract rows are
++  unchanged in shape; only issuance-time validation is stricter.
++- Migration: none.
++
++## Tests (evidence-bound)
++
++- `tests/test_v16_r1_authority.py` — **21 new**: primitive (equal/narrow accepted; wider class,
++  escaping scope, unheld effect, unheld tool refused; empty scope is a real ceiling; unconstrained
++  dimension places none; unknown class), contract-level (narrowing accepted; class/scope/effects/
++  tool widening refused with the 'never create it' sentence; self-contradictory scope/boundaries
++  refused; nested-without-delegator refused; the plain contract still validates), issuance wiring
++  (D1/D2 path carries the envelope; widening refused; unchanged without a parent), budget envelope
++  (inside accepted, beyond refused).
++- Workforce family: `test_workforce_schemas` / `assignment` / `d1` / `d2` / `learning` /
++  `parallel` / `assurance` — 269 passed together (zero regressions from the new checks).
++- Full engine: TEST_EVIDENCE_INDEX A-21.
++
++## Limitations / audit questions / repair hints
++
++- **No arbitrary nested spawning was added** (R1.C): `parent_task` remains None in every production
++  path; the new refusal is the future-proofing, not a new capability.
++- Token/wallclock reservation caps are not enforced against the job envelope — the job record
++  carries a single cost-like `budget` float (`core.py:302` compares the same figure), so only cost
++  has a delegator-side primitive. Recorded honestly rather than invented; R3 revisits budget
++  accounting.
++- Audit questions for Campaign B: (1) can any caller construct a contract without passing through
++  `validate_task_contract`? (2) does `registry_ceilings` cover every archetype in every project
++  scope? (3) is `tool_policy.allow` the right tool-grant source for the *delegator* dimension, or
++  should the parent contract's frozen `allowed_tools` be the ceiling instead (it is here when a
++  parent envelope is supplied)? (4) `_path_within` treats a `.` root as universal — is that the
++  intended meaning of an empty/rooted scope?
++- Repair hints: none open from this increment.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index e28cc2c..123b854 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,12 +1,12 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T17:05:00Z
++updated_utc: 2026-09-18T17:35:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: R0 sweep complete — HEAD carries `594b8b4` (COR-03/APR-06/THM-01) + this docs commit; see `git log --oneline -8`
++head: R1 complete — HEAD carries `dc65fbc` (R1 authority ceiling) + this docs commit; see `git log --oneline -8`
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,8 +18,8 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R0 COMPLETE** — the P2/P3 sweep is 100% dispositioned (`P2_P3_DISPOSITION.md`, 26 rows in-table: P2 10, P3 16; the directive's 27 recorded for Campaign B). Five production commits: SEC-01 `49e528e`, TR-01 `8ab7699`, COR-06/ERR-01 `5950efb`, APR-05 `dd34ac2`, COR-03/APR-06/THM-01 `594b8b4`. REL-01 remains the only `OPEN_RELEASE_BLOCKER` (R8). **Now starting R1** (delegation authority ceiling).
+-current_phase: R1 — delegation authority ceiling (`effective_child_authority ⊆ effective_delegator_authority`, existing primitives only) → R2 idempotency matrix → R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD
++current_increment: **R1 COMPLETE** — the delegation authority ceiling is executable (`dc65fbc`): `workforce.authority_within` + `validate_task_contract(parent_authority=…)` + D1/D2 issuance wiring (verifier inside the mission envelope) + `reserve_budget` job-envelope check. 21 new tests; full engine **952 passed + 10 subtests** (was 931). **Now starting R2** (logical-work / idempotency matrix).
++current_phase: R2 — logical-work/idempotency matrix + real gaps only (then R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R1** — delegation authority ceiling: first audit the real current issuance path (D1/D2/D3 contracts, assignment grants, role ceilings, leases, runtime/provider binding, tool filtering), then add the reusable narrowing check + discriminating negative tests (widen attempts on authority class, write path, tool, external effect, project boundary, budget) with the current non-nested parent/delegator semantics preserved. Then R2 idempotency matrix → R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Independent audits stay paused until the RC. Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
++next_autonomous_action: **R2** — logical-work/idempotency matrix: for every autonomous event family (submissions, job intake, events/aggregate revisions, runs + run epochs, result inbox, native RPC, native permission replies, approvals, boundary grants, external effects, continuation, broker recovery, publication, workforce task/mission events, parallel stream announcements) record logical-work identity, attempt identity, dedupe identity, persistence, authoritative state, duplicate behavior, restart behavior and side-effect behavior; prove `EVENT-IDEMPOTENCY`/`EFFECT-REPLAY` where already true, repair only the real duplicate-execution gaps, and add hostile duplicate tests (same submission/result/RPC/permission/approval/boundary grant/effect/continuation/publication; stale run epoch) including across restart where possible. Then R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
+ external_dependency: NONE
+ stop_reason: NONE

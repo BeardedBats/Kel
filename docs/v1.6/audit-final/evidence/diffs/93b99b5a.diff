@@ -1,0 +1,207 @@
+commit 93b99b5a5af969d5cd32189c9984fe5ae1975674
+2026-09-18 18:14:41 -0400
+fix(v1.6): REL-01 closed — the runtime that is hashed is the runtime that loads (R8.B/C/D)
+
+
+diff --git a/desktop/package.json b/desktop/package.json
+index 343bcd3..00bde9c 100644
+--- a/desktop/package.json
++++ b/desktop/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "Kel",
+-  "version": "1.5.0",
++  "version": "1.6.0",
+   "description": "Kel with the AionUI interface",
+   "keywords": [],
+   "license": "Apache-2.0",
+diff --git a/desktop/packages/desktop/src/process/services/kel/engineVersion.test.ts b/desktop/packages/desktop/src/process/services/kel/engineVersion.test.ts
+new file mode 100644
+index 0000000..a5906dc
+--- /dev/null
++++ b/desktop/packages/desktop/src/process/services/kel/engineVersion.test.ts
+@@ -0,0 +1,29 @@
++/**
++ * The engine-identity guard (audit A1 / ENG-01, extended by R8.B).
++ *
++ * The packaged desktop refuses to reuse a live engine that reports a different version than the app
++ * it shipped with, so that an upgrade can never keep talking to the previous engine. The engine's
++ * reported version is its own `__version__` (single-sourced in `runtime/kel/__init__.py`), and the
++ * desktop's expectation is `app.getVersion()` — i.e. this package's `version`. The two are asserted
++ * equal on the engine side (`runtime/tests/test_v16_r8_identity.py`).
++ */
++import { describe, expect, it } from 'vitest';
++import { engineVersionAccepted } from './engineVersion';
++
++describe('engineVersionAccepted', () => {
++  it('accepts an identical version', () => {
++    expect(engineVersionAccepted('1.6.0', '1.6.0')).toBe(true);
++    expect(engineVersionAccepted(' 1.6.0 ', '1.6.0')).toBe(true);
++  });
++
++  it('refuses a different or stale version', () => {
++    expect(engineVersionAccepted('1.5.0', '1.6.0')).toBe(false);
++    expect(engineVersionAccepted(undefined, '1.6.0')).toBe(false);
++    expect(engineVersionAccepted(160, '1.6.0')).toBe(false);
++  });
++
++  it('does not enforce an expectation it cannot know', () => {
++    expect(engineVersionAccepted('anything', '')).toBe(true);
++    expect(engineVersionAccepted('anything', undefined)).toBe(true);
++  });
++});
+diff --git a/runtime/kel/__init__.py b/runtime/kel/__init__.py
+index dbdd714..da646e2 100644
+--- a/runtime/kel/__init__.py
++++ b/runtime/kel/__init__.py
+@@ -1,2 +1,2 @@
+ """Kel compatibility prototype. Local, bounded, evidence-led work."""
+-__version__ = "1.5.0"
++__version__ = "1.6.0"
+diff --git a/runtime/kel/service.py b/runtime/kel/service.py
+index d1fc0cd..6aabfcc 100644
+--- a/runtime/kel/service.py
++++ b/runtime/kel/service.py
+@@ -21,7 +21,10 @@ from .coding import CodingAdapter,compile_coding
+ from .runner import DurableAdapter
+ from .research import needs_research
+ 
+-ENGINE_VERSION='1.5.0'
++# Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
++# whose reported version differs from the app it shipped with, so this literal must match
++# `desktop/package.json`'s version (what `app.getVersion()` reports in the packaged app).
++from . import __version__ as ENGINE_VERSION
+ 
+ # Verbs that mean "change code in an existing project". These are the only
+ # requests that need a project root; greenfield ("create an app") is classified
+diff --git a/runtime/tests/test_v16_r8_identity.py b/runtime/tests/test_v16_r8_identity.py
+new file mode 100644
+index 0000000..0ac85a5
+--- /dev/null
++++ b/runtime/tests/test_v16_r8_identity.py
+@@ -0,0 +1,35 @@
++"""Round 2.5 R8.B — package identity.
++
++The desktop refuses to reuse a live engine whose reported version differs from the app it shipped
++with (`engineVersionAccepted`, expectation = `app.getVersion()` = `desktop/package.json`'s version).
++The engine reports its own `__version__` in the descriptor and in `/api/state`. These tests pin the
++two ends together so a release can never ship an engine whose identity disagrees with its desktop.
++"""
++import json
++import sys
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from kel import __version__  # noqa: E402
++from kel import service  # noqa: E402
++
++REPO = Path(__file__).resolve().parent.parent.parent
++
++
++class EngineIdentityTests(unittest.TestCase):
++    def test_the_engine_reports_one_version_everywhere(self):
++        self.assertEqual(service.ENGINE_VERSION, __version__)
++        self.assertEqual(__version__, '1.6.0')
++
++    def test_the_desktop_expects_exactly_the_engine_it_ships(self):
++        desktop = json.loads((REPO / 'desktop' / 'package.json').read_text(encoding='utf-8'))
++        self.assertEqual(desktop['version'], __version__,
++                         'desktop/package.json version (app.getVersion()) must equal the engine '
++                         'version, or the packaged app refuses its own engine')
++
++    def test_the_descriptor_and_state_carry_that_version(self):
++        source = (REPO / 'runtime' / 'kel' / 'service.py').read_text(encoding='utf-8')
++        self.assertEqual(source.count("'engine_version':ENGINE_VERSION"), 3)
++        self.assertNotIn("ENGINE_VERSION='", source)  # no second literal to drift
+diff --git a/scripts/freeze-release.ps1 b/scripts/freeze-release.ps1
+index 3b98a5a..c76ba43 100644
+--- a/scripts/freeze-release.ps1
++++ b/scripts/freeze-release.ps1
+@@ -15,7 +15,37 @@ $out = Join-Path $repo $OutDir
+ if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+ Copy-Item -Recurse $PackageDir $out
+ Copy-Item -Force $AppAsar (Join-Path $out "resources/app.asar")
+-Copy-Item -Recurse -Force $RuntimeDir (Join-Path $out "resources/kel-engine")
++# The staged runtime must land *at the load path*, not nested inside the package's own copy:
++# `Copy-Item -Recurse <dir> <existing dir>` would create `resources/kel-engine/KelEngine/...` and
++# leave the package's bundled engine at the path the app actually loads (the historic REL-01
++# divergence - found live while writing the validation fixture).
++$runtimeDest = Join-Path $out "resources/kel-engine"
++if (Test-Path $runtimeDest) { Remove-Item -Recurse -Force $runtimeDest }
++Copy-Item -Recurse -Force $RuntimeDir $runtimeDest
++
++# REL-01 (V1.6): the runtime that is *hashed* must be the runtime that *loads*. Two ways this could
++# diverge silently, both refused here instead:
++#   1. the copy itself failing to land at the load path (checked by hash, not by trust);
++#   2. a package directory that already bundles a different engine under resources/kel-engine
++#      (an installed app would then run one runtime while the manifest hashes another).
++$loadPath = Join-Path $out "resources/kel-engine/KelEngine.exe"
++$sourcePath = Join-Path $RuntimeDir "KelEngine.exe"
++if (-not (Test-Path $sourcePath)) { throw "Runtime directory has no KelEngine.exe: $RuntimeDir" }
++$sourceHash = (Get-FileHash -Algorithm SHA256 $sourcePath).Hash
++$loadHash = (Get-FileHash -Algorithm SHA256 $loadPath).Hash
++if ($sourceHash -ne $loadHash) {
++    throw ("REL-01: the staged runtime and the runtime at the load path differ. " +
++          "source $sourcePath = $sourceHash ; load $loadPath = $loadHash")
++}
++$bundledPath = Join-Path $PackageDir "resources/kel-engine/KelEngine.exe"
++if (Test-Path $bundledPath) {
++    $bundledHash = (Get-FileHash -Algorithm SHA256 $bundledPath).Hash
++    if ($bundledHash -ne $sourceHash) {
++        throw ("REL-01: the package at $PackageDir bundles a different engine " +
++              "($bundledHash) than the runtime being frozen ($sourceHash). Rebuild the package from " +
++              "this runtime (scripts/build-runtime.ps1 then the electron-builder package step).")
++    }
++}
+ # V1.5: no runtime/debug leftovers in a frozen release (defensive; the package is built clean).
+ Get-ChildItem -File $out -Filter "*.log" -ErrorAction SilentlyContinue | Remove-Item -Force
+ # Positional order matters: scripts/verify-release.ps1 reads the first three hashes in this order.
+@@ -39,6 +69,8 @@ $manifest = @(
+     "- Kel.exe                                          $($sums[0].Substring(0,8))...",
+     "- resources/app.asar                               $($sums[1].Substring(0,8))...",
+     "- resources/kel-engine/KelEngine.exe                $($sums[2].Substring(0,8))...",
++    "  (REL-01: the load-path hash above equals the staged runtime hash by construction - the freeze",
++    "   refuses to assemble a release whose package bundles a different engine.)",
+     "- resources/bundled-aioncore/win32-x64/aioncore.exe $($sums[3].Substring(0,8))...",
+     "",
+     "Also written: SHA256Sums.txt (V1.5) - the same hashes as 'HASH  path' lines for standard tooling.",
+diff --git a/scripts/validate-freeze.ps1 b/scripts/validate-freeze.ps1
+new file mode 100644
+index 0000000..e8537af
+--- /dev/null
++++ b/scripts/validate-freeze.ps1
+@@ -0,0 +1,32 @@
++# REL-01 validation fixture: exercises the identical staging/hash/load logic as a release freeze
++# WITHOUT producing a release. Positive path: freeze + verify agree on the load path. Negative path:
++# a package that bundles a different engine than the frozen runtime is refused (non-zero exit).
++param()
++$ErrorActionPreference = "Stop"
++$repo = (Resolve-Path "$PSScriptRoot\..").Path
++$stub = Join-Path $repo "dist/validation-package"
++$runtime = Join-Path $repo "dist/runtime/KelEngine"
++$out = Join-Path $repo "dist/validation-freeze"
++$freeze = Join-Path $PSScriptRoot "freeze-release.ps1"
++$verify = Join-Path $PSScriptRoot "verify-release.ps1"
++if (-not (Test-Path (Join-Path $runtime "KelEngine.exe"))) {
++    throw "Build the runtime first: powershell -ExecutionPolicy Bypass -File scripts/build-runtime.ps1"
++}
++if (Test-Path $stub) { Remove-Item -Recurse -Force $stub }
++New-Item -ItemType Directory -Force -Path (Join-Path $stub "resources/kel-engine") | Out-Null
++New-Item -ItemType Directory -Force -Path (Join-Path $stub "resources/bundled-aioncore/win32-x64") | Out-Null
++Set-Content -Path (Join-Path $stub "Kel.exe") -Value "synthetic"
++Set-Content -Path (Join-Path $stub "resources/app.asar") -Value "synthetic"
++Set-Content -Path (Join-Path $stub "resources/bundled-aioncore/win32-x64/aioncore.exe") -Value "synthetic"
++Copy-Item -Recurse -Force $runtime (Join-Path $stub "resources/kel-engine")
++Write-Host "-- positive: freeze"
++& powershell -ExecutionPolicy Bypass -File $freeze -PackageDir $stub -AppAsar (Join-Path $stub "resources/app.asar") -RuntimeDir $runtime -OutDir "dist/validation-freeze"
++if ($LASTEXITCODE -ne 0) { throw "freeze-release.ps1 failed on the positive path (exit $LASTEXITCODE)" }
++Write-Host "-- positive: verify"
++& powershell -ExecutionPolicy Bypass -File $verify -ReleaseDir $out -Manifest (Join-Path $out "SHA256Sums.txt.txt")
++if ($LASTEXITCODE -ne 0) { throw "verify-release.ps1 failed on the positive path (exit $LASTEXITCODE)" }
++Write-Host "-- negative: a package bundling a different engine must be refused"
++Add-Content -Path (Join-Path $stub "resources/kel-engine/KelEngine.exe") -Value "tampered"
++& powershell -ExecutionPolicy Bypass -File $freeze -PackageDir $stub -AppAsar (Join-Path $stub "resources/app.asar") -RuntimeDir $runtime -OutDir "dist/validation-freeze"
++if ($LASTEXITCODE -eq 0) { throw "REL-01 validation FAILED: the freeze accepted a package bundling a different engine." }
++Write-Host "REL-01 validation passed: load-path hash == staged runtime hash; divergence refused (exit $LASTEXITCODE)."

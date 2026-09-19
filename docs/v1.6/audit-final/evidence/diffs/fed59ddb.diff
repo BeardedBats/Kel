@@ -1,0 +1,275 @@
+commit fed59ddba93adbeeeb7be4b9f80b11567ebcd816
+2026-09-18 12:34:59 -0400
+docs(v1.6): Phases 10-11 — provider validation + Rust freshness recheck (Phase 12 closed)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index be89acd..b7e11ae 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -406,9 +406,10 @@ focused tests, regression, packaged verification, atomic commits and records con
+ - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+ - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+-- **Phase 9 decided** 2026-09-18: no Profiles concept; Projects remain (see below). **Next**:
+-  Phase 10 — real provider validation; see `MAIN_STATUS.next_autonomous_action` for the full
+-  Campaign A queue.
++- **Phases 10-11 done** 2026-09-18: provider validation (claude PASS, codex CLI-version blocked,
++  internal/deepseek unavailable) and the Rust freshness recheck (verdict upheld; Phase 12 closed).
++  **Next**: F4 real-artifact binding + resolution-kind; see `MAIN_STATUS.next_autonomous_action` for
++  the full Campaign A queue.
+ 
+ ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+ 
+@@ -462,3 +463,18 @@ by `HIDE_DONOR_AGENT_SURFACES = true`; remaining "profile" strings are unrelated
+ and engine internals). No code change required; held visual batch 3 keeps "Projects" language. New
+ audit target 46 (AgentBadge assistantId path is donor-dead for Kel conversations). Corpus updated:
+ REQ-PP-9, mapping row 9. Next: Phase 10 — real provider validation.
++
++## Phases 10-11 — provider validation + Rust freshness (2026-09-18)
++
++**Phase 10 (sprint §36):** real calls where access allows — `claude -p` minimal call **PASSED**
++(returned `ok`; client 2.1.215, authenticated); `codex exec` reached the real service but was
++refused by CLI model-version logic (`gpt-6-astra` requires a newer Codex — recorded as an
++environment limitation, never a pass); `internal`/`deepseek` have **no credentials anywhere on this
++machine** (presence-only checks; nothing leaked). Fixture refresh: 55 passed (providers +
++assignment). Record: `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; matrix rewritten.
++
++**Phase 11 (sprint §37):** `NO_MIGRATION_NEEDED_NOW` **upheld** against the current tree — process
++model/transports/ownership unchanged by Campaign A work; A1 (`engine_version` reuse check),
++PER-02 (`apply_pending_restore` swallow) and REL-01 (freeze staging) re-verified still open (docket
++P2s); no re-open trigger fired. **Phase 12 CLOSED** (no Rust migration in V1.6). Record:
++`docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md`. Next: F4 real-artifact binding + resolution-kind.
+diff --git a/docs/v1.6/phase10/PROVIDER_VALIDATION.md b/docs/v1.6/phase10/PROVIDER_VALIDATION.md
+new file mode 100644
+index 0000000..41fdda5
+--- /dev/null
++++ b/docs/v1.6/phase10/PROVIDER_VALIDATION.md
+@@ -0,0 +1,35 @@
++# Phase 10 — Real provider validation
++
++date: 2026-09-18
++increment: PHASE10-PROVIDER-VALIDATION
++scope (sprint §36): validate every provider path current access allows; real calls where possible;
++record unavailable paths accurately; never leak credentials into evidence.
++
++## What was validated (real, this session)
++
++| Path | Probe | Result |
++|---|---|---|
++| `claude-code` (native CLI) | `claude --version` → `2.1.215 (Claude Code)`; minimal real call `claude -p "Reply with exactly: ok"` (neutral cwd) | **PASS — returned `ok` (exit 0).** Client installed and authenticated. |
++| `codex` (native CLI) | `codex --version` → `codex-cli 0.142.5`; minimal real call `codex exec --skip-git-repo-check "Reply with exactly: ok"` | **Real transport reached; run refused by the service:** `The 'gpt-6-astra' model requires a newer version of Codex. Please upgrade…` (HTTP 400). Environment/tooling limitation of the installed CLI, recorded as such — NOT validated real success. |
++| `internal` (Anthropic API key) | environment (`ANTHROPIC_API_KEY`), app credential store search (`kel-credentials.json` across the user profile) | **Unavailable — no credential exists on this machine.** (Historical: a packaged engine probe reached the real wire once with a dummy key and got HTTP 401 — unchanged.) |
++| `deepseek` (API key) | environment (`DEEPSEEK_API_KEY`) | **Unavailable — no credential exists on this machine.** |
++
++Engine-level routing/authorization fixtures re-run for freshness:
++`python -m pytest tests/test_v14_providers.py tests/test_workforce_assignment.py -q` → **55 passed**
++(model prefs, provider registry, assignment/fallback paths — fixture-level, not real calls).
++
++## Honest bounds (never blurred)
++
++- `claude` PASS validates the *installed CLI* (availability + auth + a real request round-trip).
++  The app's native-adapter **spawn path** packaged end-to-end is NOT proven by this probe; it
++  remains covered by fixture tests + the historical packaged engine probe (401 dummy-key wire
++  reach). Campaign B should re-run whatever the RC package allows.
++- `codex` is present and reachable but refused by model-version logic — recorded as an environment
++  limitation, never as a pass.
++- No credential values were read, printed, or stored anywhere in this record. Probes used only
++  presence checks and the CLIs' own configured auth (which is the user's, not exported).
++
++## Matrix updated
++
++`docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md` — rows rewritten with today's results; no row
++claims more than its probe proved.
+diff --git a/docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md b/docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md
+new file mode 100644
+index 0000000..928a470
+--- /dev/null
++++ b/docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md
+@@ -0,0 +1,33 @@
++# Phase 11 — Rust freshness recheck + Phase 12 closure
++
++date: 2026-09-18
++increment: PHASE11-RUST-FRESHNESS
++scope (sprint §37): recheck `NO_MIGRATION_NEEDED_NOW`; verify A1; verify A5 / REL-01; record
++evidence; if Rust remains unnecessary, close Phase 12 explicitly.
++
++## Verdict recheck
++
++The rust-audit verdict doc (`kel-rust-audit/docs/rust-runtime-audit/09_FINAL_RECOMMENDATION.md`)
++recommends **`NO_MIGRATION_NEEDED_NOW`**, with its basis being architectural facts (process model,
++transports, ownership) plus one architectural finding (E7) and one shutdown tail. Re-verified
++against the CURRENT tree (`df87903`, after Phases 3.5–9 landed):
++
++| Claim | Status now | Evidence |
++|---|---|---|
++| Process model / transports / ownership (audit §01) | Unchanged. The deltas since the audit (`chat_approvals`, `capabilities`, `core`, memory, workforce 5.0–5.6, capability recommendations) add state machines and routes; none change the process tree, transports, or ownership map. | Phase records + `git log ffeef73..df87903` file map |
++| E7 / **A1** — `engine_version` not validated on engine reuse | **Still open.** No comparison exists in the main process; `KelService.ts:8` still only declares the descriptor type and uses `url`/`token`. Remains docket P2 `A1`. | grep both naming forms across `desktop/.../src` |
++| E2 / A2 — `apply_pending_restore` failure swallowed (**PER-02**) | **Still open.** `service.py:36–40` still wraps the call in `try/except: pass`. Remains docket P2 `PER-02`. | direct read at current HEAD |
++| A5 / **REL-01** — freeze staging nesting an inert `resources/kel-engine/kel-engine/` + manifest following the load path | **Still open.** `scripts/freeze-release.ps1:18–26` is unchanged (copies `$RuntimeDir` to `resources/kel-engine`; hashes read `resources/kel-engine/KelEngine.exe`). Remains docket P2 `REL-01`. | direct read at current HEAD |
++| Re-open triggers (audit §07) | None fired. | no native-supervisor trigger conditions met |
++
++## Verdict
++
++**`NO_MIGRATION_NEEDED_NOW` is upheld.** No Rust migration is scheduled into V1.6. The five local
++fixes in the audit's plan (`A1`–`A5`) remain the correct shape; `A1`, `A2`(=PER-02), `A5`(=REL-01)
++are on the P2/P3 sweep docket for Campaign A; `A3`/`A4` remain lower urgency with their records.
++
++## Phase 12 — closed explicitly
++
++**Phase 12 (Rust migration "only if current evidence requires it") is CLOSED: not required.** No
++evidence produced in Campaign A (or re-checked above) requires a Rust migration. Re-entry only via
++the audit's §07 re-open triggers, recorded in the rust-audit worktree.
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index 69e5899..216ba9d 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -8,12 +8,12 @@ it blocks V1.6, owner, and the revisit condition.
+ |---|---|---|---|---|---|---|---|
+ | DEF-001 | Phase 5.7 — adaptive staffing enablement | Entry conditions unmet: no doc-13 full campaign window, no user sign-off; enabling would fabricate readiness | None (shadow learning stays on) | doc-13 campaign (classes 3/5/9 + baseline-B conflict rate) + pre-registered H1–H5 outcomes + explicit user sign-off | NO | user (sign-off) + Main | Campaign results + user sign-off |
+ | DEF-002 | Phase 5.8 / Phase 8 — Advanced Worker View | **DECISION MADE 2026-09-18: deferred beyond V1.6** (North Star ONE assistant; doc 12 success = 100% zero visits; no product decision or usability review exists; no user-reported need) | None for V1.6 (hidden orchestration stays) | Post-V1.6 product decision + usability review; then a bounded Advanced/Details-only increment behind a setting | NO | product/Nick | Decision recorded: `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` |
+-| DEF-003 | Phase 12 — Rust migration | Rust audit verdict NO_MIGRATION_NEEDED_NOW at `9c1e7d0` | None | Re-verify freshness in Phase 11; if evidence still negative, close Phase 12 explicitly | NO | Main | Phase 11 recheck |
++| DEF-003 | Phase 12 — Rust migration | Rust audit verdict NO_MIGRATION_NEEDED_NOW at `9c1e7d0`; **Phase 11 recheck 2026-09-18 upheld the verdict; Phase 12 explicitly CLOSED** | None | Re-entry only via the rust-audit §07 re-open triggers | NO | Main | Closed (2026-09-18) |
+ | DEF-004 | doc-13 full evaluation campaign | Pilot (classes 2/6/8) succeeded; full matrix is a validation vehicle, not a release behavior | None (nothing reads it to gate) | Campaign run over 10 classes × 3 configs × ≥3 seeds | NO | Main/user | Before any adaptive-enablement re-entry |
+-| DEF-005 | Optional provider validation (providers without available credentials) | No credentials available in this environment | Documented limitation, not a blocker | Real call evidence when access exists | NO | Main/user | When credentials become available |
++| DEF-005 | Optional provider validation (providers without available credentials) | No credentials available in this environment. Phase 10 (2026-09-18): `claude` real call PASS; `codex` blocked by installed CLI version (`gpt-6-astra`); `internal`/`deepseek` no credentials anywhere | Documented limitation, not a blocker | Real call evidence when access exists | NO | Main/user | When credentials/CLI updates become available |
+ | DEF-006 | Per-project flag storage (workforce flags) | Current single-flag scope is sufficient for shadow behavior | None | Design + migration when per-project control is needed | NO | Main | First real multi-project flag need |
+ | DEF-007 | Overlay content at calibration | Overlays v1 ship as a graceful no-op registry until real role overlays are authored | None | Authored overlay content + calibration results | NO | Main | When role overlays are content-authored |
+-| DEF-008 | Provider 'web'/context tokens in evidence | Only evidence-backed tokens allowed; no evidence yet | None | Evidence from real provider runs | NO | Main | Phase 10 creates evidence (or not) |
++| DEF-008 | Provider 'web'/context tokens in evidence | Only evidence-backed tokens allowed; no evidence yet (Phase 10 had no real API-provider runs — remains deferred) | None | Evidence from real provider runs | NO | Main | First real API-provider run |
+ | DEF-009 | F16-3 — workforce guarantees stay engine-level (no production caller) | Wiring into live product flows is a product decision; guarantees hold engine-level | Documented limitation | A wiring increment decision | NO | Main | Sprint §30 "provider/Workforce real wiring" item — re-decide in Campaign A |
+ | DEF-010 | Human pixel review | Requires a human; no image perception in agent threads (honest limitation) | Release gate remains open by design | Human review of `packaged-visual5`/later captures via SCREENSHOT_REVIEW_INDEX | YES for release (not for RC) | Nick | At the pre-release human gate |
+ | DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |
+diff --git a/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+index 0987f22..2bf6331 100644
+--- a/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
++++ b/docs/v1.6/pre-audit/PROVIDER_VALIDATION_MATRIX.md
+@@ -1,33 +1,35 @@
+ # PROVIDER_VALIDATION_MATRIX — provider/model/runtime validation
+ 
+-updated: 2026-09-18T16:05Z (seed; completed in Phase 10 — sprint §36)
+-rule: **mock validation is never real-provider validation.** A row may only read `real: PASS`
+-with a recorded call artifact (timestamp, transport, result — never credentials).
++updated: 2026-09-18 (Phase 10 — real calls attempted; see `docs/v1.6/phase10/PROVIDER_VALIDATION.md`)
++rule: **mock validation is never real-provider validation.** A row may only read `real: PASS` with
++a recorded call artifact (date, transport, result — never credentials).
+ 
+-Providers defined in `runtime/kel/providers.py` (`DEFINITIONS`): `claude-code` (native CLI,
+-subscription), `codex` (native CLI, subscription), `internal` (Anthropic API, `ANTHROPIC_API_KEY`),
+-`deepseek` (API, `DEEPSEEK_API_KEY`). Engine adapters: native, internal, coding, durable/research.
++Providers (`runtime/kel/providers.py` DEFINITIONS): `claude-code` (native CLI, subscription),
++`codex` (native CLI, subscription), `internal` (Anthropic API key), `deepseek` (API key).
++Engine adapters: native, internal, coding, durable/research.
+ 
+ ## Matrix
+ 
+-| Provider | Model | Runtime | AUTO | PREFERRED | FIXED | fallback | Capability grants | Privacy/local-only | Budget | Real call? | Mock only? | Credentials? | Result | Evidence | Known limitation |
+-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+-| internal (Anthropic API) | claude-sonnet-4-6 | engine adapter | routed via assignment tests | routed | routed | recorded-basis tests (engine) | fail-closed grants tests | privacy-enforced checks in assignment | reservations tested | **wire reached once** — packaged engine probe, HTTP 401 with dummy key (`package-p1cap`) | routing/assignment fixtures | none available in this environment (as of corpus open) | transport real, auth denied; real success NOT yet validated | ux-audit/p1-capability-engine-probe.py; 5.1 record | real-credential run pending Phase 10 |
+-| deepseek | deepseek-chat / deepseek-reasoner | engine adapter | same test surface | same | same | same | same | — | same | no | fixtures only | none available | untested real | — | — |
+-| claude-code | claude-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | fallback recorded at assignment layer | native tools (text/tools/edit/shell) | subscription auth | n/a | no | fixtures only | unknown in this environment | untested real | — | Phase 10 |
+-| codex | codex-native | native CLI | assignment-layer only | assignment-layer | assignment-layer | same | text/tools/edit/shell | subscription auth | n/a | no | fixtures only | unknown | untested real | — | Phase 10 |
++| Provider | Model | Runtime | AUTO | PREFERRED | FIXED | fallback | Capability grants | Privacy/local-only | Budget | Real call (2026-09-18) | Credentials | Result | Evidence | Known limitation |
++|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
++| **claude-code** | claude-native | native CLI | assignment-layer fixtures | same | same | recorded-basis fixtures | fail-closed grants tests | subscription auth | n/a | **PASS** — `claude -p "Reply with exactly: ok"` returned `ok` (exit 0); client `2.1.215` | CLI installed + authenticated | **real CLI call validated** | `docs/v1.6/phase10/PROVIDER_VALIDATION.md` | app's native-adapter spawn path packaged end-to-end not separately proven |
++| **codex** | codex-native | native CLI | assignment-layer fixtures | same | same | same | same | subscription auth | n/a | **FAIL (environment)** — real transport reached; service refused: `'gpt-6-astra' model requires a newer version of Codex` (HTTP 400); client `codex-cli 0.142.5` | CLI installed; auth implied by service response | **not validated (tooling limitation)** | same | upgrade or model fix needed before re-probe; never record as pass |
++| **internal** (Anthropic API) | claude-sonnet-4-6 | engine adapter | routed fixtures | same | same | same | same | privacy-enforced checks | reservations tested | **Unavailable** — no credential exists on this machine (env + app store searched) | none | transport real (historical packaged probe, dummy key, HTTP 401); real success NOT validated | `PROVIDER_VALIDATION.md`; ux-audit/p1-capability-engine-probe.py | provide a key → re-run Phase 10 probe |
++| **deepseek** | deepseek-chat / deepseek-reasoner | engine adapter | routed fixtures | same | same | same | same | — | same | **Unavailable** — no credential exists | none | untested real | same | provide a key → re-run |
+ 
+-## Model routing semantics under test (engine-level, audited through 8a2b25d)
++Fixture refresh (same day): `python -m pytest tests/test_v14_providers.py tests/test_workforce_assignment.py -q` → **55 passed**.
+ 
+-- AUTO / PREFERRED / FIXED resolution with no silent substitution; requirement profiles fail
+-  closed; overlays are a graceful no-op registry (Phase 5.1; audits 10–11).
+-- Per-mode fallback basis recorded (`fallback_basis`); cross-mode arguments refused.
++## Model routing semantics (engine-level, audited through `8a2b25d`; unchanged since)
++
++- AUTO / PREFERRED / FIXED resolution with no silent substitution; requirement profiles fail closed.
++- Per-mode fallback basis recorded; cross-mode arguments refused.
+ - Capability grants fail closed against the authority ceiling.
+ 
+-## Phase 10 completion checklist
++## RC checklist (remainder)
+ 
+-- [ ] Enumerate every provider path reachable in this environment; attempt a real call where a
+-      credential exists; record timestamp/result.
+-- [ ] Record unavailable paths as `unavailable` — never as pass.
+-- [ ] Confirm no credentials appear in any evidence artifact (scan).
+-- [ ] Re-run the model-routing fixtures at RC and attach counts.
++- [x] Enumerate reachable provider paths; attempt real calls where a credential exists.
++- [x] Record unavailable paths as `unavailable` — never as pass.
++- [x] Confirm no credentials appear in any evidence artifact (probes printed presence only).
++- [ ] Re-run the model-routing fixtures at RC and attach counts (scheduled).
++- [ ] If credentials appear later: re-run the `internal`/`deepseek` probes; re-try `codex` after
++      a CLI upgrade; record each result here.
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 75d36a5..f3d26bf 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -44,8 +44,8 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
+ | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | decided — deferred beyond V1.6 | docs commit (2026-09-18) | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | pending (decision review) |
+ | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | decided — no Profiles concept; Projects remain the single isolation concept | docs commit (2026-09-18) | — | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | pending (decision review) |
+-| REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
+-| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
++| REQ-PROV-10 | sprint directive §36 | real provider validation | implemented (as access allows) | docs commit (2026-09-18) | 55 focused; claude real call PASS | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `PROVIDER_VALIDATION_MATRIX.md` | codex blocked (CLI version); internal/deepseek no credentials (DEF-005) | pending |
++| REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
+ | REQ-RK | audit carry-forward | resolution-kind semantics | PENDING | — | — | — | pending |
+ | REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 4eea371..3721039 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -16,6 +16,9 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-4 | engine focused capabilities suites (Phase 7) | `cd runtime && python -m pytest tests/test_capabilities.py tests/test_research.py tests/test_acp_host.py tests/test_v13_work_context.py tests/test_v15_completion.py -q` | `df87903` | 2026-09-18 | PASS | **83 passed** (26.03s) | REQ-CAPREC-7; INV-CAP-001/002, INV-CAPREC-001 | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
+ | A-5 | desktop typecheck + unit (Phase 7) | `cd desktop && bunx tsc --noEmit && bun run test` | `df87903` | 2026-09-18 | PASS | tsc 0 errors; **90 passed / 7 files** (was 83; +7 recommendation tests) | desktop reqs; REQ-CAPREC-7 | — | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
+ | A-6 | engine full suite (Phase 7) | `cd runtime && python -m pytest tests -q` | `df87903` | 2026-09-18 | PASS | **885 passed, 10 subtests passed** (249.57s; was 878 — +7 new tests, zero regressions) | all engine reqs | INV-CAP-001/002, INV-CAPREC-001 | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | parent-executed |
++| A-7 | provider/assignment focused (Phase 10) | `cd runtime && python -m pytest tests/test_v14_providers.py tests/test_workforce_assignment.py -q` | `df87903` (engine unchanged) | 2026-09-18 | PASS | **55 passed** (6.44s) | REQ-PROV-10 | — | `docs/v1.6/phase10/PROVIDER_VALIDATION.md` | parent-executed |
++| A-8 | claude native CLI real call | `claude -p "Reply with exactly: ok"` (neutral cwd, 90s timeout) | `df87903` | 2026-09-18 | PASS | returned `ok` (exit 0); client `2.1.215` | REQ-PROV-10 | — | `docs/v1.6/phase10/PROVIDER_VALIDATION.md` | parent-executed (real call) |
++| A-9 | codex native CLI real attempt | `codex exec --skip-git-repo-check "Reply with exactly: ok"` (120s timeout) | `df87903` | 2026-09-18 | FAIL (environment) | HTTP 400: `'gpt-6-astra' model requires a newer version of Codex`; client `0.142.5` | REQ-PROV-10 | — | `docs/v1.6/phase10/PROVIDER_VALIDATION.md` | parent-executed (real attempt — recorded as limitation, never a pass) |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 5b3edad..862e5e0 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,6 +1,6 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T17:30:00Z
++updated_utc: 2026-09-18T17:50:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+@@ -15,9 +15,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: Phase 9 DECIDED — no Profiles concept; Projects remain the single isolation concept (docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md; REQ-PP-9 updated). Next: Phase 10.
+-current_phase: Phase 10 — real provider validation (queued; Phase 9 decided)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/).
++current_increment: Phases 10-11 DONE — provider validation (claude real call PASS; codex CLI-version blocked; internal/deepseek no credentials) and the Rust freshness recheck (verdict upheld; Phase 12 CLOSED). Records: docs/v1.6/phase10/, docs/v1.6/phase11/. Next: F4 real-artifact binding + resolution-kind.
++current_phase: F4 real-artifact binding + resolution-kind semantics (queued; Phases 10-11 done)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -32,7 +32,7 @@ visual_last_seen_head: ac85eb3 (BATCH 5 landed + packaged acceptance PASS — pa
+ visual_last_seen_verdict: BATCH 5 accepted on the visual branch (automated 79/79 + packaged probes); human pixel gate open by design
+ 
+ rust_verdict: NO_MIGRATION_NEEDED_NOW
+-rust_freshness_required: true
++rust_freshness_required: false (Phase 11 recheck 2026-09-18 upheld the verdict; Phase 12 explicitly closed)
+ 
+ phase4_stash_present: false
+ phase4_stash_name: MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION
+@@ -49,6 +49,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Phase 10 — real provider validation (sprint §36: validate every provider path current access allows; real calls where possible; record unavailable paths accurately; never leak credentials into evidence; build PROVIDER_VALIDATION_MATRIX continuously). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 10: Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: F4 real-artifact binding + resolution-kind semantics (audit carry-forwards: close or explicitly disposition; evidence must connect to real delivered artifacts where required). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after F4/resolution-kind: P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

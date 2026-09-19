@@ -1,0 +1,319 @@
+commit a5479363d464fe81ae1e803cdee1dc81a86c4a19
+2026-09-18 13:14:34 -0400
+assurance(v1.6): record-bound resolution kinds on findings (REQ-RK)
+
+
+diff --git a/runtime/kel/assurance.py b/runtime/kel/assurance.py
+index 02a9bc5..85ad589 100644
+--- a/runtime/kel/assurance.py
++++ b/runtime/kel/assurance.py
+@@ -62,11 +62,16 @@ FINDING_STATUSES = ('open', 'confirmed', 'dismissed', 'fixed')
+ # A finding is *live* (and therefore blocking-eligible) until a guarded resolution moves it to
+ # fixed/dismissed. Corroboration strengthens a finding; it must never clear it (audit 17, F17-1).
+ LIVE_STATUSES = ('open', 'confirmed')
++# Record-bound resolution kinds (v17). The guarded resolution paths write the kind explicitly, so
++# statistics never parse the human-readable `dismissal_reason` (audit F18-5). Rows written before
++# v17 carry NULL and are derived once from the guarded marker those same paths wrote.
++RESOLUTION_KINDS = ('fixed', 'risk-accepted', 'gate-waived', 'false-positive')
++ACCEPTANCE_KINDS = ('risk-accepted', 'gate-waived')
+ CONFIDENCE_GATES = ((2, 'suppressed'), (4, 'appendix'), (6, 'caveat'), (10, 'normal'))
+ FINDING_FIELDS = ('id', 'schema_version', 'mission_id', 'task_id', 'lens', 'severity',
+                   'confidence', 'artifact', 'location', 'summary', 'evidence', 'fix',
+                   'fingerprint', 'status', 'advisory', 'by', 'confirmations',
+-                  'dismissal_reason', 'created', 'updated')
++                  'dismissal_reason', 'resolution_kind', 'created', 'updated')
+ 
+ 
+ def lens(name):
+@@ -129,6 +134,9 @@ def validate_finding(finding):
+         require_text(finding.get('dismissal_reason'), 'dismissal_reason (required when dismissed)')
+     elif finding.get('dismissal_reason') is not None:
+         require_text(finding['dismissal_reason'], 'dismissal_reason')
++    kind = finding.get('resolution_kind')
++    if kind is not None and kind not in RESOLUTION_KINDS:
++        raise PolicyError('Resolution kinds are %s' % ', '.join(RESOLUTION_KINDS))
+     if finding.get('created') is not None:
+         require_number(finding['created'], 'finding created')
+     if finding.get('updated') is not None:
+@@ -243,21 +251,23 @@ def resolve_finding(store, finding_id, *, resolution, rationale=None, evidence_r
+ 
+         if resolution == 'fixed':
+             _require_recorded_evidence('a fix')
+-            status, reason = 'fixed', None
++            status, reason, kind = 'fixed', None, 'fixed'
+         elif resolution == 'accepted':
+             require_text(rationale, 'rationale (risk acceptance is recorded)')
+             if record['severity'] == 'blocker':
+                 _require_recorded_evidence('accepting a blocker')
+-            status, reason = 'dismissed', 'risk-accepted: %s' % rationale
++            status, reason, kind = 'dismissed', 'risk-accepted: %s' % rationale, 'risk-accepted'
+         else:
+             require_text(rationale, 'rationale (dismissals are recorded)')
+             if record['severity'] == 'blocker':
+                 _require_recorded_evidence('dismissing a blocker')
+             # The resolution marker is written by this path, so a caller-supplied rationale
+-            # cannot impersonate an acceptance (audit 17, F17-2).
+-            status, reason = 'dismissed', 'dismissed: %s' % rationale
+-        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE id=?',
+-                   (status, reason, stamp, finding_id))
++            # cannot impersonate an acceptance (audit 17, F17-2); the kind is the record-bound
++            # authority the statistics read (audit F18-5).
++            status, reason, kind = 'dismissed', 'dismissed: %s' % rationale, 'false-positive'
++        db.execute('UPDATE findings SET status=?, dismissal_reason=?, resolution_kind=?, '
++                   'updated=? WHERE id=?',
++                   (status, reason, kind, stamp, finding_id))
+         updated = dict(db.execute('SELECT * FROM findings WHERE id=?',
+                                   (finding_id,)).fetchone())
+     return updated
+@@ -445,10 +455,11 @@ def waive_gate(store, *, task_id, authority, rationale, now=None):
+                           '(open: %s)' % ', '.join(result['never_gate_hits']))
+     stamp = time.time() if now is None else now
+     with contextlib.closing(store.connect()) as db:
+-        db.execute('UPDATE findings SET status=?, dismissal_reason=?, updated=? WHERE task_id=? '
++        db.execute('UPDATE findings SET status=?, dismissal_reason=?, resolution_kind=?, '
++                   'updated=? WHERE task_id=? '
+                    'AND status IN (?, ?) AND severity IN (?, ?)',
+-                   ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), stamp,
+-                    task_id) + LIVE_STATUSES + ('blocker', 'critical'))
++                   ('dismissed', 'gate-waived (%s): %s' % (authority, rationale), 'gate-waived',
++                    stamp, task_id) + LIVE_STATUSES + ('blocker', 'critical'))
+     return {'waived': True, 'authority': authority, 'task_id': task_id,
+             'accepted': result['reasons']}
+ 
+@@ -505,10 +516,14 @@ ACCEPTANCE_REASON_PREFIXES = ('risk-accepted:', 'gate-waived')
+ 
+ 
+ def _is_acceptance(reason):
+-    """True when a dismissal records accepted risk (a waiver or a risk acceptance).
+-
+-    Both markers are written by the guarded paths, so a caller-supplied rationale cannot
+-    impersonate an acceptance (audit 17, F17-2).
++    """Legacy-only: True when a *pre-v17* dismissal reason carries an acceptance marker.
++
++    The guarded paths still write the human-readable marker, but how a finding was resolved is
++    recorded in the `resolution_kind` column, and that column is what the statistics read
++    (audit F18-5: the previous prefix test was not record-bound). This helper survives only to
++    derive the kind for rows written before that column existed. Both markers are written by the
++    guarded paths, so a caller-supplied rationale cannot impersonate an acceptance (audit 17,
++    F17-2).
+     """
+     return bool(reason) and str(reason).startswith(ACCEPTANCE_REASON_PREFIXES)
+ 
+@@ -528,7 +543,12 @@ def lens_stats(store):
+         entry['total'] += 1
+         entry[item['status']] = entry.get(item['status'], 0) + 1
+         if item['status'] == 'dismissed':
+-            if _is_acceptance(item.get('dismissal_reason')):
++            kind = item.get('resolution_kind')
++            if kind is None:
++                # Pre-v17 row: derive once from the guarded marker; free text is never parsed.
++                kind = ('risk-accepted' if _is_acceptance(item.get('dismissal_reason'))
++                        else 'false-positive')
++            if kind in ACCEPTANCE_KINDS:
+                 entry['accepted'] += 1
+             else:
+                 entry['false_positive'] += 1
+diff --git a/runtime/kel/workforce.py b/runtime/kel/workforce.py
+index d4ffdc1..e5f9fc8 100644
+--- a/runtime/kel/workforce.py
++++ b/runtime/kel/workforce.py
+@@ -27,8 +27,8 @@ from .core import PolicyError, digest, encode
+ from .memory import scan_secret
+ from .team import FORBIDDEN_DETAIL_KEYS
+ 
+-MIGRATION_VERSION = 16
+-MIGRATION_NAME = 'v16-workforce-schemas'
++MIGRATION_VERSION = 17
++MIGRATION_NAME = 'v17-finding-resolution-kind'
+ 
+ TABLES = ('task_contracts', 'workforce_messages', 'findings', 'evidence_records', 'skill_packs')
+ 
+@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS findings(
+   task_id TEXT NOT NULL, lens TEXT NOT NULL, severity TEXT NOT NULL, confidence INTEGER NOT NULL,
+   artifact TEXT, location TEXT, summary TEXT NOT NULL, evidence TEXT, fix TEXT,
+   fingerprint TEXT NOT NULL, status TEXT NOT NULL, advisory INTEGER NOT NULL DEFAULT 0,
+-  reporter TEXT NOT NULL, confirmations TEXT, dismissal_reason TEXT,
++  reporter TEXT NOT NULL, confirmations TEXT, dismissal_reason TEXT, resolution_kind TEXT,
+   created REAL NOT NULL, updated REAL NOT NULL);
+ CREATE INDEX IF NOT EXISTS findings_by_fingerprint ON findings(fingerprint);
+ CREATE INDEX IF NOT EXISTS findings_by_mission ON findings(mission_id, status);
+@@ -172,11 +172,17 @@ def ensure_schema(store):
+     """Create the V1.6 workforce tables (additive and idempotent; existing data untouched)."""
+     with contextlib.closing(store.connect()) as db:
+         db.executescript(DDL)
++        # v17 (additive): `findings.resolution_kind` records *how* a finding was resolved, so the
++        # learning loop never parses free-text reasons (audit F18-5). Databases created before the
++        # column existed get it added in place; no row is rewritten.
++        columns = [row[1] for row in db.execute('PRAGMA table_info(findings)')]
++        if 'resolution_kind' not in columns:
++            db.execute('ALTER TABLE findings ADD COLUMN resolution_kind TEXT')
+         if not db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
+                           (MIGRATION_VERSION,)).fetchone():
+             db.execute('INSERT INTO schema_migrations(version,name,applied,note) VALUES(?,?,?,?)',
+                        (MIGRATION_VERSION, MIGRATION_NAME, time.time(),
+-                        'tables=5; task_contracts/workforce_messages/evidence_records append-only'))
++                        'tables=5; append-only contracts/messages/evidence; findings.resolution_kind'))
+     return True
+ 
+ 
+diff --git a/runtime/tests/test_v16_resolution_kind.py b/runtime/tests/test_v16_resolution_kind.py
+new file mode 100644
+index 0000000..b18343b
+--- /dev/null
++++ b/runtime/tests/test_v16_resolution_kind.py
+@@ -0,0 +1,142 @@
++"""V1.6 REQ-RK: record-bound resolution kinds on findings (audit carry-forward F18-5).
++
++The learning loop used to infer "accepted risk" from a prefix on the free-text
++`dismissal_reason`. The kind is now a column written by the guarded resolution paths
++(`resolve_finding`, `waive_gate`) and read by `lens_stats`; rows written before v17 are derived
++once from the guarded marker, and free text is never parsed for new rows.
++"""
++import contextlib
++import tempfile
++import unittest
++from pathlib import Path
++
++from kel.assurance import (ACCEPTANCE_KINDS, RESOLUTION_KINDS, findings, lens_stats,
++                           record_finding, resolve_finding, validate_finding, waive_gate)
++from kel.core import PolicyError, Store
++from kel.evidence import write_evidence
++from kel.workforce import MIGRATION_VERSION, ensure_schema as ensure_workforce_schema
++
++TASK = 'tsk_' + 'b' * 8
++MISSION = 'mis_' + 'a' * 8
++
++
++def finding(lens='maintainability', **overrides):
++    body = {'id': 'find_' + 'd' * 8, 'schema_version': 1, 'mission_id': MISSION,
++            'task_id': TASK, 'lens': lens,
++            'severity': 'critical', 'confidence': 8, 'artifact': 'art_x', 'location': 'loc',
++            'summary': 'Review found a defect.', 'evidence': 'fixture', 'fix': '',
++            'fingerprint': 'fp-%s' % lens, 'status': 'open',
++            'by': {'lens': lens, 'model_family': 'fixture', 'assignment': 'asn_' + 'c' * 8}}
++    body.update(overrides)
++    return body
++
++
++class ResolutionKindTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.tmp.cleanup)
++        self.store = Store(Path(self.tmp.name) / 'data')
++        ensure_workforce_schema(self.store)
++
++    def _record(self, fingerprint, *, lens='maintainability', severity='critical'):
++        return record_finding(self.store, finding(lens=lens, severity=severity,
++                                                  fingerprint=fingerprint,
++                                                  id='find_' + fingerprint.replace('-', '')),
++                              now=1000.0)
++
++    def _kinds(self):
++        return {row['id']: row['resolution_kind'] for row in findings(self.store)}
++
++    def test_vocabulary_is_enforced(self):
++        self.assertEqual(validate_finding(finding(resolution_kind='gate-waived'))['resolution_kind'],
++                         'gate-waived')
++        with self.assertRaises(PolicyError):
++            validate_finding(finding(resolution_kind='because-i-said-so'))
++        self.assertEqual(set(RESOLUTION_KINDS), {'fixed', 'risk-accepted', 'gate-waived',
++                                                 'false-positive'})
++        self.assertEqual(set(ACCEPTANCE_KINDS), {'risk-accepted', 'gate-waived'})
++
++    def test_guarded_paths_write_the_kind(self):
++        record = self._record('fp-dismissed')
++        updated = resolve_finding(self.store, record['id'], resolution='dismissed',
++                                  rationale='not a defect')
++        self.assertEqual(updated['resolution_kind'], 'false-positive')
++        self.assertTrue(updated['dismissal_reason'].startswith('dismissed:'))
++
++        accepted = self._record('fp-accepted')
++        updated = resolve_finding(self.store, accepted['id'], resolution='accepted',
++                                  rationale='pilot risk, user informed')
++        self.assertEqual(updated['resolution_kind'], 'risk-accepted')
++
++        fixed = self._record('fp-fixed')
++        evidence = write_evidence(self.store, mission_id=MISSION, task_id=TASK,
++                                  evidence_class='test_run', label='suite', produced_by='fixture',
++                                  command='python -m pytest -q', output='green')
++        updated = resolve_finding(self.store, fixed['id'], resolution='fixed',
++                                  evidence_ref=evidence['id'])
++        self.assertEqual(updated['resolution_kind'], 'fixed')
++
++    def test_waive_gate_writes_gate_waived(self):
++        record = self._record('fp-waived', severity='blocker')
++        self.assertTrue(waive_gate(self.store, task_id=TASK, authority='user',
++                                   rationale='ship the pilot')['waived'])
++        self.assertEqual(self._kinds()[record['id']], 'gate-waived')
++
++    def test_the_column_wins_over_the_reason_text(self):
++        # A hand-written acceptance marker must not count as an acceptance when the record says
++        # false-positive (this is exactly what the old prefix test got wrong).
++        record = self._record('fp-spoof')
++        with contextlib.closing(self.store.connect()) as db:
++            db.execute("UPDATE findings SET status='dismissed', dismissal_reason=?, "
++                       "resolution_kind=? WHERE id=?",
++                       ('risk-accepted: hand written', 'false-positive', record['id']))
++        stats = lens_stats(self.store)
++        self.assertEqual(stats['maintainability']['accepted'], 0)
++        self.assertEqual(stats['maintainability']['false_positive'], 1)
++
++        # And a real acceptance keeps counting even if the human-readable reason is reworded.
++        accepted = self._record('fp-rewritten')
++        resolve_finding(self.store, accepted['id'], resolution='accepted', rationale='pilot risk')
++        with contextlib.closing(self.store.connect()) as db:
++            db.execute("UPDATE findings SET dismissal_reason='reworded rationale' WHERE id=?",
++                       (accepted['id'],))
++        stats = lens_stats(self.store)
++        self.assertEqual(stats['maintainability']['accepted'], 1)
++
++    def test_legacy_rows_without_a_kind_are_derived_once(self):
++        record = self._record('fp-legacy')
++        with contextlib.closing(self.store.connect()) as db:
++            db.execute("UPDATE findings SET status='dismissed', dismissal_reason=?, "
++                       "resolution_kind=NULL WHERE id=?",
++                       ('risk-accepted: legacy row', record['id']))
++        self.assertEqual(lens_stats(self.store)['maintainability']['accepted'], 1)
++        self.assertIsNone(self._kinds()[record['id']])
++
++    def test_migration_adds_the_column_to_an_existing_database(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        legacy = Store(Path(tmp.name) / 'legacy')
++        ensure_workforce_schema(legacy)
++        with contextlib.closing(legacy.connect()) as db:
++            db.execute('ALTER TABLE findings DROP COLUMN resolution_kind')  # pre-v17 shape
++            db.execute('DELETE FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,))
++            before = [row[1] for row in db.execute('PRAGMA table_info(findings)')]
++        self.assertNotIn('resolution_kind', before)
++        ensure_workforce_schema(legacy)
++        with contextlib.closing(legacy.connect()) as db:
++            after = [row[1] for row in db.execute('PRAGMA table_info(findings)')]
++            recorded = db.execute('SELECT name FROM schema_migrations WHERE version=?',
++                                  (MIGRATION_VERSION,)).fetchone()
++        self.assertIn('resolution_kind', after)
++        self.assertEqual(recorded['name'], 'v17-finding-resolution-kind')
++        # Idempotent: a second run changes nothing.
++        with contextlib.closing(legacy.connect()) as db:
++            rows_before = len(list(db.execute('SELECT * FROM schema_migrations')))
++        ensure_workforce_schema(legacy)
++        with contextlib.closing(legacy.connect()) as db:
++            rows_after = len(list(db.execute('SELECT * FROM schema_migrations')))
++        self.assertEqual(rows_before, rows_after)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/runtime/tests/test_workforce_schemas.py b/runtime/tests/test_workforce_schemas.py
+index 6a0b16b..1283162 100644
+--- a/runtime/tests/test_workforce_schemas.py
++++ b/runtime/tests/test_workforce_schemas.py
+@@ -92,7 +92,7 @@ class MigrationTests(Base):
+         with contextlib.closing(self.store.connect()) as db:
+             row = db.execute('SELECT name FROM schema_migrations WHERE version=?',
+                              (MIGRATION_VERSION,)).fetchone()
+-        self.assertEqual(row['name'], 'v16-workforce-schemas')
++        self.assertEqual(row['name'], 'v17-finding-resolution-kind')
+ 
+     def test_ensure_is_idempotent_across_reopens(self):
+         workforce.ensure_schema(self.store)

@@ -1,0 +1,54 @@
+commit 3d9202cd4de064b6c23826988a709610eac979e3
+2026-09-17 14:09:33 -0400
+fix(v1.6-visual): BATCH 2 — Settings shell no longer ejects on Team; Tools shows Tools
+
+
+diff --git a/desktop/packages/desktop/src/renderer/components/layout/Router.tsx b/desktop/packages/desktop/src/renderer/components/layout/Router.tsx
+index 2e4a96b..f611390 100644
+--- a/desktop/packages/desktop/src/renderer/components/layout/Router.tsx
++++ b/desktop/packages/desktop/src/renderer/components/layout/Router.tsx
+@@ -132,10 +132,10 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
+             path='/settings/skills/detail/:skillName'
+             element={<Navigate to='/team/roster' replace />}
+           />
+-          <Route
+-            path='/settings/tools'
+-            element={<Navigate to='/autonomy' replace />}
+-          />
++          {/* Kel V1.6 visual fix (finding S1-1): a real Tools settings page exists and was already
++              imported here, so redirecting away to /autonomy only ejected the user from the Settings
++              shell. Render the page the label promises instead. */}
++          <Route path='/settings/tools' element={withRouteFallback(ToolsSettings)} />
+           <Route path='/settings/capabilities' element={<Navigate to='/team/roster' replace />} />
+           <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/team/roster' replace />} />
+           <Route path='/settings/skills-hub' element={<Navigate to='/team/roster' replace />} />
+diff --git a/desktop/packages/desktop/src/renderer/components/layout/Sider/index.tsx b/desktop/packages/desktop/src/renderer/components/layout/Sider/index.tsx
+index b751033..5e21bc8 100644
+--- a/desktop/packages/desktop/src/renderer/components/layout/Sider/index.tsx
++++ b/desktop/packages/desktop/src/renderer/components/layout/Sider/index.tsx
+@@ -33,16 +33,22 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
+   const { logout, status } = useAuth();
+   const { theme, setTheme } = useThemeContext();
+   const [isBatchMode, setIsBatchMode] = useState(false);
+-  const isSettings = pathname.startsWith('/settings');
++  // Kel V1.6 visual fix (finding S1-1): Team is reached only through Settings entries and has no
++  // primary-nav entry of its own, so /team/* belongs to the Settings context. Without this, choosing
++  // "Agents" or "Team roles" silently replaced the Settings sidebar with the main navigation.
++  const isSettings =
++    pathname.startsWith('/settings') || pathname === '/team' || pathname.startsWith('/team/');
+   const lastNonSettingsPathRef = useRef('/guid');
+   const showLogout =
+     typeof window !== 'undefined' && !(window as { electronAPI?: unknown }).electronAPI && status === 'authenticated';
+ 
+   useEffect(() => {
+-    if (!pathname.startsWith('/settings')) {
++    // Paths inside the Settings context must not become the "back to chat" target, or the footer
++    // entry would send the user back into Settings instead of out of it.
++    if (!isSettings) {
+       lastNonSettingsPathRef.current = `${pathname}${search}${hash}`;
+     }
+-  }, [pathname, search, hash]);
++  }, [isSettings, pathname, search, hash]);
+ 
+   const handleNewChat = () => {
+     cleanupSiderTooltips();

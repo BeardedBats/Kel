@@ -1,0 +1,565 @@
+commit ac5e2a216473dd97705a0321e642bee0211f6e9b
+2026-09-18 12:17:44 -0400
+docs(v1.6): Phase 6 record + pre-audit corpus updates (memory reality audit)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 6e1b79f..7e57a6d 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -406,5 +406,22 @@ focused tests, regression, packaged verification, atomic commits and records con
+ - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+ - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+-- **Next**: Phase 6 — memory reality audit (bootstrap §28); see `MAIN_STATUS.next_autonomous_action`
+-  for the full Campaign A queue.
++- **Phase 6** completed 2026-09-18 (see below). **Next**: Phase 7 — smart capability
++  recommendations; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
++
++## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
++
++Completed as one increment (`docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md`; audit:
++`docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`). Reality inventory (store, write paths, read paths,
++UI surfaces, explicit non-existents), isolation/persistence/provenance verification, dispositions
++MEMR-1..MEMR-7. Bounded fixes in `22f4a3e` — the **first intentionally unaudited production
++commit** of Campaign A: Work-panel knowledge actions follow record state (`memoryRecordActions`,
++7 unit tests), forget asks for confirmation, tombstones read "Content removed.". Re-verified
++carry: SEC-01/APR-01/APR-02 (isolation class) documented; APR-03 reviewed → stays with the P2/P3
++sweep (durable-drain direction recorded); stale-detection wiring (DEF-012/LIM-13) and new-surface
++localization (DEF-013/LIM-12) deferred with records. Tests: engine focused 68 (engine untouched);
++tsc 0; vitest 83 (76→83).
++
++Reports: `docs/v1.6/pre-audit/` corpus updated (COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
++TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS,
++P2_P3_DISPOSITION, REPAIR_HINTS, VISUAL_EVIDENCE_INDEX).
+diff --git a/docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md b/docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md
+new file mode 100644
+index 0000000..582ead0
+--- /dev/null
++++ b/docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md
+@@ -0,0 +1,144 @@
++# Phase 6 — Memory reality audit (bootstrap §28)
++
++date: 2026-09-18
++increment: PHASE6-MEMORY-REALITY
++scope (directive §31): controls · reachable UX · persistence · conversation isolation · project
++isolation · source/provenance · edits · corrections · forget/delete semantics · scope · stale
++memory · hidden behavior · no-op behavior · backend/UI mismatch.
++method: source-level reality inventory (engine + renderer, file:line evidence), focused test runs,
++packaged-evidence review. Everything below is **parent-executed** evidence unless stated otherwise.
++status: COMPLETE — bounded fixes CHG-001/CHG-002 delivered in `22f4a3e`; items with dispositions below.
++
++## 1. Reality inventory
++
++### 1.1 Store & schema (engine)
++- `runtime/kel/memory.py` (999 lines): `memories`, `memory_events` (seq audit log + durable
++  `events` mirror), `memory_conflicts`; optional FTS5 `memories_fts` with LIKE fallback;
++  migration 1 `v13-memory`; migration 15 `v16-memory-proposals` (`memory_proposals` + 2 indexes);
++  one backup before the first mutation of existing data on each family; idempotent version checks
++  (pinned by test_mem12/13/14).
++- Trust ladder 1..7 with hard rules: preferences only from explicit user confirmation; decisions
++  only from user confirmation or accepted work; external content always trust 7; inference needs a
++  confidence; secret-like values refused (10 patterns); value ≤20KB, topic ≤200 chars,
++  summary ≤2000 chars.
++
++### 1.2 Write paths (who creates records)
++| # | Path | Entry point | Gate |
++|---|---|---|---|
++| W1 | Work-panel user action | `/api/memory` confirm/correct/retract/forget → `service._owned_memory` project check → `Memory.*` (service.py:370-381) | user action |
++| W2 | Accept a proposal | `accept_proposal` — corrects the existing record or records new knowledge as `user_confirmation`; conflict kind resolves the conflict (memory.py:723-776) | user action |
++| W3 | Vetting decisions | `flush_memory_checks` → `propose_change(kind='vetting')` only when a stored rule differs (vetting_session.py:806-850; service.py:682-688) | post-commit drain; idempotent by dedupe key |
++| W4 | Open conflict | `record()` when the conflict matrix yields an open pair → `kind='conflict'` proposal (memory.py:400-425) | in-transaction |
++| W5 | Source changed | `revalidate()` digest mismatch → `stale` mark + `kind='stale'` proposal (memory.py:865-905) | **no production caller (see MEMR-4)** |
++| W6 | Workforce learning | `learning.py:148-153` `record(..., source_type='workforce_*')` | flag `workforce.learning.shadow`, default off; engine-level, no live caller (F16-3) |
++
++### 1.3 Read paths
++- **Prompt context**: `Composer._add_memories` (composer.py:60-104) — `select(trust≤5)` by default;
++  user-confirmed decisions/preferences always ride (must); open-conflict records are labeled
++  "user choice pending"; trust≥6 records appear in the packet's `omitted` list; content is
++  provenance-fenced (`<memory-context>`), and model output is sanitized (fence stripping,
++  case-insensitive, full-block). `_pack` asserts a memory ref can never cross a project boundary
++  (composer.py:204-209).
++- **Work panel data**: `/api/work` → `_work()` (service.py:341-362) — records (limit 100, all
++  statuses), proposals (open = pending + deferred), open conflicts.
++- **History**: `/api/memory action=history` → `history_view` plain-language timeline (memory.py:810-861).
++
++### 1.4 UI surfaces (desktop)
++- **Work panel** (`KelWorkPanel.tsx`), mounted at the Sider bottom (Sider/index.tsx:198), drawer
++  with tabs; the **Knowledge tab** renders: pending+deferred proposal cards
++  (`MemoryProposalReview`), the open-conflict block (keep first / keep second / leave both),
++  the records list (with actions), and the "What changed" history. Drawer refresh poll 1.5s;
++  trigger at KelWorkPanel.tsx:336. Reachability: confirmed.
++- **Chat pill** (`KelMemoryProposalControl`, ChatConversation.tsx:400): pending count + popover
++  review card; "and N more waiting for review in Work"; 8s background refresh. As declared in
++  `docs/memory-proposals/04_UI_AND_COPY.md`.
++
++### 1.5 What does NOT exist (explicit)
++- No chat command that writes memory directly ("remember this" does not exist; v1.3 design keeps
++  user instructions turn-scoped — knowledge enters via vetting / proposals / corrections).
++- No Settings page for memory; the Work panel is the one knowledge UI.
++- No UI path creates a brand-new record from nothing (new knowledge arrives by accepting a
++  proposal; edits supersede).
++- No reactivation path for a retracted record (engine refuses confirm/correct on non-active;
++  retract is one-way; forget purges).
++- Proposal kinds `user_change`, `repo_state`, `correction` are accepted vocabulary with **no
++  emitters** (only vetting/conflict/stale emit).
++- `Memory.propose()` (low-trust helper) has no callers.
++- `Memory.revalidate()` has no production caller and no production code populates `source_digest`
++  → the stale trigger is engine-ready but unwired (MEMR-4).
++
++## 2. Isolation & persistence — verification
++
++- **Project isolation**: every write goes through `_require_project` + transaction; every read
++  filters by `project_id`; service actions verify `_owned_memory` / project ownership before
++  touching a record, conflict, or proposal (service.py:370-429); Composer asserts packet refs
++  never cross projects. Conversation→project mapping `_project_of` fails closed
++  ("Conversation missing", service.py:334-340).
++- **Evidence**: `test_v13_memory.py` (mem07 isolation; restart persistence mem01; purge mem06),
++  `test_v16_proposals.py` (`test_project_isolation_of_proposals_and_memory`),
++  `test_v15_memory_packets.py` (`test_retraction_in_one_project_never_touches_another_packet`).
++  Focused run 2026-09-18: **68 passed** (test_v13_memory, test_v15_memory_packets,
++  test_v16_proposals, test_workforce_learning).
++- **Persistence**: SQLite; backup + migration receipts (mem12/13/14); forget = logical + physical
++  purge (secure_delete; FTS row delete + optimize; WAL checkpoint — best-effort under readers)
++  with a content-free tombstone + audit event (memory.py:500-522; test_mem06; packets test
++  "leaves no bytes or search hits").
++- **Packaged evidence (historical)**: `package-final13` memoryprops journey PASS (proposal
++  surface). No packaged journey yet exercises the Work-panel Knowledge tab specifically —
++  recorded as an RC-battery gap.
++
++## 3. Provenance — verification
++
++- Source types + trust map (memory.py:36-60); preference/decision hard rules in `record()`;
++  supersede/conflict matrix incl. `user_confirmed` precedence and open-conflict proposals for
++  authoritative pairs; correction chains preserve history (test_mem04); external content can
++  never become authoritative (mem09); secrets refused at every write surface with refusal events
++  (mem08; proposals secret test). PASS.
++
++## 4. Findings & dispositions
++
++| ID | Finding | Severity | Disposition |
++|---|---|---|---|
++| MEMR-1 | Work panel offered actions the engine refuses (confirm/edit/retract on superseded, stale, retracted rows) → refused-action errors from the UI | minor (UX truth) | **FIXED** `22f4a3e` — status-aware gating via `memoryRecordActions` + 7 unit tests |
++| MEMR-2 | Forget (irreversible content purge) had no confirmation | minor (destructive UX) | **FIXED** `22f4a3e` — Popconfirm before purge |
++| MEMR-3 | Forgotten tombstones rendered a blank summary line | cosmetic | **FIXED** `22f4a3e` — "Content removed." placeholder |
++| MEMR-4 | Stale-detection trigger is engine-ready but unwired: no production `source_digest` producer, no `revalidate()` caller | informational | **DEFERRED, documented** — DEF-012, LIM-13; audit target added |
++| MEMR-5 | Reserved proposal kinds + `propose()` helper without callers | informational | **DOCUMENTED** — reserved vocabulary; audit target: confirm no UX promises them |
++| MEMR-6 | APR-03 (vetting→memory check queue is instance state; a crash between commit and flush loses one check silently; the decision itself survives) | P2 (docket) | **CARRY** — sweep item; durable-drain direction recorded in REPAIR_HINTS; not fixed in Phase 6 (phase discipline; needs focused tests) |
++| MEMR-7 | New knowledge-UI copy is Kel-native English; translations owned by the release program's locale pass (declared in 04_UI_AND_COPY.md) | release concern | **DEFERRED, documented** — DEF-013, LIM-12; audit target added |
++
++## 5. Bounded fixes delivered (commit `22f4a3e`)
++
++- **CHG-001** — records list actions follow record state (`memoryRecordActions` helper; confirm/edit
++  active-only, retract active|stale, forget hidden on purged tombstones) + "Content removed."
++  tombstone label. Files: `KelWorkPanel.tsx`, `memoryRecordActions.ts` (new),
++  `memoryRecordActions` unit tests (new).
++- **CHG-002** — Forget asks first (Popconfirm, irreversible-language copy).
++- Verification: `bunx tsc --noEmit` → 0 errors; `bun run test` → **83 passed** (was 76; +7);
++  engine untouched (focused memory suite 68 passed pre-change). Packaged verification deferred to
++  the RC battery (renderer-only change, no runtime-sensitive surface).
++
++## 6. Hidden-behavior / no-op check summary
++
++- Prompt influence is inspectable (packet sources + omitted list; records visible in the
++  Knowledge tab; conflicts labeled). No hidden memory mutations found: every write path is a user
++  action, a gated deterministic trigger, or the off-by-default engine-level learning loop.
++- No-op surfaces: the six items in §1.5, all with dispositions above.
++
++## 7. Audit targets added
++
++See AUDIT_TARGETS.md "Memory reality (Phase 6 additions)": cross-project id probes across every
++memory/vetting/prefs endpoint; correct→supersede chain integrity under iteration; forget on a
++conflicted record; proposal dedupe when evidence changes; composer conflict labeling; stale loop
++behavior once wired; UI-gating vs engine-guard drift; packaged Knowledge-tab rendering.
++
++## 8. Evidence pointers
++
++- Commits: `22f4a3e` (fixes; FIRST unaudited production commit), `785df71` (corpus entry).
++- Commands: engine focused `python -m pytest tests/test_v13_memory.py
++  tests/test_v15_memory_packets.py tests/test_v16_proposals.py tests/test_workforce_learning.py -q`
++  → 68 passed; desktop `bunx tsc --noEmit` → 0; `bun run test` → 83 passed.
++- Code: `runtime/kel/memory.py`, `service.py`, `composer.py`, `vetting_session.py`,
++  `desktop/.../KelWorkPanel.tsx`, `KelMemoryProposal.tsx`.
++- Docs: `docs/memory-proposals/03_TRIGGERS.md`, `04_UI_AND_COPY.md`, `06_KNOWN_LIMITATIONS.md`.
++- Audit docket: `kel-v16-code-audit/docs/code-audit/13_PHASE3_DELTA_AUDIT.md` (APR-03).
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 3eecb53..49b8798 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -76,3 +76,21 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     unlisted commit); every evidence path exists; every count matches the artifact; hunt for
+     "empty but plausible" records.
+ 31. Re-run the critical commands from TEST_EVIDENCE_INDEX on a fresh clone; compare counts.
++
++## Memory reality (Phase 6 additions)
++
++32. Probe cross-project ids on every memory-adjacent endpoint (memory + proposals + conflicts +
++    vetting sessions + model prefs) — assert refusal with no leak and no existence oracle in errors.
++33. Superseded-chain integrity: correct an active record, then attempt confirm/retract/correct on
++    the superseded one via API **and** UI — expect refusals, and the UI must not offer the actions.
++34. Forget a record that is the target of an open conflict/proposal — expect `_sync_proposals`
++    supersede, no dangling references, tombstone stays readable.
++35. Proposal dedupe under rejection: reject with evidence X → suppressed; change evidence → new
++    card; accept twice refused; deferred → accept later works.
++36. Composer packet: open-conflict records labeled, trust≥6 omitted with reasons, cross-project ref
++    boundary asserted (`_pack`); attack the label rendering with unusual values.
++37. Guard drift: map every `Memory.confirm/correct/retract/forget` guard to `memoryRecordActions`
++    and flag any unmirrored difference (CHG-001 audit question).
++38. Knowledge-tab tombstone: forgotten record renders "Content removed.", offers no actions; the
++    forget confirmation cannot be bypassed (keyboard/programmatic paths).
++39. Packaged Knowledge-tab pass (recorded gap): records list, actions, tombstones, forget confirm.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index a002696..9228a88 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -32,14 +32,65 @@ Repair hints:               (pointer into REPAIR_HINTS.md, if any)
+ 
+ ## Entries
+ 
+-*No entries yet.* The ledger opens with the first Campaign A production commit. Increment records
+-(`increments/`) are written first; the ledger summarizes each increment's behavior changes here.
++### CHG-001 — Work-panel knowledge actions follow the record's state (+ tombstone placeholder)
++
++ID: CHG-001 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
++
++- **User-visible impact:** the records list in the Work-panel Knowledge tab shows only actions that
++  apply to the record; refused-action errors are no longer reachable; a forgotten record shows
++  "Content removed." instead of a blank line.
++- **Internal impact:** new pure helper `memoryRecordActions` mirrors the engine guards; the panel
++  uses it for the confirm/edit/retract/forget buttons.
++- **Previous behavior:** every record rendered all four buttons; the engine refused non-active
++  records ("Only an active memory can be corrected/confirmed/retracted") and the error surfaced in
++  the panel; forget re-purged tombstones.
++- **New behavior:** confirm = active ∧ unconfirmed ∧ 3≤trust≤6; edit = active; retract = active or
++  stale; forget = any record except an already-purged tombstone.
++- **Primary files:** `desktop/.../chat/KelWorkPanel.tsx`, `desktop/.../kel/memoryRecordActions.ts`,
++  `desktop/tests/unit/memory-record-actions.test.ts`.
++- **Primary symbols:** `memoryRecordActions`.
++- **Data/schema changes:** none.
++- **Failure paths:** none added; engine-side refusals remain as defense in depth and are now
++  unreachable from these buttons.
++- **Security/privacy implications:** none (no capability or scope change).
++- **Persistence implications:** none.
++- **Expected invariants:** INV-MEM-001; added note — UI guard parity with engine guards.
++- **Tests:** 7 unit tests (action matrix); tsc 0; vitest 76→83.
++- **Packaged evidence:** — (RC battery asserts the Knowledge tab; recorded gap).
++- **Known concerns:** the helper must follow future engine-guard changes (audit target).
++- **Audit questions:** can any refused action still be triggered from the UI? Are active-record
++  actions unchanged? Does the packaged app render the gated matrix correctly?
++- **Repair hints:** `KelWorkPanel.tsx` records map; `memoryRecordActions.ts`.
++
++### CHG-002 — Forget asks for confirmation
++
++ID: CHG-002 · Phase: 6 · Commit: `22f4a3e` · Date: 2026-09-18
++
++- **User-visible impact:** clicking Forget opens a confirmation ("Forget this record? Its saved
++  content is removed and cannot be recovered. A blank placeholder stays in the history.") with
++  Forget/Cancel; confirming purges as before.
++- **Internal impact:** the button is wrapped in an Arco `Popconfirm`; the same `/api/memory`
++  action fires on confirm.
++- **Previous behavior:** one click purged content irreversibly.
++- **New behavior:** two steps; cancel is the default escape.
++- **Primary files:** `desktop/.../chat/KelWorkPanel.tsx`.
++- **Primary symbols:** records-list render block.
++- **Data/schema changes:** none.
++- **Failure paths:** none added; errors still surface via the panel's error state.
++- **Security/privacy implications:** none; reduces accidental destructive purge.
++- **Persistence implications:** none.
++- **Expected invariants:** none changed.
++- **Tests:** matrix covered by the CHG-001 unit tests; the dialog itself is UI-only (noted).
++- **Packaged evidence:** — (RC battery).
++- **Known concerns:** dialog copy is English (locale pass owns translations — DEF-013).
++- **Audit questions:** verify no bypass path purges without confirmation; verify copy truthfulness.
++- **Repair hints:** `KelWorkPanel.tsx` forget button.
+ 
+ Planned Phase-to-CHG mapping (kept current as work lands):
+ 
+ | Phase | Expected CHGs | Status |
+ |---|---|---|
+-| 6 — memory reality audit + bounded fixes | CHG-001+ (any fixes) | IN PROGRESS |
++| 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
+ | 7 — smart capability recommendations | CHG-0xx | PENDING |
+ | 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
+ | 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 149332f..9cb49b5 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -3,6 +3,7 @@
+ updated: 2026-09-18T16:05Z
+ range opens at: `8a2b25d` (last independently audited production point; increment 24 CONTINUE)
+ range ends at: PRE_AUDIT_V1_6_HEAD (TBD; recorded at RC)
++first intentionally unaudited production commit: `22f4a3e` (2026-09-18, Phase 6 bounded fixes)
+ rule: EVERY production-affecting commit in this range must appear here. Docs-only commits are
+ listed for completeness with `priority: LOW / docs-only`.
+ 
+@@ -21,7 +22,8 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ 
+ | SHA | parent | date | phase | intent | production files | tests | migrations | UI? | packaged | sec/priv | persistence | priority | evidence | concerns |
+ |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+-| — | — | — | — | *no production commit yet — the first one opens this table* | | | | | | | | | | |
++| `785df71` | `fd98cc4` | 2026-09-18 | A-entry | pre-audit corpus + IMPLEMENTATION_SPRINT mode (docs/state) | docs only; `.gitignore` scratch ignore | — | none | no | — | no | no | LOW | `increments/INIT-CAMPAIGN-A.md`; corpus README | — |
++| `22f4a3e` | `785df71` | 2026-09-18 | Phase 6 | Work-panel knowledge actions follow record state; forget asks first | `KelWorkPanel.tsx`; `memoryRecordActions.ts` (new) | +7 unit tests (vitest 76→83) | none | yes (renderer) | pending (RC battery) | no | no | MEDIUM | `increments/PHASE6-MEMORY-REALITY.md`; `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md` | MEMR-1/2/3 |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index d3bd71a..8b5c25a 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -17,3 +17,5 @@ it blocks V1.6, owner, and the revisit condition.
+ | DEF-009 | F16-3 — workforce guarantees stay engine-level (no production caller) | Wiring into live product flows is a product decision; guarantees hold engine-level | Documented limitation | A wiring increment decision | NO | Main | Sprint §30 "provider/Workforce real wiring" item — re-decide in Campaign A |
+ | DEF-010 | Human pixel review | Requires a human; no image perception in agent threads (honest limitation) | Release gate remains open by design | Human review of `packaged-visual5`/later captures via SCREENSHOT_REVIEW_INDEX | YES for release (not for RC) | Nick | At the pre-release human gate |
+ | DEF-011 | Final freeze/tag/stable release | Campaign A stops BEFORE release by directive | Intentionally not started | Campaign B audit + Campaign C repairs + gates | YES for release | Nick | After audit + repair |
++| DEF-012 | Memory stale-detection wiring (`source_digest` producers + a `revalidate` caller) | No producer/caller yet; mechanism is engine-ready and test-covered; staleness never gates anything | None (nothing depends on it) | Producer design (which source facts carry digests) + refresh loop + focused tests | NO | Main | First repo-fact producer needing staleness |
++| DEF-013 | Localization of new v1.6 surfaces (knowledge UI + siblings) | Copy intentionally Kel-native English; the release program's locale pass owns translations (declared 2026-09-17) | Non-English users see English on new surfaces | Locale pass across 12 locales + parity checks | NO for RC (decide at release gates) | release program | Pre-release (localization gate) |
+diff --git a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+index b94d653..61242c8 100644
+--- a/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
++++ b/docs/v1.6/pre-audit/KNOWN_LIMITATIONS.md
+@@ -17,3 +17,5 @@ must be here.
+ | LIM-9 | Windows-only validation. | macOS/Linux behavior is unverified. | macOS pipeline concerns were treated in v1.5 gates; frozen releases exist for Win. | Release gates |
+ | LIM-10 | Frozen-release verification is hash-based. | It proves byte identity, not provenance beyond the manifest. | 4-hash manifests + freeze tools. | RC |
+ | LIM-11 | Conversation transcripts/chat history are NOT authoritative evidence. | This corpus is the evidence layer; chat is control-plane only. | AUTONOMOUS_OPERATION.md disk-backed handoffs. | Always |
++| LIM-12 | **New v1.6 surfaces ship Kel-native English copy** (knowledge UI and sibling v1.6 surfaces); the release program's locale pass owns translations (declared in `docs/memory-proposals/04_UI_AND_COPY.md`). | Localized-release claims for the new surfaces. | en-US copy reviewed in packaged journeys. | Release gates (locale pass; DEF-013) |
++| LIM-13 | **Memory stale-detection is engine-ready but unwired**: no production caller of `Memory.revalidate()` and no production `source_digest` producers. | "Stale" proposals never appear from real usage; the mechanism is test-covered only. | Stale flow covered by `test_v16_proposals.py`; disposition DEF-012. | When a repo-fact producer lands |
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 1c713fc..e85d720 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -14,7 +14,7 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ |---|---|---|---|---|---|---|---|---|
+ | APR-01 | `/api/approvals` payload-actor rejection implicit; comment claims a guard that is absent | P2 | `13_PHASE3_DELTA_AUDIT.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | add payload-actor test | TBD in sweep | pending |
+ | APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | cross-scope resolution test | TBD | pending |
+-| APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on restart | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | restart regression | TBD | pending |
++| APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on crash/restart between commit and flush (`vetting_session.py:95`) | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending; Phase 6 reviewed — bounded crash-window only; durable-drain direction in REPAIR_HINTS) | — | durable drain + restart regression | TBD | pending |
+ | A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | OPEN (sweep pending) | — | stale-descriptor boot test | TBD | pending |
+ | REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | freeze tooling test | TBD | pending |
+ | SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | cross-scope session attack | TBD | pending |
+diff --git a/docs/v1.6/pre-audit/REPAIR_HINTS.md b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+index 2dd0796..f59dd52 100644
+--- a/docs/v1.6/pre-audit/REPAIR_HINTS.md
++++ b/docs/v1.6/pre-audit/REPAIR_HINTS.md
+@@ -9,7 +9,7 @@ names where the defect (if confirmed) most likely lives and how to validate a re
+ | SEC-01 vetting ownership | `runtime/kel/vetting_session.py`, `runtime/kel/acp_host.py` | `Vetting.session()`, the 8 session-addressed entrypoints (`ingest`, `process`, `finish`, `preview`, `help`, `conflict_action`, `greybox`, `apply_pending`) | vetting suite; add cross-scope regression | Route each action through a conversation-scoped lookup OR compare `session['project_id']` vs `_project_of(data['conversation'])` (mirror `_memory_action`); acceptance criteria recorded in audit `16_FINDING_STATUS.md` | INV-MEM-001 |
+ | APR-01 approvals actor | `runtime/kel/chat_approvals.py`, `runtime/kel/service.py` | `/api/approvals` handler | approvals journey (packaged), add payload-actor rejection test | Assert `'actor' in data` rejection matches sibling endpoints; fix comment-vs-code drift | INV-APPROVE-001 |
+ | APR-02 resolution scope | `runtime/kel/chat_approvals.py` | resolution lookup | add conversation-scope regression | Make resolution conversation-scoped like the read | INV-APPROVE-001 |
+-| APR-03 restart queue | `runtime/kel/chat_approvals.py` (~line 95) | `_memory_check_queue` instance state | add restart test | Persist or rebuild the queue on restart; assert no lost checks | INV-MEM-001 |
++| APR-03 vetting→memory queue | `runtime/kel/vetting_session.py` (~line 95), `runtime/kel/service.py` (~682-688) | `_memory_check_queue`, `flush_memory_checks` | `test_v16_proposals.py` (vetting section); add crash-window test | Direction: record a durable `memory_check_pending` marker (existing `vetting_events` table) inside `_decision_for`'s transaction; make `flush_memory_checks` drain pending markers lacking a processed marker (proposal dedupe makes re-processing safe); verify a decision confirmed before a simulated restart still queues its proposal | INV-MEM-001 |
+ | APR-04 DDL duplication | `runtime/kel/chat_approvals.py`, `runtime/kel/autonomy.py` (`approval_announcements`) | DDL blocks | schema tests | De-duplicate DDL; decide versioned vs core-schema treatment (like `artifact_lineage`) | INV-DATA-001 (append-only) |
+ | PER-02 silent restore | `runtime/kel/service.py` (apply_pending_restore call site), `runtime/kel/backup.py` | `apply_pending_restore`, startup try/except | backup-probe.py; add failure injection | Surface failure to the app state; never swallow | INV-ERROR-001 |
+ | PER-03 snapshot growth | `runtime/kel/backup.py` | `.pre-restore-*` creation | backup probe | Retention/pruning; move snapshot out of the restore try (failure of snapshot must not abort restore silently) | INV-ERROR-001 |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 6ae3ae9..9825f8d 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -40,7 +40,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ 
+ | Req ID | Source | Section | Status | Commit(s) | Tests | Evidence | Audit |
+ |---|---|---|---|---|---|---|---|
+-| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | IN PROGRESS | — | — | docs/v1.6/phase6/ (to be created) | pending |
++| REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
+ | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | PENDING | — | — | — | pending |
+ | REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
+ | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index cc7e77a..78dca8f 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -11,11 +11,11 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | # | Suite | Command | Commit | Date | Result | Count | Reqs | Invariants | Evidence | Category |
+ |---|---|---|---|---|---|---|---|---|---|---|
+ | A-1 | engine full suite | `cd runtime && python -m pytest tests -q` (Python 3.14.3) | `fd98cc4` | 2026-09-18 | PASS | **878 passed, 10 subtests passed** (251.55s) | all engine reqs | INV-CAP/MEM/WF | `evidence/campaign-a-baseline/engine-suite-20260918.txt` | parent-executed |
+-| A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `fd98cc4` (code = `ac85eb3` visual for renderer files? NO — main tree is fd98cc4) | TBD in Campaign A | pending | — | desktop reqs | — | — | parent-executed |
++| A-2 | desktop typecheck + unit | `cd desktop && bunx tsc --noEmit && bun run test` | `22f4a3e` | 2026-09-18 | PASS | tsc 0 errors; **83 passed / 6 files** (was 76; +7 Phase-6 gating tests) | desktop reqs; REQ-MEM-6 | — | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
++| A-3 | engine focused memory suites | `cd runtime && python -m pytest tests/test_v13_memory.py tests/test_v15_memory_packets.py tests/test_v16_proposals.py tests/test_workforce_learning.py -q` | `22f4a3e` (engine unchanged since `fd98cc4`) | 2026-09-18 | PASS | **68 passed** | REQ-MEM-1/6; INV-MEM-001..003 | `increments/PHASE6-MEMORY-REALITY.md` | parent-executed |
+ 
+-Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). The desktop
+-typecheck/unit run for the Main line is scheduled in the Campaign A regression sweep; the last
+-recorded desktop numbers belong to the visual branch (`ac85eb3`: tsc 0, **79/79**).
++Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
++`22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+ 
+ ## Historical runs in the audited range (from AUTO_RESUME.md / phase records)
+ 
+diff --git a/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+index 5703c03..09ef3db 100644
+--- a/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+@@ -40,3 +40,6 @@ authoritative; this index mirrors it for the audit corpus). Implementation branc
+ - **Human pixel review**: OPEN — no image perception in agent threads; prepared index stands ready.
+ - **Integration**: commit lineage must be preserved on merge (§44); every conflict resolution is
+   an audit target (AUDIT_TARGETS §29).
++- **Main edit notice (2026-09-18):** Phase 6 (`22f4a3e`) touched `KelWorkPanel.tsx` (Knowledge tab
++  only) — the HELD visual batches (3, 5-team half) are not affected by this edit; the Visual thread
++  revalidates against current Main before editing per protocol.
+diff --git a/docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md b/docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md
+new file mode 100644
+index 0000000..3155a76
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/PHASE6-MEMORY-REALITY.md
+@@ -0,0 +1,123 @@
++# Increment — PHASE6-MEMORY-REALITY
++
++increment_id: PHASE6-MEMORY-REALITY
++phase: 6 — memory reality audit (bootstrap §28) + bounded fixes
++base_commit: 785df71 (Campaign A entry)
++target_commit: `22f4a3e` (production fixes) + this docs commit (record + corpus updates)
++status: complete
++
++## Objective
++
++Audit the memory subsystem's reality end-to-end (controls, reachable UX, persistence, isolation,
++provenance, edits/corrections, forget semantics, hidden/no-op behavior, backend/UI mismatch) and
++apply bounded fixes where the reality diverged from the design.
++
++## Requirement Sources
++
++- Sprint directive (2026-09-18) §31; bootstrap §28.
++- `docs/v1.3/KEL_V1.3_MEMORY_MODEL.md` (trust model).
++- `docs/memory-proposals/01..07` (v1.6 proposal surface spec: triggers, UI/copy).
++
++## Implementation Summary
++
++Full audit in `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`. Bounded fixes (commit `22f4a3e`):
++
++1. Work-panel knowledge actions now follow the record's state (the panel previously offered
++   confirm/edit/retract on records the engine refuses, and re-purge on tombstones). The matrix
++   lives in a small pure helper `memoryRecordActions` mirroring the engine guards.
++2. Forget (irreversible content purge) now asks for confirmation.
++3. Forgotten tombstones render "Content removed." instead of a blank line.
++
++## Files Changed
++
++- `desktop/packages/desktop/src/renderer/components/chat/KelWorkPanel.tsx`
++- `desktop/packages/desktop/src/renderer/components/kel/memoryRecordActions.ts` (new)
++- `desktop/tests/unit/memory-record-actions.test.ts` (new)
++
++## Symbols Changed
++
++- `memoryRecordActions()` (new); KelWorkPanel records-list render block; `Popconfirm` import.
++
++## Schema/Migrations
++
++None (no engine change; max applied migration remains 19).
++
++## User-Facing Behavior
++
++- Actions that the engine would refuse no longer appear on a record.
++- Forgetting a record requires confirmation; the dialog states the content cannot be recovered.
++- Forgotten records read "Content removed.".
++
++## Internal Behavior
++
++- UI guard parity with `Memory.confirm/correct/retract/forget` is now explicit and unit-tested.
++
++## Error Paths
++
++- Removed the reachable UI path that produced refused-action errors (`Only an active memory can be
++  corrected/confirmed/retracted`). Engine-side refusals remain as defense in depth.
++
++## Lifecycle Considerations
++
++- None (renderer-only). No engine lifecycle surface touched.
++
++## Persistence / Isolation
++
++- None changed; INV-MEM-001 preserved (engine untouched; all API actions unchanged).
++
++## Security / Privacy
++
++- None changed. Forget confirmation reduces accidental destructive purge.
++
++## Self-Review Findings
++
++- Verified the gating matrix against the engine guards line-by-line (memory.py confirm/correct/
++  retract/forget) before writing the helper.
++- Noted that `user_change`/`repo_state`/`correction` proposal kinds and `Memory.revalidate()` have
++  no production callers — documented (MEMR-4/MEMR-5) rather than "fixed".
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_v13_memory.py tests/test_v15_memory_packets.py tests/test_v16_proposals.py tests/test_workforce_learning.py -q` → **68 passed** (pre-change baseline; engine untouched).
++- `cd desktop && bunx tsc --noEmit` → **0 errors**.
++- `cd desktop && bun run test` → **83 passed** (was 76; +7 new gating tests).
++
++## Results
++
++PASS (source-level). Packaged verification deferred to the RC battery (renderer-only change; the
++Knowledge tab has no packaged journey yet — recorded as an RC-battery gap).
++
++## Packaged Verification
++
++Not run for this increment (see above). No regression surface for existing packaged probes
++(memoryprops exercises the chat pill + proposal actions, which are unchanged).
++
++## Known Weaknesses
++
++- The action matrix is UI-side mirroring; if engine guards change, the helper must follow
++  (audit target recorded).
++- APR-03 (vetting→memory queue durability) reviewed and carried to the P2/P3 sweep.
++- MEMR-4 stale wiring and MEMR-7 locale pass are deferred with records.
++
++## Deferred Questions
++
++- Should the Knowledge tab list keep showing superseded/retracted records (currently yes, with
++  status labels)? Disposition: keep — history is honest and forget now purges explicitly.
++
++## Audit Targets
++
++- See AUDIT_TARGETS.md §"Memory reality (Phase 6 additions)".
++
++## Repair Hints
++
++- UI/engine guard drift: `memoryRecordActions.ts` vs `memory.py` guards.
++
++## Evidence Paths
++
++- `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`
++- `docs/v1.6/pre-audit/` (corpus rows updated: COMMIT_LEDGER, CHANGE_LEDGER CHG-001/002,
++  TEST_EVIDENCE_INDEX, REQUIREMENTS_TRACEABILITY, KNOWN_LIMITATIONS, DEFERRED_ITEMS, AUDIT_TARGETS)
++
++## Commit Chain
++
++`785df71` → `22f4a3e` (fixes) → this docs commit.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index e46ed06..7b977c5 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,10 +1,10 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T16:30:00Z
++updated_utc: 2026-09-18T16:45:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: fd98cc4 (the Campaign A entry commit sits on top; see `git log --oneline -5`)
++head: 22f4a3e (latest production commit; see `git log --oneline -6`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -12,11 +12,11 @@ sprint_campaign: CAMPAIGN_A
+ audit_mode: PAUSED_UNTIL_PRE_AUDIT_RC
+ pre_audit_corpus: docs/v1.6/pre-audit/ (initialized 2026-09-18)
+ last_audited_production: 8a2b25d
+-first_unaudited_production: TBD (opens with the first Campaign A production commit)
+-unaudited_range: 8a2b25d..HEAD (docs-only above 8a2b25d until the first production change)
++first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
++unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: Campaign A initiated — repository truth reconciled, sole ownership confirmed, pre-audit corpus initialized, baseline 878 green. Next: Phase 6.
+-current_phase: Phase 6 — memory reality audit + bounded fixes (bootstrap §28)
++current_increment: Phase 6 DONE — memory reality audit + bounded fixes (22f4a3e; record docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md; increment PHASE6-MEMORY-REALITY). Next: Phase 7.
++current_phase: Phase 7 — smart capability recommendations (queued; Phase 6 complete)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
+ 
+ audit_requested_from: NONE
+@@ -49,6 +49,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Phase 6 — memory reality audit (bootstrap §28: reachable controls, persistence, isolation, meaningful user control, confusing behavior, hidden backend behavior, no-op surfaces; document/disposition if sufficient; bounded fixes only if needed). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 6: Phase 7 capability recommendations; Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Phase 7 — smart capability recommendations (sprint §32: only real capabilities; no no-op UX; capability safety preserved; production effect verified; recorded in CHANGE_LEDGER / REQUIREMENTS_TRACEABILITY / INVARIANT_LEDGER / AUDIT_TARGETS). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 7: Phase 8/5.8 Advanced Worker View decision; Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

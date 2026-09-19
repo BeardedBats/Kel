@@ -1,0 +1,32 @@
+commit 24d775b77a1dd24d5c02534e6ff41e8daf07e835
+2026-09-18 12:35:26 -0400
+docs(v1.6): ledger rows for Phase 8-11 docs commits; published-tip refresh
+
+
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 0ceb2fc..21e541e 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -28,6 +28,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `16de55f` | `df87903` | 2026-09-18 | Phase 7 | Phase 7 record + corpus updates (docs) | docs only | — | none | no | — | no | no | LOW | `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | — |
+ | `7b32217` | `16de55f` | 2026-09-18 | Phase 7 | published-tip record + packaged pending item (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/status/MAIN_STATUS.md`; PACKAGED_EVIDENCE_INDEX | — |
+ | `006159a` | `7b32217` | 2026-09-18 | Phase 8 | Advanced Worker View decision — deferred beyond V1.6 (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | decision to verify in Campaign B |
++| `fa31618` | `006159a` | 2026-09-18 | Phase 7/8 | commit ledger rows for Phase 7 docs + Phase 8 decision commits (docs) | docs only | — | none | no | — | no | no | LOW | COMMIT_LEDGER.md | — |
++| `6ea68c2` | `fa31618` | 2026-09-18 | Phase 9 | Profiles vs Projects decision — no Profiles concept; Projects remain (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | decision to verify in Campaign B |
++| `fed59dd` | `6ea68c2` | 2026-09-18 | Phases 10-11 | provider validation + Rust freshness recheck; Phase 12 closed (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | real-call evidence recorded (claude PASS; codex env-blocked) |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 862e5e0..f7f65f5 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -43,7 +43,7 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
+ known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
+ 
+ github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
+-github_remote_integration: 16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d (verified by ls-remote 2026-09-18T17:10Z; Phase 6+7 checkpoint published)
++github_remote_integration: 7b3221795608df24299d1268b58e8abb763272c5 (verified by ls-remote 2026-09-18T17:10Z, Phase 7; the Phase 8–11 checkpoint `006159a..fed59dd` is published in the same working window — final tip in `ux-audit/github-sync-recon/22_PHASE8_11_PUBLICATION.md`)
+ github_publication_current: true
+ 
+ frozen_pre1_verified: true

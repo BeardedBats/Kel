@@ -1,0 +1,228 @@
+commit 8ab76990131da077f5af4595c2e7239bc2fe8736
+2026-09-18 16:49:04 -0400
+fix(v1.6): transcription stream lifecycle releases sockets; optional conversation scope (R0 / TR-01)
+
+
+diff --git a/runtime/kel/service.py b/runtime/kel/service.py
+index 7b5576c..2c0d81c 100644
+--- a/runtime/kel/service.py
++++ b/runtime/kel/service.py
+@@ -895,9 +895,10 @@ class Service:
+             return service.quick_transcribe(data.get('filename','audio.wav'),data.get('audio',''),
+                                             data.get('duration_ms'))
+         if action=='stream_start':return service.stream_start(data.get('conversation'))
+-        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''))
+-        if action=='stream_status':return service.stream_status(data['session'])
+-        if action=='stream_finish':return service.stream_finish(data['session'])
++        if action=='stream_chunk':return service.stream_chunk(data['session'],data.get('pcm',''),
++                                                              data.get('conversation'))
++        if action=='stream_status':return service.stream_status(data['session'],data.get('conversation'))
++        if action=='stream_finish':return service.stream_finish(data['session'],data.get('conversation'))
+         if action=='export_text':return service.export_text(data['id'])
+         if action=='export_audio':return service.export_audio(data['id'])
+         if action=='set_key':return service.set_key(data.get('key',''))
+diff --git a/runtime/kel/transcription.py b/runtime/kel/transcription.py
+index 8579753..5982051 100644
+--- a/runtime/kel/transcription.py
++++ b/runtime/kel/transcription.py
+@@ -271,6 +271,10 @@ class _FixtureStream:
+             self.sentences.append(FIXTURE_SENTENCES[0])
+         return {'text': ' '.join(self.sentences), 'final': True}
+ 
++    def close(self):
++        """Nothing to release for the in-process fixture stream (audit TR-01)."""
++        return None
++
+ 
+ class MuseProvider(TranscriptionProvider):
+     """Meta Muse Voice Transcribe (donor protocol).
+@@ -530,6 +534,22 @@ class _MuseStream:
+             time.sleep(0.05)
+         return {'text': self._full(), 'final': True, 'state': self.state, 'error': self.error}
+ 
++    def close(self):
++        """Release an abandoned stream without blocking (audit TR-01).
++
++        The reader thread blocks on `self._queue.get()` until it receives the sentinel, and only
++        then sends `endStream` and closes the websocket. A stream the user abandons (panel closed,
++        app navigated away) would otherwise hold its socket and thread for the life of the process
++        once the entry is reaped. Safe to call repeatedly and from the reaper: the sentinel is
++        queued best-effort and the state settles to 'closed'.
++        """
++        try:
++            self._queue.put_nowait(None)
++        except Exception:
++            pass
++        if self.state in ('connecting', 'live'):
++            self.state = 'closed'
++
+ 
+ # ---- the library service ------------------------------------------------------------------------
+ 
+@@ -864,19 +884,31 @@ class Transcription:
+                 'label': ('Live transcription is on.' if provider.name == 'muse'
+                           else 'Practice transcript is on — check any answers before applying.')}
+ 
+-    def _stream(self, session_id):
++    def _stream(self, session_id, conversation=None):
+         entry = self._streams.get(session_id)
+         if not entry:
+             raise PolicyError('That recording session has ended.')
++        # Scope when the caller declares one (audit TR-01, mirroring APR-02/SEC-01): a session
++        # created for another conversation is never driven from this one. Additive — a caller that
++        # declares nothing (or a session created without one) behaves exactly as before.
++        if (conversation and entry.get('conversation')
++                and str(entry['conversation']) != str(conversation)):
++            raise PolicyError('That recording session belongs to another conversation')
+         return entry
+ 
+     def _gc_streams(self):
+         cutoff = time.time() - 2 * 60 * 60
+         for key in [key for key, entry in self._streams.items() if entry['started'] < cutoff]:
+-            self._streams.pop(key, None)
++            entry = self._streams.pop(key, None)
++            if entry:
++                # A reaped entry must not keep its socket and reader thread alive (audit TR-01).
++                try:
++                    entry['handle'].close()
++                except Exception:
++                    pass
+ 
+-    def stream_chunk(self, session_id, pcm):
+-        entry = self._stream(session_id)
++    def stream_chunk(self, session_id, pcm, conversation=None):
++        entry = self._stream(session_id, conversation)
+         data = base64.b64decode(pcm or '', validate=True)
+         if data:
+             entry['handle'].feed(data)
+@@ -885,16 +917,20 @@ class Transcription:
+                 'state': state.get('state') or ('live' if entry['provider'] == 'fixture' else 'live'),
+                 'error': state.get('error') or ''}
+ 
+-    def stream_status(self, session_id):
+-        entry = self._stream(session_id)
++    def stream_status(self, session_id, conversation=None):
++        entry = self._stream(session_id, conversation)
+         state = entry['handle'].status()
+         return {'session_id': session_id, 'text': state.get('text') or '',
+                 'state': state.get('state') or 'live', 'error': state.get('error') or ''}
+ 
+-    def stream_finish(self, session_id):
+-        entry = self._stream(session_id)
++    def stream_finish(self, session_id, conversation=None):
++        entry = self._stream(session_id, conversation)
+         result = entry['handle'].finish()
+         duration = getattr(entry['handle'], 'audio_ms', 0) or 0
+         self._streams.pop(session_id, None)
++        try:
++            entry['handle'].close()  # idempotent: a failed/connecting stream may still hold a socket
++        except Exception:
++            pass
+         return {'text': (result.get('text') or '').strip(), 'duration_ms': duration,
+                 'mode': entry['provider'], 'error': result.get('error') or ''}
+diff --git a/runtime/tests/test_transcription.py b/runtime/tests/test_transcription.py
+index 611b7d0..e638023 100644
+--- a/runtime/tests/test_transcription.py
++++ b/runtime/tests/test_transcription.py
+@@ -8,14 +8,16 @@ VettingAnswerIngestion pipeline produce equivalent Vetting state.
+ import base64
+ import io
+ import os
++import queue
+ import sys
+ import tempfile
++import time
+ import unittest
+ import wave
+ from pathlib import Path
+ 
+ from kel.core import PolicyError, Store
+-from kel.transcription import Transcription, contextual_title
++from kel.transcription import Transcription, _MuseStream, contextual_title
+ from kel.vetting import think_out_loud_buckets
+ from kel.service import Service
+ from kel.vetting_session import Vetting, snapshot
+@@ -172,6 +174,83 @@ class StreamTests(TranscriptionBase):
+         self.assertIn('ended', str(raised.exception))
+ 
+ 
++class _FakeStream:
++    """Records the lifecycle calls the library makes on a stream handle (TR-01)."""
++
++    def __init__(self):
++        self.closed = 0
++        self.finished = 0
++        self.audio_ms = 1000
++
++    def feed(self, data):
++        return None
++
++    def status(self):
++        return {'text': '', 'state': 'live', 'error': ''}
++
++    def finish(self):
++        self.finished += 1
++        return {'text': 'done', 'final': True}
++
++    def close(self):
++        self.closed += 1
++
++
++class StreamLifecycleTests(TranscriptionBase):
++    """TR-01: a reaped or finished stream must release its socket, not just its dict entry."""
++
++    def _install(self, conversation='main', age=0):
++        handle = _FakeStream()
++        session_id = 'ts-fake-%d' % id(handle)
++        self.t._streams[session_id] = {'handle': handle, 'provider': 'fixture',
++                                       'started': time.time() - age,
++                                       'conversation': conversation}
++        self.addCleanup(self.t._streams.pop, session_id, None)
++        return session_id, handle
++
++    def test_an_over_age_stream_is_closed_when_reaped(self):
++        session_id, handle = self._install(age=3 * 60 * 60)
++        fresh_id, fresh = self._install(age=0)
++        self.t._gc_streams()
++        self.assertNotIn(session_id, self.t._streams)
++        self.assertEqual(handle.closed, 1)
++        self.assertIn(fresh_id, self.t._streams)
++        self.assertEqual(fresh.closed, 0)
++
++    def test_finish_releases_the_handle_as_well_as_the_entry(self):
++        session_id, handle = self._install()
++        result = self.t.stream_finish(session_id)
++        self.assertEqual(result['text'], 'done')
++        self.assertNotIn(session_id, self.t._streams)
++        self.assertEqual(handle.finished, 1)
++        self.assertEqual(handle.closed, 1)
++
++    def test_a_declared_conversation_must_match_the_stream(self):
++        session_id, handle = self._install(conversation='main')
++        with self.assertRaises(PolicyError) as caught:
++            self.t.stream_chunk(session_id, b64(b'\x00\x00' * 8), conversation='elsewhere')
++        self.assertIn('another conversation', str(caught.exception))
++        with self.assertRaises(PolicyError):
++            self.t.stream_status(session_id, conversation='elsewhere')
++        with self.assertRaises(PolicyError):
++            self.t.stream_finish(session_id, conversation='elsewhere')
++        # Undeclared (or unscoped) callers keep the previous behaviour.
++        self.t.stream_chunk(session_id, b64(b'\x00\x00' * 8))
++        self.t.stream_status(session_id, conversation='main')
++
++    def test_muse_close_is_idempotent_and_never_blocks(self):
++        stream = _MuseStream.__new__(_MuseStream)
++        stream._queue = queue.Queue()
++        stream.state = 'live'
++        stream.finals = []
++        stream.partial = ''
++        stream.error = ''
++        stream.close()
++        stream.close()
++        self.assertEqual(stream.state, 'closed')
++        self.assertIsNone(stream._queue.get_nowait())
++
++
+ class ProviderModeTests(TranscriptionBase):
+     def test_mode_is_fixture_without_a_key_and_switches_when_set(self):
+         status = self.t.status()

@@ -1,0 +1,373 @@
+commit 12f87a7f0da3c9a3a9040182e796aa2193256621
+2026-09-18 20:16:01 -0400
+docs(v1.6): R11 records — integration breadcrumb, ledgers, requirements, visual index, status
+
+
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+index 9735d54..88ce30d 100644
+--- a/docs/v1.6/MARATHON_STATE.md
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -3,7 +3,7 @@
+ MARATHON_MODE: ACTIVE
+ 
+ start_head: 756218e (published docs tip; production 8a677d0)
+-current_head: `05608e6` (docs: denominator reconciliation) + R9 visual lane `938dc9b`/`96979c7` (see `git log --oneline -20` in both worktrees)
++current_head: `7267630` (R11 integration merge; visual lane `bc92f7f` integrated; see `git log --oneline -20`)
+ 
+ completed_this_run:
+ - repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
+@@ -32,32 +32,39 @@ completed_this_run:
+   the R9 evidence index (`96979c7`). Acceptance: tsc 0, vitest **122/122**. Bookkeeping: the
+   27-vs-26 P2/P3 denominator is RECONCILED (`05608e6`; every original finding ID mapped;
+   no closed finding reopened; no repo gap found).
+-- **R10 IN PROGRESS** — packaged journey: `Kel-1.6.0` win-unpacked rebuilt from the re-anchored
+-  lane, bundling the frozen **1.6.0** engine (the visual worktree's `dist/runtime/KelEngine` was
+-  a stale 1.5.0 bundle — replaced from `kel-ux-v15/dist/runtime/KelEngine`, verified 1.6.0 in the
+-  package). The packaged engine-loss probe (kill → reconnecting → supervised restart → durable
+-  folder preserved → repeat loss → could-not-recover → manual retry; `desktop-link.log`
+-  transitions; screenshots; raw-leak scan) is running.
++- **R10 COMPLETE** — packaged engine-loss/recovery journey PASS on the final lane package: boot
++  healthy (engine 1.6.0) → kill → truthful reconnecting → supervised restart → durable work
++  preserved → repeat loss → recovered → restart impossible → honest could-not-recover (~5 s with
++  the ENOENT fail-fast) → manual retry → recovered. Evidence `ux-audit/runs/r10-{f,g}` (7
++  screenshots; DOM leak scan clean; console errors 0); record `docs/v1.6-visual-ux/19_…`.
++- **R11 COMPLETE** — visual lane → Main merge `7267630` (before-mutation record: merge base
++  `05608e6`, Main-only 3 docs, Visual-only 55 files, ZERO overlapping files, no conflict
++  resolutions); post-merge Main: tsc 0 + vitest 122/122; corpus records updated
++  (`COMMIT_LEDGER`, `CHANGE_LEDGER` CHG-024…028, `REQUIREMENTS_TRACEABILITY`, `VISUAL_EVIDENCE_INDEX`,
++  `increments/R11-INTEGRATION.md`).
+ - breadcrumbs kept current for R0 through R6: P2_P3_DISPOSITION, COMMIT_LEDGER, CHANGE_LEDGER
+   (CHG-012…018), REQUIREMENTS_TRACEABILITY (REQ-R25-R1), INVARIANT_LEDGER, TEST_EVIDENCE_INDEX,
+   MAIN_STATUS, AUTO_RESUME
+ 
+-current_phase: R10 - engine-loss/recovery packaged journey
+-current_item: R10 - run + collect the packaged journey (session `51g2x4zf`), then write the R10 evidence record
++current_phase: R12 - final Campaign A regression + packaged/installed battery
++current_item: R12 - full engine + desktop suites, packaged/installed battery from the MERGED Main, failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD
+ 
+ next_queue:
+-1. R10 — finish the packaged engine-loss/recovery journey + record evidence (screenshots, link log)
+-2. R11 — Visual → Main integration (before-mutation checks; resolve KelService/transcription/
+-   KelWorkPanel overlaps on current semantics; tsc + vitest + packaged probes after)
+-3. R12 — final Campaign A regression: full engine suite, desktop suite, packaged/installed
+-   battery (installer, icons, About, console), failure injection, release integrity
+-4. PRE_AUDIT_V1_6_HEAD — finalize the pre-audit corpus + the Campaign B handoff
++1. R12 — full engine suite (fresh + upgrade DB, all V1.6 migrations, authority/approvals/leases/
++   idempotency/effects/retry/persist/liveness/recovery/memory/continuation/providers/routing/D1-D3/
++   assurance/learning/evidence/completion/lineage/vetting/transcription/restore/release identity)
++2. R12 — desktop tsc + full vitest on the merged tree
++3. R12 — packaged/installed battery: rebuild from merged Main; NSIS installer + icons + About +
++   branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals +
++   capabilities + memory + transcription + artifacts + Workforce asserts + attention + engine-loss
++4. R12 — failure injection + release integrity
++5. PRE_AUDIT_V1_6_HEAD — finalize `PRE_AUDIT_RELEASE_CANDIDATE.md` + the Campaign B handoff corpus
+ 
+-last_focused_tests: R9 lane: desktop vitest 122/122 (12 files) + tsc 0 (visual lane tip `938dc9b`)
+-last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` (was 974 at `8c899c8`)
+-last_desktop_tsc: 0 errors (visual lane, R9 batches 6-8 + R9.D; main lane 93-era still green)
+-last_desktop_vitest: **122 passed** (12 files, R9 lane)
+-last_packaged: `Kel-1.6.0` win-unpacked (visual lane, engine 1.6.0 verified) + R10 journey in flight
++last_focused_tests: R11 post-merge: desktop vitest 122/122 (12 files) + tsc 0 on Main
++last_full_engine: **981 passed + 10 subtests** (270.51s) at `b2ffed1` — R12 re-runs on the merged tree
++last_desktop_tsc: 0 errors (Main post-merge `7267630`)
++last_desktop_vitest: **122 passed** (12 files, Main post-merge)
++last_packaged: `Kel-1.6.0` lane package + R10 journey PASS (`ux-audit/runs/r10-{f,g}`); R12 rebuilds from Main incl. the installer
+ 
+ last_push: `93b99b5` -> origin/ux/v15-journeys (R7/R8 breadcrumbs follow)
+ last_scan: 0 real hits (R0/R1 commits — no secrets/private data)
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index dabc849..472da69 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -539,6 +539,56 @@ ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) ·
+   Does the recorder double-write on re-landing (it must not)?
+ - **Repair hints:** recorder next to `_record_lineage`; verifier next to `_evidence_violations`.
+ 
++### CHG-024 — Honest engine-loss surfaces + supervision (R9 batch 6 / findings 16/17)
++ID: CHG-024 / Phase: Campaign A — R9 batch 6 / Commits: `2897207`, `645898a`, `fa66f04` / Date: 2026-09-18
++New behavior: one classifier + copy source (`engineFailure.ts`) for every failure a person can see
++(transport text can appear ONLY inside the Technical-details disclosure / diagnostics copy —
++unit-pinned); a supervision machine (`engineHealth.ts`) drives honest link states (connected /
++reconnecting / recovered / could-not-recover) with one supervised restart per incident, an
++automatic budget that is never reset by a failed attempt, and a person-started retry as a new
++incident; the shell shows an in-flow strip; the before-quit drain only fires for the instance that
++spawned the engine. Previous: raw `TypeError: fetch failed` reached user copy; no supervision.
++Primary files: `desktop/.../kel/engineFailure.ts`, `engineHealth.ts`, `KelFailureCard.tsx`,
++`KelEngineNotice.tsx`, `KelService.ts`, `preload/main.ts`, `kelApi.ts`, 8 pages, `kel-tokens.css`,
++`Layout.tsx`, tests. Tests: `engine-failure` (12) + `engine-health` (6); tsc 0; R10 packaged
++journey PASS (`ux-audit/runs/r10-{f,g}`). Evidence: `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`;
++AUDIT_TARGETS 86–88.
++
++### CHG-025 — The composer owns its secondary controls (R9 batch 7 / finding 2)
++ID: CHG-025 / Phase: Campaign A — R9 batch 7 / Commit: `0e7d21a` / Date: 2026-09-18
++New behavior: model / tools / memory controls render as one compact row attached to the composer
++(`composerControls` prop through ChatConversation → AcpChat → AcpSendBox); the header keeps only
++the invisible warmup selector; mobile keeps its existing flow (no duplicate controls). Previous:
++detached header island. Primary files: `ChatConversation.tsx`, `AcpChat.tsx`, `AcpSendBox.tsx`.
++Tests: tsc 0; vitest 114.
++
++### CHG-026 — Final normalization pass (R9 batch 8)
++ID: CHG-026 / Phase: Campaign A — R9 batch 8 / Commit: `c911d81` / Date: 2026-09-18
++New behavior: table cells break long unbroken tokens (`overflow-wrap: anywhere`); the legacy
++`KelErrorState` primitive is removed so the raw-cause pattern cannot be reintroduced by reuse.
++Recorded residue: donor preview viewers append a raw exception message outside Kel surfaces
++(AUDIT_TARGETS 89). Tests: tsc 0; vitest 114.
++
++### CHG-027 — "Needs your attention" (R9.D; derived-only view)
++ID: CHG-027 / Phase: Campaign A — R9.D / Commit: `938dc9b` / Date: 2026-09-18
++New behavior: a derived-only Work-surface section aggregating approval waiting, blocked work,
++recorded failure, finished-without-clean-verification, continuation-ready and permission-decision
++items from `/api/state` + `/api/autonomy`; every action opens the EXISTING surface that owns the
++decision; project isolation is fail-closed and hostile-tested; stale references render honestly
++with no action; copy checked against worker/lease/routing vocabulary. Primary files:
++`needsAttention.ts`, `KelNeedsAttention.tsx`, `work/index.tsx`, tests. Tests: `needs-attention`
++(8); tsc 0; vitest 122. AUDIT_TARGETS 84–85.
++
++### CHG-028 — Engine-loss/recovery proven as a packaged journey (R10; closes TR-02's binding)
++ID: CHG-028 / Phase: Campaign A — R10 / Commits: evidence `bc92f7f` (lane) / Date: 2026-09-18
++New behavior: no new production code beyond CHG-024's follow-ups; this entry records the packaged
++proof: boot → healthy (engine 1.6.0) → kill → truthful reconnecting → supervised restart →
++durable work preserved (seeded transcription folder + conversations + engine version) → repeated
++loss → recovered again → restart impossible → honest could-not-recover (~5 s with fail-fast) →
++manual retry → recovered. 7 screenshots; DOM raw-leak scan clean; console errors 0. Engine-side
++variants (approval-wait loss, effect reconciliation) carried to the R12 battery. Evidence:
++`docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`; `ux-audit/runs/r10-{f,g}`.
++
+ Planned Phase-to-CHG mapping (kept current as work lands):
+ 
+ | Phase | Expected CHGs | Status |
+@@ -566,5 +616,5 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
+ | R7 credential containment | CHG-022 delivered (`b6c4eff`); record `increments/R7-CREDENTIAL-BOUNDARY.md` | DONE |
+ | R8 migrations + package identity + REL-01 | CHG-023 delivered (`2468b16`, `93b99b5`); record `increments/R8-PACKAGE-ASSERTIONS.md` | DONE |
+-| Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+-| Engine-loss/recovery behavior | CHG-0xx | PENDING |
++| Visual batches 6–8 + integration | CHG-024 (batch 6 `2897207`+`645898a`+`fa66f04`), CHG-025 (batch 7 `0e7d21a`), CHG-026 (batch 8 `c911d81`), CHG-027 (R9.D `938dc9b`); integrated `7267630`; evidence `docs/v1.6-visual-ux/18_R9_EVIDENCE.md` | DONE |
++| Engine-loss/recovery behavior | CHG-028 (supervision + states; packaged proof `ux-audit/runs/r10-{f,g}`; `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`) | DONE |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 76078aa..bf38c3e 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -64,12 +64,13 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `93b99b5` | `2468b16` | 2026-09-18 | R8.B/C/D / PACKAGE-IDENTITY + REL-01 | frozen load path carries the staged runtime (no nesting); the freeze refuses divergence; engine/desktop version identity = 1.6.0 | `scripts/freeze-release.ps1`; `scripts/validate-freeze.ps1`; `kel/__init__.py`; `kel/service.py`; `desktop/package.json`; `tests/test_v16_r8_identity.py`; `engineVersion.test.ts`; record | +3 engine + 3 desktop tests; packaged probe (1.6.0, 4 providers); full suite A-26 | none | yes (version strings) | no | no | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 fixture evidence | installer battery + real-package freeze remain R12 |
+ | `HEAD` | `93b99b5` | 2026-09-18 | R7+R8 | R7/R8 breadcrumbs (this commit) | docs only | engine full A-26; desktop A-27 | none | no | - | no | no | LOW | corpus rows REQ-R25-R7/R8, INV-CREDENTIAL-CONTAINMENT/PACKAGE-IDENTITY, CHG-022/023, A-26/27; `increments/R7...`, `R8...` | next: R9 Visual 6-8 + Needs Your Attention |
+ 
+-## Visual branch commits pending integration (NOT covered by any independent audit)
++## Visual lane commits — INTEGRATED into Main (R11 `7267630`; NOT covered by an independent audit)
+ 
+-Branch `ux/v16-visual-fix` (worktree `kel-v16-visual-fix`). These carry production changes that
+-have automated (79/79 vitest, tsc 0) and packaged (`package-visual5` probes a/b/c) acceptance only.
+-When integrated into `ux/v15-journeys` they enter the Commit Ledger range above as NEW commits
+-(integration commit(s) + preserved lineage), and their original SHAs remain traceable.
++Branch `ux/v16-visual-fix` (worktree `kel-v16-visual-fix`), re-anchored on Main `05608e6`
++during R9.A (`3050761`, pure-union merge — zero production overlap). Every row below is now
++part of the integration lineage; original SHAs remain traceable. Automated acceptance at lane
++tip `fa66f04`: tsc 0; vitest **122/122** (12 files). Packaged: R10 engine-loss journey
++(`ux-audit/runs/r10-{f,g}`, PASS) + `package-visual5` probes a/b/c.
+ 
+ | SHA | date | batch | intent | production files (summary) | evidence | concerns |
+ |---|---|---|---|---|---|---|
+@@ -78,6 +79,25 @@ When integrated into `ux/v15-journeys` they enter the Commit Ledger range above
+ | `04151c8` | 2026-09-17 | docs | visual plan docs onto the branch | docs | — | — |
+ | `83af16f` | 2026-09-18 | Batch 4 | Transcription standalone IA | transcription renderer | tsc 0; 76/76 | finding 2/3 baselines pending |
+ | `ac85eb3` | 2026-09-18 | Batch 5 | Sidebar rows: action gutter + leading-mark semantics | ConversationRow, tests | tsc 0; **79/79**; packaged probe c | human pixel gate open |
++| `0ff061d` | 2026-09-18 | R9.A | lane reconciliation + integration map (zero-overlap proof) | docs | — | — |
++| `3050761` | 2026-09-18 | R9.A | re-anchor merge Main `05608e6` into the lane (pure union) | merge of Main docs + lane | batch-1–5 files byte-identical post-merge | — |
++| `2897207` | 2026-09-18 | Batch 6 | honest engine-loss / failure states + supervision (findings 16/17) | engineFailure, engineHealth, KelService, failure card/notice, 8 pages, preload, tests | tsc 0; vitest 114; R10 packaged PASS | packaged evidence at R10 |
++| `0e7d21a` | 2026-09-18 | Batch 7 | composer owns model/tools/memory (finding 2) | ChatConversation, AcpChat, AcpSendBox | tsc 0; vitest 114 | mobile path unchanged by design |
++| `c911d81` | 2026-09-18 | Batch 8 | normalization (overflow guard; legacy error primitive removed) | kel-tokens.css, KelPrimitives | tsc 0; vitest 114 | donor preview residue recorded (audit target 89) |
++| `938dc9b` | 2026-09-18 | R9.D | Needs Your Attention (derived-only view + hostile tests) | needsAttention, KelNeedsAttention, Work mount, tests | tsc 0; vitest 122 | — |
++| `645898a` | 2026-09-18 | Batch 6b | fail-fast when a supervised spawn dies outright | KelService | tsc 0; vitest 122 | first attempt used `exitCode` only — ineffective for ENOENT (r10-d evidence) |
++| `fa66f04` | 2026-09-18 | Batch 6c | ENOENT spawns fail fast (`pid === undefined`) | KelService | tsc 0; vitest 122; r10-f: could-not-recover in ~5 s | — |
++| `96979c7` | 2026-09-18 | docs | R9 evidence index (18_R9_EVIDENCE.md) | docs | — | — |
++| `bc92f7f` | 2026-09-18 | docs | R10 evidence (19_R10_ENGINE_LOSS_EVIDENCE.md) | docs | — | — |
++
++## Main-lane docs + integration commits (R9–R11)
++
++| SHA | date | phase | intent | files | notes |
++|---|---|---|---|---|
++| `05608e6` | 2026-09-18 | R9 bookkeeping | P2/P3 denominator reconciliation (27-vs-26) + full original-ID mapping | docs corpus | no production change |
++| `1972b68` | 2026-09-18 | R9 status | MAIN_STATUS + MARATHON_STATE breadcrumbs | docs | — |
++| `93b7074` | 2026-09-18 | R9 audit targets | targets 86–90 (supervision/loaded-gun/preview residue/packaging inputs) | docs | — |
++| `7267630` | 2026-09-18 | **R11** | integration merge: visual lane → Main (batches 1–8 + R9.D + R10 supervision) | union (55 lane files + 3 Main docs) | zero overlapping files; no conflict resolutions; post-merge tsc 0 + vitest 122/122 |
+ 
+ ## Maintenance rules
+ 
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 3b3b483..80f05fd 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -64,11 +64,11 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-R25-R7 | roadmap R2.5 (Round 2.5 H/I; CREDENTIAL-CONTAINMENT) | credential/network boundary confirmation | **implemented** (`b6c4eff`): channel inventory; `child_env` containment at the spawn sites; the coding test command clears all provider keys; sentinel tests; native-host network reality documented (no OS sandbox; egress filtering = post-V1.6) | `b6c4eff` | `tests/test_v16_r7_credentials.py` 5 new; focused 85 passed; full A-26 | `increments/R7-CREDENTIAL-BOUNDARY.md`; INV-CREDENTIAL-CONTAINMENT | engine-local helper subprocesses inherit the user env (disclosed) | pending |
+ | REQ-R25-R8 | roadmap R2.5 15 (= REQ-PKG-ASSERT + REL-01) | packaged/migration assertions | **implemented** (`2468b16`, `93b99b5`): unique migration markers (max 21; fresh/idempotent/upgrade proven); the freeze lands the staged runtime at the load path and refuses divergence (REL-01 fixture, positive + negative); engine/desktop identity 1.6.0; frozen load-path engine booted with fresh migrations, 4 providers, connected and guardrails_ok | `2468b16`; `93b99b5` | `test_v16_r8_migrations.py` 4; `test_v16_r8_identity.py` 3; desktop `engineVersion.test.ts` 3; packaged probe | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 row | installer battery + real-package freeze re-run at R12 | pending |
+ | REQ-R25-R9 | roadmap R2.5 (Round 2.5 N) | Visual batches 6–8 + Needs Your Attention (derived-only) | PENDING | — | — | roadmap §R9 | — | pending |
+-| REQ-R25-R10 | roadmap R2.5 §17 (= REQ-ELOSS) | engine-loss/recovery UX | PENDING | — | — | roadmap §R10 | — | pending |
++| REQ-R25-R10 | roadmap R2.5 §17 (= REQ-ELOSS) | engine-loss/recovery UX | **complete** — batch 6 built the honest states (classifier, supervision, reconnecting/recovered/could-not-recover, manual retry, fail-fast spawn) and R10 proved the packaged journey (`ux-audit/runs/r10-{f,g}/`; link log; 7 screenshots; DOM leak scan clean) | `2897207`, `645898a`, `fa66f04` (lane), `7267630` (integration) | A-28 (r10-f/g raw); tsc/vitest A-27b | roadmap §R10; `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md` | carried to R12: engine-suite battery incl. upgrade DB on the packaged engine; approval/effect variants not constructible in the isolated profile | pending (audit re-runs) |
+ | REQ-R25-R11 | roadmap R2.5 §18 | Visual → Main integration | PENDING | — | — | roadmap §R11 | — | pending |
+ | REQ-R25-R12 | roadmap R2.5 §19 | final Campaign A regression | PENDING | — | — | roadmap §R12 | — | pending |
+-| REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+-| REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
++| REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | **complete** — batch 6 (`2897207`+follow-ups), batch 7 (`0e7d21a`), batch 8 (`c911d81`); evidence `docs/v1.6-visual-ux/18_R9_EVIDENCE.md`; integrated into Main `7267630` (R11, zero overlaps) | `2897207`, `0e7d21a`, `c911d81`, `7267630` | tsc 0 + vitest 122/122 on both lanes and post-merge | VISUAL_EVIDENCE_INDEX.md (batch ledger) | human pixel gate remains OPEN by design | pending |
++| REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | **complete** — see REQ-R25-R10 row (R10 packaged journey PASS; TR-02 residual closed by the batch-6 toast classification); R9.D attention surface delivered (`938dc9b`) | `2897207`, `938dc9b` | A-28; needs-attention hostile suite (8 tests) | `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md` | approval-wait loss not constructible; engine suite covers | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+ | REQ-PKG-ASSERT | carry-forward | packaged battery assertions 16–19 | PENDING | — | — | PACKAGED_EVIDENCE_INDEX.md | pending |
+ | REQ-RC | sprint directive §45/§46 | pre-audit regression + RC | PENDING | — | — | docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md | pending |
+diff --git a/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+index 1f42416..c42db99 100644
+--- a/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/VISUAL_EVIDENCE_INDEX.md
+@@ -1,9 +1,11 @@
+ # VISUAL_EVIDENCE_INDEX — visual findings, batches, acceptance, human gate
+ 
+-updated: 2026-09-18T16:05Z
++updated: 2026-09-18T00:20Z
+ authority: `kel-v16-visual-audit/docs/v1.6-visual-ux/VISUAL_STATUS.md` (the schema block there is
+ authoritative; this index mirrors it for the audit corpus). Implementation branch
+-`ux/v16-visual-fix` @ `ac85eb3`; integration into Main: **NOT YET** (Campaign A §44 goal).
++`ux/v16-visual-fix` @ `fa66f04` (code) / `bc92f7f` (evidence); integration into Main:
++**DONE** — merge commit `7267630` (R11; before-mutation record in `increments/R11-INTEGRATION.md`,
++zero overlapping files, no conflict resolutions).
+ 
+ ## Batch ledger
+ 
+@@ -11,13 +13,12 @@ authoritative; this index mirrors it for the audit corpus). Implementation branc
+ |---|---|---|---|---|---|---|---|---|
+ | 1 — design tokens | visual plan set §tokens | — | `8dd21f9` | 39/39 WCAG contrast checks; tsc 0; vitest 76/76 | package-visual5 (probe a) | visual5 captures 1–23 (probe a) | OPEN | PENDING |
+ | 2 — settings shell | finding S1-1 + Tools route | — | `3d9202c` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
+-| 3 — Work / Projects / Permissions | held | — | — | — | — | — | — | HELD (Main surface release needed) |
+-| 4 — transcription IA | finding 2/3 baseline caveat | — | `83af16f` | tsc 0; 76/76 | package-visual5 (probe a) | as above | OPEN | PENDING |
+-| 5 — sidebar rows (action gutter + leading mark) | findings S2/S3 (03 §2, 03 §4 · 04 §4.2) | — | `ac85eb3` | tsc 0; **79/79** (+3 unit tests) | package-visual5 probe c: overlapPx −4 (was +12), 32px gutter, marks correct | package-visual5 captures (probe c) | OPEN | PENDING |
+-| 5 (Team half) | team terminology / entry merge | — | — | — | — | — | — | HELD |
+-| 6 — engine loss / error translation / supervision | findings 16/17 reproduced by probe b | HIGH (raw `TypeError: fetch failed` surfaces) | — | — | — | — | — | PENDING |
+-| 7 — composer / Model / Tools | gated by coordinator | — | — | — | — | — | — | HELD |
+-| 8 — final normalization (settings half) | — | — | — | — | — | — | — | HELD |
++| 6 — engine loss / error translation / supervision | findings 16/17 reproduced by probe b | HIGH (raw `TypeError: fetch failed` surfaces) | `2897207` (+ `645898a`, `fa66f04` fail-fast follow-ups) | tsc 0; vitest 114→122 (classifier + health-machine suites) | **R10 packaged journey PASS** — `ux-audit/runs/r10-{f,g}/` (r10-g full journey; r10-f fast-fail cannot-restart); 7 screenshots; DOM leak scan clean | `r10-g/r10-0{0..4}*.png`, `r10-f/r10d-0*.png` | OPEN | **DONE** (`7267630`) |
++| 7 — composer / Model / Tools | finding 2 (03 §2) | — | `0e7d21a` | tsc 0; vitest 114 | covered by r10-g boot/connected captures | `r10-g/r10-00-connected.png` | OPEN | **DONE** (`7267630`) |
++| 8 — final normalization | directive §8 | — | `c911d81` | tsc 0; vitest 114 | covered by r10-g captures | as above | OPEN | **DONE** (`7267630`) |
++| R9.D — Needs Your Attention | directive §9 / roadmap item N | — | `938dc9b` | tsc 0; vitest 122 (hostile isolation suite) | R12 battery (Work-surface capture) | — | OPEN | **DONE** (`7267630`) |
++| 3 — Work / Projects / Permissions (full rebuild) | visual plan set | — | — | — | — | — | — | NOT ORDERED (normalization-only scope applied in batch 8) |
++| 5 (Team half full redesign) | team terminology / entry merge | — | — | — | — | — | — | NOT ORDERED (normalization-only) |
+ 
+ ## Packaged acceptance detail (package-visual5, 2026-09-18)
+ 
+@@ -59,8 +60,10 @@ Committed captures + reproduction commands: `docs/v1.6/branding/evidence/`.
+ 
+ - **Two missing baseline captures** for findings 2 and 3 (before those surfaces are touched).
+ - **Human pixel review**: OPEN — no image perception in agent threads; prepared index stands ready.
+-- **Integration**: commit lineage must be preserved on merge (§44); every conflict resolution is
+-  an audit target (AUDIT_TARGETS §29).
++- **Integration DONE** (`7267630`): zero overlapping files at integration time; no conflict
++  resolutions were required (audit target §29 therefore records "no resolutions"). R9/R10 lineage
++  preserved in `docs/v1.6-visual-ux/17–19` and the corpus rows of `increments/R11-INTEGRATION.md`.
+ - **Main edit notice (2026-09-18):** Phase 6 (`22f4a3e`) touched `KelWorkPanel.tsx` (Knowledge tab
+-  only) — the HELD visual batches (3, 5-team half) are not affected by this edit; the Visual thread
+-  revalidates against current Main before editing per protocol.
++  only) — resolved during R9.A by re-anchoring the lane on Main `05608e6` (pure-union merge); the
++  pre-existing `KelModelControl` / `KelApprovalCard` / `KelCapabilityCard` behavior was preserved
++  exactly as Main shipped it.
+diff --git a/docs/v1.6/pre-audit/increments/R11-INTEGRATION.md b/docs/v1.6/pre-audit/increments/R11-INTEGRATION.md
+new file mode 100644
+index 0000000..b45cc13
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R11-INTEGRATION.md
+@@ -0,0 +1,47 @@
++# R11 — Visual → Main integration record (2026-09-18)
++
++Directive §12. This is the semantic integration of the visual lane into Main.
++
++## Before mutation (recorded facts)
++
++- Main worktree `kel-ux-v15`, branch `ux/v15-journeys` — clean; tip **`93b7074`**.
++- Visual worktree `kel-v16-visual-fix`, branch `ux/v16-visual-fix` — clean; tip **`bc92f7f`**
++  (code tip `fa66f04`).
++- Merge base of the two branches: **`05608e6`** (the R9 re-anchor point).
++- Main-only changes since the base (3 files, docs only): `docs/v1.6/MARATHON_STATE.md`,
++  `docs/v1.6/status/MAIN_STATUS.md`, `docs/v1.6/pre-audit/AUDIT_TARGETS.md`.
++- Visual-only changes since the base (55 files): `desktop/**` (batches 1–8, R9.D, supervision +
++  follow-ups, tests) and `docs/v1.6-visual-ux/**` (plan set + `17–19` records).
++- **Overlapping files: NONE.** No conflict resolutions were required; per §12, no branch was
++  preferred by age — the merge is a pure union of behavior.
++- No competing writer (single Program Director; Main quiescent during R9/R10).
++
++## Mutation
++
++- `git merge ux/v16-visual-fix --no-ff` in the Main worktree → merge commit **`7267630`**
++  ("merge(v1.6): R11 — integrate the visual lane into Main"). Conflict count: 0.
++
++## After mutation (verification)
++
++- `bunx tsc --noEmit` → **0 errors** (Main worktree).
++- `bun run test` → **122 passed / 122** (12 files).
++- Engine suite: not re-run here (no engine/runtime file changed by this merge); the R12 battery
++  re-runs the full engine suite + the packaged battery on the post-merge build.
++- Preserved by construction: all Campaign A runtime/API behavior (Main side untouched by the
++  lane), and all accepted visual behavior (lane deltas merged verbatim; batches 1–5 files were
++  proven byte-identical at the re-anchor and are untouched since).
++- No force updates; lineage preserved (the lane's original SHAs remain reachable; recorded in
++  `COMMIT_LEDGER.md`).
++
++## Durable records updated with this record
++
++`COMMIT_LEDGER.md` (integration rows), `CHANGE_LEDGER.md` (CHG-024…028 + mapping),
++`REQUIREMENTS_TRACEABILITY.md` (REQ-R25-R10 / REQ-VIS-6..8 / REQ-ELOSS),
++`VISUAL_EVIDENCE_INDEX.md` (integration status), `MAIN_STATUS.md` / `MARATHON_STATE.md`
++(breadcrumbs), and the visual authority `VISUAL_STATUS.md` (`integrated_main_head: 7267630`).
++
++## Carried into R12
++
++- Full engine suite + desktop suite on the merged tree.
++- Packaged/installed battery rebuilt **from the merged Main** (fresh package incl. installer
++  path), failure injection, release integrity, and the pre-audit corpus finalization.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 825ec83..e7eb685 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,12 +1,12 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T23:55:00Z
++updated_utc: 2026-09-19T00:35:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: R0-R8 COMPLETE + R9 VISUAL LANE DELIVERED (batches 6-8 + Needs Your Attention on `ux/v16-visual-fix`, re-anchored on Main); production tip `022f3ac`; docs tip `05608e6`; see `git log --oneline -20`
++head: R0-R11 COMPLETE — visual lane integrated into Main (merge `7267630`; batches 1-8 + R9.D + R10 supervision on Main); next: R12 battery + PRE_AUDIT_V1_6_HEAD; see `git log --oneline -20`
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,8 +18,8 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R0-R8 COMPLETE**; **R9 COMPLETE on the visual lane** — lane reconciled + re-anchored on Main `05608e6` (`0ff061d`, `3050761`), batches 6 (engine loss / failure states), 7 (composer owns model/tools/memory), 8 (normalization) and R9.D (**Needs Your Attention**, derived-only + hostile project-isolation tests) delivered (`2897207`, `0e7d21a`, `c911d81`, `938dc9b`, `96979c7`); tsc 0, vitest **122/122**; packaged evidence = R10. **R10 in progress:** package rebuilt as `Kel-1.6.0` bundling the frozen **1.6.0** engine (the R8 load-path runtime; the pre-existing `dist/runtime/KelEngine` in the visual worktree was a stale 1.5.0 bundle and was replaced); packaged engine-loss/recovery journey running with screenshots. **Next: R11** (Visual -> Main semantic integration), then R12 + PRE_AUDIT_V1_6_HEAD.
+-current_phase: R10 - engine-loss/recovery packaged journey (packaged app; honest reconnecting/recovered/could-not-recover states; durable work preserved; repeat loss; manual retry)
++current_increment: **R0-R9 COMPLETE; R10 COMPLETE (packaged engine-loss journey PASS: `ux-audit/runs/r10-{f,g}`, 7 screenshots, DOM leak scan clean); R11 COMPLETE (visual lane → Main merge `7267630`, zero overlapping files, post-merge tsc 0 + vitest 122/122).** **Next: R12** — full engine suite + desktop suite + packaged/installed battery (fresh package + installer from the MERGED Main), failure injection, release integrity, then PRE_AUDIT_V1_6_HEAD.
++current_phase: R12 - final Campaign A regression + packaged/installed battery (the marathon's last gate before PRE_AUDIT_V1_6_HEAD)
+ completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+@@ -28,11 +28,11 @@ audit_required: false
+ audit_last_seen_head: 8a2b25d
+ audit_last_seen_verdict: CONTINUE (increment 24 — all F23-1..F23-10 closed; 24-N1..N3 informational)
+ 
+-visual_state: R9_COMPLETE_PENDING_R11_INTEGRATION
++visual_state: INTEGRATED (R11 `7267630`; verification continues in the R12 battery)
+ visual_clean_head: 60b2322
+ visual_required: true
+-visual_last_seen_head: 96979c7 (R9 evidence; code tip `938dc9b`; lane re-anchored on Main `05608e6` — pure-union merge `3050761` with the 9 batch-1-5 files byte-identical; batches 6-8 + R9.D delivered; tsc 0; vitest 122/122; NOT independently audited; integration into Main = R11)
+-visual_last_seen_verdict: R9 delivered on the visual branch (automated suite green; packaged engine-loss journey + screenshots at R10); human pixel gate open by design
++visual_last_seen_head: bc92f7f (code `fa66f04`; integrated into Main at `7267630`; tsc 0; vitest 122/122; R10 packaged journey PASS — `ux-audit/runs/r10-{f,g}`)
++visual_last_seen_verdict: integrated; NOT independently audited; human pixel gate open by design
+ 
+ rust_verdict: NO_MIGRATION_NEEDED_NOW
+ rust_freshness_required: false (Phase 11 recheck 2026-09-18 upheld the verdict; Phase 12 explicitly closed)
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R10 finish -> R11 -> R12 -> PRE_AUDIT RC.** R10: the packaged `Kel-1.6.0` win-unpacked package bundles the 1.6.0 engine and the batch-6 supervision; run the packaged engine-loss/recovery journey (kill -> honest reconnecting -> supervised restart -> durable work preserved -> repeat loss -> could-not-recover -> manual retry), collect `desktop-link.log` transitions, screenshots, raw-leak scan. R11: integrate `ux/v16-visual-fix` -> `ux/v15-journeys` semantically (before-mutation checks per directive section 12; resolve the `KelService.ts` / transcription / KelWorkPanel overlaps on CURRENT semantics; re-run tsc + vitest + packaged probes). R12: full engine suite + desktop suite + packaged/installed battery + failure injection + release integrity; then finalize the pre-audit corpus and create PRE_AUDIT_V1_6_HEAD. REL-01 is CLOSED; the final release freeze remains out of scope for Campaign A. Marathon: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO` until Campaign A completes or a genuine human gate exists).
++next_autonomous_action: **R12 — the full pre-audit battery on the MERGED tree, then PRE_AUDIT_V1_6_HEAD.** Engine: full suite (fresh DB, upgrade DB, migrations, authority, approvals, leases, idempotency, effects, retry-durable, persist-canonical, liveness, recovery, memory, continuation, providers, routing, D1-D3, assurance, learning, evidence, completion, lineage, vetting, transcription, restore, release identity). Desktop: tsc + full vitest. Packaged/installed: rebuild from the merged Main (NSIS installer + icons + About + branding + runtime load path + engine SHA + fresh/upgrade DB + isolation + approvals + capabilities + memory + transcription + artifacts + Workforce assertions + Needs Your Attention + engine-loss + console/overflow/routes). Failure injection (engine loss/restart failure, provider unavailable, stale run, duplicate result/submission, approval misuse, cross-project IDs, stale lease, restore failure, malformed payloads, identity mismatch, retry exhaustion, verification failure). Release integrity (branch/worktree/remote exact, no force push, scan 0 hits, frozen refs untouched). Then finalize `docs/v1.6/PRE_AUDIT_RELEASE_CANDIDATE.md` (PRE_AUDIT_V1_6_HEAD=<sha>) + the full handoff corpus. STOP there — no Campaign B/C, no release freeze.
+ external_dependency: NONE
+ stop_reason: NONE

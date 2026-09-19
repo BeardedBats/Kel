@@ -1,0 +1,309 @@
+commit 11e152558ce4b53c693fa5c93ac1d5e729c9b2eb
+2026-09-18 14:04:09 -0400
+docs(v1.6): A1 breadcrumbs + REL-01 flagged as a release blocker (13/27 rows decided)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index e796d42..e87572c 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -561,3 +561,19 @@ desktop `tsc` 0; **full engine suite 905 passed** (+10 subtests, was 900). The I
+ automated test (no Electron/IPC harness here) — recorded as audit target §58 rather than claimed.
+ Sweep status: **11/27 rows dispositioned** (P2 1/10, P3 10/17). Next: the remaining P2s, starting
+ with A1 and REL-01.
++
++## A1 / ENG-01 — detached-engine reuse validates `engine_version` (2026-09-18)
++
++**A1 FIXED (`101d8c3`), REL-01 recorded `OPEN_RELEASE_BLOCKER`.** The audit's final verdict listed
++A1 as "Detached-engine reuse does not validate `engine_version` — NEW, verified": the app read
++`desktop-session.json`, called `/api/state`, and reused whatever answered, so an upgrade (which
++replaces `resources/kel-engine`) could leave the new build talking to the old engine. The fix is a
++pure decision (`engineVersionAccepted(live, expected)` — exact match; empty expectation means an
++unpackaged dev run where `app.getVersion()` is Electron's, deliberately not enforced) applied at
++**both** trust sites: the reuse path and the spawn-wait loop, because a leftover engine can keep
++re-writing the shared descriptor. Verification: desktop `tsc` 0; vitest **93 passed** (was 90, +3).
++REL-01 is the same subsystem (which engine a build ships) but its only honest verification is a real
++freeze — outside Campaign A's boundary — so it is flagged as a release blocker with the fix drafted
++in its row rather than being silently deferred. Sweep status: **13/27 rows carry a final
++disposition** (P2 3/10, P3 10/17); 14 remain undecided. Next: the remaining P2s (APR-01/02/03,
++SEC-01, PER-03, TR-01/02) and P3s.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 6e155e5..a2a55d7 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -173,3 +173,13 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     unsanitised (`_header_safe` is applied to *every* parameter, not just the filename); (c) confirm
+     `NEVER_BACKUP` is consulted on every backup path, including the hot-database copy, and that the
+     credentials sidecar is reported as skipped rather than silently absent.
++
++## A1 engine-version binding (2026-09-18 additions)
++
++59. Engine-version binding: the *decision* is unit-tested (`engineVersionAccepted`) but the wiring
++    has no Electron harness — challenge it by reading `initializeKel` and confirming **both** trust
++    sites check the version (the reuse path and the spawn-wait loop) and that no other path can set
++    `connected = true` from an unchecked answer. Also confirm a stale engine that keeps re-writing
++    the shared `desktop-session.json` cannot satisfy the check, and that a packaged build's
++    `app.getVersion()` really equals the engine's `ENGINE_VERSION` in the RC artifact (a mismatch
++    would now block startup instead of silently reusing).
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index 2e34c87..ea1c5f3 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,34 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-009 — Detached-engine reuse validates `engine_version` (audit A1 / ENG-01)
++
++ID: CHG-009 · Phase: Campaign A — P2/P3 sweep · Commit: `101d8c3` · Date: 2026-09-18
++
++- **User-visible impact:** indirect — after an upgrade the app no longer talks to a leftover engine
++  of the previous version; it spawns the engine it shipped and waits for that one.
++- **Internal impact:** new `engineVersionAccepted(live, expected)` (pure, unit-tested) and the check
++  applied at **both** trust sites in `initializeKel` (the descriptor reuse path and the spawn-wait
++  loop, which previously connected to whatever answered first).
++- **Previous behavior:** `desktop-session.json` + any `/api/state` answer = reused engine.
++- **New behavior:** the live `engine_version` must equal the version this build shipped
++  (`app.getVersion()` when packaged; `KEL_ENGINE_VERSION` overrides); an unpackaged dev run passes
++  an empty expectation and is deliberately not enforced (its `app.getVersion()` is Electron's).
++- **Primary files:** `desktop/packages/desktop/src/process/services/kel/engineVersion.ts` (new),
++  `KelService.ts`, `desktop/tests/unit/kelEngineVersion.test.ts` (new).
++- **Primary symbols:** `engineVersionAccepted`, `initializeKel`.
++- **Data/schema changes:** none. **Failure paths:** a stale engine is simply not reused; port
++  handling is untouched (each engine picks its own port), so nothing is stranded.
++- **Security/privacy implications:** none. **Persistence implications:** none.
++- **Expected invariants:** INV-A1-001 (a reused engine is the engine this build shipped).
++- **Tests:** 3 desktop unit tests + `tsc` 0 + vitest 93 (A-17).
++- **Packaged evidence:** n/a (the RC packaged battery starts the app, which exercises the path).
++- **Known concerns:** the end-to-end spawn fallback has no Electron harness here — the decision is
++  unit-tested, the wiring typecheck-verified (audit target §59).
++- **Audit questions:** can any path still connect to an engine whose version was not checked? Does a
++  stale engine keep holding the descriptor file (the loop re-reads it every 250 ms)?
++- **Repair hints:** `engineVersionAccepted` is the single decision point.
++
+ ### CHG-008 — Sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups
+ 
+ ID: CHG-008 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index a480ccc..85855aa 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -42,7 +42,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `df1997a` | `c1bb980` | 2026-09-18 | PER-02 (P2 sweep) | a failed or partial restore is recorded and surfaced | `kel/backup.py`; `kel/service.py`; `tests/test_v16_restore_visibility.py` | +5 engine tests; full suite **900 passed** (+10 subtests) | none (sidecar `restore-outcome.json`) | additive `state()['restore']`; renderer surface → REQ-ELOSS | n/a (RC battery can assert on a staged restore) | yes (additive payload key) | no | MEDIUM | `increments/PER-02-RESTORE-VISIBILITY.md`; TEST_EVIDENCE_INDEX A-15 | renderer does not show it yet (target 57); PER-03 shares the path |
+ | `cbd0430` | `df1997a` | 2026-09-18 | PER-02 | PER-02 breadcrumbs | docs only | — | none | no | — | no | no | LOW | corpus rows PER-02 / CHG-007 / §57; AUTO_RESUME section | — |
+ | `0596211` | `cbd0430` | 2026-09-18 | INT-01 / SEC-01-multipart / PER-04 | sweep batch 2: IPC frame guard, multipart header hygiene, credentials excluded from backups | `desktop/.../kel/KelService.ts`; `kel/transcription.py`; `kel/backup.py`; `tests/test_v16_sweep_fixes.py` | +5 engine tests; full suite **905 passed** (+10 subtests); desktop tsc 0 | none (`NEVER_BACKUP` guard) | no (hardening) | n/a | no | no | MEDIUM | `increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md`; TEST_EVIDENCE_INDEX A-16 | IPC guard has no automated test (no harness) — §58 |
+-| `HEAD` | `0596211` | 2026-09-18 | sweep batch 2 | sweep batch 2 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows INT-01 / SEC-01-multipart / PER-04 / DEAD-05 / TR-01 / CHG-008 / §58; AUTO_RESUME section | — |
++| `a3e272d` | `0596211` | 2026-09-18 | sweep batch 2 | sweep batch 2 breadcrumbs | docs only | — | none | no | — | no | no | LOW | corpus rows INT-01 / SEC-01-multipart / PER-04 / DEAD-05 / TR-01 / CHG-008 / §58; AUTO_RESUME section | — |
++| `101d8c3` | `a3e272d` | 2026-09-18 | A1 / ENG-01 | detached-engine reuse validates `engine_version` (both trust sites) | `desktop/.../kel/engineVersion.ts` (new); `KelService.ts`; `tests/unit/kelEngineVersion.test.ts` (new) | +3 desktop tests; vitest **93 passed**; tsc 0 | none | no (upgrade correctness) | n/a | no | no | MEDIUM | `increments/A1-ENGINE-VERSION-BINDING.md`; TEST_EVIDENCE_INDEX A-17 | end-to-end spawn fallback has no Electron harness — §59 |
++| `HEAD` | `101d8c3` | 2026-09-18 | A1 | A1 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows A1 / REL-01 / CHG-009 / §59; AUTO_RESUME section | REL-01 recorded OPEN_RELEASE_BLOCKER |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 8f31adc..fddeaf5 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -15,8 +15,8 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | APR-01 | `/api/approvals` payload-actor rejection implicit; comment claims a guard that is absent | P2 | `13_PHASE3_DELTA_AUDIT.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | add payload-actor test | TBD in sweep | pending |
+ | APR-02 | Approval resolution is not conversation-scoped while the read is | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | cross-scope resolution test | TBD | pending |
+ | APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on crash/restart between commit and flush (`vetting_session.py:95`) | P2 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending; Phase 6 reviewed — bounded crash-window only; durable-drain direction in REPAIR_HINTS) | — | durable drain + restart regression | TBD | pending |
+-| A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | OPEN (sweep pending) | — | stale-descriptor boot test | TBD | pending |
+-| REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | freeze tooling test | TBD | pending |
++| A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | **FIXED** (2026-09-18, `101d8c3`): `engineVersionAccepted(live, expected)` compares the live `/api/state` `engine_version` with the version this build shipped, and the check runs in **both** places that used to trust the answer — the reuse path and the spawn-wait loop (a leftover engine can keep the shared descriptor alive). An unpackaged dev run passes an empty expectation (its `app.getVersion()` is Electron's) and is deliberately not enforced | `101d8c3` | `desktop/tests/unit/kelEngineVersion.test.ts` (3); tsc 0; vitest 93 | none (upgrade-correctness) | pending |
++| REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | **OPEN_RELEASE_BLOCKER** (verified open 2026-09-18: `kel-builder.json`/`kel-runtime-builder.json` declare `{"from": "../dist/runtime/KelEngine", "to": "kel-engine"}` — the load path the app stages from (`process.resourcesPath/kel-engine`) — while the freeze tool's staging step does not affect that path, so a freeze can ship an engine older than what `dist/runtime` holds. **Not fixed here on purpose:** the only honest verification is a real freeze, which Campaign A is forbidden to perform; the fix (stage into the packaged `resources/kel-engine` and hash *that*) plus its freeze-level verification belong to the RC gate/human. Mitigation available at RC time: the packaged battery can assert the packaged engine identity without freezing) | — | freeze tooling test (gated) | **release-relevant** | pending |
+ | SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | cross-scope session attack | TBD | pending |
+ | PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | **FIXED** (engine half, 2026-09-18): `backup._record_outcome` writes `restore-outcome.json` beside the data on both decisive paths (the DB is what a restore replaces) and the failure path keeps `restore-pending.json`; `service._restore_outcome` surfaces it as `state()['restore']` — boot never aborts. The renderer surface stays with REQ-ELOSS (audit target 57) | `df1997a` | `tests/test_v16_restore_visibility.py` (5 new; full suite 900) | none (no UI claim made) | pending |
+ | PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | retention test | TBD | pending |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index b6422c1..d8eea2b 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 11/27 rows dispositioned with inline evidence (P2 1/10: PER-02 fixed; P3 10/17: 7 `DEFERRED_NON_RELEASE`/`NOT_APPLICABLE`, 3 fixed — INT-01, SEC-01-multipart, PER-04); the rest stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211` | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 13/27 rows carry a final disposition (P2 3/10: PER-02 + A1 fixed, REL-01 = `OPEN_RELEASE_BLOCKER`; P3 10/17: 7 `DEFERRED_NON_RELEASE`/`NOT_APPLICABLE`, 3 fixed); 14 rows stay `OPEN (sweep pending)` | PER-02 `df1997a`; batch 2 `0596211`; A1 `101d8c3` | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index c59b5a9..eac8da6 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -26,6 +26,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-14 | engine full suite (REQ-F4 real-artifact binding) | `cd runtime && python -m pytest tests -q` | `081a6ef` | 2026-09-18 | PASS | **895 passed, 10 subtests passed** (255.90s; was 891 — +4 new tests, zero regressions). First run of the new gate flagged 8 failures + 5 errors in fixture harnesses (`test_workforce_d2.py`, `test_workforce_parallel.py`) which now record their deliveries | REQ-F4 | INV-F4-001 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | parent-executed |
+ | A-15 | engine full suite (PER-02 restore visibility) | `cd runtime && python -m pytest tests -q` | `df1997a` | 2026-09-18 | PASS | **900 passed, 10 subtests passed** (253.45s; was 895 — +5 new tests, zero regressions); focused `test_v16_restore_visibility.py` + `test_backup.py` = 14 passed | PER-02 | INV-PER02-001 | `increments/PER-02-RESTORE-VISIBILITY.md` | parent-executed |
+ | A-16 | engine full suite + desktop typecheck (sweep batch 2) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit` | `0596211` | 2026-09-18 | PASS | **905 passed, 10 subtests passed** (251.00s; was 900 — +5 new tests, zero regressions); focused sweep-fix + backup + transcription = 41 passed; tsc 0 | INT-01, SEC-01-multipart, PER-04 | INV-SWEEP2-001 | `increments/P2P3-BATCH2-IPC-HEADER-BACKUP.md` | parent-executed (IPC guard by parity, no harness — §58) |
++| A-17 | desktop typecheck + unit suite (A1 engine-version binding) | `cd desktop && bunx tsc --noEmit && bun run test` | `101d8c3` | 2026-09-18 | PASS | tsc 0 errors; **93 passed / 8 files** (was 90 — +3 new tests) | A1 / ENG-01 | INV-A1-001 | `increments/A1-ENGINE-VERSION-BINDING.md` | parent-executed (decision unit-tested; spawn wiring typecheck-only — §59) |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/A1-ENGINE-VERSION-BINDING.md b/docs/v1.6/pre-audit/increments/A1-ENGINE-VERSION-BINDING.md
+new file mode 100644
+index 0000000..c58c151
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/A1-ENGINE-VERSION-BINDING.md
+@@ -0,0 +1,128 @@
++# Increment — A1 / ENG-01: detached-engine reuse validates `engine_version`
++
++increment_id: V16-A1-ENGINE-VERSION
++phase: Campaign A — P2/P3 sweep (audit docket) · A1 / ENG-01 (P2)
++base_commit: a3e272d (sweep batch 2 docs)
++target_commit: `101d8c3` (implementation) + this docs commit
++status: complete
++
++## Objective
++
++Close the P2 finding recorded in the audit's final verdict: the desktop reused whatever engine
++answered `/api/state`, without comparing `engine_version`, so an upgrade could leave the new build
++talking to the previous version's engine.
++
++## Requirement Sources
++
++- `docs/code-audit/12_FINAL_VERDICT.md:101` — "`ENG-01` | P2 | Detached-engine reuse does not validate
++  `engine_version` (A1) | NEW, verified".
++- `docs/code-audit/15_RUST_LEAD_VERIFICATION.md` — the source of the A1 row in
++  `pre-audit/P2_P3_DISPOSITION.md`.
++- `desktop/kel-builder.json` — declares the bundled engine (`../dist/runtime/KelEngine` →
++  `kel-engine`), i.e. an upgrade replaces the engine the app loads.
++
++## Implementation Summary
++
++1. **The decision, as data** (`process/services/kel/engineVersion.ts`): `engineVersionAccepted(live,
++   expected)` — exact match required (trimmed); a missing/non-string live version refuses; an empty
++   `expected` means the caller cannot know the build's engine version and is **not enforced**
++   (documented escape for unpackaged dev runs, where `app.getVersion()` reports Electron's own
++   version).
++2. **Both trust sites** (`KelService.ts:initializeKel`): the check now guards the reuse path (a
++   descriptor whose engine does not match is no longer "a live engine") **and** the spawn-wait loop —
++   a leftover engine can keep rewriting the shared `desktop-session.json`, so the loop keeps waiting
++   for the engine this build expects instead of connecting to whatever answers first.
++3. **No port risk:** each engine picks its own port, so refusing a stale engine cannot strand the app
++   without an engine.
++
++## Files Changed
++
++- `desktop/packages/desktop/src/process/services/kel/engineVersion.ts` (new)
++- `desktop/packages/desktop/src/process/services/kel/KelService.ts`
++- `desktop/tests/unit/kelEngineVersion.test.ts` (new)
++
++## Symbols Changed
++
++`engineVersionAccepted` (new), `initializeKel` (reuse path + spawn-wait loop).
++
++## Schema/Migrations
++
++None.
++
++## User-Facing Behavior
++
++Indirect: after an upgrade the app spawns its own engine instead of reusing a stale one.
++
++## Internal Behavior
++
++`expectedEngineVersion = process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '')`.
++
++## Error Paths
++
++A stale engine is treated exactly like "no live engine": the app spawns. If the expected engine
++never answers within 45 s it still throws `Kel engine did not start. See desktop.log.`.
++
++## Lifecycle Considerations
++
++The drain hook is unchanged: it addresses `descriptor`, which the spawn path overwrites.
++
++## Persistence / Isolation
++
++None (the descriptor file's format is untouched).
++
++## Security / Privacy
++
++None.
++
++## Self-Review Findings
++
++- The first design compared only the descriptor's own claim (written by the engine itself), which
++  would have been circular; the check compares the **live** `/api/state` version against the version
++  the *build* expects. Recorded because the naive version would have looked like a fix and proved
++  nothing.
++- Enforcing in dev would have broken every unpackaged start (`app.getVersion()` is Electron's), so
++  the empty-expected escape is explicit and tested rather than implied.
++
++## Tests Run
++
++- `cd desktop && bunx tsc --noEmit` → 0 errors.
++- `cd desktop && bun run test` → **93 passed / 8 files** (was 90; +3 new).
++- Engine suite untouched by this change (no engine files modified).
++
++## Results
++
++PASS.
++
++## Packaged Verification
++
++Not applicable here (startup behaviour); the RC packaged battery starts the packaged app, which
++exercises the reuse path against the real `resources/kel-engine`.
++
++## Known Weaknesses
++
++- The end-to-end spawn fallback has no automated test: this repository has no Electron/IPC harness,
++  so the decision is unit-tested and the wiring is typecheck-verified (audit target §59).
++- **REL-01 remains `OPEN_RELEASE_BLOCKER`** (freeze staging is a no-op for the load path): it is the
++  same subsystem (which engine a build actually ships) but its only honest verification is a real
++  freeze, which Campaign A is forbidden to perform. The fix plan is recorded in the row; the
++  decision belongs to the RC gate/human.
++
++## Deferred Questions
++
++- Should a mismatched engine be asked to shut down (instead of idling out) when the app spawns a
++  replacement? Recorded for the RC gate; behaviour today is unchanged.
++
++## Audit Targets
++
++AUDIT_TARGETS § 59.
++
++## Repair Hints
++
++`engineVersionAccepted` is the single decision point; both call sites of `expectedEngineAnswered()`
++must stay in sync if a third trust site is ever added.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/A1-ENGINE-VERSION-BINDING.md` (this file)
++- corpus rows: P2_P3_DISPOSITION (A1 fixed; REL-01 blocker), CHANGE_LEDGER CHG-009,
++  TEST_EVIDENCE_INDEX A-17, COMMIT_LEDGER
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index f453f60..3369fc2 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 0596211 (sweep batch 2 production commit; docs commit follows — see `git log --oneline -8`)
++head: 101d8c3 (A1 production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -17,9 +17,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-P2P3 IN PROGRESS — 11/27 docket rows dispositioned with inline evidence; PER-02 fixed (`df1997a`) and sweep batch 2 fixed (`0596211`: IPC frame guard INT-01, multipart header hygiene SEC-01-multipart, credentials out of backups PER-04; full engine suite 905, desktop tsc 0). Prior: REQ-F4 DONE (081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: continue the sweep — A1 and REL-01 are the remaining release-relevant P2s.
+-current_phase: P2/P3 sweep (in progress; batch 2 fixed at 0596211)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905).
++current_increment: REQ-P2P3 IN PROGRESS — 13/27 docket rows carry a final disposition; **A1 fixed** (`101d8c3`: detached-engine reuse validates `engine_version` at both trust sites; desktop tsc 0, vitest 93), **PER-02 fixed** (`df1997a`), **sweep batch 2 fixed** (`0596211`: INT-01, SEC-01-multipart, PER-04), and **REL-01 recorded `OPEN_RELEASE_BLOCKER`** (freeze-level verification is outside Campaign A's boundary; decision belongs to the RC gate). Prior: REQ-F4 DONE (081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: continue the sweep — 7 P2s (APR-01/02/03, SEC-01, PER-03, TR-01/02) and 7 P3s remain undecided.
++current_phase: P2/P3 sweep (in progress; A1 closed at 101d8c3; REL-01 flagged as a release blocker)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -51,6 +51,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md` is the live table; 16 rows still `OPEN (sweep pending)` — P2 9/10, P3 7/17). Read the source records in the audit worktree `kel-v16-code-audit/docs/code-audit/` for the remaining P2s (APR-01/02/03, A1, REL-01, SEC-01, PER-03, TR-01/02) and P3s (APR-05/06, COR-03, COR-06, THM-01, ERR-01), then set one of the five dispositions or fix the release-relevant ones. A1 (`engine_version` on the detached-engine reuse path) and REL-01 (freeze staging is a no-op for the load path) are the release-relevant pair — A1 is fixable with a desktop test; REL-01's full verification needs a real freeze, which Campaign A must not perform. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — now also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md`; 14 rows still undecided — P2 7: APR-01/02/03, SEC-01, PER-03, TR-01/02; P3 7). Read the source records in the audit worktree `kel-v16-code-audit/docs/code-audit/` and set one of the five dispositions, fixing the release-relevant ones. REL-01 is already `OPEN_RELEASE_BLOCKER`: its fix (stage into the packaged `resources/kel-engine` and hash that) is drafted in the row, but its verification requires a real freeze, which Campaign A must not perform — the RC gate/human decides. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

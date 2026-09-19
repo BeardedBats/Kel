@@ -1,0 +1,181 @@
+commit 006159a31ea1d8edaf4db28d12b2389d8da9c05d
+2026-09-18 12:31:29 -0400
+docs(v1.6): Phase 8/5.8 decision — Advanced Worker View deferred beyond V1.6
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 627399c..ac8c870 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -406,8 +406,9 @@ focused tests, regression, packaged verification, atomic commits and records con
+ - **Rust**: NO_MIGRATION_NEEDED_NOW (`kel-rust-audit` @ `9c1e7d0`); freshness rechecked in Phase 11.
+ - **Baseline evidence**: engine `878 passed (+10 subtests)` at `fd98cc4` (2026-09-18, 251.55s) —
+   `docs/v1.6/pre-audit/evidence/campaign-a-baseline/`.
+-- **Phase 7** completed 2026-09-18 (see below). **Next**: Phase 8/5.8 — Advanced Worker View
+-  decision; see `MAIN_STATUS.next_autonomous_action` for the full Campaign A queue.
++- **Phase 8/5.8 decided** 2026-09-18: Advanced Worker View deferred beyond V1.6 (see below).
++  **Next**: Phase 9 — Profiles vs Projects; see `MAIN_STATUS.next_autonomous_action` for the full
++  Campaign A queue.
+ 
+ ## Phase 6 — memory reality audit + bounded fixes (2026-09-18)
+ 
+@@ -438,3 +439,15 @@ INV-CAPREC-001 added; audit targets 40–45 added. Tests: engine focused 83; **f
+ (+10 subtests; was 878); tsc 0; vitest **90** (was 83). Packaged card evidence deferred — no
+ provider in this environment (LIM-14); transcript-inline placement = DEF-014. Next: Phase 8/5.8
+ decision.
++
++## Phase 8/5.8 — Advanced Worker View: decision (2026-09-18)
++
++**DECIDED — deferred beyond V1.6.** Final record: `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`
++(supersedes the pending-state 5.8 record). Rationale: North Star ONE assistant; design doc 12's own
++success bar is zero visits; the spec's exit gate (product decision + usability review) has not
++occurred and no user need is recorded; sprint directive §33 says not to block the sprint on the
++optional panel. No UI/endpoints added; existing engine-side data stays available. Re-entry
++conditions recorded (post-V1.6 decision → bounded Advanced/Details-only increment, zero-visit
++default). Phase 5.7 confirmed deferred per §34 (no fabrication; activation criteria already
++recorded). Corpus updated: DEF-002, REQ-AWV-8, REQ-WF-5.8, CHANGE_LEDGER mapping. Next: Phase 9 —
++Profiles vs Projects.
+diff --git a/docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md b/docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md
+new file mode 100644
+index 0000000..a814a8b
+--- /dev/null
++++ b/docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md
+@@ -0,0 +1,57 @@
++# Phase 8 / 5.8 — Advanced Worker View: V1.6 PRODUCT DECISION
++
++Date: 2026-09-18 · Decider: Program Director (sole, Campaign A) · Status: **DECIDED — DEFERRED
++BEYOND V1.6** · Supersedes: `docs/v1.6/phase5/5.8_DECISION_DEFERRED.md` (pending-state record)
++
++## Decision
++
++The Advanced Worker View is **not in V1.6 scope**. V1.6 ships with the North Star intact: **one
++capable assistant with hidden orchestration**. No worker-view UI, no panels, no new endpoints are
++added for this phase. The existing engine-side data (team events, jobs/milestones/runs/leases,
++findings, evidence, routing outcomes — the 5.2–5.4 endpoints) stays as-is, available for a future
++decision.
++
++## Evidence considered
++
++- **Design doc 12** (`ux-audit/workforce-os/12_ADVANCED_WORKER_VIEW.md`): "the user should never
++  need this view to operate Kel"; success criterion #1 is "100% of ordinary missions complete with
++  **zero visits** to the advanced view". It is a research/design package, not a product commitment.
++- **Spec entry** (`15_PHASE5_IMPLEMENTATION_SPEC.md` §5.8): the exit gate is a *product decision*
++  plus a *usability review* with the zero-visit default preserved. Neither exists; no user-reported
++  need exists.
++- **Phase 5 record**: only hidden orchestration was implemented, by design; workforce surfaces are
++  engine-level with no live caller (F16-3).
++- **Sprint directive §33**: "Resolve as one decision. Default North Star: ONE ASSISTANT. …
++  If deferred: record exact rationale. … Do not block the sprint merely because optional worker
++  visualization is not justified."
++- **Sprint economics**: V1.6's remaining release-blocking work (engine-loss UX, P2/P3 sweep, visual
++  batches + integration, regression, RC) outranks an optional instrument panel. The spec's own
++  "no UI-first" rule forbids building panels before the product decision.
++
++## What ships instead (V1.6)
++
++- Normal mode only: outcome-level progress, the Work panel's existing surfaces (memory knowledge,
++  job state, approvals, lineage, capability cards), and the improvements already delivered in
++  Phases 0–7 and the visual batches.
++- No new worker-visualization surface is referenced by any V1.6 requirement; nothing else changes
++  for this phase.
++
++## Re-entry criteria (post-V1.6, recorded for DEF-002)
++
++1. A product decision by Nick that the view is in scope, supported by a usability review.
++2. If approved: bounded UI increment behind a setting — **Advanced / Details only**, zero-visit
++   default preserved, exportable mission report, derived-only data (doc 12 honesty rules: no
++   invented staff, no post-hoc copy, uncertainty first-class, project isolation enforced).
++3. No engine changes required beyond small derived queries (doc 12 §4).
++
++## Related: Phase 5.7 (adaptive staffing) — confirmed position
++
++Per sprint §34: no fabrication. The required campaign/sign-off is absent, so 5.7 stays **DEFERRED**
++with its recorded activation criteria (`docs/v1.6/phase5/5.7_DECISION_DEFERRED.md`; DEF-001).
++Shadow learning remains valid V1.6 behavior. Nothing is built for 5.7 in this sprint.
++
++## Release impact
++
++None. This decision removes an optional surface from the release conversation; it blocks nothing.
++Campaign B should treat this decision as a scope disposition to verify (requirement REQ-AWV-8 /
++DEF-002), not as an implementation claim.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index b77e4c9..dc9e37b 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -123,7 +123,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ |---|---|---|
+ | 6 — memory reality audit + bounded fixes | CHG-001, CHG-002 delivered (`22f4a3e`); audit record `docs/v1.6/phase6/` | DONE |
+ | 7 — smart capability recommendations | CHG-003 delivered (`df87903`); record `docs/v1.6/phase7/` | DONE |
+-| 8 — Advanced Worker View decision | none (decision only; recorded in DEFERRED_ITEMS.md) | PENDING |
++| 8 — Advanced Worker View decision | none (decision only; FINAL: deferred beyond V1.6 — `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md`) | DONE |
+ | 9 — Profiles vs Projects decision/fixes | CHG-0xx | PENDING |
+ | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
+ | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
+diff --git a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+index 434f287..69e5899 100644
+--- a/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
++++ b/docs/v1.6/pre-audit/DEFERRED_ITEMS.md
+@@ -7,7 +7,7 @@ it blocks V1.6, owner, and the revisit condition.
+ | ID | Item | Why deferred | Release impact | Required future evidence | Blocks V1.6? | Owner | Revisit condition |
+ |---|---|---|---|---|---|---|---|
+ | DEF-001 | Phase 5.7 — adaptive staffing enablement | Entry conditions unmet: no doc-13 full campaign window, no user sign-off; enabling would fabricate readiness | None (shadow learning stays on) | doc-13 campaign (classes 3/5/9 + baseline-B conflict rate) + pre-registered H1–H5 outcomes + explicit user sign-off | NO | user (sign-off) + Main | Campaign results + user sign-off |
+-| DEF-002 | Phase 5.8 / Phase 8 — Advanced Worker View | No product decision; North Star is ONE assistant; endpoints exist for a future decision; implementing panels now would be UI-first | None for V1.6 (hidden orchestration stays) | Product decision (is it V1.6 scope?) + usability review with zero-visit default preserved | NO | product/Nick | The Phase 8 decision record (Campaign A) — currently: deferred |
++| DEF-002 | Phase 5.8 / Phase 8 — Advanced Worker View | **DECISION MADE 2026-09-18: deferred beyond V1.6** (North Star ONE assistant; doc 12 success = 100% zero visits; no product decision or usability review exists; no user-reported need) | None for V1.6 (hidden orchestration stays) | Post-V1.6 product decision + usability review; then a bounded Advanced/Details-only increment behind a setting | NO | product/Nick | Decision recorded: `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` |
+ | DEF-003 | Phase 12 — Rust migration | Rust audit verdict NO_MIGRATION_NEEDED_NOW at `9c1e7d0` | None | Re-verify freshness in Phase 11; if evidence still negative, close Phase 12 explicitly | NO | Main | Phase 11 recheck |
+ | DEF-004 | doc-13 full evaluation campaign | Pilot (classes 2/6/8) succeeded; full matrix is a validation vehicle, not a release behavior | None (nothing reads it to gate) | Campaign run over 10 classes × 3 configs × ≥3 seeds | NO | Main/user | Before any adaptive-enablement re-entry |
+ | DEF-005 | Optional provider validation (providers without available credentials) | No credentials available in this environment | Documented limitation, not a blocker | Real call evidence when access exists | NO | Main/user | When credentials become available |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 8bc714b..1a00034 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -33,7 +33,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-WF-5.5 | 15 §5.5 | — | implemented | `5f77f42`, `b1141c4`, `2a12b77`, `d8880f3` | `parallel.py` (migration 19) | 842→853; audits 20–22 | 5.5_IMPLEMENTATION_RECORD.md | F20-6/F20-14/N21-5/R22-3 | covered |
+ | REQ-WF-5.6 | 15 §5.6; doc 11 | — | implemented | `ba52869`, `8a2b25d` | `learning.py`; memory/team/assignment hooks | 853→878; audits 23/24 | 5.6_IMPLEMENTATION_RECORD.md | 5.6 limitation set | covered |
+ | REQ-WF-5.7 | 15 §5.7; doc 11 §5 | deferral | deferred (decision) | — | — | — | 5.7_DECISION_DEFERRED.md | entry unmet | deferred |
+-| REQ-WF-5.8 | 15 §5.8; doc 12 | deferral | deferred (decision) | — | — | — | 5.8_DECISION_DEFERRED.md | awaits Phase 8 decision | deferred |
++| REQ-WF-5.8 | 15 §5.8; doc 12 | deferral | deferred (decision made) | — | — | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | decision 2026-09-18: deferred beyond V1.6 | deferred |
+ | REQ-VIS-1..5 | visual plan set (worktrees) | batches 1–5 | implemented on visual branch | `8dd21f9`, `3d9202c`, `83af16f`, `ac85eb3` | renderer surfaces | tsc 0; 76→79; packaged visual5 probes | VISUAL_EVIDENCE_INDEX.md | human gate open | pending (never audited) |
+ 
+ ## Campaign A arcs (unaudited range; updated as increments land)
+@@ -42,7 +42,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ |---|---|---|---|---|---|---|---|
+ | REQ-MEM-6 | sprint directive §31 (bootstrap §28) | memory reality audit + bounded fixes | implemented (audit + bounded fixes) | `22f4a3e` | `KelWorkPanel.tsx`; `memoryRecordActions.ts` | 7 unit tests; engine focused 68 | `docs/v1.6/phase6/MEMORY_REALITY_AUDIT.md`; `increments/PHASE6-MEMORY-REALITY.md` | MEMR-4/5/6/7 deferred with records | pending |
+ | REQ-CAPREC-7 | sprint directive §32 | smart capability recommendations | implemented | `df87903` | focused 83 / full 885 / desktop 90 | `docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md`; `increments/PHASE7-CAPABILITY-RECOMMENDATIONS.md` | packaged card evidence deferred (LIM-14) | pending |
+-| REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | PENDING | — | — | — | pending |
++| REQ-AWV-8 | sprint directive §33 | Advanced Worker View decision | decided — deferred beyond V1.6 | docs commit (2026-09-18) | — | `docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md` | pending (decision review) |
+ | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | PENDING | — | — | — | pending |
+ | REQ-PROV-10 | sprint directive §36 | real provider validation | PENDING | — | — | PROVIDER_VALIDATION_MATRIX.md | pending |
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 85bda12..1881a2a 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,6 +1,6 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T17:05:00Z
++updated_utc: 2026-09-18T17:20:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+@@ -15,9 +15,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: Phase 7 DONE — capability recommendations (df87903; record docs/v1.6/phase7/CAPABILITY_RECOMMENDATIONS.md; increment PHASE7-CAPABILITY-RECOMMENDATIONS). Next: Phase 8/5.8 decision.
+-current_phase: Phase 8/5.8 — Advanced Worker View decision (queued; Phase 7 complete)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac)
++current_increment: Phase 8/5.8 DECIDED — Advanced Worker View deferred beyond V1.6 (docs/v1.6/phase8/ADVANCED_WORKER_VIEW_DECISION.md; DEF-002/REQ-AWV-8 updated). Next: Phase 9.
++current_phase: Phase 9 — Profiles vs Projects decision/fixes (queued; Phase 8 decided)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -49,6 +49,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: Phase 8/5.8 — Advanced Worker View decision (sprint §33: resolve as one decision; North Star ONE assistant; if deferred record exact rationale; if implemented keep Advanced/Details only; do not block the sprint). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 8: Phase 9 Profiles vs Projects; Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Phase 9 — Profiles vs Projects decision (sprint §35: resolve semantics using actual product behavior; prefer fewer concepts; implement the bounded V1.6 decision; record the user-model reasoning in the corpus). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after Phase 9: Phase 10 provider validation; Phase 11 Rust freshness; F4 real-artifact binding + resolution-kind; P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

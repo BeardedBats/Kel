@@ -1,0 +1,574 @@
+commit 4440a90d270a3e77c2a4d0059772724d94e8ca08
+2026-09-18 17:04:51 -0400
+docs(v1.6): R0 complete — the P2/P3 sweep is 100% dispositioned
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 1f21eff..3486b89 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -643,3 +643,43 @@ APPROVAL-EXACT completion (target normalization + revalidation immediately befor
+ with **R4**. Sweep: **17/27 rows carry a final disposition** (P2 7/10, P3 10/17); 10 remain — SEC-01,
+ TR-01, TR-02 and 7 P3 rows. Next: SEC-01 (vetting session ownership), TR-01 (`_STREAMS` lifecycle
+ review), then the P3 rows; R1 follows R0.
++
++## R0 COMPLETE — the P2/P3 sweep is 100% dispositioned (2026-09-18, marathon run)
++
++**Every row in `pre-audit/P2_P3_DISPOSITION.md` now carries a final disposition** (26 rows in-table:
++P2 10, P3 16 — the sprint directive cites 27; the count difference is recorded for Campaign B rather
++than guessed at). Five production commits: `49e528e` SEC-01, `8ab7699` TR-01, `5950efb`
++COR-06/ERR-01, `dd34ac2` APR-05, `594b8b4` COR-03/APR-06/THM-01.
++
++- **SEC-01** — vetting actions are conversation-scoped: `Vetting(store, conversation=…)` carries the
++  acting scope and `session()` (the single load point every by-id action uses) refuses a foreign row;
++  `apply_pending` checks scope before its early returns; the service builds the instance with the
++  acting conversation. `panel()` stays the marked cross-conversation display surface. 7 new tests.
++- **TR-01** — the `_STREAMS` review found a real leak: a reaped/abandoned stream kept its websocket
++  and reader thread blocked on `_queue.get()` for the life of the process. `_MuseStream.close()`
++  (idempotent, sentinel-based) + `_FixtureStream.close()` + close-on-reap + close-after-finish fix
++  it; optional conversation scope added. 4 new tests.
++- **COR-06/ERR-01** — `Service._required(data, key, sentence)` replaces direct payload indexing in
++  both dispatch families and the inline routes (`/api/retry`, `/api/control`, `/api/apply`,
++  `/api/approval`); the vetting family gained the transcription family's unexpected-failure wrapper.
++  3 new tests.
++- **APR-05** — `chat_approvals` migration **v20**: the poll path (approval card refreshes every 3 s)
++  performs no DDL after the first call; pre-marker stores are stamped once. 3 new tests.
++- **COR-03/APR-06/THM-01** — the model pill reports failures instead of rejecting silently; the
++  approval card no longer claims "already settled" for transport failures (engine sentence when it
++  arrived, explicit "could not reach its engine" otherwise); deleting a theme prunes its saved colour
++  overrides. tsc 0; vitest 93.
++- **TR-02** — `DEFERRED_NON_RELEASE`, explicitly bound to R9.A batch 6 / R10 (the residual is
++  transport-failure *presentation*; the fallback path is already honest and fixing it here would race
++  the Visual lane).
++
++Evidence: **full engine suite 931 passed (+10 subtests)** (was 915); focused vetting 36 /
++transcription 31 / sweep-fixes 15; desktop tsc 0 + vitest 93; TEST_EVIDENCE_INDEX A-20; record
++`increments/R0-SWEEP.md`; CHG-012…017; REQ-P2P3/OWNERSHIP-PARITY/POLL-CHEAP/TRUTHFUL-SURFACES/
++ERROR-SENTENCES/THEME-HYGIENE/TR02-BINDING.
++
++Next: **R1 — delegation authority ceiling** (`effective_child ⊆ delegator`, existing primitives only),
++then R2 idempotency matrix → R3 retry durability → R4 approval binding → R5 persistence → R6
++state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs
++Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression →
++PRE_AUDIT_V1_6_HEAD. REL-01 stays `OPEN_RELEASE_BLOCKER` until R8 evidence exists.
+diff --git a/docs/v1.6/MARATHON_STATE.md b/docs/v1.6/MARATHON_STATE.md
+new file mode 100644
+index 0000000..739afac
+--- /dev/null
++++ b/docs/v1.6/MARATHON_STATE.md
+@@ -0,0 +1,50 @@
++# MARATHON_STATE — continuous Campaign A execution
++
++MARATHON_MODE: ACTIVE
++
++start_head: 756218e (published docs tip; production 8a677d0)
++current_head: `594b8b4` + R0 docs commit (see `git log --oneline -8`)
++
++completed_this_run:
++- repository truth re-reconciled (branch/clean/remote/frozen refs/stash/watch) — sole writer confirmed
++- MARATHON_STATE created; engine suite re-run at the R0 boundary: **931 passed + 10 subtests**
++- **R0 COMPLETE** — P2/P3 sweep 100% dispositioned (26 rows in-table: P2 10, P3 16; directive's 27
++  recorded for Campaign B). Commits: SEC-01 `49e528e` (vetting acting scope), TR-01 `8ab7699`
++  (stream lifecycle closes + optional scope), COR-06/ERR-01 `5950efb` (dispatch plain sentences),
++  APR-05 `dd34ac2` (poll path DDL-free, migration v20), COR-03/APR-06/THM-01 `594b8b4` (truthful
++  failure surfaces); TR-02 bound to R9.A/R10; REL-01 stays the only OPEN_RELEASE_BLOCKER (R8)
++- breadcrumbs: P2_P3_DISPOSITION (26/26 + completion record), increments/R0-SWEEP.md, COMMIT_LEDGER,
++  CHANGE_LEDGER (CHG-012..017), REQUIREMENTS_TRACEABILITY (7 REQ rows), TEST_EVIDENCE_INDEX (A-20),
++  MAIN_STATUS, AUTO_RESUME
++
++current_phase: R1 — delegation authority ceiling
++current_item: R1.A — audit the real current issuance path (D1/D2/D3, assignment grants, role ceilings, leases, runtime/provider binding, tool filtering) before writing any narrowing check
++
++next_queue:
++1. R1 — narrowing function + discriminating widen-attempt tests (existing primitives only; no nesting)
++2. R2 — logical-work/idempotency matrix + real gaps
++3. R3 — durable retry/recovery budgets
++4. R4 — canonical approval binding (APPROVAL-EXACT; absorbs declared-conversation hardening)
++5. R5 — persistence integrity contract + adversarial tests
++6. R6 — truthful state + liveness separation (+ RECOVERY-CLASSIFICATION)
++7. R7 — credential/network boundary proof (CREDENTIAL-CONTAINMENT)
++8. R8 — packaged/migration assertions + REL-01 (minimum marathon return gate)
++9. R9 — Visual batches 6–8 + Needs Your Attention (derived-only)
++10. R10 — engine-loss/recovery UX
++11. R11 — Visual → Main integration
++12. R12 — final Campaign A regression → PRE_AUDIT_V1_6_HEAD
++
++last_focused_tests: R0 row-level suites — vetting 36, transcription 31, sweep-fixes 15, approvals + restore green
++last_full_engine: **931 passed + 10 subtests** (258.82s) at `594b8b4` (was 915 at `8a677d0`)
++last_desktop_tsc: 0 errors (`tsc -p tsconfig.json --noEmit`)
++last_desktop_vitest: **93 passed** (8 files)
++last_packaged: `package-logo` era (71c78f0); rebranding verified; R8 refreshes
++
++last_push: `594b8b4` → origin/ux/v15-journeys (R0 docs commit follows)
++last_scan: 0 real hits (R0 commits — no secrets/private data; docs-only additions)
++
++blocker: NONE
++
++return_allowed: NO
++(gate: R0–R12 complete → PRE_AUDIT_V1_6_HEAD, or a genuine human stop condition
++per the marathon directive §32. A clean checkpoint is never a stopping point.)
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index a90d997..dde7dfe 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,120 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-012 — Vetting session actions are conversation-scoped (R0 / SEC-01)
++
++ID: CHG-012 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `49e528e` · Date: 2026-09-18
++
++- **User-visible impact:** none in the normal flow; a session id from another conversation can no
++  longer be driven from here.
++- **Internal impact:** `Vetting(store, conversation=None)` carries the acting scope; `session()` —
++  the single load point every by-id action funnels through — refuses a foreign row;
++  `apply_pending` checks scope before its early returns; `service._vetting_action` builds the
++  instance with the acting conversation.
++- **Previous behavior:** `session(id)` loaded `WHERE id=?` with no scope; every by-id action accepted
++  a foreign id.
++- **New behavior:** `PolicyError('That vetting session belongs to another conversation')`; direct
++  callers that declare no conversation keep the old behaviour (additive).
++- **Primary files:** `runtime/kel/vetting_session.py`, `runtime/kel/service.py`,
++  `runtime/tests/test_vetting.py`.
++- **Primary symbols:** `Vetting.__init__`, `Vetting.session`, `Vetting.panel`, `Vetting.apply_pending`,
++  `Service._vetting_action`.
++- **Data/schema changes:** none. **Failure paths:** refusal happens before any write; verified by
++  snapshot equality in the tests.
++- **Security/privacy implications:** closes the vetting half of RISK-003 (bare-id addressing).
++- **Expected invariants:** `INV-SWEEP4-001`; extends `INV-APPROVE-002`'s principle to vetting.
++- **Tests:** 7 new (A-20). **Packaged evidence:** n/a.
++- **Audit questions:** does any by-id path bypass `session()` (e.g. direct SQL in another module)?
++  Is `panel`'s cross-conversation read still marked for the caller?
++- **Repair hints:** all 8 by-id call sites go through `session()`; the scope is a constructor
++  context, so a future action added to the class inherits the gate by construction.
++
++### CHG-013 — Transcription stream lifecycle releases sockets (R0 / TR-01)
++
++ID: CHG-013 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8ab7699` · Date: 2026-09-18
++
++- **User-visible impact:** none; abandoned recordings release their connection instead of holding it.
++- **Internal impact:** `_MuseStream.close()` (sentinel + state settle, idempotent), `_FixtureStream.close()`,
++  `_gc_streams()` closes before dropping, `stream_finish` closes after finishing; optional
++  conversation scope threaded through `_stream`/`stream_chunk`/`stream_status`/`stream_finish` and the
++  service route.
++- **Previous behavior:** a reaped/abandoned entry was dropped from `_STREAMS` while its reader thread
++  stayed blocked on `_queue.get()` and its websocket stayed open for the life of the process.
++- **New behavior:** the sentinel unblocks the reader (`endStream` → socket close); a declared
++  conversation that does not own the stream is refused.
++- **Primary files:** `runtime/kel/transcription.py`, `runtime/kel/service.py`,
++  `runtime/tests/test_transcription.py`.
++- **Primary symbols:** `_MuseStream.close`, `_FixtureStream.close`, `Transcription._stream`,
++  `_gc_streams`, `stream_chunk`, `stream_status`, `stream_finish`.
++- **Data/schema changes:** none. **Failure paths:** `close()` never raises and tolerates double calls;
++  the GC path swallows handle errors by design (best-effort reaping).
++- **Security/privacy implications:** audio and text flow unchanged; the scope gate narrows access.
++- **Persistence implications:** none. **Known concern:** the desktop does not declare a conversation on
++  stream calls yet (additive contract keeps it working).
++- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 4 new (A-20). **Packaged evidence:** n/a.
++- **Audit questions:** can a `_MuseStream` object be constructed but never registered (leak on the
++  start path)? Does `finish()` tolerate a stream that already died?
++- **Repair hints:** `_gc_streams` is the only reaper; `close()` is the only releaser.
++
++### CHG-014 — Dispatch layers answer missing fields with plain sentences (R0 / COR-06 + ERR-01)
++
++ID: CHG-014 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `5950efb` · Date: 2026-09-18
++
++- **User-visible impact:** a missing field now yields a sentence a person can act on instead of
++  `'session'`.
++- **Internal impact:** `Service._required(data, key, sentence)`; the vetting family gained the same
++  unexpected-failure wrapper the transcription family had; the inline routes (`/api/retry`,
++  `/api/control`, `/api/apply`, `/api/approval`) moved to the same contract.
++- **Previous behavior:** direct payload indexing → raw exception strings on the shared error path.
++- **New behavior:** `PolicyError(sentence)` for missing fields; one plain sentence for unexpected
++  failures.
++- **Primary files:** `runtime/kel/service.py`, `runtime/tests/test_v16_sweep_fixes.py`.
++- **Primary symbols:** `Service._required`, `_vetting_route`, `_vetting_action`,
++  `_transcription_dispatch`.
++- **Data/schema changes:** none. **Security/privacy implications:** none (message text only).
++- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 3 new (A-20).
++- **Audit questions:** are there remaining direct-index sites on other routes (e.g. `/api/attach`)?
++- **Repair hints:** grep for `data['` in `service.py` — remaining sites are optional-field reads.
++
++### CHG-015 — The approval poll path performs no DDL (R0 / APR-05)
++
++ID: CHG-015 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `dd34ac2` · Date: 2026-09-18
++
++- **User-visible impact:** none; removes avoidable lock pressure behind the 3-second card refresh.
++- **Internal impact:** `chat_approvals.MIGRATION_VERSION = 20`; `ensure_schema` returns before the body
++  once stamped; a pre-marker store runs the idempotent body once and is stamped (`INSERT OR IGNORE`).
++- **Previous behavior:** two unconditional `executescript` batches on every call.
++- **New behavior:** the read path performs no DDL after the first call.
++- **Primary files:** `runtime/kel/chat_approvals.py`, `runtime/tests/test_v16_sweep_fixes.py`.
++- **Data/schema changes:** one additive migration marker row; no table/column change.
++- **Failure paths:** a missing `schema_migrations` (fresh store) still creates everything in the
++  original order (sibling ensures first).
++- **Persistence implications:** the marker is the only new state.
++- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** 3 new (A-20).
++- **Audit questions:** does any other frequently-polled read path run DDL? (grep `executescript` for
++  unconditional callers).
++- **Repair hints:** the acceptance criterion is met by the early return; `CodingAdapter`'s own
++  unconditional DDL remains for its direct callers.
++
++### CHG-016 — Failure surfaces tell the truth (R0 / COR-03 + APR-06 + THM-01)
++
++ID: CHG-016 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `594b8b4` · Date: 2026-09-18
++
++- **User-visible impact:** the approval card no longer claims "already settled" for transport
++  failures; the model pill reports failures instead of failing silently; the delete-theme flow leaves
++  no stale colour overrides.
++- **Internal impact:** `KelApprovalCard.act` catch discriminates engine-sentence vs unreachable;
++  `KelModelControl.setConversation` gained try/catch; `CssThemeSettings.handleDeleteTheme` calls
++  `clearThemeOverrides(themeId)`.
++- **Primary files:** `desktop/.../kel/KelApprovalCard.tsx`, `desktop/.../kel/KelModelControl.tsx`,
++  `desktop/.../AppearanceSettings/CssThemeSettings.tsx`.
++- **Data/schema changes:** none (config bucket pruned on delete).
++- **Security/privacy implications:** none. **Known concern:** no renderer component harness (§58).
++- **Expected invariants:** `INV-SWEEP4-001`. **Tests:** tsc 0; vitest 93 (A-20).
++- **Audit questions:** does any other surface assert a state it cannot know on failure?
++- **Repair hints:** the unreachable-pattern regex is the single discriminator; R9.A/R10 will extend
++  it into the engine-loss presentation.
++
+ ### CHG-011 — Approval resolution is conversation-scoped (R0 / APR-02)
+ 
+ ID: CHG-011 · Phase: Campaign A — roadmap R0 (P2/P3 sweep) · Commit: `8a677d0` · Date: 2026-09-18
+@@ -373,6 +487,11 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
+ | F4 real-artifact binding wiring | CHG-006 delivered (implementation commit); record `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | DONE |
+ | resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
+-| P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
++| SEC-01 vetting session scope | CHG-012 delivered (`49e528e`); record `increments/R0-SWEEP.md` | DONE |
++| TR-01 transcription stream lifecycle | CHG-013 delivered (`8ab7699`); record `increments/R0-SWEEP.md` | DONE |
++| COR-06/ERR-01 dispatch sentences | CHG-014 delivered (`5950efb`); record `increments/R0-SWEEP.md` | DONE |
++| APR-05 approval poll DDL | CHG-015 delivered (`dd34ac2`); record `increments/R0-SWEEP.md` | DONE |
++| COR-03/APR-06/THM-01 truthful surfaces | CHG-016 delivered (`594b8b4`); record `increments/R0-SWEEP.md` | DONE |
++| TR-02 renderer binding | CHG-017 recorded as a binding to R9.A/R10 (no code in R0) | DONE |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+ | Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 0d20264..7fcf275 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -48,7 +48,12 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `84b5646` | `11e1525` | 2026-09-18 | PER-03 / APR-01 | pre-restore snapshots pruned; actor guard pinned by tests | `kel/backup.py`; `tests/test_v16_sweep_fixes.py` | +4 engine tests; full suite **909 passed** (+10 subtests) | none (`SNAPSHOT_KEEP` retention) | no (bounded growth) | n/a | no | no | LOW | `increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md`; TEST_EVIDENCE_INDEX A-18 | APR-02 + SEC-01 verified OPEN with fix sketches |
+ | `9eab3c6` | `ae4c5b0` | 2026-09-18 | Round 2.5 | adopt the canonical roadmap (KEL_CANONICAL_ROADMAP_R2_5) + invariants, audit targets, risks, deferrals, R25 requirement rows | docs only | — | none | no | — | no | no | LOW | `KEL_CANONICAL_ROADMAP_R2_5.md`; corpus pointers | audit_mode stays PAUSED_UNTIL_PRE_AUDIT_RC |
+ | `8a677d0` | `9eab3c6` | 2026-09-18 | R0 / APR-02 | approval resolution is conversation-scoped (write path matches the read path) | `kel/chat_approvals.py`; `kel/service.py`; `tests/test_v16_approvals.py`; `desktop/.../KelApprovalCard.tsx`; `desktop/.../KelWorkPanel.tsx` | +6 engine tests; full suite **915 passed** (+10 subtests); tsc 0, vitest 93 | none | no (scope hardening) | n/a | no | no | MEDIUM | `increments/R0-APR02-APPROVAL-SCOPE.md`; TEST_EVIDENCE_INDEX A-19 | R4 makes the declaration mandatory + adds normalization/revalidation |
+-| `HEAD` | `8a677d0` | 2026-09-18 | R0 / APR-02 | R0/APR-02 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows APR-02 / CHG-011 / A-19; AUTO_RESUME section | 10 sweep rows still OPEN |
++| `49e528e` | `756218e` | 2026-09-18 | R0 / SEC-01 | vetting actions enforce conversation ownership (acting-scope gate on the single session load point) | `kel/vetting_session.py`; `kel/service.py`; `tests/test_vetting.py` | +7 engine tests; `test_vetting.py` **36 passed** | none | no (scope hardening) | n/a | no | no | MEDIUM | `increments/R0-SWEEP.md`; TEST_EVIDENCE_INDEX A-20 | `panel()` intentionally stays a marked cross-conversation display surface (existing tests) |
++| `8ab7699` | `49e528e` | 2026-09-18 | R0 / TR-01 | stream lifecycle releases sockets; optional conversation scope | `kel/transcription.py`; `kel/service.py`; `tests/test_transcription.py` | +4 engine tests; `test_transcription.py` **31 passed** | none | no (resource lifecycle) | n/a | no | no | MEDIUM | `increments/R0-SWEEP.md`; A-20 | undeclared callers keep the previous behaviour (desktop stream calls declare no conversation yet) |
++| `5950efb` | `8ab7699` | 2026-09-18 | R0 / COR-06 + ERR-01 | dispatch layers answer missing request fields with plain sentences | `kel/service.py`; `tests/test_v16_sweep_fixes.py` | +3 engine tests; file **12 passed** | none | no (error-surface honesty) | n/a | no | no | LOW | `increments/R0-SWEEP.md`; A-20 | ERR-01 alias note recorded in the disposition table for Campaign B |
++| `dd34ac2` | `5950efb` | 2026-09-18 | R0 / APR-05 | approval poll path stops running DDL once stamped | `kel/chat_approvals.py`; `tests/test_v16_sweep_fixes.py` | +3 engine tests; file **15 passed** | migration marker **v20** (additive; no table/column change) | no | n/a | no | yes (marker row) | LOW | `increments/R0-SWEEP.md`; A-20 | pre-marker stores run the idempotent body once and are stamped |
++| `594b8b4` | `dd34ac2` | 2026-09-18 | R0 / COR-03 + APR-06 + THM-01 | failure surfaces tell the truth (model pill reports, approval card distinguishes unreachable vs settled, theme delete prunes overrides) | `desktop/.../kel/KelModelControl.tsx`; `desktop/.../kel/KelApprovalCard.tsx`; `desktop/.../AppearanceSettings/CssThemeSettings.tsx` | desktop tsc 0; vitest **93 passed** | none | yes (message copy + delete handler) | n/a | no | no | LOW | `increments/R0-SWEEP.md`; A-20 | no renderer component harness (§58) — packaged probes at R8/R12 are the gate |
++| `HEAD` | `594b8b4` | 2026-09-18 | R0 | R0 sweep complete: 26/26 dispositions final + breadcrumbs (this commit) | docs only | engine full **931 passed, 10 subtests**; desktop tsc 0, vitest 93 | none | no | — | no | no | LOW | corpus rows SEC-01 / TR-01 / TR-02 / APR-05 / APR-06 / COR-03 / COR-06 / THM-01 / ERR-01; `increments/R0-SWEEP.md`; A-20 | REL-01 remains `OPEN_RELEASE_BLOCKER` until R8; 26-vs-27 row count left for Campaign B |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 4da0a73..afb08c6 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -1,6 +1,6 @@
+ # P2_P3_DISPOSITION — every finding, current disposition
+ 
+-updated: 2026-09-18T16:05Z (seed; completed during the P2/P3 sweep phase — sprint directive §40)
++updated: 2026-09-18T17:05Z (R0 sweep complete — **every row carries a final disposition**; sprint §40)
+ The full historic finding set lives in the audit records (`kel-v16-code-audit/docs/code-audit/`,
+ increments 1–24). This file carries the live disposition table and grows to cover every historic
+ P2/P3. Campaign B independently re-verifies every disposition; no finding disappears.
+@@ -8,6 +8,12 @@ P2/P3. Campaign B independently re-verifies every disposition; no finding disapp
+ Allowed final dispositions: **FIXED · STALE · NOT_APPLICABLE · DEFERRED_NON_RELEASE ·
+ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (sweep pending)`.
+ 
++**R0 completion (2026-09-18):** this table carries 26 rows (P2 10, P3 16) and all 26 are final —
++verified by grepping the file for any remaining `OPEN (sweep pending)` row before commit. The sprint
++directive cites 27 rows; the difference is a bookkeeping discrepancy recorded for Campaign B (no
++row in this file is undispositioned). REL-01 remains `OPEN_RELEASE_BLOCKER` per its own rules and is
++the only row awaiting R8-level package evidence.
++
+ ## P2 — open at corpus open
+ 
+ | ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Test | Release relevance | Audit confirm |
+@@ -17,32 +23,32 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | APR-03 | `_memory_check_queue` is instance state — queued memory checks lost on crash/restart between commit and flush (`vetting_session.py:95`) | P2 | `13_PHASE3_DELTA_AUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18: still instance state; Phase 6 reviewed it as a bounded crash-window only, and the durable-drain direction is a feature rather than a release condition) | — | — | none | pending |
+ | A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | **FIXED** (2026-09-18, `101d8c3`): `engineVersionAccepted(live, expected)` compares the live `/api/state` `engine_version` with the version this build shipped, and the check runs in **both** places that used to trust the answer — the reuse path and the spawn-wait loop (a leftover engine can keep the shared descriptor alive). An unpackaged dev run passes an empty expectation (its `app.getVersion()` is Electron's) and is deliberately not enforced | `101d8c3` | `desktop/tests/unit/kelEngineVersion.test.ts` (3); tsc 0; vitest 93 | none (upgrade-correctness) | pending |
+ | REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | **OPEN_RELEASE_BLOCKER** (verified open 2026-09-18: `kel-builder.json`/`kel-runtime-builder.json` declare `{"from": "../dist/runtime/KelEngine", "to": "kel-engine"}` — the load path the app stages from (`process.resourcesPath/kel-engine`) — while the freeze tool's staging step does not affect that path, so a freeze can ship an engine older than what `dist/runtime` holds. **Not fixed here on purpose:** the only honest verification is a real freeze, which Campaign A is forbidden to perform; the fix (stage into the packaged `resources/kel-engine` and hash *that*) plus its freeze-level verification belong to the RC gate/human. Mitigation available at RC time: the packaged battery can assert the packaged engine identity without freezing) | — | freeze tooling test (gated) | **release-relevant** | pending |
+-| SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending — verified 2026-09-18 as still open: `vetting_session.Vetting.session(session_id)` loads `WHERE id=?` with no project/conversation filter, and the action methods take only a session id; fix sketch: an ownership parameter on the session/approval lookups rather than a re-check per route) | — | cross-scope session attack | TBD | pending |
++| SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `49e528e`): `Vetting(store, conversation=…)` carries the acting scope and `session()` — the single load point all by-id actions (ingest/process/finish/help/greybox/apply_pending/_control) already funnel through — refuses a row whose `conversation_id` differs. `panel()` stays the marked display surface (existing `cross_conversation` behaviour preserved). The service builds the Vetting with the conversation it is acting in. Direct callers that declare no conversation are unchanged (additive) | `49e528e` | `tests/test_vetting.py` (7 new: foreign-conversation refusal for every by-id action with the session unchanged, unscoped-instance compatibility, unknown id still null, service-route scope, panel behaviour) | none (scope hardening) | pending |
+ | PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | **FIXED** (engine half, 2026-09-18): `backup._record_outcome` writes `restore-outcome.json` beside the data on both decisive paths (the DB is what a restore replaces) and the failure path keeps `restore-pending.json`; `service._restore_outcome` surfaces it as `state()['restore']` — boot never aborts. The renderer surface stays with REQ-ELOSS (audit target 57) | `df1997a` | `tests/test_v16_restore_visibility.py` (5 new; full suite 900) | none (no UI claim made) | pending |
+ | PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `84b5646`): `SNAPSHOT_KEEP = 2` + `_prune_snapshots(root)` keep only the newest snapshots and run on **both** the success and the failure path (repeated failed attempts accumulate too); the snapshot the current attempt wrote always survives and pruning is best-effort. The "silently aborts" half was already closed by CHG-007 (recorded + surfaced) | `84b5646` | `tests/test_v16_sweep_fixes.py` (2 new) | none (bounded growth) | pending |
+-| TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | OPEN (sweep pending — verified 2026-09-18 that it is still module-level: `transcription.py:36` `_STREAMS = {}`, `:528` `self._streams = _STREAMS`; the lifecycle review the finding asks for has **not** been done, so this row stays unverified-clear) | — | shutdown cleanup test | TBD | pending |
+-| TR-02 | Abandoned-stream UX in the transcription renderer (residual) | P2 | `02_FILE_REVIEW_LEDGER.md` | OPEN (sweep pending — not re-reviewed in batch 3: it is a renderer-UX row and needs a visual pass, which is scheduled with the visual batches rather than guessed at here) | — | renderer state test | TBD | pending |
++| TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | **FIXED** (2026-09-18, `8ab7699`): the lifecycle review the row asked for was performed. Module-level storage is per-process and restart-safe by construction, but a reaped/abandoned stream never released its handle — `_MuseStream._run` blocks on `_queue.get()` until the sentinel, so `_gc_streams()` dropped the entry and left the websocket + reader thread alive. Now: `_MuseStream.close()` (idempotent, non-blocking, safe from the reaper) + `_FixtureStream.close()`; `_gc_streams()` closes before dropping; `stream_finish` closes after finishing. Optional conversation scope added on `_stream`/`stream_chunk`/`stream_status`/`stream_finish` | `8ab7699` | `tests/test_transcription.py` (4 new: over-age stream closed when reaped, finish releases the handle as well as the entry, declared-conversation mismatch refused while undeclared callers keep working, `close()` idempotent + non-blocking) | none (resource lifecycle) | pending |
++| TR-02 | Abandoned-stream UX in the transcription renderer (residual) | P2 | `02_FILE_REVIEW_LEDGER.md` | **DEFERRED_NON_RELEASE — bound to R9.A/R10** (reviewed 2026-09-18 against the tree): the backend semantics need no correction and the renderer already handles abandonment honestly — cancel/navigate away stops capture and fires a best-effort `stream_finish`; a stream that died mid-recording is swallowed per chunk (live text is best-effort) and the stop path falls back to `quick_transcribe` over the recorded audio (`KelMicButton.tsx:110-135`, `transcription/index.tsx:228-250`), so the user still gets a transcript. The residual is **transport-failure presentation** (a raw `fetch failed` can reach `Message.error`), which is exactly R9.A batch 6 (failure states / error translation) and R10 (engine-loss/recovery UX) — fixing it here would race the Visual lane for the same files. No false 'implemented UX' claim is made | — | renderer state test (no component-test harness exists — audit target §58) | none (presentation follows R9/R10) | pending |
+ 
+ ## P3 — open at corpus open
+ 
+ | ID | Description (one line) | Severity | Source record | Current disposition | Fix commit | Release relevance | Audit confirm |
+ |---|---|---|---|---|---|---|---|
+ | APR-04 | `approval_announcements` DDL defined twice, with no migration version | P3 | `13_PHASE3_DELTA_AUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18: the two blocks are semantically identical — `chat_approvals.py:27-33`, `core.py:157-161`; `IF NOT EXISTS` makes the duplicate inert and there is no schema divergence) | — | none | pending |
+-| APR-05 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
+-| APR-06 | Approvals-arc minor (full text in `13_PHASE3_DELTA_AUDIT.md`; one-line completion during sweep) | P3 | `13_PHASE3_DELTA_AUDIT.md` | OPEN (sweep pending) | — | TBD | pending |
++| APR-05 | Approvals-arc minor (per-poll DDL fan-out in `chat_approvals.ensure_schema`; full text in `13_PHASE3_DELTA_AUDIT.md`) | P3 | `13_PHASE3_DELTA_AUDIT.md` | **FIXED** (2026-09-18, `dd34ac2`): `MIGRATION_VERSION = 20`; `ensure_schema` early-returns before any DDL once stamped (announcements + sibling ensures + coding tables), and a pre-marker store runs the idempotent body once and is then stamped. The read path (`items()`, polled every 3 s by the approval card) performs no DDL | `dd34ac2` | `tests/test_v16_sweep_fixes.py` (3 new) | none (poll-path work + lock pressure) | pending |
++| APR-06 | Approvals-arc minor (card failure message asserts 'already settled' for every failure; full text in `13_PHASE3_DELTA_AUDIT.md`) | P3 | `13_PHASE3_DELTA_AUDIT.md` | **FIXED** (2026-09-18, `594b8b4`): `KelApprovalCard.act()` shows the engine's own sentence when it arrived and says 'Kel could not reach its engine just now, so that decision was not recorded' for a transport failure (fetch/IPC/timeout patterns), never claiming a settlement it cannot know; the 3 s refresh still self-corrects | `594b8b4` | desktop `tsc` 0; vitest 93 (no component harness for this file — audit target §58) | none (decision-surface honesty) | pending |
+ | DEAD-06 | `packaging/ux-audit.cjs` unwired and misfiled (referenced by nothing outside docs) | P3 | `08_DEAD_CODE.md` | **NOT_APPLICABLE** (verified 2026-09-18: it is the packaged-UI evidence tool — PACKAGED_EVIDENCE_INDEX `package-logo` + phases 6–7 + the visual batches; referenced by the pre-audit corpus, not dead) | — | none | pending |
+ | CAP2-LONGTEXT | `directive_clauses()` returns `[]` above 2000 chars — reserved directives in long pastes silently ignored (fails safe) | P3 | `19_CAP2_RESIDUAL_REAUDIT.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `capabilities.py:437-448`: >2000 chars → `[]`; the message is forwarded byte-for-byte, so no capability is silently enabled) | — | none | pending |
+ | INT-01 | Inconsistent sender-frame validation (`kel:artifact-reveal` lacks the check) | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `0596211`): the handler now requires `event.senderFrame === event.sender.mainFrame` and a `file:` URL, byte-for-byte the guard its four siblings carry (verified in `KelService.ts`) | `0596211` | desktop `tsc` 0; no IPC harness exists (audit target §58) | none (parity hardening) | pending |
+ | PER-04 | `KEL_DATA_DIR` puts `kel-credentials.json` inside the backup root (override path only) | P3 | `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `0596211`): `Backup.create` skips `NEVER_BACKUP = ('kel-credentials.json',)` and reports it in `skipped`/`notes`; the in-database secrets were already stripped | `0596211` | `tests/test_v16_sweep_fixes.py` (2) | none (override-only path, now closed) | pending |
+-| COR-03 | `KelModelControl.setConversation` has no error path | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-03 | `KelModelControl.setConversation` has no error path | P3 | `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `594b8b4`): the request is wrapped; the engine's sentence (e.g. 'Open a conversation before choosing its model.') is shown verbatim with a plain fallback for a transport failure, matching `KelToolsControl`; the unhandled rejection is gone | `594b8b4` | desktop `tsc` 0; vitest 93 (no component harness — audit target §58) | none (feedback parity) | pending |
+ | COR-04 | `set_conversation` accepts a non-existent conversation | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `model_prefs.py:107-110`: only non-empty is validated; callers pass the open conversation, and a stranded preference is inert) | — | none | pending |
+ | COR-05 | `search.py` bare `except` per section | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `search.py:51,72,91`: per-section `except Exception: pass`; fails soft, sections independent, no data loss) | — | none | pending |
+-| COR-06 | KeyError leaks from vetting/transcription dispatch | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
++| COR-06 | KeyError leaks from vetting/transcription dispatch | P3 | `11_FINDINGS.md` | **FIXED** (2026-09-18, `5950efb`): `Service._required(data, key, sentence)` replaces direct payload indexing in both dispatch families (session/question/conflict/choice/id/source), and `_vetting_action` now wraps unexpected failures in one plain sentence like `_transcription_action` already did. The same pattern was closed on `/api/retry`, `/api/control`, `/api/apply`, `/api/approval` | `5950efb` | `tests/test_v16_sweep_fixes.py` (3 new: vetting family, transcription family, inline routes — plain sentence + no raw exception string) | none (error-surface honesty) | pending |
+ | MDL-01 | `set_conversation` accepts a non-existent conversation (with COR-04) | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (same evidence as COR-04) | — | none | pending |
+-| THM-01 | Theme overrides keyed by theme id survive theme deletion | P3 | `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | TBD | pending |
++| THM-01 | Theme overrides keyed by theme id survive theme deletion | P3 | `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `594b8b4`): `handleDeleteTheme` drops the deleted theme's override bucket in the same operation (`clearThemeOverrides(themeId)` from `applyTheme.ts`), so a theme re-created with the same id cannot inherit the old colours. Builtin defaults were already never mutated | `594b8b4` | desktop `tsc` 0; vitest 93 (no component harness — audit target §58) | none (stale config rows) | pending |
+ | SEC-01-multipart | Caller-supplied filename interpolated into a multipart header unescaped (transcription) | P3 | `11_FINDINGS.md` | **FIXED** (2026-09-18, `0596211`): every header parameter now goes through `_header_safe` (CR/LF folded, quotes normalised, backslashes neutralised); a crafted filename can no longer start a header line, and clean names round-trip unchanged | `0596211` | `tests/test_v16_sweep_fixes.py` (3) | none (header-injection hardening) | pending |
+ | DEAD-05 | `service.py` calls `Vetting` privates (`_questions`, `_format_resurface`) | P3 | `16_FINDING_STATUS.md` | **DEFERRED_NON_RELEASE** (verified 2026-09-18, `service.py:744-745` still call the privates): internal coupling only — no user-visible effect, and a public wrapper is cosmetic; deferred rather than refactored for its own sake | — | none | none | pending |
+-| ERR-01 | KeyError leaks from dispatch (with COR-06) | P3 | `11_FINDINGS.md` | OPEN (sweep pending) | — | TBD | pending |
++| ERR-01 | KeyError leaks from dispatch (with COR-06). **Alias note for Campaign B:** `11_FINDINGS.md:23` uses ERR-01 for the `search.run` bare-except claim, which is COR-05 (already DEFERRED_NON_RELEASE); `16_FINDING_STATUS.md:103` and this table bind ERR-01 to the KeyError family. Both descriptions are dispositioned — no reading leaves ERR-01 open | P3 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | **FIXED** (2026-09-18, `5950efb`) — same fix as COR-06 (shared dispatch contract + tests); the `search.run` reading is COR-05's disposition | `5950efb` | `tests/test_v16_sweep_fixes.py` (3 new) | none (error-surface honesty) | pending |
+ 
+ ## Closed / retracted in the audited range (for completeness — do not re-open without cause)
+ 
+@@ -55,27 +61,27 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+   `21`–`37`; none remain open except as carried in the rows above (F4/F16-3/F17-4/F18-5/R22-3 are
+   carried items with their own dispositions in DEFERRED_ITEMS.md / REQUIREMENTS_TRACEABILITY.md).
+ 
+-## Sweep worklist (sprint §40)
++## Sweep completion record (sprint §40)
+ 
+ Method: per row, verify the current tree (grep/read) *and* read the source audit record for the
+-original claim, then set one of the five dispositions with the evidence inline. Rows still reading
+-`OPEN (sweep pending)` are unverified — they must not be read as cleared.
+-
+-Progress 2026-09-18 (first batch, verified against the tree):
+-
+-1. **OPEN** — complete one-line descriptions for APR-05/06: the source record lives in the audit
+-   worktree `kel-v16-code-audit/docs/code-audit/13_PHASE3_DELTA_AUDIT.md`; read it next.
+-2. **DONE** — DEAD-06, CAP2-LONGTEXT, APR-04, COR-04, COR-05, MDL-01 dispositioned with inline
+-   evidence (see the tables above).
+-3. **OPEN** — still need source-record reads + a decision: P2 = APR-01, APR-02, APR-03, A1, REL-01,
+-   SEC-01, PER-02, PER-03, TR-01, TR-02; P3 = APR-05, APR-06, INT-01, PER-04, COR-06, THM-01,
+-   SEC-01-multipart, DEAD-05, ERR-01.
+-4. **A1 note for the sweep** — `KelService.ts` still reuses a running engine after only
+-   `JSON.parse(descriptor)` + `/api/state`, with no `engine_version` comparison even though the
+-   `Descriptor` type carries the field (read 2026-09-18). Fix-or-defer is the sweep's decision; a
+-   fix needs a desktop test for the stale-descriptor path.
+-Rules for the rest of the sweep:
++original claim, then set one of the five dispositions with the evidence inline. No row reads
++`OPEN (sweep pending)` any more; the string survives only in this documentation.
++
++2026-09-18 — R0 completed the sweep under the marathon directive:
++
++1. **SEC-01** FIXED (`49e528e`) — acting-scope gate on the vetting session load point + service wiring.
++2. **TR-01** FIXED (`8ab7699`) — stream handles released on reap/finish; optional conversation scope.
++3. **TR-02** DEFERRED_NON_RELEASE, bound to R9.A/R10 (presentation of transport failures only).
++4. **APR-05** FIXED (`dd34ac2`) — approvals poll path DDL-free once stamped (migration 20).
++5. **APR-06 / COR-03 / THM-01** FIXED (`594b8b4`) — truthful failure messages on the approval card
++   and the model pill; theme overrides pruned with the theme.
++6. **COR-06 / ERR-01** FIXED (`5950efb`) — dispatch layers answer missing fields with plain sentences
++   (`Service._required`), the vetting family wrapped like the transcription family.
++
++Rules for the rest of the sweep (kept for reference):
+ 
+ - Release-relevant → fix in Campaign A; otherwise DEFERRED_NON_RELEASE with a rationale.
+ - Every fix gets a test + a CHANGE_LEDGER entry + an updated row here.
+-- Campaign B re-verifies all rows; discrepancies are findings.
++- Campaign B re-verifies all rows; discrepancies are findings (the 26-vs-27 row count note above is
++  deliberately left for that audit rather than silently reconciled).
++
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 04972f8..05191a6 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,13 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | in progress — **17/27** rows carry a final disposition (P2 7/10: PER-02, A1, APR-01, PER-03, **APR-02** fixed; APR-03 `DEFERRED_NON_RELEASE`; REL-01 `OPEN_RELEASE_BLOCKER` — P3 10/17); 10 rows stay `OPEN (sweep pending)` (P2: SEC-01, TR-01, TR-02; P3 7) | APR-02 `8a677d0`; earlier `84b5646`/`101d8c3`/`0596211`/`df1997a` | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep (roadmap R0) | **complete — every row in `P2_P3_DISPOSITION.md` carries a final disposition** (26 rows in-table: P2 10, P3 16; REL-01 the only `OPEN_RELEASE_BLOCKER`, awaiting R8 package/freeze-level evidence; TR-02 `DEFERRED_NON_RELEASE` bound to R9.A/R10) | `49e528e`; `8ab7699`; `5950efb`; `dd34ac2`; `594b8b4` (earlier `8a677d0`/`84b5646`/`101d8c3`/`0596211`/`df1997a`) | focused per row; full suite see A-20 | P2_P3_DISPOSITION.md; `increments/R0-SWEEP.md` | 26-vs-27 row count left for Campaign B by design | pending |
++| REQ-OWNERSHIP-PARITY | R0 sweep (SEC-01/TR-01; extends APR-02) | action paths enforce the same conversation ownership as read/display paths | implemented | `49e528e`; `8ab7699` | 11 focused (7 vetting + 4 transcription); full see A-20 | `increments/R0-SWEEP.md` | the vetting panel keeps its marked cross-conversation display read; desktop stream calls do not declare a conversation yet (additive) | pending |
++| REQ-POLL-CHEAP | R0 sweep (APR-05) | the approvals read path performs no DDL once its migration marker exists | implemented | `dd34ac2` | 3 focused; full see A-20 | `increments/R0-SWEEP.md` | v20 marker stamps pre-existing stores on the next call | pending |
++| REQ-TRUTHFUL-SURFACES | R0 sweep (COR-03/APR-06) | a failure notice never claims a state the surface cannot know | implemented | `594b8b4` | tsc 0; vitest 93 | `increments/R0-SWEEP.md` | no component harness (§58) | pending |
++| REQ-ERROR-SENTENCES | R0 sweep (COR-06/ERR-01) | a missing request field answers with a plain sentence, never a raw exception string | implemented | `5950efb` | 3 focused; full see A-20 | `increments/R0-SWEEP.md` | — | pending |
++| REQ-THEME-HYGIENE | R0 sweep (THM-01) | deleting a theme drops its saved colour overrides in the same operation | implemented | `594b8b4` | tsc 0; vitest 93 | `increments/R0-SWEEP.md` | — | pending |
++| REQ-TR02-BINDING | R0 sweep (TR-02) | abandoned-stream transport-failure presentation is delivered by R9.A batch 6 / R10 | bound (no code in R0) | — | — | P2_P3_DISPOSITION.md (TR-02 row); `increments/R0-SWEEP.md` | must be honored before the PRE_AUDIT RC | pending |
+ | REQ-R25-R1 | roadmap R2.5 (Round 2.5 A; invariant AUTH-DELEGATION) | delegation authority ceiling (`child ⊆ delegator`) | PENDING | — | — | `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` §R1 | — | pending |
+ | REQ-R25-R2 | roadmap R2.5 (Round 2.5 B; EVENT-IDEMPOTENCY / EFFECT-REPLAY) | logical-work/idempotency matrix + real gaps only | PENDING | — | — | roadmap §R2 | — | pending |
+ | REQ-R25-R3 | roadmap R2.5 (Round 2.5 C; RETRY-DURABLE) | durable retry/recovery budgets | PENDING | — | — | roadmap §R3 | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 04079ed..6334972 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -29,6 +29,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-17 | desktop typecheck + unit suite (A1 engine-version binding) | `cd desktop && bunx tsc --noEmit && bun run test` | `101d8c3` | 2026-09-18 | PASS | tsc 0 errors; **93 passed / 8 files** (was 90 — +3 new tests) | A1 / ENG-01 | INV-A1-001 | `increments/A1-ENGINE-VERSION-BINDING.md` | parent-executed (decision unit-tested; spawn wiring typecheck-only — §59) |
+ | A-18 | engine full suite (sweep batch 3: snapshots + actor guard) | `cd runtime && python -m pytest tests -q` | `84b5646` | 2026-09-18 | PASS | **909 passed, 10 subtests passed** (252.08s; was 905 — +4 new tests, zero regressions); focused sweep-fix + backup + transcription = 45 passed | PER-03, APR-01 | INV-PER03-001 | `increments/P2P3-BATCH3-SNAPSHOTS-SCOPE.md` | parent-executed |
+ | A-19 | engine full suite + desktop suite (R0 / APR-02 approval scope) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc --noEmit && bun run test` | `8a677d0` | 2026-09-18 | PASS | **915 passed, 10 subtests passed** (264.24s; was 909 — +6 new tests, zero regressions); focused approvals + sweep-fix = 33 passed; desktop tsc 0, vitest 93 | APR-02 (R0) | INV-APPROVE-002 (partial) | `increments/R0-APR02-APPROVAL-SCOPE.md` | parent-executed |
++| A-20 | engine full suite + desktop typecheck/suite (R0 sweep completion: SEC-01, TR-01, COR-06/ERR-01, APR-05, COR-03/APR-06/THM-01) | `cd runtime && python -m pytest tests -q`; `cd desktop && bunx tsc -p tsconfig.json --noEmit && bunx vitest run` | `594b8b4` | 2026-09-18 | PASS | **931 passed, 10 subtests passed** (258.82s; was 915 — +16 new tests, zero regressions); focused: `test_vetting.py` 36, `test_transcription.py` 31, `test_v16_sweep_fixes.py` 15, approvals + restore-visibility green; desktop tsc 0 errors, **vitest 93 passed (8 files)** | SEC-01, TR-01, TR-02 (deferred-binding), APR-05, APR-06, COR-03, COR-06, THM-01, ERR-01 | INV-SWEEP4-001 | `increments/R0-SWEEP.md` | parent-executed (renderer rows verified by tsc + code read only — §58) |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/R0-SWEEP.md b/docs/v1.6/pre-audit/increments/R0-SWEEP.md
+new file mode 100644
+index 0000000..7f0ebdf
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/R0-SWEEP.md
+@@ -0,0 +1,107 @@
++# Increment — R0: the P2/P3 sweep reaches 100% final dispositions
++
++increment_id: V16-R0-SWEEP
++phase: Campaign A — R0 (roadmap R2.5; marathon directive §8)
++base_commit: `756218e` (published docs tip; last production `8a677d0`)
++target_commits: `49e528e` (SEC-01) · `8ab7699` (TR-01) · `5950efb` (COR-06/ERR-01) ·
++`dd34ac2` (APR-05) · `594b8b4` (COR-03/APR-06/THM-01) + this docs commit
++status: complete (full engine regression run at this increment — see TEST_EVIDENCE_INDEX)
++
++## Objective
++
++Finish the historical P2/P3 sweep: every row in `pre-audit/P2_P3_DISPOSITION.md` carries one of the
++five final dispositions, with the source audit record read, the current tree verified, a
++discriminating test for every behavior change, and an honest disposition where no change is
++justified. Method per row: inspect the original claim → inspect current code → reproduce where
++meaningful → decide release relevance → fix or disposition.
++
++## Rows closed in this increment
++
++| Row | Sev | Disposition | Commit | Discriminating evidence |
++|---|---|---|---|---|
++| SEC-01 | P2 | FIXED | `49e528e` | 7 new sweep tests; `test_vetting.py` 36 passed |
++| TR-01 | P2 | FIXED | `8ab7699` | 4 new lifecycle tests; `test_transcription.py` 31 passed |
++| TR-02 | P2 | DEFERRED_NON_RELEASE (bound to R9.A/R10) | — | tree read: fallback path already honest; residual is transport-failure *presentation* |
++| APR-05 | P3 | FIXED | `dd34ac2` | 3 new tests: stamp + no DDL on the poll path + pre-marker upgrade |
++| APR-06 | P3 | FIXED | `594b8b4` | tsc 0; vitest 93 (no component harness — §58) |
++| COR-03 | P3 | FIXED | `594b8b4` | tsc 0; vitest 93 |
++| COR-06 | P3 | FIXED | `5950efb` | 3 new dispatch tests |
++| THM-01 | P3 | FIXED | `594b8b4` | tsc 0; vitest 93 |
++| ERR-01 | P3 | FIXED (alias note recorded) | `5950efb` | same dispatch tests |
++
++Cross-cutting behavior changes:
++
++1. **Vetting session actions are conversation-scoped** (SEC-01). `Vetting(store, conversation=None)`
++   carries the acting scope; `session()` — the single load point used by every by-id action — refuses
++   a row whose `conversation_id` differs. `apply_pending` validates scope before its own early
++   returns. `panel()` remains a marked display surface (`cross_conversation` preserved), and callers
++   that declare no conversation keep the old behavior (additive).
++2. **Transcription stream lifecycle releases resources** (TR-01). `_MuseStream.close()` queues the
++   reader sentinel best-effort (→ `endStream` → socket close) and is idempotent; `_gc_streams()`
++   closes before dropping; `stream_finish` closes after finishing; `_FixtureStream.close()` is a
++   symmetric no-op. Optional conversation scope on stream actions.
++3. **Dispatch layers never leak raw exception strings** (COR-06/ERR-01). New
++   `Service._required(data, key, sentence)`; the vetting family gained the same unexpected-failure
++   wrapper the transcription family already had; `/api/retry`, `/api/control`, `/api/apply`,
++   `/api/approval` moved to the same contract.
++4. **The approvals poll path performs no DDL** (APR-05). `chat_approvals.MIGRATION_VERSION = 20`;
++   `ensure_schema` early-returns once stamped; a pre-marker store runs the idempotent body once.
++5. **Failure surfaces tell the truth** (COR-03/APR-06/THM-01): the model pill reports instead of
++   rejecting silently; the approval card distinguishes "engine unreachable" from a settled decision
++   and otherwise shows the engine's own sentence; deleting a theme drops its saved colour overrides
++   in the same operation.
++
++## Requirement / invariant mapping
++
++- Requirements: `REQ-P2P3-SWEEP` (this increment completes it), `REQ-OWNERSHIP-PARITY`
++  (APR-02 → SEC-01 → TR-01 scope chain), `REQ-POLL-CHEAP` (APR-05), `REQ-TRUTHFUL-SURFACES`
++  (COR-03/APR-06), `REQ-ERROR-SENTENCES` (COR-06/ERR-01), `REQ-THEME-HYGIENE` (THM-01).
++- Invariants touched: **LIVE-AUTHORITY** adjacency (scope gates never *widen*), **PERSIST-CANONICAL**
++  adjacency (the migration marker is additive and idempotent), event-idempotency untouched.
++- Round 2.5 notes: APR-02 resolved the approval write/read parity; SEC-01/TR-01 extend the same
++  ownership principle to vetting and transcription. R4 (APPROVAL-EXACT) still owns normalization +
++  pre-execution revalidation; TR-02's renderer residual is owned by R9.A/R10 by explicit binding.
++
++## Failure modes addressed
++
++- A foreign vetting session id could be mutated from another conversation (SEC-01).
++- An abandoned/expired transcription stream held its websocket and reader thread for the life of the
++  process (TR-01).
++- A missing request field surfaced as `'session'`/`'id'` instead of a sentence (COR-06/ERR-01).
++- The approval card polled DDL every 3 seconds; lock churn risk on a competing writer (APR-05).
++- The approval card claimed "already settled" for transport failures; the model pill failed silently;
++  a deleted theme's overrides outlived it (APR-06/COR-03/THM-01).
++
++## Security / privacy / persistence / migration impact
++
++- Security/privacy: three scope gates (vetting, transcription, service wiring) narrow authority,
++  never widen; no new secrets, no new network paths, no new persisted personal data.
++- Persistence: one additive migration marker (v20, `chat_approval_announcements`); no table or column
++  changes; pre-marker stores are stamped on the next call without rewriting rows.
++- Migration: idempotent (`INSERT OR IGNORE`); fresh stores keep the original creation order.
++
++## Tests (evidence-bound)
++
++- Engine focused: `test_vetting.py` 36 · `test_transcription.py` 31 · `test_v16_sweep_fixes.py` 15 ·
++  `test_v16_approvals.py` + `test_v16_restore_visibility.py` green.
++- Engine full: recorded in TEST_EVIDENCE_INDEX at this commit (see A-20).
++- Desktop: `tsc -p tsconfig.json --noEmit` → 0; `vitest run` → 93 passed (8 files).
++
++## Limitations / audit questions / repair hints
++
++- The desktop has **no renderer component-test harness** (§58): COR-03/APR-06/THM-01 are verified by
++  tsc + suite + code read; the packaged probes at R8/R12 are the behavioral gate.
++- TR-02 is intentionally not implemented here — Campaign B should verify the binding to R9.A/R10 is
++  honored by the time the RC is assembled.
++- The sprint directive cites 27 P2/P3 rows; the in-repo table carries 26 (P2 10, P3 16). Campaign B
++  should reconcile the count from the audit records rather than trusting either number.
++- ERR-01 has two source descriptions in the audited corpus (`search.run` bare except = COR-05 vs the
++  KeyError family = this fix). Both readings are dispositioned; the alias is recorded in the table.
++- Repair hints: none open from this increment (all FIXED rows carry their commit + test).
++
++## Breadcrumb updates in this increment
++
++`P2_P3_DISPOSITION.md` (26/26 final + completion record) · `COMMIT_LEDGER.md` (5 production + docs) ·
++`CHANGE_LEDGER.md` (mapping rows) · `REQUIREMENTS_TRACEABILITY.md` (REQ rows) ·
++`TEST_EVIDENCE_INDEX.md` (A-20+) · `MAIN_STATUS.md` · `AUTO_RESUME.md` · `MARATHON_STATE.md` ·
++this record.
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index f743a57..e28cc2c 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -1,12 +1,12 @@
+ # MAIN_STATUS
+ 
+-updated_utc: 2026-09-18T16:56:00Z
++updated_utc: 2026-09-18T17:05:00Z
+ # note: prose `updated_utc` / `updated:` stamps written during the 2026-09-18 sprint are approximate
+ # wall-clock markers (written to the nearest few minutes); git commit timestamps are authoritative.
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 8a677d0 (R0/APR-02 production commit; docs commit follows — see `git log --oneline -8`)
++head: R0 sweep complete — HEAD carries `594b8b4` (COR-03/APR-06/THM-01) + this docs commit; see `git log --oneline -8`
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -18,9 +18,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: **R0** — P2/P3 sweep at 17/27 (P2 7/10); **APR-02 FIXED** (`8a677d0`: approval resolution is conversation-scoped on both sides, additive contract; full engine suite 915, tsc 0, vitest 93); roadmap R2.5 adopted (`9eab3c6`). Still OPEN: SEC-01, TR-01, TR-02 + 7 P3 rows. REL-01 = `OPEN_RELEASE_BLOCKER`.
+-current_phase: R0 — finish the P2/P3 sweep (roadmap R2.5 adopted 2026-09-18; next phases R1 delegation authority ceiling → R2 idempotency → R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915).
++current_increment: **R0 COMPLETE** — the P2/P3 sweep is 100% dispositioned (`P2_P3_DISPOSITION.md`, 26 rows in-table: P2 10, P3 16; the directive's 27 recorded for Campaign B). Five production commits: SEC-01 `49e528e`, TR-01 `8ab7699`, COR-06/ERR-01 `5950efb`, APR-05 `dd34ac2`, COR-03/APR-06/THM-01 `594b8b4`. REL-01 remains the only `OPEN_RELEASE_BLOCKER` (R8). **Now starting R1** (delegation authority ceiling).
++current_phase: R1 — delegation authority ceiling (`effective_child_authority ⊆ effective_delegator_authority`, existing primitives only) → R2 idempotency matrix → R3 retry budgets → R4 approval binding → R5 persistence → R6 state/liveness → R7 credential boundary → R8 package assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss UX → R11 Visual→Main integration → R12 final regression → PRE_AUDIT_V1_6_HEAD
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900); sweep batch 2 (0596211; IPC frame guard, multipart header hygiene, credentials out of backups; engine suite 905); A1 engine-version binding (101d8c3; `engineVersionAccepted` at both trust sites; tsc 0, vitest 93); sweep batch 3 (84b5646; pre-restore snapshot retention + payload-actor guard pinned; engine suite 909); round-2.5 roadmap adopted (9eab3c6); APR-02 approval scope (8a677d0; write path matches the read path; engine suite 915); R0 sweep completion (SEC-01 `49e528e` vetting acting scope; TR-01 `8ab7699` stream lifecycle + close; COR-06/ERR-01 `5950efb` dispatch sentences; APR-05 `dd34ac2` poll path DDL-free, migration v20; COR-03/APR-06/THM-01 `594b8b4` truthful surfaces; full engine suite **931 passed**, +10 subtests; 26/26 sweep rows final; record `increments/R0-SWEEP.md`).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -42,8 +42,8 @@ phase4_stash_name: MAIN-PHASE4-WIP-BEFORE-P1-CAPABILITY-REMEDIATION
+ phase4_restored: true
+ 
+ open_p1: NONE
+-open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-02
+-known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
++open_p2: NONE — APR-01, APR-02, A1, SEC-01, PER-02, PER-03, TR-01 FIXED; APR-03, TR-02 `DEFERRED_NON_RELEASE` (TR-02 bound to R9.A/R10); REL-01 `OPEN_RELEASE_BLOCKER` (R8)
++known_p3: NONE OPEN — APR-04/05/06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03/04/05/06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01 all final
+ 
+ github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
+ github_remote_integration: 7b3221795608df24299d1268b58e8abb763272c5 (verified by ls-remote 2026-09-18T17:10Z, Phase 7; the Phase 8–11 checkpoint `006159a..fed59dd` is published in the same working window — final tip in `ux-audit/github-sync-recon/22_PHASE8_11_PUBLICATION.md`)
+@@ -52,6 +52,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: **R0** — finish the P2/P3 sweep (`P2_P3_DISPOSITION.md`; 11 rows undecided — P2 4: APR-02, SEC-01, TR-01, TR-02; P3 7) so all 27 carry one of the five final dispositions; then **R1–R12** per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md` (R1 delegation authority ceiling; R2 idempotency matrix; R3 durable retry budgets; R4 canonical approval binding, absorbing APR-02; R5 persistence integrity; R6 truthful state + liveness; R7 credential/network boundary proof; R8 packaged/migration assertions + REL-01; R9 Visual 6–8 + Needs Your Attention; R10 engine-loss/recovery UX; R11 Visual→Main integration; R12 final regression), then record **PRE_AUDIT_V1_6_HEAD** and STOP Campaign A. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Independent audits stay paused until the RC.
++next_autonomous_action: **R1** — delegation authority ceiling: first audit the real current issuance path (D1/D2/D3 contracts, assignment grants, role ceilings, leases, runtime/provider binding, tool filtering), then add the reusable narrowing check + discriminating negative tests (widen attempts on authority class, write path, tool, external effect, project boundary, budget) with the current non-nested parent/delegator semantics preserved. Then R2 idempotency matrix → R3 retry durability → R4 approval binding (absorbs APR-02's declared-conversation hardening) → R5 persistence integrity → R6 truthful state + liveness → R7 credential/network boundary proof → R8 packaged/migration assertions + REL-01 → R9 Visual 6–8 + Needs Your Attention → R10 engine-loss/recovery UX → R11 Visual→Main integration → R12 final regression, then record **PRE_AUDIT_V1_6_HEAD** and stop Campaign A per `docs/v1.6/KEL_CANONICAL_ROADMAP_R2_5.md`. REL-01 stays `OPEN_RELEASE_BLOCKER` until package/freeze-level evidence exists (Campaign A must not perform the immutable release freeze). Independent audits stay paused until the RC. Marathon mode: `docs/v1.6/MARATHON_STATE.md` (`return_allowed: NO`).
+ external_dependency: NONE
+ stop_reason: NONE

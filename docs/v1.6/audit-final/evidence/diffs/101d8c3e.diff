@@ -1,0 +1,110 @@
+commit 101d8c3e31465a258be995944ba8a799a9119b7d
+2026-09-18 14:02:48 -0400
+fix(v1.6): detached-engine reuse validates engine_version (A1 / ENG-01)
+
+
+diff --git a/desktop/packages/desktop/src/process/services/kel/KelService.ts b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+index 7d677d7..d6a95a2 100644
+--- a/desktop/packages/desktop/src/process/services/kel/KelService.ts
++++ b/desktop/packages/desktop/src/process/services/kel/KelService.ts
+@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
+ import fs from 'fs';
+ import path from 'path';
+ import { recoverHistory, type HistoryMessage } from './reconcileHistory';
++import { engineVersionAccepted } from './engineVersion';
+ import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
+ type Descriptor = { url: string; token: string; engine_version: string };
+ let descriptor: Descriptor;
+@@ -41,10 +42,20 @@ export async function initializeKel(port: number): Promise<void> {
+       });
+   });
+   const descriptorPath = path.join(root, 'desktop-session.json');
++  // Audit A1 / ENG-01: something answering /api/state is not proof that it is the engine this build
++  // shipped with — an upgrade replaces `resources/kel-engine`, so a leftover engine of another
++  // version must not be reused. A packaged build knows its own version; an unpackaged dev run
++  // reports Electron's through `app.getVersion()`, so it passes an empty expectation and the check
++  // is not enforced there.
++  const expectedEngineVersion = process.env.KEL_ENGINE_VERSION || (app.isPackaged ? app.getVersion() : '');
++  const expectedEngineAnswered = async () => {
++    const state = (await kelRequest('/api/state')) as { engine_version?: string } | undefined;
++    return engineVersionAccepted(state?.engine_version, expectedEngineVersion);
++  };
+   let connected = false;
+   try {
+     descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+-    await kelRequest('/api/state');
++    if (!(await expectedEngineAnswered())) throw new Error('stale engine descriptor');
+     connected = true;
+     console.log('[KEL-BOOT] initializeKel reused running engine');
+   } catch {
+@@ -110,7 +121,9 @@ export async function initializeKel(port: number): Promise<void> {
+     while (Date.now() < deadline) {
+       try {
+         descriptor = JSON.parse(fs.readFileSync(descriptorPath, 'utf8'));
+-        await kelRequest('/api/state');
++        // The descriptor file is shared with any leftover engine: keep waiting until the engine
++        // this build expects answers instead of connecting to whatever answers first (A1 / ENG-01).
++        if (!(await expectedEngineAnswered())) throw new Error('waiting for the expected engine');
+         connected = true;
+         break;
+       } catch {
+diff --git a/desktop/packages/desktop/src/process/services/kel/engineVersion.ts b/desktop/packages/desktop/src/process/services/kel/engineVersion.ts
+new file mode 100644
+index 0000000..53e5b45
+--- /dev/null
++++ b/desktop/packages/desktop/src/process/services/kel/engineVersion.ts
+@@ -0,0 +1,16 @@
++/**
++ * Which live Kel engine this desktop build may reuse (audit A1 / ENG-01).
++ *
++ * The desktop talks to a detached engine over HTTP: answering `/api/state` proves something is
++ * listening, not that it is the engine this build shipped with. An upgrade replaces
++ * `resources/kel-engine`, so a leftover engine from the previous version must not be reused.
++ *
++ * `expected` is the engine version this build expects. An empty value means the caller cannot know
++ * it (an unpackaged dev run, where `app.getVersion()` reports Electron's own version); that case is
++ * deliberately *not* enforced rather than failing every dev start closed.
++ */
++export function engineVersionAccepted(live: unknown, expected: unknown): boolean {
++  const wanted = typeof expected === 'string' ? expected.trim() : '';
++  if (!wanted) return true;
++  return typeof live === 'string' && live.trim() === wanted;
++}
+diff --git a/desktop/tests/unit/kelEngineVersion.test.ts b/desktop/tests/unit/kelEngineVersion.test.ts
+new file mode 100644
+index 0000000..1b33e6a
+--- /dev/null
++++ b/desktop/tests/unit/kelEngineVersion.test.ts
+@@ -0,0 +1,32 @@
++import { describe, expect, it } from 'vitest';
++import { engineVersionAccepted } from '@process/services/kel/engineVersion';
++
++/**
++ * Audit A1 / ENG-01: detached-engine reuse must compare `engine_version`, not just whether
++ * `/api/state` answers.
++ */
++describe('engineVersionAccepted', () => {
++  it('accepts exactly the expected engine version', () => {
++    expect(engineVersionAccepted('1.5.0', '1.5.0')).toBe(true);
++    expect(engineVersionAccepted(' 1.5.0 ', '1.5.0')).toBe(true);
++    expect(engineVersionAccepted('1.5.0', ' 1.5.0 ')).toBe(true);
++  });
++
++  it('refuses a stale, missing or non-string engine version', () => {
++    expect(engineVersionAccepted('1.4.0', '1.5.0')).toBe(false);
++    expect(engineVersionAccepted('1.5.0.1', '1.5.0')).toBe(false);
++    expect(engineVersionAccepted(undefined, '1.5.0')).toBe(false);
++    expect(engineVersionAccepted(null, '1.5.0')).toBe(false);
++    expect(engineVersionAccepted('', '1.5.0')).toBe(false);
++    expect(engineVersionAccepted(1.5, '1.5.0')).toBe(false);
++    expect(engineVersionAccepted({ engine_version: '1.5.0' }, '1.5.0')).toBe(false);
++  });
++
++  it('does not enforce the check when this build cannot know the expected version', () => {
++    // Unpackaged dev runs report Electron's version through `app.getVersion()`; the caller passes
++    // an empty expectation instead of failing every start closed.
++    expect(engineVersionAccepted('1.5.0', '')).toBe(true);
++    expect(engineVersionAccepted('anything', undefined)).toBe(true);
++    expect(engineVersionAccepted(undefined, '')).toBe(true);
++  });
++});

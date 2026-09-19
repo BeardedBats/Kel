@@ -1,0 +1,32 @@
+commit 7b3221795608df24299d1268b58e8abb763272c5
+2026-09-18 12:30:30 -0400
+docs(v1.6): record the published Phase 6+7 tip (16de55f); packaged pending item for the capability card
+
+
+diff --git a/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+index 8f756e7..81ffa48 100644
+--- a/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/PACKAGED_EVIDENCE_INDEX.md
+@@ -29,6 +29,9 @@ Build convention: `desktop`, `bunx electron-builder --config kel-builder.json --
+   (findings 16/17) — Campaign A closes this behavior (visual batch 6 + engine supervision work).
+ - RC package: `package-prea` (name reserved) — full battery + migration assertions + journeys at
+   PRE_AUDIT_V1_6_HEAD. Recorded here when built.
++- Phase 7 capability card: seed a blocked milestone carrying a `recommendation` in a packaged app;
++  assert the card renders in the Work panel, the actions hit the engine (`/api/capabilities`), and
++  dismissal works (no provider in this environment — audit target 45; LIM-14).
+ 
+ ## Maintenance rules
+ 
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index a9a8e9e..85bda12 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -43,7 +43,7 @@ open_p2: APR-01, APR-02, APR-03, A1, REL-01, SEC-01, PER-02, PER-03, TR-01, TR-0
+ known_p3: APR-04, APR-05, APR-06, DEAD-06, CAP2-LONGTEXT, INT-01, PER-04, COR-03, COR-04, COR-05, COR-06, MDL-01, THM-01, SEC-01-multipart, DEAD-05, ERR-01
+ 
+ github_remote_main: 5e76b21071a28601a7fb4de508cb3cf349c77db8
+-github_remote_integration: fd98cc402b98acf9a230fb160e4766f7f5f931f3 (verified by ls-remote at Campaign A entry 2026-09-18T16:05Z)
++github_remote_integration: 16de55f1a4d0f3e3cac29a704c8aa52b548f8d8d (verified by ls-remote 2026-09-18T17:10Z; Phase 6+7 checkpoint published)
+ github_publication_current: true
+ 
+ frozen_pre1_verified: true

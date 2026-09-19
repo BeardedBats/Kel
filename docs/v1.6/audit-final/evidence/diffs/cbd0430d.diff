@@ -1,0 +1,312 @@
+commit cbd0430dc054631d052b7284bca5c975bb58e9a5
+2026-09-18 13:50:29 -0400
+docs(v1.6): PER-02 breadcrumbs + P2/P3 sweep progress (7/27 rows dispositioned)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index 3e913c0..f7b510f 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -527,3 +527,20 @@ way the real worker wiring must. Commit `081a6ef`; record
+ 126 passed; **full engine suite 895 passed** (+10 subtests, was 891). Residuals: `run_d1` does not
+ yet pass an `artifact_root` (audit target 56); non-content-bound contracts keep their previous
+ scope. Next: **P2/P3 sweep**.
++
++## PER-02 — restore failures are recorded and surfaced (2026-09-18)
++
++**FIXED (engine half) — audit P2 PER-02 (Rust-corroborated).** `service.py` used to wrap
++`apply_pending_restore` in `try/except: pass` and discard the boolean, so a restore that could not
++start, or failed halfway, left no trace. Now `backup._record_outcome` writes
++`restore-outcome.json` **beside** the data (the database is what a restore replaces, so the record
++cannot live inside it) on both decisive paths — success `ok=True`; failure `ok=False` with the
++exception *type name* and `restore-pending.json` left in place — and `service.state()` carries
++`restore: {ok, detail, at} | null` next to `connected`/`engine_version` (additive payload, no
++contract break). Boot never aborts on a restore failure. Commit `df1997a`; record
++`increments/PER-02-RESTORE-VISIBILITY.md`; tests `tests/test_v16_restore_visibility.py` (5 new);
++focused 14 passed; **full engine suite 900 passed** (+10 subtests, was 895). The renderer surface
++that would *show* the outcome belongs to REQ-ELOSS (audit target 57) and was deliberately not
++invented here. Sweep status after this increment: **7/27 rows dispositioned** (P2 1/10, P3 6/17).
++Next: continue the sweep (P2 rows need their source records read; A1 and REL-01 remain the
++release-relevant ones).
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 4fb8f17..3c5b3d5 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -156,3 +156,11 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+ 56. On-disk binding coverage: `close_d1(artifact_root=…)` is exercised only where a caller supplies
+     a root (tests do; `run_d1` does not yet) — verify the live path supplies one before any release
+     claim of on-disk verification, and that a stale/renamed file is refused.
++
++## Restore visibility (2026-09-18 additions)
++
++57. Restore failure surfacing: the engine now records `restore-outcome.json` beside the data and
++    exposes `state()['restore']`; verify no restore failure can occur without that record, that a
++    failed attempt keeps `restore-pending.json`, and that a renderer surface (REQ-ELOSS) reads the
++    existing payload instead of a new endpoint. Also confirm `state()['restore']` cannot report a
++    stale outcome after a later clean start (PER-02) and is not confused by PER-03's snapshot path.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index 206e0b0..dea7a1e 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,38 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-007 — A failed or partial restore is recorded and surfaced (audit PER-02)
++
++ID: CHG-007 · Phase: Campaign A — P2/P3 sweep · Commit: implementation commit · Date: 2026-09-18
++
++- **User-visible impact:** indirect — a restore that cannot start or fails halfway is now reported in
++  the engine state instead of vanishing; the renderer banner that shows it belongs to REQ-ELOSS.
++- **Internal impact:** `backup.OUTCOME` + `_record_outcome(root, ok, detail)` write a sidecar
++  (`restore-outcome.json`) beside the data on both decisive paths; `service._restore_outcome` reads
++  it and `Service.state()` carries `restore: {ok, detail, at} | null`; the caller records a
++  cannot-start failure while still letting boot proceed.
++- **Previous behavior:** `service.py` wrapped `apply_pending_restore` in `try/except: pass` and threw
++  the boolean away (Rust-corroborated silent failure).
++- **New behavior:** the outcome is durable and observable; `False` keeps its old meaning, and the
++  pending marker stays in place after a failed attempt.
++- **Primary files:** `runtime/kel/backup.py`, `runtime/kel/service.py`,
++  `runtime/tests/test_v16_restore_visibility.py`.
++- **Primary symbols:** listed above.
++- **Data/schema changes:** none (a sidecar file, not a table — the database is what a restore
++  replaces, so the record cannot live in it).
++- **Failure paths:** recording never raises; a failed restore still returns `False`.
++- **Security/privacy implications:** none — `detail` is an exception *type name*, never a message.
++- **Persistence implications:** one new sidecar inside the data root.
++- **Expected invariants:** INV-PER02-001 (new: a restore attempt's outcome is durable and queryable;
++  boot never aborts on a restore failure).
++- **Tests:** `tests/test_v16_restore_visibility.py` (5 new) + full suite (A-15).
++- **Packaged evidence:** n/a (the RC battery can assert `state()['restore']` on a staged restore).
++- **Known concerns:** the renderer does not surface it yet (REQ-ELOSS, audit target 57); PER-03 shares
++  the path and stays open in the sweep.
++- **Audit questions:** can a restore fail without an outcome record? Is the marker still present after
++  a failure? Does `state()` ever report a stale outcome after a later clean start?
++- **Repair hints:** recording in `kel/backup.py`, surfacing in `kel/service.py:state()`.
++
+ ### CHG-006 — Real-artifact binding: closure verifies the artifact the assignment delivered
+ 
+ ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) · Commit: implementation commit · Date: 2026-09-18
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 5c2d0d8..5931e95 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -38,7 +38,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `a547936` | `1894ef7` | 2026-09-18 | REQ-RK | record-bound resolution kinds on findings + additive workforce migration v17 | `kel/assurance.py`; `kel/workforce.py`; `tests/test_v16_resolution_kind.py` (new); `tests/test_workforce_schemas.py` | +6 engine tests; full suite **891 passed** (+10 subtests) | v17 additive (`findings.resolution_kind`) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | yes (additive) | MEDIUM | `increments/REQ-RK-RESOLUTION-KIND.md`; TEST_EVIDENCE_INDEX A-13 | prefixes kept in text (deliberate); no per-kind breakdown in `lens_stats` |
+ | `a7c7aa4` | `a547936` | 2026-09-18 | REQ-RK | REQ-RK breadcrumbs | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-RK / CHG-005 / §53–54; AUTO_RESUME section | — |
+ | `081a6ef` | `a7c7aa4` | 2026-09-18 | REQ-F4 / WF-12 | real-artifact binding: closure verifies the artifact the assignment delivered | `kel/core.py`; `kel/delegation.py`; `kel/evaluation.py`; `tests/test_workforce_d1.py`; `tests/test_workforce_d2.py` | +4 engine tests; full suite **895 passed** (+10 subtests); D1+D2+parallel 126 | none (existing `assignment_artifacts` gains its first reader) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | no | MEDIUM | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; TEST_EVIDENCE_INDEX A-14 | on-disk check needs an `artifact_root` (`run_d1` does not pass one yet); non-content-bound contracts unchanged |
+-| `HEAD` | `081a6ef` | 2026-09-18 | REQ-F4 | REQ-F4 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-F4 / CHG-006 / §55–56; AUTO_RESUME section | — |
++| `c1bb980` | `820ee3e` | 2026-09-18 | REQ-P2P3 | P2/P3 sweep first batch (6 rows dispositioned against the tree) | docs only | — | none | no | — | no | no | LOW | `P2_P3_DISPOSITION.md`; REQUIREMENTS_TRACEABILITY REQ-P2P3 | 21 rows still OPEN (sweep pending) |
++| `df1997a` | `c1bb980` | 2026-09-18 | PER-02 (P2 sweep) | a failed or partial restore is recorded and surfaced | `kel/backup.py`; `kel/service.py`; `tests/test_v16_restore_visibility.py` | +5 engine tests; full suite **900 passed** (+10 subtests) | none (sidecar `restore-outcome.json`) | additive `state()['restore']`; renderer surface → REQ-ELOSS | n/a (RC battery can assert on a staged restore) | yes (additive payload key) | no | MEDIUM | `increments/PER-02-RESTORE-VISIBILITY.md`; TEST_EVIDENCE_INDEX A-15 | renderer does not show it yet (target 57); PER-03 shares the path |
++| `HEAD` | `df1997a` | 2026-09-18 | PER-02 | PER-02 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows PER-02 / CHG-007 / §57; AUTO_RESUME section | — |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+index 3eb93a0..4760392 100644
+--- a/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
++++ b/docs/v1.6/pre-audit/P2_P3_DISPOSITION.md
+@@ -18,7 +18,7 @@ OPEN_RELEASE_BLOCKER**. Until the sweep sets a final value, rows read `OPEN (swe
+ | A1 | `engine_version` not validated on the detached-engine reuse path (`KelService.ts:43-52`) | P2 | `15_RUST_LEAD_VERIFICATION.md` | OPEN (sweep pending) | — | stale-descriptor boot test | TBD | pending |
+ | REL-01 | `freeze-release.ps1` engine staging is a no-op for the path the app loads and the manifest hashes | P2 | `15_RUST_LEAD_VERIFICATION.md`, `17_P1_REMEDIATION_REAUDIT.md` | OPEN (sweep pending) | — | freeze tooling test | TBD | pending |
+ | SEC-01 | Vetting session actions have no project/conversation ownership check (acceptance criteria recorded) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | cross-scope session attack | TBD | pending |
+-| PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | OPEN (sweep pending) | — | failure injection | TBD | pending |
++| PER-02 | A failed or partial restore is silent (`service.py` swallows `apply_pending_restore`) | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` (Rust-corroborated) | **FIXED** (engine half, 2026-09-18): `backup._record_outcome` writes `restore-outcome.json` beside the data on both decisive paths (the DB is what a restore replaces) and the failure path keeps `restore-pending.json`; `service._restore_outcome` surfaces it as `state()['restore']` — boot never aborts. The renderer surface stays with REQ-ELOSS (audit target 57) | `df1997a` | `tests/test_v16_restore_visibility.py` (5 new; full suite 900) | none (no UI claim made) | pending |
+ | PER-03 | `.pre-restore-*` snapshots unbounded/never pruned; snapshot failure aborts restore silently | P2 | `11_FINDINGS.md`, `16_FINDING_STATUS.md` | OPEN (sweep pending) | — | retention test | TBD | pending |
+ | TR-01 | Transcription `_STREAMS` module-level stream sessions — shutdown/cleanup not reviewed | P2 | `02_FILE_REVIEW_LEDGER.md`, `06_RUNTIME_AND_PROCESS.md` | OPEN (sweep pending) | — | shutdown cleanup test | TBD | pending |
+ | TR-02 | Abandoned-stream UX in the transcription renderer (residual) | P2 | `02_FILE_REVIEW_LEDGER.md` | OPEN (sweep pending) | — | renderer state test | TBD | pending |
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 526df71..36d3f06 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -48,7 +48,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+-| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 6/27 rows dispositioned with inline evidence (P2 0/10, P3 6/17); the rest stay `OPEN (sweep pending)` | — | — | P2_P3_DISPOSITION.md | pending |
++| REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | in progress — 7/27 rows dispositioned with inline evidence (P2 1/10: PER-02 fixed engine-side; P3 6/17 `DEFERRED_NON_RELEASE`/`NOT_APPLICABLE`); the rest stay `OPEN (sweep pending)` | PER-02 fix commit | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+ | REQ-WFWIRE | sprint §30 "provider/Workforce real wiring"; F16-3 | wiring increment | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 19cc927..8514441 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -24,6 +24,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-12 | packaged branding verification | `[System.Drawing.Icon]::ExtractAssociatedIcon` on `Kel.exe` + the NSIS installer, then `python scripts/verify-brand-render.py dist/logo-evidence/ux-audit --sizes 40,48,56,64,72,80` | branding commit | 2026-09-18 | PASS | exe icon = shipped `app.ico` frame (mad **0.0**), installer icon **0.0**, previous package not the K (73.2); About capture matches the canonical art at **0.960** masked NCC; harness `errors: []` | REQ-LOGO-1 | — | `docs/v1.6/branding/evidence/README.md` | parent-executed (packaged) |
+ | A-13 | engine full suite (REQ-RK resolution kinds) | `cd runtime && python -m pytest tests -q` | `a547936` | 2026-09-18 | PASS | **891 passed, 10 subtests passed** (250.14s; was 885 — +6 new tests, zero regressions) | REQ-RK | INV-RK-001 | `increments/REQ-RK-RESOLUTION-KIND.md` | parent-executed |
+ | A-14 | engine full suite (REQ-F4 real-artifact binding) | `cd runtime && python -m pytest tests -q` | `081a6ef` | 2026-09-18 | PASS | **895 passed, 10 subtests passed** (255.90s; was 891 — +4 new tests, zero regressions). First run of the new gate flagged 8 failures + 5 errors in fixture harnesses (`test_workforce_d2.py`, `test_workforce_parallel.py`) which now record their deliveries | REQ-F4 | INV-F4-001 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | parent-executed |
++| A-15 | engine full suite (PER-02 restore visibility) | `cd runtime && python -m pytest tests -q` | `df1997a` | 2026-09-18 | PASS | **900 passed, 10 subtests passed** (253.45s; was 895 — +5 new tests, zero regressions); focused `test_v16_restore_visibility.py` + `test_backup.py` = 14 passed | PER-02 | INV-PER02-001 | `increments/PER-02-RESTORE-VISIBILITY.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/PER-02-RESTORE-VISIBILITY.md b/docs/v1.6/pre-audit/increments/PER-02-RESTORE-VISIBILITY.md
+new file mode 100644
+index 0000000..8630684
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/PER-02-RESTORE-VISIBILITY.md
+@@ -0,0 +1,130 @@
++# Increment — PER-02: a failed or partial restore is recorded and surfaced, never silent
++
++increment_id: V16-PER02-RESTORE-VISIBILITY
++phase: Campaign A — P2/P3 sweep (audit docket) · PER-02
++base_commit: c1bb980 (P2/P3 first batch docs)
++target_commit: the implementation commit + this docs commit
++status: complete (engine half; renderer surfacing linked to REQ-ELOSS)
++
++## Objective
++
++Close the P2 finding recorded in `docs/code-audit/03_CORRECTNESS.md:48-54` and
++`05_PERSISTENCE_AND_MIGRATIONS.md:66`: `service.py` wrapped `apply_pending_restore(self.store)` in
++`try/except Exception: pass` and discarded the boolean, so a restore that could not start, or that
++failed halfway, left no trace anyone could see (a Rust-corroborated finding).
++
++## Requirement Sources
++
++- `03_CORRECTNESS.md:48-54` — "`service.py` wraps `apply_pending_restore(self.store)` in
++  `try/except Exception: pass` and discards the boolean… See `PER-02`."
++- `05_PERSISTENCE_AND_MIGRATIONS.md:66-71` — "**`PER-02` (P2):** failure is silent" (+ PER-03's
++  snapshot-abort case sharing the path).
++- `pre-audit/P2_P3_DISPOSITION.md` — PER-02 row (P2).
++
++## Implementation Summary
++
++1. **Durable, database-independent record** (`kel/backup.py`): `OUTCOME = 'restore-outcome.json'`
++   and `_record_outcome(root, ok, detail)` write `{ok, detail, at}` **beside the data** — the record
++   cannot live in the database, because the database is what a restore replaces. Recording never
++   raises, so a failed restore still returns its verdict.
++2. **Both decisive paths recorded**: success writes `ok=True`; the failure path now catches
++   `Exception as exc`, records `ok=False, detail=<exception type>`, and returns `False` with the
++   pending marker still in place (a half-applied restore must stay pending).
++3. **Boot safety + surfacing** (`kel/service.py`): the caller records a failure itself when the
++   restore cannot even start (never aborting boot), and `Service.state()` now carries
++   `restore: {ok, detail, at} | null` alongside `connected`/`engine_version`, so the app can say
++   what happened. Payload change is additive; no client breaks.
++
++## Files Changed
++
++- `runtime/kel/backup.py` (`OUTCOME`, `_record_outcome`, both restore paths)
++- `runtime/kel/service.py` (`_restore_outcome`, caller-side recording, `state()['restore']`)
++- `runtime/tests/test_v16_restore_visibility.py` (new, 5 tests)
++
++## Symbols Changed
++
++`backup.OUTCOME`, `backup._record_outcome`, `backup.apply_pending_restore` (outcome recording),
++`service._restore_outcome`, `Service.__init__`, `Service.state`.
++
++## Schema/Migrations
++
++None.
++
++## User-Facing Behavior
++
++Indirect: the engine now reports a restore failure instead of losing it. The renderer banner that
++would show it belongs to **REQ-ELOSS** (engine-loss/recovery UX) and is recorded as audit target 57 —
++this increment deliberately does not invent a UI surface.
++
++## Internal Behavior
++
++`state()['restore']` is `null` when no restore was ever attempted, `{ok: true, …}` after a clean
++apply, and `{ok: false, detail: '<ExceptionType>'}` after a failure.
++
++## Error Paths
++
++A failing `apply_pending_restore` still returns `False` (contract unchanged for existing callers and
++tests) and still leaves `restore-pending.json` in place.
++
++## Lifecycle Considerations
++
++The sidecar is written before/after the restore attempt and is not part of a backup
++(`SKIP_ENTRIES` covers the staging dir and the marker; the outcome file is a plain sidecar like
++`BACKUP-INFO.json`).
++
++## Persistence / Isolation
++
++One new sidecar file inside the data root.
++
++## Security / Privacy
++
++None: the detail is an exception *type name*, never a message body (no paths, no content).
++
++## Self-Review Findings
++
++- The first test run failed for a self-inflicted reason worth recording: a helper named `_outcome`
++  collided with `unittest.TestCase._outcome`, so the test file now uses `_recorded_outcome` with a
++  comment. No product defect behind it.
++- `False` from `apply_pending_restore` means both "nothing pending" and "failed"; rather than change
++  the return type (and break callers), the *outcome file* disambiguates, and "nothing pending"
++  records nothing at all — which is exactly what `state()['restore'] is None` means.
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_v16_restore_visibility.py tests/test_backup.py -q`
++  → **14 passed** (5 new + 9 existing backup tests).
++- Full engine suite: see TEST_EVIDENCE_INDEX A-15.
++
++## Results
++
++PASS (engine half).
++
++## Packaged Verification
++
++Not applicable (engine-side behaviour; the RC packaged battery re-runs the engine suite and can
++assert `state()['restore']` on a staged restore).
++
++## Known Weaknesses
++
++- The renderer does not yet display the outcome (queued with REQ-ELOSS; audit target 57).
++- PER-03 (unbounded `.pre-restore-*` snapshots; snapshot failure aborting a restore silently) shares
++  this path and stays open in the sweep.
++
++## Deferred Questions
++
++- Should a failed restore block the app's *write* surfaces until acknowledged? (Product decision;
++  recorded for the sweep/REQ-ELOSS.)
++
++## Audit Targets
++
++AUDIT_TARGETS § 57.
++
++## Repair Hints
++
++Recording lives in `kel/backup.py`; surfacing in `kel/service.py:state()`. A renderer banner should
++read the existing `/api/state` payload, not add a new endpoint.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/PER-02-RESTORE-VISIBILITY.md` (this file)
++- corpus rows: P2_P3_DISPOSITION (PER-02), CHANGE_LEDGER CHG-007, TEST_EVIDENCE_INDEX A-15
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index c003c92..64876cb 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 081a6ef (REQ-F4 production commit; docs commit follows — see `git log --oneline -8`)
++head: df1997a (PER-02 production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -17,9 +17,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-F4 DONE — real-artifact binding: a content-bound close now verifies the artifact the assignment actually delivered (`assignment_artifacts` gained its first reader; `artifact_root` adds on-disk existence+digest); full engine suite 895 (commit 081a6ef). Prior: REQ-RK DONE (record-bound `resolution_kind`, migration v17; a547936); REQ-LOGO-1 DONE (canonical Kel logo on every production-reachable branding surface; 71c78f0, packaged-verified). Next: P2/P3 sweep.
+-current_phase: P2/P3 sweep (queued; REQ-F4 closed at 081a6ef)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895).
++current_increment: REQ-P2P3 IN PROGRESS — 7/27 docket rows dispositioned with inline evidence; **PER-02 (silent restore failure) FIXED engine-side** (`df1997a`; `restore-outcome.json` + `state()['restore']`; full engine suite 900). Prior: REQ-F4 DONE (real-artifact binding; 081a6ef); REQ-RK DONE (a547936); REQ-LOGO-1 DONE (71c78f0, packaged-verified). Next: continue the sweep — A1 and REL-01 are the remaining release-relevant P2s.
++current_phase: P2/P3 sweep (in progress; PER-02 fixed at df1997a)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895); PER-02 restore visibility (df1997a; `restore-outcome.json` + `state()['restore']`; engine suite 900).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -51,6 +51,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: P2/P3 sweep (audit docket + sprint §40; disposition every P2/P3 finding). REQ-F4 (real-artifact binding, audit F4/WF-12) and REQ-RK (resolution kinds) are closed (`081a6ef`, `a547936`); REQ-LOGO-1 (canonical logo) is closed and packaged-verified (`71c78f0`). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after P2/P3: Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: Continue the P2/P3 sweep (`docs/v1.6/pre-audit/P2_P3_DISPOSITION.md` is the live table; 20 rows still `OPEN (sweep pending)`). Read the source records in the audit worktree `kel-v16-code-audit/docs/code-audit/` for the remaining P2s (APR-01/02/03, A1, REL-01, SEC-01, PER-03, TR-01/02) and P3s (APR-05/06, INT-01, PER-04, COR-06, THM-01, SEC-01-multipart, DEAD-05, ERR-01), then set one of the five dispositions or fix the release-relevant ones. A1 (`engine_version` on the detached-engine reuse path) and REL-01 (freeze staging is a no-op for the load path) are the release-relevant pair — A1 is fixable with a desktop test; REL-01's full verification needs a real freeze, which Campaign A must not perform. Campaign A queue after the sweep: REQ-PKG-ASSERT (packaged battery assertions 16–19); Visual batches 6–8 + integration into Main; REQ-ELOSS (engine-loss/recovery UX — now also the home of the restore-outcome renderer surface, audit target 57); final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

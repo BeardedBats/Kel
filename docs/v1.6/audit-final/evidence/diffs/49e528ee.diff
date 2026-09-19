@@ -1,0 +1,161 @@
+commit 49e528ee78d382c1df455bee079bfe6a323f566c
+2026-09-18 16:44:35 -0400
+fix(v1.6): vetting session actions enforce conversation ownership (R0 / SEC-01)
+
+
+diff --git a/runtime/kel/service.py b/runtime/kel/service.py
+index dd00e1f..7b5576c 100644
+--- a/runtime/kel/service.py
++++ b/runtime/kel/service.py
+@@ -692,7 +692,9 @@ class Service:
+         # pasted text and direct callers; this layer only routes and persists the durable
+         # out-of-band messages (panel-driven start/process/finish) as conversation content.
+         from .vetting_session import Vetting
+-        vetting=Vetting(self.store)
++        # The acting conversation is the session scope (audit SEC-01): a by-id vetting action can
++        # only touch a session that belongs to the conversation the caller is acting in.
++        vetting=Vetting(self.store,conversation=(data.get('conversation') or 'main'))
+         result=self._vetting_route(vetting,data)
+         # Confirmed decisions are compared against saved project knowledge once the session
+         # transaction has committed; a disagreeing stored rule queues on the review surface.
+diff --git a/runtime/kel/vetting_session.py b/runtime/kel/vetting_session.py
+index 818bf3e..fdb7401 100644
+--- a/runtime/kel/vetting_session.py
++++ b/runtime/kel/vetting_session.py
+@@ -88,8 +88,13 @@ def opposition_pairs(chosen):
+ class Vetting:
+     """Durable design-vetting sessions, scoped to a conversation."""
+ 
+-    def __init__(self, store):
++    def __init__(self, store, conversation=None):
+         self.store = store
++        # Acting scope (audit SEC-01): the service constructs a Vetting for the conversation the
++        # caller is acting in, and every by-id action then runs only against a session that
++        # belongs to it — the same ownership semantics the panel display path already applies. A
++        # direct caller that constructs without a conversation keeps the previous behaviour.
++        self.scope_conversation = str(conversation) if conversation else None
+         ensure_schema(store)
+         self._bank_cache = None
+         self._memory_check_queue = []
+@@ -112,9 +117,13 @@ class Vetting:
+         with contextlib.closing(self.store.connect()) as db:
+             return run(db)
+ 
+-    def session(self, session_id, db=None):
++    def session(self, session_id, db=None, *, enforce_scope=True):
+         def run(db):
+-            return _row(db.execute('SELECT * FROM vetting_sessions WHERE id=?', (session_id,)).fetchone())
++            row = _row(db.execute('SELECT * FROM vetting_sessions WHERE id=?', (session_id,)).fetchone())
++            if (row and enforce_scope and self.scope_conversation
++                    and str(row.get('conversation_id')) != self.scope_conversation):
++                raise PolicyError('That vetting session belongs to another conversation')
++            return row
+         if db is not None:
+             return run(db)
+         with contextlib.closing(self.store.connect()) as db:
+@@ -511,7 +520,11 @@ class Vetting:
+ 
+     def panel(self, conversation=None, session_id=None):
+         with contextlib.closing(self.store.connect()) as db:
+-            session = self.session(session_id, db) if session_id else self.active(conversation, db)
++            # Display surface: the panel deliberately reaches a finished/paused session from
++            # elsewhere and marks it `cross_conversation` (PanelFallbackTests), so the acting
++            # scope does not apply to this read (audit SEC-01 scopes actions, not this view).
++            session = (self.session(session_id, db, enforce_scope=False) if session_id
++                       else self.active(conversation, db))
+             cross = False
+             if not session and conversation:
+                 # A finished or paused session stays reachable: the panel keeps showing its
+@@ -782,6 +795,10 @@ class Vetting:
+     def apply_pending(self, session_id, accept=True, source='chat', correction=''):
+         """Confirm or reject proposed (low-confidence) mappings. Never auto-applied."""
+         with self.store.transaction() as db:
++            # Scope first (audit SEC-01): even the paths that end up writing nothing must refuse a
++            # session that belongs to another conversation.
++            if self.scope_conversation:
++                self.session(session_id, db)
+             row = db.execute("SELECT detail FROM vetting_events WHERE session_id=? AND action='proposals_pending'"
+                              ' ORDER BY seq DESC LIMIT 1', (session_id,)).fetchone()
+             if not row:
+diff --git a/runtime/tests/test_vetting.py b/runtime/tests/test_vetting.py
+index f961e25..414bad8 100644
+--- a/runtime/tests/test_vetting.py
++++ b/runtime/tests/test_vetting.py
+@@ -17,7 +17,7 @@ from pathlib import Path
+ from urllib.parse import urlparse
+ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+ 
+-from kel.core import Store
++from kel.core import PolicyError, Store
+ from kel.service import Service
+ from kel.vetting_session import Vetting, snapshot
+ 
+@@ -468,3 +468,68 @@ class PanelFallbackTests(VettingBase):
+         panel = self.v.panel(conversation='fresh-conversation')
+         self.assertEqual(panel['session']['topic'], 'Second design')
+         self.assertTrue(panel['cross_conversation'])
++
++
++class SessionScopeTests(VettingBase):
++    """SEC-01: a by-id action must run only against a session in the acting conversation."""
++
++    def _scoped(self, conversation):
++        return Vetting(self.store, conversation=conversation)
++
++    def tearDown(self):
++        # The service's telemetry/log writer can hold files briefly on Windows; a teardown lock is
++        # not a product failure (the engine suite runs the same way elsewhere).
++        try:
++            self.tmp.cleanup()
++        except PermissionError:
++            pass
++
++    def test_a_by_id_action_from_another_conversation_is_refused(self):
++        foreign = self._scoped('somewhere-else')
++        with self.assertRaises(PolicyError) as caught:
++            foreign.session(self.sid)
++        self.assertIn('another conversation', str(caught.exception))
++        self.assertIsNotNone(self._scoped('main').session(self.sid))
++
++    def test_every_by_id_action_is_refused_and_leaves_the_session_untouched(self):
++        before = snapshot(self.store, self.sid)
++        foreign = self._scoped('somewhere-else')
++        for call in (lambda: foreign.ingest(self.sid, '1: C'),
++                     lambda: foreign.process(self.sid),
++                     lambda: foreign.finish(self.sid),
++                     lambda: foreign.apply_pending(self.sid, accept=True),
++                     lambda: foreign.help(self.sid, 'q1', 'explain'),
++                     lambda: foreign.greybox(self.sid, 'q1', action='design')):
++            with self.assertRaises(PolicyError) as caught:
++                call()
++            self.assertIn('another conversation', str(caught.exception))
++        # A nonexistent conflict id refuses earlier by design ('Conflict not found'); the scope
++        # gate is what a real foreign conflict would hit next.
++        with self.assertRaises(PolicyError):
++            foreign.conflict_action(self.sid, 'c1', 'accept')
++        self.assertEqual(snapshot(self.store, self.sid), before)
++
++    def test_an_unscoped_instance_keeps_the_previous_behaviour(self):
++        # Direct callers (and tests) that construct without a conversation are unchanged.
++        before = snapshot(self.store, self.sid)
++        self.assertIsNotNone(self.v.session(self.sid))
++        self.v.ingest(self.sid, '1: C')
++        self.assertNotEqual(snapshot(self.store, self.sid), before)
++
++    def test_an_unknown_session_id_is_still_absent_not_a_scope_error(self):
++        self.assertIsNone(self._scoped('main').session('no-such-session'))
++
++    def test_the_service_route_is_scoped_to_the_declared_conversation(self):
++        service = Service(str(Path(self.tmp.name) / 'kel.sqlite3'))
++        self.addCleanup(service.shutdown)
++        with self.assertRaises(PolicyError) as caught:
++            service._vetting_action({'action': 'process', 'session': self.sid,
++                                     'conversation': 'elsewhere'})
++        self.assertIn('another conversation', str(caught.exception))
++        # The owning conversation still resolves the same session (process is honest about an
++        # unanswered session; what matters is that it is no longer refused for scope).
++        service._vetting_action({'action': 'panel', 'session': self.sid, 'conversation': 'main'})
++
++    def test_the_panel_remains_a_marked_display_surface(self):
++        panel = self._scoped('elsewhere').panel(conversation='elsewhere', session_id=self.sid)
++        self.assertEqual(panel['session']['topic'], 'Basketball dashboard')

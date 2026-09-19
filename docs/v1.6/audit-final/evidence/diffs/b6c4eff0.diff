@@ -1,0 +1,146 @@
+commit b6c4eff0dfe295d93819f5e836800c5c8cf30ec4
+2026-09-18 17:51:38 -0400
+fix(v1.6): provider children receive only the credential they require (R7 / CREDENTIAL-CONTAINMENT)
+
+
+diff --git a/runtime/kel/appserver.py b/runtime/kel/appserver.py
+index 5675d6c..2945f93 100644
+--- a/runtime/kel/appserver.py
++++ b/runtime/kel/appserver.py
+@@ -10,6 +10,7 @@ import queue
+ import subprocess
+ import threading
+ import time
++from .internal import child_env
+ from .native import executable
+ 
+ 
+@@ -32,8 +33,7 @@ class CodexConnection:
+                         'browser_use','computer_use','image_generation','goals','in_app_browser','browser_use_external'):
+             args += ['--disable', feature]
+         if process_argv is not None:args=process_argv
+-        env = os.environ.copy()
+-        env.pop('ANTHROPIC_API_KEY', None)
++        env = child_env(keep=('OPENAI_API_KEY',))  # the trusted Codex child's own credential (R7.C)
+         self.process = subprocess.Popen(args, cwd=self.workspace, stdin=subprocess.PIPE,
+             stdout=subprocess.PIPE, stderr=self.err, text=True, encoding='utf-8', env=env,
+             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+diff --git a/runtime/kel/coding.py b/runtime/kel/coding.py
+index a5d5c26..77997c9 100644
+--- a/runtime/kel/coding.py
++++ b/runtime/kel/coding.py
+@@ -237,7 +237,7 @@ class CodingAdapter:
+             tests=connection.call('command/exec',{'command':contract['test_command'],'cwd':str(workspace),
+                 'timeoutMs':90000,'sandboxPolicy':{'type':'workspaceWrite',
+                 'writableRoots':[str(workspace)],'networkAccess':False},
+-                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None}},timeout=100)
++                'env':{'ANTHROPIC_API_KEY':None,'OPENAI_API_KEY':None,'DEEPSEEK_API_KEY':None}},timeout=100)
+             after=file_manifest(workspace)
+             stable=before==after
+             git(workspace,'add','-A')
+diff --git a/runtime/kel/internal.py b/runtime/kel/internal.py
+index 794cc85..d4bc18d 100644
+--- a/runtime/kel/internal.py
++++ b/runtime/kel/internal.py
+@@ -13,6 +13,21 @@ from .core import uid
+ _SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
+ 
+ 
++def child_env(*, keep=()):
++    """The environment for a child provider process (CREDENTIAL-CONTAINMENT, Round 2.5 R7).
++
++    A trusted provider process receives the credential it requires and nothing more: every other
++    provider key in this process's environment is removed, so a Codex child never sees the
++    Anthropic or DeepSeek key and a Claude child never sees the OpenAI one. `keep` names the
++    credentials the child legitimately needs (R7.C).
++    """
++    env = os.environ.copy()
++    for name in _SECRET_ENV_KEYS:
++        if name not in keep:
++            env.pop(name, None)
++    return env
++
++
+ def redact(text):
+     """Remove secret-shaped tokens and live key values from anything that can become durable."""
+     text = str(text)
+diff --git a/runtime/tests/test_v16_r7_credentials.py b/runtime/tests/test_v16_r7_credentials.py
+new file mode 100644
+index 0000000..8787129
+--- /dev/null
++++ b/runtime/tests/test_v16_r7_credentials.py
+@@ -0,0 +1,74 @@
++"""Round 2.5 R7 — CREDENTIAL-CONTAINMENT: a provider process gets the credential it needs and
++nothing else, and a raw credential never becomes prompts, artifacts, packets, logs, diagnostics or
++durable content.
++
++The inventory and the honest network-boundary statement are recorded in
++`docs/v1.6/pre-audit/increments/R7-CREDENTIAL-BOUNDARY.md`. Every test uses synthetic sentinel
++values injected into the environment, and restores the environment afterwards.
++"""
++import os
++import sys
++import unittest
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++from kel.core import PolicyError  # noqa: E402
++from kel.internal import child_env, redact  # noqa: E402
++from kel.memory import scan_secret  # noqa: E402
++from kel.workforce import assert_safe  # noqa: E402
++
++KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY')
++SENTINEL = 'sk-' + 'sentinel0' * 4  # secret-shaped (matches the api-key pattern)
++
++
++class CredentialContainmentTests(unittest.TestCase):
++    def setUp(self):
++        self.saved = {name: os.environ.get(name) for name in KEYS}
++        for name in KEYS:
++            os.environ[name] = SENTINEL
++        self.addCleanup(self._restore)
++
++    def _restore(self):
++        for name, value in self.saved.items():
++            if value is None:
++                os.environ.pop(name, None)
++            else:
++                os.environ[name] = value
++
++    def test_a_child_receives_only_the_credential_it_requires(self):
++        claude = child_env(keep=('ANTHROPIC_API_KEY',))
++        self.assertEqual(claude['ANTHROPIC_API_KEY'], SENTINEL)
++        self.assertNotIn('OPENAI_API_KEY', claude)
++        self.assertNotIn('DEEPSEEK_API_KEY', claude)
++        codex = child_env(keep=('OPENAI_API_KEY',))
++        self.assertEqual(codex['OPENAI_API_KEY'], SENTINEL)
++        self.assertNotIn('ANTHROPIC_API_KEY', codex)
++        self.assertNotIn('DEEPSEEK_API_KEY', codex)
++
++    def test_a_child_that_needs_no_provider_credential_receives_none(self):
++        env = child_env()
++        for name in KEYS:
++            self.assertNotIn(name, env)
++
++    def test_redact_masks_live_values_and_secret_shaped_tokens(self):
++        self.assertNotIn(SENTINEL, redact('boom: ' + SENTINEL))
++        self.assertIn('[redacted]', redact('key ' + SENTINEL))
++        self.assertIn('[redacted]', redact('Authorization: Bearer sk-abc1234567890'))
++        self.assertEqual(redact('ordinary text'), 'ordinary text')
++
++    def test_a_secret_shaped_value_is_detected_before_it_becomes_durable(self):
++        self.assertIsNotNone(scan_secret('token ' + SENTINEL))
++        self.assertIsNone(scan_secret('an ordinary sentence'))
++        with self.assertRaises(PolicyError) as caught:
++            assert_safe({'note': 'remember to rotate ' + SENTINEL}, path='record.note')
++        self.assertIn('Unsafe workforce record', str(caught.exception))
++
++    def test_the_containment_is_wired_where_processes_are_spawned(self):
++        root = Path(__file__).resolve().parent.parent / 'kel'
++        appserver = (root / 'appserver.py').read_text(encoding='utf-8')
++        self.assertNotIn('os.environ.copy()', appserver)
++        self.assertIn('child_env(keep=(\'OPENAI_API_KEY\',))', appserver)
++        coding = (root / 'coding.py').read_text(encoding='utf-8')
++        for name in KEYS:
++            self.assertIn("'%s':None" % name, coding)

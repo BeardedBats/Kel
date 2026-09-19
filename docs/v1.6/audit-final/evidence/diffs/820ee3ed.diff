@@ -1,0 +1,325 @@
+commit 820ee3ed83abf98e2d4e8867207f927758a0679b
+2026-09-18 13:33:46 -0400
+docs(v1.6): REQ-F4 real-artifact binding breadcrumbs (carry-forward F4 / WF-12 closed)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index c36c1ab..3e913c0 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -510,3 +510,20 @@ markers) is preserved. Commit `a547936`; record `increments/REQ-RK-RESOLUTION-KI
+ `tests/test_v16_resolution_kind.py` (6); focused 136 passed; **full engine suite 891 passed**
+ (+10 subtests, was 885). No desktop change required (no desktop code reads reasons or lens stats).
+ Next: **F4 real-artifact binding wiring**.
++
++## REQ-F4 / WF-12 — real-artifact binding (2026-09-18)
++
++**DONE — REQ-F4 / audit carry-forward F4 (audit scope WF-12).** Closure verification compared the
++evidence's artifact digest against the *packet's own* artifact list, and `assignment_artifacts` —
++the table recording what an assignment really delivered — had a writer (`Team.add_artifact`) and no
++reader. Now: `Store._record_assignment_artifact` binds each landed milestone artifact to its
++assignment in the same transaction as `artifact_lineage` (idempotent), and
++`_artifact_violations` refuses a content-bound close whose claimed digest was never recorded for
++that assignment — plus, when a caller supplies `artifact_root`, a missing file or a digest that
++does not match what is on disk. The gate immediately found 8 failures + 5 errors in fixture
++harnesses (D2 builder/verifier workers, pilot specialists) which now record their deliveries the
++way the real worker wiring must. Commit `081a6ef`; record
++`increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; tests `tests/test_workforce_d1.py` (4 new); focused
++126 passed; **full engine suite 895 passed** (+10 subtests, was 891). Residuals: `run_d1` does not
++yet pass an `artifact_root` (audit target 56); non-content-bound contracts keep their previous
++scope. Next: **P2/P3 sweep**.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index c2e249f..4fb8f17 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -146,3 +146,13 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     v17 `ALTER TABLE` is lossless on a populated pre-v17 store (rows preserved verbatim).
+ 54. Learning-loop semantics: `fp_rate`/`learnable` must be unchanged for pre-v17 rows (derived once)
+     and correct for new rows; no review surface silently reads reason text.
++
++## Real-artifact binding (2026-09-18 additions)
++
++55. Real-artifact binding: confirm no path can close a content-bound contract on an artifact that
++    `assignment_artifacts` does not record for that assignment; confirm the recorder cannot
++    double-write or bind an artifact to the wrong assignment (job+milestone lookup), and that a
++    bare store (no team tables) fails safe (refuses rather than invents a binding).
++56. On-disk binding coverage: `close_d1(artifact_root=…)` is exercised only where a caller supplies
++    a root (tests do; `run_d1` does not yet) — verify the live path supplies one before any release
++    claim of on-disk verification, and that a stale/renamed file is refused.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index f357143..206e0b0 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -182,6 +182,38 @@ ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit:
+   reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
+ - **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
+ 
++### CHG-006 — Real-artifact binding: closure verifies the artifact the assignment delivered
++
++ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) · Commit: implementation commit · Date: 2026-09-18
++
++- **User-visible impact:** none directly (engine closure semantics); a content-bound task can no
++  longer be closed on an artifact nothing delivered.
++- **Internal impact:** `Store._record_assignment_artifact` binds each landed milestone artifact to
++  its assignment in `assignment_artifacts` (the table had a writer and **no reader**);
++  `_artifact_violations` verifies ownership at close and, when an `artifact_root` is supplied,
++  existence + digest on disk; `_evidence_violations`/`close_d1` carry the optional root.
++- **Previous behavior:** the close compared the evidence's artifact digest against the packet's own
++  artifact list, so a self-asserted digest satisfied a content-bound contract.
++- **New behavior:** the digest must be recorded for the assignment (real delivery), and a declared
++  path must exist and hash to the claim when a root is given.
++- **Primary files:** `runtime/kel/core.py`, `runtime/kel/delegation.py`,
++  `runtime/tests/test_workforce_d1.py`.
++- **Primary symbols:** listed above.
++- **Data/schema changes:** none (existing `assignment_artifacts` gains its first reader).
++- **Failure paths:** refusals join the existing `PolicyError('Evidence-bound close refused: …')`.
++- **Security/privacy implications:** none (strictness increases).
++- **Persistence implications:** the binding is written inside the consume transaction
++  (`INSERT OR IGNORE`, idempotent).
++- **Expected invariants:** INV-F4-001 (new: a content-bound close rests on a recorded delivered
++  artifact; on-disk binding when a root is supplied).
++- **Tests:** `tests/test_workforce_d1.py` (4 new) + full suite (A-14).
++- **Packaged evidence:** n/a (engine semantics; the RC battery re-runs the engine suite).
++- **Known concerns:** `run_d1` does not pass an `artifact_root` yet; non-content-bound contracts keep
++  their previous scope.
++- **Audit questions:** can any path write a content-bound close that no delivered artifact backs?
++  Does the recorder double-write on re-landing (it must not)?
++- **Repair hints:** recorder next to `_record_lineage`; verifier next to `_evidence_violations`.
++
+ Planned Phase-to-CHG mapping (kept current as work lands):
+ 
+ | Phase | Expected CHGs | Status |
+@@ -193,7 +225,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | Canonical logo (Nick directive 2026-09-18) | CHG-004 delivered (branding commit); record `docs/v1.6/branding/` | DONE |
+ | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
+ | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
+-| F4 real-artifact binding wiring | CHG-0xx | PENDING |
++| F4 real-artifact binding wiring | CHG-006 delivered (implementation commit); record `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | DONE |
+ | resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
+ | P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 137f271..5c2d0d8 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -36,7 +36,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `71c78f0` | `edd50de` | 2026-09-18 | REQ-LOGO-1 | canonical Kel logo (Nick directive) on every production-reachable branding surface | `desktop/resources/*` icons + `branding/kel-logo.png`; `desktop/public/pwa/*`; renderer brand asset; `AboutModalContent.tsx`; `kel-builder.json`; `scripts/make-brand-assets.py`; `scripts/verify-brand-render.py` | tsc 0; vitest 90; packaged exe+installer icon extraction (mad 0.0); About render 0.960 NCC | none | yes (About mark; login mark asset) | `package-logo` (PASS) | no | no | MEDIUM | `docs/v1.6/branding/CANONICAL_LOGO.md`; `increments/LOGO-CANONICAL.md`; `docs/v1.6/branding/evidence/` | exe metadata `CompanyName=AionUi` (target 49); 16 px legibility human gate |
+ | `1894ef7` | `71c78f0` | 2026-09-18 | REQ-LOGO-1 | canonical-logo breadcrumbs (REQ + CHG-004 + indexes + evidence) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-LOGO-1 / CHG-004 / §47–52; AUTO_RESUME section | — |
+ | `a547936` | `1894ef7` | 2026-09-18 | REQ-RK | record-bound resolution kinds on findings + additive workforce migration v17 | `kel/assurance.py`; `kel/workforce.py`; `tests/test_v16_resolution_kind.py` (new); `tests/test_workforce_schemas.py` | +6 engine tests; full suite **891 passed** (+10 subtests) | v17 additive (`findings.resolution_kind`) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | yes (additive) | MEDIUM | `increments/REQ-RK-RESOLUTION-KIND.md`; TEST_EVIDENCE_INDEX A-13 | prefixes kept in text (deliberate); no per-kind breakdown in `lens_stats` |
+-| `HEAD` | `a547936` | 2026-09-18 | REQ-RK | REQ-RK breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-RK / CHG-005 / §53–54; AUTO_RESUME section | — |
++| `a7c7aa4` | `a547936` | 2026-09-18 | REQ-RK | REQ-RK breadcrumbs | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-RK / CHG-005 / §53–54; AUTO_RESUME section | — |
++| `081a6ef` | `a7c7aa4` | 2026-09-18 | REQ-F4 / WF-12 | real-artifact binding: closure verifies the artifact the assignment delivered | `kel/core.py`; `kel/delegation.py`; `kel/evaluation.py`; `tests/test_workforce_d1.py`; `tests/test_workforce_d2.py` | +4 engine tests; full suite **895 passed** (+10 subtests); D1+D2+parallel 126 | none (existing `assignment_artifacts` gains its first reader) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | no | MEDIUM | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md`; TEST_EVIDENCE_INDEX A-14 | on-disk check needs an `artifact_root` (`run_d1` does not pass one yet); non-content-bound contracts unchanged |
++| `HEAD` | `081a6ef` | 2026-09-18 | REQ-F4 | REQ-F4 breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-F4 / CHG-006 / §55–56; AUTO_RESUME section | — |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index 6555938..1bcabfd 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -46,7 +46,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-PP-9 | sprint directive §35 | Profiles vs Projects decision | decided — no Profiles concept; Projects remain the single isolation concept | docs commit (2026-09-18) | — | `docs/v1.6/phase9/PROFILES_VS_PROJECTS_DECISION.md` | pending (decision review) |
+ | REQ-PROV-10 | sprint directive §36 | real provider validation | implemented (as access allows) | docs commit (2026-09-18) | 55 focused; claude real call PASS | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `PROVIDER_VALIDATION_MATRIX.md` | codex blocked (CLI version); internal/deepseek no credentials (DEF-005) | pending |
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+-| REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
++| REQ-F4 | audit carry-forward (F4 / WF-12) | real-artifact binding wiring | implemented | implementation commit (2026-09-18) | 4 focused (new); full suite see A-14 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | on-disk check needs an `artifact_root`, which `run_d1` does not pass yet; non-content-bound contracts unchanged | pending |
+ | REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+ | REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 2f77ec5..19cc927 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -23,6 +23,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-11 | brand-asset generation + determinism | `python scripts/make-brand-assets.py "…/Kel Logo.png"` then `--check` | branding commit | 2026-09-18 | PASS | 10 outputs; stable hashes; canonical sha256 guard (`7418a42f…`) | REQ-LOGO-1 | — | `docs/v1.6/branding/CANONICAL_LOGO.md` §2 | parent-executed |
+ | A-12 | packaged branding verification | `[System.Drawing.Icon]::ExtractAssociatedIcon` on `Kel.exe` + the NSIS installer, then `python scripts/verify-brand-render.py dist/logo-evidence/ux-audit --sizes 40,48,56,64,72,80` | branding commit | 2026-09-18 | PASS | exe icon = shipped `app.ico` frame (mad **0.0**), installer icon **0.0**, previous package not the K (73.2); About capture matches the canonical art at **0.960** masked NCC; harness `errors: []` | REQ-LOGO-1 | — | `docs/v1.6/branding/evidence/README.md` | parent-executed (packaged) |
+ | A-13 | engine full suite (REQ-RK resolution kinds) | `cd runtime && python -m pytest tests -q` | `a547936` | 2026-09-18 | PASS | **891 passed, 10 subtests passed** (250.14s; was 885 — +6 new tests, zero regressions) | REQ-RK | INV-RK-001 | `increments/REQ-RK-RESOLUTION-KIND.md` | parent-executed |
++| A-14 | engine full suite (REQ-F4 real-artifact binding) | `cd runtime && python -m pytest tests -q` | `081a6ef` | 2026-09-18 | PASS | **895 passed, 10 subtests passed** (255.90s; was 891 — +4 new tests, zero regressions). First run of the new gate flagged 8 failures + 5 errors in fixture harnesses (`test_workforce_d2.py`, `test_workforce_parallel.py`) which now record their deliveries | REQ-F4 | INV-F4-001 | `increments/REQ-F4-REAL-ARTIFACT-BINDING.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/REQ-F4-REAL-ARTIFACT-BINDING.md b/docs/v1.6/pre-audit/increments/REQ-F4-REAL-ARTIFACT-BINDING.md
+new file mode 100644
+index 0000000..e12b71a
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/REQ-F4-REAL-ARTIFACT-BINDING.md
+@@ -0,0 +1,145 @@
++# Increment — REQ-F4 / WF-12: real-artifact binding (evidence binds to real delivered artifacts)
++
++increment_id: V16-F4-REAL-ARTIFACT-BINDING
++phase: Campaign A — audit carry-forward `F4` / audit-scope `WF-12`
++base_commit: a7c7aa4 (REQ-RK docs)
++target_commit: the implementation commit + this docs commit
++status: complete
++
++## Objective
++
++Close the carry-forward recorded since phase 5.3: closure verification compared the evidence's
++artifact digest against the **packet's own artifact list**, and `assignment_artifacts` — the table
++that records what an assignment really delivered — had a writer (`Team.add_artifact`) and **no
++reader at all**. A self-asserted digest could therefore satisfy a content-bound contract.
++
++## Requirement Sources
++
++- `pre-audit/AUDIT_SCOPE.md:78` — **WF-12 | Real-artifact binding (`F4`) | evidence binds to real
++  delivered artifacts | campaign wiring item | OPEN carry-forward**.
++- `phase5/5.3_IMPLEMENTATION_RECORD.md:78` — "on-disk artifact existence/ownership binding remains
++  **F4 — deferred** to the real-worker wiring"; `5.4:67` "F4 remains open"; `5.5:153` "F4 … the
++  wiring increment".
++- `pre-audit/REQUIREMENTS_TRACEABILITY.md` REQ-F4.
++
++## Implementation Summary
++
++1. **Recorder (the missing wiring)** — `kel/core.py: _record_assignment_artifact(...)`: when a
++   milestone artifact lands (the same transaction that writes `artifact_lineage`), the artifact is
++   bound to the delivering assignment in `assignment_artifacts` (digest `sha256:<hex>`, filename,
++   class `artifact`). Guarded: bare stores with no team tables, or no assignment for that
++   milestone, are skipped — the close path then refuses the unbound claim instead of inventing a
++   binding.
++2. **Verifier** — `kel/delegation.py: _artifact_violations(...)`: for every artifact a packet claims,
++   (a) the digest must be recorded for this assignment (ownership), and (b) when the caller supplies
++   `artifact_root`, the declared path must exist and, for a full-length sha256 claim, hash to the
++   claimed digest (on disk). Digests compare as bare lowercase hex, so `sha256:ABC…` and `ABC…` are
++   the same artifact.
++3. **Wiring** — `_evidence_violations` merges those violations for content-bound contracts (the same
++   gate as the pre-existing "not bound to a delivered artifact" check); `close_d1` takes
++   `artifact_root=None` and passes it through. A completed close with violations is still refused
++   with the same `PolicyError` shape, now naming the real-artifact violation.
++4. **Fixture honesty** — three harnesses that closed content-bound contracts on self-asserted
++   artifacts now record what they deliver, exactly as the real worker wiring must:
++   `tests/test_workforce_d1.py` (success helper), `tests/test_workforce_d2.py` (builder + verifier
++   workers), and `kel/evaluation.py` (`_make_builder`/`_make_verifier`, the pilot's deterministic
++   specialists). The gate found every remaining unbacked claim itself: the first full run reported
++   8 failures + 5 errors in `test_workforce_d2.py` / `test_workforce_parallel.py`, all resolved by
++   recording the deliveries.
++
++## Files Changed
++
++- `runtime/kel/core.py` (`_record_assignment_artifact` + its call where the artifact lands)
++- `runtime/kel/delegation.py` (`_normalise_digest`, `_artifact_violations`, `_evidence_violations`,
++  `close_d1`)
++- `runtime/kel/evaluation.py` (pilot specialists record their deliveries)
++- `runtime/tests/test_workforce_d1.py` (4 new tests + the success helper records its artifact)
++- `runtime/tests/test_workforce_d2.py` (builder/verifier workers record their deliveries)
++
++## Symbols Changed
++
++`Store._record_assignment_artifact`, `_normalise_digest`, `_artifact_violations`,
++`_evidence_violations(…, artifact_root)`, `close_d1(…, artifact_root)`.
++
++## Schema/Migrations
++
++None. `assignment_artifacts` already existed (team schema) — this increment gives it a reader.
++
++## User-Facing Behavior
++
++None directly (engine closure semantics). A content-bound task can no longer be closed on an
++artifact that nothing delivered.
++
++## Internal Behavior
++
++`close_d1` refuses with messages like
++`artifact art_e51 (sha256:77bb) was never recorded as delivered by this assignment`,
++`artifact art_e51 is not on disk at src/api/export.py`, or
++`artifact art_e51 digest sha256:bbb… does not match sha256:aaa… on disk`.
++
++## Error Paths
++
++Refusal is the same `PolicyError('Evidence-bound close refused: …')` path as before (first five
++violations are surfaced); the assignment stays open for a corrected packet.
++
++## Lifecycle Considerations
++
++`_record_assignment_artifact` is idempotent (`INSERT OR IGNORE` on the (assignment_id, digest) key)
++and inside the consume transaction, so the binding commits with the artifact.
++
++## Persistence / Isolation
++
++No new files; one existing table gains its first reader.
++
++## Security / Privacy
++
++None. Strictness increases (claims must be backed by delivered artifacts).
++
++## Self-Review Findings
++
++- The on-disk half needs an artifact root, which the engine legitimately does not know at close
++  time; it is therefore an explicit parameter and the *ownership* half is always enforced. Recorded
++  as a residual: `run_d1` does not yet pass a root, so on-disk verification runs wherever a caller
++  supplies one (tests do).
++- Digests shorter than a full sha256 (fixtures) skip the hash-equality check but still require the
++  ownership binding — recorded in the code comment and here.
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_workforce_d1.py -q` → **35 passed** (31 + 4 new).
++- Full engine suite: see TEST_EVIDENCE_INDEX A-14.
++
++## Results
++
++PASS (engine).
++
++## Packaged Verification
++
++Not applicable (engine-internal closure semantics; the RC packaged battery re-runs the engine suite
++against the packaged runtime).
++
++## Known Weaknesses
++
++- `run_d1` still calls `close_d1` without `artifact_root`, so a live run's on-disk check depends on
++  the caller; wiring a project root through `run_d1` is a follow-up (audit target 56).
++- A non-content-bound contract still accepts a claimed artifact list (unchanged scope; F4 is about
++  the content-bound promise).
++
++## Deferred Questions
++
++- Should `lens_stats`/the review surface expose artifact-binding failures as a learning signal?
++
++## Audit Targets
++
++AUDIT_TARGETS § 55–56.
++
++## Repair Hints
++
++The recorder is in `kel/core.py` next to `_record_lineage`; the verifier in `kel/delegation.py` next
++to `_evidence_violations`. Both are small and separate on purpose.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/REQ-F4-REAL-ARTIFACT-BINDING.md` (this file)
++- corpus rows: REQUIREMENTS_TRACEABILITY REQ-F4, CHANGE_LEDGER CHG-006, TEST_EVIDENCE_INDEX A-14,
++  COMMIT_LEDGER
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index 3b13f7f..c003c92 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: a547936 (REQ-RK production commit; docs commit follows — see `git log --oneline -8`)
++head: 081a6ef (REQ-F4 production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -17,9 +17,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-RK DONE — findings now carry a record-bound `resolution_kind` (migration v17, additive); the learning loop no longer parses free-text reasons (commit a547936; full engine suite 891). Prior: REQ-LOGO-1 DONE — canonical Kel logo on every production-reachable branding surface (71c78f0; packaged-verified). Next: F4 real-artifact binding wiring.
+-current_phase: F4 real-artifact binding wiring (queued; REQ-RK closed at a547936)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891).
++current_increment: REQ-F4 DONE — real-artifact binding: a content-bound close now verifies the artifact the assignment actually delivered (`assignment_artifacts` gained its first reader; `artifact_root` adds on-disk existence+digest); full engine suite 895 (commit 081a6ef). Prior: REQ-RK DONE (record-bound `resolution_kind`, migration v17; a547936); REQ-LOGO-1 DONE (canonical Kel logo on every production-reachable branding surface; 71c78f0, packaged-verified). Next: P2/P3 sweep.
++current_phase: P2/P3 sweep (queued; REQ-F4 closed at 081a6ef)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891); REQ-F4 real-artifact binding (081a6ef; `assignment_artifacts` bound at landing and verified at close; engine suite 895).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -51,6 +51,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: F4 real-artifact binding wiring (audit carry-forward; evidence must connect to real delivered artifacts). REQ-RK (resolution-kind semantics) is now closed (`a547936`). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after F4: P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: P2/P3 sweep (audit docket + sprint §40; disposition every P2/P3 finding). REQ-F4 (real-artifact binding, audit F4/WF-12) and REQ-RK (resolution kinds) are closed (`081a6ef`, `a547936`); REQ-LOGO-1 (canonical logo) is closed and packaged-verified (`71c78f0`). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after P2/P3: Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE

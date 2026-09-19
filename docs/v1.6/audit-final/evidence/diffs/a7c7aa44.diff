@@ -1,0 +1,310 @@
+commit a7c7aa4400987ca352b9dc324d60405eefc820fd
+2026-09-18 13:15:17 -0400
+docs(v1.6): REQ-RK resolution-kind breadcrumbs (carry-forward F18-5 closed)
+
+
+diff --git a/docs/v1.6/AUTO_RESUME.md b/docs/v1.6/AUTO_RESUME.md
+index b1f098e..c36c1ab 100644
+--- a/docs/v1.6/AUTO_RESUME.md
++++ b/docs/v1.6/AUTO_RESUME.md
+@@ -496,3 +496,17 @@ the packaged About capture matching the canonical artwork at 0.960 masked NCC. K
+ `CompanyName=AionUi` in exe metadata, dead donor `logo.svg`, donor `.nsh` installer text (not included
+ by the builder) — audit targets 47–49. The human pixel gate (16 px legibility, About placement) stays
+ open. Next: F4 real-artifact binding + resolution-kind.
++
++## REQ-RK — record-bound resolution kinds (2026-09-18)
++
++**DONE — REQ-RK / audit carry-forward F18-5 (N18-5).** `_is_acceptance` inferred an acceptance from a
++prefix on the free-text `dismissal_reason`; how a finding was resolved is now recorded data.
++`findings.resolution_kind` (vocabulary `fixed|risk-accepted|gate-waived|false-positive`) is written by
++the guarded paths (`resolve_finding`, `waive_gate`), validated when present, and read by `lens_stats`,
++which derives the kind once for rows written before v17. The additive migration **v17**
++(`v17-finding-resolution-kind`) adds the column in place with a PRAGMA guard — no row rewritten, no
++contract change, idempotent across reopens. The F17-2 anti-impersonation guarantee (guarded reason
++markers) is preserved. Commit `a547936`; record `increments/REQ-RK-RESOLUTION-KIND.md`; tests
++`tests/test_v16_resolution_kind.py` (6); focused 136 passed; **full engine suite 891 passed**
++(+10 subtests, was 885). No desktop change required (no desktop code reads reasons or lens stats).
++Next: **F4 real-artifact binding wiring**.
+diff --git a/docs/v1.6/pre-audit/AUDIT_TARGETS.md b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+index 8a71f5a..c2e249f 100644
+--- a/docs/v1.6/pre-audit/AUDIT_TARGETS.md
++++ b/docs/v1.6/pre-audit/AUDIT_TARGETS.md
+@@ -137,3 +137,12 @@ recorded "not reproduced". Aim to make the audit smarter than the implementer.
+     every packaged resource; assert none shows the donor mark on a reachable surface.
+ 52. Derivative integrity: re-run `scripts/make-brand-assets.py --check` and confirm the recorded
+     hashes (guards against later asset drift).
++
++## Resolution kinds (2026-09-18 additions)
++
++53. Resolution kinds: confirm every guarded path that writes a resolved status (`resolve_finding`,
++    `waive_gate`) also writes `resolution_kind`, that no other path can write `dismissed`/`fixed`
++    without one, and that a hand-written `dismissal_reason` cannot change any statistic. Verify the
++    v17 `ALTER TABLE` is lossless on a populated pre-v17 store (rows preserved verbatim).
++54. Learning-loop semantics: `fp_rate`/`learnable` must be unchanged for pre-v17 rows (derived once)
++    and correct for new rows; no review surface silently reads reason text.
+diff --git a/docs/v1.6/pre-audit/CHANGE_LEDGER.md b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+index d93a2b6..f357143 100644
+--- a/docs/v1.6/pre-audit/CHANGE_LEDGER.md
++++ b/docs/v1.6/pre-audit/CHANGE_LEDGER.md
+@@ -151,6 +151,37 @@ ID: CHG-004 · Phase: Campaign A branding requirement (Nick directive 2026-09-18
+   legible? Does the extracted exe icon match the shipped `app.ico` frame exactly?
+ - **Repair hints:** regenerate via the script; the surface table in `docs/v1.6/branding/CANONICAL_LOGO.md`.
+ 
++### CHG-005 — Record-bound resolution kinds (findings) + additive workforce migration v17
++
++ID: CHG-005 · Phase: Campaign A (audit carry-forward F18-5 / WF-13) · Commit: implementation commit · Date: 2026-09-18
++
++- **User-visible impact:** none directly (learning-loop/review semantics); a finding's resolution is
++  now auditable as recorded data rather than inferred text.
++- **Internal impact:** `findings.resolution_kind` (additive column, migration **v17**
++  `v17-finding-resolution-kind`); `RESOLUTION_KINDS`/`ACCEPTANCE_KINDS` vocabulary;
++  `resolve_finding`/`waive_gate` write the kind; `lens_stats` counts by it; `validate_finding`
++  validates it; `_is_acceptance` demoted to a legacy-row derivation helper.
++- **Previous behavior:** acceptance was inferred from a prefix on the free-text
++  `dismissal_reason` (audit F18-5: not record-bound).
++- **New behavior:** the recorded kind is authoritative; pre-v17 rows are derived once; the F17-2
++  anti-impersonation guarantee (guarded reason markers) is preserved.
++- **Primary files:** `runtime/kel/assurance.py`, `runtime/kel/workforce.py`,
++  `runtime/tests/test_v16_resolution_kind.py` (new), `runtime/tests/test_workforce_schemas.py`.
++- **Primary symbols:** listed above.
++- **Data/schema changes:** `findings.resolution_kind TEXT` (nullable), migration v17 with an
++  in-place `ALTER TABLE` for existing stores; no row rewritten.
++- **Failure paths:** unknown kind → `PolicyError`; pre-v17 row → derived, never an error.
++- **Security/privacy implications:** none (no new inputs).
++- **Persistence implications:** additive migration, idempotent across reopens.
++- **Expected invariants:** INV-RK-001 (new: a resolved status always carries its kind on the guarded
++  paths; statistics never require parsing free text).
++- **Tests:** `tests/test_v16_resolution_kind.py` (6) + focused suite 136 passed + full suite (A-13).
++- **Packaged evidence:** n/a (engine semantics; the RC packaged battery re-runs the engine suite).
++- **Known concerns:** prefixes remain in the stored text (deliberate); no per-kind breakdown exposed.
++- **Audit questions:** can any path write `dismissed`/`fixed` without a kind? Does a hand-written
++  reason change any statistic? Is the v17 ALTER lossless on a populated pre-v17 store?
++- **Repair hints:** extend `RESOLUTION_KINDS` + the writers + the migration note together.
++
+ Planned Phase-to-CHG mapping (kept current as work lands):
+ 
+ | Phase | Expected CHGs | Status |
+@@ -163,7 +194,7 @@ Planned Phase-to-CHG mapping (kept current as work lands):
+ | 10 — real provider validation | none (evidence only; PROVIDER_VALIDATION_MATRIX.md) | PENDING |
+ | 11/12 — Rust freshness / migration | none expected (verification only) | PENDING |
+ | F4 real-artifact binding wiring | CHG-0xx | PENDING |
+-| resolution-kind semantics | CHG-0xx | PENDING |
++| resolution-kind semantics | CHG-005 delivered (implementation commit); record `increments/REQ-RK-RESOLUTION-KIND.md` | DONE |
+ | P2/P3 sweep | CHG-0xx per fixed finding | PENDING |
+ | Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
+ | Engine-loss/recovery behavior | CHG-0xx | PENDING |
+diff --git a/docs/v1.6/pre-audit/COMMIT_LEDGER.md b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+index 142294b..137f271 100644
+--- a/docs/v1.6/pre-audit/COMMIT_LEDGER.md
++++ b/docs/v1.6/pre-audit/COMMIT_LEDGER.md
+@@ -34,7 +34,9 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
+ | `fed59dd` | `6ea68c2` | 2026-09-18 | Phases 10-11 | provider validation + Rust freshness recheck; Phase 12 closed (docs) | docs only | — | none | no | — | no | no | LOW | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | real-call evidence recorded (claude PASS; codex env-blocked) |
+ | `24d775b` | `fed59dd` | 2026-09-18 | Phases 8-11 | ledger rows for Phase 8-11 docs + published-tip refresh + (this commit: missing Phase 6 docs row) | docs only | — | none | no | — | no | no | LOW | COMMIT_LEDGER.md; MAIN_STATUS.md | — |
+ | `71c78f0` | `edd50de` | 2026-09-18 | REQ-LOGO-1 | canonical Kel logo (Nick directive) on every production-reachable branding surface | `desktop/resources/*` icons + `branding/kel-logo.png`; `desktop/public/pwa/*`; renderer brand asset; `AboutModalContent.tsx`; `kel-builder.json`; `scripts/make-brand-assets.py`; `scripts/verify-brand-render.py` | tsc 0; vitest 90; packaged exe+installer icon extraction (mad 0.0); About render 0.960 NCC | none | yes (About mark; login mark asset) | `package-logo` (PASS) | no | no | MEDIUM | `docs/v1.6/branding/CANONICAL_LOGO.md`; `increments/LOGO-CANONICAL.md`; `docs/v1.6/branding/evidence/` | exe metadata `CompanyName=AionUi` (target 49); 16 px legibility human gate |
+-| `HEAD` | `71c78f0` | 2026-09-18 | REQ-LOGO-1 | canonical-logo breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-LOGO-1 / CHG-004 / §47–52; AUTO_RESUME section | — |
++| `1894ef7` | `71c78f0` | 2026-09-18 | REQ-LOGO-1 | canonical-logo breadcrumbs (REQ + CHG-004 + indexes + evidence) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-LOGO-1 / CHG-004 / §47–52; AUTO_RESUME section | — |
++| `a547936` | `1894ef7` | 2026-09-18 | REQ-RK | record-bound resolution kinds on findings + additive workforce migration v17 | `kel/assurance.py`; `kel/workforce.py`; `tests/test_v16_resolution_kind.py` (new); `tests/test_workforce_schemas.py` | +6 engine tests; full suite **891 passed** (+10 subtests) | v17 additive (`findings.resolution_kind`) | no (engine semantics) | n/a (RC battery re-runs the engine suite) | no | yes (additive) | MEDIUM | `increments/REQ-RK-RESOLUTION-KIND.md`; TEST_EVIDENCE_INDEX A-13 | prefixes kept in text (deliberate); no per-kind breakdown in `lens_stats` |
++| `HEAD` | `a547936` | 2026-09-18 | REQ-RK | REQ-RK breadcrumbs (this commit) | docs only | — | none | no | — | no | no | LOW | corpus rows REQ-RK / CHG-005 / §53–54; AUTO_RESUME section | — |
+ 
+ ## Visual branch commits pending integration (NOT covered by any independent audit)
+ 
+diff --git a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+index a1e4552..6555938 100644
+--- a/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
++++ b/docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md
+@@ -47,7 +47,7 @@ unaudited range; `deferred` = explicitly deferred with a decision record.
+ | REQ-PROV-10 | sprint directive §36 | real provider validation | implemented (as access allows) | docs commit (2026-09-18) | 55 focused; claude real call PASS | `docs/v1.6/phase10/PROVIDER_VALIDATION.md`; `PROVIDER_VALIDATION_MATRIX.md` | codex blocked (CLI version); internal/deepseek no credentials (DEF-005) | pending |
+ | REQ-RUST-11 | sprint directive §37 | Rust freshness recheck | verified — verdict upheld; Phase 12 closed | docs commit (2026-09-18) | A1/PER-02/REL-01 re-verified open | `docs/v1.6/phase11/RUST_FRESHNESS_RECHECK.md` | none new | pending |
+ | REQ-F4 | audit carry-forward (F4) | real-artifact binding wiring | PENDING | — | — | — | pending |
+-| REQ-RK | audit carry-forward | resolution-kind semantics | PENDING | — | — | — | pending |
++| REQ-RK | audit carry-forward (F18-5 / WF-13) | resolution-kind semantics | implemented | implementation commit (2026-09-18) | 6 focused (new); full suite see A-13 | `increments/REQ-RK-RESOLUTION-KIND.md` | reason prefixes retained for readability; `lens_stats` has no per-kind breakdown yet | pending |
+ | REQ-P2P3 | audit docket + sprint §40 | P2/P3 sweep | PENDING | — | — | P2_P3_DISPOSITION.md | pending |
+ | REQ-VIS-6..8 | visual plan set | batches 6–8 + integration | PENDING | — | — | VISUAL_EVIDENCE_INDEX.md | pending |
+ | REQ-ELOSS | sprint directive §43; findings 16/17 | engine loss + recovery UX | PENDING | — | — | — | pending |
+diff --git a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+index 2490a52..2f77ec5 100644
+--- a/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
++++ b/docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md
+@@ -22,6 +22,7 @@ Category column: `parent-executed` (run by the implementing thread — most rows
+ | A-10 | desktop typecheck + unit (canonical logo) | `cd desktop && bunx tsc --noEmit && bun run test` | branding commit | 2026-09-18 | PASS | tsc 0 errors; **90 passed / 7 files** | REQ-LOGO-1 | — | `increments/LOGO-CANONICAL.md` | parent-executed |
+ | A-11 | brand-asset generation + determinism | `python scripts/make-brand-assets.py "…/Kel Logo.png"` then `--check` | branding commit | 2026-09-18 | PASS | 10 outputs; stable hashes; canonical sha256 guard (`7418a42f…`) | REQ-LOGO-1 | — | `docs/v1.6/branding/CANONICAL_LOGO.md` §2 | parent-executed |
+ | A-12 | packaged branding verification | `[System.Drawing.Icon]::ExtractAssociatedIcon` on `Kel.exe` + the NSIS installer, then `python scripts/verify-brand-render.py dist/logo-evidence/ux-audit --sizes 40,48,56,64,72,80` | branding commit | 2026-09-18 | PASS | exe icon = shipped `app.ico` frame (mad **0.0**), installer icon **0.0**, previous package not the K (73.2); About capture matches the canonical art at **0.960** masked NCC; harness `errors: []` | REQ-LOGO-1 | — | `docs/v1.6/branding/evidence/README.md` | parent-executed (packaged) |
++| A-13 | engine full suite (REQ-RK resolution kinds) | `cd runtime && python -m pytest tests -q` | `a547936` | 2026-09-18 | PASS | **891 passed, 10 subtests passed** (250.14s; was 885 — +6 new tests, zero regressions) | REQ-RK | INV-RK-001 | `increments/REQ-RK-RESOLUTION-KIND.md` | parent-executed |
+ 
+ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). A-2/A-3 ran at
+ `22f4a3e` (Phase 6). The last visual-branch desktop numbers remain `ac85eb3`: tsc 0, **79/79**.
+diff --git a/docs/v1.6/pre-audit/increments/REQ-RK-RESOLUTION-KIND.md b/docs/v1.6/pre-audit/increments/REQ-RK-RESOLUTION-KIND.md
+new file mode 100644
+index 0000000..10604f4
+--- /dev/null
++++ b/docs/v1.6/pre-audit/increments/REQ-RK-RESOLUTION-KIND.md
+@@ -0,0 +1,135 @@
++# Increment — REQ-RK (record-bound resolution kinds) + additive workforce migration v17
++
++increment_id: V16-RK-RESOLUTION-KIND
++phase: Campaign A — assurance learning-loop semantics (audit carry-forward F18-5 / WF-13)
++base_commit: 1894ef7 (canonical-logo docs)
++target_commit: `a547936` (implementation) + this docs commit
++status: complete
++
++## Objective
++
++Close the audit carry-forward that said `_is_acceptance` "is prefix-based, not record-bound":
++record *how* a finding was resolved as data, so the learning loop and any review surface reads a
++recorded kind instead of parsing free-text reasons.
++
++## Requirement Sources
++
++- Audit finding **F18-5** (N18-5): "`_is_acceptance` is prefix-based, not record-bound | info |
++  carried forward (needs a resolution-kind column)" — `docs/v1.6/phase5/5.4_IMPLEMENTATION_RECORD.md`.
++- `REQ-RK` row (`pre-audit/REQUIREMENTS_TRACEABILITY.md`), `CHANGE_LEDGER` mapping row
++  "resolution-kind semantics".
++- `AUDIT_SCOPE.md` WF-13: "Evidence-bound review rows + resolution-kind (F17-4/F18-5)".
++
++## Implementation Summary
++
++1. **Vocabulary** (`kel/assurance.py`): `RESOLUTION_KINDS = ('fixed', 'risk-accepted',
++   'gate-waived', 'false-positive')` and `ACCEPTANCE_KINDS = ('risk-accepted', 'gate-waived')`.
++2. **Schema** (`kel/workforce.py`): additive `findings.resolution_kind TEXT`; migration
++   bumped to **v17** (`v17-finding-resolution-kind`); `ensure_schema` adds the column in place for
++   databases created before it (PRAGMA-guarded, no row rewritten) and records the migration once.
++3. **Writers**: `resolve_finding` writes `fixed` / `risk-accepted` / `false-positive` alongside the
++   human-readable reason; `waive_gate` writes `gate-waived`. The guarded reason markers stay (they
++   are the F17-2 anti-impersonation guarantee), but they are no longer the authority.
++4. **Reader**: `lens_stats` counts by the record field; a NULL kind (pre-v17 row) is derived once
++   from the guarded marker. Free text is never parsed for new rows.
++5. **Validation**: `validate_finding` accepts and validates `resolution_kind` when present
++   (`FINDING_FIELDS` extended); an unknown kind is refused.
++
++## Files Changed
++
++- `runtime/kel/assurance.py` (vocabulary, validation, both writers, `lens_stats`, docstrings)
++- `runtime/kel/workforce.py` (DDL column, v17 migration, additive ALTER)
++- `runtime/tests/test_v16_resolution_kind.py` (new, 6 tests)
++- `runtime/tests/test_workforce_schemas.py` (migration-name assertion moved to v17)
++
++## Symbols Changed
++
++`RESOLUTION_KINDS`, `ACCEPTANCE_KINDS`, `FINDING_FIELDS`, `validate_finding`, `resolve_finding`,
++`waive_gate`, `_is_acceptance` (legacy-only), `lens_stats`, `workforce.ensure_schema`,
++`workforce.MIGRATION_VERSION/MIGRATION_NAME`.
++
++## Schema/Migrations
++
++Additive: `findings.resolution_kind` + migration v17. Existing rows keep NULL and are derived once;
++no data is rewritten, no contract changes. The desktop HTTP/SSE surface is untouched (the engine
++payload gains one optional field on finding rows if a client reads the row directly).
++
++## User-Facing Behavior
++
++None directly (learning-loop semantics). A finding's resolution is now auditable as data.
++
++## Internal Behavior
++
++`lens_stats` no longer infers acceptance from a string prefix:
++a hand-written `dismissal_reason` cannot impersonate an acceptance when the record says otherwise
++(test `test_the_column_wins_over_the_reason_text`).
++
++## Error Paths
++
++Unknown `resolution_kind` → `PolicyError`. Pre-v17 rows → derived, never an error.
++
++## Lifecycle Considerations
++
++Migration is idempotent across reopens (test) and additive for existing stores.
++
++## Persistence / Isolation
++
++Same store; no new files, no new paths.
++
++## Security / Privacy
++
++None. The F17-2 guarantee (a caller-supplied rationale cannot impersonate an acceptance) is
++preserved and now backed by the record.
++
++## Self-Review Findings
++
++- The prefix test was load-bearing for a real statistic (`fp_rate`), so the change had to keep the
++  legacy rows' meaning while making new rows record-bound — hence the explicit one-time derivation
++  path instead of a silent behavior change.
++- Adding a column to a table with append-only *sibling* tables required no trigger changes
++  (`findings` is mutable by design; only its guarded paths write statuses).
++
++## Tests Run
++
++- `cd runtime && python -m pytest tests/test_v16_resolution_kind.py -q` → **6 passed**.
++- `cd runtime && python -m pytest tests/test_v16_resolution_kind.py tests/test_workforce_assurance.py
++  tests/test_workforce_schemas.py tests/test_workforce_d2.py -q` → **136 passed**.
++- Full engine suite: see TEST_EVIDENCE_INDEX A-13.
++
++## Results
++
++PASS (engine). No desktop change was required: no desktop code consumes `dismissal_reason` or
++`lens_stats` (verified by grep).
++
++## Packaged Verification
++
++Not applicable to this increment (engine-internal semantics; the RC packaged battery re-runs the
++engine suite on the packaged runtime).
++
++## Known Weaknesses
++
++- The reason prefixes remain in the stored text (kept deliberately for the F17-2 guarantee and for
++  human readability); a reader that *wanted* to could still parse them — the point is that nothing
++  has to.
++- `lens_stats` exposes `accepted`/`false_positive` but not yet a per-kind breakdown; a review surface
++  that wants kinds can read `findings()['resolution_kind']` directly.
++
++## Deferred Questions
++
++- F4 real-artifact binding wiring (the paired carry-forward) — next increment.
++- Whether the desktop assurance UI should display the kind (no surface reads it today).
++
++## Audit Targets
++
++AUDIT_TARGETS § 53–54.
++
++## Repair Hints
++
++Vocabulary lives in `kel/assurance.py`; adding a kind means extending `RESOLUTION_KINDS`, the
++writers, and the migration note.
++
++## Evidence Paths
++
++- `docs/v1.6/pre-audit/increments/REQ-RK-RESOLUTION-KIND.md` (this file)
++- corpus rows: REQUIREMENTS_TRACEABILITY REQ-RK, CHANGE_LEDGER CHG-005, TEST_EVIDENCE_INDEX A-13,
++  COMMIT_LEDGER
+diff --git a/docs/v1.6/status/MAIN_STATUS.md b/docs/v1.6/status/MAIN_STATUS.md
+index f37f637..3b13f7f 100644
+--- a/docs/v1.6/status/MAIN_STATUS.md
++++ b/docs/v1.6/status/MAIN_STATUS.md
+@@ -6,7 +6,7 @@ updated_utc: 2026-09-18T16:56:00Z
+ program: Kel V1.6
+ worktree: C:\Users\Nick\Desktop\Kel\kel-ux-v15
+ branch: ux/v15-journeys
+-head: 71c78f0 (canonical-logo production commit; docs commit follows — see `git log --oneline -8`)
++head: a547936 (REQ-RK production commit; docs commit follows — see `git log --oneline -8`)
+ worktree_clean: true
+ 
+ state: IMPLEMENTATION_SPRINT
+@@ -17,9 +17,9 @@ last_audited_production: 8a2b25d
+ first_unaudited_production: 22f4a3e (Phase 6 bounded fixes — first intentionally unaudited production commit)
+ unaudited_range: 8a2b25d..HEAD (production starts at 22f4a3e)
+ 
+-current_increment: REQ-LOGO-1 DONE — the exact Nick-supplied folded-ribbon K is now the canonical Kel logo on every production-reachable branding surface (commit 71c78f0; record docs/v1.6/branding/; packaged-verified). Prior: Phases 10-11 DONE — provider validation (claude real call PASS; codex CLI-version blocked; internal/deepseek no credentials) and the Rust freshness recheck (verdict upheld; Phase 12 CLOSED). Records: docs/v1.6/phase10/, docs/v1.6/phase11/. Next: F4 real-artifact binding + resolution-kind.
+-current_phase: F4 real-artifact binding + resolution-kind semantics (queued; Phases 10-11 done)
+-completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS).
++current_increment: REQ-RK DONE — findings now carry a record-bound `resolution_kind` (migration v17, additive); the learning loop no longer parses free-text reasons (commit a547936; full engine suite 891). Prior: REQ-LOGO-1 DONE — canonical Kel logo on every production-reachable branding surface (71c78f0; packaged-verified). Next: F4 real-artifact binding wiring.
++current_phase: F4 real-artifact binding wiring (queued; REQ-RK closed at a547936)
++completed_through: Phases 0-3, the P1 capability gate (CAP-01/02/03, CAP2-CLAUSE, CAP2-RESIDUAL), Phase 4 (commit fd04c00, audit CONTINUE), Phase 5.0 foundations (cc909b9, audit CONTINUE), Phase 5.1 assignment (9d6ed55 + 5b83f0e, audits 10-11 CONTINUE), Phase 5.2 D1 delegation (894be5b + f9cf3ea, audits 12-13 CONTINUE), Phase 5.3 D2 pods (48dacb3 + 5747567, audits 14-15 CONTINUE), the Phase 5.4 assurance arc (932db33 + 27e3720 / d394649 / 71122ef + acceptance patch f25a4bf; audits 16/17/18 REVISE, 19 CONTINUE), the Phase 5.5 parallel arc (5f77f42 + b1141c4 + 2a12b77 + acceptance patch d8880f3; audits 20/21 REVISE, 22 CONTINUE; published 9a2965d..d8880f3), and Phase 5.6 learning loop (ba52869 + remediation 8a2b25d; audits 23 REVISE, 24 CONTINUE; accepted and published 5127bac). Campaign A: Phases 6 and 7 implemented (22f4a3e, df87903); Phase 8/5.8 decided (Advanced Worker View deferred beyond V1.6; docs/v1.6/phase8/); Phase 9 decided (no Profiles concept — Projects remain the single isolation concept; docs/v1.6/phase9/); Phases 10-11 done (provider validation as access allows; Rust verdict upheld; Phase 12 closed; docs/v1.6/phase10/, docs/v1.6/phase11/); REQ-LOGO-1 canonical Kel logo across all production-reachable branding surfaces (71c78f0; docs/v1.6/branding/; packaged `package-logo` PASS); REQ-RK record-bound resolution kinds (a547936; migration v17 additive; engine suite 891).
+ 
+ audit_requested_from: NONE
+ audit_requested_through: NONE
+@@ -51,6 +51,6 @@ github_publication_current: true
+ frozen_pre1_verified: true
+ older_freezes_verified: true
+ 
+-next_autonomous_action: F4 real-artifact binding + resolution-kind semantics (audit carry-forwards: close or explicitly disposition; evidence must connect to real delivered artifacts where required). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after F4/resolution-kind: P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
++next_autonomous_action: F4 real-artifact binding wiring (audit carry-forward; evidence must connect to real delivered artifacts). REQ-RK (resolution-kind semantics) is now closed (`a547936`). The breadcrumb corpus `docs/v1.6/pre-audit/` is maintained per increment. Campaign A queue after F4: P2/P3 sweep; Visual batches 6–8 + integration into Main; engine-loss/recovery behavior; final integration; pre-audit regression; PRE_AUDIT RC. Independent audits stay paused until the RC.
+ external_dependency: NONE
+ stop_reason: NONE
