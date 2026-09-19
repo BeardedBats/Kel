@@ -20,7 +20,7 @@ import {
 } from '@/renderer/utils/file/previewPayload';
 import { notifyManualRestartRequired } from '@/renderer/utils/appRestart';
 import { isElectronDesktop } from '@/renderer/utils/platform';
-import { Alert, Collapse, Form, InputNumber, Message, Modal, Switch } from '@arco-design/web-react';
+import { Alert, Button, Collapse, Form, InputNumber, Message, Modal, Switch } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
@@ -75,6 +75,7 @@ const SystemModalContent: React.FC = () => {
   const [previewLimitMb, setPreviewLimitMb] = useState<number>(DEFAULT_TEXT_PREVIEW_LIMIT_MB);
   const previewLimitDraftRef = useRef<string>(String(DEFAULT_TEXT_PREVIEW_LIMIT_MB));
   const [saveUploadToWorkspace, setSaveUploadToWorkspace] = useState(false);
+  const [foldersOpen, setFoldersOpen] = useState(false);
 
   useEffect(() => {
     if (!isDesktop) {
@@ -500,7 +501,7 @@ const SystemModalContent: React.FC = () => {
 
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
-          <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-16px space-y-12px'>
+          <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {preferenceItems.map((item) => (
                 <PreferenceRow key={item.key} label={item.label} description={item.description}>
@@ -551,22 +552,41 @@ const SystemModalContent: React.FC = () => {
                 )}
               </Collapse.Item>
             </Collapse>
-            <Form form={form} layout='vertical' className='!mt-32px space-y-16px' onValuesChange={handleValuesChange}>
-              <DirInputItem label={t('settings.workDir')} field='workDir' />
-              <DirInputItem label={t('settings.logDir')} field='logDir' />
-              {error && (
-                <Alert
-                  className='mt-16px'
-                  type='error'
-                  content={
-                    <span>
-                      {typeof error === 'string' ? error : JSON.stringify(error)}
-                      <FeedbackButton module='system-settings' className='ms-6px' />
-                    </span>
-                  }
-                />
-              )}
-            </Form>
+          </div>
+
+          {/* Working-folder overrides live behind an explicit disclosure: the physical path includes
+              a donor-era subfolder name that should not be primary vocabulary for normal users, but
+              the exact paths stay available (and editable) here for the people who need them. */}
+          <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-8px'>
+            <div className='flex items-center justify-between w-full gap-12px'>
+              <div className='flex flex-col'>
+                <span className='text-14px text-1'>Advanced — folders</span>
+                <span className='text-14px text-3'>
+                  Where Kel keeps working files and logs. Changing these moves real data and restarts Kel.
+                </span>
+              </div>
+              <Button size='small' onClick={() => setFoldersOpen((value) => !value)}>
+                {foldersOpen ? 'Hide' : 'Show'}
+              </Button>
+            </div>
+            <div className={foldersOpen ? 'block mt-12px' : 'hidden'}>
+              <Form form={form} layout='vertical' className='space-y-16px' onValuesChange={handleValuesChange}>
+                <DirInputItem label={t('settings.workDir')} field='workDir' />
+                <DirInputItem label={t('settings.logDir')} field='logDir' />
+                {error && (
+                  <Alert
+                    className='mt-16px'
+                    type='error'
+                    content={
+                      <span>
+                        {typeof error === 'string' ? error : JSON.stringify(error)}
+                        <FeedbackButton module='system-settings' className='ms-6px' />
+                      </span>
+                    }
+                  />
+                )}
+              </Form>
+            </div>
           </div>
 
           {/* Voice input (speech-to-text) settings */}

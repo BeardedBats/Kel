@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Radio, Switch } from '@arco-design/web-react';
+import { Message, Radio, Switch } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { systemSettings } from '@/common/adapter/ipcBridge';
 import { configService } from '@/common/config/configService';
@@ -53,9 +53,13 @@ const PetSettings: React.FC = () => {
   const handleEnabledChange = useCallback((checked: boolean) => {
     setEnabled(checked);
     configService.setLocal('pet.enabled', checked);
-    systemSettings.setPetEnabled.invoke({ enabled: checked }).catch(() => {
+    systemSettings.setPetEnabled.invoke({ enabled: checked }).catch((error: unknown) => {
+      // The toggle must never sit ON when the pet cannot actually be created: settle back to the
+      // real state and say why (RA-MINOR-003). A reload must not contradict what was just shown.
       setEnabled(!checked);
       configService.setLocal('pet.enabled', !checked);
+      const detail = String((error as Error)?.message || '').trim();
+      Message.error(detail || 'Kel could not change the desktop pet just now.');
     });
   }, []);
 

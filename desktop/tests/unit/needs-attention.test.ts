@@ -47,7 +47,7 @@ describe('collectAttention — mapping', () => {
     expect(kinds).toEqual(['approval', 'continuation', 'failure', 'input', 'permission', 'review']);
     for (const item of items) {
       if (item.action) {
-        expect(['/chat/conv-a', '/work', '/autonomy']).toContain(item.action.to);
+        expect(['/conversation/conv-a', '/work', '/autonomy']).toContain(item.action.to);
       }
     }
   });

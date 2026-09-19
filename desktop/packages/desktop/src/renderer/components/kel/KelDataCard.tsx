@@ -28,14 +28,6 @@ const summaryLine = (summary: BackupSummary): string => {
   return parts.length ? parts.join(' · ') : 'nothing backed up yet';
 };
 
-const Card: React.FC<{ title: string; subtitle?: string; children: React.ReactNode }> = ({ title, subtitle, children }) => (
-  <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px'>
-    <div className='text-14px text-t-primary leading-22px'>{title}</div>
-    {subtitle && <div className='text-12px text-t-secondary leading-20px mb-10px'>{subtitle}</div>}
-    <div className='mt-8px flex flex-col gap-10px'>{children}</div>
-  </div>
-);
-
 export const KelDataCard: React.FC = () => {
   const [dataPath, setDataPath] = useState<DataPath | null>(null);
   const [backupTarget, setBackupTarget] = useState('');
@@ -136,11 +128,17 @@ export const KelDataCard: React.FC = () => {
   }, [restoreSource]);
 
   return (
-    <>
-      <Card
-        title='Data folder'
-        subtitle='Where Kel keeps your chats, projects, transcripts and settings on this computer.'
-      >
+    <div className='kel-card'>
+      <div className='text-14px text-t-primary leading-22px font-500'>Data & backup</div>
+      <div className='text-14px text-t-secondary leading-20px mt-2px'>
+        Where Kel keeps your chats, projects, transcripts and settings on this computer — plus simple backup and
+        restore. Credentials are never included in backups.
+      </div>
+
+      <div className='kel-divider' />
+
+      <div className='flex flex-col gap-8px'>
+        <div className='text-14px text-t-primary font-500'>Data folder</div>
         <div className='flex items-center gap-8px flex-wrap'>
           <code className='text-12px text-t-secondary break-all' data-testid='data-folder-path'>
             {dataPath ? dataPath.root : pathError ? 'Kel could not read the data folder path.' : 'Loading…'}
@@ -157,11 +155,13 @@ export const KelDataCard: React.FC = () => {
             Show in folder
           </Button>
         </div>
-      </Card>
-      <Card
-        title='Backup'
-        subtitle='Saves a copy of everything above to a folder you choose. Credentials are never included.'
-      >
+      </div>
+
+      <div className='kel-divider' />
+
+      <div className='flex flex-col gap-8px'>
+        <div className='text-14px text-t-primary font-500'>Backup</div>
+        <div className='text-14px text-t-secondary'>Saves a copy of everything above to a folder you choose.</div>
         <div className='flex items-center gap-8px flex-wrap'>
           <Input
             value={backupTarget}
@@ -174,11 +174,13 @@ export const KelDataCard: React.FC = () => {
             Back up now
           </Button>
         </div>
-      </Card>
-      <Card
-        title='Restore'
-        subtitle='Brings back a backup folder. Your current data is kept and Kel restarts to finish.'
-      >
+      </div>
+
+      <div className='kel-divider' />
+
+      <div className='flex flex-col gap-8px'>
+        <div className='text-14px text-t-primary font-500'>Restore</div>
+        <div className='text-14px text-t-secondary'>Brings back a backup folder. Your current data is kept and Kel restarts to finish.</div>
         <div className='flex items-center gap-8px flex-wrap'>
           <Input
             value={restoreSource}
@@ -191,8 +193,8 @@ export const KelDataCard: React.FC = () => {
             Restore from this backup
           </Button>
         </div>
-      </Card>
-    </>
+      </div>
+    </div>
   );
 };
 

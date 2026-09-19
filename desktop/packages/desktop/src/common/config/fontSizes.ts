@@ -9,11 +9,13 @@ export type FontSizeKey = 'app' | 'chat' | 'markdown' | 'code';
 
 export type FontSizeSpec = { default: number; min: number; max: number; cssVar: string };
 
+// Human-visual repair: defaults meet Kel's readability floors — message text (markdown) at the
+// conversational 16px, code at 14px. Explicit user customization may still choose smaller values.
 export const FONT_SIZE_SPECS: Record<FontSizeKey, FontSizeSpec> = {
   app: { default: 14, min: 12, max: 22, cssVar: '--app-font-size' },
   chat: { default: 14, min: 12, max: 22, cssVar: '--chat-font-size' },
-  markdown: { default: 13, min: 12, max: 22, cssVar: '--md-font-size' },
-  code: { default: 12, min: 10, max: 18, cssVar: '--code-font-size' },
+  markdown: { default: 16, min: 12, max: 22, cssVar: '--md-font-size' },
+  code: { default: 14, min: 12, max: 18, cssVar: '--code-font-size' },
 };
 
 export const FONT_SIZE_KEYS: FontSizeKey[] = ['app', 'chat', 'markdown', 'code'];

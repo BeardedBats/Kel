@@ -31,6 +31,20 @@ describe('donor-surface policy (AUD-MINOR-008)', () => {
   });
 });
 
+describe('desktop pet truthfulness (RA-MINOR-003)', () => {
+  it('a refused enable rejects loudly instead of resolving silently', () => {
+    const bridge = read('packages/desktop/src/process/bridge/systemSettingsBridge.ts');
+    expect(bridge).toContain("throw new Error('The desktop pet is not available in this build");
+    expect(bridge).toContain("stays off");
+  });
+
+  it('the settings toggle reverts and explains when the enable is refused', () => {
+    const page = read('packages/desktop/src/renderer/pages/settings/PetSettings.tsx');
+    expect(page).toContain('Message.error');
+    expect(page).toContain('setEnabled(!checked)');
+  });
+});
+
 describe('Kel build identity (AUD-MINOR-009)', () => {
   const builder = read('scripts/build-with-builder.js');
   const kelConfig = JSON.parse(read('kel-builder.json'));
@@ -53,5 +67,22 @@ describe('aioncore provenance binding (AUD-MINOR-007)', () => {
     expect(prepare).toContain("writeJson(path.join(targetDir, 'provenance.json'), provenance);");
     expect(prepare).toContain('writeProvenance,');
     expect(read('scripts/build-with-builder.js')).toContain('aioncore provenance.json missing');
+  });
+});
+
+describe('installer message branding (RA-MINOR-002)', () => {
+  it('installer failure dialogs carry no donor product names', () => {
+    const messages = read('resources/windows/installer-messages.nsh');
+    expect(messages).not.toMatch(/AionUi/);
+    expect(messages).not.toMatch(/AionCore/);
+    expect(messages).toMatch(/Kel installation failed/);
+    expect(messages).toMatch(/Kel 安装失败/);
+  });
+
+  it('the support report header and footer use Kel naming', () => {
+    const report = read('resources/windows/support/report-installer-failure.ps1');
+    expect(report).toContain("'Kel installer failure ' + $code");
+    expect(report).toContain("'To Kel Team'");
+    expect(report).not.toMatch(/AionUi Team/);
   });
 });
