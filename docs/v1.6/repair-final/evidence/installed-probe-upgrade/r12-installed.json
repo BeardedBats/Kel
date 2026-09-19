@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "appDir": "C:\\Users\\Nick\\KelRepairInstall",
+  "startedAt": "2026-09-19T15:03:18.104Z",
+  "steps": {
+    "healthyBoot": true,
+    "engineVersion": "1.6.0",
+    "conversations": [
+      "3fa5df04-f8aa-4cd1-9434-437b885b9e1e",
+      "404a59cb-d322-4990-82c4-69e0beff1662",
+      "cafcccba-4cf5-4bfe-a860-f85a2c5cc74b",
+      "main"
+    ],
+    "restore": null,
+    "hashAfterSkip": "#/guid",
+    "attentionVisible": true,
+    "attentionText": "Needs your attention Nothing needs you right now.",
+    "aboutLogoLoaded": true,
+    "aboutText": "Model AI Core Agents Skills Tools Application Appearance Remote Desktop Pet System Archived Archived conversations Other About Work & context Back to Chat"
+  },
+  "consoleErrors": [],
+  "rawLeaks": [],
+  "overflow": {
+    "/work": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/about": {
+      "doc": 0,
+      "body": 0
+    },
+    "/": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/appearance": {
+      "doc": 0,
+      "body": 0
+    },
+    "/autonomy": {
+      "doc": 0,
+      "body": 0
+    }
+  },
+  "screenshots": [
+    "r12-work.png",
+    "r12-about.png"
+  ],
+  "linkLog": [
+    "[KEL-LINK] 2026-09-19T00:10:11.680Z state=recovered attempts=2",
+    "[KEL-LINK] 2026-09-19T00:10:21.159Z state=unrecoverable attempts=2",
+    "[KEL-LINK] 2026-09-19T00:10:21.369Z state=reconnecting attempts=1",
+    "[KEL-LINK] 2026-09-19T00:10:21.899Z state=recovered attempts=1",
+    "[KEL-LINK] 2026-09-19T00:46:40.702Z state=connected attempts=0",
+    "[KEL-LINK] 2026-09-19T15:03:20.173Z state=connected attempts=0"
+  ],
+  "gate": {
+    "pass": true,
+    "failures": []
+  }
+}

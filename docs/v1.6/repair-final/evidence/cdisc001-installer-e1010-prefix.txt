@@ -1,0 +1,13 @@
+== C-DISC-001 evidence: installer E1010 (donor-hardcoded AionUi.exe) — pre-fix report ==
+
+status: skipped | code: E1010 | reason: empty-dsn
+blockingDiagnostics: event=extract result=fail method=7z missing=AionUi.exe
+session: 32a2c6a0e592 | at: 2026-09-19T10:45:59.7135717-04:00
+
+-- installer log last session (pre-fix) --
+2026-09-19T10:44:59.6380616-04:00 session-begin | event=session-begin detail=preInit
+2026-09-19T10:45:00.9676470-04:00 process-find | 
+2026-09-19T10:45:01.6289423-04:00 uninstall-result | 
+2026-09-19T10:45:57.4899378-04:00 session-end | event=session-end result=fail code=E1010 detail=event=extract result=fail method=7z missin
+2026-09-19T10:45:58.2269886-04:00 report-auto | event=report-auto reason=silent code=E1010
+2026-09-19T10:45:59.7475236-04:00 report-skipped | 

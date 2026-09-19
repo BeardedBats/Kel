@@ -1,0 +1,14 @@
+== Campaign C §18 installed battery ==
+
+-- reinstall over existing --
+EXIT=0
+reinstall: files intact + uninstaller present
+
+-- uninstall (silent) --
+uninstall exit: 0
+install dir: removed
+ARP entries referencing KelRepairInstall: 0
+start-menu Kel.lnk: 0
+desktop Kel.lnk: 0
+retained data roots: both present (retained)
+retained appdata: 3

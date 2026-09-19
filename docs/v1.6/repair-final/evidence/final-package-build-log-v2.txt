@@ -1,0 +1,83 @@
+🔨 Building for architecture: x64
+📋 Builder arguments: --win
+📦 Incremental build: Vite output unchanged, skipping compilation
+📦 Using cached Vite build output
+📦 Bundling builtin MCP servers (self-contained)...
+Preparing aioncore for win32-x64 (version: v0.2.2)
+  Downloading aioncore from https://github.com/iOfficeAI/AionCore/releases/download/v0.2.2/aioncore-v0.2.2-x86_64-pc-windows-msvc.zip
+  Downloaded from GitHub releases
+  Preparing managed resources under resources\bundled-aioncore\win32-x64\managed-resources
+Prepared managed resources under C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\resources\bundled-aioncore\win32-x64\managed-resources
+  node   -> C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64
+  manifest -> C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\resources\bundled-aioncore\win32-x64\managed-resources\manifest.json
+  Bundled aioncore prepared: resources/bundled-aioncore/win32-x64/aioncore.exe [source=download]
+  Bundled managed resources prepared: C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\resources\bundled-aioncore\win32-x64\managed-resources
+[hub] Preparing hub resources from tag: dist-latest
+[hub] Downloading index.json...
+[hub] index.json downloaded from https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/index.json
+[hub] Found 7 extensions to bundle
+[hub] aionext-auggie -> aionext-auggie.zip (3.0 KB)
+[hub] aionext-claude -> aionext-claude.zip (2.6 KB)
+[hub] aionext-codebuddy -> aionext-codebuddy.zip (3.5 KB)
+[hub] aionext-codex -> aionext-codex.zip (2.1 KB)
+[hub] aionext-goose -> aionext-goose.zip (3.6 KB)
+[hub] aionext-opencode -> aionext-opencode.zip (2.4 KB)
+[hub] aionext-qwen -> aionext-qwen.zip (2.7 KB)
+[hub] Done: 7/7 extensions bundled in resources/hub/
+📦 Compression level: 7 (local build)
+🚀 Creating distributables for x64...
+📋 Including Windows x64 architecture check script
+  • electron-builder  version=26.15.2 os=10.0.26200
+  • loaded configuration  file=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\kel-builder.json
+  • loaded parent configuration  file=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\packages\desktop\electron-builder.yml
+  • Specified application directory equals to project dir — superfluous or wrong configuration  appDirectory=.
+  • detected workspace root for project using lock file  pm=bun config=undefined resolved=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop projectDir=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop
+  • "electron-squirrel-startup" dependency is not required for NSIS
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=win32 arch=x64 electron=44.3.0 appOutDir=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked
+  • using custom unpacked Electron distribution  electronDist=node_modules\electron\dist
+  • copying unpacked Electron  source=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop\node_modules\electron\dist destination=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked
+  • searching for node modules  pm=bun searchDir=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\desktop
+  • note: bun does not support any CLI for dependency tree extraction, utilizing file traversal collector instead
+  • using manual traversal of node_modules to build dependency tree
+  • missing optional dependencies  dependencies=["@napi-rs/canvas-linux-x64-gnu@0.1.97","@napi-rs/canvas-darwin-x64@0.1.97","@napi-rs/canvas-win32-arm64-msvc@0.1.97","@napi-rs/canvas-linux-arm-gnueabihf@0.1.97","@napi-rs/canvas-linux-x64-musl@0.1.97","@napi-rs/canvas-linux-arm64-gnu@0.1.97","@napi-rs/canvas-linux-arm64-musl@0.1.97","@napi-rs/canvas-darwin-arm64@0.1.97","@napi-rs/canvas-android-arm64@0.1.97","@napi-rs/canvas-linux-riscv64-gnu@0.1.97","@img/sharp-darwin-arm64@0.34.5","@img/sharp-darwin-x64@0.34.5","@img/sharp-libvips-darwin-arm64@1.2.4","@img/sharp-libvips-darwin-x64@1.2.4","@img/sharp-libvips-linux-arm@1.2.4","@img/sharp-libvips-linux-arm64@1.2.4","@img/sharp-libvips-linux-ppc64@1.2.4","@img/sharp-libvips-linux-riscv64@1.2.4","@img/sharp-libvips-linux-s390x@1.2.4","@img/sharp-libvips-linux-x64@1.2.4","@img/sharp-libvips-linuxmusl-arm64@1.2.4","@img/sharp-libvips-linuxmusl-x64@1.2.4","@img/sharp-linux-arm@0.34.5","@img/sharp-linux-arm64@0.34.5","@img/sharp-linux-ppc64@0.34.5","@img/sharp-linux-riscv64@0.34.5","@img/sharp-linux-s390x@0.34.5","@img/sharp-linux-x64@0.34.5","@img/sharp-linuxmusl-arm64@0.34.5","@img/sharp-linuxmusl-x64@0.34.5","@img/sharp-wasm32@0.34.5","@img/sharp-win32-arm64@0.34.5","@img/sharp-win32-ia32@0.34.5"]
+  • updating asar integrity executable resource  executablePath=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\Kel.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\kel-engine\KelEngine.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\bundled-aioncore\win32-x64\aioncore.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node.exe
+
+🔧 afterPack hook started
+   Platform: win32, Build arch: x64, Target arch: x64
+   Checking resources directory: C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources
+   Contents: AionUI-LICENSE.txt, app.asar, app.asar.unpacked, app.png, bundled-aioncore, default_app.asar, fonts, hub, kel-engine, manifest.webmanifest, pet-states, pwa, sw.js
+   app.asar.unpacked contents: node_modules, out
+   node_modules contents: @napi-rs, @rollup, better-sqlite3, bindings, detect-libc, jszip, prebuild-install, web-tree-sitter...
+   ✓ Bundled resources verified for win32-x64 (5 checks)
+   ℹ️  Rebuilding native modules for platform requirements (force=false)
+
+🔧 Checking native modules (win32-x64)...
+   appOutDir: C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked
+   Modules to rebuild: better-sqlite3
+   ✓ Found better-sqlite3, rebuilding for x64...
+     Using pinned Electron ABI 136 for prebuilt resolution
+     URL: https://github.com/WiseLibs/better-sqlite3/releases/download/v12.8.0/better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     looking for local prebuild @ prebuilds\better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+(node:26888) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+     looking for cached prebuild @ C:\Users\Nick\AppData\Roaming\npm-cache\_prebuilds\76a9cd-better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     found cached prebuild
+     unpacking @ C:\Users\Nick\AppData\Roaming\npm-cache\_prebuilds\76a9cd-better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     unpack resolved to C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\app.asar.unpacked\node_modules\better-sqlite3\build\Release\better_sqlite3.node
+     ✓ prebuilt binary installed
+     ✓ Rebuild completed
+     Debug: Found binary at C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\app.asar.unpacked\node_modules\better-sqlite3\build\Release\better_sqlite3.node
+     ✓ Binary verification passed
+
+✅ All native modules rebuilt successfully for x64
+
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\Kel.exe
+  • building        target=nsis file=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\Kel-1.6.0-win-x64.exe archs=x64 oneClick=false perMachine=false
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\win-unpacked\resources\elevate.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\Kel-1.6.0-win-x64.__uninstaller.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-final-repair\dist\package-r12\Kel-1.6.0-win-x64.exe
+✅ Build completed!
