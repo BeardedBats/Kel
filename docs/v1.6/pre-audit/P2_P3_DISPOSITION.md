@@ -14,6 +14,10 @@ commit. REL-01 was the last row to resolve; it is FIXED (`93b99b5`, R8) — see 
 
 ## Denominator reconciliation — the 27-vs-26 question (R9 bookkeeping, 2026-09-18)
 
+**TL;DR (Campaign C, 2026-09-19):** the canonical sweep slate is **26 rows (P2 10 + P3 16)**; the
+directive's **27 = P2 10 + P3 17** is worklist arithmetic over the increment-1/2 audit material,
+not an inventory count. Every original finding ID maps to a terminal disposition below.
+
 **Determination.** Both **enumerated** slates on disk have always been 26 rows (P2 10, P3 16): this
 table, and the independent audit's own reconciled docket (`kel-v16-code-audit/docs/code-audit/`
 `AUDIT_STATUS.md` → `p2_open` / `p3_open`, corroborated by `increment-16/review-manifest.md`).

@@ -1,5 +1,12 @@
 # Kel V1.6 — Human Visual UX Audit · 00 STATUS
 
+> **Reconciliation note (Campaign C, 2026-09-19, AUD-MINOR-005).** This file is retained as the
+> original audit-stop record. The remediation it awaited was delivered through R9/R10 (visual
+> batches 6–8, Needs Your Attention, engine-loss/recovery UX) and integrated in `7267630`; the
+> statements below about "no production-code remediation" describe the state at audit time, not
+> the RC tree. See `17_R9_LANE_RECONCILIATION.md`, `18_R9_EVIDENCE.md`,
+> `19_R10_ENGINE_LOSS_EVIDENCE.md`.
+
 Audit performed by the independent Human Visual UX reviewer thread.
 **Production code was NOT modified in this phase.** The only new worktree is the isolated audit worktree below.
 
