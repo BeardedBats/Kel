@@ -1,0 +1,34 @@
+range: 8a2b25d..08f56673 (73 commits)
+
+== [A] COMMITS IN RANGE NOT FOUND (any mention) IN COMMIT_LEDGER.md ==
+NOT_MENTIONED: 022f3ac | 2026-09-18 18:20:22 -0400 | test(v1.6): engine-version assertion follows the single source (R8.B follow-up)
+NOT_MENTIONED: 0aadd42 | 2026-09-18 18:27:17 -0400 | docs(v1.6): R7–R8 breadcrumbs — credential containment, package identity, REL-01 CLOSED
+NOT_MENTIONED: 34947f0 | 2026-09-18 19:33:57 -0400 | feat(v1.6-visual): R10 prep — [KEL-LINK] transition log beside the engine log (packaged evidence)
+NOT_MENTIONED: 12f87a7 | 2026-09-18 20:16:01 -0400 | docs(v1.6): R11 records — integration breadcrumb, ledgers, requirements, visual index, status
+NOT_MENTIONED: 08f5667 | 2026-09-18 20:52:11 -0400 | docs(v1.6): PRE_AUDIT_V1_6_HEAD — Campaign A complete; pre-audit release candidate ready
+
+== [B] HEX TOKENS IN COMMIT_LEDGER.md vs REPOSITORY ==
+tokens: 69; in_range: 68; prior(audited/older): 1; other: 0
+-- OTHER (not in range and not prior):
+-- IN_RANGE not covered above (informational): 68
+
+== [C] R6 liveness test introducer ==
+ADDED e8bbb05 docs(v1.6): R3–R6 breadcrumbs — retry durability, approval window, canonical persistence, liveness truth
+== [D] misc ==
+e8bbb05 stat:
+ docs/v1.6/pre-audit/CHANGE_LEDGER.md               |  34 ++++++
+ docs/v1.6/pre-audit/COMMIT_LEDGER.md               |   7 +-
+ docs/v1.6/pre-audit/INVARIANT_LEDGER.md            | 120 +++++++++++++++++++++
+ docs/v1.6/pre-audit/REQUIREMENTS_TRACEABILITY.md   |  10 +-
+ docs/v1.6/pre-audit/TEST_EVIDENCE_INDEX.md         |   4 +
+ .../pre-audit/increments/R2-IDEMPOTENCY-MATRIX.md  |  79 ++++++++++++++
+ .../v1.6/pre-audit/increments/R4-APPROVAL-EXACT.md |  71 ++++++++++++
+ .../increments/R5-PERSISTENCE-INTEGRITY.md         |  75 +++++++++++++
+ .../v1.6/pre-audit/increments/R6-TRUTHFUL-STATE.md |  60 +++++++++++
+ docs/v1.6/status/MAIN_STATUS.md                    |  10 +-
+ runtime/tests/test_v16_r6_liveness.py              |  95 ++++++++++++++++
+ 13 files changed, 600 insertions(+), 18 deletions(-)
+shortstat range:
+ 189 files changed, 14424 insertions(+), 615 deletions(-)
+changed files count:
+189
