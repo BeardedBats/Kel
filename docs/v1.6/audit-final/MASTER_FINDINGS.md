@@ -75,7 +75,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Reproduction:** probe-1 §G (G1–G4). **Evidence:** `evidence/auditor-probe-1.log`. **Confidence:** HIGH.
 - **Adjacent risk / follow-through:** sentinel trace through logs/prompts/artifacts/CompletionPackets showed environs presence only; tool policy + `fetch/network` refusals reduce exfiltration reach (deepening recorded in this pass).
 - **Repair criteria:** per-provider strip map (or align docstring to documented native-env policy); test for third-provider key absence. **Regression test:** env-content test for both native children.
-- **Campaign C:** `NOT_STARTED`.
+- **Campaign C:** `REPAIRED` — repair commit: `91bd869` · re-test: credential suite 9/9 (3 new fail pre-fix), cluster 34/34, probe §G G4 replay (DeepSeek absent from both children) · final re-audit: `PENDING`
 
 ## AUD-MINOR-004 — R12 packaged-evidence integrity gaps (non-discriminating probe exit; uninstall evidence absent; pre-RC integrity snapshot)
 

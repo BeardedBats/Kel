@@ -1,0 +1,14 @@
+
+    def test_unknown_native_provider_strips_every_provider_key(self):
+        base = {'ANTHROPIC_API_KEY': 'a', 'OPENAI_API_KEY': 'o', 'DEEPSEEK_API_KEY': 'd'}
+        env = child_env('fixture', base)
+        for key in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'):
+>           self.assertNotIn(key, env)
+E           AssertionError: 'ANTHROPIC_API_KEY' unexpectedly found in {'ANTHROPIC_API_KEY': 'a', 'DEEPSEEK_API_KEY': 'd'}
+
+tests\test_v15_credentials.py:103: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_a_spawned_native_child_process_sees_only_its_own_key
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_native_children_strip_third_provider_keys
+FAILED tests/test_v15_credentials.py::ChildEnvironmentTests::test_unknown_native_provider_strips_every_provider_key
+3 failed, 6 passed in 0.26s
