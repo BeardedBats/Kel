@@ -8,12 +8,13 @@ import {
   KelButton,
   KelCard,
   KelEmpty,
-  KelErrorState,
   KelLoading,
   KelSection,
   KelTable,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
+import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelProviders,
   type KelCredentialMetadata,
@@ -47,7 +48,7 @@ const Providers: React.FC = () => {
     reasons: string[];
     reason: string;
   } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [secure, setSecure] = useState<{ available: boolean; providers: Record<string, string[]> } | null>(
@@ -73,7 +74,7 @@ const Providers: React.FC = () => {
       setError(null);
     } catch (err) {
       setProviders([]);
-      setError(err instanceof Error ? err.message : 'The engine did not answer.');
+      setError(err);
     }
   }, []);
 
@@ -88,7 +89,7 @@ const Providers: React.FC = () => {
       const result = await kelProviders.readiness(capability, prefer);
       setReadiness(result);
     } catch (err) {
-      setNote(`Readiness failed: ${err instanceof Error ? err.message : String(err)}`);
+      setNote(`Readiness didn't go through. ${failureSentence(err, 'The engine did not answer — try again.')}`);
     } finally {
       setBusy(false);
     }
@@ -105,7 +106,7 @@ const Providers: React.FC = () => {
           `Recorded credential metadata for ${provider}. The value itself lives in the OS store, never in the engine.`
         );
       } catch (err) {
-        setNote(`Could not record metadata: ${err instanceof Error ? err.message : String(err)}`);
+        setNote(`Couldn't record the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
@@ -122,7 +123,7 @@ const Providers: React.FC = () => {
         await load();
         setNote(`Removed credential metadata for ${provider}.`);
       } catch (err) {
-        setNote(`Could not remove metadata: ${err instanceof Error ? err.message : String(err)}`);
+        setNote(`Couldn't remove the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
@@ -151,13 +152,7 @@ const Providers: React.FC = () => {
           </KelButton>
         </div>
 
-        {error && (
-          <KelErrorState
-            title="Provider state could not be read"
-            cause={error}
-            fix="Check that the Kel engine is running, then press Reload."
-          />
-        )}
+        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && providers === null && <KelLoading rows={4} />}
         {note && <p className="kel-meta">{note}</p>}
 
@@ -322,9 +317,7 @@ const Providers: React.FC = () => {
                     await load();
                   } catch (err) {
                     setNote(
-                      `Could not store the credential: ${
-                        err instanceof Error ? err.message : String(err)
-                      }`
+                      `Couldn't store the credential. ${failureSentence(err, 'The engine did not answer — try again.')}`
                     );
                   } finally {
                     setBusy(false);

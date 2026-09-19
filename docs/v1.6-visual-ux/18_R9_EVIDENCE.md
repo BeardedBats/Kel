@@ -1,0 +1,61 @@
+# 18 — R9 evidence: batches 6–8 + Needs Your Attention (2026-09-18)
+
+Lane: `ux/v16-visual-fix`, re-anchored on Main `05608e6` (see `17_R9_LANE_RECONCILIATION.md`).
+
+## Commits (lane order)
+
+| SHA | What |
+|---|---|
+| `0ff061d` | R9.A lane reconciliation + integration map (zero-overlap proof; re-anchor decision) |
+| `3050761` | Merge Main (`05608e6`) into the visual lane — pure union, 9 batch-1–5 files byte-identical |
+| `2897207` | BATCH 6 — engine loss / failure states (findings 16/17) |
+| `0e7d21a` | BATCH 7 — composer owns its secondary controls (finding 2) |
+| `c911d81` | BATCH 8 — final normalization (genuine inconsistencies only) |
+| `938dc9b` | R9.D — "Needs your attention" derived-only view |
+
+## Automated acceptance (at `938dc9b`)
+
+- `bunx tsc --noEmit` → **0 errors**
+- `bun run test` → **122 passed / 122** across **12 files** (new: `engine-failure` 12,
+  `engine-health` 6, `needs-attention` 8)
+- Engine suite: not affected (no engine/runtime file touched this batch — pure desktop lane).
+
+## What each batch delivered (evidence index mapping)
+
+- **Batch 6** (R9.A; findings 16/17; plan `09_ERROR_STATES.md`): classifier + copy source
+  (`engineFailure.ts`), supervision machine (`engineHealth.ts` + `KelService.ts` wiring), shell
+  notice (`KelEngineNotice` in `Layout`), shared failure card (`KelFailureCard`) across work /
+  projects / autonomy / team / transcription / diagnostics / providers / onboarding; TR-02
+  residual closed (16 transcription toasts + providers/onboarding messages classified);
+  before-quit drain bound to the spawning instance only (the "loaded gun" closed).
+- **Batch 7** (R9.B; finding 2; plan `03_CHAT_AND_COMPOSER.md`): model/tools/memory controls
+  moved from the detached header island into one compact row attached to the composer
+  (`ChatConversation` → `AcpChat` → `AcpSendBox` `composerControls`); header keeps only the
+  invisible warmup selector; mobile behavior unchanged (no duplicate controls).
+- **Batch 8** (R9.C; plan `12_ACCEPTANCE_CRITERIA.md` step 9 + normalization): `.kel-table td`
+  may break long tokens (no horizontal overflow); legacy `KelErrorState` removed so the
+  raw-cause pattern cannot be reintroduced; donor preview viewers recorded as audit context
+  (outside Kel surfaces).
+- **R9.D** (directive §9; roadmap item N): pure aggregator + Work-surface view; fail-closed
+  project isolation; stale = honest + no action; no machinery vocabulary (unit-pinned).
+
+## R11 integration preview (files this lane now shares with Main-change history)
+
+Since the re-anchor point `05608e6` this lane changed **53 files** (production + tests + plan
+docs). Files that ALSO carry pre-existing Main change history — i.e. the R11 conflict surface to
+resolve semantically — are exactly:
+
+- `process/services/kel/KelService.ts` (Main: A1/ENG-01 + INT-01 guards; lane: supervision)
+- `renderer/components/chat/KelWorkPanel.tsx` (Main: Knowledge actions; lane: kelAPI typings)
+- `renderer/components/kel/KelModelControl.tsx`, `KelApprovalCard.tsx`, `KelCapabilityCard.tsx`
+  (Main: COR-03 / APR-06 / R7 surfaces; lane: untouched — preserved as Main shipped them)
+- `renderer/pages/kel/transcription/index.tsx` (Main: TR-01 era; lane: batch 4 IA + batch 6
+  toasts)
+
+No other file is dual-owned. R11 must re-run tsc + vitest + packaged probes after the merge.
+
+## Pending at R9 close (honest)
+
+- Screenshot regeneration for batches 6–8 + R9.D: performed with the packaged battery at R10
+  (engine-loss journey doubles as the failure-state screenshot source).
+- Human pixel review: **PENDING** (human gate — never claimed).

@@ -33,16 +33,22 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
   const { logout, status } = useAuth();
   const { theme, setTheme } = useThemeContext();
   const [isBatchMode, setIsBatchMode] = useState(false);
-  const isSettings = pathname.startsWith('/settings');
+  // Kel V1.6 visual fix (finding S1-1): Team is reached only through Settings entries and has no
+  // primary-nav entry of its own, so /team/* belongs to the Settings context. Without this, choosing
+  // "Agents" or "Team roles" silently replaced the Settings sidebar with the main navigation.
+  const isSettings =
+    pathname.startsWith('/settings') || pathname === '/team' || pathname.startsWith('/team/');
   const lastNonSettingsPathRef = useRef('/guid');
   const showLogout =
     typeof window !== 'undefined' && !(window as { electronAPI?: unknown }).electronAPI && status === 'authenticated';
 
   useEffect(() => {
-    if (!pathname.startsWith('/settings')) {
+    // Paths inside the Settings context must not become the "back to chat" target, or the footer
+    // entry would send the user back into Settings instead of out of it.
+    if (!isSettings) {
       lastNonSettingsPathRef.current = `${pathname}${search}${hash}`;
     }
-  }, [pathname, search, hash]);
+  }, [isSettings, pathname, search, hash]);
 
   const handleNewChat = () => {
     cleanupSiderTooltips();

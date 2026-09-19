@@ -113,7 +113,10 @@ const AcpSendBox: React.FC<{
   messageState: UseAcpMessageReturn;
   teamSendMessage?: (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
   teamRuntime?: TeamSendBoxRuntime;
-}> = ({ conversation_id, backend, session_mode, agent_name, messageState, teamSendMessage, teamRuntime }) => {
+  /** Batch 7 (finding 2): the conversation's secondary controls (model / tools / memory),
+   *  rendered as a compact row attached to the composer — never a detached header island. */
+  composerControls?: React.ReactNode;
+}> = ({ conversation_id, backend, session_mode, agent_name, messageState, teamSendMessage, teamRuntime, composerControls }) => {
   const {
     aiProcessing,
     setAiProcessing,
@@ -803,6 +806,11 @@ Please check your local CLI tool authentication status`,
         onRetryStart={teamRuntime?.onRetryStart ? () => void teamRuntime.onRetryStart?.() : undefined}
       />
       <CrossSessionDisabledBanner />
+      {composerControls && !isMobile && (
+        <div className='flex items-center gap-8px mb-8px flex-wrap min-w-0' data-kel-composer-controls>
+          {composerControls}
+        </div>
+      )}
       <SendBox
         onMobilePlusClick={isMobile ? () => setIsMobileSheetOpen(true) : undefined}
         value={content}
