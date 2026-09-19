@@ -1,0 +1,144 @@
+....FFEF.F.                                                              [100%]
+=================================== ERRORS ====================================
+_ ERROR at teardown of CrossScopeResolutionTests.test_no_conversation_cannot_settle_a_foreign_step_approval _
+
+path = 'C:\\Users\\Nick\\AppData\\Local\\Temp\\tmpgr3t7agg', dir_fd = None
+onexc = <function TemporaryDirectory._rmtree.<locals>.onexc at 0x0000023688A59900>
+
+    def _rmtree_unsafe(path, dir_fd, onexc):
+        if dir_fd is not None:
+            raise NotImplementedError("dir_fd unavailable on this platform")
+        try:
+            st = os.lstat(path)
+        except OSError as err:
+            onexc(os.lstat, path, err)
+            return
+        try:
+            if _rmtree_islink(st):
+                # symlinks to directories are forbidden, see bug #1669
+                raise OSError("Cannot call rmtree on a symbolic link")
+        except OSError as err:
+            onexc(os.path.islink, path, err)
+            # can't continue even if onexc hook returns
+            return
+        def onerror(err):
+            if not isinstance(err, FileNotFoundError):
+                onexc(os.scandir, err.filename, err)
+        results = os.walk(path, topdown=False, onerror=onerror, followlinks=os._walk_symlinks_as_files)
+        for dirpath, dirnames, filenames in results:
+            for name in dirnames:
+                fullname = os.path.join(dirpath, name)
+                try:
+                    os.rmdir(fullname)
+                except FileNotFoundError:
+                    continue
+                except OSError as err:
+                    onexc(os.rmdir, fullname, err)
+            for name in filenames:
+                fullname = os.path.join(dirpath, name)
+                try:
+>                   os.unlink(fullname)
+E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\Nick\\AppData\\Local\\Temp\\tmpgr3t7agg\\data\\kel.sqlite3'
+
+C:\Python314\Lib\shutil.py:701: PermissionError
+
+During handling of the above exception, another exception occurred:
+C:\Python314\Lib\tempfile.py:975: in cleanup
+    self._rmtree(self.name, ignore_errors=self._ignore_cleanup_errors)
+C:\Python314\Lib\tempfile.py:955: in _rmtree
+    _shutil.rmtree(name, onexc=onexc)
+C:\Python314\Lib\shutil.py:852: in rmtree
+    _rmtree_impl(path, dir_fd, onexc)
+C:\Python314\Lib\shutil.py:705: in _rmtree_unsafe
+    onexc(os.unlink, fullname, err)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+func = <built-in function unlink>
+path = 'C:\\Users\\Nick\\AppData\\Local\\Temp\\tmpgr3t7agg\\data\\kel.sqlite3'
+exc = PermissionError(13, 'The process cannot access the file because it is being used by another process')
+
+    def onexc(func, path, exc):
+        if isinstance(exc, PermissionError):
+            if repeated and path == name:
+                if ignore_errors:
+                    return
+                raise
+    
+            try:
+                if path != name:
+                    _resetperms(_os.path.dirname(path))
+                _resetperms(path)
+    
+                try:
+>                   _os.unlink(path)
+E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\Nick\\AppData\\Local\\Temp\\tmpgr3t7agg\\data\\kel.sqlite3'
+
+C:\Python314\Lib\tempfile.py:930: PermissionError
+================================== FAILURES ===================================
+_ CrossScopeResolutionTests.test_no_conversation_cannot_settle_a_foreign_boundary_grant _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_no_conversation_cannot_settle_a_foreign_boundary_grant>
+
+    def test_no_conversation_cannot_settle_a_foreign_boundary_grant(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        _, request_id = self.ask_for_access_for(other)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:492: AssertionError
+_ CrossScopeResolutionTests.test_no_conversation_cannot_settle_a_foreign_step_approval _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_no_conversation_cannot_settle_a_foreign_step_approval>
+
+    def test_no_conversation_cannot_settle_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:478: AssertionError
+___ CrossScopeResolutionTests.test_the_legacy_singular_route_is_scoped_too ____
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_the_legacy_singular_route_is_scoped_too>
+
+    def test_the_legacy_singular_route_is_scoped_too(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:523: AssertionError
+_ CrossScopeResolutionTests.test_the_service_route_refuses_omission_on_a_foreign_step_approval _
+
+self = <test_v16_approvals.CrossScopeResolutionTests testMethod=test_the_service_route_refuses_omission_on_a_foreign_step_approval>
+
+    def test_the_service_route_refuses_omission_on_a_foreign_step_approval(self):
+        other = self.store.create(compile_coding('Elsewhere.', self.project,
+                                                 ['python', '-m', 'unittest']),
+                                  conversation='elsewhere')
+        run, approval_id, thread, result = self.ask_for_step(job=other)
+        service = Service(str(self.base / 'data'))
+        self.addCleanup(service.shutdown)
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_approvals.py:506: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_no_conversation_cannot_settle_a_foreign_boundary_grant
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_no_conversation_cannot_settle_a_foreign_step_approval
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_the_legacy_singular_route_is_scoped_too
+FAILED tests/test_v16_approvals.py::CrossScopeResolutionTests::test_the_service_route_refuses_omission_on_a_foreign_step_approval
+ERROR tests/test_v16_approvals.py::CrossScopeResolutionTests::test_no_conversation_cannot_settle_a_foreign_step_approval
+4 failed, 6 passed, 18 deselected, 1 error in 11.49s

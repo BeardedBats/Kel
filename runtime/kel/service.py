@@ -631,6 +631,10 @@ class Service:
             with contextlib.closing(self.store.connect()) as db:
                 row=db.execute('SELECT x.action,a.job_id FROM approval_actions x JOIN approvals a ON a.id=x.approval_id WHERE x.approval_id=?',(self._required(data,'id','Permission request missing'),)).fetchone()
             if not row:raise PolicyError('Permission request missing')
+            # Campaign C AUD-MAJOR-001: this route may not resolve unscoped by id - the same
+            # ownership check as the chat path runs here, with omission acting as `main`.
+            from .chat_approvals import require_owned
+            require_owned(self.store,'action',data.get('id'),data.get('conversation'))
             action=json.loads(row['action']);status=self.store.resolve_approval(data.get('id'),action,bool(data.get('allow')))
             if status=='APPROVED' and data.get('remember'):
                 job=self.store.get(row['job_id']);self.context.grant(job['contract'].get('project_id','default'),action)
