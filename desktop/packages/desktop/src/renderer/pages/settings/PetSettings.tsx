@@ -77,7 +77,9 @@ const PetSettings: React.FC = () => {
     systemSettings.setPetEnabled.invoke({ enabled: checked }).then(settle).catch(settle);
     // The donor bridge dispatcher can swallow a refused handler without settling its promise;
     // reconcile on a deadline so the toggle can never sit ON against the real state.
-    window.setTimeout(() => void settle(), 900);
+    window.setTimeout(() => {
+      void settle();
+    }, 900);
   }, []);
 
   const handleSizeChange = useCallback(

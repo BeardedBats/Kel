@@ -42,7 +42,7 @@ describe('desktop pet truthfulness (RA-MINOR-003)', () => {
     const page = read('packages/desktop/src/renderer/pages/settings/PetSettings.tsx');
     expect(page).toContain('Message.error');
     expect(page).toMatch(/getPetEnabled\.invoke\(\)/);
-    expect(page).toContain('setEnabled(Boolean(actual))');
+    expect(page).toContain('void settle();');
   });
 });
 
