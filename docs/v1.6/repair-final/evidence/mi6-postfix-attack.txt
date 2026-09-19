@@ -1,0 +1,16 @@
+scope 'src/../secrets'         -> REFUSED: write_scope entry 'src/../secrets' escapes the delegator scope ['src']
+scope 'a/../../x'              -> REFUSED: write_scope entry 'a/../../x' escapes the delegator scope ['src']
+scope 'src/nested/../file.py'  -> contained (None)
+scope 'src/sub/../app.py'      -> contained (None)
+scope './src/app.py'           -> contained (None)
+scope 'src//nested///x'        -> contained (None)
+scope 'src\\nested'            -> contained (None)
+scope '/etc/passwd'            -> REFUSED: write_scope entry '/etc/passwd' escapes the delegator scope ['src']
+scope 'C:file.txt'             -> REFUSED: write_scope entry 'C:file.txt' escapes the delegator scope ['src']
+scope 'src2/file.py'           -> REFUSED: write_scope entry 'src2/file.py' escapes the delegator scope ['src']
+scope 'SRC/file.py'            -> REFUSED: write_scope entry 'SRC/file.py' escapes the delegator scope ['src']
+scope '..'                     -> REFUSED: write_scope entry '..' escapes the delegator scope ['src']
+scope '../src'                 -> REFUSED: write_scope entry '../src' escapes the delegator scope ['src']
+scope '.'                      -> REFUSED: write_scope entry '.' escapes the delegator scope ['src']
+scope 'src'                    -> contained (None)
+dot-root 'deep/nested/file' -> contained (None)

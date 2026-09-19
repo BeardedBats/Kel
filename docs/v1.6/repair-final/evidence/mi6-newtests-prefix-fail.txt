@@ -1,0 +1,10 @@
+>       with self.assertRaises(PolicyError) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: PolicyError not raised
+
+tests\test_v16_r1_authority.py:194: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_v16_r1_authority.py::AuthorityWithinTests::test_dotdot_entries_resolve_lexically_before_containment
+FAILED tests/test_v16_r1_authority.py::AuthorityWithinTests::test_the_containment_normalization_table
+FAILED tests/test_v16_r1_authority.py::ContractParentAuthorityTests::test_a_write_scope_that_escapes_via_dotdot_is_refused_end_to_end
+3 failed, 1 passed, 22 deselected in 0.09s

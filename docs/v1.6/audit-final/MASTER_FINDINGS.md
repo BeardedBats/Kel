@@ -101,7 +101,7 @@ Severity re-evaluation pass complete (`19_SEVERITY_REVIEW.md`): no label changed
 - **Expected:** a child scope lexically escaping the delegator scope (via `..`) is refused. **Actual:** `authority_within({'write_scope': ['src/../secrets']}, {'write_scope': ['src']})` → contained (`None`); `_path_within` normalizes `./` + separators, never resolves `..`; `.` as parent root universal by design; `..` alone refused.
 - **Reproduction:** inline probe 2026-09-19; `runtime/kel/workforce.py` source read. **Evidence:** thread transcript + this ledger. **Confidence:** HIGH (primitive), MEDIUM (consumer impact).
 - **Adjacent risk:** any future consumer treating scope strings as real boundaries inherits the gap. **Repair criteria:** resolve `..` lexically or refuse `..` segments; document `.` semantics; tests `src/../x`, `a/../../x`, mixed separators. **Promotion criterion:** consumer runtime confirmation (Campaign C).
-- **Regression test:** primitive table + one end-to-end contract refusal. **Campaign C:** `NOT_STARTED`.
+- **Regression test:** primitive table + one end-to-end contract refusal. **Campaign C:** `REPAIRED` — repair commit: `c056a8a` · re-test: 4/4 (3 fail pre-fix), focused 26/26, cluster 303/303, inline replay refused · final re-audit: `PENDING`
 
 ## AUD-MINOR-007 — Donor-derived `aioncore` runtime is live and shipped; no corpus disposition found (binary staged from cache)
 

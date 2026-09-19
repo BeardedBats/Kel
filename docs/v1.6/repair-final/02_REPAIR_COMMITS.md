@@ -15,3 +15,5 @@ Rule: production commits carry the finding ID; raw evidence lives under `docs/v1
 | 7 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-002 recorded`) | AUD-MINOR-002 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
 | 8 | `91bd869` | AUD-MINOR-003 | fix | Native child envs strip every other provider credential via the canonical key set; discriminating tests |
 | 9 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-003 recorded`) | AUD-MINOR-003 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
+| 10 | `c056a8a` | AUD-MINOR-006 | fix | Delegation containment resolves `..` lexically (workforce._path_within); traversal table + e2e refusal tests |
+| 11 | (this commit; see `git log` subject `docs(v1.6-repair): AUD-MINOR-006 recorded`) | AUD-MINOR-006 | docs | Disposition detail, commit ledger, regression evidence, status/resume, master-findings Campaign C field |
