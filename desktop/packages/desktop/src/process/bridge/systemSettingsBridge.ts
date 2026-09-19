@@ -16,6 +16,7 @@ import { ipcBridge } from '@/common';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { changeLanguage } from '@process/services/i18n';
 import type { PetSize } from '@process/pet/petTypes';
+import { KEL_PET_SUBSYSTEM_ENABLED } from '@process/pet/petPolicy';
 import { createOrUpdateTray, destroyTray, setCloseToTrayEnabled } from '@process/utils/tray';
 import { readCloseToTraySetting, writeCloseToTraySetting } from '@process/utils/closeToTraySetting';
 import {
@@ -82,6 +83,12 @@ export function initSystemSettingsBridge(): void {
   });
 
   ipcBridge.systemSettings.setPetEnabled.provider(async ({ enabled }) => {
+    if (enabled && !KEL_PET_SUBSYSTEM_ENABLED) {
+      // Kel V1.6 policy (AUD-MINOR-008): the donor pet surface cannot be enabled; keep the
+      // stored state honest by persisting the disabled value.
+      await ProcessConfig.set('pet.enabled', false);
+      return;
+    }
     const { createPetWindow, destroyPetWindow, isPetSupported } = await import('@process/pet/petManager');
     if (enabled && !isPetSupported()) {
       console.warn('[SystemSettings] Desktop pet is not supported in headless mode');

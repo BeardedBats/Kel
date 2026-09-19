@@ -11,6 +11,22 @@
  */
 
 const { execSync, spawnSync } = require('child_process');
+
+// Kel V1.6 packaging identity (Campaign C AUD-MINOR-009): the Kel config is the ONLY default;
+// the donor yml stays as its `extends` base. The build refuses to run when the effective
+// config does not carry Kel identity.
+const KEL_BUILDER_CONFIG = 'kel-builder.json';
+
+function assertKelBuildIdentity() {
+  const configPath = path.resolve(__dirname, '..', KEL_BUILDER_CONFIG);
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  if (config.productName !== 'Kel' || config.appId !== 'com.kel.desktop') {
+    throw new Error(
+      `Refusing to build: ${KEL_BUILDER_CONFIG} must carry Kel identity (productName=Kel, appId=com.kel.desktop); got productName=${config.productName} appId=${config.appId}`
+    );
+  }
+  console.log(`✅ Build identity: ${config.productName} / ${config.appId} (${KEL_BUILDER_CONFIG})`);
+}
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -531,7 +547,7 @@ function createMacArtifactsWithPrepackaged(appDir, targetArch) {
   const appPath = path.join(appDir, appName);
 
   execSync(
-    `bunx electron-builder --config packages/desktop/electron-builder.yml --mac dmg zip --${targetArch} --prepackaged "${appPath}" --publish=never`,
+    `bunx electron-builder --config ${KEL_BUILDER_CONFIG} --mac dmg zip --${targetArch} --prepackaged "${appPath}" --publish=never`,
     {
       stdio: 'inherit',
       shell: process.platform === 'win32',
@@ -717,6 +733,7 @@ try {
   if (!skipViteBuild) {
     // Run electron-vite to build all bundles (main + preload + renderer)
     console.log(`📦 Building ${targetArch}...`);
+    assertKelBuildIdentity();
     execSync(`bunx electron-vite build --config packages/desktop/electron.vite.config.ts`, {
       stdio: 'inherit',
       shell: process.platform === 'win32',
@@ -774,6 +791,10 @@ try {
     arch: targetArch,
     version: resolveAioncoreVersion(projectRoot),
   });
+  const aioncoreDir = path.join(projectRoot, 'resources', 'bundled-aioncore', `${process.platform}-${targetArch}`);
+  if (!fs.existsSync(path.join(aioncoreDir, 'provenance.json'))) {
+    throw new Error(`aioncore provenance.json missing under ${aioncoreDir} (Kel build assertion, AUD-MINOR-007)`);
+  }
 
   // 6. Prepare hub resources (index.json + extension zips for offline fallback)
   execSync('node scripts/prepareHubResources.js', { stdio: 'inherit', env: process.env });
@@ -863,7 +884,7 @@ try {
     cleanupWindowsPackOutput();
   }
 
-  const builderCommand = `bunx electron-builder --config packages/desktop/electron-builder.yml ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}`;
+  const builderCommand = `bunx electron-builder --config ${KEL_BUILDER_CONFIG} ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}`;
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {

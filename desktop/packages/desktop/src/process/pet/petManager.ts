@@ -11,6 +11,7 @@ import { PetStateMachine } from './petStateMachine';
 import { PetIdleTicker } from './petIdleTicker';
 import { PetEventBridge } from './petEventBridge';
 import { setPetNotifyHook } from '../../common/adapter/main';
+import { KEL_PET_SUBSYSTEM_ENABLED } from './petPolicy';
 import {
   initPetConfirmManager,
   updateAnchorBounds,
@@ -93,6 +94,10 @@ const RESTORABLE_STATES: ReadonlySet<PetState> = new Set<PetState>(['thinking', 
  * Create pet windows (rendering window + hit detection window).
  */
 export function createPetWindow(): void {
+  if (!KEL_PET_SUBSYSTEM_ENABLED) {
+    console.warn('[Pet] Disabled by Kel policy (AUD-MINOR-008); no pet window will be created.');
+    return;
+  }
   if (!isPetSupported()) {
     console.warn('[Pet] Desktop pet is not supported in headless mode');
     return;

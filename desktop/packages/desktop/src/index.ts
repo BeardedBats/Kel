@@ -26,6 +26,7 @@ import { ipcBridge } from './common';
 import { initializeProcess } from './process';
 import { initializeKel } from './process/services/kel/KelService';
 import { startBackendOrExit } from './process/startup/backendStartup';
+import { KEL_PET_SUBSYSTEM_ENABLED } from './process/pet/petPolicy';
 import { assertStartupArchitectureCompatible } from './process/startup/architectureCompatibility';
 import { classifyBackendStartupFailure } from './process/startup/backendStartupFailure';
 import { registerBackendStartupIpc } from './process/startup/backendStartupIpc';
@@ -1055,7 +1056,7 @@ const handleAppReady = async (): Promise<void> => {
       void (async () => {
         try {
           const petEnabled = await ProcessConfig.get('pet.enabled');
-          if (petEnabled === true) {
+          if (petEnabled === true && KEL_PET_SUBSYSTEM_ENABLED) {
             // Read pet sub-settings before creating the pet so flags are honored
             // on the first createPetWindow() call (which is sync).
             const confirmEnabled = (await ProcessConfig.get('pet.confirmEnabled')) ?? true;
