@@ -1,0 +1,87 @@
+{
+ "schema": 1,
+ "appDir": "C:\\Users\\Nick\\KelAuditInstall",
+ "startedAt": "2026-09-19T05:20:20.386Z",
+ "steps": {
+  "healthyBoot": true,
+  "engineVersion": "1.6.0",
+  "conversationsBefore": [
+   "4b3c8832-d9bf-4458-b6df-df0536b57ad4",
+   "main"
+  ],
+  "projectsBefore": [
+   "default"
+  ],
+  "seededFolder": {
+   "id": "dbf285fd-7fdb-485c-b0c3-defd748e197e",
+   "name": "R10 durable folder"
+  },
+  "libraryHasSeedBefore": true,
+  "reconnectNotice": "Kel is reconnecting The engine stopped answering. Kel is bringing it back — your work is preserved.",
+  "recoveredNotice": "Kel restarted successfully The engine is back and your work is preserved. You can continue where you left off.",
+  "engineHealthyAfter1": true,
+  "newPidAfter1": true,
+  "libraryHasSeedAfter": true,
+  "conversationsAfter": [
+   "4b3c8832-d9bf-4458-b6df-df0536b57ad4",
+   "main"
+  ],
+  "conversationsPreserved": true,
+  "engineVersionStable": true,
+  "recoveredNoticeAgain": "Kel restarted successfully The engine is back and your work is preserved. You can continue where you left off.",
+  "newPidAfter2": true,
+  "engineBinaryHeld": true,
+  "couldNotRecoverNotice": "Kel couldn't recover on its own The engine did not come back after 2 attempts. Close and open Kel, or try a restart below. Try to restart Kel's engine",
+  "engineBinaryRestored": true,
+  "manualRetryClicked": true,
+  "engineHealthyAfterManual": true,
+  "newPidAfterManual": true,
+  "finalNotice": "Kel restarted successfully The engine is back and your work is preserved. You can continue where you left off."
+ },
+ "transitions": [],
+ "enginePids": {
+  "before": [
+   21812
+  ],
+  "kill1": {
+   "attempted": [
+    21812
+   ],
+   "killed": [
+    21812
+   ]
+  },
+  "after1": [
+   29640
+  ],
+  "kill2": {
+   "attempted": [
+    29640
+   ],
+   "killed": [
+    29640
+   ]
+  },
+  "after2": [
+   15940
+  ],
+  "kill3": {
+   "attempted": [
+    15940
+   ],
+   "killed": [
+    15940
+   ]
+  },
+  "after3": [
+   44980
+  ]
+ },
+ "consoleErrors": [],
+ "rawLeaks": [],
+ "screenshots": [
+  "r10-01-reconnecting.png",
+  "r10-02-recovered.png",
+  "r10-03-could-not-recover.png"
+ ]
+}
