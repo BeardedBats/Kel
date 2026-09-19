@@ -12,6 +12,7 @@
 import { ipcMain, app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { collectFeedbackLogAttachment } from '../feedback/logs';
+import { assertTrustedSender, isTrustedSender } from '../../common/senderGuard';
 
 type RendererFeedbackLogPayload = {
   details?: unknown;
@@ -33,7 +34,8 @@ function normalizeRendererFeedbackLogPayload(payload: RendererFeedbackLogPayload
   };
 }
 
-ipcMain.on('feedback:renderer-log', (_event, payload: RendererFeedbackLogPayload) => {
+ipcMain.on('feedback:renderer-log', (event, payload: RendererFeedbackLogPayload) => {
+  if (!isTrustedSender(event, { allowDevServer: true })) return;
   const log = normalizeRendererFeedbackLogPayload(payload ?? {});
   const args = [`[FeedbackReport:renderer] ${log.message}`];
   if (log.details !== undefined) {
@@ -49,7 +51,8 @@ ipcMain.on('feedback:renderer-log', (_event, payload: RendererFeedbackLogPayload
   }
 });
 
-ipcMain.handle('feedback:collect-logs', async () => {
+ipcMain.handle('feedback:collect-logs', async (event) => {
+  assertTrustedSender(event, { allowDevServer: true });
   try {
     let logsDir: string;
     try {
@@ -74,6 +77,7 @@ ipcMain.handle('feedback:collect-logs', async () => {
 });
 
 ipcMain.handle('feedback:capture-screenshot', async (event) => {
+  assertTrustedSender(event, { allowDevServer: true });
   try {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || win.isDestroyed()) {

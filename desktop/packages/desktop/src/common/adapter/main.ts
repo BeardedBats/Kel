@@ -9,6 +9,7 @@ import { ipcMain } from 'electron';
 
 import { bridge } from '@/common/platform/bridge';
 import { ADAPTER_BRIDGE_EVENT_KEY } from './constant';
+import { assertTrustedSender } from '../senderGuard';
 import { registerWebSocketBroadcaster, getBridgeEmitter, setBridgeEmitter, broadcastToAll } from './registry';
 
 /**
@@ -90,7 +91,10 @@ bridge.adapter({
     // 保存 emitter 引用供 WebSocket 处理使用 / Save emitter reference for WebSocket handling
     setBridgeEmitter(emitter);
 
-    ipcMain.handle(ADAPTER_BRIDGE_EVENT_KEY, (_event, info) => {
+    ipcMain.handle(ADAPTER_BRIDGE_EVENT_KEY, (event, info) => {
+      // The donor bridge methods behind this dispatcher are privileged (update, shell, storage
+      // lifecycles); apply the shared sender guard (Campaign C AUD-MAJOR-002).
+      assertTrustedSender(event, { allowDevServer: true });
       const { name, data } = JSON.parse(info) as BridgeEventData;
       return Promise.resolve(emitter.emit(name, data));
     });

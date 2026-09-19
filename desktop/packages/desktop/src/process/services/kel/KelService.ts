@@ -7,6 +7,8 @@ import { recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
+import { registerKelCredentialIpc } from './kelCredentialIpc';
+import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
 const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
@@ -482,8 +484,7 @@ export async function initializeKel(port: number): Promise<void> {
   fs.renameSync(historyPath + '.tmp', historyPath);
   ipcMain.removeHandler('kel:conversation');
   ipcMain.handle('kel:conversation', (event, id: string) => {
-    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame?.url.startsWith('file:'))
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event);
     if (mapping[id]) return mapping[id];
     if (fs.existsSync(liveMapDir))
       for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json'))) {
@@ -494,8 +495,7 @@ export async function initializeKel(port: number): Promise<void> {
   });
   ipcMain.removeHandler('kel:history-search');
   ipcMain.handle('kel:history-search', (event, query: string) => {
-    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame?.url.startsWith('file:'))
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event);
     if (typeof query !== 'string' || query.trim().length < 1) return [];
     return Object.values(history)
       .flat()
@@ -507,8 +507,7 @@ export async function initializeKel(port: number): Promise<void> {
   });
   ipcMain.removeHandler('kel:history');
   ipcMain.handle('kel:history', async (event, id: string) => {
-    if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame?.url.startsWith('file:'))
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event);
     if (!mapping[id] && fs.existsSync(liveMapDir))
       for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json')))
         Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
@@ -526,12 +525,7 @@ export async function initializeKel(port: number): Promise<void> {
   // quit during ANY later failure still stops a freshly spawned engine.
   ipcMain.removeHandler('kel:request');
   ipcMain.handle('kel:request', async (event, route: string, body?: unknown) => {
-    const url = event.senderFrame?.url || '';
-    if (
-      event.senderFrame !== event.sender.mainFrame ||
-      (!url.startsWith('file:') && !url.startsWith('http://localhost:'))
-    )
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event, { allowDevServer: true });
     if (
       !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
         route
@@ -543,9 +537,7 @@ export async function initializeKel(port: number): Promise<void> {
   // Batch 6 (findings 16/17): the shell's honest view of the engine link, plus the support
   // actions the failure surfaces offer. Presentation-only — no durable state is owned here.
   const guardKelWindow = (event: Electron.IpcMainInvokeEvent) => {
-    const url = event.senderFrame?.url || '';
-    if (event.senderFrame !== event.sender.mainFrame || (!url.startsWith('file:') && !url.startsWith('http://localhost:')))
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event, { allowDevServer: true });
   };
   ipcMain.removeHandler('kel:engine-state');
   ipcMain.handle('kel:engine-state', (event) => {
@@ -579,9 +571,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:artifact-reveal', (event, relpath: string) => {
     // Same frame guard as the other privileged handlers: only the app's own main frame may ask the
     // OS to reveal a path (audit INT-01 - this handler was the one that skipped the check).
-    const url = event.senderFrame?.url || '';
-    if (event.senderFrame !== event.sender.mainFrame || !url.startsWith('file:'))
-      throw new Error('Unknown Kel window');
+    assertTrustedSender(event);
     if (typeof relpath !== 'string' || !relpath) throw new Error('Missing artifact path');
     const root = path.resolve(dataRoot());
     const target = path.resolve(root, relpath);
@@ -591,25 +581,12 @@ export async function initializeKel(port: number): Promise<void> {
   });
   // OS-backed credential custody (V1.4 Gate 6): values are encrypted with safeStorage (DPAPI on
   // Windows) in the main process; the engine only ever receives metadata, and no IPC returns a value.
-  ipcMain.handle('kel:credential-status', () => credentialStatus());
-  ipcMain.handle(
-    'kel:credential-set',
-    async (event, provider: string, field: string, value: string): Promise<{ provider: string; fields: string[] }> => {
-      const stored = setCredential(provider, field, value);
-      await kelRequest('/api/providers', {
-        action: 'set_credential',
-        provider,
-        fields: stored.fields,
-        credential_ref: `kel:provider:${provider}:${field}`,
-      }).catch((): undefined => undefined);
-      return { provider: stored.provider, fields: stored.fields };
-    }
-  );
-  ipcMain.handle('kel:credential-delete', async (event, provider: string): Promise<{ provider: string; removed: number }> => {
-    const removed = removeCredential(provider);
-    await kelRequest('/api/providers', { action: 'delete_credential', provider }).catch(
-      (): undefined => undefined
-    );
-    return removed;
+  // Credential custody IPC (Campaign C AUD-MAJOR-002): the trio now runs the shared sender
+  // guard like every other privileged channel; the engine sync stays best-effort.
+  registerKelCredentialIpc({
+    status: credentialStatus,
+    set: setCredential,
+    remove: removeCredential,
+    syncProviders: (body) => kelRequest('/api/providers', body),
   });
 }
