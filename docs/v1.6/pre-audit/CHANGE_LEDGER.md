@@ -539,6 +539,56 @@ ID: CHG-006 · Phase: Campaign A (audit carry-forward F4 / audit-scope WF-12) ·
   Does the recorder double-write on re-landing (it must not)?
 - **Repair hints:** recorder next to `_record_lineage`; verifier next to `_evidence_violations`.
 
+### CHG-024 — Honest engine-loss surfaces + supervision (R9 batch 6 / findings 16/17)
+ID: CHG-024 / Phase: Campaign A — R9 batch 6 / Commits: `2897207`, `645898a`, `fa66f04` / Date: 2026-09-18
+New behavior: one classifier + copy source (`engineFailure.ts`) for every failure a person can see
+(transport text can appear ONLY inside the Technical-details disclosure / diagnostics copy —
+unit-pinned); a supervision machine (`engineHealth.ts`) drives honest link states (connected /
+reconnecting / recovered / could-not-recover) with one supervised restart per incident, an
+automatic budget that is never reset by a failed attempt, and a person-started retry as a new
+incident; the shell shows an in-flow strip; the before-quit drain only fires for the instance that
+spawned the engine. Previous: raw `TypeError: fetch failed` reached user copy; no supervision.
+Primary files: `desktop/.../kel/engineFailure.ts`, `engineHealth.ts`, `KelFailureCard.tsx`,
+`KelEngineNotice.tsx`, `KelService.ts`, `preload/main.ts`, `kelApi.ts`, 8 pages, `kel-tokens.css`,
+`Layout.tsx`, tests. Tests: `engine-failure` (12) + `engine-health` (6); tsc 0; R10 packaged
+journey PASS (`ux-audit/runs/r10-{f,g}`). Evidence: `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`;
+AUDIT_TARGETS 86–88.
+
+### CHG-025 — The composer owns its secondary controls (R9 batch 7 / finding 2)
+ID: CHG-025 / Phase: Campaign A — R9 batch 7 / Commit: `0e7d21a` / Date: 2026-09-18
+New behavior: model / tools / memory controls render as one compact row attached to the composer
+(`composerControls` prop through ChatConversation → AcpChat → AcpSendBox); the header keeps only
+the invisible warmup selector; mobile keeps its existing flow (no duplicate controls). Previous:
+detached header island. Primary files: `ChatConversation.tsx`, `AcpChat.tsx`, `AcpSendBox.tsx`.
+Tests: tsc 0; vitest 114.
+
+### CHG-026 — Final normalization pass (R9 batch 8)
+ID: CHG-026 / Phase: Campaign A — R9 batch 8 / Commit: `c911d81` / Date: 2026-09-18
+New behavior: table cells break long unbroken tokens (`overflow-wrap: anywhere`); the legacy
+`KelErrorState` primitive is removed so the raw-cause pattern cannot be reintroduced by reuse.
+Recorded residue: donor preview viewers append a raw exception message outside Kel surfaces
+(AUDIT_TARGETS 89). Tests: tsc 0; vitest 114.
+
+### CHG-027 — "Needs your attention" (R9.D; derived-only view)
+ID: CHG-027 / Phase: Campaign A — R9.D / Commit: `938dc9b` / Date: 2026-09-18
+New behavior: a derived-only Work-surface section aggregating approval waiting, blocked work,
+recorded failure, finished-without-clean-verification, continuation-ready and permission-decision
+items from `/api/state` + `/api/autonomy`; every action opens the EXISTING surface that owns the
+decision; project isolation is fail-closed and hostile-tested; stale references render honestly
+with no action; copy checked against worker/lease/routing vocabulary. Primary files:
+`needsAttention.ts`, `KelNeedsAttention.tsx`, `work/index.tsx`, tests. Tests: `needs-attention`
+(8); tsc 0; vitest 122. AUDIT_TARGETS 84–85.
+
+### CHG-028 — Engine-loss/recovery proven as a packaged journey (R10; closes TR-02's binding)
+ID: CHG-028 / Phase: Campaign A — R10 / Commits: evidence `bc92f7f` (lane) / Date: 2026-09-18
+New behavior: no new production code beyond CHG-024's follow-ups; this entry records the packaged
+proof: boot → healthy (engine 1.6.0) → kill → truthful reconnecting → supervised restart →
+durable work preserved (seeded transcription folder + conversations + engine version) → repeated
+loss → recovered again → restart impossible → honest could-not-recover (~5 s with fail-fast) →
+manual retry → recovered. 7 screenshots; DOM raw-leak scan clean; console errors 0. Engine-side
+variants (approval-wait loss, effect reconciliation) carried to the R12 battery. Evidence:
+`docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`; `ux-audit/runs/r10-{f,g}`.
+
 Planned Phase-to-CHG mapping (kept current as work lands):
 
 | Phase | Expected CHGs | Status |
@@ -566,5 +616,5 @@ Planned Phase-to-CHG mapping (kept current as work lands):
 | R6 truthful state / liveness | inventory + 5 tests (no production change); record `increments/R6-TRUTHFUL-STATE.md` | DONE |
 | R7 credential containment | CHG-022 delivered (`b6c4eff`); record `increments/R7-CREDENTIAL-BOUNDARY.md` | DONE |
 | R8 migrations + package identity + REL-01 | CHG-023 delivered (`2468b16`, `93b99b5`); record `increments/R8-PACKAGE-ASSERTIONS.md` | DONE |
-| Visual batches 6–8 + integration | CHG-0xx (per batch; see VISUAL_EVIDENCE_INDEX.md) | PENDING |
-| Engine-loss/recovery behavior | CHG-0xx | PENDING |
+| Visual batches 6–8 + integration | CHG-024 (batch 6 `2897207`+`645898a`+`fa66f04`), CHG-025 (batch 7 `0e7d21a`), CHG-026 (batch 8 `c911d81`), CHG-027 (R9.D `938dc9b`); integrated `7267630`; evidence `docs/v1.6-visual-ux/18_R9_EVIDENCE.md` | DONE |
+| Engine-loss/recovery behavior | CHG-028 (supervision + states; packaged proof `ux-audit/runs/r10-{f,g}`; `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`) | DONE |

@@ -64,12 +64,13 @@ migrations | UI? | packaged impact? | sec/privacy? | persistence? | priority | e
 | `93b99b5` | `2468b16` | 2026-09-18 | R8.B/C/D / PACKAGE-IDENTITY + REL-01 | frozen load path carries the staged runtime (no nesting); the freeze refuses divergence; engine/desktop version identity = 1.6.0 | `scripts/freeze-release.ps1`; `scripts/validate-freeze.ps1`; `kel/__init__.py`; `kel/service.py`; `desktop/package.json`; `tests/test_v16_r8_identity.py`; `engineVersion.test.ts`; record | +3 engine + 3 desktop tests; packaged probe (1.6.0, 4 providers); full suite A-26 | none | yes (version strings) | no | no | HIGH | `increments/R8-PACKAGE-ASSERTIONS.md`; INV-PACKAGE-IDENTITY; REL-01 fixture evidence | installer battery + real-package freeze remain R12 |
 | `HEAD` | `93b99b5` | 2026-09-18 | R7+R8 | R7/R8 breadcrumbs (this commit) | docs only | engine full A-26; desktop A-27 | none | no | - | no | no | LOW | corpus rows REQ-R25-R7/R8, INV-CREDENTIAL-CONTAINMENT/PACKAGE-IDENTITY, CHG-022/023, A-26/27; `increments/R7...`, `R8...` | next: R9 Visual 6-8 + Needs Your Attention |
 
-## Visual branch commits pending integration (NOT covered by any independent audit)
+## Visual lane commits — INTEGRATED into Main (R11 `7267630`; NOT covered by an independent audit)
 
-Branch `ux/v16-visual-fix` (worktree `kel-v16-visual-fix`). These carry production changes that
-have automated (79/79 vitest, tsc 0) and packaged (`package-visual5` probes a/b/c) acceptance only.
-When integrated into `ux/v15-journeys` they enter the Commit Ledger range above as NEW commits
-(integration commit(s) + preserved lineage), and their original SHAs remain traceable.
+Branch `ux/v16-visual-fix` (worktree `kel-v16-visual-fix`), re-anchored on Main `05608e6`
+during R9.A (`3050761`, pure-union merge — zero production overlap). Every row below is now
+part of the integration lineage; original SHAs remain traceable. Automated acceptance at lane
+tip `fa66f04`: tsc 0; vitest **122/122** (12 files). Packaged: R10 engine-loss journey
+(`ux-audit/runs/r10-{f,g}`, PASS) + `package-visual5` probes a/b/c.
 
 | SHA | date | batch | intent | production files (summary) | evidence | concerns |
 |---|---|---|---|---|---|---|
@@ -78,6 +79,25 @@ When integrated into `ux/v15-journeys` they enter the Commit Ledger range above 
 | `04151c8` | 2026-09-17 | docs | visual plan docs onto the branch | docs | — | — |
 | `83af16f` | 2026-09-18 | Batch 4 | Transcription standalone IA | transcription renderer | tsc 0; 76/76 | finding 2/3 baselines pending |
 | `ac85eb3` | 2026-09-18 | Batch 5 | Sidebar rows: action gutter + leading-mark semantics | ConversationRow, tests | tsc 0; **79/79**; packaged probe c | human pixel gate open |
+| `0ff061d` | 2026-09-18 | R9.A | lane reconciliation + integration map (zero-overlap proof) | docs | — | — |
+| `3050761` | 2026-09-18 | R9.A | re-anchor merge Main `05608e6` into the lane (pure union) | merge of Main docs + lane | batch-1–5 files byte-identical post-merge | — |
+| `2897207` | 2026-09-18 | Batch 6 | honest engine-loss / failure states + supervision (findings 16/17) | engineFailure, engineHealth, KelService, failure card/notice, 8 pages, preload, tests | tsc 0; vitest 114; R10 packaged PASS | packaged evidence at R10 |
+| `0e7d21a` | 2026-09-18 | Batch 7 | composer owns model/tools/memory (finding 2) | ChatConversation, AcpChat, AcpSendBox | tsc 0; vitest 114 | mobile path unchanged by design |
+| `c911d81` | 2026-09-18 | Batch 8 | normalization (overflow guard; legacy error primitive removed) | kel-tokens.css, KelPrimitives | tsc 0; vitest 114 | donor preview residue recorded (audit target 89) |
+| `938dc9b` | 2026-09-18 | R9.D | Needs Your Attention (derived-only view + hostile tests) | needsAttention, KelNeedsAttention, Work mount, tests | tsc 0; vitest 122 | — |
+| `645898a` | 2026-09-18 | Batch 6b | fail-fast when a supervised spawn dies outright | KelService | tsc 0; vitest 122 | first attempt used `exitCode` only — ineffective for ENOENT (r10-d evidence) |
+| `fa66f04` | 2026-09-18 | Batch 6c | ENOENT spawns fail fast (`pid === undefined`) | KelService | tsc 0; vitest 122; r10-f: could-not-recover in ~5 s | — |
+| `96979c7` | 2026-09-18 | docs | R9 evidence index (18_R9_EVIDENCE.md) | docs | — | — |
+| `bc92f7f` | 2026-09-18 | docs | R10 evidence (19_R10_ENGINE_LOSS_EVIDENCE.md) | docs | — | — |
+
+## Main-lane docs + integration commits (R9–R11)
+
+| SHA | date | phase | intent | files | notes |
+|---|---|---|---|---|
+| `05608e6` | 2026-09-18 | R9 bookkeeping | P2/P3 denominator reconciliation (27-vs-26) + full original-ID mapping | docs corpus | no production change |
+| `1972b68` | 2026-09-18 | R9 status | MAIN_STATUS + MARATHON_STATE breadcrumbs | docs | — |
+| `93b7074` | 2026-09-18 | R9 audit targets | targets 86–90 (supervision/loaded-gun/preview residue/packaging inputs) | docs | — |
+| `7267630` | 2026-09-18 | **R11** | integration merge: visual lane → Main (batches 1–8 + R9.D + R10 supervision) | union (55 lane files + 3 Main docs) | zero overlapping files; no conflict resolutions; post-merge tsc 0 + vitest 122/122 |
 
 ## Maintenance rules
 
