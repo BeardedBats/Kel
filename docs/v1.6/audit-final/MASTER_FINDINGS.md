@@ -6,7 +6,7 @@ Severities: `AUD-BLOCK` / `AUD-MAJOR` / `AUD-MINOR` / `AUD-SUG`. Status: `RECORD
 Campaign C fields start `NOT_STARTED`/blank. Findings are recorded, never repaired here.
 
 ## Summary (as of this revision)
-- AUD-BLOCK: 0 · AUD-MAJOR: 1 · AUD-MINOR: 8 · AUD-SUG: 1
+- AUD-BLOCK: 0 · AUD-MAJOR: 2 · AUD-MINOR: 9 · AUD-SUG: 1
 - In verification (NOT findings yet): `_path_within` `..`-escape & case/prefix tricks; capability technical-string recognition (bare path/log-line); r10 timing-precision wording; donor-residual classification (AionUI description/email, bundled-aioncore, web-host `aioncore` launcher reachability); visual screenshot-count arithmetic; mail `docs/v1.6-visual-ux/00_STATUS.md` staleness; `next free version` drift (folded into AUD-MINOR-005 items).
 
 ---
@@ -101,7 +101,7 @@ Campaign C fields start `NOT_STARTED`/blank. Findings are recorded, never repair
 ---
 
 ## Campaign C handoff (running)
-Repair set so far: `AUD-MAJOR-001`, `AUD-MINOR-001` … `AUD-MINOR-008`, `AUD-SUG-001`. Nothing repaired in Campaign B; the RC target is unchanged.
+Repair set so far: `AUD-MAJOR-001`, `AUD-MAJOR-002`, `AUD-MINOR-001` … `AUD-MINOR-009`, `AUD-SUG-001`. Nothing repaired in Campaign B; the RC target is unchanged.
 
 ### AUD-MINOR-006 — Delegation containment primitive does not resolve `..`: `src/../secrets` counts as within `src`
 
@@ -144,4 +144,30 @@ Repair set so far: `AUD-MAJOR-001`, `AUD-MINOR-001` … `AUD-MINOR-008`, `AUD-SU
 ### Addendum to AUD-MINOR-004 (item d)
 
 - r10-f row claims per-attempt failure timings ("attempt 1 fails (2 ms) → attempt 2 fails (2 ms)") that are NOT retained in `ux-audit/runs/r10-f/**`; the load-bearing timings ARE retained (reconnect#1 00:09:35.236 → unrecoverable 00:09:40.249 ≈ 5.01 s; manual retry → recovered in 0.53 s).
+
+### AUD-MAJOR-002 — Privileged IPC surface lacks sender validation across multiple channels, including a generic bridge dispatcher into donor bridge methods
+
+- **Severity:** AUD-MAJOR · **Status:** RECORDED (code-verified; empirical subframe test not performed — no Electron harness, same limitation the corpus records at §58) · **Subsystem:** desktop main/renderer boundary
+- **Evidence:** `KelService.ts` guards 8 channels with `event.senderFrame === event.sender.mainFrame` (+file:/localhost URL), but the credential trio has NO guard: `kel:credential-status` (`:594`, no event param), `kel:credential-set` (`:595-607`, stores secrets), `kel:credential-delete` (`:608-616`, removes them). `feedbackBridge.ts`: `feedback:collect-logs` (`:52`, returns log file bytes, no event param) and `feedback:capture-screenshot` (`:76`, captures the window) have no frame validation. `index.ts` sendSync channels `get-backend-port`/`get-initial-language`/`get-backend-startup-*` (`:255-269`) and `backend:recover-corrupted-database` (`:271`) are unguarded. `common/adapter/main.ts` registers `ipcMain.handle(ADAPTER_BRIDGE_EVENT_KEY, (_event, info) => emitter.emit(name, data))` — a generic dispatcher with no sender check, reachable via `electronAPI.emit` (`preload/main.ts:20-33`) and dispatching into the donor bridge provider map (`app.update-cdp-config`, `app.clear-browser-data`, `app.set-start-on-boot`, `update.download` / `auto-update.quit-and-install`, `shell.openExternal`, `app.set-zoom-factor`, `skills.files.*`, …).
+- **Expected:** the declared closure of the INT-01 class is a uniform privileged-IPC surface: every privileged channel validates the sender frame (only the app's own main frame may act).
+- **Actual:** validation is partial (8 of 11 Kel channels; 0 of 2 feedback channels; 0 sendSync handlers; generic dispatcher unvalidated). Electron runs the preload for subframes as well, so the app-exposed `electronAPI`/`kelAPI` surface can exist in non-main frames (welcome-home for the guard that eight channels DO apply); artifact preview renders iframes/webviews (`HTMLRenderer`, `WebviewHost`, `OfficeWatchViewer`, `PDFViewer`, Markdown components).
+- **Impact:** non-main frames — if any reachable frame carries the exposed bridge — can set/delete provider credentials, pull log bytes, capture the window, or invoke donor bridge methods with system-level effects (CDP config, browser-data clearing, installer download/quit-and-install, openExternal). Even in the most conservative reading (main-frame-only reachability), the unguarded channels contradict the declared uniform boundary and reintroduce the INT-01 class on new channels.
+- **Repair criteria:** apply one shared, tested sender-validation helper to every privileged channel (Kel trio + feedback pair + sendSync handlers + `backend:recover-corrupted-database` + the adapter dispatcher); decide whether the generic dispatcher surface is needed at all for Kel (vs donor dormant); regression list per channel.
+- **Confidence:** HIGH for the missing guards (code); MEDIUM-HIGH for subframe reachability (Electron semantics + code analysis; no harness run).
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### AUD-MINOR-009 — Donor builder config remains the default build path (`electron-builder.yml`: appId com.aionui.app, productName AionUi)
+
+- **Severity:** AUD-MINOR · **Status:** RECORDED · **Subsystem:** packaging/build tooling (donor residual)
+- **Evidence:** `desktop/packages/desktop/electron-builder.yml` — `appId: com.aionui.app`, `productName: AionUi` (only config referenced by `scripts/build-with-builder.js`, which `bun run build` / `dist:win` use and whose fallbacks hardcode `AionUi.exe`, `AionUi/Electron process` checks). Kel packages are produced only when `--config kel-builder.json` is passed explicitly (RC evidence: `docs/v1.6/AUTO_RESUME.md:372`; build logs `package-*-build.log` → `loaded configuration file=...kel-builder.json`).
+- **Expected:** one obvious production build path; donor configs removed or clearly quarantined.
+- **Actual:** the DEFAULT scripts build a donor-branded app; the Kel config is an explicit side path. A maintainer/CI running `bun run dist:win` would produce `AionUi`-named artifacts.
+- **Repair criteria:** make the Kel config the default (or remove donor build scripts/names); ensure `kel-builder.json` is the single packaging config; add a build-identity assertion (productName=Kel, appId) to a CI step.
+- **Campaign C:** `NOT_STARTED` — — · — · —
+
+### Revision notes (2026-09-19 continuation)
+
+- **AUD-MINOR-004 addendum (e):** no build log/command record for the RC `package-r12` was retained anywhere (no `package-r12-build.log`; only install/probe evidence). The documented generic command (`--config kel-builder.json --win --x64`) cannot itself produce the NSIS artifact given `win.target=["dir"]` in the committed config — the exact R12 invocation is unreconstructable from retained evidence; the auditor rebuild mirrors it with `-c.win.target=nsis`.
+- **AUD-MINOR-007 added evidence:** the official build flow calls `prepareAioncore(...)` (`scripts/build-with-builder.js` step 5) and `kel-builder.json` `extraResources` ships `{from: LICENSE, to: AionUI-LICENSE.txt}` — i.e., the donor runtime and its license are intentional, config-driven packaging inputs; the open question is provenance binding + naming disposition, not removal.
+- **Engine rebuild evidence:** independent PyInstaller rebuild from the RC tree succeeded (log `evidence/auditor-engine-rebuild.log`); fresh `KelEngine.exe` = 3,326,709 B (same size as packaged) with a different SHA-256 (`3bd693b3…` vs `69123af0…`) — expected PyInstaller non-reproducibility; the RC's own chain (staged == packaged == installed claim) remains hash-exact.
 
