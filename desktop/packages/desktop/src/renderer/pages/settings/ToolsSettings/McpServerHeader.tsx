@@ -8,6 +8,12 @@ import FeedbackButton from '@/renderer/components/base/FeedbackButton';
 import { iconColors } from '@/renderer/styles/colors';
 import { formatDateTime } from '@/renderer/services/i18n/format';
 
+/**
+ * Human-visual repair: donor-era internal MCP ids stay for compatibility, but the UI speaks Kel —
+ * the built-in browser server shows as "Kel Browser" instead of its config id.
+ */
+const MCP_DISPLAY_NAMES: Record<string, string> = { 'aionui-browser': 'Kel Browser' };
+
 interface McpServerHeaderProps {
   server: IMcpServer;
   isTestingConnection: boolean;
@@ -168,7 +174,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   return (
     <div className='flex items-center justify-between group'>
       <div className='flex items-center gap-2'>
-        <span>{server.name}</span>
+        <span>{MCP_DISPLAY_NAMES[server.name] ?? server.name}</span>
         {statusPopoverContent ? (
           <Popover content={statusPopoverContent} trigger='hover' position='top'>
             <span className='flex items-center cursor-default'>{statusIcon}</span>

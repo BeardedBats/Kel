@@ -6,7 +6,6 @@
 
 import type { Theme } from '@/common/theme/types';
 import { LIGHT_THEME_ID, DARK_THEME_ID } from '@/common/theme/constants';
-import { defaultThemeCover } from '@renderer/pages/settings/AppearanceSettings/themeCovers';
 
 const T0 = 0;
 
@@ -14,12 +13,13 @@ const T0 = 0;
 // (the System sentinel is resolved to Light/Dark in resolveActiveTheme, not listed here).
 // The former decorative community skins were deprecated and removed; a persisted
 // activeId that still points at one resolves to Light via resolveActiveTheme.
+// Human-visual repair: built-in themes use the generated neutral ThemeLayoutPreview;
+// the donor-era default-theme.png cover was removed from the tree.
 export const BUILTIN_THEMES: Theme[] = [
   {
     id: LIGHT_THEME_ID,
     name: 'Light',
     appearance: 'light',
-    cover: defaultThemeCover,
     builtin: true,
     created_at: T0,
     updated_at: T0,
