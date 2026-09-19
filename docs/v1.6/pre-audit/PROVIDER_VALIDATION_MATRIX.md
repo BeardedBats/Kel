@@ -33,3 +33,10 @@ Fixture refresh (same day): `python -m pytest tests/test_v14_providers.py tests/
 - [ ] Re-run the model-routing fixtures at RC and attach counts (scheduled).
 - [ ] If credentials appear later: re-run the `internal`/`deepseek` probes; re-try `codex` after
       a CLI upgrade; record each result here.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+Unchanged at RC: validation evidence stands as recorded; provider access remains the limiter
+(LIM-14). No provider-facing code changed in R9–R12 (desktop presentation + supervision only);
+the packaged engine boots with provider discovery unchanged (4 providers in the R8 assertion;
+RC upgrade boot probed the same path).

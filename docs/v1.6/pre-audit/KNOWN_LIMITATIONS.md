@@ -20,3 +20,13 @@ must be here.
 | LIM-12 | **New v1.6 surfaces ship Kel-native English copy** (knowledge UI and sibling v1.6 surfaces); the release program's locale pass owns translations (declared in `docs/memory-proposals/04_UI_AND_COPY.md`). | Localized-release claims for the new surfaces. | en-US copy reviewed in packaged journeys. | Release gates (locale pass; DEF-013) |
 | LIM-13 | **Memory stale-detection is engine-ready but unwired**: no production caller of `Memory.revalidate()` and no production `source_digest` producers. | "Stale" proposals never appear from real usage; the mechanism is test-covered only. | Stale flow covered by `test_v16_proposals.py`; disposition DEF-012. | When a repo-fact producer lands |
 | LIM-14 | **Capability-recommendation card packaged rendering is unproven** (no provider ⇒ no blocked run can be produced here); transcript-inline placement pending (DEF-014). | Packaged evidence for Phase 7's UI surface. | Engine + unit coverage; the Work-panel placement is live for any blocked milestone. | Next packaged battery (RC) |
+
+## PRE-AUDIT RC update (2026-09-19)
+
+- LIM-14 (provider reality) unchanged at RC: provider validation runs as access allows.
+- LIM-RC-1: packaged probes exercise first-run by the product's own "Skip setup" path (recorded in
+  `r12-installed.json` steps).
+- LIM-RC-2: engine-loss variants requiring approvals/effects "in flight" are not constructible in
+  the isolated profile; covered at engine level (A-29) and recorded in `19_R10…`.
+- LIM-RC-3: no agent performs pixel approval; the human visual gate stays PENDING with screenshots
+  indexed (`r10-g`, `r12-work.png`, `r12-about.png`, `r12-exe-icon.png`).

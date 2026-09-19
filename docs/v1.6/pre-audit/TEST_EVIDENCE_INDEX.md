@@ -70,8 +70,45 @@ Note: A-1 ran on the Main worktree at `fd98cc4` (no renderer changes involved). 
 | P-5 | memory proposals journey | `package-final13` | PASS | ux-audit/run-memoryprops.sh | packaged |
 | P-6 | Phase 4 copy-scan + standing journeys | `package-final17` | PASS | ux-audit/run-phase4.sh | packaged |
 | P-7 | visual5 probes a/b/c | `package-visual5` | PASS (probe b reproduces engine-loss findings 16/17 — recorded, not a regression) | ux-audit/visual/runs/visual5-{a,b,c} | packaged |
+| P-8 | R10 engine-loss/recovery journeys (kill → reconnecting → supervised restart → durable preserved → repeat → could-not-recover → manual retry) | `package-r12` era (lane package, engine 1.6.0) | PASS — r10-g full (5 screenshots), r10-f fast-fail focused (2 screenshots); DOM leak scan clean; console 0 | ux-audit/runs/r10-{f,g}/ | packaged |
+| P-9 | R12 installed probes: fresh + upgrade-DB (installer → silent install → launch → Work/attention/About → uninstall) | `package-r12` (installed) | PASS — exit-0 install; healthy 1.6.0; attention section present; About K renders; 0 leaks; 0 console errors; 0 horizontal overflow (5 routes) | ux-audit/runs/r12-{fresh2,upgrade,upgrade-out,r12-installed}; r12-install-result.json | packaged |
+
+## A-28 — R10 packaged engine-loss/recovery journey (2026-09-18)
+
+Command: `node ux-audit/r10-engine-loss-probe.cjs <appDir> <root> <out>` + `r10-d-cannot-restart.cjs`.
+Result: **PASS** (r10-f/r10-g on the final lane package with the frozen 1.6.0 engine; the full
+journey required sequence mapped in `docs/v1.6-visual-ux/19_R10_ENGINE_LOSS_EVIDENCE.md`;
+`[KEL-LINK]` transitions: connected → reconnecting → recovered ×2 → unrecoverable → manual
+retry → recovered). Category: packaged/journey. Note: engine variants not constructible in the
+isolated profile (approval-wait loss, effect reconciliation) are covered at engine level (A-29).
+
+## A-29 — R12 final Campaign A battery (2026-09-19)
+
+- Engine full suite on the merged tree: **998 passed + 10 subtests** (284.53s) — log
+  `ux-audit/r12-engine-suite.log` (`ENGINE_EXIT=0`). Includes the failure-injection families:
+  `test_v16_r2_idempotency` (duplicate submission/result), `test_v16_r4_approval_exact`
+  (approval misuse/mutation/window), `test_v16_r5_persistence` (malformed payloads),
+  `test_v16_r6_liveness` (stale run/liveness separation), `test_v16_r7_credentials`,
+  `test_v16_r8_identity`/`test_v16_r8_migrations` (runtime identity mismatch, fresh/upgrade DB,
+  all V1.6 migrations), `test_v16_restore_visibility` (restore failure), `test_v16_r1_authority`
+  + `test_v16_r3_retry_durability` (authority widening, retry exhaustion), `test_v16_approvals`
+  + `test_v16_sweep_fixes` (cross-scope ids, leases), workforce D1–D3 suites (verification
+  failure, evidence binding), provider tests (`test_v14_providers.py`).
+- Desktop on the merged tree: `tsc` 0; vitest **122/122** (12 files).
+- R12 installed battery: see P-9 row. Installed package metadata: `Kel · Kel · 1.6.0`;
+  Add/Remove `DisplayName=Kel · Publisher=Kel · DisplayVersion=1.6.0`; engine SHA-256
+  `69123AF0…` equals the frozen runtime; install → uninstall lifecycle clean (dir, registry,
+  desktop + start-menu links removed).
+- Release integrity: `ux-audit/runs/r12-integrity.txt` (remote exact; frozen refs unchanged;
+  secret scan 0 actionable; no force push).
+- Packaged upgrade-DB boot: populated 1.6.0 data root booted on the installed app with all
+  conversations preserved, zero console errors (`ux-audit/runs/r12-upgrade/`).
 
 ## Discrimination log (regression fixes)
+
+- R9/R10 supervision: r10-d/r10-e (pre-fail-fast) vs r10-f (post-fail-fast): could-not-recover
+  arrives in ~5 s instead of ~95 s — the 45 s-per-attempt burn was measured, fixed (`fa66f04`),
+  and re-measured.
 
 Per §14 of the sprint directive, record discrimination where practical. `FAILS_PRE_FIX` /
 `PASSES_POST_FIX` pairs are recorded in the phase records; entries:

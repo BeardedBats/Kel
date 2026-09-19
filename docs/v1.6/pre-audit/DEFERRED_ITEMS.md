@@ -35,3 +35,12 @@ generic agent-cockpit UI. Each may only return through a new product decision wi
 | DEF-012 | Memory stale-detection wiring (`source_digest` producers + a `revalidate` caller) | No producer/caller yet; mechanism is engine-ready and test-covered; staleness never gates anything | None (nothing depends on it) | Producer design (which source facts carry digests) + refresh loop + focused tests | NO | Main | First repo-fact producer needing staleness |
 | DEF-013 | Localization of new v1.6 surfaces (knowledge UI + siblings) | Copy intentionally Kel-native English; the release program's locale pass owns translations (declared 2026-09-17) | Non-English users see English on new surfaces | Locale pass across 12 locales + parity checks | NO for RC (decide at release gates) | release program | Pre-release (localization gate) |
 | DEF-014 | Transcript-inline capability card placement | Needs a live-run refusal (provider) to design against; the Work-panel placement already delivers the recommendation | None for RC | Provider-backed journey + placement decision | NO | Main | First provider-backed packaged battery |
+
+## PRE-AUDIT RC update (2026-09-19)
+
+- Donor preview viewers (OfficeWatchViewer/PDFViewer) raw exception residue — audit target 89
+  (outside Kel surfaces; normalization sweep chose to record rather than touch donor machinery).
+- About-modal engine liveness line — deliberately not added in batch 8 (the shell strip carries
+  liveness; the Diagnostics page carries the version) — record only.
+- Visual-plan full rebuilds for Work/Projects/Permissions and the Team half were NOT ordered by
+  the R9 directive; batch 8 applied normalization-only fixes.

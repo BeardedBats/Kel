@@ -37,3 +37,14 @@ names where the defect (if confirmed) most likely lives and how to validate a re
   and per-increment audits `21`–`37`.
 - Acceptance criteria for SEC-01: `16_FINDING_STATUS.md` (quoted above).
 - A1/PER-02 overlap analysis: `15_RUST_LEAD_VERIFICATION.md`.
+
+## PRE-AUDIT RC update (2026-09-19)
+
+- Failure copy: `renderer/components/kel/engineFailure.ts` is the single classifier/copy source —
+  extend the class table there, never inline strings at call sites.
+- Supervision: `process/services/kel/engineHealth.ts` owns the budget semantics; `KelService.ts`
+  performs actions it returns. A restart without a patient ping is a defect by construction.
+- Attention surface: `needsAttention.ts` maps payload → items; never join across sources and keep
+  the fail-closed project filter intact.
+- Packaging: `desktop/package.json` `author.name`/`companyName` feed user-visible metadata; the
+  stock NSIS template is required (donor `resources/windows/*.nsh` are not part of the Kel path).

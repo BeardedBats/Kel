@@ -28,7 +28,7 @@
     }
   ],
   "directories": {
-    "output": "../dist/package",
+    "output": "../dist/package-r12",
     "app": ".",
     "buildResources": "resources"
   },
