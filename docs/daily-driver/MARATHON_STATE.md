@@ -30,6 +30,7 @@ Last updated: 2026-09-20 (**marathon complete — D3–D19 landed, fresh package
 - BLOCKERS: none
 - UNAVAILABLE EXTERNAL CREDENTIALS: no provider keys in this environment; journeys 1–3 carry synthetic-provider evidence instead of a live model turn
 - DAILY-DRIVER CANDIDATE STATUS: **INSTALLED · VERIFIED · RECORDED** — `DAILY_DRIVER_CANDIDATE.md` carries the identity, bind chain, hashes, the installed-battery results, and the honest open items.
+- DAILY_DRIVER_CANDIDATE_HEAD: `6c9d1a1d69016a3c8c307b157d7998521b355011` (local marker tag `DAILY_DRIVER_CANDIDATE_HEAD`; the source tree the final installer was built from and the installed battery verified)
 
 ## Rules in force
 
