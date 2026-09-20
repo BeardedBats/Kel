@@ -60,9 +60,18 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   section is paused-only, keeps engine reasons, dedupes against needs-you items, and its summary
   counts come from the emitted lines. `KelWorkJob` gained `route_block` + milestone `error` in the
   client types (always returned by the engine).
-- **NEXT: D8 — Adaptive staffing** (§18–20). Recon `/api/team` + assignments/derived_state and the
-  recipes/pods architecture; add smallest-sufficient-tier selection with authority ceilings inside
-  the existing system; normal UI says only "Kel is using an independent review".
+- **D8 slice 1 landed (this commit); D8 continues.** The engine's staffing ladder was already
+  complete and pinned (`staffing.py` TIERS D0–D4 + hard rules + band ceilings + reasons; assignments
+  carry dispatch_tier/authority_max/budget_class; eight workforce test files). The gap was the
+  surface: the Work page showed a specialist table with role versions, digests, provider/model and
+  budget meters. It now speaks user language via `staffingLanguage.ts` ("Kel is using an independent
+  review." / "An independent review: in progress|finished|waiting|stopped and needs a look" /
+  "Extra help: …"), pins in `staffing-language.test.ts`.
+- **D8 remaining (exact next action):** (a) the Kel Team page still exposes a Roster view with "Seed
+  the default roster" — normal-user roster management is out of scope, so decide developer-only
+  disclosure vs removal (`pages/kel/team/index.tsx` view switch + seeding action); (b) write the
+  D0/D1/D2/D3 selection/boundary evidence against `staffing.py` + the workforce test files. Then D9
+  (learning promotion).
 
 ## Where
 

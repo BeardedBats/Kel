@@ -101,4 +101,19 @@
   (id-based dedupe against the attention items), and its summary counts are computed from the emitted
   lines so it cannot overstate. `KelWorkJob` gained `route_block` and milestone `error` in the client
   types (both were always returned by the engine).
+- **D-018 — D8 slice 1 approach.** The engine's staffing ladder was already complete and pinned
+  (`staffing.py`: TIERS D0–D4, feature vector + band ceilings, hard rules R1–R10 — security boundary
+  ⇒ Sentinel mandatory/tier ≥ D2, irreversible or externally visible effect ⇒ approval + independent
+  review/tier ≥ D2, no tier upgrade as a stall remedy; `decide()` records reasons; team assignments
+  carry dispatch_tier/authority_max/budget_class; eight workforce test files pin the behaviour). The
+  actual gap was the SURFACE: the Work page rendered a specialist table with internals (role version,
+  snapshot digest, provider/model, budget meter, raw derived state). Slice 1 replaces it with plain
+  language — `staffingLanguage.ts` (`staffingSummary` → "Kel is using an independent review.";
+  `assignmentLine` → "An independent review: in progress/finished/waiting/stopped and needs a look",
+  "Extra help: …"), with the human role name + update time kept as the support line and four test
+  cases pinning the language and banning internals (tiers, digests, budgets, assignment ids).
+  Remaining D8 (recorded, not silently dropped): the Kel Team page still exposes a Roster view with
+  "Seed the default roster" — normal-user roster management is out of scope, so that view needs a
+  decision (developer-only disclosure or removal), plus the D0/D1/D2/D3 selection/boundary evidence
+  write-up.
 - (append as work proceeds; every non-obvious choice gets a line)
