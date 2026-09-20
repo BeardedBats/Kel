@@ -16,10 +16,10 @@ source HEAD → renderer build → engine build → installer → installed cand
   cuts — the engine source did not move, only the renderer did.
 - **Package build:** `node scripts/build-with-builder.js x64 --win --x64 --config.win.signExecutable=false`
   (kel-builder.json; resource editing ON, signing skipped by config).
-- **Installer (re-cut, installed):** `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`
-  sha256 `f5c8f2672ba3561270f5a906befa3f18c4167e76916025a373cba491d563a397` (213,633,457 bytes).
-- **App executable (re-cut):** `dist/package-r12/win-unpacked/Kel.exe`
-  sha256 `de1109c8a4094516472b9313ab78e9ff4ca0b3dbdb2ce4e0f76d90af7726326a`;
+- **Installer (final re-cut, installed):** `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`
+  sha256 `0add7bc4d4e08dc16e744fec487951be923c6caf0bb40dbf22a96c8b7422dffb` (213,631,660 bytes).
+- **App executable (final re-cut):** `dist/package-r12/win-unpacked/Kel.exe`
+  sha256 `e1d62c5fc4dddb78195081644eb92dcb836e072b34632ac299a403c6c59afdc6`;
   ProductName **Kel**, FileDescription **Kel**, FileVersion **1.7.0-dev**.
 - **Engine bundled:** `resources/kel-engine/KelEngine.exe`, installed hash verified == build hash
   (`01c58bdf…`).
@@ -64,9 +64,12 @@ source HEAD → renderer build → engine build → installer → installed cand
       feed exists yet), no release card appeared, and no donor terms are on the page.
 - [x] Installed pass over nine surfaces (Landing, Work, Projects, Recipes, Activity, Transcription,
       Team → chat redirect, Settings, Tools): **no raw error patterns, no horizontal overflow, zero
-      donor terms**; navigation 3.0–4.3 s per surface, startup-to-window 11.5 s, **0 console errors**,
-      and the forced close left **no orphaned `KelEngine` process**. Evidence:
-      `docs/daily-driver/evidence/d19/installed-battery.json` (+ surface and probe screenshots).
+      donor terms**; navigation 3.0–4.3 s per surface, startup-to-window 13.9 s, **0 console errors**,
+      and the forced close left **no orphaned `KelEngine` process**. Automatic routing exercised on
+      the installed build: "Check readiness" answered `Chosen: Claude (Claude Code) · claude-native`
+      with `Chain: Claude (Claude Code) → Codex → DeepSeek API → Anthropic API` — not one engine id.
+      Evidence: `docs/daily-driver/evidence/d19/installed-battery.json` (+ surface and probe
+      screenshots).
 - [x] Upgrade preservation (re-proven on the re-cut): the prepared engine root held 1 job
       ("Summarise the Q3 customer feedback into a one-page brief", CLOSED/VERIFIED) + 1 lease + 1
       publication + 2 runs + 2 messages before the install; the installer updated the candidate in
@@ -103,7 +106,8 @@ describe. Recovery performed, mirroring the documented procedure:
 | --- | --- | --- | --- |
 | build-01 (superseded) | `Kel-1.7.0-dev-win-x64.exe` (fast build, no engine staged) | `50c107eb…` | proved the pipeline; superseded (engine missing, exe metadata skipped via fast flag) |
 | build-02 (superseded) | `Kel-1.7.0-dev-win-x64.exe` | `364065d3…` | engine bundled + exe resource editing applied; donor-org sweep 0 hits; installed to the candidate and re-verified in place after the D19 residual rebuild |
-| build-03 (re-cut, installed) | `Kel-1.7.0-dev-win-x64.exe` | `f5c8f267…` | re-cut after the D19 provider-language fix (renderer only; engine hash unchanged `01c58bdf…`); donor-org sweep 0 files / 0 occurrences; installed over the candidate in place and fully batteries |
+| build-03 (superseded) | `Kel-1.7.0-dev-win-x64.exe` | `f5c8f267…` | first re-cut after the D19 provider-name fix (renderer only; engine unchanged) |
+| build-04 (final, installed) | `Kel-1.7.0-dev-win-x64.exe` | `0add7bc4…` (213,631,660 B) | covers the readiness-chain naming too; donor-org sweep 0 occurrences / 0 files; installed over the candidate in place and fully batteries; app exe `e1d62c5f…` |
 | engine | `dist/runtime/KelEngine/KelEngine.exe` | `01c58bdf…` | PyInstaller from this lane's `runtime/`; structural check 51/51 OK; installed hash verified equal |
 
 ## Installed battery — final state
@@ -117,12 +121,13 @@ The four GUI-driven replays left open by the first pass are now done, on the ins
 - **D0-004 PASS** — exactly one refusal message, truthful OFF state.
 - **D1 PASS** — human provider statuses; Set up → Save + Verify answers honestly and names the
   provider the person clicked (`Saved and verified Anthropic API: …`); the synthetic key was removed
-  again, leaving the prepared state as found.
+  again, leaving the prepared state as found. The readiness answer names its chain the same way
+  (`Claude (Claude Code) → Codex → DeepSeek API → Anthropic API`).
 - **D2 PASS** — update check fails closed with the transport truth, no donor infrastructure.
 - **Upgrade preservation PASS** — durable work identical before/after the install (see the checklist
   entry); the installed UI reads it live (finished job + active lease + resumption brief).
 - **Surfaces PASS** — nine shipped surfaces with no raw errors, no overflow, no donor terms; startup
-  11.5 s, 3.0–4.3 s per surface, no orphaned processes.
+  13.9 s, 3.0–4.3 s per surface, no orphaned processes.
 
 Replay: `node packaging/verify-installed-battery.cjs` (drives the installed app through its own
 window; `--tour` and `--dump-providers` are the structural inspection modes). The engine-side

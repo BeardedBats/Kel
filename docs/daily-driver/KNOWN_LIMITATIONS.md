@@ -132,6 +132,7 @@ Honest, current list (grows/shrinks as phases complete):
   API entry (`runtime/kel/providers.py`). Stored credential references and the engine's own identity
   for that provider are keyed by it, so renaming it is a migration-class change and was deliberately
   not attempted at the package gate. The user surfaces no longer show it — the Work route sentence,
-  the provider save confirmation and the readiness choices all name the provider from the inventory
-  label (`provider-language.test.ts` pins it). Any future surface must do the same: the raw id is not
-  user copy.
+  the provider save confirmation, the readiness choices and the routing answer's fallback chain all
+  name the provider from the inventory label (`provider-language.test.ts` pins it; the installed
+  battery reads the answer: `Chosen: Claude (Claude Code)` / `Chain: Claude (Claude Code) → Codex →
+  DeepSeek API → Anthropic API`). Any future surface must do the same: the raw id is not user copy.
