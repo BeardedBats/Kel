@@ -18,8 +18,8 @@ migration, public A2A, fashionable rewrites.
 | D6 | Continuation / resumability ("while you were away" brief; real resume actions) | **DONE (core)** |
 | D7 | Long-running autonomy (durable objective/step, completion criteria, human gates) | **DONE (core)** |
 | D8 | Adaptive staffing (D0–D4 tiers; guardrails; hidden internally) | **DONE (core)** |
-| D9 | Learning promotion (high-confidence, low-risk only; provenance/retraction preserved) | QUEUED |
-| D10 | Recipes (declarative; compile into existing execution; evidence-based suggestions) | QUEUED |
+| D9 | Learning promotion (high-confidence, low-risk only; provenance/retraction preserved) | **DONE (core)** |
+| D10 | Recipes (declarative; compile into existing execution; evidence-based suggestions) | **IN PROGRESS** |
 | D11 | Cross-device continuity (server-authoritative state) | QUEUED |
 | D12 | Smarter provider routing (task fit, health, cost where known; honest fallbacks) | QUEUED |
 | D13 | Failure recovery polish (provider/CLI/engine/network/remote/transcription/update) | QUEUED |

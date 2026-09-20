@@ -74,6 +74,7 @@ export default function KelProjectsPage() {
   );
 
   const records = work?.memory.records ?? [];
+  const proposals = work?.memory.proposals ?? [];
   const conflicts = work?.memory.conflicts ?? [];
   const sections = work?.map?.sections ?? [];
   const entries = work?.recipes.entries ?? [];
@@ -178,6 +179,67 @@ export default function KelProjectsPage() {
                 />
               )}
             </KelCard>
+            {proposals.length > 0 && (
+              <KelCard
+                title="Kel suggests"
+                chip={
+                  <span className="kel-meta">
+                    {proposals.length === 1
+                      ? 'one waiting for you'
+                      : `${proposals.length} waiting for you`}
+                  </span>
+                }
+              >
+                <p className="kel-sub">
+                  Kel only changes what it knows when you agree — nothing here applies by itself.
+                </p>
+                {proposals.slice(0, 5).map((proposal) => (
+                  <div className="kel-row" key={proposal.id} style={{ alignItems: 'flex-start' }}>
+                    <div className="kel-attention__text">
+                      <strong>{proposal.summary || proposal.topic || 'A change Kel noticed'}</strong>
+                      {proposal.why && <span className="kel-meta">Why: {proposal.why}</span>}
+                    </div>
+                    <span className="kel-grow" />
+                    <KelButton
+                      variant="secondary"
+                      disabled={busy !== null}
+                      onClick={() =>
+                        void act('Accepted', () => kelMemoryAction('accept_proposal', proposal.id))
+                      }
+                    >
+                      Use this
+                    </KelButton>
+                    <KelButton
+                      variant="quiet"
+                      disabled={busy !== null}
+                      onClick={() =>
+                        void act('Deferred', () => kelMemoryAction('defer_proposal', proposal.id))
+                      }
+                    >
+                      Not now
+                    </KelButton>
+                    <KelButton
+                      variant="quiet"
+                      disabled={busy !== null}
+                      onClick={() =>
+                        void act('Rejected', () =>
+                          kelMemoryAction('reject_proposal', proposal.id, {
+                            reason: 'set aside from the Knowledge panel',
+                          })
+                        )
+                      }
+                    >
+                      No thanks
+                    </KelButton>
+                  </div>
+                ))}
+                {proposals.length > 5 && (
+                  <p className="kel-meta">
+                    {`${proposals.length - 5} more waiting — clearing these first keeps it simple.`}
+                  </p>
+                )}
+              </KelCard>
+            )}
             <KelSection title="Conflicts">
               {conflicts.length === 0 ? (
                 <p className="kel-meta">No conflicting knowledge for this project.</p>

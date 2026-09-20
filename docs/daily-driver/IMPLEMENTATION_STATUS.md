@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D8 complete; D9 starting)
+Updated: 2026-09-20 (D0–D9 complete; D10 starting)
 
 ## Lane
 
@@ -60,9 +60,16 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   (plain-language Office by default; Roster/Studio + internals + the seed action behind "Developer
   view"; `team-surface.test.ts` 3 pins). D0–D3 selection/boundary evidence: **277 workforce tests
   OK** + 19 team tests OK.
+- **D9 complete** (this commit) — controlled learning promotion: the engine's proposal pipeline
+  (queue → defer/accept/reject, trust-model application, superseded history) was already complete
+  and pinned; the human surface was the gap, so `KelWork` now types the always-returned open queue,
+  the Knowledge view renders a "Kel suggests" review card ("nothing here applies by itself.") with
+  Use this / Not now / No thanks wired to `accept_proposal` / `defer_proposal` / `reject_proposal`,
+  and a live HTTP journey proves the whole loop (`packaging/verify-learning-proposals.cjs`, verdict
+  all-true, `evidence/d9/`). Found + fixed a real contract bug along the way: `/api/work` returns a
+  record's `value` as a JSON string; the client type now matches reality.
 
 ## Next item
 
-- **D9 — Controlled learning promotion** (§21–22): map the existing memory/learning lifecycle
-  (candidate → proposal → promotion → retraction) and its human surface, then close the smallest
-  honest gap without inventing a second memory system.
+- **D10 — Recipes** (§23–24): map the recipe library (`recipes.py`: entries/preview/compile) and its
+  human surface, then close the smallest honest gap.
