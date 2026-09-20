@@ -93,6 +93,10 @@ const Providers: React.FC = () => {
       const draft = keyDraft;
       if (!draft || draft.provider !== provider || !draft.value) return;
       const field = 'api_key';
+      // D19: the person set up the card they clicked, so the confirmation names that provider the
+      // way the page does — never the engine's internal id.
+      const providerName =
+        (providers ?? []).find((item) => item.provider === provider)?.label ?? provider;
       setBusy(true);
       setNote(null);
       try {
@@ -105,16 +109,16 @@ const Providers: React.FC = () => {
         await load();
         setNote(
           listedBack
-            ? `Saved and verified ${provider}: the key is in the OS store and recorded for the engine. Kel starts using it the next time its engine starts.`
-            : `Saved ${provider}, but the OS store did not list the key back — check it again before relying on it.`
+            ? `Saved and verified ${providerName}: the key is in the OS store and recorded for the engine. Kel starts using it the next time its engine starts.`
+            : `Saved ${providerName}, but the OS store did not list the key back — check it again before relying on it.`
         );
       } catch (err) {
-        setNote(`Couldn't save the key for ${provider}. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+        setNote(`Couldn't save the key for ${providerName}. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
     },
-    [keyDraft, load]
+    [keyDraft, load, providers]
   );
 
   const removeKey = useCallback(
@@ -318,7 +322,7 @@ const Providers: React.FC = () => {
                 variant={name === prefer ? 'primary' : 'quiet'}
                 onClick={() => setPrefer(name)}
               >
-                {name || 'auto'}
+                {name ? ((providers ?? []).find((item) => item.provider === name)?.label ?? name) : 'auto'}
               </KelButton>
             ))}
             <KelButton variant="primary" disabled={busy} onClick={() => void runReadiness()}>

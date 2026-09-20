@@ -23,6 +23,7 @@ import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLangua
 import {
   kelArtifact,
   kelControl,
+  kelProviders,
   kelRecipePropose,
   kelRecipeSave,
   kelState,
@@ -68,6 +69,7 @@ const MILESTONE_STATE_TEXT: Record<string, string> = {
 const WorkCenter: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [routes, setRoutes] = useState<Record<string, KelJobRoute>>({});
+  const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<KelAssignment[]>([]);
   const [continuation, setContinuation] = useState<KelContinuationCandidate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -82,9 +84,22 @@ const WorkCenter: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      const [state, team] = await Promise.all([kelState(), kelTeam.office('default')]);
+      const [state, team, providers] = await Promise.all([
+        kelState(),
+        kelTeam.office('default'),
+        // D19: the route sentence names providers the way a person knows them, so the inventory
+        // of names is read alongside the state (never the engine's raw ids).
+        kelProviders.list().catch((): null => null),
+      ]);
       setJobs(state.jobs ?? []);
       setRoutes(state.routes ?? {});
+      setProviderLabels(
+        Object.fromEntries(
+          ((providers as { providers?: { provider: string; label: string }[] } | null)?.providers ?? []).map(
+            (item) => [item.provider, item.label]
+          )
+        )
+      );
       setContinuation(state.continuation ?? []);
       setAssignments(team.assignments ?? []);
       setError(null);
@@ -268,8 +283,8 @@ const WorkCenter: React.FC = () => {
                 ? VERDICT_TEXT[activeJob.verdict] ?? `verification status: ${activeJob.verdict.toLowerCase().replace(/_/g, ' ')}`
                 : 'verification runs after the checks pass'}
             </p>
-            {routeSentence(routes[activeJob.id]) && (
-              <p className="kel-meta">{routeSentence(routes[activeJob.id])}</p>
+            {routeSentence(routes[activeJob.id], providerLabels) && (
+              <p className="kel-meta">{routeSentence(routes[activeJob.id], providerLabels)}</p>
             )}
             {recipeDraft && (
               <KelSection title="Save as a recipe">
