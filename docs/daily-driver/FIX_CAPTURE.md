@@ -94,6 +94,14 @@ Inside it: `Kel.exe` `588fcc5d…`, `resources/kel-engine/KelEngine.exe` `443a4e
 Installed to **`C:\Users\Nick\KelDogfoodCandidate`** (its own target; registered there), data root
 `C:\Users\Nick\KelDogfoodRuns\prepared\engine`.
 
+One honest note about the previous candidate: NSIS updates heal to the *registered* install directory,
+and the first Fix Capture install ran before the registration had been repointed — that one pass landed
+in `C:\Users\Nick\KelDailyDriverCandidate`, so that directory now holds this build rather than the
+Daily Driver one. Its **data root is untouched**, the Daily Driver candidate is still reproducible from
+`DAILY_DRIVER_CANDIDATE_HEAD` (`6c9d1a1`), and every piece of Daily Driver evidence in this folder
+stands; only the old installer binary in `dist/` has been superseded by this build. The Fix Capture
+candidate was then installed to its own directory and is the registered application now.
+
 The journeys were driven through the installed app's own window over CDP
 (`packaging/verify-fix-capture.cjs`; raw results and screenshots in
 `docs/daily-driver/evidence/fix-capture/`). This machine has no microphone, so the app was launched
