@@ -231,6 +231,23 @@ class Dogfood:
                  _short(conversation, 120), _short(version, 80)))
         return self.get(fix_id)
 
+    def discard_tmp(self, relpath):
+        """Throw away one in-flight capture.
+
+        A cancelled capture must not leave a screenshot behind, and neither may a capture whose fix
+        was never saved. Only files inside `dogfood/tmp` can be reached this way.
+        """
+        if not relpath:
+            return {'discarded': False}
+        target = self._inside(relpath, self.tmp)
+        if not target.is_file():
+            return {'discarded': False}
+        try:
+            target.unlink()
+        except OSError:
+            return {'discarded': False}
+        return {'discarded': True}
+
     def set_status(self, fix_id, status):
         value = str(status or '').upper()
         if value not in STATUSES:

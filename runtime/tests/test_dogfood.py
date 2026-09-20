@@ -99,6 +99,25 @@ class DogfoodCase(unittest.TestCase):
         item = self.save('Relative capture', screenshot='dogfood/tmp/from-main.png')
         self.assertEqual(item['screenshot'], 'dogfood/screenshots/FIX-0001.png')
 
+    def test_discard_removes_only_in_flight_captures(self):
+        # A cancelled capture must not leave its screenshot behind.
+        capture = craft_temp_screenshot(self.dogfood, 'cancelled.png')
+        self.assertTrue(self.dogfood.discard_tmp('dogfood/tmp/cancelled.png')['discarded'])
+        self.assertFalse(capture.exists())
+        # Discarding something already gone (or already committed under a fix) is a quiet no-op.
+        self.assertFalse(self.dogfood.discard_tmp('dogfood/tmp/cancelled.png')['discarded'])
+        item = self.save('Committed', screenshot=str(craft_temp_screenshot(self.dogfood, 'kept.png')))
+        self.assertTrue(item['has_screenshot'])
+        # A committed screenshot is out of reach by design: cancelling can never delete one.
+        with self.assertRaises(PolicyError):
+            self.dogfood.discard_tmp(item['screenshot'])
+        self.assertTrue((Path(self.temp.name) / 'dogfood/screenshots/FIX-0001.png').is_file())
+        # And nothing outside dogfood/tmp can be reached this way.
+        with self.assertRaises(PolicyError):
+            self.dogfood.discard_tmp('dogfood/screenshots/FIX-0001.png')
+        with self.assertRaises(PolicyError):
+            self.dogfood.discard_tmp('../kel.sqlite3')
+
     def test_screenshot_outside_the_dogfood_folder_is_refused(self):
         outside = Path(self.temp.name) / 'outside.png'
         outside.write_bytes(b'not ours')
