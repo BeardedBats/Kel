@@ -1,5 +1,9 @@
 # DAILY_DRIVER_CANDIDATE — Kel 1.7.0-dev
 
+`DAILY_DRIVER_CANDIDATE_HEAD=6c9d1a1d69016a3c8c307b157d7998521b355011` — the source tree the final
+installer was built from and the one the installed battery verified against (a local marker tag of
+the same name points at it).
+
 The installed candidate this marathon produced. Everything below is verified against the artifacts and
 the installed copy on this machine; incomplete items are stated as incomplete.
 
