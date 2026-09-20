@@ -9,15 +9,15 @@ migration, public A2A, fashionable rewrites.
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| D0 | Close final V1.6 human-visual residuals (HVRA-MINOR-001/002, HVRA-SUG-001/002) | **IN PROGRESS** |
-| D1 | Provider + model onboarding (truthful states, setup flows, Save+Verify, health/failure UX) | QUEUED |
-| D2 | Update reliability (safe installer-based upgrade; user-visible update state; no data loss) | QUEUED |
-| D3 | Remote / WebUI usable away from the desktop; explicit enable; hardening | QUEUED |
-| D4 | Transcription first-class workflow (record/upload/folders/transcript actions/send-to-chat) | QUEUED |
-| D5 | Needs Your Attention as the canonical interruption center + restrained notifications | QUEUED |
-| D6 | Continuation / resumability ("while you were away" brief; real resume actions) | QUEUED |
-| D7 | Long-running autonomy (durable objective/step, completion criteria, human gates) | QUEUED |
-| D8 | Adaptive staffing (D0–D4 tiers; guardrails; hidden internally) | QUEUED |
+| D0 | Close final V1.6 human-visual residuals (HVRA-MINOR-001/002, HVRA-SUG-001/002) | **DONE** |
+| D1 | Provider + model onboarding (truthful states, setup flows, Save+Verify, health/failure UX) | **DONE (core)** |
+| D2 | Update reliability (safe installer-based upgrade; user-visible update state; no data loss) | **DONE (core)** |
+| D3 | Remote / WebUI usable away from the desktop; explicit enable; hardening | **DONE (core)** |
+| D4 | Transcription first-class workflow (record/upload/folders/transcript actions/send-to-chat) | **DONE (core)** |
+| D5 | Needs Your Attention as the canonical interruption center + restrained notifications | **DONE (core)** |
+| D6 | Continuation / resumability ("while you were away" brief; real resume actions) | **DONE (core)** |
+| D7 | Long-running autonomy (durable objective/step, completion criteria, human gates) | **DONE (core)** |
+| D8 | Adaptive staffing (D0–D4 tiers; guardrails; hidden internally) | **DONE (core)** |
 | D9 | Learning promotion (high-confidence, low-risk only; provenance/retraction preserved) | QUEUED |
 | D10 | Recipes (declarative; compile into existing execution; evidence-based suggestions) | QUEUED |
 | D11 | Cross-device continuity (server-authoritative state) | QUEUED |

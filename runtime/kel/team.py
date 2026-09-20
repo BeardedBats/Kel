@@ -263,7 +263,15 @@ class Team:
                 'task_id': task_id, 'version': version}
 
     def resolve_role(self, template_id, project_id='', task_id=''):
-        version, fields = self.current_version(template_id)
+        try:
+            version, fields = self.current_version(template_id)
+        except PolicyError:
+            # Kel manages its own roster: a role that ships with the product is seeded on first
+            # use, so a person never has to manage rosters. Unknown ids still fail closed.
+            if template_id not in {seed[0] for seed in SEED_ROLES}:
+                raise
+            self.seed_defaults()
+            version, fields = self.current_version(template_id)
         resolved = dict(fields)
         sources = ['global@v%d' % version]
         with contextlib.closing(self.store.connect()) as db:

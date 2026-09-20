@@ -112,8 +112,20 @@
   `assignmentLine` → "An independent review: in progress/finished/waiting/stopped and needs a look",
   "Extra help: …"), with the human role name + update time kept as the support line and four test
   cases pinning the language and banning internals (tiers, digests, budgets, assignment ids).
-  Remaining D8 (recorded, not silently dropped): the Kel Team page still exposes a Roster view with
-  "Seed the default roster" — normal-user roster management is out of scope, so that view needs a
-  decision (developer-only disclosure or removal), plus the D0/D1/D2/D3 selection/boundary evidence
-  write-up.
+  Remaining D8 was closed in D-019.
+- **D-019 — D8 closure: Kel manages its own roster + the Team page is a developer surface.** (1) The
+  engine now seeds shipped roles on first use: `Team.resolve_role` catches the missing-template
+  PolicyError, seeds the defaults when the id is one of `SEED_ROLES` (idempotent by construction),
+  and re-resolves; any other id still fails closed. A person never has to manage rosters, and the
+  explicit `seed` action stays available for developer use. Pinned by two new `test_v14_team` cases
+  (first-use seeding; unknown id refused) — roster self-seeding is a product behaviour, not a UI
+  trick. (2) The Team page became a developer surface: the Office is the default and speaks plain
+  staffing language (`staffingSummary` + `assignmentLine`); the Roster/Studio tabs, the internals
+  columns (role version, provider/model, budget meter, raw state), the activity timeline, and the
+  roster seed action sit behind a page-local "Developer view" toggle (per-session, not persisted —
+  internals disclosure is deliberate, not a stored preference). Deep links still land on Office in
+  normal mode. Pinned by `team-surface.test.ts` (toggle gate, effective-view switch, plain-language
+  lines, exactly one seed label and it sits after the clean office empty state, engine comment +
+  guard substring). (3) D0–D3 selection/boundary evidence: `python -m unittest discover -s tests -p
+  "test_workforce_*.py"` → **277 tests OK** plus `test_v14_team` 19 OK.
 - (append as work proceeds; every non-obvious choice gets a line)

@@ -57,8 +57,10 @@ Honest, current list (grows/shrinks as phases complete):
   (`test_v16_r6_liveness`, `test_v16_r3_retry_durability`) plus the desktop-side derivation tests:
   creating a genuinely mid-flight job here would require a live provider credential, which this
   environment does not have.
-- Adaptive staffing (D8, slice 1): tier selection, hard rules and ceilings remain engine-internal —
-  by design; normal surfaces speak in plain sentences (`staffingLanguage.ts`). The Kel Team page
-  still shows a Roster view with "Seed the default roster" (normal-user roster management is out of
-  scope per the directive) — flagged for the next D8 slice (developer-only disclosure or removal).
-  The tier ladder is not user-configurable and has no user-facing knob by design.
+- Adaptive staffing (D8): tier selection, hard rules and ceilings remain engine-internal — by design;
+  normal surfaces speak in plain sentences (`staffingLanguage.ts`). Kel manages its own roster
+  (shipped roles seed on first use; `Team.resolve_role`), and roster/studio management, internals
+  columns, and the explicit seed action live behind the Team page's "Developer view" toggle. That
+  toggle is per-session and not persisted — a deliberate choice (internals disclosure is an explicit
+  act, not a stored preference). The tier ladder is not user-configurable and has no user-facing knob
+  by design.

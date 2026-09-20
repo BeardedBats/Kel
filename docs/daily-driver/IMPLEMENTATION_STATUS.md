@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D7 complete; D8 slice 1 landed, D8 continuing)
+Updated: 2026-09-20 (D0–D8 complete; D9 starting)
 
 ## Lane
 
@@ -52,14 +52,17 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   human side now classifies an orphaned run as needs-you (with the engine's own reason) while a
   route-blocked job stays auto-resuming, and the landing brief preserves reasons, dedupes, and
   reports counts from what it actually shows.
-- **D8 slice 1** (this commit) — adaptive staffing: the engine ladder (D0–D4, hard rules, ceilings,
-  8 workforce test files) was verified complete; the Work page's internals table (role versions,
-  digests, budget meters) was replaced with user language — "Kel is using an independent review." +
-  per-specialist plain sentences (`staffingLanguage.ts`, 4 pins). REMAINING: Team-page roster
-  exposure decision + D0–D3 selection/boundary evidence.
+- **D8 complete** (slice 1 `daafd36`, closure this commit) — adaptive staffing: the engine ladder
+  (D0–D4, hard rules, ceilings, 8 workforce files) was verified complete; the Work page's internals
+  table was replaced with user language (`staffingLanguage.ts`, 4 pins); **the engine now seeds
+  shipped roles on first use** (`Team.resolve_role`; idempotent; unknown ids fail closed; 2 new
+  `test_v14_team` pins) so nobody manages rosters; **the Team page is a developer surface**
+  (plain-language Office by default; Roster/Studio + internals + the seed action behind "Developer
+  view"; `team-surface.test.ts` 3 pins). D0–D3 selection/boundary evidence: **277 workforce tests
+  OK** + 19 team tests OK.
 
 ## Next item
 
-- **D8 remainder** (§18–20): decide the Kel Team page's Roster view (normal-user roster management is
-  out of scope — developer-only disclosure or removal) and record the D0/D1/D2/D3 selection/boundary
-  evidence; then **D9 — Controlled learning promotion** (§21–22).
+- **D9 — Controlled learning promotion** (§21–22): map the existing memory/learning lifecycle
+  (candidate → proposal → promotion → retraction) and its human surface, then close the smallest
+  honest gap without inventing a second memory system.
