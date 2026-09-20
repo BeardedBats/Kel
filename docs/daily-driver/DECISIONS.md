@@ -61,4 +61,17 @@
   (`packaging/verify-transcription-e2e.cjs`) proving the real service end to end. Text export
   downloads the loaded transcript locally; the engine's `export_text` stays available for other
   clients.
+- **D-015 — D5 approach.** The attention model stays derived-only: D5 adds a `connection` kind sourced
+  from the engine's provider statuses (`not_installed` / `installed_not_authenticated` = the "Needs
+  setup" states), copy kept in user language ("A connection needs setup") and a Project-unbound,
+  timestamp-less item so it sorts below live asks and fails closed under project filters. The
+  needs-attention vocabulary ban drops `provider` (the Providers page has been a user-facing surface
+  since D1; the item intentionally routes there). Notifications are transition-driven via a pure core
+  (`attentionNotificationCore.ts`): first snapshot silent, meaningful kinds only
+  (approval/input/permission/failure/review/connection + cleanly-finished work), 30-min per-item
+  cooldown, 3 events per tick, and delivery through the existing `ipcBridge.notification.show`
+  (window-focus + setting gating stays in the main process). Snooze/Later is deliberately NOT
+  implemented: it would require a second state store the derived-only surface must not grow.
+  Update/restart items are omitted because no authoritative renderer-visible restart flag exists
+  (the update channel is closed in D2) — invented items are worse than none.
 - (append as work proceeds; every non-obvious choice gets a line)

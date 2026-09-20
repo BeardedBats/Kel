@@ -41,3 +41,7 @@
 | 09:36 | D4 full | `bunx vitest run` | 20 files / 191 PASS | includes the policy pins |
 | 09:36 | D4 typecheck | `bunx tsc --noEmit` | exit 0 | — |
 | 09:37 | D4 live engine fixture flow | `python -m kel.service --data <tmp>` + `node packaging/verify-transcription-e2e.cjs` | all steps OK (1.6s) | practice mode: stream 4.6s→text; upload→combine (8.8s, source consumed); exports (485 chars / 403,244-byte wav); folders create/rename/assign/unassign; key set → `muse`, clear → `fixture`; two plain-language errors. Evidence `evidence/d4/transcription-e2e.json` |
+| 09:52 | D5 engine shape probe | `python -m kel.service` + `GET /api/state` | fresh-store shapes recorded | `state.providers` = id list; `state.approvals` = `[]` (non-empty shape unverified — not consumed); provider STATUSES come from the providers list API (`not_installed` / `installed_not_authenticated` / `healthy` / …) |
+| 09:56 | D5 suites (new + extended) | `bunx vitest run tests/unit/attention-notification-core.test.ts tests/unit/needs-attention.test.ts` | 16 PASS combined | transitions-only core (silent first snapshot, kinds, cooldown, per-tick cap, truncation, finished) + connection-kind derivations (sorting, unbound, action route) |
+| 09:58 | D5 typecheck | `bunx tsc --noEmit` | exit 0 | three defects found by the new tests and fixed: kind filter compared ids instead of kinds; cooldown sentinel `?? 0`; `seen` now mirrors the snapshot (resolved-and-returned items can re-notify after cooldown) |
+| 09:58 | D5 full | `bunx vitest run` | 21 files / 199 PASS | — |

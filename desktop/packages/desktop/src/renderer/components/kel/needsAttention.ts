@@ -15,7 +15,7 @@
 
 import type { KelBoundaryRequest, KelContinuationCandidate, KelWorkJob } from './kelApi';
 
-export type AttentionKind = 'approval' | 'input' | 'permission' | 'failure' | 'review' | 'continuation' | 'stale';
+export type AttentionKind = 'approval' | 'input' | 'permission' | 'failure' | 'review' | 'continuation' | 'connection' | 'stale';
 
 export interface AttentionItem {
   /** Stable, derived key — built only from authoritative ids present in the payload. */
@@ -30,10 +30,20 @@ export interface AttentionItem {
   at: number;
 }
 
+export interface AttentionProviderState {
+  /** Engine provider id (code — never rendered as machinery). */
+  id: string;
+  /** The provider's user-facing name, when the engine reports one. */
+  label?: string;
+  status?: string;
+}
+
 export interface AttentionPayload {
   jobs?: KelWorkJob[];
   continuation?: KelContinuationCandidate[];
   boundaryRequests?: KelBoundaryRequest[];
+  /** Provider statuses from the same /api/state read (D5: setup needs are attention too). */
+  providers?: AttentionProviderState[];
 }
 
 export interface AttentionFilter {
@@ -102,6 +112,22 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
         });
       }
     }
+  }
+
+  // D5: a provider that still needs setup is a genuine human interruption. The engine states
+  // `not_installed` / `installed_not_authenticated` are exactly "Needs setup" in user language.
+  // The item is deliberately unbound to a project (fail-closed under project filters) and carries
+  // no timestamp — it is persistent configuration, not a fleeting event, so it sorts below live asks.
+  for (const provider of payload.providers ?? []) {
+    if (provider.status !== 'not_installed' && provider.status !== 'installed_not_authenticated') continue;
+    items.push({
+      id: `connection-${provider.id}`,
+      kind: 'connection',
+      title: 'A connection needs setup',
+      detail: `${provider.label || provider.id} — finish setting it up so Kel can keep it available.`,
+      action: { label: 'Set it up', to: '/providers' },
+      at: 0,
+    });
   }
 
   for (const candidate of payload.continuation ?? []) {

@@ -59,7 +59,9 @@ describe('collectAttention — mapping', () => {
       boundaryRequests: [boundary({})],
     });
     const visible = JSON.stringify(items).toLowerCase();
-    for (const banned of ['lease', 'assignment', 'worker', 'runtime', 'router', 'queue', 'agent_id', 'provider']) {
+    // 'provider' is no longer banned: since D1 the Providers page is a user-facing surface, and D5
+    // routes setup needs there deliberately. Everything else is machinery and stays banned.
+    for (const banned of ['lease', 'assignment', 'worker', 'runtime', 'router', 'queue', 'agent_id']) {
       expect(visible).not.toContain(banned);
     }
   });
@@ -110,6 +112,33 @@ describe('collectAttention — unknown/stale items fail honestly', () => {
       jobs: [job({ id: 'j1', state: 'CLOSED', verdict: 'VERIFIED' })],
       boundaryRequests: [boundary({ status: 'DENIED' })],
     });
+    expect(items).toEqual([]);
+  });
+});
+
+describe('collectAttention — D5 connection setup needs', () => {
+  it('surfaces providers that need setup, routed to the Providers surface, sorted below live asks', () => {
+    const items = collectAttention({
+      jobs: [job({ id: 'j1', state: 'AWAITING_USER' })],
+      providers: [
+        { id: 'codex', label: 'Codex', status: 'installed_not_authenticated' },
+        { id: 'claude', label: 'Claude', status: 'healthy' },
+        { id: 'codex-code', label: 'Codex (CLI)', status: 'not_installed' },
+      ],
+    });
+    const connections = items.filter((item) => item.kind === 'connection');
+    expect(connections.map((item) => item.id).sort()).toEqual(['connection-codex', 'connection-codex-code']);
+    // Persistent configuration sorts below live asks (no timestamp).
+    expect(items[items.length - 1].kind).toBe('connection');
+    for (const item of connections) {
+      expect(item.action?.to).toBe('/providers');
+      expect(item.projectId).toBeUndefined();
+    }
+    expect(connections[0].detail).toContain('Codex');
+  });
+
+  it('excludes connection items under a project filter (unbound, fail-closed)', () => {
+    const items = collectAttention({ providers: [{ id: 'codex', status: 'not_installed' }] }, { projectId: 'P-A' });
     expect(items).toEqual([]);
   });
 });
