@@ -17,7 +17,8 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { kelAutonomy, type KelBoundaryRequest, type KelLease } from '@renderer/components/kel/kelApi';
+import { kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
+import { workLabelFor } from '@renderer/components/kel/jobLabels';
 
 const STATE_CLASS: Record<string, string> = {
   ACTIVE: 'kel-chip kel-chip--ok',
@@ -37,6 +38,7 @@ const STATE_TEXT: Record<string, string> = {
 
 export default function KelAutonomyPage() {
   const [leases, setLeases] = useState<KelLease[] | null>(null);
+  const [jobs, setJobs] = useState<KelWorkJob[]>([]);
   const [requests, setRequests] = useState<KelBoundaryRequest[]>([]);
   const [rules, setRules] = useState<Array<{ rule: string; text: string; test: string }>>([]);
   const [digest, setDigest] = useState('');
@@ -52,15 +54,19 @@ export default function KelAutonomyPage() {
 
   const load = useCallback(async () => {
     try {
-      const [leasePayload, requestPayload, guardrailPayload] = await Promise.all([
+      const [leasePayload, requestPayload, guardrailPayload, statePayload] = await Promise.all([
         kelAutonomy.leases(),
         kelAutonomy.requests(),
         kelAutonomy.guardrails(),
+        // Work labels come from the same engine; when the state read is unavailable the table
+        // falls back to a neutral label instead of failing the whole page (HVRA-MINOR-001).
+        kelState().catch((): null => null),
       ]);
       setLeases(leasePayload.leases ?? []);
       setRequests(requestPayload.requests ?? []);
       setRules(guardrailPayload.rules ?? []);
       setDigest(guardrailPayload.digest ?? '');
+      setJobs(statePayload?.jobs ?? []);
       setError(null);
     } catch (err) {
       setLeases([]);
@@ -141,8 +147,12 @@ export default function KelAutonomyPage() {
               <KelTable
                 head={['Work', 'State', 'Expires', 'Scope', 'Actions']}
                 rows={leases.map((lease) => [
-                  <span className="kel-strong" key={`${lease.lease_id}-job`}>
-                    {lease.job_id}
+                  <span
+                    className="kel-strong"
+                    key={`${lease.lease_id}-job`}
+                    title={`Work reference: ${lease.job_id}`}
+                  >
+                    {workLabelFor(lease.job_id, jobs)}
                   </span>,
                   <span className={STATE_CLASS[lease.state] ?? 'kel-chip'} key={`${lease.lease_id}-st`}>
                     {STATE_TEXT[lease.state] ?? lease.state.toLowerCase().replace(/_/g, ' ')}
@@ -282,6 +292,26 @@ export default function KelAutonomyPage() {
           )}
           {!firstLeaseId && <p className="kel-meta">Grant a permission first; the check needs a scope to test against.</p>}
         </KelCard>
+
+        {leases !== null && leases.length > 0 && (
+          <KelCard title="Work references">
+            <p className="kel-meta">
+              Support detail — the identifiers behind the Work column, kept out of the normal view.
+            </p>
+            <KelTable
+              head={['Work', 'Job id', 'Lease id']}
+              rows={leases.map((lease) => [
+                <span key={`${lease.lease_id}-wl`}>{workLabelFor(lease.job_id, jobs)}</span>,
+                <span className="kel-code" key={`${lease.lease_id}-wj`}>
+                  {lease.job_id}
+                </span>,
+                <span className="kel-code" key={`${lease.lease_id}-wls`}>
+                  {lease.lease_id}
+                </span>,
+              ])}
+            />
+          </KelCard>
+        )}
 
         {rules.length > 0 && (
           <KelSection title={`Locked guardrails · digest ${digest.slice(0, 12)}`}>
