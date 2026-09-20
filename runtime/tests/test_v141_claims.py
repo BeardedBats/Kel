@@ -61,9 +61,10 @@ REQUIRED = {
         'execution-path',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx': (
-        # Updated in V1.5 G7: enforcement is real; the pinned claim is the shipped copy.
-        'Kel enforces that scope on the worker execution path',
-        'denied before anything runs',
+        # V1.5 G7: enforcement is real. The V1.6 human-visual repair rewrote this page in plain
+        # language; the daily-driver lane re-pins the same claims to the repaired shipped copy.
+        'Kel enforces those limits while it works',
+        'checked against them before it runs',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
         # Updated in V1.5 G4: injection is real; the pinned claim is the shipped copy.
