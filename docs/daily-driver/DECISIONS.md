@@ -87,4 +87,18 @@
   cannot make it lie. `kelState`'s type now includes the `restore` field the engine always returned.
   Restart verification plants the engine's OWN restore-outcome file on a throwaway data dir and
   asserts a fresh process restores durable truth and surfaces it (`evidence/d6/`).
+- **D-017 — D7 approach.** The engine side of long-running autonomy was already complete and pinned:
+  `recover_expired` fences expired runs (run ORPHANED, milestone UNCERTAIN + the reconcile reason,
+  job WAITING_RESOURCE/UNCERTAIN) and `test_v16_r6_liveness.py` pins "reconcile first, never
+  auto-retried" plus late-result discarding; `test_v16_r3_retry_durability.py` pins durable milestone
+  attempt budgets, the provider failure counter/circuit, and the automatic-resume refusal once
+  exhausted; `wait_for_route`/`retry_route` carry the route reason and resume by themselves; approvals
+  are human-gated by construction. D7 therefore changed only the human-facing classification: an
+  orphaned run (WAITING_RESOURCE without `route_block`, with a recorded milestone reason) is now a
+  Needs-Your-Attention item carrying the engine's own sentence, while a route-blocked job is
+  explicitly NOT an interruption (it auto-resumes). The landing brief's "stopped" section is now
+  deliberately-paused-only, keeps the engine reason when recorded, never duplicates a needs-you job
+  (id-based dedupe against the attention items), and its summary counts are computed from the emitted
+  lines so it cannot overstate. `KelWorkJob` gained `route_block` and milestone `error` in the client
+  types (both were always returned by the engine).
 - (append as work proceeds; every non-obvious choice gets a line)

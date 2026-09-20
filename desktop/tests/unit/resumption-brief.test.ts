@@ -80,15 +80,63 @@ describe('buildResumptionBrief', () => {
       jobs: [
         job({ id: 'paused', state: 'PAUSED' }),
         job({ id: 'blocked', state: 'BLOCKED' }),
-        job({ id: 'waiting', state: 'WAITING_RESOURCE' }),
+        job({ id: 'waiting', state: 'WAITING_RESOURCE', route_block: 'No model is available right now' }),
       ],
     });
     const stopped = result.lines.filter((line) => line.kind === 'stopped');
-    expect(stopped.map((line) => line.id)).toEqual(['brief-stopped-paused', 'brief-stopped-waiting']);
+    // Only a deliberate pause is "stopped": a route-blocked job resumes by itself (go-ahead/Work).
+    expect(stopped.map((line) => line.id)).toEqual(['brief-stopped-paused']);
     expect(stopped[0].detail).toMatch(/pick it back up/i);
     // BLOCKED stays needs-you only (no duplicate line).
     expect(result.lines.some((line) => line.kind === 'needs-you')).toBe(true);
-    expect(stopped).toHaveLength(2);
+  });
+
+  it('surfaces an orphaned run as needs-you exactly once, with the engine reason', () => {
+    const result = brief({
+      jobs: [
+        job({
+          id: 'orphan',
+          state: 'WAITING_RESOURCE',
+          milestones: { m1: { state: 'UNCERTAIN', error: 'Expired run; native state requires reconciliation' } },
+        }),
+      ],
+      // The engine also lists it as a continuation candidate; the brief must not repeat it.
+      continuation: [candidate({ job_id: 'orphan', summary: 'A run stopped mid-flight' })],
+    });
+    const needsYou = result.lines.filter((line) => line.kind === 'needs-you');
+    expect(needsYou).toHaveLength(1);
+    expect(needsYou[0].title).toMatch(/fresh start/i);
+    expect(needsYou[0].detail).toContain('requires reconciliation');
+    expect(needsYou[0].detail).toContain('will not replay it on its own');
+    expect(result.lines.filter((line) => line.kind === 'resumable')).toHaveLength(0);
+    expect(result.lines.filter((line) => line.kind === 'stopped')).toHaveLength(0);
+    expect(result.summary).toContain('1 needs you');
+  });
+
+  it('keeps a route-blocked job in the go-ahead section with the engine reason, never needs-you', () => {
+    const result = brief({
+      jobs: [job({ id: 'w1', state: 'WAITING_RESOURCE', route_block: 'No model is available right now' })],
+      continuation: [candidate({ job_id: 'w1', reasons: ['No model is available right now'] })],
+    });
+    expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
+    const resumable = result.lines.filter((line) => line.kind === 'resumable');
+    expect(resumable).toHaveLength(1);
+    expect(resumable[0].detail).toContain('No model is available right now');
+  });
+
+  it('carries the engine reason into a paused job line when one is recorded', () => {
+    const result = brief({
+      jobs: [
+        job({
+          id: 'p2',
+          state: 'PAUSED',
+          milestones: { m1: { state: 'NEEDS_REPAIR', error: 'Checks failed on the last attempt' } },
+        }),
+      ],
+    });
+    const stopped = result.lines.filter((line) => line.kind === 'stopped');
+    expect(stopped).toHaveLength(1);
+    expect(stopped[0].detail).toContain('Checks failed on the last attempt');
   });
 
   it('turns continuation candidates into go-ahead lines with the reasons', () => {

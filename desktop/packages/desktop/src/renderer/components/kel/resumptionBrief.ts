@@ -101,9 +101,17 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     });
   }
 
+  // Job ids already surfaced as needing you (the sections below must not repeat them).
+  const surfaced = new Set<string>();
+  for (const item of attention) {
+    const match = /^(?:approval|input|failure|review|permission|connection)-(.+)$/.exec(item.id);
+    if (match) surfaced.add(match[1]);
+  }
+
   // 3) What finished cleanly while you were away.
   const finished = jobs.filter((job) => job.state === 'CLOSED' && (job.verdict || '').toUpperCase() === 'VERIFIED').toSorted(byUpdatedDesc);
   for (const job of finished.slice(0, BRIEF_SECTION_CAP)) {
+    if (surfaced.has(job.id)) continue;
     lines.push({
       id: `brief-finished-${job.id}`,
       kind: 'finished',
@@ -113,16 +121,19 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     });
   }
 
-  // 4) What stopped short of finishing (paused / waiting on a resource — not "needs you").
-  const stopped = jobs
-    .filter((job) => job.state === 'PAUSED' || job.state === 'WAITING_RESOURCE')
-    .toSorted(byUpdatedDesc);
+  // 4) What stopped short of finishing: a deliberate pause. (A route-blocked job is different — it
+  // resumes by itself once a model is available, so it stays in the go-ahead section below.)
+  const stopped = jobs.filter((job) => job.state === 'PAUSED').toSorted(byUpdatedDesc);
   for (const job of stopped.slice(0, BRIEF_SECTION_CAP)) {
+    if (surfaced.has(job.id)) continue;
+    const reason = job.route_block || Object.values(job.milestones ?? {}).find((entry) => entry.error)?.error;
     lines.push({
       id: `brief-stopped-${job.id}`,
       kind: 'stopped',
       title: `Stopped: ${requestOf(job)}`,
-      detail: 'It stopped before finishing. Open the chat to pick it back up.',
+      detail: reason
+        ? `${reason}. Open the chat to pick it back up.`
+        : 'It stopped before finishing. Open the chat to pick it back up.',
       action: openChat(job.conversation),
     });
   }
@@ -131,6 +142,7 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   const resumable = payload.continuation ?? [];
   for (const candidate of resumable.slice(0, BRIEF_SECTION_CAP)) {
     const jobId = candidate.job_id || candidate.job?.id || 'unknown';
+    if (surfaced.has(jobId)) continue;
     // A candidate's embedded job is a partial record; the full job (when present) carries the chat.
     const job = jobs.find((entry) => entry.id === jobId);
     const reasons = (candidate.reasons ?? []).filter(Boolean);
@@ -146,6 +158,7 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   // 6) What is still running.
   const active = jobs.filter((job) => job.state === 'RUNNING').toSorted(byUpdatedDesc);
   for (const job of active.slice(0, BRIEF_SECTION_CAP)) {
+    if (surfaced.has(job.id)) continue;
     lines.push({
       id: `brief-active-${job.id}`,
       kind: 'active',
@@ -173,13 +186,15 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     });
   }
 
-  const needsYou = lines.filter((line) => line.kind === 'needs-you').length;
+  // Counts come from the emitted lines, so the headline summary can never overstate what is shown.
+  const countOf = (kind: BriefKind): number => lines.filter((line) => line.kind === kind).length;
+  const needsYou = countOf('needs-you');
   const parts: string[] = [];
   if (needsYou) parts.push(`${needsYou} need${needsYou === 1 ? 's' : ''} you`);
-  if (finished.length) parts.push(`${finished.length} finished`);
-  if (stopped.length) parts.push(`${stopped.length} stopped`);
-  if (resumable.length) parts.push(`${resumable.length} waiting for your go-ahead`);
-  if (active.length) parts.push(`${active.length} still running`);
+  if (countOf('finished')) parts.push(`${countOf('finished')} finished`);
+  if (countOf('stopped')) parts.push(`${countOf('stopped')} stopped`);
+  if (countOf('resumable')) parts.push(`${countOf('resumable')} waiting for your go-ahead`);
+  if (countOf('active')) parts.push(`${countOf('active')} still running`);
 
   return {
     quiet: lines.length === 0,

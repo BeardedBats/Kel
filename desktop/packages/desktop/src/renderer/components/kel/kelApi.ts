@@ -53,6 +53,8 @@ export interface KelJobMilestoneRuntime {
   attempts?: number;
   artifact?: string;
   digest?: string;
+  /** Plain engine reason recorded when a milestone needed repair or reconciliation. */
+  error?: string;
 }
 
 export interface KelJobContractMilestone {
@@ -72,6 +74,12 @@ export interface KelWorkJob {
   budget?: number;
   /** Engine-reported last update, when the engine provides one. */
   updated?: number;
+  /**
+   * Set while the engine waits for an available model route (D7): such a job resumes automatically
+   * when a route is available, so it is NOT a human interruption. Absent while waiting because an
+   * expired/orphaned run needs reconciliation — that one genuinely needs a person.
+   */
+  route_block?: string;
   contract?: { request?: string; project_id?: string; milestones?: KelJobContractMilestone[] };
   milestones?: Record<string, KelJobMilestoneRuntime>;
 }
