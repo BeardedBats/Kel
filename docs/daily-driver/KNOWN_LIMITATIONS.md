@@ -27,7 +27,9 @@ Honest, current list (grows/shrinks as phases complete):
   (deterministic text; the UI labels it honestly). Key set/clear flips the reported mode truthfully
   (`muse` ↔ `fixture`); the Muse transcription call itself is unverified here. UI-level click-through
   (microphone capture, OS file picker) is deferred to the packaged battery / D18 (no audio hardware
-  in this environment); the policy pins + the live HTTP flow cover the shipped logic.- Remote surface (D3): enforcement is gateway-side because aioncore's local mode never gates its own
+  in this environment); the policy pins + the live HTTP flow cover the shipped logic.
+- V1.6 release evidence and frozen tags intentionally not updated (historical record).
+- Remote surface (D3): enforcement is gateway-side because aioncore's local mode never gates its own
   business routes. Consequences: (1) pre-login, the SPA's boot probes (client settings/config/cron/
   realtime WS) are refused with 401 — expected noise until login; the login page renders with the
   default theme. (2) Session validity is cached 5s (positives), so a revoked cookie may pass for up
