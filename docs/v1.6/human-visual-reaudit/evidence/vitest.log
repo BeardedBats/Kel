@@ -1,0 +1,375 @@
+$ vitest run
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop[39m
+
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/memory-record-actions.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/keepAwake.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/kelEngineVersion.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/sender-guard.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/engine-health.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/needs-attention.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/conversation-leading-mark.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/capability-recommendation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/engine-failure.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/donor-policy.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+[90mstderr[2m | packages/web-host/src/agent-process-registry.test.ts[2m > [22m[2mcleanupRegisteredAgentProcesses[2m > [22m[2mresolves and quarantines when the registry file is empty
+[22m[39m[web-host] agent process registry C:\Users\Nick\AppData\Local\Temp\aionui-agent-registry-L7kvbl\runtime\agent-process-registry.json is corrupt; quarantining and continuing empty SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readRegistry (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:95:25)
+    at cleanupRegisteredAgentProcessesInner (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:49:20)
+    at cleanupRegisteredAgentProcesses (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:39:5)
+    at C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.test.ts:82:5
+    at [90mfile:///C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/[39mnode_modules/[4m.bun[24m/@vitest+runner@4.1.0/node_modules/[4m@vitest/runner[24m/dist/index.js:1258:20
+
+[90mstderr[2m | packages/web-host/src/agent-process-registry.test.ts[2m > [22m[2mcleanupRegisteredAgentProcesses[2m > [22m[2mresolves and quarantines when the registry file holds malformed JSON
+[22m[39m[web-host] agent process registry C:\Users\Nick\AppData\Local\Temp\aionui-agent-registry-BDHSR0\runtime\agent-process-registry.json is corrupt; quarantining and continuing empty SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readRegistry (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:95:25)
+    at cleanupRegisteredAgentProcessesInner (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:49:20)
+    at cleanupRegisteredAgentProcesses (C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.ts:39:5)
+    at C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/agent-process-registry.test.ts:94:5
+    at [90mfile:///C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/[39mnode_modules/[4m.bun[24m/@vitest+runner@4.1.0/node_modules/[4m@vitest/runner[24m/dist/index.js:1258:20
+
+ [32m✓[39m [30m[43m node [49m[39m packages/web-host/src/agent-process-registry.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mfindAvailablePort[2m > [22m[2mresolves with the port reported by the listening server
+[22m[39m[aioncore] selected backend port 40404 after 1 attempts
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mfindAvailablePort[2m > [22m[2mresolves the preferred port when it is available
+[22m[39m[aioncore] selected backend port 65303 after 1 attempts
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mfindAvailablePort[2m > [22m[2mdoes not bind a preferred port when Fetch would block requests to it
+[22m[39m[aioncore] skipped fetch-blocked backend port 1720
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mfindAvailablePort[2m > [22m[2mdoes not bind a preferred port when Fetch would block requests to it
+[22m[39m[aioncore] selected backend port 40404 after 1 attempts
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mfindAvailablePort[2m > [22m[2mrejects instead of retrying forever when every attempt returns a Fetch-blocked port
+[22m[39m[aioncore] skipped fetch-blocked backend port 1720
+
+ [32m✓[39m [30m[43m node [49m[39m packages/web-host/src/static-server-lanip.unit.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (success path)[2m > [22m[2mlets aioncore choose the backend port and waits for the reported listening event
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /w --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (success path)[2m > [22m[2mlets aioncore choose the backend port and waits for the reported listening event
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":55555}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (success path)[2m > [22m[2mlets aioncore choose the backend port and waits for the reported listening event
+[22m[39m[aioncore] health ready on port 55555 after 1 attempts, elapsed_ms=0, data-dir: /db/path
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (success path)[2m > [22m[2mspawns with correct args, waits for /health, reports running
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /w --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (success path)[2m > [22m[2mspawns with correct args, waits for /health, reports running
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":55555}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mfails before spawn when startup directory preparation fails
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /work --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: startup directory prep FAILED
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mskips mkdir for a pre-existing work dir so a Windows drive root can start (ELECTRON-3S4)
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir D:\ --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: spawn() threw
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code and stage from early-exit stderr
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /work --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code and stage from early-exit stderr
+[22m[39m[aioncore] BOOTSTRAP_DATA_INIT_FAILED stage=database.open databasePath=/db/path/aionui-backend.db: failed to initialize application data
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code and stage from early-exit stderr
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=1 signal=null
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code when stderr drains after exit but before close
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /work --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code when stderr drains after exit but before close
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=1 signal=null
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mcaptures backend boundary code when stderr drains after exit but before close
+[22m[39m[aioncore] BOOTSTRAP_DATA_INIT_FAILED stage=database.migration databasePath=/db/path/aionui-backend.db: failed to initialize application data
+
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/ipc-sender-channels.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkills child and reports listen_timeout when aioncore never reports a port
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkills child and throws when /health never responds OK within timeout
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkills child and throws when /health never responds OK within timeout
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33333}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mincludes startup diagnostics when health check times out
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --work-dir /work --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mincludes startup diagnostics when health check times out
+[22m[39m[aioncore] database is locked
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mincludes startup diagnostics when health check times out
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33334}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords the last non-OK health response when health check times out
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords the last non-OK health response when health check times out
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33336}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords when server listening appears before health check times out
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords when server listening appears before health check times out
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33337}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords TCP reachability when fetch fails after the server starts listening
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords TCP reachability when fetch fails after the server starts listening
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33338}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords polling delay when a health attempt stalls past the timeout
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords polling delay when a health attempt stalls past the timeout
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33340}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords TCP connection errors when fetch fails and the port is unreachable
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mrecords TCP connection errors when fetch fails and the port is unreachable
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33339}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkeeps child alive and reports ready later when pending timeout is allowed
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkeeps child alive and reports ready later when pending timeout is allowed
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33335}
+
+(node:19840) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkeeps child alive and reports ready later when pending timeout is allowed
+[22m[39m[aioncore] health check timed out; keeping process alive on port 33335
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mkeeps child alive and reports ready later when pending timeout is allowed
+[22m[39m[aioncore] late health ready on port 33335, elapsed_ms=1200, data-dir: /db/path
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mmarks the health_timeout error kept-alive when pending timeout is allowed
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mmarks the health_timeout error kept-alive when pending timeout is allowed
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33342}
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (health timeout)[2m > [22m[2mmarks the health_timeout error kept-alive when pending timeout is allowed
+[22m[39m[aioncore] health check timed out; keeping process alive on port 33342
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: treats an AIONCORE_READY marker as ready without /health passing
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: treats an AIONCORE_READY marker as ready without /health passing
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33343}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: treats an AIONCORE_READY marker as ready without /health passing
+[22m[39m[aioncore] AIONCORE_READY
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: treats an AIONCORE_READY marker as ready without /health passing
+[22m[39m[aioncore] ready signal received on port 33343, elapsed_ms=0, data-dir: /db/path
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: a late AIONCORE_READY marker resolves the pending state and fires onReady
+[22m[39m[aioncore] starting: /abs/path/aioncore --port 0 --data-dir /db/path --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --log-dir /log/dir --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: a late AIONCORE_READY marker resolves the pending state and fires onReady
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":33344}
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: a late AIONCORE_READY marker resolves the pending state and fires onReady
+[22m[39m[aioncore] health check timed out; keeping process alive on port 33344
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: a late AIONCORE_READY marker resolves the pending state and fires onReady
+[22m[39m[aioncore] AIONCORE_READY
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.start (AIONCORE_READY consumption)[2m > [22m[2mAC-7: a late AIONCORE_READY marker resolves the pending state and fires onReady
+[22m[39m[aioncore] late ready signal on port 33344, elapsed_ms=31000, data-dir: /db/path
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mrejects startup as cancelled when stopped before health check passes
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mrejects startup as cancelled when stopped before health check passes
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=null signal=SIGTERM
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2msends SIGTERM then resolves when child emits exit
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2msends SIGTERM then resolves when child emits exit
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":22222}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2msends SIGTERM then resolves when child emits exit
+[22m[39m[aioncore] health ready on port 22222 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2msends SIGTERM then resolves when child emits exit
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=0 signal=undefined
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mescalates to SIGKILL when SIGTERM times out
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mescalates to SIGKILL when SIGTERM times out
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":22223}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mescalates to SIGKILL when SIGTERM times out
+[22m[39m[aioncore] health ready on port 22223 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for Windows taskkill to finish before cleaning registered agent processes
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for Windows taskkill to finish before cleaning registered agent processes
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":22224}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for Windows taskkill to finish before cleaning registered agent processes
+[22m[39m[aioncore] health ready on port 22224 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for Windows taskkill to finish before cleaning registered agent processes
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=0 signal=undefined
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for forced Windows taskkill before cleanup when graceful stop times out
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for forced Windows taskkill before cleanup when graceful stop times out
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":22225}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager.stop[2m > [22m[2mwaits for forced Windows taskkill before cleanup when graceful stop times out
+[22m[39m[aioncore] health ready on port 22225 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":65303}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] health ready on port 65303 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=1 signal=SIGABRT
+
+[90mstderr[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] child exited unexpectedly; scheduling restart {
+  exitCode: [33m1[39m,
+  signal: [32m'SIGABRT'[39m,
+  port: [33m65303[39m,
+  restartCount: [33m1[39m,
+  maxRestarts: [33m3[39m,
+  delayMs: [33m1000[39m
+}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] starting: /x --port 65303 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":65303}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mrestarts on the existing backend port after an unexpected exit
+[22m[39m[aioncore] health ready on port 65303 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mlogs crash restart scheduling details
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mlogs crash restart scheduling details
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":65303}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mlogs crash restart scheduling details
+[22m[39m[aioncore] health ready on port 65303 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mlogs crash restart scheduling details
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=1 signal=SIGABRT
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mlogs crash restart scheduling details
+[22m[39m[aioncore] starting: /x --port 65303 --data-dir /db --parent-pid 19840 --log-level debug --app-version 1.2.3 --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mdoes not reuse corrupted database recovery authorization during crash restart
+[22m[39m[aioncore] starting: /x --port 0 --data-dir /db --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local --recover-corrupted-database
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mdoes not reuse corrupted database recovery authorization during crash restart
+[22m[39m[aioncore] AIONCORE_LISTENING {"host":"127.0.0.1","port":65303}
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mdoes not reuse corrupted database recovery authorization during crash restart
+[22m[39m[aioncore] health ready on port 65303 after 1 attempts, elapsed_ms=0, data-dir: /db
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mdoes not reuse corrupted database recovery authorization during crash restart
+[22m[39m[KEL-BOOT] backend-launcher: child exit code=1 signal=SIGABRT
+
+[90mstdout[2m | packages/web-host/src/backend-launcher.test.ts[2m > [22m[2mBackendLifecycleManager crash restart[2m > [22m[2mdoes not reuse corrupted database recovery authorization during crash restart
+[22m[39m[aioncore] starting: /x --port 65303 --data-dir /db --parent-pid 19840 --log-level info --app-version 1.2.3 --managed-resources-mode bundled --local
+[KEL-BOOT] backend-launcher: spawning aioncore
+[KEL-BOOT] backend-launcher: aioncore spawned pid=99999
+
+ [32m✓[39m [30m[43m node [49m[39m packages/web-host/src/backend-launcher.test.ts [2m([22m[2m44 tests[22m[2m)[22m[33m 8958[2mms[22m[39m
+     [33m[2m✓[22m[39m escalates to SIGKILL when SIGTERM times out [33m 5210[2mms[22m[39m
+     [33m[2m✓[22m[39m restarts on the existing backend port after an unexpected exit [33m 1224[2mms[22m[39m
+     [33m[2m✓[22m[39m logs crash restart scheduling details [33m 1206[2mms[22m[39m
+     [33m[2m✓[22m[39m does not reuse corrupted database recovery authorization during crash restart [33m 1208[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m packages/web-host/src/static-server.unit.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 28265[2mms[22m[39m
+     [33m[2m✓[22m[39m serves static index.html at / [33m 3070[2mms[22m[39m
+     [33m[2m✓[22m[39m SPA fallback: /chat/123 returns index.html [33m 3025[2mms[22m[39m
+     [33m[2m✓[22m[39m static asset /assets/main.js served [33m 3018[2mms[22m[39m
+     [33m[2m✓[22m[39m /api/* reverse-proxies to backend [33m 3016[2mms[22m[39m
+     [33m[2m✓[22m[39m /login reverse-proxies to backend (no local handler) [33m 3017[2mms[22m[39m
+     [33m[2m✓[22m[39m /api/auth/user reverse-proxies to backend (no local handler) [33m 3016[2mms[22m[39m
+     [33m[2m✓[22m[39m /logout reverse-proxies to backend (no local handler) [33m 3022[2mms[22m[39m
+     [33m[2m✓[22m[39m /api proxy returns 502 when backend unreachable [33m 3023[2mms[22m[39m
+     [33m[2m✓[22m[39m POST body with a large payload is fully forwarded to backend (no byte drop during splice) [33m 4022[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m156 passed[39m[22m[90m (156)[39m
+[2m   Start at [22m 22:09:54
+[2m   Duration [22m 29.21s[2m (transform 2.16s, setup 380ms, import 2.82s, tests 37.33s, environment 1ms)[22m
+
