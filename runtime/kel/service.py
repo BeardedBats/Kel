@@ -696,6 +696,7 @@ class Service:
             return Diagnostics(self.store,ENGINE_VERSION).apply(data)
         if path=='/api/vetting':return self._vetting_action(data)
         if path=='/api/transcription':return self._transcription_action(data)
+        if path=='/api/dogfood':return self._dogfood_action(data)
         if path=='/api/model':return self._model_action(data)
         if path=='/api/capabilities':return self._capabilities_action(data)
         if path=='/api/data-path':return {'root':str(self.store.root),'database':str(self.store.db_path)}
@@ -976,6 +977,40 @@ class Service:
         if action=='clear_key':return service.clear_key()
         raise PolicyError('Unknown transcription action')
 
+    # -- Fix Capture (V2.0 preflight) --------------------------------------------------------------
+    def _dogfood_action(self,data):
+        # Same contract as the other families: an unexpected failure answers in one plain sentence,
+        # and PolicyError keeps the sentence it was raised with.
+        try:
+            return self._dogfood_dispatch(data)
+        except PolicyError:
+            raise
+        except Exception:
+            raise PolicyError('Kel could not finish that fix action. Try again.') from None
+
+    def _dogfood_list(self,status=None):
+        from .dogfood import Dogfood
+        return Dogfood(self.store).list(status or None)
+
+    def _dogfood_dispatch(self,data):
+        from .dogfood import Dogfood
+        service=Dogfood(self.store)
+        action=data.get('action')
+        if action=='list':return service.list(data.get('status') or None)
+        if action=='get':return service.get(self._required(data,'id','Pick a fix first.'))
+        if action=='save':
+            return service.save(data.get('transcript',''),screenshot=data.get('screenshot'),
+                                route=data.get('route'),page_title=data.get('page_title'),
+                                element=data.get('element'),window=data.get('window'),
+                                diagnostics=data.get('diagnostics'),version=data.get('version'),
+                                conversation=data.get('conversation'))
+        if action=='set_status':
+            return service.set_status(self._required(data,'id','Pick a fix first.'),
+                                      self._required(data,'status','Pick a status first.'))
+        if action=='prepare_prompt':
+            return service.prepare_prompt(data.get('fix_ids') or None)
+        raise PolicyError('Unknown fix action')
+
     def _vetting_all_answered(self,questions):
         return all((q.get('answer') or {}).get('status') in ('ANSWERED','PARTIALLY_ANSWERED','SKIPPED','DEFERRED')
                    for q in questions)
@@ -1003,6 +1038,7 @@ def serve(root,port=0):
                     query=parse_qs(parsed.query)
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/dogfood':self.reply(200,service._dogfood_list(query.get('status',[None])[0]));return
                     if parsed.path=='/api/artifact':
                         if 'lineage' in query:
                             out=service.store.lineage_artifact(query['lineage'][0])
