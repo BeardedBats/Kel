@@ -1,0 +1,25 @@
+{
+  "phase": "D11",
+  "when": "2026-09-20T14:46:01.985Z",
+  "port": 25913,
+  "engine_data": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d11-engine-AElbzr",
+  "web_data": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d11-web-X8SbAf",
+  "seeded_job": "9f47d23a-441c-4b57-9339-4e83ac815f27",
+  "verdict": {
+    "webui_ready": true,
+    "initial_password_published": true,
+    "anonymous_is_refused": true,
+    "login_succeeds": true,
+    "state_status": 200,
+    "state_body_head": "{\"approvals\":[],\"attachments\":[],\"connected\":true,\"continuation\":[{\"accepted\":0,\"conversation\":\"main\",\"job_id\":\"9f47d23a-441c-4b57-9339-4e83ac815f27\",\"last_event_at\":1789915557.150006,\"linked\":[],\"ope",
+    "authenticated_state_reachable": true,
+    "desktop_job_visible_remotely": true,
+    "work_status": 200,
+    "work_body_head": "{\"map\":null,\"memory\":{\"conflicts\":[],\"proposals\":[],\"records\":[]},\"project_id\":\"default\",\"recipes\":{\"entries\":[{\"digest\":\"7f0449770b55d7ac5b09ef51ee1cbd15901cea12aedcbc509273b8be405749aa\",\"kind\":\"mixe",
+    "workspace_reachable_remotely": true,
+    "engine_token_never_reaches_the_browser": true,
+    "dead_engine_fails_closed": true,
+    "dead_engine_error": "KEL_ENGINE_UNREACHABLE"
+  },
+  "all_green": true
+}

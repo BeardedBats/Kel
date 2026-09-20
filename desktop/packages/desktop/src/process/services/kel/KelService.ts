@@ -590,3 +590,5 @@ export async function initializeKel(port: number): Promise<void> {
     syncProviders: (body) => kelRequest('/api/providers', body),
   });
 }
+
+export const kelEngineDataRoot = (): string => dataRoot();

@@ -12,6 +12,7 @@ import { getSystemDir } from './initStorage';
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { startWebHost, type WebHostHandle } from '@aionui/web-host';
 import { getDataPath } from './utils';
+import { kelEngineDataRoot } from '../services/kel/KelService';
 
 const WEBUI_CONFIG_FILE = 'webui.config.json';
 const DESKTOP_WEBUI_ENABLED_KEY = 'webui.desktop.enabled';
@@ -248,6 +249,9 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     port: preferredPort,
     allowRemote,
     requireAuth: true,
+    // D11 — the remote browser reaches Kel's own engine through the session-gated /kel gateway;
+    // the engine descriptor (and its bearer token) stays in the main process's data root.
+    kelDataDir: kelEngineDataRoot(),
     // Must align with the desktop IPC path's backend dataDir (src/index.ts), otherwise
     // users see divergent SQLite state between desktop app and bundled WebUI.
     dataDir: getDataPath(),

@@ -13,6 +13,8 @@
 import http, { type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import net, { type Socket } from 'node:net';
+import fs from 'node:fs';
+import path from 'node:path';
 import serveHandler from 'serve-handler';
 
 export type StaticServerOptions = {
@@ -26,6 +28,13 @@ export type StaticServerOptions = {
    * set this; the library default stays false so unit tests can exercise raw proxying.
    */
   requireAuth?: boolean;
+  /**
+   * D11 — the Kel gateway: when set, `/kel/*` is proxied to the Kel engine whose descriptor
+   * (`desktop-session.json`) lives in this directory. The engine's bearer token is read
+   * server-side per request and never reaches the browser; the route is session-gated exactly
+   * like the rest of the gateway. Without this option `/kel/*` falls through to the SPA.
+   */
+  kelDataDir?: string;
 };
 
 export type StaticServerHandle = {
@@ -185,6 +194,51 @@ function forwardToBackend(req: IncomingMessage, res: ServerResponse, backendPort
   req.pipe(proxy);
 }
 
+/**
+ * D11 — resolve the running Kel engine from the desktop's own descriptor. Read per request so a
+ * restarted engine (new port/token) is picked up immediately; failures fail closed.
+ */
+async function readKelEngine(kelDataDir: string): Promise<{ url: string; token: string } | null> {
+  try {
+    const raw = await fs.promises.readFile(path.join(kelDataDir, 'desktop-session.json'), 'utf8');
+    const parsed = JSON.parse(raw) as { url?: string; token?: string };
+    if (!parsed.url || !parsed.token) return null;
+    return { url: parsed.url, token: parsed.token };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * D11 — forward a browser request to the Kel engine with the process-held bearer token. The
+ * browser's own session cookie is dropped: the engine authenticates on the bearer alone and never
+ * sees aionui session material.
+ */
+function forwardToKel(req: IncomingMessage, res: ServerResponse, engine: { url: string; token: string }): void {
+  const target = new URL(engine.url);
+  const headers: http.OutgoingHttpHeaders = { ...req.headers, host: target.host, authorization: `Bearer ${engine.token}` };
+  delete headers.cookie;
+  const options: http.RequestOptions = {
+    hostname: target.hostname,
+    port: target.port,
+    path: (req.url ?? '/').replace(/^\/kel/, '') || '/',
+    method: req.method,
+    headers,
+  };
+  const proxy = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
+  proxy.on('error', () => {
+    if (!res.headersSent) {
+      replyJson(res, 502, { error: 'KEL_ENGINE_UNREACHABLE' });
+    } else {
+      res.destroy();
+    }
+  });
+  req.pipe(proxy);
+}
+
 // Max bytes we peek before forcing a routing decision. An HTTP request-line
 // on its own is typically < 100 bytes; a full header block is < 2 KB. If we
 // haven't seen a newline after 4 KB the client is sending something weird —
@@ -288,6 +342,29 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
           }
         }
         forwardToBackend(req, res, opts.backendPort);
+        return;
+      }
+
+      // D11 — the Kel gateway: the remote browser reaches Kel's own engine here. Same session
+      // authority as every other gated route; the engine bearer stays server-side; when the
+      // engine is not running the caller gets an honest 503 instead of a broken page.
+      if (opts.kelDataDir && req.url.startsWith('/kel/')) {
+        if (validateSession) {
+          const allowed = await validateSession.validate(req.headers.cookie);
+          if (!allowed) {
+            replyJson(res, 401, { success: false, error: 'Authentication required', code: 'UNAUTHORIZED' });
+            return;
+          }
+        }
+        const engine = await readKelEngine(opts.kelDataDir);
+        if (!engine) {
+          replyJson(res, 503, {
+            error: 'KEL_ENGINE_UNAVAILABLE',
+            message: 'Kel is not running on this machine right now.',
+          });
+          return;
+        }
+        forwardToKel(req, res, engine);
         return;
       }
 

@@ -158,4 +158,19 @@
   HTTP (`packaging/verify-recipe-loop.cjs`): nothing stored by the draft; save without confirmation
   refused; confirm persists; re-save idempotent; run + run-again accepted; the first run is a real
   job. No second workflow engine, no recipe marketplace, no scheduler.
+- **D-022 — D11 approach.** Cross-device continuity needed the remote browser to reach Kel's own
+  durable state — but the Kel engine is process-local to the desktop (per-process bearer token) and
+  the remote browser only had the aioncore SPA + gateway. Rather than build a second state store or
+  expose the engine on the network, the **desktop's own web-host became the Kel gateway**: `/kel/*`
+  is session-gated by the same authority as every other gated route, the engine descriptor
+  (`desktop-session.json`) is read per request from the app's data root, and the bearer token is
+  attached server-side — the browser never sees it; the browser's aionui cookie is stripped before
+  forwarding. The renderer's `call()` keeps one implementation for both worlds: preload bridge when
+  present, otherwise `fetch('/kel' + route)`. Failure modes are honest (no engine → 503, dead →
+  502). The real-stack journey proved the loop (anonymous refused → login → desktop-created work
+  visible remotely → dead engine fails closed) and caught one nuance worth recording: the engine's
+  state/work reads are GET-with-query (what the renderer actually uses), not POST actions, so the
+  "Unknown action" 400 was the journey's mistake, not a gateway bug. Known limit: live Kel updates
+  do not stream over the gateway yet (pages refresh on load; no second WebSocket path was
+  invented).
 - (append as work proceeds; every non-obvious choice gets a line)

@@ -82,7 +82,12 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   bug the dead primitive had: short milestone ids (`m1`) failed recipe-slug validation — now mapped
   (depends_on included) + pinned. Live HTTP journey all-true (`packaging/verify-recipe-loop.cjs` +
   `evidence/d10/`).
-- **Next: D11 — cross-device continuity** (directive §25).
+- **D11 done (this commit).** Cross-device continuity: the web-host gained a session-gated `/kel`
+  gateway to the Kel engine (bearer stays server-side; browser cookie stripped; 503/502 fail-closed);
+  the renderer falls back from the missing preload bridge to it, so one UI works remotely; desktop
+  app + dev CLI wire the engine data root in. Real-stack journey all-green
+  (`packaging/verify-remote-kel.cjs` + `evidence/d11/`).
+- **Next: D12 — smarter provider routing** (directive §26–27).
 
 ## Where
 
