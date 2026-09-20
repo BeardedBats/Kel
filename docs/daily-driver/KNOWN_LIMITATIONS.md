@@ -95,3 +95,7 @@ Honest, current list (grows/shrinks as phases complete):
   view, not a live feed (no streaming channel exists yet; D11's limitation applies). It lists at most
   the last five finished items and the first three continuation candidates — depth stays deliberately
   shallow; nothing else is hidden, the rest is one click away on Work.
+- Emergency stop (D15): it stops at the next safe check rather than mid-write — a step that is already
+  writing a file finishes that write before the stop lands (that is the engine's safe-check semantics,
+  unchanged). Finished work is never undone by the stop, and resuming after a stop is a deliberate act
+  (new work must be asked for again).

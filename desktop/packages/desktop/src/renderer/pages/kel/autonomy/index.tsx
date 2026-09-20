@@ -51,6 +51,8 @@ export default function KelAutonomyPage() {
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [advanced, setAdvanced] = useState(false);
+  // D15 — emergency stop is deliberate: the first click arms it, the second click stops everything.
+  const [stopArmed, setStopArmed] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -118,19 +120,45 @@ export default function KelAutonomyPage() {
           <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
             Reload
           </KelButton>
-          <KelButton
-            variant="secondary"
-            disabled={busy || active.length === 0}
-            onClick={() => void act('Emergency stop', () => kelAutonomy.emergencyStop())}
-          >
-            Emergency stop
-          </KelButton>
+          {!stopArmed ? (
+            <KelButton
+              variant="secondary"
+              disabled={busy || active.length === 0}
+              onClick={() => setStopArmed(true)}
+            >
+              Emergency stop
+            </KelButton>
+          ) : (
+            <>
+              <KelButton
+                variant="primary"
+                disabled={busy}
+                onClick={() =>
+                  void act('Emergency stop', async () => {
+                    await kelAutonomy.emergencyStop();
+                    setStopArmed(false);
+                  })
+                }
+              >
+                Yes — stop everything
+              </KelButton>
+              <KelButton variant="quiet" disabled={busy} onClick={() => setStopArmed(false)}>
+                Keep going
+              </KelButton>
+            </>
+          )}
         </div>
 
         <p className="kel-meta">
           Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
           at its next safe check. It does not undo work that already finished.
         </p>
+        {stopArmed && (
+          <p className="kel-meta kel-strong">
+            This will revoke every active permission and pause all active or queued work now. Finished
+            work is not undone — choose Yes to confirm, or Keep going to leave everything as it is.
+          </p>
+        )}
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && leases === null && <KelLoading rows={3} />}

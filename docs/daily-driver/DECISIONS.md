@@ -212,4 +212,15 @@
   was chosen after `Activity` turned out not to exist in the icon set (tsc caught it). To keep the
   Work page and Activity from drifting, the verdict/route/job-state sentences moved into a shared
   `workLanguage.ts` (the only non-additive part of this phase; the D12 pin was re-pointed there).
+- **D-026 — D15 approach.** The containment engine was already deep and pinned (twenty-plus autonomy
+  and boundary cases: reviewed-plan requirement, frozen/system roots, fail-closed tools, one-time
+  grants, expiry, revocation, actor authority); D15 verified it rather than rebuilding it, and closed
+  the one human-risk gap the recon found: the emergency stop fired on a single click. It is now a
+  deliberate two-step action — the first click arms it, an explanatory line appears, and only "Yes —
+  stop everything" calls the engine ("Keep going" disarms; the engine call exists exactly once, in
+  the confirmed branch, pinned). The live journey proved the semantics end to end and surfaced a
+  detail worth recording: the engine refuses a payload-supplied `actor` with "Actor identity comes
+  from the authenticated Kel session, not from the request payload" — a stronger guarantee than the
+  page needed, now part of the evidence. No bespoke sandbox was invented; the OS/browser sandbox
+  boundary and secret-scan behaviours stay exactly where their suites pin them.
 - (append as work proceeds; every non-obvious choice gets a line)
