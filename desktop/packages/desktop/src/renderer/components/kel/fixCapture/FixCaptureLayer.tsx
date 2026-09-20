@@ -49,10 +49,17 @@ const FixCaptureLayer: React.FC = () => {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Ctrl+Shift+F begins a capture, or stops one that is recording; Esc always cancels.
+  //
+  // The chord is deliberately claimed in the CAPTURE phase: the donor's conversation-search modal
+  // also binds Ctrl+Shift+F (a document-capture listener that preventDefaults and opens the search).
+  // Fix Capture is the primary consumer of this chord now, so it stops the event before the search
+  // handler sees it; search keeps its own trigger and the Ctrl+K palette path. Documented in
+  // KNOWN_LIMITATIONS and pinned by `fix-capture.dom.test.ts`.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (isPrimaryApplicationShortcut(event, { key: 'f', shiftKey: true, targetGuard: 'embedded-editor' })) {
         event.preventDefault();
+        event.stopPropagation();
         if (phaseRef.current === 'idle') api.current.begin();
         else if (phaseRef.current === 'recording') api.current.stop();
         return;
@@ -62,8 +69,8 @@ const FixCaptureLayer: React.FC = () => {
         api.current.cancel();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
   }, []);
 
   // Selecting: the overlay is transparent, so hit-testing finds the real element underneath and the

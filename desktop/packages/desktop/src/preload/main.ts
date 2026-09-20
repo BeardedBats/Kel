@@ -134,9 +134,11 @@ contextBridge.exposeInMainWorld('kelAPI', {
     remove: (provider: string) => ipcRenderer.invoke('kel:credential-delete', provider),
   },
   // Fix Capture (V2.0 preflight): the window screenshot + metrics come from the main process, and
-  // the path handed back is relative to the engine data root. Absent on the remote surface (a plain
-  // browser cannot read Kel's window), where Fix Capture says so honestly instead of guessing.
+  // the path handed back is relative to the engine data root. The view can read one saved screenshot
+  // back for display. Absent on the remote surface (a plain browser cannot read Kel's window), where
+  // Fix Capture says so honestly instead of guessing.
   dogfood: {
     capture: () => ipcRenderer.invoke('kel:dogfood-capture'),
+    screenshot: (relpath: string) => ipcRenderer.invoke('kel:dogfood-screenshot', relpath),
   },
 });
