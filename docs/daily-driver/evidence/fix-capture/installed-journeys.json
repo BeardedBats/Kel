@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-09-20T21:26:19.069Z",
+  "startedAt": "2026-09-20T21:45:36.636Z",
   "installDir": "C:\\Users\\Nick\\KelDogfoodCandidate",
   "appExe": "C:\\Users\\Nick\\KelDogfoodCandidate\\Kel.exe",
   "dataRoot": "C:\\Users\\Nick\\KelDogfoodRuns\\prepared\\engine",
@@ -45,7 +45,12 @@
       "targetBoxInsideTheImage": true,
       "scale": 1,
       "detailFound": true,
-      "outlineRendered": false
+      "outlineRendered": true,
+      "outlineBox": {
+        "width": 104,
+        "height": 17
+      },
+      "outlineHasArea": true
     }
   },
   "consoleErrors": [],
@@ -58,7 +63,7 @@
     },
     "files": {
       "prompts": [
-        "PROMPT-20260920-172708.md"
+        "PROMPT-20260920-174628.md"
       ],
       "screenshots": [
         "FIX-0001.png",

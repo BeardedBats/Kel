@@ -85,4 +85,41 @@ exactly one fix with the full payload, a missing microphone becomes a typed capt
 cancels without saving and hands the temp screenshot back — and the pins that matter: the bridge
 allowlist admits the dogfood routes, the capture-phase claim over the donor search, no spacebar
 shortcut, no single-side borders, exactly four statuses, screenshot path safety. Full desktop suite:
-**38 files / 303 tests** (tsc clean).
+**38 files / 304 tests** (tsc clean).
+
+## The package, and what the installed app proved
+
+Build: `dist/package-r12/Kel-1.7.0-dev-win-x64.exe` — `c1a25b96…` (213,640,232 bytes).
+Inside it: `Kel.exe` `588fcc5d…`, `resources/kel-engine/KelEngine.exe` `443a4e73…`.
+Installed to **`C:\Users\Nick\KelDogfoodCandidate`** (its own target; registered there), data root
+`C:\Users\Nick\KelDogfoodRuns\prepared\engine`.
+
+The journeys were driven through the installed app's own window over CDP
+(`packaging/verify-fix-capture.cjs`; raw results and screenshots in
+`docs/daily-driver/evidence/fix-capture/`). This machine has no microphone, so the app was launched
+with Chromium's synthetic audio device and the engine's practice transcription provider answered the
+recording — the capture path, the transcription family, the store and the whole UI are the shipped
+ones, and the transcript text is the practice sentence by design.
+
+| Journey | Result |
+|---|---|
+| **A** Ctrl+Shift+F → click a Settings element → record → stop → Save Fix → restart | **PASS** — `FIX-0001` saved with its transcript, **still there after a restart**, transcript visible in the view |
+| **B** Record Again → new transcript → Save | **PASS** — `FIX-0002`, exactly one fix created by the capture, the target kept across the re-record |
+| **C** click outside after recording | **PASS** — cancelled, nothing saved, panel gone, **0 files left in `dogfood/tmp`** |
+| **D** capture fixes → Prepare Fix Prompt | **PASS** — prompt written, every new Fix id inside it, all of them **OPEN → BATCHED**, the Open tab had listed them, and the prompt carries the ten instructions |
+| **E** screenshot + target box vs the real element | **PASS** — `FIX-0001.png` saved (60,470 bytes, 2065×1392), route `/settings/about`, element `<span>` “Check for updates”, box inside the image, and the view draws the outline over it (104×17) |
+
+Honesty checks on the same run: **0** console errors, **0** orphaned `KelEngine` processes, **no** raw
+internal ids on the surface, **no** donor terminology, **0 px** horizontal overflow; `dogfood/` held
+exactly one prompt, four screenshots, and no temporary files.
+
+Four defects were found this way and fixed (see the two `fix(fix-capture)` commits): the main-process
+route allowlist refusing `/api/dogfood`, the preload never exposing the saved-screenshot read, the
+donor conversation search already owning Ctrl+Shift+F, and the temporary screenshot surviving a
+cancel. Each one now has a pin.
+
+## Honest limits
+
+See `KNOWN_LIMITATIONS.md` — the synthetic-microphone verification, screenshot privacy (local only,
+never uploaded, never sent to a model during capture), the app-scoped shortcut, and the Ctrl+Shift+F
+trade with the conversation search. Raw audio is never kept: only the words become a fix.
