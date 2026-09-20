@@ -59,6 +59,12 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
   page.on('console', (m) => { if (m.type() === 'error') R.consoleErrors.push(m.text()); });
   page.on('pageerror', (e) => R.pageErrors.push(String((e && e.message) || e)));
   await page.waitForLoadState('domcontentloaded');
+  // Keep the audit window off-screen during runs (never disturb the desktop).
+  try {
+    await app.evaluate(async ({ BrowserWindow }) => {
+      for (const w of BrowserWindow.getAllWindows()) { w.setPosition(-32000, -32000); w.setSkipTaskbar(true); }
+    });
+  } catch (e) {}
 
   const hash = () => page.evaluate(() => window.location.hash);
   const settle = (ms) => page.waitForTimeout(ms || 700);
@@ -78,7 +84,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
   const setSize = async (w, h) => {
     await app.evaluate(async ({ BrowserWindow }, size) => {
       const win = BrowserWindow.getAllWindows()[0];
-      if (win) win.setBounds({ x: 60, y: 40, width: size.w, height: size.h });
+      if (win) win.setBounds({ x: -32000, y: 0, width: size.w, height: size.h });
     }, { w, h });
     await settle(500);
   };
@@ -231,7 +237,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       };
     });
     await shot('permissions-language-top');
-    const advClicked = await domClick("() => Array.from(document.querySelectorAll('button')).find(b => (b.textContent||'').trim() === 'Advanced details')");
+    const advClicked = await page.evaluate(() => { const b = Array.from(document.querySelectorAll('button')).find((x) => (x.textContent || '').trim() === 'Advanced details'); if (!b) return false; b.click(); return true; });
     await settle(800);
     const permAdv = await page.evaluate(() => {
       const t = document.body.innerText || '';
@@ -245,7 +251,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       return rows.slice(0, 4).map((r) => (r.innerText || '').replace(/\s+/g, ' ').slice(0, 180));
     });
     V('permissionsRows', permRow);
-    if (advClicked) { await domClick("() => Array.from(document.querySelectorAll('button')).find(b => (b.textContent||'').trim() === 'Hide advanced details')"); await settle(400); }
+    if (advClicked) { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('button')).find((x) => (x.textContent || '').trim() === 'Hide advanced details'); if (b) b.click(); }); await settle(400); }
 
     /* ---------------- P5 work -> open the chat ---------------- */
     await nav('#/work', 1200);

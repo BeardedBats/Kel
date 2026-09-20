@@ -1,0 +1,360 @@
+🔨 Building for architecture: x64
+📋 Builder arguments: --win
+📦 Building x64...
+✅ Build identity: Kel / com.kel.desktop (kel-builder.json)
+[36mvite v6.4.1 [32mbuilding SSR bundle for production...[36m[39m
+transforming...
+[32m✓[39m 581 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/configureChromium.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/index.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/utils.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/initStorage.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/webuiConfig.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/initStorage.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/zoom.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/applicationBridgeCore.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/notificationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/systemSettingsBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/i18n/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/closeToTraySetting.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/keepAwake.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/migrateAssistants.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/runBackendMigrations.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/webuiConfig.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/cdpBridgeRegistry.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/updateBridge.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/updateBridge.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/index.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/i18n/index.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/updateBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/systemSettingsBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/index.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/pet/petConfirmManager.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/pet/petManager.ts, C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/tray.ts, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/backend-launcher.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/web-host/src/index.ts, dynamic import will not move module into another chunk.
+[39m
+[2mout/main/[22m[36mchunks/recoverCorruptedDatabase-Dk_RJS1h.js  [39m[1m[2m    0.81 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/BetterSqlite3Driver-BI766XRT.js       [39m[1m[2m    0.83 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/resetPasswordCLI-DaeszqTa.js          [39m[1m[2m    2.36 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/ensureAdminUser-BbInqote.js           [39m[1m[2m    3.14 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/static-server-CI25cKGE.js             [39m[1m[2m    6.48 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/petManager-pj4qVDhi.js                [39m[1m[2m    7.51 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/cdpBridge-Iy7D9rDm.js                 [39m[1m[2m   11.58 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/runBackendMigrations-3yQeyiGN.js      [39m[1m[2m   45.51 kB[22m[1m[22m
+[2mout/main/[22m[36mchunks/index-DTyfevvC.js                     [39m[1m[2m  328.59 kB[22m[1m[22m
+[2mout/main/[22m[36mindex.js                                     [39m[1m[33m3,968.95 kB[39m[22m
+[36m[vite-plugin-static-copy][39m [32mCopied 1 items.[39m
+[32m✓ built in 2.90s[39m
+[36mvite v6.4.1 [32mbuilding SSR bundle for production...[36m[39m
+transforming...
+[32m✓[39m 6 modules transformed.
+rendering chunks...
+[2mout/preload/[22m[36mpetPreload.js         [39m[1m[2m0.50 kB[22m[1m[22m
+[2mout/preload/[22m[36mpetHitPreload.js      [39m[1m[2m0.67 kB[22m[1m[22m
+[2mout/preload/[22m[36mpetConfirmPreload.js  [39m[1m[2m0.97 kB[22m[1m[22m
+[2mout/preload/[22m[36mindex.js              [39m[1m[2m6.83 kB[22m[1m[22m
+[32m✓ built in 42ms[39m
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[33mnode_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/index.mjs (11:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/index.mjs" was ignored.[39m
+[33mnode_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/dom-export.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/dom-export.mjs" was ignored.[39m
+[33mnode_modules/.bun/swr@2.4.1+b1ab299f0a400331/node_modules/swr/dist/_internal/config-context-12s-CCVTDPOP.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/swr@2.4.1+b1ab299f0a400331/node_modules/swr/dist/_internal/config-context-12s-CCVTDPOP.mjs" was ignored.[39m
+[33mnode_modules/.bun/@iconify+react@6.0.2+b1ab299f0a400331/node_modules/@iconify/react/dist/iconify.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/@iconify+react@6.0.2+b1ab299f0a400331/node_modules/@iconify/react/dist/iconify.js" was ignored.[39m
+[32m✓[39m 8401 modules transformed.
+rendering chunks...
+[2m../../../../out/renderer/[22m[32mpet/pet.html                                        [39m[1m[2m    0.64 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32mpet/pet-hit.html                                    [39m[1m[2m    0.69 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32mindex.html                                          [39m[1m[2m    2.12 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size3-Regular-CTq5MqoE.woff            [39m[1m[2m    4.42 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32mpet/pet-confirm.html                                [39m[1m[2m    4.90 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size4-Regular-Dl5lxZxV.woff2           [39m[1m[2m    4.93 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size2-Regular-Dy4dx90m.woff2           [39m[1m[2m    5.21 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size1-Regular-mCD8mA8B.woff2           [39m[1m[2m    5.47 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size4-Regular-BF-4gkZK.woff            [39m[1m[2m    5.98 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size2-Regular-oD1tc_U0.woff            [39m[1m[2m    6.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/lark-9hxxyz3-.svg                            [39m[1m[2m    6.21 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size1-Regular-C195tn64.woff            [39m[1m[2m    6.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2     [39m[1m[2m    6.91 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2        [39m[1m[2m    6.91 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size3-Regular-DgpXs0kz.ttf             [39m[1m[2m    7.59 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff      [39m[1m[2m    7.66 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff         [39m[1m[2m    7.72 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Script-Regular-D3wIWfF6.woff2          [39m[1m[2m    9.64 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2       [39m[1m[2m   10.34 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size4-Regular-DWFBv043.ttf             [39m[1m[2m   10.36 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Script-Regular-D5yQViql.woff           [39m[1m[2m   10.59 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2         [39m[1m[2m   11.32 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2            [39m[1m[2m   11.35 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size2-Regular-B7gKUWhC.ttf             [39m[1m[2m   11.51 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2        [39m[1m[2m   12.03 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2          [39m[1m[2m   12.22 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Size1-Regular-Dbsnue_I.ttf             [39m[1m[2m   12.23 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff        [39m[1m[2m   12.32 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf       [39m[1m[2m   12.34 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf          [39m[1m[2m   12.37 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff          [39m[1m[2m   13.21 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Bold-BsDP51OF.woff             [39m[1m[2m   13.30 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2      [39m[1m[2m   13.57 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Italic-DN2j7dab.woff         [39m[1m[2m   14.11 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Bold-DbIhKOiC.woff           [39m[1m[2m   14.41 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Typewriter-Regular-C0xS9mPB.woff       [39m[1m[2m   16.03 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2         [39m[1m[2m   16.40 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-Italic-t53AETM-.woff2             [39m[1m[2m   16.44 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Script-Regular-C5JkGWo-.ttf            [39m[1m[2m   16.65 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2         [39m[1m[2m   16.78 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Italic-NWA7e6Wa.woff2             [39m[1m[2m   16.99 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff          [39m[1m[2m   18.67 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-Italic-DA0__PXp.woff              [39m[1m[2m   18.75 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-BoldItalic-SpSLRI95.woff          [39m[1m[2m   19.41 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf         [39m[1m[2m   19.44 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Regular-CB_wures.ttf           [39m[1m[2m   19.57 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Fraktur-Bold-BdnERNNW.ttf              [39m[1m[2m   19.58 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Italic-BMLOBm91.woff              [39m[1m[2m   19.68 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf          [39m[1m[2m   22.36 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_SansSerif-Bold-CFMepnvq.ttf            [39m[1m[2m   24.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Bold-Cx986IdX.woff2               [39m[1m[2m   25.32 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Regular-B22Nviop.woff2            [39m[1m[2m   26.27 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf        [39m[1m[2m   27.56 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_AMS-Regular-BQhdFMY1.woff2             [39m[1m[2m   28.08 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Bold-Jm3AIy58.woff                [39m[1m[2m   29.91 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Regular-Dr94JaBh.woff             [39m[1m[2m   30.77 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf           [39m[1m[2m   31.20 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Math-Italic-flOr_0UB.ttf               [39m[1m[2m   31.31 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf           [39m[1m[2m   32.97 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_AMS-Regular-DMm9YOAa.woff              [39m[1m[2m   33.52 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Italic-3WenGoN9.ttf               [39m[1m[2m   33.58 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Bold-waoOVXN0.ttf                 [39m[1m[2m   51.34 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_Main-Regular-ypZvNtVU.ttf              [39m[1m[2m   53.58 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/KaTeX_AMS-Regular-DRggAlZN.ttf               [39m[1m[2m   63.63 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[32massets/app-Bq_S8k2x.png                             [39m[1m[2m  965.28 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-BzE5jDVY.css                           [39m[1m[2m    0.26 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/ModeSettings--7RDZSt1.css                    [39m[1m[2m    0.70 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/SettingsPageWrapper-Cp63D2i9.css             [39m[1m[2m    0.82 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-Cuy7c_XP.css                           [39m[1m[2m    2.26 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/useActiveLease-B_aXBAQb.css                  [39m[1m[2m    3.69 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/useOpenFileSelector-C7KeqHH4.css             [39m[1m[2m    4.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-Dqv7fsPj.css                           [39m[1m[2m    5.03 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-CEzNigGs.css                           [39m[1m[2m    5.48 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/MessageList-DM2LNqr5.css                     [39m[1m[2m   10.90 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-CyLRN5t7.css                           [39m[1m[2m   11.46 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/vendor-diff-BgE3edmZ.css                     [39m[1m[2m   17.08 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/conversationTurnClock-CPAQTvgA.css           [39m[1m[2m   17.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/index-BbfAuQZs.css                           [39m[1m[2m  122.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[35massets/vendor-DMNS9Ldg.css                          [39m[1m[2m  598.38 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/clone-Dv9mqps_.js                            [39m[1m[2m    0.10 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/channel-cPBtiMp2.js                          [39m[1m[2m    0.11 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/init-Gi6I4Gst.js                             [39m[1m[2m    0.15 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-QZHKN3VN-BEk2XBrG.js                   [39m[1m[2m    0.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-4BX2VUAB-B-LnWHrl.js                   [39m[1m[2m    0.22 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-55IACEB6-DsHvY3J-.js                   [39m[1m[2m    0.23 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/assistantDisplay-CjxZ6P12.js                 [39m[1m[2m    0.23 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/list-DmsaW-qc.js                             [39m[1m[2m    0.30 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-FMBD7UC4-NrVkGD1h.js                   [39m[1m[2m    0.36 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/FlexFullContainer-CAYwJ3E0.js                [39m[1m[2m    0.37 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/stateDiagram-v2-FVOUBMTO-C9MHFc6x.js         [39m[1m[2m    0.45 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-KX2RTZJC-Cm32spTK.js                   [39m[1m[2m    0.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/PreferenceRow-DJpYrXF1.js                    [39m[1m[2m    0.52 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/classDiagram-VBA2DB6C-DL-Aaevu.js            [39m[1m[2m    0.53 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/classDiagram-v2-RAHNMMFH-DL-Aaevu.js         [39m[1m[2m    0.53 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ForkBranchIcon-CFo7K5Mm.js                   [39m[1m[2m    0.60 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useConversationAssistants-Dr02e1ob.js        [39m[1m[2m    0.64 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/conversationRuntime-C9C1PjE4.js              [39m[1m[2m    0.74 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/infoDiagram-LFFYTUFH-ChA2e9ze.js             [39m[1m[2m    0.74 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/catalog-8TW-nh_S.js                          [39m[1m[2m    0.79 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/FeedbackButton-DmBFjLJr.js                   [39m[1m[2m    0.96 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SettingsCreateMenu-MQI256fd.js               [39m[1m[2m    1.00 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/pet-CKZ1wK1K.js                              [39m[1m[2m    1.13 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ordinal-Cboi1Yqb.js                          [39m[1m[2m    1.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/LegacyReadOnlyConversation-BpvcKpwd.js       [39m[1m[2m    1.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SkillUsedByStack-BhTVeJs-.js                 [39m[1m[2m    1.28 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/KelFailureCard-CEX6ps_V.js                   [39m[1m[2m    1.37 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/assistantSelection-B69HqliM.js               [39m[1m[2m    1.46 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/acpMapping-Dbq73S-u.js                       [39m[1m[2m    1.48 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/pet-hit-BWW8apdB.js                          [39m[1m[2m    1.55 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useSendBoxDraft-DOswLg0e.js                  [39m[1m[2m    1.67 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SettingsPageHeader-BOGlaHzo.js               [39m[1m[2m    1.76 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-JSJVCQXG-DdcpyR0X.js                   [39m[1m[2m    1.88 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/pet-confirm-BPUiqXPq.js                      [39m[1m[2m    2.14 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useManagedAgents-LvZR-gjX.js                 [39m[1m[2m    2.15 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/AssistantAvatar-DPb6rBqn.js                  [39m[1m[2m    2.22 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/runtimeSelectorOptions-BzlNProa.js           [39m[1m[2m    2.35 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/GoogleModelSelector-C53qLsoG.js              [39m[1m[2m    2.41 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/skillImportMessages-PFrWv7mr.js              [39m[1m[2m    2.47 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/_basePickBy-DYkoHpeP.js                      [39m[1m[2m    2.58 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ExtensionSettingsPage-B4OZl5zZ.js            [39m[1m[2m    2.63 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/conversationCreateError-Cy9c0K5U.js          [39m[1m[2m    2.74 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/audio-DhdRQi-S.js                            [39m[1m[2m    2.77 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/PetSettings-CuRvCUV_.js                      [39m[1m[2m    3.21 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useModelProviderList-Ddz2mC2s.js             [39m[1m[2m    3.26 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SettingsPageWrapper-jqZ2NeNT.js              [39m[1m[2m    3.42 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/arc-Cp4k38g8.js                              [39m[1m[2m    3.43 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/agentRuntimeCatalog-DSI_XriR.js              [39m[1m[2m    4.10 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/EnvVarEditor-1ARkJ32J.js                     [39m[1m[2m    4.14 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/diagram-P4PSJMXO-CGlFcDeG.js                 [39m[1m[2m    4.38 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/defaultLocale-DX6XiGOO.js                    [39m[1m[2m    4.69 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/TestShowcase-mUmhcgGE.js                     [39m[1m[2m    5.09 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/FilePreview-D68x6CpO.js                      [39m[1m[2m    5.11 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/pieDiagram-SKSYHLDU-BvSDzx8-.js              [39m[1m[2m    5.32 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-BLatJeWc.js                            [39m[1m[2m    5.33 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SettingsSider-z6XRzxfv.js                    [39m[1m[2m    5.49 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/linear-eNDlc2da.js                           [39m[1m[2m    5.65 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CbJQ28Se.js                            [39m[1m[2m    5.90 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/graph-BwmsvbX7.js                            [39m[1m[2m    5.91 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/diagram-IFDJBPK2-d2NyuCWl.js                 [39m[1m[2m    5.99 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useCronJobs-B8gYE7go.js                      [39m[1m[2m    6.12 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-B-kiZ-HD.js                            [39m[1m[2m    6.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/KelModelControl-BeJZzvTS.js                  [39m[1m[2m    6.85 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CJ3feSrC.js                            [39m[1m[2m    6.87 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-qu0bD-6-.js                            [39m[1m[2m    6.89 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-D7aSsb1K.js                            [39m[1m[2m    7.02 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/RuntimeSelectorPill-Bxq6Hknj.js              [39m[1m[2m    7.31 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CfkIFvJy.js                            [39m[1m[2m    7.38 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-A99_P6Z6.js                            [39m[1m[2m    7.85 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/EmojiPicker-8X204IMS.js                      [39m[1m[2m    7.86 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/AgentRepairPage-Dup6qQDc.js                  [39m[1m[2m    8.11 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/UpdateModal-BCngsQip.js                      [39m[1m[2m    8.61 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useGuidAssistantSelection-v25WXfhG.js        [39m[1m[2m    9.23 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-BRjDwVPF.js                            [39m[1m[2m    9.80 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SkillDetailPage-DcR_H41V.js                  [39m[1m[2m   10.41 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/stateDiagram-RAJIS63D-CzJAEKuW.js            [39m[1m[2m   10.46 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/dagre-KLK3FWXG-42eXaNbB.js                   [39m[1m[2m   11.07 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-D4602Xn1.js                            [39m[1m[2m   11.21 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/_baseUniq-BTRpv4Jt.js                        [39m[1m[2m   11.88 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-DM2qT_HO.js                            [39m[1m[2m   13.40 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/TaskDetailPage-Z2v9qzLL.js                   [39m[1m[2m   14.92 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useSpeechInput-Cfdb3u1A.js                   [39m[1m[2m   15.53 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/diagram-E7M64L7V-BAvtlKzF.js                 [39m[1m[2m   15.93 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/WebuiSettings-Cq05Wmfh.js                    [39m[1m[2m   16.24 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-Dam2sa84.js                            [39m[1m[2m   16.68 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ishikawaDiagram-PHBUUO56-HAYmv3Ac.js         [39m[1m[2m   17.54 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/kanban-definition-K7BYSVSG-DmHgjegC.js       [39m[1m[2m   20.31 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index--Rq2X6gO.js                            [39m[1m[2m   20.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/AionrsChat-CbtFbRQa.js                       [39m[1m[2m   20.64 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/mindmap-definition-YRQLILUH-BokLhlXg.js      [39m[1m[2m   21.02 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/sankeyDiagram-WA2Y5GQK-Cze0NRul.js           [39m[1m[2m   22.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CODl_6vd.js                            [39m[1m[2m   22.24 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/journeyDiagram-4ABVD52K-DqBRTMoY.js          [39m[1m[2m   23.61 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/timeline-definition-YZTLITO2-CnapWf9u.js     [39m[1m[2m   23.66 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/gitGraphDiagram-K3NZZRJ6-BkDUITxk.js         [39m[1m[2m   24.19 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/jobAgentMeta-B8o3QP5E.js                     [39m[1m[2m   24.53 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SkillsHubSettings-OVqMN4QN.js                [39m[1m[2m   24.97 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/erDiagram-INFDFZHY-CtOZBrLK.js               [39m[1m[2m   26.02 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CybmzS8A.js                            [39m[1m[2m   27.07 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/layout-DxHnyT2p.js                           [39m[1m[2m   27.38 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useOpenFileSelector-CLkrkJOk.js              [39m[1m[2m   28.72 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-BexWpIjH.js                            [39m[1m[2m   29.24 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/requirementDiagram-Z7DCOOCP-DPpFMHVy.js      [39m[1m[2m   30.37 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/quadrantDiagram-337W2JSQ-DahU_1Vz.js         [39m[1m[2m   33.92 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/AcpChat-CZwQ1T9m.js                          [39m[1m[2m   35.07 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-NQ4KR5QH-BvsLHMk2.js                   [39m[1m[2m   36.41 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/SystemSettings-B4JI-ABO.js                   [39m[1m[2m   39.99 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/xychartDiagram-JWTSCODW-BnX1v0e2.js          [39m[1m[2m   40.26 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useUpdateNotificationController-CPRp5e46.js  [39m[1m[2m   41.31 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/vennDiagram-LZ73GAT5-b-r5EEgQ.js             [39m[1m[2m   41.50 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ModeSettings-KfiA2d3e.js                     [39m[1m[2m   43.34 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-BKUHB7YM.js                            [39m[1m[2m   44.26 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/vendor-diff-AIAqKCH4.js                      [39m[1m[2m   44.70 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-DSrszAvD.js                            [39m[1m[2m   45.33 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/sortable.esm-t5QPBP-h.js                     [39m[1m[2m   45.92 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/chunk-WL4C6EOR-CyJEN8XX.js                   [39m[1m[2m   46.30 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/useActiveLease-BszHXJxz.js                   [39m[1m[2m   47.09 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/flowDiagram-PKNHOUZH-B6uRwj2k.js             [39m[1m[2m   60.94 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ganttDiagram-A5KZAMGK-mHJN0d-I.js            [39m[1m[2m   64.52 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-DfzPKGv0.js                            [39m[1m[2m   67.64 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/c4Diagram-IC4MRINW-BHC-s2sL.js               [39m[1m[2m   70.22 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/blockDiagram-WCTKOSBZ-BbvAuJoS.js            [39m[1m[2m   70.81 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/cose-bilkent-S5V4N54A-CjwXX5lI.js            [39m[1m[2m   81.77 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-CzNVnGtd.js                            [39m[1m[2m   87.55 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/conversationTurnClock-BxnJf244.js            [39m[1m[2m   88.37 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/applyTheme-BX7CArsK.js                       [39m[1m[2m  104.25 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/ChannelModalContent-BSWAla-M.js              [39m[1m[2m  106.77 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/sequenceDiagram-2WXFIKYE-QLqgOcSX.js         [39m[1m[2m  111.33 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/MessageList-CoYi1AxE.js                      [39m[1m[2m  118.54 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/architectureDiagram-2XIMDMQ5-BLq9XK7m.js     [39m[1m[2m  149.20 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-DQXhCJEQ.js                            [39m[1m[2m  420.40 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/cytoscape.esm-C-N-7XAP.js                    [39m[1m[2m  442.42 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/treemap-KZPCXAKY-Bq7sp4Wl.js                 [39m[1m[2m  453.36 kB[22m[1m[22m
+[2m../../../../out/renderer/[22m[36massets/index-D1jOsF5f.js                            [39m[1m[33m3,714.53 kB[39m[22m
+[2m../../../../out/renderer/[22m[36massets/vendor-C1JjvuRu.js                           [39m[1m[33m4,753.90 kB[39m[22m
+[33m
+(!) Some chunks are larger than 1500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 45.60s[39m
+📦 Bundling builtin MCP servers (self-contained)...
+Preparing aioncore for win32-x64 (version: v0.2.2)
+  Downloading aioncore from https://github.com/iOfficeAI/AionCore/releases/download/v0.2.2/aioncore-v0.2.2-x86_64-pc-windows-msvc.zip
+  Downloaded from GitHub releases
+  Preparing managed resources under resources\bundled-aioncore\win32-x64\managed-resources
+Prepared managed resources under C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\resources\bundled-aioncore\win32-x64\managed-resources
+  node   -> C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64
+  manifest -> C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\resources\bundled-aioncore\win32-x64\managed-resources\manifest.json
+  Bundled aioncore prepared: resources/bundled-aioncore/win32-x64/aioncore.exe [source=download]
+  Bundled managed resources prepared: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\resources\bundled-aioncore\win32-x64\managed-resources
+[hub] Preparing hub resources from tag: dist-latest
+[hub] Downloading index.json...
+[hub] index.json downloaded from https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/index.json
+[hub] Found 7 extensions to bundle
+[hub] aionext-auggie -> aionext-auggie.zip (3.0 KB)
+[hub] aionext-claude -> aionext-claude.zip (2.6 KB)
+[hub] aionext-codebuddy -> aionext-codebuddy.zip (3.5 KB)
+[hub] aionext-codex -> aionext-codex.zip (2.1 KB)
+[hub] aionext-goose -> aionext-goose.zip (3.6 KB)
+[hub] aionext-opencode -> aionext-opencode.zip (2.4 KB)
+[hub] aionext-qwen -> aionext-qwen.zip (2.7 KB)
+[hub] Done: 7/7 extensions bundled in resources/hub/
+📦 Compression level: 7 (local build)
+🚀 Creating distributables for x64...
+📋 Including Windows x64 architecture check script
+  • electron-builder  version=26.15.2 os=10.0.26200
+  • loaded configuration  file=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\kel-builder.json
+  • loaded parent configuration  file=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\packages\desktop\electron-builder.yml
+  • Specified application directory equals to project dir — superfluous or wrong configuration  appDirectory=.
+  • detected workspace root for project using lock file  pm=bun config=undefined resolved=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop projectDir=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop
+  • "electron-squirrel-startup" dependency is not required for NSIS
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=win32 arch=x64 electron=44.3.0 appOutDir=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked
+  • using custom unpacked Electron distribution  electronDist=node_modules\electron\dist
+  • copying unpacked Electron  source=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop\node_modules\electron\dist destination=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked
+  • searching for node modules  pm=bun searchDir=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\desktop
+  • note: bun does not support any CLI for dependency tree extraction, utilizing file traversal collector instead
+  • using manual traversal of node_modules to build dependency tree
+  • missing optional dependencies  dependencies=["@napi-rs/canvas-linux-x64-gnu@0.1.97","@napi-rs/canvas-darwin-x64@0.1.97","@napi-rs/canvas-win32-arm64-msvc@0.1.97","@napi-rs/canvas-linux-arm-gnueabihf@0.1.97","@napi-rs/canvas-linux-x64-musl@0.1.97","@napi-rs/canvas-linux-arm64-gnu@0.1.97","@napi-rs/canvas-linux-arm64-musl@0.1.97","@napi-rs/canvas-darwin-arm64@0.1.97","@napi-rs/canvas-android-arm64@0.1.97","@napi-rs/canvas-linux-riscv64-gnu@0.1.97","@img/sharp-darwin-arm64@0.34.5","@img/sharp-darwin-x64@0.34.5","@img/sharp-libvips-darwin-arm64@1.2.4","@img/sharp-libvips-darwin-x64@1.2.4","@img/sharp-libvips-linux-arm@1.2.4","@img/sharp-libvips-linux-arm64@1.2.4","@img/sharp-libvips-linux-ppc64@1.2.4","@img/sharp-libvips-linux-riscv64@1.2.4","@img/sharp-libvips-linux-s390x@1.2.4","@img/sharp-libvips-linux-x64@1.2.4","@img/sharp-libvips-linuxmusl-arm64@1.2.4","@img/sharp-libvips-linuxmusl-x64@1.2.4","@img/sharp-linux-arm@0.34.5","@img/sharp-linux-arm64@0.34.5","@img/sharp-linux-ppc64@0.34.5","@img/sharp-linux-riscv64@0.34.5","@img/sharp-linux-s390x@0.34.5","@img/sharp-linux-x64@0.34.5","@img/sharp-linuxmusl-arm64@0.34.5","@img/sharp-linuxmusl-x64@0.34.5","@img/sharp-wasm32@0.34.5","@img/sharp-win32-arm64@0.34.5","@img/sharp-win32-ia32@0.34.5"]
+  • updating asar integrity executable resource  executablePath=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\Kel.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\kel-engine\KelEngine.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\bundled-aioncore\win32-x64\aioncore.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node.exe
+
+🔧 afterPack hook started
+   Platform: win32, Build arch: x64, Target arch: x64
+   Checking resources directory: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources
+   Contents: AionUI-LICENSE.txt, app.asar, app.asar.unpacked, app.png, bundled-aioncore, default_app.asar, fonts, hub, kel-engine, manifest.webmanifest, pet-states, pwa, sw.js
+   app.asar.unpacked contents: node_modules, out
+   node_modules contents: @napi-rs, @rollup, better-sqlite3, bindings, detect-libc, jszip, prebuild-install, web-tree-sitter...
+   ✓ Bundled resources verified for win32-x64 (5 checks)
+   ℹ️  Rebuilding native modules for platform requirements (force=false)
+
+🔧 Checking native modules (win32-x64)...
+   appOutDir: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked
+   Modules to rebuild: better-sqlite3
+   ✓ Found better-sqlite3, rebuilding for x64...
+     Using pinned Electron ABI 136 for prebuilt resolution
+     URL: https://github.com/WiseLibs/better-sqlite3/releases/download/v12.8.0/better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     looking for local prebuild @ prebuilds\better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+(node:32376) [DEP0176] DeprecationWarning: fs.R_OK is deprecated, use fs.constants.R_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+     looking for cached prebuild @ C:\Users\Nick\AppData\Roaming\npm-cache\_prebuilds\76a9cd-better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     found cached prebuild
+     unpacking @ C:\Users\Nick\AppData\Roaming\npm-cache\_prebuilds\76a9cd-better-sqlite3-v12.8.0-electron-v136-win32-x64.tar.gz
+     unpack resolved to C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\app.asar.unpacked\node_modules\better-sqlite3\build\Release\better_sqlite3.node
+     ✓ prebuilt binary installed
+     ✓ Rebuild completed
+     Debug: Found binary at C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\app.asar.unpacked\node_modules\better-sqlite3\build\Release\better_sqlite3.node
+     ✓ Binary verification passed
+
+✅ All native modules rebuilt successfully for x64
+
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\Kel.exe
+  • building        target=nsis file=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\Kel-1.6.0-win-x64.exe archs=x64 oneClick=false perMachine=false
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\win-unpacked\resources\elevate.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\Kel-1.6.0-win-x64.__uninstaller.exe
+  • signing with signtool.exe  path=C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\Kel-1.6.0-win-x64.exe
+✅ Build completed!

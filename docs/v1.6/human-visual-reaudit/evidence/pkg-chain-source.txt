@@ -1,0 +1,32 @@
+== reaudit build ==
+170df43843e577723918b0a3ee8dbf4f9318c871a9db28cf9126f3ec3b9ced8d *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/Kel-1.6.0-win-x64.exe
+-rwxr-xr-x 1 Nick 197121 213615918 Sep 19 22:18 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/Kel-1.6.0-win-x64.exe
+e7afa62dd74b6f6ca434a6a3fba557bb20345e0b09a15c1ffe7040a3e0fddab5 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/win-unpacked/Kel.exe
+707f76d54986aa10b1a71d2cd272c0cfcbdfbe082059dfe8735745e23564bdef *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/win-unpacked/resources/app.asar
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/win-unpacked/resources/kel-engine/KelEngine.exe
+== campaign build ==
+0dc5dc36010c2d355c874a04fd63f9d5db12059d9974c8369f0f85470fa46509 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-fix/dist/package-r12/Kel-1.6.0-win-x64.exe
+28ad709821a3fb124bdad4b54e615f7a02270adb79d64b3605dfec314015e5f1 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-fix/dist/package-r12/win-unpacked/Kel.exe
+206a7497aea9493e3eddb9f087abbabc71c0aba65fa08b3bd93d087112c46c44 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-fix/dist/package-r12/win-unpacked/resources/app.asar
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-fix/dist/package-r12/win-unpacked/resources/kel-engine/KelEngine.exe
+== staged engine (reaudit worktree) ==
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/runtime/KelEngine/KelEngine.exe
+== tree counts ==
+resources/bundled-aioncore: reaudit=2189 campaign=2189
+resources/hub: reaudit=9 campaign=9
+resources/pet-states: reaudit=22 campaign=22
+resources/fonts: reaudit=9 campaign=9
+== app.asar equality ==
+ASAR_DIFFERS
+engine tree manifest reaudit=bf3f8cec8b76f04967f1ae5e6ae65bf8283a663a0bdd08347f20e3cc5ba7a407
+engine tree manifest campaign=bf3f8cec8b76f04967f1ae5e6ae65bf8283a663a0bdd08347f20e3cc5ba7a407
+ENGINE_TREE_IDENTICAL
+== exe version ==
+
+
+ProductName    : Kel
+ProductVersion : 1.6.0.0
+FileVersion    : 1.6.0
+
+
+
