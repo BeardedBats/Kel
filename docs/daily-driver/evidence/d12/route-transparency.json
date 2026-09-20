@@ -1,0 +1,38 @@
+{
+  "phase": "D12",
+  "when": "2026-09-20T14:52:04.667Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d12-YyFhRI",
+  "job": "3bcf58bf-79ba-4869-b500-c98a1e41210c",
+  "verdict": {
+    "engine_booted": true,
+    "state_ok": true,
+    "route_is_exposed": true,
+    "route_matches_the_claim": true,
+    "excluded_reasons_are_intact": true,
+    "unknowns_are_flagged_honestly": true,
+    "route_body": {
+      "at": 1789915922.4443588,
+      "provider": "fixture",
+      "route": {
+        "excluded": {
+          "alt-provider": [
+            "quota exhausted"
+          ],
+          "local-box": [
+            "authentication unavailable"
+          ]
+        },
+        "fallbacks": [
+          "other-provider"
+        ],
+        "policy": "eligible-cost-v1",
+        "selected": "fixture",
+        "unknown_cost": true,
+        "unknown_quota": true
+      }
+    },
+    "after_cancel_state": "CANCELLING",
+    "route_clears_only_when_terminal": true
+  },
+  "all_green": true
+}

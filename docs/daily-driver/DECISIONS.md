@@ -173,4 +173,32 @@
   "Unknown action" 400 was the journey's mistake, not a gateway bug. Known limit: live Kel updates
   do not stream over the gateway yet (pages refresh on load; no second WebSocket path was
   invented).
+- **D-023 — D12 approach.** The routing engine was already complete and honest: `router.select`
+  applies deterministic hard filters (install/auth/capability/quota/circuit/privacy/quality floor),
+  orders by known cost then latency then quota, and returns the selected provider, the ordered
+  fallbacks, per-provider exclusion reasons, and explicit `unknown_cost`/`unknown_quota` flags.
+  The gap was visibility: a *chosen* route was invisible to the user (only blocked routes surfaced,
+  via D7). D12 therefore reuses what the engine already records — the `run.claimed` event carries
+  the decision — and exposes it as a `routes` map on `/api/state` for **active** jobs only, which
+  the Work page renders as one plain sentence: "Running on X — the cheapest eligible option", an
+  honest fallback offer, and up to three skipped providers with reasons translated into user words
+  ("its quota is used up", "its key is not set", …). Unknowns stay in the sentence ("its cost is not
+  known yet") rather than being silently omitted; there is no new routing logic and no per-user
+  tuning UI. The live journey also settled an honest rule: a cancel-pending job keeps advertising
+  its route until it reaches a terminal state (the journey asserts exactly that rule, not blind
+  disappearance). Working this phase surfaced a real bug in the D11 remote fallback — it POSTed
+  every call, so bodyless reads (state/work/artifact) would have failed remotely with "Unknown
+  action"; the fallback now GETs bodyless calls exactly like the preload bridge
+  (`method: hasBody ? 'POST' : 'GET'`, pinned).
+- **D-024 — D13 approach.** Failure recovery was already broad (D5 attention, D6 restart/resume, D7
+  orphans/route blocks, D2 update path, D4 bounded transcription failures), but D11 introduced a new
+  failure surface with no human voice: the remote gateway's machine codes. D13 therefore stays
+  narrow and finishes the language: `kelApi.call` maps `KEL_ENGINE_UNAVAILABLE` ("Kel isn't running
+  on the computer that serves this page right now…") and `KEL_ENGINE_UNREACHABLE` ("Kel stopped
+  answering on that computer. Your work is kept — try again in a moment.") to sentences, treats a
+  browser-level fetch failure as a device/network problem rather than an engine fault, and falls
+  back to the engine's own message for unknown codes — a raw code can no longer surface as UI copy.
+  The codes themselves are live-verified by the D11 journey (502/503 on a dead/missing engine); the
+  translation layer is source-pinned. No new recovery machinery was invented; retry/reconciliation/
+  resumability stay exactly where the earlier phases verified them.
 - (append as work proceeds; every non-obvious choice gets a line)

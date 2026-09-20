@@ -37,3 +37,21 @@ describe('remote Kel bridge (D11)', () => {
     expect(webui).toContain('kelDataDir: process.env.KEL_DATA_DIR?.trim() || undefined');
   });
 });
+
+describe('remote failure language (D13)', () => {
+  it('turns gateway codes into sentences and never shows the raw code', () => {
+    expect(kelApi).toContain('const GATEWAY_FAILURE_TEXT: Record<string, string> = {');
+    expect(kelApi).toContain('KEL_ENGINE_UNAVAILABLE:');
+    expect(kelApi).toContain('KEL_ENGINE_UNREACHABLE:');
+    expect(kelApi).toContain("Kel isn't running on the computer that serves this page right now.");
+    expect(kelApi).toContain('Kel stopped answering on that computer. Your work is kept — try again in a moment.');
+    // The message is looked up by code; the raw code is never thrown as the message itself.
+    expect(kelApi).toContain('GATEWAY_FAILURE_TEXT[code] ??');
+    expect(kelApi).not.toContain("throw new Error(message);");
+  });
+
+  it('treats a browser-level network drop as a device problem, not a Kel fault', () => {
+    expect(kelApi).toContain("This device can't reach Kel right now — check the connection and try again.");
+    expect(kelApi).toContain('let response: Response;');
+  });
+});

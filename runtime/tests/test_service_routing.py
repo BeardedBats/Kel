@@ -36,6 +36,25 @@ class RoutingTests(unittest.TestCase):
             time.sleep(.05)
         raise TimeoutError('submission did not settle')
 
+    def test_state_exposes_the_chosen_route_for_active_runs(self):
+        # D12: the routing decision behind a run must be readable by user surfaces (provider +
+        # policy + fallbacks + excluded reasons), straight from the run.claimed event.
+        contract = {'request': 'Route transparency', 'milestones': [
+            {'id': 'm1', 'objective': 'Work', 'filename': 'out.md', 'depends_on': [],
+             'checks': [{'kind': 'min_chars', 'value': 10}]}]}
+        job = self.service.store.create(contract, conversation='main')
+        job_id = job['id'] if isinstance(job, dict) else job
+        route = {'selected': 'fixture', 'fallbacks': ['other'],
+                 'excluded': {'alt': ['quota exhausted']}, 'policy': 'eligible-cost-v1',
+                 'unknown_cost': True, 'unknown_quota': True}
+        self.service.store.claim(job_id, 'm1', provider='fixture', route=route, model='fixture-1')
+        state = self.service.state('main')
+        decision = state['routes'][job_id]
+        self.assertEqual(decision['provider'], 'fixture')
+        self.assertEqual(decision['route']['selected'], 'fixture')
+        self.assertEqual(decision['route']['policy'], 'eligible-cost-v1')
+        self.assertEqual(decision['route']['excluded'], {'alt': ['quota exhausted']})
+
     def test_classify_maps_request_kinds(self):
         self.assertEqual(classify('status')['kind'], 'status')
         self.assertEqual(classify('write a plan for the garden')['kind'], 'document')

@@ -28,6 +28,7 @@ import {
   kelTeam,
   type KelAssignment,
   type KelContinuationCandidate,
+  type KelJobRoute,
   type KelWorkJob,
 } from '@renderer/components/kel/kelApi';
 
@@ -54,8 +55,36 @@ const MILESTONE_STATE_TEXT: Record<string, string> = {
   FAILED: 'Failed',
 };
 
+const ROUTE_REASON_TEXT: Record<string, string> = {
+  'user choice': 'you set another provider as the choice',
+  'not installed': 'it is not installed',
+  'authentication unavailable': 'its key is not set',
+  'missing capability': "it can't do this kind of work",
+  'quota exhausted': 'its quota is used up',
+  'health circuit open': 'it had recent failures',
+  'privacy scope': 'it is not private enough for this job',
+  'quality floor not established': 'it has no track record yet',
+};
+
+/** D12: one plain sentence about why a run landed on this provider, honest about unknowns. */
+const routeSentence = (route: KelJobRoute | undefined): string | null => {
+  if (!route) return null;
+  const policy = route.route.policy === 'eligible-cost-v1' ? 'the cheapest eligible option' : null;
+  const unknown = route.route.unknown_cost ? 'its cost is not known yet' : null;
+  const head = `Running on ${route.provider || route.route.selected}${policy ? ` — ${policy}` : ''}${unknown ? ` (${unknown})` : ''}.`;
+  const fallback = route.route.fallbacks?.[0]
+    ? ` If it fails, Kel will try ${route.route.fallbacks[0]}.`
+    : '';
+  const skipped = Object.entries(route.route.excluded ?? {})
+    .slice(0, 3)
+    .map(([name, reasons]) => `${name} (${(reasons ?? []).map((reason) => ROUTE_REASON_TEXT[reason] ?? reason).join(', ')})`);
+  const skippedSentence = skipped.length ? ` Skipped: ${skipped.join('; ')}.` : '';
+  return head + fallback + skippedSentence;
+};
+
 const WorkCenter: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
+  const [routes, setRoutes] = useState<Record<string, KelJobRoute>>({});
   const [assignments, setAssignments] = useState<KelAssignment[]>([]);
   const [continuation, setContinuation] = useState<KelContinuationCandidate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -72,6 +101,7 @@ const WorkCenter: React.FC = () => {
     try {
       const [state, team] = await Promise.all([kelState(), kelTeam.office('default')]);
       setJobs(state.jobs ?? []);
+      setRoutes(state.routes ?? {});
       setContinuation(state.continuation ?? []);
       setAssignments(team.assignments ?? []);
       setError(null);
@@ -255,6 +285,9 @@ const WorkCenter: React.FC = () => {
                 ? VERDICT_TEXT[activeJob.verdict] ?? `verification status: ${activeJob.verdict.toLowerCase().replace(/_/g, ' ')}`
                 : 'verification runs after the checks pass'}
             </p>
+            {routeSentence(routes[activeJob.id]) && (
+              <p className="kel-meta">{routeSentence(routes[activeJob.id])}</p>
+            )}
             {recipeDraft && (
               <KelSection title="Save as a recipe">
                 <p className="kel-sub">

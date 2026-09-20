@@ -80,3 +80,14 @@ Honest, current list (grows/shrinks as phases complete):
   (the desktop app, or `bun run webui` with `KEL_DATA_DIR` pointed at a running engine). Live Kel
   updates do not stream over the gateway yet — pages show state as of load/refresh (aioncore's own
   `/ws` is untouched); a Kel streaming channel is deliberately not invented in this phase.
+- Routing transparency (D12): the Work page shows the route for up to three skipped providers (the
+  rest stay available to the engine and in the API payload). "Cost where known" stays literal —
+  when cost is unknown the sentence says so instead of guessing. The route map covers active jobs;
+  once a job is terminal its route leaves `/api/state`. Provider failover ordering itself is the
+  engine's (D7 territory); this surface is informational and offers no manual override beyond the
+  existing provider-choice setting.
+- Remote failure language (D13): the D13 layer covers what the *gateway* reports. Failures that
+  happen before the page's own origin answers (a dead web-host, a wrong address, TLS problems) are
+  the browser's own error page and cannot be restyled by Kel — the device-level sentence covers the
+  reachable-page case only. Unknown gateway codes deliberately fall back to the engine's own message
+  rather than a guessed translation.
