@@ -27,8 +27,14 @@ migration, public A2A, fashionable rewrites.
 | D15 | Security / sandbox boundary improvements (no bespoke hypervisor) | **DONE (core)** |
 | D16 | Live capability revision (revocation narrows immediately; no silent widening) | **DONE (core)** |
 | D17 | Plugin / integration developer surface (+ connected/needs-setup/unavailable UX) | **DONE (core)** |
-| D18 | Synthetic daily-driver dogfood journeys (10 journeys; friction fixes) | **IN PROGRESS** |
-| D19 | Full regression + fresh package + installed candidate + final records | QUEUED |
+| D18 | Synthetic daily-driver dogfood journeys (10 journeys; friction fixes) | **DONE** |
+| D19 | Full regression + fresh package + installed candidate + final records | **DONE** |
+| V2.0 preflight | Fix Capture (Ctrl+Shift+F → click → speak → Save Fix; Dogfood Fixes view; Prepare Fix Prompt) | **DONE** |
 
 Cross-cutting (always on): internal self-review per phase; focused tests after every feature cluster;
 disk-first durable state; honest development identity; no release, no publish, no new audit campaign.
+
+## V2.0 preflight (separate tranche, opened after the Daily Driver marathon closed)
+
+Fix Capture ships so real dogfooding can start: one hotkey, one click, one spoken thought, one button.
+The rest of V2.0 has deliberately **not** been started — see `FIX_CAPTURE.md` for the record.

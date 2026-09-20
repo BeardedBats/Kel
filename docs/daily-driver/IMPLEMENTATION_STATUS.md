@@ -120,5 +120,26 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
 
 ## Next item
 
-- **D18 — Synthetic daily-driver dogfood journeys** (§36): run the ten journeys end to end against
-  real builds and fix the friction they expose.
+- **Daily Driver marathon closed** (D19 · fresh package · installed candidate — see
+  `DAILY_DRIVER_CANDIDATE.md`), then **V2.0 preflight: Fix Capture** (separate tranche) — shipped; see
+  `FIX_CAPTURE.md`. The rest of V2.0 is deliberately not started.
+
+## V2.0 preflight — Fix Capture (complete)
+
+- **Engine** (`8ce902b`): `runtime/kel/dogfood.py` (migration 22) owns the fix store and the files
+  under the engine data root (`dogfood/screenshots/FIX-0001.png`, `dogfood/tmp/`, `dogfood/prompts/`),
+  and `/api/dogfood` (list/get/save/set_status/prepare_prompt) follows the family contract — plain
+  sentences, a GET read for the list. `prepare_prompt` writes the prompt file first and only then
+  marks the included OPEN fixes BATCHED. 21 engine tests.
+- **Desktop** (`5bd820e`): Ctrl+Shift+F opens a transparent selection overlay (hit-testing finds the
+  real element, the click is swallowed), the target is captured with its context and a window
+  screenshot from the main process, and Kel's own transcription family drives the live transcript.
+  The floating panel records, reviews, records again or saves beside the target; Esc, click-outside
+  and a second hotkey press behave exactly as promised in `fixCaptureMachine.ts`. `/dogfood` reviews
+  the fixes, changes status, and prepares/copies/reveals the fix prompt. 32 desktop tests.
+- **Installed journeys A–E** ran against the packaged candidate with Chromium's synthetic microphone
+  (this machine has none) and the engine's practice transcription provider: save → restart → still
+  there; Record Again; click-outside cancel; three fixes → one prompt → Batched; screenshot + target
+  box verified against the real element. Evidence `evidence/fix-capture/installed-journeys.json`.
+- **Not an issue tracker, by construction**: four statuses and a schema pin that there are no
+  tracking fields (engine test) plus a desktop pin on the tracking vocabulary.

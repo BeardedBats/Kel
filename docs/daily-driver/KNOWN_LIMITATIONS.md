@@ -136,3 +136,23 @@ Honest, current list (grows/shrinks as phases complete):
   name the provider from the inventory label (`provider-language.test.ts` pins it; the installed
   battery reads the answer: `Chosen: Claude (Claude Code)` / `Chain: Claude (Claude Code) → Codex →
   DeepSeek API → Anthropic API`). Any future surface must do the same: the raw id is not user copy.
+- Fix Capture (V2.0 preflight): this machine has no microphone, so the installed journeys ran with
+  Chromium's synthetic audio device and the engine's practice transcription provider. The recording
+  path, Kel's transcription family, the store, the screenshots and the whole UI are the shipped ones;
+  what was never exercised here is real spoken audio through a real provider key. On a machine with a
+  microphone and a Muse key the same code path runs with real audio — nothing else changes.
+- Fix Capture screenshots (V2.0 preflight): they are local, never uploaded, never sent to a model
+  during capture, and never taken from the desktop or another application — only Kel's own window.
+  A screenshot can still contain whatever was on screen at that moment, so they live under the data
+  root's `dogfood/screenshots/` and travel only inside a fix prompt that Nick deliberately prepares.
+  Raw audio is discarded; only the words are stored.
+- Fix Capture shortcut (V2.0 preflight): Ctrl+Shift+F is an application shortcut (the renderer's own
+  keydown, the same way Ctrl+K opens the palette), not an OS-global registration. It works whenever
+  Kel is focused and deliberately does not steal the chord from other applications; capturing from
+  outside Kel would also mean capturing a window Fix Capture is not allowed to read.
+- Ctrl+Shift+F conflict (V2.0 preflight), resolved deliberately: the donor's conversation-search modal
+  also bound that chord (a document-level capture listener). Fix Capture now claims it — the layer
+  listens on `window` in the capture phase and stops the event, so the search never opens on that
+  chord. The search keeps its own trigger in the conversation header and the Ctrl+K palette path; its
+  binding is left in place (pinned as the documented trade in `fix-capture.dom.test.ts`). Nick asked
+  for Ctrl+Shift+F as the capture hotkey, so the capture wins the chord.
