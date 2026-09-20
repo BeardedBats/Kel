@@ -3,6 +3,19 @@ import type { WebHostOptions, WebHostHandle } from './types.js';
 export type { AppMetadata, BackendBinaryResolver, WebHostOptions, WebHostHandle } from './types.js';
 export { startStaticServer, stopStaticServer } from './static-server.js';
 export type { StaticServerOptions, StaticServerHandle } from './static-server.js';
+// D3 — browser authentication for the WebUI gateway (password store, sessions, QR tokens).
+export {
+  WebUiAuth,
+  ensureInitialPassword,
+  generateReadablePassword,
+  setWebUiPassword,
+  setWebUiUsername,
+  generateWebUiQrToken,
+  consumeWebUiQrToken,
+  readAuthFile,
+  writeAuthFile,
+} from './auth.js';
+export type { WebUiAuthFile, WebUiSession } from './auth.js';
 
 // Backend launcher exports (M4)
 export {
@@ -56,6 +69,9 @@ export async function startWebHost(opts: WebHostOptions): Promise<WebHostHandle>
       backendPort: backendHandle.port,
       port: opts.port,
       allowRemote: opts.allowRemote ?? false,
+      auth: opts.auth
+        ? { userDataPath: opts.app.userDataPath, bearerToken: opts.auth.bearerToken }
+        : undefined,
     });
   } catch (err) {
     // If static-server fails, clean up backend

@@ -14,12 +14,19 @@ import http, { type IncomingMessage, type Server, type ServerResponse } from 'no
 import { networkInterfaces } from 'node:os';
 import net, { type Socket } from 'node:net';
 import serveHandler from 'serve-handler';
+import { consumeWebUiQrToken, SESSION_COOKIE, WebUiAuth } from './auth.js';
 
 export type StaticServerOptions = {
   staticDir: string;
   backendPort: number;
   port?: number;
   allowRemote?: boolean;
+  /**
+   * D3 gateway authentication. When present, every proxied API call (HTTP and WebSocket) must
+   * carry a signed-in browser session, and `bearerToken` — the Kel engine's per-process token —
+   * is injected server-side so it never reaches the browser. LAN binding requires auth.
+   */
+  auth?: { userDataPath: string; bearerToken?: string };
 };
 
 export type StaticServerHandle = {
@@ -32,6 +39,145 @@ export type StaticServerHandle = {
 };
 
 const DEFAULT_PORT = 25808;
+
+const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+
+const parseCookies = (header: string | undefined): Record<string, string> => {
+  const out: Record<string, string> = {};
+  if (!header) return out;
+  for (const part of header.split(';')) {
+    const index = part.indexOf('=');
+    if (index < 0) continue;
+    out[part.slice(0, index).trim()] = part.slice(index + 1).trim();
+  }
+  return out;
+};
+
+const sessionIdFrom = (req: IncomingMessage): string | undefined =>
+  parseCookies(req.headers.cookie)[SESSION_COOKIE];
+
+const replyJson = (
+  res: ServerResponse,
+  status: number,
+  body: Record<string, unknown>,
+  extraHeaders: Record<string, string> = {}
+): void => {
+  const raw = Buffer.from(JSON.stringify(body));
+  res.writeHead(status, { 'content-type': 'application/json', 'content-length': String(raw.length), ...extraHeaders });
+  res.end(raw);
+};
+
+const sessionCookie = (id: string): string =>
+  `${SESSION_COOKIE}=${id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
+
+const clearedSessionCookie = (): string => `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+
+const readJsonBody = async (req: IncomingMessage, limit = 1_000_000): Promise<Record<string, unknown> | null> =>
+  new Promise((resolve) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > limit) {
+        resolve(null);
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      try {
+        const parsed: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        resolve(parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null);
+      } catch {
+        resolve(null);
+      }
+    });
+    req.on('error', () => resolve(null));
+  });
+
+/**
+ * Browser-session endpoints, served by the gateway itself (the Kel engine has no web auth).
+ * Returns true when the request was fully handled here.
+ */
+async function handleAuthRoute(req: IncomingMessage, res: ServerResponse, auth: WebUiAuth): Promise<boolean> {
+  const url = req.url || '';
+  const path = url.split('?')[0];
+  if (path === '/api/auth/user' && req.method === 'GET') {
+    const session = auth.getSession(sessionIdFrom(req));
+    if (!session) {
+      replyJson(res, 401, { success: false });
+      return true;
+    }
+    replyJson(res, 200, { success: true, user: { id: 'admin', username: session.username } });
+    return true;
+  }
+  if (path === '/api/auth/status' && req.method === 'GET') {
+    replyJson(res, 200, { success: true, needs_setup: !auth.hasPassword(), user_count: auth.hasPassword() ? 1 : 0 });
+    return true;
+  }
+  if (path === '/login' && req.method === 'POST') {
+    const key = req.socket.remoteAddress || 'local';
+    if (auth.isThrottled(key)) {
+      replyJson(res, 429, { success: false, code: 'tooManyAttempts' });
+      return true;
+    }
+    const body = await readJsonBody(req);
+    const username = typeof body?.username === 'string' ? body.username : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
+    if (!auth.verifyLogin(username, password)) {
+      auth.recordFailure(key);
+      replyJson(res, 401, { success: false, message: 'Invalid username or password.' });
+      return true;
+    }
+    auth.clearFailures(key);
+    const session = auth.createSession();
+    replyJson(
+      res,
+      200,
+      { success: true, user: { id: 'admin', username: session.username } },
+      { 'Set-Cookie': sessionCookie(session.id) }
+    );
+    return true;
+  }
+  if (path === '/api/auth/refresh' && req.method === 'POST') {
+    const session = auth.getSession(sessionIdFrom(req));
+    if (!session) {
+      replyJson(res, 401, { success: false });
+      return true;
+    }
+    replyJson(res, 200, { success: true }, { 'Set-Cookie': sessionCookie(session.id) });
+    return true;
+  }
+  if (path === '/logout' && req.method === 'POST') {
+    auth.destroySession(sessionIdFrom(req));
+    replyJson(res, 200, { success: true }, { 'Set-Cookie': clearedSessionCookie() });
+    return true;
+  }
+  if (path === '/qr-login' && req.method === 'GET') {
+    const token = new URL(url, 'http://localhost').searchParams.get('token') || '';
+    if (consumeWebUiQrToken(token)) {
+      const session = auth.createSession();
+      res.writeHead(302, { Location: '/', 'Set-Cookie': sessionCookie(session.id) });
+      res.end();
+    } else {
+      res.writeHead(302, { Location: '/login?error=qr' });
+      res.end();
+    }
+    return true;
+  }
+  return false;
+}
+
+/** Headers for an authenticated upgrade: inject the engine token, strip browser origin/cookies. */
+function rewriteUpgradeHeaders(headerBlock: string, bearerToken?: string): string {
+  const lines = headerBlock.split('\r\n').filter((line) => {
+    const lower = line.toLowerCase();
+    return line.length > 0 && !lower.startsWith('origin:') && !lower.startsWith('cookie:');
+  });
+  if (bearerToken) lines.push(`Authorization: Bearer ${bearerToken}`);
+  return lines.join('\r\n') + '\r\n\r\n';
+}
 
 // Ranges that are non-internal IPv4 yet never a reachable LAN address, so we
 // must never advertise them as the WebUI access URL even when they are the only
@@ -76,13 +222,26 @@ function getLanIP(): string | null {
   return pickLanIP(networkInterfaces());
 }
 
-function forwardToBackend(req: IncomingMessage, res: ServerResponse, backendPort: number): void {
+function forwardToBackend(
+  req: IncomingMessage,
+  res: ServerResponse,
+  backendPort: number,
+  authz?: { bearerToken?: string }
+): void {
+  const headers: http.OutgoingHttpHeaders = { ...req.headers, host: `127.0.0.1:${backendPort}` };
+  if (authz) {
+    // The gateway (not the browser) carries the engine credential: inject the per-process
+    // bearer token and drop browser-supplied origin/cookies before the request leaves the host.
+    if (authz.bearerToken) headers.authorization = `Bearer ${authz.bearerToken}`;
+    delete headers.origin;
+    delete headers.cookie;
+  }
   const options: http.RequestOptions = {
     hostname: '127.0.0.1',
     port: backendPort,
     path: req.url,
     method: req.method,
-    headers: { ...req.headers, host: `127.0.0.1:${backendPort}` },
+    headers,
   };
   const proxy = http.request(options, (proxyRes) => {
     res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
@@ -163,6 +322,11 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
   const port = opts.port ?? DEFAULT_PORT;
   const allowRemote = opts.allowRemote === true;
   const host = allowRemote ? '0.0.0.0' : '127.0.0.1';
+  const auth = opts.auth ? new WebUiAuth(opts.auth.userDataPath) : null;
+  const bearerToken = opts.auth?.bearerToken;
+  if (allowRemote && !auth) {
+    throw new Error('Refusing to bind the WebUI to the network without authentication');
+  }
 
   // The HTTP server listens only on loopback — user traffic hits the outer
   // net.Server first. We route to this server for everything except WS
@@ -180,10 +344,25 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
         return;
       }
 
-      // /api/* — reverse proxy to backend (includes /api/auth/*).
-      // /login and /logout are aionui-auth's top-level auth endpoints: proxy them too
-      // so WebUI browser clients reach the backend without a path-rewrite.
-      if (req.url.startsWith('/api/') || req.url.startsWith('/api?') || req.url === '/login' || req.url === '/logout') {
+      if (auth) {
+        // D3: the gateway owns browser auth. Session endpoints are served here; proxied API
+        // calls require a signed-in session and carry the engine token injected server-side.
+        const handled = await handleAuthRoute(req, res, auth);
+        if (handled) return;
+        if (req.url.startsWith('/api/') || req.url.startsWith('/api?')) {
+          if (!auth.getSession(sessionIdFrom(req))) {
+            replyJson(res, 401, { success: false, message: 'Sign in to use Kel remotely.' });
+            return;
+          }
+          forwardToBackend(req, res, opts.backendPort, { bearerToken });
+          return;
+        }
+      } else if (
+        req.url.startsWith('/api/') ||
+        req.url.startsWith('/api?') ||
+        req.url === '/login' ||
+        req.url === '/logout'
+      ) {
         forwardToBackend(req, res, opts.backendPort);
         return;
       }
@@ -234,6 +413,30 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       peeked = Buffer.concat([peeked, chunk]);
       const decision = peekWsRoute(peeked);
       if (decision === null && peeked.length < PEEK_LIMIT_BYTES) return;
+      if (decision === true && auth) {
+        // D3: authenticated upgrades — wait for the full header block so the session cookie can
+        // be checked, then forward with the engine token injected and browser cookies stripped.
+        const headerEnd = peeked.indexOf('\r\n\r\n');
+        if (headerEnd < 0 && peeked.length < PEEK_LIMIT_BYTES) return;
+        cleanup();
+        if (headerEnd < 0) {
+          spliceToTcpEndpoint(client, internalPort, peeked);
+          return;
+        }
+        const headerText = peeked.slice(0, headerEnd).toString('latin1');
+        const cookieLine = /^cookie:\s*(.+)$/im.exec(headerText);
+        const session = auth.getSession(parseCookies(cookieLine?.[1])[SESSION_COOKIE]);
+        if (!session) {
+          client.end('HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n');
+          return;
+        }
+        const rewritten = Buffer.concat([
+          Buffer.from(rewriteUpgradeHeaders(headerText, bearerToken), 'latin1'),
+          peeked.slice(headerEnd + 4),
+        ]);
+        spliceToTcpEndpoint(client, opts.backendPort, rewritten);
+        return;
+      }
       cleanup();
       const target = decision === true ? opts.backendPort : internalPort;
       spliceToTcpEndpoint(client, target, peeked);

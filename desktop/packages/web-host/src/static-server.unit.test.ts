@@ -410,14 +410,34 @@ describe('static-server', () => {
     expect(h1.networkUrl).toBeUndefined();
     await h1.stop();
 
-    const h2 = await startStaticServer({
-      staticDir,
-      backendPort: backend.port,
-      port: 0,
-      allowRemote: true,
-    });
-    // may still be undefined on CI machines without a LAN interface
-    expect(typeof h2.networkUrl === 'string' || h2.networkUrl === undefined).toBe(true);
-    await h2.stop();
+    // D3: LAN binding now requires the gateway auth; a temp dir supplies the password store.
+    const authDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ws-auth-'));
+    try {
+      const h2 = await startStaticServer({
+        staticDir,
+        backendPort: backend.port,
+        port: 0,
+        allowRemote: true,
+        auth: { userDataPath: authDir },
+      });
+      // may still be undefined on CI machines without a LAN interface
+      expect(typeof h2.networkUrl === 'string' || h2.networkUrl === undefined).toBe(true);
+      await h2.stop();
+    } finally {
+      await fs.rm(authDir, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses LAN binding without authentication (D3 invariant)', async () => {
+    const backend = await startMockBackend((_req, res) => res.end('nope'));
+    stopBackend = backend.close;
+    await expect(
+      startStaticServer({
+        staticDir,
+        backendPort: backend.port,
+        port: 0,
+        allowRemote: true,
+      })
+    ).rejects.toThrow('without authentication');
   });
 });
