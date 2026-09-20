@@ -52,4 +52,13 @@
   the peek listener keeps collecting so cleanup+splice stay in one tick — the pattern the splice code
   documents). No donor binary changes; desktop/CLI callers that talk to aioncore directly are
   unaffected.
+- **D-014 — D4 approach.** The engine already owned a complete transcription family
+  (`/api/transcription`: record/upload/live stream/combine/exports/folders/key) with the honest
+  credential-free "Practice mode" as the no-key default; the page was feature-complete too. D4 adds
+  the missing spec piece — client-side search over the one library (recents + folder children, no
+  second store) — plus policy pins (`transcription-policy.test.ts`: no spacebar handler ever binds,
+  Escape-only cancel; action wiring; download/copy/share affordances) and a live HTTP fixture flow
+  (`packaging/verify-transcription-e2e.cjs`) proving the real service end to end. Text export
+  downloads the loaded transcript locally; the engine's `export_text` stays available for other
+  clients.
 - (append as work proceeds; every non-obvious choice gets a line)

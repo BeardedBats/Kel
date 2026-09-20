@@ -14,8 +14,8 @@ Status legend: **DONE** · **DONE (core)** · **PARTIAL** · **IN PROGRESS** · 
 | D1 | Provider + model onboarding (human statuses, Set up → Save + Verify) | §6–7 | DONE (core) | `0279a1d` | `providerStatus.ts` + 11 tests; page wiring pins; live key validation unavailable (no external creds) — see KNOWN_LIMITATIONS |
 | D2 | Update reliability: donor CDN feed severed; fail-closed Kel GitHub check; installer upgrade path documented | §8 | DONE (core) | `7c9df63` | `updateFeed` returns null; `_feedConfigured` guards; `update-policy.test.ts`; packaged upgrade + Properties re-verify at package phase |
 | D3 | Remote / WebUI (+security) | §9–10 | DONE (core) | D3 commit (revert `b13301a`) | gateway session enforcement (`gateway-session.unit.test.ts`, 10 tests); anon allowlist; `/qr-login` proxy; WS gating; logout cache invalidation; real-stack matrix + browser evidence in `evidence/d3/`; see KNOWN_LIMITATIONS for aioncore-side constraints |
-| D4 | Transcription first-class workflow | §11 | IN PROGRESS | — | — |
-| D5 | Needs Your Attention + notifications | §12–13 | QUEUED | — | — |
+| D4 | Transcription first-class workflow | §11 | DONE (core) | D4 commit | engine family + page already complete; + client-side searchable recents; `transcription-policy.test.ts` (4 pins); live fixture flow `packaging/verify-transcription-e2e.cjs` + `evidence/d4/`; live Muse path needs a Meta key (see KNOWN_LIMITATIONS) |
+| D5 | Needs Your Attention + notifications | §12–13 | IN PROGRESS | — | — |
 | D6 | Continuation / resumability | §14–15 | QUEUED | — | — |
 | D7 | Long-running autonomy | §16–17 | QUEUED | — | — |
 | D8 | Adaptive staffing | §18–20 | QUEUED | — | — |

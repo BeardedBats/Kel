@@ -18,8 +18,15 @@ Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` →
   `/qr-login` now proxied; WS upgrades validated). Verified against the real stack: anon → 401
   (loopback + LAN + reset-password), authed → 200, revoked replay → 401, browser login → app,
   phone 390 no overflow. Evidence: `evidence/d3/` + TEST_EVIDENCE rows.
-- **NEXT: D4 — Transcription first-class workflow** (§11). Start with the transcription page and
-  the engine's transcription routes; preserve "NO spacebar start/stop shortcut".
+- **D4 Transcription done (this commit).** The engine family (`/api/transcription`) and the page were
+  already complete; D4 added searchable recents (client-side, one library), policy pins
+  (`transcription-policy.test.ts` — no spacebar handler, Escape-only cancel, action wiring,
+  affordances) and a live HTTP fixture flow (`packaging/verify-transcription-e2e.cjs`, practice
+  mode): stream 4.6s → text; upload → combine (8.8s, source consumed); exports (485 chars / 403 KB);
+  folders create/rename/assign/unassign; key set → `muse` / clear → `fixture`; plain-language errors.
+- **NEXT: D5 — Needs Your Attention + notifications** (§12–13). Start at
+  `renderer/components/kel/KelNeedsAttention.tsx` + `needsAttention.ts` (authoritative-state derived)
+  and the notification hooks (`useBrowserNotification`); restrained events only.
 
 ## Where
 
