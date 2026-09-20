@@ -147,10 +147,11 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   (404)`, no release card), upgrade preservation (durable work byte-identical before/after) and zero
   orphaned `KelEngine` processes. Evidence: `evidence/d19/installed-battery.json` (+ screenshots);
   checklist and bind chain in `PACKAGE_EVIDENCE.md`.
-- **Re-cut package installed (final).** Installer `f5c8f2672ba3561270f5a906befa3f18c4167e76916025a373cba491d563a397`
-  (213,633,457 B), Kel.exe `de1109c8…`, engine `01c58bdf…` (unchanged between cuts; source did not
+- **Final re-cut package installed.** Installer `0add7bc4d4e08dc16e744fec487951be923c6caf0bb40dbf22a96c8b7422dffb`
+  (213,631,660 B), Kel.exe `e1d62c5f…`, engine `01c58bdf…` (unchanged between cuts; source did not
   move), installed at `C:\Users\Nick\KelDailyDriverCandidate` with `Uninstall Kel.exe` metadata
-  Kel / 1.7.0-dev.
+  Kel / 1.7.0-dev. This cut adds the readiness-chain naming (the routing answer now reads
+  `Chosen: Claude (Claude Code)` / `Chain: Claude (Claude Code) → Codex → DeepSeek API → Anthropic API`).
 - **STATUS: MARATHON ENDPOINT REACHED (D19 · fresh package · installed Daily Driver Candidate).**
   Nothing is in flight. The only remainders are environment-limited and recorded in
   `KNOWN_LIMITATIONS.md`: no provider credential on this machine (so no live model turn) and no phone

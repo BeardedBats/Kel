@@ -88,6 +88,13 @@ const Providers: React.FC = () => {
     }
   }, [capability, prefer]);
 
+  /** Engine provider id → the name a person knows (D19: ids never reach user copy). */
+  const nameOf = useCallback(
+    (id: string): string =>
+      (providers ?? []).find((item) => item.provider === id)?.label ?? id.replace(/-/g, ' '),
+    [providers]
+  );
+
   const saveKey = useCallback(
     async (provider: string) => {
       const draft = keyDraft;
@@ -95,8 +102,7 @@ const Providers: React.FC = () => {
       const field = 'api_key';
       // D19: the person set up the card they clicked, so the confirmation names that provider the
       // way the page does — never the engine's internal id.
-      const providerName =
-        (providers ?? []).find((item) => item.provider === provider)?.label ?? provider;
+      const providerName = nameOf(provider);
       setBusy(true);
       setNote(null);
       try {
@@ -118,7 +124,7 @@ const Providers: React.FC = () => {
         setBusy(false);
       }
     },
-    [keyDraft, load, providers]
+    [keyDraft, load, nameOf]
   );
 
   const removeKey = useCallback(
@@ -322,7 +328,7 @@ const Providers: React.FC = () => {
                 variant={name === prefer ? 'primary' : 'quiet'}
                 onClick={() => setPrefer(name)}
               >
-                {name ? ((providers ?? []).find((item) => item.provider === name)?.label ?? name) : 'auto'}
+                {name ? nameOf(name) : 'auto'}
               </KelButton>
             ))}
             <KelButton variant="primary" disabled={busy} onClick={() => void runReadiness()}>
@@ -346,7 +352,9 @@ const Providers: React.FC = () => {
                   ))}
                 </ul>
               )}
-              <p className="kel-meta">Chain: {readiness.chain.join(' → ') || 'none'}</p>
+              <p className="kel-meta">
+                Chain: {readiness.chain.map((id) => nameOf(id)).join(' → ') || 'none'}
+              </p>
             </>
           )}
         </KelCard>

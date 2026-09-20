@@ -59,9 +59,16 @@ describe('provider names on the work surfaces (D19)', () => {
   });
 
   it('the provider confirmation and the readiness choices name the provider', () => {
+    expect(providersPage).toContain('const nameOf = useCallback(');
     expect(providersPage).toContain('Saved and verified ${providerName}');
-    expect(providersPage).toContain('?.label ?? provider;');
     expect(providersPage).not.toContain('Saved and verified ${provider}:');
-    expect(providersPage).toMatch(/name \? \(\(providers \?\? \[\]\)\.find/);
+    expect(providersPage).toContain("{name ? nameOf(name) : 'auto'}");
+  });
+
+  it('the readiness answer names its chain instead of listing engine ids', () => {
+    expect(providersPage).toContain('readiness.chain.map((id) => nameOf(id))');
+    expect(providersPage).not.toContain('readiness.chain.join(');
+    // The unknown-id fallback humanizes rather than printing the id.
+    expect(providersPage).toContain("?.label ?? id.replace(/-/g, ' ')");
   });
 });

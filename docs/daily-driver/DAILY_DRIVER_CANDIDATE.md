@@ -19,9 +19,9 @@ the installed copy on this machine; incomplete items are stated as incomplete.
 - Engine: `dist/runtime/KelEngine/KelEngine.exe`, sha256
   `01c58bdfcdb94c34acb1bf811cbf1faf06a29f9068c06c53fd6a97a5058b2a9c` (3,330,256 B),
   PyInstaller from this lane's `runtime/`, structural check 51/51 OK.
-- Installer (re-cut, installed): `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`, sha256
-  `f5c8f2672ba3561270f5a906befa3f18c4167e76916025a373cba491d563a397` (213,633,457 B).
-- App executable (re-cut): sha256 `de1109c8a4094516472b9313ab78e9ff4ca0b3dbdb2ce4e0f76d90af7726326a`;
+- Installer (final re-cut, installed): `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`, sha256
+  `0add7bc4d4e08dc16e744fec487951be923c6caf0bb40dbf22a96c8b7422dffb` (213,631,660 B).
+- App executable (final re-cut): sha256 `e1d62c5fc4dddb78195081644eb92dcb836e072b34632ac299a403c6c59afdc6`;
   ProductName/FileDescription **Kel**, FileVersion **1.7.0-dev**; installed `Uninstall Kel.exe`
   carries the same metadata (HVRA-MINOR-002 closed at the artifact level).
 
@@ -42,12 +42,14 @@ the installed copy on this machine; incomplete items are stated as incomplete.
 - **Installed GUI battery (re-cut build, `evidence/d19/installed-battery.json`):** nine shipped
   surfaces (Landing, Work, Projects, Recipes, Activity, Transcription, Team → chat redirect,
   Settings, Tools) with **no raw error patterns, no horizontal overflow, zero donor terms, 0 console
-  errors**; startup-to-window 11.5 s and 3.0–4.3 s per surface. The four replays: D0-001 (Permissions
+  errors**; startup-to-window 13.9 s and 3.0–4.3 s per surface. The four replays: D0-001 (Permissions
   Work column shows the job's request; the engine's job id `0482b75e-…` appears nowhere in it —
   cross-checked against the engine database), D0-004 (exactly one pet-refusal message, toggle settles
   OFF), D1 (human provider statuses; Set up → Save + Verify answers "Saved and verified **Anthropic
   API**: …", key removed again afterwards), D2 (update check fails closed: `Update metadata request
-  failed (404)`, no release card).
+  failed (404)`, no release card). Automatic routing answered in the installed app too:
+  `Chosen: Claude (Claude Code) · claude-native` with `Chain: Claude (Claude Code) → Codex → DeepSeek
+  API → Anthropic API` — engine ids nowhere on the surface.
 - The installed app's SPA serves the real sign-in surface (`Kel - Sign In`, `/#/login`) and the
   remote auth wall refuses unauthenticated backend calls — D3's session enforcement, visible in the
   production build.
@@ -62,7 +64,7 @@ the installed copy on this machine; incomplete items are stated as incomplete.
 ## Suite state at this record
 
 - Engine: **1029 tests OK** (`python -m unittest discover -s tests`).
-- Desktop: tsc exit 0 · **36 files / 268 PASS** (`bunx vitest run`).
+- Desktop: tsc exit 0 · **36 files / 269 PASS** (`bunx vitest run`).
 - Engine-side journeys with a synthetic provider turn (real kill/recover/continue):
   `python ../packaging/verify_synthetic_journeys.py` — **all green (16/16)**.
 - Live journeys (re-run green on fresh data dirs): learning proposals, recipe loop, remote

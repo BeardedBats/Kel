@@ -381,6 +381,30 @@ async function probeProviders(page, checks) {
       /API key \(billed per use\)|subscription session/.test(pageText),
     sample: pageText.slice(0, 400),
   };
+
+  // Automatic routing, exercised in the installed app: the readiness answer must name providers the
+  // way a person knows them (D19) and must be an answer, not a spinner.
+  const readinessButton = page.getByRole('button', { name: 'Check readiness', exact: true }).first();
+  if ((await readinessButton.count().catch(() => 0)) > 0) {
+    await readinessButton.click();
+    await wait(5000);
+    const answer = await bodyText(page);
+    const chosen = (answer.match(/Chosen: [^\n]*/) || [null])[0];
+    const chain = (answer.match(/Chain: [^\n]*/) || [null])[0];
+    const honestNoProvider = /No provider can take this capability right now/.test(answer);
+    const shown = `${chosen || ''} ${chain || ''}`;
+    // Case-sensitive: the labels are "Anthropic API", "Claude (Claude Code)", "Codex", "DeepSeek API".
+    const rawIds = ['internal', 'claude-code', 'codex', 'deepseek'].filter((id) =>
+      new RegExp(`\\b${id}\\b`).test(shown)
+    );
+    checks.providers_readiness = {
+      pass: (!!chosen || honestNoProvider) && rawIds.length === 0,
+      chosen,
+      chain,
+      honestNoProvider,
+      rawIdsInTheAnswer: rawIds,
+    };
+  }
   const setUp = page.getByRole('button', { name: 'Set up', exact: true }).first();
   if ((await setUp.count().catch(() => 0)) === 0) {
     checks.providers_setup_flow = { pass: false, reason: 'no Set up control on the installed page' };

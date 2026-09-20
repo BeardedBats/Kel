@@ -1,20 +1,20 @@
 {
-  "startedAt": "2026-09-20T18:57:12.277Z",
+  "startedAt": "2026-09-20T19:29:48.626Z",
   "installDir": "C:\\Users\\Nick\\KelDailyDriverCandidate",
   "appExe": "C:\\Users\\Nick\\KelDailyDriverCandidate\\Kel.exe",
   "dataRoot": "C:\\Users\\Nick\\KelDailyDriverRuns\\prepared\\engine",
-  "cdpPort": 54337,
+  "cdpPort": 63633,
   "checks": {
     "timings": {
-      "Landing": 3037,
-      "startupToWindow": 11526,
-      "Work": 4301,
-      "Projects": 4270,
-      "Recipes": 4287,
-      "Activity": 4259,
-      "Transcription": 4261,
-      "Team": 3040,
-      "Settings": 4283,
+      "Landing": 3035,
+      "startupToWindow": 13862,
+      "Work": 4309,
+      "Projects": 4285,
+      "Recipes": 4294,
+      "Activity": 4279,
+      "Transcription": 4276,
+      "Team": 3035,
+      "Settings": 4279,
       "Tools": 4291
     },
     "surface_landing": {
@@ -151,6 +151,13 @@
       "pass": true,
       "sample": "Skip to main content\nKel\nNew Chat\nWork\nProjects\nActivity\nPermissions\nTranscription\nProject conversations\nWorkspace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nI'm sending a test message here\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI "
     },
+    "providers_readiness": {
+      "pass": true,
+      "chosen": "Chosen: Claude (Claude Code) · claude-native",
+      "chain": "Chain: Claude (Claude Code) → Codex → DeepSeek API → Anthropic API",
+      "honestNoProvider": false,
+      "rawIdsInTheAnswer": []
+    },
     "providers_targeted_card": "Anthropic API",
     "providers_setup_flow": {
       "pass": true,
@@ -191,10 +198,10 @@
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Kel/1.7.0-dev Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
     "V8-Version": "13.8.258.32",
     "WebKit-Version": "537.36 (@e9338f3ca35356d29b834450ba248c96511395e0)",
-    "webSocketDebuggerUrl": "ws://127.0.0.1:54337/devtools/browser/68395ed6-b83f-4b27-9c78-5425072518d8"
+    "webSocketDebuggerUrl": "ws://127.0.0.1:63633/devtools/browser/60b84661-d3ed-45e2-a465-61ac76c92b3c"
   },
   "appUrl": "file:///C:/Users/Nick/KelDailyDriverCandidate/resources/app.asar/out/renderer/index.html#/guid",
-  "startupMs": 11526,
+  "startupMs": 13862,
   "allPassed": true,
   "donorTermsInConsole": 0
 }
