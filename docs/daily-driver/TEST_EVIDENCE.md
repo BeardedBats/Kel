@@ -92,3 +92,8 @@
 | 11:9x | D17 live journey | `node packaging/verify-integrations-overview.cjs` | **verdict all green** | `/api/capabilities` returns rows with honest states + reasons; ids stable per conversation. Evidence `evidence/d17/integrations-overview.json` |
 | 11:9x | D16+D17 typecheck + full | `bunx tsc --noEmit` · `bunx vitest run` | tsc 0 · 33 files / 258 PASS | integrations card + rule copy; no other suite moved |
 | 11:9x | D16 engine full suite | `cd runtime && python -m unittest discover -s tests` | **1025 tests OK (299.6s)** | ran with the boundary-scope hardening; includes the two new autonomy pins |
+| 11:2x | D19 regression — ENGINE | `cd runtime && python -m unittest discover -s tests` | **1025 tests OK (324.1s)** | full suite re-run at the regression gate |
+| 11:2x | D19 regression — DESKTOP | `bunx tsc --noEmit` · `bunx vitest run` | tsc 0 · 33 files / 258 PASS | full typecheck + unit suite at the regression gate |
+| 11:2x | D19 regression — live journeys | all seven `packaging/verify-*.cjs` (learning, recipes, remote-kel, routes, stop, revision, integrations) | **ALL GREEN** | every live journey re-run at the regression gate, each on a fresh throwaway data dir |
+| 11:2x | D19 regression — transcription | `node packaging/verify-transcription-e2e.cjs` | pass (exit 0) | 12 verdict checks green; the initial `has_key` reading is informational now (a fresh dir legitimately has no key; one is set later in the run and cleared — recorded as `has_key_at_start`) |
+| 11:2x | D19 regression — staffing | `cd runtime && python -m unittest discover -s tests -p "test_workforce_*.py"` | 277+ OK | workforce D0–D4 ladder/boundary pins |

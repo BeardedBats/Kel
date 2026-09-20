@@ -1,8 +1,8 @@
 {
   "phase": "D12",
-  "when": "2026-09-20T14:52:04.667Z",
-  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d12-YyFhRI",
-  "job": "3bcf58bf-79ba-4869-b500-c98a1e41210c",
+  "when": "2026-09-20T15:25:36.778Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d12-weYEcV",
+  "job": "007dbd15-bd34-4711-82fe-9aac07297840",
   "verdict": {
     "engine_booted": true,
     "state_ok": true,
@@ -11,7 +11,7 @@
     "excluded_reasons_are_intact": true,
     "unknowns_are_flagged_honestly": true,
     "route_body": {
-      "at": 1789915922.4443588,
+      "at": 1789917934.481624,
       "provider": "fixture",
       "route": {
         "excluded": {
