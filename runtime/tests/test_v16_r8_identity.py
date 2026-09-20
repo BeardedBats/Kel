@@ -21,7 +21,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 class EngineIdentityTests(unittest.TestCase):
     def test_the_engine_reports_one_version_everywhere(self):
         self.assertEqual(service.ENGINE_VERSION, __version__)
-        self.assertEqual(__version__, '1.6.0')
+        self.assertEqual(__version__, '1.7.0-dev')
 
     def test_the_desktop_expects_exactly_the_engine_it_ships(self):
         desktop = json.loads((REPO / 'desktop' / 'package.json').read_text(encoding='utf-8'))
