@@ -98,7 +98,11 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   reads as a device problem, unknown codes fall back to the engine's message — no raw code as UI
   copy. Codes live-verified in D11; language layer source-pinned. Engine suite re-run green
   (1023 OK).
-- **Next: D14 — optional Advanced Activity view** (directive §29).
+- **D14 done (this commit).** Optional Activity view: new `/activity` page (sider entry) composed from
+  existing state only — Happening now (routing sentence included), Waiting on you (Open Work),
+  Recently finished (plain verdicts), provider count; internals banned by pin. Shared
+  `workLanguage.ts` keeps Work and Activity sentences identical. tsc 0 · Vitest 30 files / 249 PASS.
+- **Next: D15 — security / sandbox boundary improvements** (directive §30–31).
 
 ## Where
 

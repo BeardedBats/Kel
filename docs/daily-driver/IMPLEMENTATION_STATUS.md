@@ -97,9 +97,12 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   computer. Your work is kept — try again in a moment."), a browser-level network drop reads as a
   device problem, and unknown codes fall back to the engine's own message — a raw code can no
   longer appear as UI copy. Engine full suite re-run green (1023 OK) after the D12 change.
+- **D14 complete** (this commit) — the optional Activity view: a quiet `/activity` page composed
+  entirely from existing state (Happening now with the routing sentence, Waiting on you with an Open
+  Work link, Recently finished with plain verdicts, provider count). No internals — pinned. Work and
+  Activity now share their sentences through `workLanguage.ts`, so they can never drift.
 
 ## Next item
 
-- **D14 — Optional Advanced Activity view** (§29): implement a high-level, optional Activity surface
-  over existing state (no leases/epochs/internal IDs outside developer disclosure), only if it fits
-  cleanly.
+- **D15 — Security / sandbox boundary improvements** (§30–31): verify the existing containment
+  (guardrails, boundary requests, permissions) end to end and close the smallest honest gap.

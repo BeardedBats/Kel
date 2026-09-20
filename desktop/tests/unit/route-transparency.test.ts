@@ -14,6 +14,7 @@ const read = (relative: string) => readFileSync(path.join(repoRoot, relative), '
 const service = read('runtime/kel/service.py');
 const kelApi = read('desktop/packages/desktop/src/renderer/components/kel/kelApi.ts');
 const workPage = read('desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx');
+const workLanguage = read('desktop/packages/desktop/src/renderer/components/kel/workLanguage.ts');
 
 describe('route contract (D12)', () => {
   it('the engine exposes the run.claimed decision per active job', () => {
@@ -33,13 +34,13 @@ describe('route contract (D12)', () => {
 
 describe('route sentence (D12)', () => {
   it('speaks plainly, offers the fallback, and names skipped providers with reasons', () => {
-    expect(workPage).toContain('Running on ');
-    expect(workPage).toContain('If it fails, Kel will try ');
-    expect(workPage).toContain('Skipped: ');
-    expect(workPage).toContain("'quota exhausted': 'its quota is used up'");
-    expect(workPage).toContain("'health circuit open': 'it had recent failures'");
-    expect(workPage).toContain("'authentication unavailable': 'its key is not set'");
-    expect(workPage).toContain('its cost is not known yet');
+    expect(workLanguage).toContain('Running on ');
+    expect(workLanguage).toContain('If it fails, Kel will try ');
+    expect(workLanguage).toContain('Skipped: ');
+    expect(workLanguage).toContain("'quota exhausted': 'its quota is used up'");
+    expect(workLanguage).toContain("'health circuit open': 'it had recent failures'");
+    expect(workLanguage).toContain("'authentication unavailable': 'its key is not set'");
+    expect(workLanguage).toContain('its cost is not known yet');
   });
 
   it('renders only when the engine actually recorded a decision', () => {

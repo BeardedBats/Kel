@@ -23,8 +23,8 @@ migration, public A2A, fashionable rewrites.
 | D11 | Cross-device continuity (server-authoritative state) | **DONE (core)** |
 | D12 | Smarter provider routing (task fit, health, cost where known; honest fallbacks) | **DONE (core)** |
 | D13 | Failure recovery polish (provider/CLI/engine/network/remote/transcription/update) | **DONE (core)** |
-| D14 | Optional Advanced Activity view (high-level only; optional + unobtrusive) | **IN PROGRESS** |
-| D15 | Security / sandbox boundary improvements (no bespoke hypervisor) | QUEUED |
+| D14 | Optional Advanced Activity view (high-level only; optional + unobtrusive) | **DONE (core)** |
+| D15 | Security / sandbox boundary improvements (no bespoke hypervisor) | **IN PROGRESS** |
 | D16 | Live capability revision (revocation narrows immediately; no silent widening) | QUEUED |
 | D17 | Plugin / integration developer surface (+ connected/needs-setup/unavailable UX) | QUEUED |
 | D18 | Synthetic daily-driver dogfood journeys (10 journeys; friction fixes) | QUEUED |

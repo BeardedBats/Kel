@@ -19,6 +19,7 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { NeedsAttention } from '@renderer/components/kel/KelNeedsAttention';
 import { assignmentLine, staffingSummary } from '@renderer/components/kel/staffingLanguage';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
+import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLanguage';
 import {
   kelArtifact,
   kelControl,
@@ -41,45 +42,14 @@ const WAIT_REASON: Record<string, string> = {
   BLOCKED: 'Blocked by a safety rule; the reason is recorded.',
 };
 
-// Human-visual repair: verdicts and milestone states in user language — no raw engine enums.
-const VERDICT_TEXT: Record<string, string> = {
-  VERIFIED: 'verified',
-  FAILED: 'failed — see the checks',
-  UNCERTAIN: 'not confirmed yet — needs evidence',
-};
+// Human-visual repair: milestone states in user language — no raw engine enums.
+// (VERDICT_TEXT and the routing sentence live in workLanguage.ts, shared with the Activity view.)
 const MILESTONE_STATE_TEXT: Record<string, string> = {
   QUEUED: 'Waiting to start',
   RUNNING: 'In progress',
   ACCEPTED: 'Accepted',
   BLOCKED: 'Blocked',
   FAILED: 'Failed',
-};
-
-const ROUTE_REASON_TEXT: Record<string, string> = {
-  'user choice': 'you set another provider as the choice',
-  'not installed': 'it is not installed',
-  'authentication unavailable': 'its key is not set',
-  'missing capability': "it can't do this kind of work",
-  'quota exhausted': 'its quota is used up',
-  'health circuit open': 'it had recent failures',
-  'privacy scope': 'it is not private enough for this job',
-  'quality floor not established': 'it has no track record yet',
-};
-
-/** D12: one plain sentence about why a run landed on this provider, honest about unknowns. */
-const routeSentence = (route: KelJobRoute | undefined): string | null => {
-  if (!route) return null;
-  const policy = route.route.policy === 'eligible-cost-v1' ? 'the cheapest eligible option' : null;
-  const unknown = route.route.unknown_cost ? 'its cost is not known yet' : null;
-  const head = `Running on ${route.provider || route.route.selected}${policy ? ` — ${policy}` : ''}${unknown ? ` (${unknown})` : ''}.`;
-  const fallback = route.route.fallbacks?.[0]
-    ? ` If it fails, Kel will try ${route.route.fallbacks[0]}.`
-    : '';
-  const skipped = Object.entries(route.route.excluded ?? {})
-    .slice(0, 3)
-    .map(([name, reasons]) => `${name} (${(reasons ?? []).map((reason) => ROUTE_REASON_TEXT[reason] ?? reason).join(', ')})`);
-  const skippedSentence = skipped.length ? ` Skipped: ${skipped.join('; ')}.` : '';
-  return head + fallback + skippedSentence;
 };
 
 const WorkCenter: React.FC = () => {

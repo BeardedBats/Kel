@@ -79,3 +79,5 @@
 | 11:5x | D12 engine full suite | `cd runtime && python -m unittest discover -s tests` | **1023 tests OK (289.9s)** | ran after the `state()` route-map change; includes the new routing test |
 | 11:5x | D13 pins (new cases) | `bunx vitest run tests/unit/kel-remote-bridge.test.ts` | 5 PASS | gateway codes mapped to sentences; raw code never thrown; browser-level network drop reads as a device problem |
 | 11:5x | D13 typecheck + full | `bunx tsc --noEmit` · `bunx vitest run` | tsc 0 · 29 files / 245 PASS | failure language for the remote surface; no other suite moved. (The underlying codes were live-verified in the D11 real-stack journey; this layer is source-pinned.) |
+| 11:6x | D14 pins (new) | `bunx vitest run tests/unit/activity-surface.test.ts` | 4 PASS | route + nav entry; high-level sections in user language; internals banned (lease/epoch/run/digest tokens); Work + Activity share `workLanguage.ts` |
+| 11:6x | D14 typecheck + full | `bunx tsc --noEmit` · `bunx vitest run` | tsc 0 · 30 files / 249 PASS | Activity page + shared language module; one D12 pin re-pointed at the shared module (the extraction moved the strings) |
