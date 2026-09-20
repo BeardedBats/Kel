@@ -52,11 +52,13 @@ Honest, current list (grows/shrinks as phases complete):
   is the mechanism, and the brief only points at it.
 - Long-running autonomy (D7): the engine never auto-replays an unconfirmed/orphaned run — that is
   deliberate (reconcile first) and now surfaces as needs-you with the engine's reason; a
-  route-blocked job waits and resumes by itself, so it deliberately does not interrupt. Live
-  verification of an orphaned run in this environment is limited to the engine unit pins
-  (`test_v16_r6_liveness`, `test_v16_r3_retry_durability`) plus the desktop-side derivation tests:
-  creating a genuinely mid-flight job here would require a live provider credential, which this
-  environment does not have.
+  route-blocked job waits and resumes by itself, so it deliberately does not interrupt. The orphaned
+  journey is now live-verified end to end with a synthetic provider turn
+  (`verify_synthetic_journeys.py` J3): a real child process is killed mid-run, recovery fences it
+  (ORPHANED run, UNCERTAIN milestone, attempts unchanged, no replay), and the person's own
+  continuation completes the same job. What a real-provider orphan would additionally exercise — a
+  live model call inside the fenced attempt — stays unverified here because no provider credential
+  exists on this machine.
 - Adaptive staffing (D8): tier selection, hard rules and ceilings remain engine-internal — by design;
   normal surfaces speak in plain sentences (`staffingLanguage.ts`). Kel manages its own roster
   (shipped roles seed on first use; `Team.resolve_role`), and roster/studio management, internals
@@ -116,3 +118,13 @@ Honest, current list (grows/shrinks as phases complete):
   documented V1.6 heal behaviour. Fresh installs to a new path require clearing the app's
   registration keys first (`HKCU\Software\9280710d-…` + the Uninstall key); the incident and its
   repair are recorded in `PACKAGE_EVIDENCE.md`.
+- Continuing an interrupted run (D19): the engine fences a run that died mid-flight and only an
+  explicit person continuation re-arms it (`Store.reopen`, reached through
+  `Continuation.execute_resume`). The fresh attempt is bounded by the same retry ceiling as any other
+  (`attempts < 4`); when a fenced milestone has already spent its retries, the continuation is
+  refused with the engine's own sentence instead of silently re-running. The person gets a *fresh*
+  attempt, never a replay of the interrupted one — that attempt stays in the event log for review.
+- Update-check wording (D19): with no published Kel release feed, the manual check shows the
+  transport-level truth (`Update metadata request failed (404)`) rather than a friendly guess. Honest
+  and fail-closed, but technical; a friendlier closed-channel sentence is a candidate for a later
+  phase, not invented at the package gate.

@@ -809,7 +809,13 @@ class Store:
             self._save(db, job, 'contract.revised')
 
     def reopen(self, job_id, reason='continuation'):
-        """Reopen a settled failed/uncertain job for continued work (V1.3)."""
+        """Reopen a settled, paused, or interrupted job for continued work (V1.3).
+
+        Only an explicit person continuation reaches this method. That matters for a milestone
+        fenced as UNCERTAIN (an expired or orphaned run, a lost worker, an unreconcilable coding
+        session): the fence exists so nothing replays an unconfirmed external writer *on its own*,
+        and this is the one place where the person's own decision lifts it for a fresh attempt.
+        """
         with self.transaction() as db:
             job = self._get(db, job_id)
             if job.get('verdict') == 'VERIFIED':
@@ -828,6 +834,12 @@ class Store:
             for m in job['milestones'].values():
                 if m['state'] == 'EXHAUSTED' and m['attempts'] < 4:
                     m['state'] = 'READY'
+                elif m['state'] == 'UNCERTAIN' and m['attempts'] < 4:
+                    # The person asked again, so the fenced attempt is retired instead of replayed:
+                    # the event log keeps what happened, and a fresh attempt may run. The note is
+                    # cleared by the next claim, so it can never outlive the retry it describes.
+                    m.update(state='NEEDS_REPAIR', artifact=None, checks=[],
+                             error='Trying this again at your request; the interrupted attempt was not replayed.')
             job.update(state='READY', verdict='UNCERTAIN', assessment=None)
             self._save(db, job, 'job.reopened', {'reason': str(reason)[:200]})
             return job_id
