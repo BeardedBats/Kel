@@ -2,27 +2,34 @@
 
 Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` → `FEATURE_LEDGER.md`.
 
+## Checkpoint (2026-09-19)
+
+- D0 residuals CLOSED (`9bdf338`, `777fefe`, `cce55d0`, `f594282`; records `288a53c`).
+- Engine claims re-pin done (`80c4ba2`) — full engine suite green (1019 OK).
+- D1 providers core done (`0279a1d`) — tsc 0, Vitest 18/177.
+- D2 update path done (`7c9df63`) — donor CDN severed, fail-closed Kel GitHub check.
+- **NEXT: D3 — Remote / WebUI.** Start with `desktop/packages/web-host` (static-server,
+  backend-launcher, auth) and `WebuiModalContent.tsx`; then §9–§10 requirements.
+
 ## Where
 
 - Worktree: `C:\Users\Nick\Desktop\Kel\kel-daily-driver` · branch `dev/daily-driver`.
-- Base `37b1f27…`; current HEAD is recorded in `MARATHON_STATE.md`.
+- Current HEAD is recorded in `MARATHON_STATE.md`.
 
 ## How to continue
 
 1. `cd /c/Users/Nick/Desktop/Kel/kel-daily-driver` and `git status` + `git log --oneline -10`
-   (confirm clean tree and latest checkpoint).
-2. Open `MARATHON_STATE.md`; continue from **CURRENT ITEM** / **NEXT QUEUE**.
-3. Work loop per feature: understand → narrow design → implement → self-review → focused tests →
-   realistic journey → record (`TEST_EVIDENCE.md`, `FEATURE_LEDGER.md`) → commit → continue.
-4. Update `MARATHON_STATE.md` at every checkpoint (disk is durable state).
+   (confirm clean tree and the latest checkpoint).
+2. Open `MARATHON_STATE.md`; continue from **CURRENT PHASE** / **NEXT QUEUE**.
+3. Follow the per-phase loop; record evidence; commit; continue.
 
 ## Commands
 
 - Install deps (once per worktree): `cd desktop && bun install`
 - Full unit suite: `cd desktop && bunx vitest run`
-- Focused tests: `cd desktop && bunx vitest run tests/unit/donor-policy.test.ts tests/unit/needs-attention.test.ts`
-- Typecheck: `cd desktop && bunx tsc --noEmit` (exact invocation used is recorded in `TEST_EVIDENCE.md`)
-- Engine tests: `cd runtime && python -m unittest discover -s tests` (record actual command used)
+- Typecheck: `cd desktop && bunx tsc --noEmit`
+- Engine tests: `cd runtime && python -m unittest discover -s tests`
+- Web-host tests are part of the desktop vitest run (`packages/web-host/src/*.test.ts`).
 
 ## Package / install (final phases)
 
