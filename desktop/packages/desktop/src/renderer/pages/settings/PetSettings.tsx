@@ -66,12 +66,19 @@ const PetSettings: React.FC = () => {
         setEnabled(on);
         configService.setLocal('pet.enabled', on);
         if (checked && !on) {
-          Message.error('The desktop pet is not available in this build, so it stays off.');
+          // HVRA-SUG-002: one refusal explanation per attempt — the stable message id collapses any
+          // duplicate emission (a second identical toast updates the first instead of stacking).
+          Message.error({
+            id: 'pet-enable-refused',
+            content: 'The desktop pet is not available in this build, so it stays off.',
+          });
         }
       } catch {
         setEnabled(false);
         configService.setLocal('pet.enabled', false);
-        if (checked) Message.error('The desktop pet could not be turned on.');
+        if (checked) {
+          Message.error({ id: 'pet-enable-failed', content: 'The desktop pet could not be turned on.' });
+        }
       }
     };
     systemSettings.setPetEnabled.invoke({ enabled: checked }).then(settle).catch(settle);
