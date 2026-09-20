@@ -189,7 +189,19 @@ export interface KelMemoryRecord {
   source_ref: string;
   confidence: number;
   updated: number;
-  value?: Record<string, unknown>;
+  /** The engine returns the stored JSON column as-is (a string in the /api/work payload). */
+  value?: string | Record<string, unknown>;
+}
+
+/** A change Kel proposes but never applies by itself — a person accepts, defers, or rejects it. */
+export interface KelMemoryProposal {
+  id: string;
+  kind: string;
+  state: string;
+  topic?: string;
+  summary?: string;
+  why?: string;
+  updated?: number;
 }
 
 export interface KelMapSection {
@@ -213,7 +225,11 @@ export interface KelRecipeEntry {
 
 export interface KelWork {
   project_id: string;
-  memory: { records: KelMemoryRecord[]; conflicts: Array<Record<string, unknown>> };
+  memory: {
+    records: KelMemoryRecord[];
+    proposals: KelMemoryProposal[];
+    conflicts: Array<Record<string, unknown>>;
+  };
   map: { version: number; fingerprint: string; updated: number; note?: string; sections: KelMapSection[] } | null;
   recipes: { entries: KelRecipeEntry[] };
 }
@@ -222,7 +238,14 @@ export const kelWork = (conversation = 'main') =>
   call<KelWork>(`/api/work?conversation=${encodeURIComponent(conversation)}`);
 
 export const kelMemoryAction = (
-  action: 'confirm' | 'retract' | 'forget' | 'correct',
+  action:
+    | 'confirm'
+    | 'retract'
+    | 'forget'
+    | 'correct'
+    | 'accept_proposal'
+    | 'reject_proposal'
+    | 'defer_proposal',
   id: string,
   extra: Record<string, unknown> = {},
   conversation = 'main'

@@ -1,0 +1,37 @@
+{
+  "phase": "D9",
+  "when": "2026-09-20T14:24:07.046Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d9-baQFlK",
+  "proposals": {
+    "a": "5b71d1ac-951c-4d46-bf29-8f29c4185727",
+    "b": "7145be83-6126-4f84-bd64-aa4c1bf4fed8"
+  },
+  "verdict": {
+    "engine_booted": true,
+    "project_is_default": true,
+    "queue_has_two_pending": true,
+    "nothing_applied_before_a_decision": true,
+    "defer_keeps_it_queued": true,
+    "accept_applies_the_change": true,
+    "accept_preserves_history": true,
+    "accept_leaves_only_the_other": true,
+    "reject_empties_the_queue": true,
+    "rejected_change_never_applied": true,
+    "records_after": [
+      {
+        "topic": "deploy target",
+        "status": "active",
+        "trust": 2,
+        "value": "{\"host\": \"staging-2\"}"
+      },
+      {
+        "topic": "deploy target",
+        "status": "superseded",
+        "trust": 2,
+        "value": "{\"host\": \"staging-1\"}"
+      }
+    ],
+    "engine_stopped": true
+  },
+  "all_green": true
+}

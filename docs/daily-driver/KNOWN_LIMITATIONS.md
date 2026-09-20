@@ -64,3 +64,9 @@ Honest, current list (grows/shrinks as phases complete):
   toggle is per-session and not persisted — a deliberate choice (internals disclosure is an explicit
   act, not a stored preference). The tier ladder is not user-configurable and has no user-facing knob
   by design.
+- Learning promotion (D9): the engine's pipeline (queue → accept/defer/reject, trust-model
+  application, superseded history) is complete; the Knowledge surface shows at most 5 waiting
+  suggestions at once (a "N more waiting" line points at the rest) and lives in the projects
+  workspace, not a global inbox. Rejected suggestions deliberately do not re-ask until their
+  evidence changes (engine behaviour, pinned). Proposals are produced by the engine's own loops
+  (vetting/repo-state/corrections) — there is no manual "create proposal" UI, and none is planned.

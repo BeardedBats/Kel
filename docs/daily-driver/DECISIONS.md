@@ -128,4 +128,19 @@
   lines, exactly one seed label and it sits after the clean office empty state, engine comment +
   guard substring). (3) D0–D3 selection/boundary evidence: `python -m unittest discover -s tests -p
   "test_workforce_*.py"` → **277 tests OK** plus `test_v14_team` 19 OK.
+- **D-020 — D9 approach.** The engine's proposal pipeline was already complete and pinned (queue →
+  defer/accept/reject; acceptance applies through the same trust model as corrections; the previous
+  value survives as superseded history; a rejected proposal never re-asks until its evidence
+  changes; `/api/work` already returned the open queue). The gap was the human side: the client type
+  did not declare the queue and the Knowledge surface could not decide on it. D9 therefore (1) types
+  the always-returned queue (`KelMemoryProposal`) and extends `kelMemoryAction` with the three
+  decision actions, (2) renders a "Kel suggests" review card in the Knowledge view — quiet when
+  empty, user language ("nothing here applies by itself."), the engine's own `why`, and exactly
+  three honest choices (Use this / Not now / No thanks), capped at 5 visible with a count line, and
+  (3) proves the loop live over the shipped HTTP surface
+  (`packaging/verify-learning-proposals.cjs`: nothing applied before a decision; defer keeps it
+  queued; accept applies + preserves superseded history; reject never applies). The journey also
+  exposed a real contract bug: `/api/work` passes the stored JSON column through as a string, so
+  the client's `value?: Record<string, unknown>` was wrong — now `string | Record<string, unknown>`.
+  No global "learnings inbox" was created; the review lives where the knowledge lives (Projects).
 - (append as work proceeds; every non-obvious choice gets a line)

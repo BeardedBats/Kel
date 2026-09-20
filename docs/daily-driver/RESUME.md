@@ -70,7 +70,13 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   action sit behind a "Developer view" toggle; `team-surface.test.ts` pins the gate, the language,
   and the seed-leak ban). D0–D3 selection/boundary evidence recorded: **277 workforce tests OK**
   (`python -m unittest discover -s tests -p "test_workforce_*.py"`) + 19 team tests OK.
-- **Next: D9 — controlled learning promotion** (directive §21–22).
+- **D9 done (this commit).** Controlled learning promotion: the engine's proposal pipeline was already
+  complete; the human side was missing. The open queue is now typed and the Knowledge view renders a
+  "Kel suggests" review card ("nothing here applies by itself.", Use this / Not now / No thanks →
+  accept/defer/reject_proposal, 5-visible cap). Live HTTP journey all-true
+  (`packaging/verify-learning-proposals.cjs` + `evidence/d9/`); found + fixed a real contract bug
+  (`/api/work` returns record `value` as a JSON string — the client type now matches).
+- **Next: D10 — Recipes** (directive §23–24).
 
 ## Where
 
