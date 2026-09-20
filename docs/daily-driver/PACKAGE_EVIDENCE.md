@@ -48,7 +48,11 @@ source HEAD → renderer build → engine build → installer → installed cand
 - [ ] Installed probe: Desktop-Pet enable refusal shows exactly ONE toast — **D0-004 live replay** (GUI).
 - [ ] Installed probe: Providers page shows human statuses; Set up → Save + Verify — **D1 replay** (GUI).
 - [ ] Update check fails closed truthfully in the installed app — **D2 replay** (GUI).
-- [ ] Upgrade preservation: install over a disposable populated prior install — **D2/Journey-7**.
+- [x] Upgrade preservation: install-over-self on the candidate preserved the durable work — before
+      the reinstall the prepared engine root held 1 job ("Summarise the Q3 customer feedback into a
+      one-page brief") + 1 lease; the installer updated the candidate in place (correct update-mode
+      target), `Kel.exe` refreshed, the bundled engine hash unchanged (`17c08c57…`), and **both the
+      job and the lease were intact afterwards** (data root untouched by the installer).
 - [x] Install dir: `C:\Users\Nick\KelDailyDriverCandidate`; data root prepared at
       `C:\Users\Nick\KelDailyDriverRuns\prepared`.
 - [x] Preserved installs: `KelV16ReviewInstall` (Sep 19 17:17) and `KelVisualReauditInstall`
