@@ -1,0 +1,34 @@
+# ROADMAP — Kel Daily Driver Expansion (lane `dev/daily-driver`)
+
+Guiding principle: **ONE CAPABLE ASSISTANT WITH HIDDEN ORCHESTRATION.**
+
+Out of scope for this tranche (per marathon instruction §35): profiles, visible workforce dashboard,
+normal-user roster management, unlimited nested spawning, second memory system, second workflow
+engine, second authorization system, second task database, enterprise RBAC, giant vector DB, Rust
+migration, public A2A, fashionable rewrites.
+
+| Phase | Scope | Status |
+| --- | --- | --- |
+| D0 | Close final V1.6 human-visual residuals (HVRA-MINOR-001/002, HVRA-SUG-001/002) | **IN PROGRESS** |
+| D1 | Provider + model onboarding (truthful states, setup flows, Save+Verify, health/failure UX) | QUEUED |
+| D2 | Update reliability (safe installer-based upgrade; user-visible update state; no data loss) | QUEUED |
+| D3 | Remote / WebUI usable away from the desktop; explicit enable; hardening | QUEUED |
+| D4 | Transcription first-class workflow (record/upload/folders/transcript actions/send-to-chat) | QUEUED |
+| D5 | Needs Your Attention as the canonical interruption center + restrained notifications | QUEUED |
+| D6 | Continuation / resumability ("while you were away" brief; real resume actions) | QUEUED |
+| D7 | Long-running autonomy (durable objective/step, completion criteria, human gates) | QUEUED |
+| D8 | Adaptive staffing (D0–D4 tiers; guardrails; hidden internally) | QUEUED |
+| D9 | Learning promotion (high-confidence, low-risk only; provenance/retraction preserved) | QUEUED |
+| D10 | Recipes (declarative; compile into existing execution; evidence-based suggestions) | QUEUED |
+| D11 | Cross-device continuity (server-authoritative state) | QUEUED |
+| D12 | Smarter provider routing (task fit, health, cost where known; honest fallbacks) | QUEUED |
+| D13 | Failure recovery polish (provider/CLI/engine/network/remote/transcription/update) | QUEUED |
+| D14 | Optional Advanced Activity view (high-level only; optional + unobtrusive) | QUEUED |
+| D15 | Security / sandbox boundary improvements (no bespoke hypervisor) | QUEUED |
+| D16 | Live capability revision (revocation narrows immediately; no silent widening) | QUEUED |
+| D17 | Plugin / integration developer surface (+ connected/needs-setup/unavailable UX) | QUEUED |
+| D18 | Synthetic daily-driver dogfood journeys (10 journeys; friction fixes) | QUEUED |
+| D19 | Full regression + fresh package + installed candidate + final records | QUEUED |
+
+Cross-cutting (always on): internal self-review per phase; focused tests after every feature cluster;
+disk-first durable state; honest development identity; no release, no publish, no new audit campaign.
