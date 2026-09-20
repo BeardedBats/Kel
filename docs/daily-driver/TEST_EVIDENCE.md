@@ -16,11 +16,18 @@
 
 | When (local) | Scope | Command | Result | Notes |
 | --- | --- | --- | --- | --- |
-| 2026-09-19 ~23:03 | desktop baseline | `bunx vitest run` | 15 files / 156 PASS | pre-D0 tree (version bump only) |
-| 2026-09-19 ~23:05 | engine identity | `python -m unittest discover -s tests -p "test_v16_r8_identity.py"` | 3 tests OK | pins desktop version == engine `__version__` == `1.7.0-dev` |
-| 2026-09-19 ~23:05 | new job-label suite | `bunx vitest run tests/unit/job-labels.test.ts` | 1 file / 5 PASS | HVRA-MINOR-001 |
-| 2026-09-19 ~23:06 | desktop after D0 edits | `bunx vitest run` | 16 files / 163 PASS | tsc found TS7011 (fixed with explicit annotation) |
-| 2026-09-19 ~23:08 | desktop typecheck (final D0 tree) | `bunx tsc --noEmit` | exit 0 | — |
-| 2026-09-19 ~23:08 | desktop full (final D0 tree) | `bunx vitest run` | 16 files / 163 PASS | — |
-| 2026-09-19 ~23:09 | focused D0 suites | `bunx vitest run tests/unit/donor-policy.test.ts tests/unit/job-labels.test.ts tests/unit/needs-attention.test.ts` | 3 files / 24 PASS | donor-policy now 11 tests (2 new pins) |
-| 2026-09-19 ~23:07 | engine full suite (verbose) | `python -m unittest discover -s tests -v` | IN PROGRESS | result recorded here when complete; one `F` observed in an earlier, killed partial run — identify + resolve before D19 |
+| 23:03 | desktop baseline | `bunx vitest run` | 15 files / 156 PASS | pre-D0 tree |
+| 23:05 | engine identity | `python -m unittest discover -s tests -p "test_v16_r8_identity.py"` | 3 OK | pins desktop version == engine `__version__` == `1.7.0-dev` |
+| 23:05 | new job-label suite | `bunx vitest run tests/unit/job-labels.test.ts` | 5 PASS | HVRA-MINOR-001 |
+| 23:06 | desktop after D0 edits | `bunx vitest run` | 16 files / 163 PASS | tsc had found TS7011 → fixed with explicit annotation |
+| 23:08 | desktop typecheck (final D0 tree) | `bunx tsc --noEmit` | exit 0 | — |
+| 23:08 | desktop full (final D0 tree) | `bunx vitest run` | 16 files / 163 PASS | — |
+| 23:09 | focused D0 suites | `donor-policy + job-labels + needs-attention` | 3 files / 24 PASS | donor-policy 11 tests (2 new pins) |
+| 23:07→23:19 | engine full suite #1 | `python -m unittest discover -s tests -v` | **1019 tests, 1 failure** | failure = `test_v141_claims` (pre-existing, see ENG-001) |
+| 23:11 | claims single file (after re-pin) | `python -m unittest tests.test_v141_claims -v` | 2 OK | — |
+| 23:14 | D1 typecheck | `bunx tsc --noEmit` | exit 0 | — |
+| 23:14 | D1 focused | `provider-status + job-labels + donor-policy` | 3 files / 27 PASS | provider-status 11 tests |
+| 23:15 | D1 full | `bunx vitest run` | 17 files / 174 PASS | — |
+| 23:19 | engine full suite #2 (re-run) | `python -m unittest discover -s tests` | **1019 tests OK (275.5s)** | fully green |
+| 23:18 | D2 typecheck | `bunx tsc --noEmit` | exit 0 | — |
+| 23:18 | D2 full | `bunx vitest run` | 18 files / 177 PASS | includes `update-policy.test.ts` |
