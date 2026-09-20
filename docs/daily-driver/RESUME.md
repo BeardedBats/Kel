@@ -24,9 +24,15 @@ Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` →
   affordances) and a live HTTP fixture flow (`packaging/verify-transcription-e2e.cjs`, practice
   mode): stream 4.6s → text; upload → combine (8.8s, source consumed); exports (485 chars / 403 KB);
   folders create/rename/assign/unassign; key set → `muse` / clear → `fixture`; plain-language errors.
-- **NEXT: D5 — Needs Your Attention + notifications** (§12–13). Start at
-  `renderer/components/kel/KelNeedsAttention.tsx` + `needsAttention.ts` (authoritative-state derived)
-  and the notification hooks (`useBrowserNotification`); restrained events only.
+- **D5 Needs-Your-Attention + notifications done (this commit).** Added the `connection` kind
+  (provider setup needs, user language, routed to Providers, project-unbound) and a transition-only
+  notification core + hook (`attentionNotificationCore.ts`, `useKelAttentionNotification`) wired into
+  the shell: silent first snapshot, meaningful kinds only, 30-min per-item cooldown, 3 events/tick,
+  delivery via the existing notification bridge (focus + setting gating unchanged). Snooze/Later
+  intentionally absent (would grow a second state store).
+- **NEXT: D6 — Continuation / resumability** (§14–15). Start from `state.continuation` and the
+  existing resume/retry touch points (Work/GUID/Needs-Attention actions); make reopening Kel
+  effortless with real actions only; test restart during active work.
 
 ## Where
 

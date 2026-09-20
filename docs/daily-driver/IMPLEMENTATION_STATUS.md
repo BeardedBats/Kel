@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D4 complete; entering D5)
+Updated: 2026-09-20 (D0–D5 complete; entering D6)
 
 ## Lane
 
@@ -39,10 +39,14 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   (`packaging/verify-transcription-e2e.cjs` + `evidence/d4/`); searchable recents added client-side
   (one library, no second store); policy pins for the no-spacebar rule, action wiring, and
   downloads/copy/share affordances.
+- **D5** (this commit) — Needs-Your-Attention gained the `connection` kind (provider setup needs,
+  user language, routed to Providers, project-unbound, sorted below live asks) and the shell gained
+  restrained transition-driven desktop notifications (silent first snapshot, meaningful kinds only,
+  30-min cooldown, 3/tick, existing focus/setting gating). Snooze/Later omitted by design.
 
 ## Next item
 
-- **D5 — Needs Your Attention + notifications** (§12–13): the canonical human-interruption surface
-  derived from authoritative state (approvals, permission asks, blocking questions, provider setup,
-  failed/uncertain/completed work, update/restart), with grouping/priority/age/reason, direct actions,
-  automatic removal when resolved, and restrained desktop notifications for meaningful events only.
+- **D6 — Continuation / resumability** (§14–15): reopening Kel becomes effortless — resumption
+  briefs from durable truth (completed / active / stopped / needs-Nick / resumable / blockers), real
+  actions only (Resume, Retry, Continue, Review, Approve, Change provider, Open result, Open
+  conversation), restart-during-active-work testing.

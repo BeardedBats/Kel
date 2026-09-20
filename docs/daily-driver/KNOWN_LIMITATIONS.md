@@ -38,3 +38,9 @@ Honest, current list (grows/shrinks as phases complete):
   (4) aioncore still binds loopback only; the desktop app's own local calls bypass the gateway by
   design (they are not browser traffic). (5) `POST /api/webui/reset-password` is now session-gated
   over the gateway; the desktop settings flow (direct local call) still works.
+- Attention + notifications (D5): notifications fire while Kel is running (the driver polls the
+  authoritative reads in the shell). A fully quit Kel cannot notify — there is no background service,
+  and none is proposed. Snooze/Later is intentionally absent (it would grow a second state store
+  beyond the derived-only surface). Update/restart attention items are omitted until an authoritative
+  renderer-visible flag exists (update channel closed in D2). The connection item covers engine
+  provider setup needs; the Providers page remains the deeper surface.
