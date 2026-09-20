@@ -166,6 +166,10 @@ export default function KelAutonomyPage() {
 
         {!error && leases !== null && (
           <KelCard title="Active permissions">
+            <p className="kel-meta">
+              Changes apply immediately — revoking a permission stops the next step, even while work is
+              running, and nothing widens on its own: extra access only follows an access request you approve.
+            </p>
             {leases.length === 0 ? (
               <KelEmpty
                 title="No permissions yet in this project."

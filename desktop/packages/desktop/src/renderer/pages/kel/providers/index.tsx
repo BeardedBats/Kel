@@ -4,6 +4,7 @@
  * Design: docs/v1.4/KEL_V1.4_PROVIDER_SPEC.md.
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   KelButton,
   KelCard,
@@ -16,14 +17,18 @@ import {
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
+  kelCapabilities,
   kelProviders,
+  type KelCapabilityRow,
   type KelCredentialMetadata,
   type KelProviderStatus,
 } from '@renderer/components/kel/kelApi';
 import { presentProvider, toneChipClass, usableNow } from '@renderer/components/kel/providerStatus';
 
 const Providers: React.FC = () => {
+  const navigate = useNavigate();
   const [providers, setProviders] = useState<KelProviderStatus[] | null>(null);
+  const [capabilities, setCapabilities] = useState<KelCapabilityRow[] | null>(null);
   const [credentialRows, setCredentialRows] = useState<KelCredentialMetadata[]>([]);
   const [capability, setCapability] = useState('text');
   const [prefer, setPrefer] = useState('');
@@ -51,12 +56,14 @@ const Providers: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      const [list, credentials] = await Promise.all([
+      const [list, credentials, capabilityRows] = await Promise.all([
         kelProviders.list(),
         kelProviders.credentials(),
+        kelCapabilities().catch((): KelCapabilityRow[] => []),
       ]);
       setProviders(list.providers ?? []);
       setCredentialRows(credentials.credentials ?? []);
+      setCapabilities(capabilityRows);
       setError(null);
     } catch (err) {
       setProviders([]);
@@ -249,6 +256,45 @@ const Providers: React.FC = () => {
             </KelCard>
             );
           })}
+
+        <KelCard
+          title="Integrations"
+          chip={
+            <span className="kel-meta">
+              {capabilities === null
+                ? 'checking'
+                : capabilities.every((row) => row.availability === 'available')
+                  ? 'all available'
+                  : 'some need setup'}
+            </span>
+          }
+        >
+          <p className="kel-sub">
+            The tools Kel can use in this app, straight from the engine — connected, needing setup, or
+            unavailable, with the reason. Per-chat control lives beside the message box (the tools pill).
+          </p>
+          {(capabilities ?? []).map((row) => (
+            <div className="kel-row" key={row.id}>
+              <div className="kel-attention__text">
+                <strong>{row.label}</strong>
+                <span className="kel-meta">
+                  {row.availability === 'available'
+                    ? 'Connected'
+                    : row.availability === 'needs_setup'
+                      ? `Needs setup — ${row.availability_reason || 'a key or setting is missing'}`
+                      : `Unavailable — ${row.availability_reason || 'not on this machine'}`}
+                  {row.effective === 'on' ? ' · In use' : ' · Off'}
+                </span>
+              </div>
+              <span className="kel-grow" />
+              {row.availability === 'needs_setup' && (
+                <KelButton variant="quiet" onClick={() => navigate('/settings/tools')}>
+                  Set up
+                </KelButton>
+              )}
+            </div>
+          ))}
+        </KelCard>
 
         <KelCard title="Readiness preflight">
           <p className="kel-sub">

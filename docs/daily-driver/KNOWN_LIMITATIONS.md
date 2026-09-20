@@ -99,3 +99,11 @@ Honest, current list (grows/shrinks as phases complete):
   writing a file finishes that write before the stop lands (that is the engine's safe-check semantics,
   unchanged). Finished work is never undone by the stop, and resuming after a stop is a deliberate act
   (new work must be asked for again).
+- Live revision (D16): widening always requires a user resolution — there is deliberately no
+  "remember this forever" toggle in the free-form path (the engine supports a project-scoped grant,
+  but the surface only asks per request). Evidence rounds the target to directories and the grant is
+  a one-time use; a second identical action goes back through the request flow.
+- Integrations overview (D17): it reports the engine's inventory; per-conversation overrides and
+  "enable once" stay in the composer's tools pill, and actual setup happens on the Settings → Tools
+  surface. Unavailable entries explain the engine's reason and offer no button — there is nothing to
+  click when the machine genuinely cannot run something.

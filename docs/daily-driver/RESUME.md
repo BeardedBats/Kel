@@ -107,7 +107,14 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   the effect spelled out; the engine call exists only in the confirmed branch. Live journey
   all-green: lease ACTIVE → stop → REVOKED (`reason: emergency stop`), work PAUSED, forged `actor`
   refused by the engine itself (`packaging/verify-emergency-stop.cjs` + `evidence/d15/`).
-- **Next: D16 — live capability revision** (directive §32).
+- **D16 done (D16+D17 commit).** Live capability revision: revocation narrows the next check
+  immediately; a pending request changes nothing; a user grant widens for one use and does not
+  stick. Unknown boundary scopes are now refused loudly (the plural-`roots` silent dead grant is
+  gone); autonomy suite 32 OK; engine full suite 1025 OK.
+- **D17 done (D16+D17 commit).** Integrations overview on Providers: Connected / Needs setup /
+  Unavailable with the engine's reason, from `/api/capabilities` — the same rows the per-chat tools
+  pill draws; Set up points at Settings → Tools. Live journey all-green.
+- **Next: D18 — synthetic daily-driver dogfood journeys** (directive §36).
 
 ## Where
 
