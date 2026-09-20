@@ -22,8 +22,12 @@ Honest, current list (grows/shrinks as phases complete):
 - Internal donor remnants retained deliberately (non-user-visible): license headers, internal NSIS
   symbols, and `HTTP-Referer: https://aionui.com` on two provider API client paths. Recorded for
   future cleanup decisions; not part of the user surface.
-- V1.6 release evidence and frozen tags intentionally not updated (historical record).
-- Remote surface (D3): enforcement is gateway-side because aioncore's local mode never gates its own
+- Transcription (D4): the live provider (Muse, `api.meta.ai`) needs a Meta API key, which is not
+  available in this environment — the credential-free "Practice mode" is the verified live path
+  (deterministic text; the UI labels it honestly). Key set/clear flips the reported mode truthfully
+  (`muse` ↔ `fixture`); the Muse transcription call itself is unverified here. UI-level click-through
+  (microphone capture, OS file picker) is deferred to the packaged battery / D18 (no audio hardware
+  in this environment); the policy pins + the live HTTP flow cover the shipped logic.- Remote surface (D3): enforcement is gateway-side because aioncore's local mode never gates its own
   business routes. Consequences: (1) pre-login, the SPA's boot probes (client settings/config/cron/
   realtime WS) are refused with 401 — expected noise until login; the login page renders with the
   default theme. (2) Session validity is cached 5s (positives), so a revoked cookie may pass for up

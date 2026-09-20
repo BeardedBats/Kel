@@ -1,0 +1,81 @@
+{
+  "dataDir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d4-nm2FfG",
+  "checks": {
+    "status": {
+      "mode": "fixture",
+      "label": "Practice mode",
+      "has_key": false,
+      "live_capable": true,
+      "detail": "Practice mode transcribes locally with clear, repeatable text — add a Meta API key in Settings to use Muse."
+    },
+    "upload": {
+      "id": "252d5d71-54a4-4a24-b62b-66dc55a0b65c",
+      "status": "complete",
+      "has_audio": true,
+      "duration_ms": 4200,
+      "text_head": "This is a local practice transcript so the recording and saving flow can be used before a "
+    },
+    "stream": {
+      "session_created": true,
+      "live": true,
+      "chunk_ok": true,
+      "mid_text_head": "This is a local practice transcript so the recording and sav",
+      "final_text_head": "This is a local practice transcript so the recording and saving flow can be used before a ",
+      "duration_ms": 4600
+    },
+    "save_recording": {
+      "id": "30d9b71d-aeab-4b8f-85e9-abadf1bf8321",
+      "has_audio": true,
+      "name": "Local Practice Transcript So the Recording and Saving Flow"
+    },
+    "folders": {
+      "folder": "D4 folder",
+      "renamed": "D4 renamed recording",
+      "assigned": true,
+      "unassigned": true
+    },
+    "combine": {
+      "duration_ms": 8800,
+      "text_head": "This is a local practice transcript so the recording and saving flow can be used before a "
+    },
+    "exports": {
+      "text": {
+        "name": "D4 renamed recording.txt",
+        "chars": 485
+      },
+      "audio": {
+        "name": "D4 renamed recording.wav",
+        "mime": "audio/wav",
+        "bytes": 403244
+      }
+    },
+    "library": {
+      "folders": 1,
+      "transcripts": 1,
+      "combined_present": true,
+      "upload_consumed_by_combine": true
+    },
+    "key_lifecycle": {
+      "set_ack": true,
+      "mode_after_set": "muse",
+      "cleared": true,
+      "mode_after_clear": "fixture"
+    },
+    "plain_errors": [
+      {
+        "action": "stream_chunk",
+        "got_error": true,
+        "plain": true,
+        "message": "stream_chunk -> 400 That recording session has ended."
+      },
+      {
+        "action": "export_audio",
+        "got_error": true,
+        "plain": true,
+        "message": "export_audio -> 400 That transcript no longer exists."
+      }
+    ]
+  },
+  "startedAt": "2026-09-20T13:37:50.315Z",
+  "finishedAt": "2026-09-20T13:37:51.938Z"
+}

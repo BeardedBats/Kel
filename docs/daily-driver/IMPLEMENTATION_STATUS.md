@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D3 complete; entering D4)
+Updated: 2026-09-20 (D0–D4 complete; entering D5)
 
 ## Lane
 
@@ -35,10 +35,14 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   validate-gates everything against aioncore's `/api/auth/user` (allowlist: login/logout/qr-login/
   api-auth), proxies `/qr-login`, and gates WS upgrades. Verified with the real stack (raw boundary
   matrix + Playwright browser, `evidence/d3/`). Wrong first attempt reverted (`b13301a`).
+- **D4** (this commit) — transcription verified live in practice mode
+  (`packaging/verify-transcription-e2e.cjs` + `evidence/d4/`); searchable recents added client-side
+  (one library, no second store); policy pins for the no-spacebar rule, action wiring, and
+  downloads/copy/share affordances.
 
 ## Next item
 
-- **D4 — Transcription first-class workflow** (§11): record/upload/drag-drop, folders, recent
-  transcripts, detail/rename/copy/download (transcript + audio), progress/cancel/retry, API-key
-  setup, conversation/Project integration; keep the "no spacebar start/stop" rule; no second
-  document database.
+- **D5 — Needs Your Attention + notifications** (§12–13): the canonical human-interruption surface
+  derived from authoritative state (approvals, permission asks, blocking questions, provider setup,
+  failed/uncertain/completed work, update/restart), with grouping/priority/age/reason, direct actions,
+  automatic removal when resolved, and restrained desktop notifications for meaningful events only.

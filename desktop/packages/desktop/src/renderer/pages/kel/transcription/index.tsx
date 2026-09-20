@@ -114,6 +114,7 @@ const TranscriptionPage: React.FC = () => {
   const recEpochRef = useRef(0);
   const [combineOpen, setCombineOpen] = useState(false);
   const [combineSource, setCombineSource] = useState('');
+  const [recentSearch, setRecentSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const selected = useMemo(
@@ -124,6 +125,14 @@ const TranscriptionPage: React.FC = () => {
     () => [...library.transcripts].sort((a, b) => b.created - a.created),
     [library.transcripts]
   );
+  // D4: search narrows the recents (and folder contents) client-side — one library, no second store.
+  const visibleRecent = useMemo(() => {
+    const needle = recentSearch.trim().toLowerCase();
+    if (!needle) return recent;
+    return recent.filter(
+      (item) => item.name.toLowerCase().includes(needle) || (item.text || '').toLowerCase().includes(needle)
+    );
+  }, [recent, recentSearch]);
 
   const refresh = useCallback(async () => {
     try {
@@ -646,7 +655,7 @@ const statusCopy =
               </div>
             )}
             {library.folders.map((folder) => {
-              const children = recent.filter((item) => item.folder_id === folder.id);
+              const children = visibleRecent.filter((item) => item.folder_id === folder.id);
               const open = expanded.has(folder.id);
               return (
                 <div key={folder.id}>
@@ -735,13 +744,27 @@ const statusCopy =
           </div>
           <div className={styles.divider} />
           <div className={styles.sectionTitle}>Recent</div>
+          <Input
+            size='small'
+            allowClear
+            placeholder='Search transcripts'
+            value={recentSearch}
+            onChange={setRecentSearch}
+            style={{ margin: '0 8px 6px', width: 'calc(100% - 16px)' }}
+            data-testid='transcript-search'
+          />
           <div className={styles.scrollArea} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
                 Nothing here yet.
               </div>
             )}
-            {recent.map((item) => (
+            {recent.length > 0 && visibleRecent.length === 0 && (
+              <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
+                No transcripts match that search.
+              </div>
+            )}
+            {visibleRecent.map((item) => (
               <button
                 key={item.id}
                 type='button'
