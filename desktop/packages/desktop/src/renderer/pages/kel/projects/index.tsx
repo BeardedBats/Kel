@@ -16,7 +16,7 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { kelMapAction, kelMemoryAction, kelRecipePreview, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
+import { kelMapAction, kelMemoryAction, kelRecipePreview, kelRecipeRun, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
 
 type View = 'knowledge' | 'map' | 'recipes';
 
@@ -326,6 +326,32 @@ export default function KelProjectsPage() {
                       }
                     >
                       Preview (dry run)
+                    </KelButton>,
+                    <KelButton
+                      key={`${recipeId}-run`}
+                      variant="secondary"
+                      disabled={busy !== null || !recipeId}
+                      onClick={() => {
+                        setBusy(`Run ${recipeId}`);
+                        setNote(null);
+                        void (async () => {
+                          try {
+                            const out = await kelRecipeRun(recipeId);
+                            setNote(
+                              `Run submitted — follow it on the Work page (${String(out.submission).slice(0, 8)}).`
+                            );
+                            await load();
+                          } catch (err) {
+                            setNote(
+                              `Run failed. ${failureSentence(err, 'The engine did not answer — try again.')}`
+                            );
+                          } finally {
+                            setBusy(null);
+                          }
+                        })();
+                      }}
+                    >
+                      Run
                     </KelButton>,
                   ];
                 })}

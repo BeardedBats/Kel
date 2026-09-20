@@ -70,3 +70,8 @@ Honest, current list (grows/shrinks as phases complete):
   workspace, not a global inbox. Rejected suggestions deliberately do not re-ask until their
   evidence changes (engine behaviour, pinned). Proposals are produced by the engine's own loops
   (vetting/repo-state/corrections) — there is no manual "create proposal" UI, and none is planned.
+- Recipes (D10): runs compile into normal jobs (the durable submission queue drains one at a time);
+  without a provider credential a submitted run sits READY/WAITING_RESOURCE here — the loop itself is
+  verified, provider execution is not. Run sends no inputs from the UI yet: recipes that declare
+  required inputs surface the engine's own "needs input" refusal as a plain note rather than a form
+  (an input form is a candidate for a later phase, not invented now).

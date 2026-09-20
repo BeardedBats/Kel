@@ -266,6 +266,27 @@ export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknow
     conversation: 'main',
   });
 
+/** Draft a recipe from a settled job — preview only; saving needs explicit confirmation. */
+export const kelRecipePropose = (jobId: string, conversation = 'main') =>
+  call<{ recipe: Record<string, unknown>; preview: { steps: string[]; kind: string; milestones: number } }>(
+    '/api/recipes',
+    { action: 'propose_from_job', job_id: jobId, conversation }
+  );
+
+/** Run a recipe by compiling it into the existing execution (a normal job). */
+export const kelRecipeRun = (
+  recipeId: string,
+  inputs: Record<string, unknown> = {},
+  conversation = 'main'
+) => call<{ submission: string }>('/api/recipes', { action: 'run', recipe_id: recipeId, inputs, conversation });
+
+/** Save a project recipe. The engine refuses unless confirmation is explicit. */
+export const kelRecipeSave = (recipe: Record<string, unknown>, conversation = 'main') =>
+  call<{ saved: boolean; digest: string; recipe_id?: string; version?: string; reason?: string }>(
+    '/api/recipes',
+    { action: 'save', recipe, confirm: true, conversation }
+  );
+
 export interface KelProviderStatus {
   provider: string;
   label: string;

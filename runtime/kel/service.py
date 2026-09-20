@@ -505,6 +505,14 @@ class Service:
                              'recipe':{'recipe_id':data.get('recipe_id'),
                                        'inputs':data.get('inputs') or {}}})
             return {'submission':sid}
+        if action=='propose_from_job':
+            return library.propose_from_job(data.get('job_id',''))
+        if action=='save':
+            recipe=data.get('recipe')
+            if not isinstance(recipe,dict):
+                raise PolicyError('A recipe object is required')
+            return library.save(recipe,scope='project',project_id=project_id,
+                                confirm=data.get('confirm') is True)
         raise PolicyError('Unknown recipe action')
 
     def _link_origin(self,job_id,conversation_id,sid):
