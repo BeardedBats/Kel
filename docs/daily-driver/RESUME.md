@@ -1,6 +1,16 @@
 # RESUME — how to continue this marathon (disk-first)
 
-Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` → `FEATURE_LEDGER.md`.
+**Restore the entire marathon by reading exactly three files, in this order:**
+
+1. `MARATHON_DIRECTIVE.md` — the complete governing program (D3–D19, package, install, durable-state and
+   testing rules, out-of-scope list, return/end-state rules, final response format).
+2. `MARATHON_STATE.md` — the live checkpoint: HEAD, current phase, current item, exact next action,
+   completed phases, latest test state, remaining queue.
+3. `RESUME.md` (this file) — how to run it: commands, package/install roots, crash discipline, never-rules.
+
+Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATUS.md`, `FEATURE_LEDGER.md`,
+`DECISIONS.md`, `TEST_EVIDENCE.md`, `PACKAGE_EVIDENCE.md`, `KNOWN_LIMITATIONS.md`, `DOGFOOD_JOURNEYS.md`,
+`ROADMAP.md`.
 
 ## Checkpoint (2026-09-20)
 
@@ -43,7 +53,8 @@ Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` →
 
 1. `cd /c/Users/Nick/Desktop/Kel/kel-daily-driver` and `git status` + `git log --oneline -10`
    (confirm clean tree and the latest checkpoint).
-2. Open `MARATHON_STATE.md`; continue from **CURRENT PHASE** / **NEXT QUEUE**.
+2. Open `MARATHON_DIRECTIVE.md` (the program), then `MARATHON_STATE.md`; continue from
+   **CURRENT PHASE** / **CURRENT ITEM** / **EXACT NEXT ACTION**.
 3. Follow the per-phase loop; record evidence; commit; continue.
 
 ## Commands
