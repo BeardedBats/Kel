@@ -247,6 +247,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     staticDir: path.join(__dirname, '../renderer'),
     port: preferredPort,
     allowRemote,
+    requireAuth: true,
     // Must align with the desktop IPC path's backend dataDir (src/index.ts), otherwise
     // users see divergent SQLite state between desktop app and bundled WebUI.
     dataDir: getDataPath(),

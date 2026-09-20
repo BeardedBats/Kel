@@ -178,6 +178,8 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
       backendPort: 0, // invalid port → API proxy will fail cleanly
       port,
       allowRemote,
+      // No auth authority exists in frontend-only mode — fail closed on every API call.
+      requireAuth: true,
     });
     currentHandle = handle;
 
@@ -206,6 +208,7 @@ async function runStart(flags: Map<string, string | true>): Promise<void> {
       staticDir,
       port,
       allowRemote,
+      requireAuth: true,
       dataDir,
       logDir,
       dirs: {

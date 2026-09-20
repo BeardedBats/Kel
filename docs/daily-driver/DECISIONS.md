@@ -35,4 +35,21 @@
   (`BeardedBats/Kel`) remains the single source of truth and fails closed until Kel publishes release
   assets. Installer-based upgrades preserve user data by architecture; packaged upgrade verification
   is scheduled for the package phase. No cloud update service introduced.
+- **D-012 — D3 course correction (wrong-layer gateway reverted).** The first D3a attempt (commit
+  `33fbbeb`, reverted in `b13301a`) added a password/session gateway assuming the web-host proxies to
+  the Kel engine with its bearer token. Repository truth: the shipped app bundles aioncore
+  (`resources/bundled-aioncore/win32-x64`) and the web-host proxies to IT (`globalThis.__backendPort`);
+  the Kel engine is reached only by the main process. The revert restored the donor auth stack
+  untouched.
+- **D-013 — D3 enforcement lives in the web-host gateway.** aioncore runs in local mode ("auth
+  disabled") and never gated business routes: an anonymous LAN client could read conversations/
+  settings AND invoke `POST /api/webui/reset-password` (admin takeover). The gateway is the only
+  network boundary we own, so it now validates every proxied request against aioncore's own
+  `/api/auth/user` (5s positive / 2s negative cache per cookie; logout invalidates immediately;
+  fail-closed on transport errors). Anonymous allowlist: `/login`, `/logout`, `/qr-login`,
+  `/api/auth/user|status|refresh`. `/qr-login` is now proxied to the backend (previously it fell
+  through to the SPA and never reached aioncore). WS upgrades carry the same gate (validated while
+  the peek listener keeps collecting so cleanup+splice stay in one tick — the pattern the splice code
+  documents). No donor binary changes; desktop/CLI callers that talk to aioncore directly are
+  unaffected.
 - (append as work proceeds; every non-obvious choice gets a line)

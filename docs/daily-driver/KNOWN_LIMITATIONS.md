@@ -23,3 +23,12 @@ Honest, current list (grows/shrinks as phases complete):
   symbols, and `HTTP-Referer: https://aionui.com` on two provider API client paths. Recorded for
   future cleanup decisions; not part of the user surface.
 - V1.6 release evidence and frozen tags intentionally not updated (historical record).
+- Remote surface (D3): enforcement is gateway-side because aioncore's local mode never gates its own
+  business routes. Consequences: (1) pre-login, the SPA's boot probes (client settings/config/cron/
+  realtime WS) are refused with 401 — expected noise until login; the login page renders with the
+  default theme. (2) Session validity is cached 5s (positives), so a revoked cookie may pass for up
+  to 5s unless the logout happened through the gateway (logout invalidates immediately). (3) The
+  realtime WS bridge only connects after login; before that, reconnects are refused by the gate.
+  (4) aioncore still binds loopback only; the desktop app's own local calls bypass the gateway by
+  design (they are not browser traffic). (5) `POST /api/webui/reset-password` is now session-gated
+  over the gateway; the desktop settings flow (direct local call) still works.

@@ -35,6 +35,11 @@ export type WebHostOptions = {
   staticDir: string;
   port?: number;
   allowRemote?: boolean;
+  /**
+   * D3 — gateway session enforcement: refuse proxied requests without a live backend session
+   * (anonymous allowlist: /login, /logout, /qr-login, /api/auth/*).
+   */
+  requireAuth?: boolean;
   dataDir?: string;
   logDir?: string;
   dirs?: BackendSystemDirs;

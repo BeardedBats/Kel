@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-19 (D0 closed; entering D1)
+Updated: 2026-09-20 (D0–D3 complete; entering D4)
 
 ## Lane
 
@@ -25,7 +25,20 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
 - External provider credentials: probed in D1 (recorded in KNOWN_LIMITATIONS.md when known).
 - No public DNS / no external notification delivery assumed; fixtures + local validation where honest.
 
+## Completed lanes since (summary)
+
+- **D1** `0279a1d` — truthful provider states (Available / Needs setup / Temporarily unavailable /
+  Unavailable), Set up → Save + Verify.
+- **D2** `7c9df63` — donor update CDN severed; manual Kel GitHub check fails closed.
+- **D3** (this commit) — Remote/WebUI: the shipped surface had no session enforcement on business APIs
+  (anonymous LAN reads + anonymous `POST /api/webui/reset-password`); the web-host gateway now
+  validate-gates everything against aioncore's `/api/auth/user` (allowlist: login/logout/qr-login/
+  api-auth), proxies `/qr-login`, and gates WS upgrades. Verified with the real stack (raw boundary
+  matrix + Playwright browser, `evidence/d3/`). Wrong first attempt reverted (`b13301a`).
+
 ## Next item
 
-- **D1 — Provider + model onboarding**: truthful provider states, setup flows (API key entry → secure
-  storage → Save + Verify), model discovery/selection, health + failure UX in normal-user language.
+- **D4 — Transcription first-class workflow** (§11): record/upload/drag-drop, folders, recent
+  transcripts, detail/rename/copy/download (transcript + audio), progress/cancel/retry, API-key
+  setup, conversation/Project integration; keep the "no spacebar start/stop" rule; no second
+  document database.
