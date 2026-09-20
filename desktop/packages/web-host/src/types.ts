@@ -35,11 +35,6 @@ export type WebHostOptions = {
   staticDir: string;
   port?: number;
   allowRemote?: boolean;
-  /**
-   * D3 — browser authentication gateway (Kel). When present, proxied API/WS calls require a
-   * signed-in browser session and the engine bearer token is injected server-side.
-   */
-  auth?: { bearerToken?: string };
   dataDir?: string;
   logDir?: string;
   dirs?: BackendSystemDirs;

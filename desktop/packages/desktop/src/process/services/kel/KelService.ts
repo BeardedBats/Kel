@@ -11,14 +11,6 @@ import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
-
-/**
- * D3: the web-host gateway needs the engine's per-process token to authenticate browser calls
- * without ever exposing the token to a browser. Returns null until the engine has started.
- */
-export function kelEngineDescriptor(): { url: string; token: string; engine_version: string } | null {
-  return descriptor ?? null;
-}
 const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
 async function kelRequest(route: string, body?: unknown, timeoutMs = 30000) {
   const address = new URL(descriptor.url);

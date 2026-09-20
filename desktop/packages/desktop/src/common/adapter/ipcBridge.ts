@@ -1579,8 +1579,9 @@ export const task = {
 };
 
 // ---------------------------------------------------------------------------
-// WebUI — start/stop/getStatus/statusChanged are IPC (Electron-only lifecycle); D3 moved the
-// credential operations to desktop IPC against the web-host auth store (no donor HTTP routes).
+// WebUI — mix: start/stop/getStatus/statusChanged stay IPC (Electron-only
+// lifecycle owned by the main process, can't run in backend); credential
+// operations route to backend /api/webui/* under local-mode.
 // ---------------------------------------------------------------------------
 
 export interface IWebUIStatus {
@@ -1615,19 +1616,14 @@ export const webui = {
     lanIP?: string;
     initialPassword?: string;
   }>('webui.status-changed'),
-  // D3: credential operations are desktop IPC against the web-host auth store (no donor HTTP).
-  changePassword: bridge.buildProvider<{ ok: boolean; code?: string; message?: string }, { newPassword: string }>(
-    'webui.change-password'
-  ),
-  changeUsername: bridge.buildProvider<{ ok: boolean; username?: string; code?: string }, { newUsername: string }>(
-    'webui.change-username'
-  ),
-  resetPassword: bridge.buildProvider<{ ok: boolean; new_password?: string; code?: string }, void>(
-    'webui.reset-password'
-  ),
-  generateQRToken: bridge.buildProvider<{ ok: boolean; token?: string; expires_at_ms?: number; code?: string }, void>(
-    'webui.generate-qr-token'
-  ),
+  changePassword: httpPost<void, { newPassword: string }>('/api/webui/change-password', (p) => ({
+    new_password: p.newPassword,
+  })),
+  changeUsername: httpPost<{ username: string }, { newUsername: string }>('/api/webui/change-username', (p) => ({
+    new_username: p.newUsername,
+  })),
+  resetPassword: httpPost<{ new_password: string }, void>('/api/webui/reset-password'),
+  generateQRToken: httpPost<{ token: string; expires_at_ms: number }, void>('/api/webui/generate-qr-token'),
 };
 
 // ---------------------------------------------------------------------------

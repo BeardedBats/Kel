@@ -36,20 +36,31 @@ export function resolveResetPasswordUsername(argv: string[]): string {
   return argsAfterCommand.find((arg) => !arg.startsWith('--')) || 'admin';
 }
 
-// D3: Kel keeps one admin account whose scrypt hash lives in <data>/webui.config.json (owned by
-// the web-host auth store). This writes a fresh random password there; the next browser login
-// uses it. No donor backend route is involved.
+// index.ts:487 already started a backend for every mode including --resetpass,
+// so we reuse __backendPort instead of spawning a short-lived one. username arg
+// is advisory; backend operates on get_primary_webui_user() == system_default_user.
 export async function resetPasswordCLI(username: string): Promise<void> {
-  log.info(`Target user: ${username} (advisory — Kel keeps one admin account)`);
+  log.info(`Target user: ${username} (advisory — operates on system_default_user)`);
+  const port = (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
+  if (!port) {
+    log.error('Backend did not start — cannot reset password');
+    process.exit(1);
+  }
   try {
-    const { generateReadablePassword, setWebUiPassword } = await import('@aionui/web-host');
-    const { getDataPath } = await import('./utils');
-    const password = generateReadablePassword();
-    const result = setWebUiPassword(getDataPath(), password);
-    if (!result.ok) throw new Error(`Could not set a new password (${result.code})`);
+    const res = await fetch(`http://127.0.0.1:${port}/api/webui/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`reset-password failed (${res.status}): ${body}`);
+    }
+    const payload = (await res.json()) as { data?: { new_password?: string } };
+    const newPassword = payload.data?.new_password;
+    if (!newPassword) throw new Error('reset-password returned no new_password');
     log.success('Password reset successfully.');
     log.info('New password:');
-    log.highlight(password);
+    log.highlight(newPassword);
     log.info('');
     log.warning('Please change this password after next login.');
   } catch (error) {

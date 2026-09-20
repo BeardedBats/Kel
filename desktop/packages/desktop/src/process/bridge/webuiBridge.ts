@@ -3,25 +3,18 @@
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
  *
- * Desktop IPC bridge for WebUI lifecycle (start/stop/getStatus) + browser credentials.
+ * Desktop IPC bridge for WebUI lifecycle (start/stop/getStatus).
  *
- * D3 (Kel): the browser login is owned by the web-host gateway — a scrypt password stored in
- * `<Kel data>/webui.config.json` plus in-memory sessions; the engine's per-process bearer token
- * is injected by the gateway and never reaches a browser. This bridge exposes the lifecycle and
- * the credential operations as IPC so they work with the server stopped and without the donor
- * aioncore HTTP routes.
+ * WebUI credential operations (change-password / change-username / reset-password /
+ * generate-qr-token) are NOT handled here — those are HTTP routes on aioncore's
+ * local-only /api/webui/*, called directly by the renderer via ipcBridge HTTP.
+ *
+ * This bridge owns only the lifecycle + status snapshot, because spawning a
+ * WebUI instance requires Electron's app.* / Node child_process — aioncore
+ * has no way to start a WebUI wrapper around itself.
  */
 
 import { ipcBridge } from '@/common';
-import {
-  ensureInitialPassword,
-  generateReadablePassword,
-  generateWebUiQrToken,
-  readAuthFile,
-  setWebUiPassword,
-  setWebUiUsername,
-} from '@aionui/web-host';
-import { getDataPath } from '../utils/utils';
 import {
   startDesktopWebUI,
   stopDesktopWebUI,
@@ -29,18 +22,69 @@ import {
   setDesktopWebUIInitialPassword,
 } from '@process/utils/webuiConfig';
 
-const currentAdminUsername = (): string => readAuthFile(getDataPath()).adminUsername || 'admin';
+type AdminUsernameResult = { username?: string };
+
+function getBackendPort(): number | undefined {
+  return (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
+}
+
+async function fetchAdminUsername(): Promise<string> {
+  const port = getBackendPort();
+  if (!port) return 'admin';
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/internal/users/system`);
+    if (!res.ok) return 'admin';
+    const json = (await res.json()) as { data?: AdminUsernameResult | null };
+    return json.data?.username ?? 'admin';
+  } catch {
+    return 'admin';
+  }
+}
+
+/**
+ * On first Enable-WebUI click after a fresh install, the backend's users table
+ * holds the seeded `system_default_user` row with an empty password_hash.
+ * Probe /api/auth/status; if `needs_setup === true`, ask backend to generate
+ * and persist a random password, then stash the plaintext for Settings to show
+ * once. When the backend already has credentials (upgrade path handled by
+ * ensureAdminUser, or a prior Enable-WebUI), this is a no-op.
+ */
+async function maybeSeedInitialPassword(): Promise<void> {
+  const port = getBackendPort();
+  if (!port) {
+    throw new Error('[WebUI] Cannot start: aioncore is not running (globalThis.__backendPort unset)');
+  }
+  const statusRes = await fetch(`http://127.0.0.1:${port}/api/auth/status`);
+  if (!statusRes.ok) {
+    throw new Error(`[WebUI] /api/auth/status returned ${statusRes.status}`);
+  }
+  const statusJson = (await statusRes.json()) as { needs_setup?: boolean; data?: { needs_setup?: boolean } };
+  const needsSetup = statusJson.needs_setup ?? statusJson.data?.needs_setup ?? false;
+  if (!needsSetup) {
+    setDesktopWebUIInitialPassword(undefined);
+    return;
+  }
+  const resetRes = await fetch(`http://127.0.0.1:${port}/api/webui/reset-password`, { method: 'POST' });
+  if (!resetRes.ok) {
+    throw new Error(`[WebUI] /api/webui/reset-password returned ${resetRes.status}`);
+  }
+  const resetJson = (await resetRes.json()) as { data?: { new_password?: string }; new_password?: string };
+  const newPassword = resetJson.data?.new_password ?? resetJson.new_password;
+  if (!newPassword) {
+    throw new Error('[WebUI] /api/webui/reset-password returned no new_password');
+  }
+  setDesktopWebUIInitialPassword(newPassword);
+}
 
 export function initWebuiBridge(): void {
   ipcBridge.webui.getStatus.provider(async () => {
     const snapshot = getDesktopWebUIStatus();
-    return { ...snapshot, adminUsername: currentAdminUsername() };
+    const adminUsername = await fetchAdminUsername();
+    return { ...snapshot, adminUsername };
   });
 
   ipcBridge.webui.start.provider(async (params) => {
-    // First enable after a fresh install generates the one-time password shown once in Settings.
-    const { password } = ensureInitialPassword(getDataPath());
-    setDesktopWebUIInitialPassword(password);
+    await maybeSeedInitialPassword();
     const handle = await startDesktopWebUI({
       port: params?.port,
       allowRemote: params?.allowRemote,
@@ -59,29 +103,5 @@ export function initWebuiBridge(): void {
   ipcBridge.webui.stop.provider(async () => {
     await stopDesktopWebUI();
     ipcBridge.webui.statusChanged.emit({ running: false });
-  });
-
-  // Credential operations (desktop-side). The gateway's login checks the same store; a new
-  // password applies to the next login, existing sessions keep their own lifetime.
-  ipcBridge.webui.changePassword.provider(async (params) =>
-    setWebUiPassword(getDataPath(), params?.newPassword ?? '')
-  );
-
-  ipcBridge.webui.changeUsername.provider(async (params) => setWebUiUsername(getDataPath(), params?.newUsername ?? ''));
-
-  ipcBridge.webui.resetPassword.provider(async () => {
-    const password = generateReadablePassword();
-    const result = setWebUiPassword(getDataPath(), password);
-    if (!result.ok) return { ok: false, code: result.code };
-    // Surface the new password once, exactly like the first-enable flow.
-    setDesktopWebUIInitialPassword(password);
-    return { ok: true, new_password: password };
-  });
-
-  ipcBridge.webui.generateQRToken.provider(async () => {
-    const status = getDesktopWebUIStatus();
-    if (!status.running) return { ok: false, code: 'WEBUI_NOT_RUNNING' };
-    const token = generateWebUiQrToken();
-    return { ok: true, token: token.token, expires_at_ms: token.expires_at_ms };
   });
 }
