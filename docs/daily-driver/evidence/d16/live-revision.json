@@ -1,0 +1,21 @@
+{
+  "phase": "D16",
+  "when": "2026-09-20T15:17:38.369Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d16-w0BDKf",
+  "seeded": {
+    "job": "a4a7015d-b6e9-4673-9569-85d7b7c0e8b8",
+    "lease": "614b095c-85fb-452f-8e35-8162b17c3d0f"
+  },
+  "verdict": {
+    "in_scope_write_is_allowed": true,
+    "out_of_scope_write_is_denied": true,
+    "request_is_pending": true,
+    "pending_request_does_not_widen": true,
+    "user_grant_is_accepted": true,
+    "user_grant_widens_deliberately": true,
+    "one_time_grant_does_not_stick": true,
+    "revoke_is_accepted": true,
+    "revocation_narrows_immediately": true
+  },
+  "all_green": true
+}

@@ -302,6 +302,10 @@ class Autonomy:
                           risk=''):
         scope = _text(scope, 'scope')
         target = _text(target, 'target')
+        # D16: the scope must be one of the singular kinds a check can match, or the grant would sit
+        # in the ledger and quietly never apply. Fail loudly instead of filing a dead request.
+        if scope not in ('root', 'repo', 'domain', 'tool', 'external'):
+            raise PolicyError('Unknown boundary scope')
         request_id = uid()
         with self.store.transaction() as db:
             if not self._lease(db, lease_id):

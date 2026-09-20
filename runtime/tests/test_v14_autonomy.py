@@ -32,6 +32,21 @@ class AutonomyBase(unittest.TestCase):
         self.tmp.cleanup()
 
 
+class BoundaryScopeTests(AutonomyBase):
+    def test_unknown_boundary_scope_is_refused(self):
+        # D16: a scope literal that can never match a check (e.g. the plural 'roots') would create a
+        # grant that quietly never applies — refuse it instead of filing a dead request.
+        with self.assertRaises(PolicyError):
+            self.autonomy.request_expansion(self.lease_id, 'roots', str(self.other))
+        self.assertEqual(len(self.autonomy.requests(self.lease_id)), 0)
+
+    def test_the_kinds_that_can_match_are_accepted(self):
+        before = len(self.autonomy.requests(self.lease_id))
+        for scope in ('root', 'repo', 'domain', 'tool', 'external'):
+            self.autonomy.request_expansion(self.lease_id, scope, str(self.other))
+        self.assertEqual(len(self.autonomy.requests(self.lease_id)), before + 5)
+
+
 class LeaseIssueTests(AutonomyBase):
     def test_a_reviewed_plan_is_required(self):
         with self.assertRaises(PolicyError):

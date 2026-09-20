@@ -238,6 +238,23 @@ export interface KelMemoryProposal {
   updated?: number;
 }
 
+/** D17: one tool/skill the engine can use, with its honest availability state. */
+export interface KelCapabilityRow {
+  id: string;
+  label: string;
+  description: string;
+  availability: 'available' | 'needs_setup' | 'unavailable';
+  availability_reason: string;
+  global: 'on' | 'off';
+  override: 'default' | 'on' | 'off';
+  effective: 'on' | 'off';
+  usable: boolean;
+}
+
+/** D17 — the integrations inventory (the same rows the per-chat tools pill draws). */
+export const kelCapabilities = (conversation?: string) =>
+  call<KelCapabilityRow[]>('/api/capabilities', { action: 'get', conversation });
+
 export interface KelMapSection {
   name: string;
   trust: string;

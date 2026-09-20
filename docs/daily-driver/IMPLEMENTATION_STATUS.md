@@ -107,8 +107,18 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   exists only in the confirmed branch. Live journey all-green: lease ACTIVE → stop → REVOKED
   (`reason: emergency stop`), work PAUSED, forged `actor` refused by the engine itself
   (`packaging/verify-emergency-stop.cjs`, `evidence/d15/`).
+- **D16 complete** (this commit) — live capability revision verified over HTTP, 9/9: revocation
+  narrows the very next check (`lease-revoked`); a pending boundary request changes nothing; a user
+  grant widens for one use only and does not stick. Real fix: an unknown boundary scope is now
+  refused (`Unknown boundary scope`) instead of silently filing a grant that can never match
+  (autonomy suite 32 OK; engine full suite 1025 OK). Permissions page states the rule in user
+  language. Evidence `evidence/d16/live-revision.json`.
+- **D17 complete** (this commit) — integrations overview: an Integrations card on the Providers page
+  reads the engine's own capability inventory (`/api/capabilities`) and says Connected / Needs setup /
+  Unavailable with the engine's reason, `In use`/`Off`, and Set up → Settings → Tools only where
+  setup helps. Live journey all-green (`evidence/d17/integrations-overview.json`).
 
 ## Next item
 
-- **D16 — Live capability revision** (§32): verify that revocation narrows immediately and nothing
-  widens silently, then close the smallest honest gap.
+- **D18 — Synthetic daily-driver dogfood journeys** (§36): run the ten journeys end to end against
+  real builds and fix the friction they expose.

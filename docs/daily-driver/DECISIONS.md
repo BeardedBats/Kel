@@ -224,3 +224,20 @@
   page needed, now part of the evidence. No bespoke sandbox was invented; the OS/browser sandbox
   boundary and secret-scan behaviours stay exactly where their suites pin them.
 - (append as work proceeds; every non-obvious choice gets a line)
+- **D-027 — D16 approach.** Live revision was already real (per-call lease reads, fail-closed); D16
+  proved both halves over HTTP and fixed the one silent edge the journey found: `request_expansion`
+  took any scope string, so a caller passing the plural `roots` (a natural mistake — the `issue()`
+  parameter is literally named `roots`) created a grant row whose kind could never match a `check`
+  lookup (which matches the singular kinds). The failure was safe (denied, never widened) but silent
+  and confusing; it now raises `Unknown boundary scope`, with the five matchable kinds pinned as
+  accepted. The Permissions page states the rule in the user's language ("Changes apply immediately…
+  nothing widens on its own").
+- **D-028 — D17 approach.** The integration inventory already existed in the engine
+  (`/api/capabilities` snapshot: id/label/availability/reason/effective/usable — built for the
+  per-chat tools pill), but no surface answered "what is connected, what needs setup, what is
+  unavailable?" without opening a chat. D17 adds exactly that as an Integrations card on the
+  Providers page, reading the same snapshot (so the pill and the overview cannot disagree);
+  needs-setup rows point at `/settings/tools` (the real setup surface) and unavailable rows offer no
+  action — the engine's reason is shown instead. A "developer surface" beyond this was deliberately
+  NOT invented: the per-chat pill already exposes the per-conversation overrides, and capability
+  internals stay engine-side.

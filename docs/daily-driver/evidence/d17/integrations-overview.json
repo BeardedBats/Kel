@@ -1,0 +1,37 @@
+{
+  "phase": "D17",
+  "when": "2026-09-20T15:19:46.178Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d17-j8x7Hc",
+  "verdict": {
+    "inventory_returns_rows": true,
+    "every_row_has_honest_state": true,
+    "ids_are_stable_per_conversation": true,
+    "rows": [
+      {
+        "id": "web",
+        "availability": "available",
+        "effective": "on",
+        "reason": "Kel can look things up for you"
+      },
+      {
+        "id": "files",
+        "availability": "available",
+        "effective": "on",
+        "reason": "Kel can read and change files in this project"
+      },
+      {
+        "id": "terminal",
+        "availability": "available",
+        "effective": "on",
+        "reason": "A coding assistant is ready on this computer"
+      },
+      {
+        "id": "github",
+        "availability": "available",
+        "effective": "on",
+        "reason": "A coding assistant is ready on this computer"
+      }
+    ]
+  },
+  "all_green": true
+}
