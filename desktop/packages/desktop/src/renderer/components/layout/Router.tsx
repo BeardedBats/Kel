@@ -31,6 +31,7 @@ const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
 const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
 const KelProviders = React.lazy(() => import('@renderer/pages/kel/providers'));
 const KelAutonomy = React.lazy(() => import('@renderer/pages/kel/autonomy'));
+const KelActivity = React.lazy(() => import('@renderer/pages/kel/activity'));
 const KelOnboarding = React.lazy(() => import('@renderer/pages/kel/onboarding'));
 const KelDiagnostics = React.lazy(() => import('@renderer/pages/kel/diagnostics'));
 
@@ -182,6 +183,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />
           <Route path='/providers' element={withRouteFallback(KelProviders)} />
           <Route path='/autonomy' element={withRouteFallback(KelAutonomy)} />
+          <Route path='/activity' element={withRouteFallback(KelActivity)} />
           <Route path='/onboarding' element={withRouteFallback(KelOnboarding)} />
           <Route path='/diagnostics' element={withRouteFallback(KelDiagnostics)} />
         </Route>

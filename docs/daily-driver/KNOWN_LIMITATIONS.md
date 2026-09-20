@@ -91,3 +91,7 @@ Honest, current list (grows/shrinks as phases complete):
   the browser's own error page and cannot be restyled by Kel — the device-level sentence covers the
   reachable-page case only. Unknown gateway codes deliberately fall back to the engine's own message
   rather than a guessed translation.
+- Activity (D14): the page is a composition of current state, so it refreshes on load/visit — it is a
+  view, not a live feed (no streaming channel exists yet; D11's limitation applies). It lists at most
+  the last five finished items and the first three continuation candidates — depth stays deliberately
+  shallow; nothing else is hidden, the rest is one click away on Work.

@@ -201,4 +201,15 @@
   The codes themselves are live-verified by the D11 journey (502/503 on a dead/missing engine); the
   translation layer is source-pinned. No new recovery machinery was invented; retry/reconciliation/
   resumability stay exactly where the earlier phases verified them.
+- **D-025 — D14 approach.** The directive allows an Activity surface "only if it fits the current
+  architecture cleanly". It does: `/api/state` already returns jobs, continuation candidates,
+  approvals, providers, and (since D12) the routing decisions — so the new `/activity` page is pure
+  composition, with zero new engine endpoints and zero new stores. Sections are exactly the
+  directive's allowed list expressed as three cards (Happening now / Waiting on you / Recently
+  finished) plus a provider count; the directive's forbidden list (leases, epochs, worker ids,
+  routing packets, DB rows) is banned by a source pin. The page sits in the sider next to Work and
+  Projects as "Activity" (unobtrusive: it is read-only and never asks for anything); `AllApplication`
+  was chosen after `Activity` turned out not to exist in the icon set (tsc caught it). To keep the
+  Work page and Activity from drifting, the verdict/route/job-state sentences moved into a shared
+  `workLanguage.ts` (the only non-additive part of this phase; the D12 pin was re-pointed there).
 - (append as work proceeds; every non-obvious choice gets a line)

@@ -1,13 +1,14 @@
 /**
  * Kel navigation entries — the primary nav is only the places a user *does* something
- * (Work, Projects) plus the two review surfaces that unblock them (Permissions).
+ * (Work, Projects) plus the two review surfaces that unblock them (Permissions) and the optional
+ * high-level Activity view (D14).
  * Configuration surfaces (Providers, Team, Diagnostics) live in Settings.
  * Rendered in the fixed nav slot above the scrollable history area. Real buttons, Kel labels,
  * active state from the route.
  */
 import React from 'react';
 import { Tooltip } from '@arco-design/web-react';
-import { Folder, ListView, Lock, Voice } from '@icon-park/react';
+import { AllApplication, Folder, ListView, Lock, Voice } from '@icon-park/react';
 import classNames from 'classnames';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
@@ -15,6 +16,7 @@ import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 const ENTRIES = [
   { id: 'work', path: '/work', label: 'Work', Icon: ListView },
   { id: 'projects', path: '/projects', label: 'Projects', Icon: Folder },
+  { id: 'activity', path: '/activity', label: 'Activity', Icon: AllApplication },
   { id: 'autonomy', path: '/autonomy', label: 'Permissions', Icon: Lock },
   { id: 'transcription', path: '/transcription', label: 'Transcription', Icon: Voice },
 ] as const;
