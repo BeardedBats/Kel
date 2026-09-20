@@ -204,6 +204,8 @@ describe('Fix Capture — the capture itself', () => {
     expect(payload.element).toMatchObject({ tag: 'button' });
     expect(payload.window).toMatchObject({ width: 1280, height: 800, scale: 2 });
     expect(calls.filter((entry) => entry.body?.action === 'save').length).toBe(1);
+    // A saved fix's screenshot was moved under its id: cancelling afterwards can never delete it.
+    expect(findCall('discard')).toBeUndefined();
     await waitFor(() => expect(screen.getByText('Saved as FIX-0001.')).toBeTruthy());
   });
 
@@ -225,6 +227,13 @@ describe('Fix Capture — the capture itself', () => {
   });
 
   it('a click outside cancels a review: nothing is saved, nothing is left behind', async () => {
+    captureResult = {
+      screenshot: 'dogfood/tmp/cancel-me.png',
+      image: { width: 1280, height: 800 },
+      content: { width: 1280, height: 800 },
+      display: { scale: 1 },
+      captured_at: 1,
+    };
     renderLayer();
     hotkey();
     await waitFor(() => expect(screen.getByTestId('fix-capture-overlay')).toBeTruthy());
@@ -236,5 +245,8 @@ describe('Fix Capture — the capture itself', () => {
     await waitFor(() => expect(screen.queryByTestId('fix-capture-panel')).toBeNull());
     expect(findCall('save')).toBeUndefined();
     expect(mic.cancel).toHaveBeenCalled();
+    // The in-flight screenshot goes back to the engine, which deletes it.
+    await waitFor(() => expect(findCall('discard')).toBeTruthy());
+    expect(findCall('discard')?.body.screenshot).toBe('dogfood/tmp/cancel-me.png');
   });
 });

@@ -41,6 +41,12 @@ const engine = read('runtime/kel/dogfood.py');
 const engineService = read('runtime/kel/service.py');
 const dogfoodIpc = read('desktop/packages/desktop/src/process/services/kel/kelDogfoodIpc.ts');
 const hook = read('desktop/packages/desktop/src/renderer/components/kel/fixCapture/useFixCapture.ts');
+const searchPopover = read(
+  'desktop/packages/desktop/src/renderer/pages/conversation/GroupedHistory/ConversationSearchPopover.tsx'
+);
+const bridgeService = read('desktop/packages/desktop/src/process/services/kel/KelService.ts');
+const preload = read('desktop/packages/desktop/src/preload/main.ts');
+const kelApiSource = read('desktop/packages/desktop/src/renderer/components/kel/kelApi.ts');
 
 const element = (markup: string): Element => {
   const host = document.createElement('div');
@@ -67,6 +73,21 @@ describe('Fix Capture — the hotkey', () => {
   it('is mounted once by the shell, next to the command palette', () => {
     expect(layout).toContain('<FixCaptureLayer />');
     expect(layout).toContain("import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';");
+  });
+});
+
+describe('Fix Capture — the hotkey conflict, resolved deliberately', () => {
+  it('claims Ctrl+Shift+F in the capture phase, ahead of the donor conversation search', () => {
+    // Both bind the chord. Fix Capture listens on window in the capture phase and stops the event,
+    // so the search handler (document capture) never sees it; the search keeps its own trigger and
+    // the Ctrl+K palette path. Its raw binding stays in the source — that is the documented trade.
+    expect(layer).toContain("window.addEventListener('keydown', onKeyDown, true);");
+    expect(layer).toContain('event.stopPropagation();');
+    expect(searchPopover).toContain(
+      "document.addEventListener('keydown', handleGlobalSearchShortcut, true);"
+    );
+    expect(searchPopover).toContain("key: 'f',");
+    expect(searchPopover).toContain('shiftKey: true,');
   });
 });
 
@@ -147,6 +168,41 @@ describe('Fix Capture — the state machine', () => {
     const saving = run(begin(), [{ type: 'pick' as never, target: describeElement(element('<i>x</i>'))! }, { type: 'started' }, { type: 'stop' }, { type: 'stopped', text: 'y' }, { type: 'save' }]);
     expect(saving.phase).toBe('saving');
     expect(fixCaptureReducer(saving, { type: 'cancel' }).phase).toBe('saving');
+  });
+});
+
+describe('Fix Capture — the preload exposes what the client calls', () => {
+  it('wires capture and screenshot end to end (preload ↔ main ↔ client)', () => {
+    // The renderer's declared shape is not the preload's implementation: a member can be declared,
+    // called, and still missing from the bridge. This pin walks the whole path.
+    expect(preload).toContain("capture: () => ipcRenderer.invoke('kel:dogfood-capture')");
+    expect(preload).toContain(
+      "screenshot: (relpath: string) => ipcRenderer.invoke('kel:dogfood-screenshot', relpath)"
+    );
+    expect(dogfoodIpc).toContain("ipcMain.handle('kel:dogfood-capture'");
+    expect(dogfoodIpc).toContain("ipcMain.handle('kel:dogfood-screenshot'");
+    expect(kelApiSource).toContain('api.dogfood.capture');
+    expect(kelApiSource).toContain('api.dogfood.screenshot');
+  });
+});
+
+describe('Fix Capture — the desktop bridge admits the route', () => {
+  it('accepts every dogfood route the client uses, and nothing more', () => {
+    // The main process keeps a route allowlist for `kel:request`; a new family has to be let in.
+    // This pin reads the shipped regex itself and tries the routes the client actually sends.
+    const allowSource = bridgeService.match(/!\/\^\\\/api\\\/\(([\s\S]*?)\)\$\/\.test\(/)?.[1];
+    expect(allowSource, 'the kel:request allowlist must be findable').toBeTruthy();
+    expect(allowSource).toContain('dogfood');
+    const allow = new RegExp(`^/api/(${allowSource})$`);
+    for (const route of [
+      '/api/dogfood',
+      '/api/dogfood?status=OPEN',
+      '/api/dogfood?action=get&id=FIX-0007',
+    ]) {
+      expect(allow.test(route), `${route} must pass the bridge allowlist`).toBe(true);
+    }
+    expect(allow.test('/api/dogfood?action=save')).toBe(false);
+    expect(allow.test('/api/secret')).toBe(false);
   });
 });
 

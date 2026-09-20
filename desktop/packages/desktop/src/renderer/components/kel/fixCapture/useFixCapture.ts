@@ -61,6 +61,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
   const tickRef = useRef<number | null>(null);
   const pollRef = useRef<number | null>(null);
   const dismissRef = useRef<number | null>(null);
+  /** The temp screenshot of a capture that has not been saved yet (or null). */
+  const pendingRef = useRef<string | null>(null);
 
   const stopTimers = useCallback(() => {
     if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -77,7 +79,17 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
     }
   }, []);
 
-  /** Cancel audio + live session; used by Esc, click-outside, unmount. Never saves anything. */
+  /**
+   * A cancelled capture leaves nothing behind: the temp screenshot goes back to the engine, which
+   * deletes it. After a save the engine has already moved that file under the fix id, so this is a
+   * no-op — which is the point: cancelling can never delete a saved fix's screenshot.
+   */
+  const discardCapture = useCallback((relpath: string | null | undefined) => {
+    if (!relpath) return;
+    void kelRequest('/api/dogfood', { action: 'discard', screenshot: relpath }).catch(() => {});
+  }, []);
+
+  /** Cancel audio + live session + any unsaved capture; used by Esc, click-outside, unmount. */
   const teardown = useCallback(() => {
     epochRef.current += 1;
     stopTimers();
@@ -89,7 +101,11 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       /* already gone */
     }
     endSession();
-  }, [endSession, stopTimers]);
+    if (pendingRef.current) {
+      discardCapture(pendingRef.current);
+      pendingRef.current = null;
+    }
+  }, [discardCapture, endSession, stopTimers]);
 
   /** Start (or restart) one live recording: microphone first, then the engine session. */
   const startSession = useCallback(async () => {
@@ -176,6 +192,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       // screenshot shows Kel as it was, and the highlight is never baked into the image.
       await nextFrames();
       const screenshot: FixCaptureScreenshot | null = await kelDogfood.capture();
+      // Held until the fix is saved: a cancelled capture hands this path back to the engine.
+      pendingRef.current = screenshot?.screenshot ?? null;
       dispatch({
         type: 'capture',
         screenshot,
@@ -263,6 +281,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
         conversation: state.conversation,
       });
       dispatch({ type: 'saved', id: saved.id });
+      pendingRef.current = null;
       dismissRef.current = window.setTimeout(() => dispatch({ type: 'dismiss' }), SAVED_DISMISS_MS);
     } catch (error) {
       dispatch({
@@ -282,19 +301,9 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
   useEffect(
     () => () => {
       if (dismissRef.current !== null) window.clearTimeout(dismissRef.current);
-      epochRef.current += 1;
-      stopTimers();
-      try {
-        captureRef.current?.cancel();
-      } catch {
-        /* already gone */
-      }
-      captureRef.current = null;
-      const session = sessionRef.current;
-      sessionRef.current = null;
-      if (session) void kelRequest('/api/transcription', { action: 'stream_finish', session }).catch(() => {});
+      teardown();
     },
-    [stopTimers]
+    [teardown]
   );
 
   return { state, begin, cancel, pick, stop, again, save, dismiss, setDraft };
