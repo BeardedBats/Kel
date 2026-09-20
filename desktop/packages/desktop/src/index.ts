@@ -986,6 +986,7 @@ const handleAppReady = async (): Promise<void> => {
         staticDir: path.join(__dirname, '../renderer'),
         port: resolvedPort,
         allowRemote,
+        requireAuth: true,
         dataDir: getDataPath(),
         logDir: sysDirWebUI.logDir,
         // Expose the same AIONUI_{CACHE,WORK,LOG}_DIR env the desktop IPC path

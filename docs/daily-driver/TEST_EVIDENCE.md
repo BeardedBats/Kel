@@ -31,3 +31,9 @@
 | 23:19 | engine full suite #2 (re-run) | `python -m unittest discover -s tests` | **1019 tests OK (275.5s)** | fully green |
 | 23:18 | D2 typecheck | `bunx tsc --noEmit` | exit 0 | — |
 | 23:18 | D2 full | `bunx vitest run` | 18 files / 177 PASS | includes `update-policy.test.ts` |
+| 09:14 | D3 gateway suite (new) | `bunx vitest run packages/web-host/src/gateway-session.unit.test.ts` | 10 PASS | anon 401 incl. reset-password takeover; allowlist passthrough; `/api/auth/user` validation + cache; logout invalidation; WS gating |
+| 09:25 | D3 typecheck | `bunx tsc --noEmit` | exit 0 | — |
+| 09:2x | D3 full | `bunx vitest run` | 19 files / 187 PASS | includes the new gateway suite |
+| 09:27 | D3 real stack — raw boundary matrix | `bun run webui --remote --data-dir C:/Users/Nick/KelDailyDriverRuns/d3-remote` (shipped aioncore from `KelVisualFixInstall`) + `node packaging/diagnose-remote-auth.cjs` | anon 401 ×5 (loopback + LAN, incl. reset-password) · login 200 · cookie 200 ×3 · logout 200 · revoked replay 401 | before the fix the same matrix returned 200 for anonymous LAN reads AND an anonymous `POST /api/webui/reset-password` |
+| 09:30 | D3 real stack — browser | `node packaging/verify-remote-e2e.cjs` (Playwright/Edge) | entry → /#/login; login ✓ → /#/onboarding; assistants 24 items; refresh 200; logout → 401; relogin ✓; phone 390 overflow 0; LAN anon 401 | screenshots `evidence/d3/01–04*.png`, machine-readable `evidence/d3/remote-e2e.json`; console noise = pre-login boot probes (documented limitation) |
+| — | engine suite | not re-run in D3 (no engine changes) | last full run: 1019 OK (275.5s) | — |

@@ -20,6 +20,12 @@ export type StaticServerOptions = {
   backendPort: number;
   port?: number;
   allowRemote?: boolean;
+  /**
+   * D3 — gateway session enforcement: refuse proxied requests without a live backend session
+   * (anonymous allowlist: /login, /logout, /qr-login, /api/auth/*). The shipping entry points
+   * set this; the library default stays false so unit tests can exercise raw proxying.
+   */
+  requireAuth?: boolean;
 };
 
 export type StaticServerHandle = {
@@ -32,6 +38,86 @@ export type StaticServerHandle = {
 };
 
 const DEFAULT_PORT = 25808;
+
+const AUTH_VALIDATION_TTL_MS = 5_000;
+const AUTH_VALIDATION_NEGATIVE_TTL_MS = 2_000;
+const AUTH_VALIDATION_CACHE_LIMIT = 128;
+
+// D3 — anonymous allowlist: exactly what the SPA's boot flow needs. Everything else — business
+// APIs, /api/webui/* administration, internal /api/auth/* helpers — requires a live session.
+const ANONYMOUS_ROUTES = new Set([
+  '/login',
+  '/logout',
+  '/qr-login',
+  '/api/auth/user',
+  '/api/auth/status',
+  '/api/auth/refresh',
+]);
+
+const isProxyRoute = (url: string): boolean =>
+  url.startsWith('/api/') ||
+  url.startsWith('/api?') ||
+  url === '/login' ||
+  url === '/logout' ||
+  url === '/qr-login' ||
+  url.startsWith('/qr-login?');
+
+const replyJson = (res: ServerResponse, status: number, body: Record<string, unknown>): void => {
+  const raw = Buffer.from(JSON.stringify(body));
+  res.writeHead(status, { 'content-type': 'application/json', 'content-length': String(raw.length) });
+  res.end(raw);
+};
+
+/**
+ * Session enforcement for the remote gateway.
+ *
+ * The backend (aioncore) keeps sessions, but it runs in local mode and does not gate business
+ * routes; only its own /api/auth/user answers truthfully about a session. The gateway asks that
+ * authority and caches the verdict briefly per cookie value. Positives live 5s, negatives 2s
+ * (credential-spam damping); transport errors fail closed without caching. Logout drops the
+ * cached verdict so a revoked cookie is re-checked on its very next use.
+ */
+function createSessionValidator(backendPort: number): {
+  validate: (cookie: string | undefined) => Promise<boolean>;
+  invalidate: (cookie: string | undefined) => void;
+} {
+  const cache = new Map<string, { valid: boolean; until: number }>();
+  const remember = (cookie: string, valid: boolean): void => {
+    cache.set(cookie, {
+      valid,
+      until: Date.now() + (valid ? AUTH_VALIDATION_TTL_MS : AUTH_VALIDATION_NEGATIVE_TTL_MS),
+    });
+    while (cache.size > AUTH_VALIDATION_CACHE_LIMIT) {
+      const oldest = cache.keys().next().value;
+      if (oldest === undefined) break;
+      cache.delete(oldest);
+    }
+  };
+  return {
+    validate: async (cookie) => {
+      if (!cookie) return false;
+      const cached = cache.get(cookie);
+      if (cached && cached.until > Date.now()) return cached.valid;
+      try {
+        const response = await fetch(`http://127.0.0.1:${backendPort}/api/auth/user`, { headers: { cookie } });
+        if (response.ok) {
+          remember(cookie, true);
+          return true;
+        }
+        if (response.status === 401 || response.status === 403) {
+          remember(cookie, false);
+          return false;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+    invalidate: (cookie) => {
+      if (cookie) cache.delete(cookie);
+    },
+  };
+}
 
 // Ranges that are non-internal IPv4 yet never a reachable LAN address, so we
 // must never advertise them as the WebUI access URL even when they are the only
@@ -163,6 +249,7 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
   const port = opts.port ?? DEFAULT_PORT;
   const allowRemote = opts.allowRemote === true;
   const host = allowRemote ? '0.0.0.0' : '127.0.0.1';
+  const validateSession = opts.requireAuth === true ? createSessionValidator(opts.backendPort) : null;
 
   // The HTTP server listens only on loopback — user traffic hits the outer
   // net.Server first. We route to this server for everything except WS
@@ -181,9 +268,25 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       }
 
       // /api/* — reverse proxy to backend (includes /api/auth/*).
-      // /login and /logout are aionui-auth's top-level auth endpoints: proxy them too
-      // so WebUI browser clients reach the backend without a path-rewrite.
-      if (req.url.startsWith('/api/') || req.url.startsWith('/api?') || req.url === '/login' || req.url === '/logout') {
+      // /login, /logout and /qr-login are aionui-auth's top-level endpoints: proxy them too so
+      // WebUI browser clients reach the backend without a path-rewrite.
+      if (isProxyRoute(req.url)) {
+        // D3: the backend runs in local mode and does not enforce sessions on business routes, so
+        // the gateway (the only network boundary) enforces here: everything outside the anonymous
+        // allowlist needs a session the backend auth authority still accepts.
+        if (validateSession) {
+          const pathname = req.url.split('?')[0];
+          if (pathname === '/logout' && req.method === 'POST') {
+            // Drop the cached verdict so a logged-out cookie is re-checked on its next use.
+            validateSession.invalidate(req.headers.cookie);
+          } else if (!ANONYMOUS_ROUTES.has(pathname)) {
+            const allowed = await validateSession.validate(req.headers.cookie);
+            if (!allowed) {
+              replyJson(res, 401, { success: false, error: 'Authentication required', code: 'UNAUTHORIZED' });
+              return;
+            }
+          }
+        }
         forwardToBackend(req, res, opts.backendPort);
         return;
       }
@@ -223,6 +326,7 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
   const tcp_server = net.createServer((client: Socket) => {
     let peeked = Buffer.alloc(0);
     let settled = false;
+    let upgradePending = false;
     const cleanup = (): void => {
       if (settled) return;
       settled = true;
@@ -232,8 +336,36 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
     };
     const onData = (chunk: Buffer): void => {
       peeked = Buffer.concat([peeked, chunk]);
+      if (upgradePending) return; // keep collecting while the session check runs
       const decision = peekWsRoute(peeked);
       if (decision === null && peeked.length < PEEK_LIMIT_BYTES) return;
+      if (decision === true && validateSession) {
+        // Upgrades carry the session cookie in their header block; wait for it and validate the
+        // session before splicing. Anonymous upgrades never reach the backend. The peek listener
+        // stays attached while the check is in flight — bytes keep collecting into `peeked` — so
+        // cleanup() and the splice still happen back-to-back in one tick, exactly like the
+        // unauthenticated path this splice code was written for.
+        const headerEnd = peeked.indexOf('\r\n\r\n');
+        if (headerEnd < 0 && peeked.length < PEEK_LIMIT_BYTES) return;
+        if (headerEnd < 0) {
+          cleanup();
+          spliceToTcpEndpoint(client, internalPort, peeked);
+          return;
+        }
+        const headerText = peeked.slice(0, headerEnd).toString('latin1');
+        const cookieLine = /^cookie:\s*(.+)$/im.exec(headerText);
+        upgradePending = true;
+        void validateSession.validate(cookieLine?.[1]).then((allowed) => {
+          upgradePending = false;
+          cleanup();
+          if (allowed) {
+            spliceToTcpEndpoint(client, opts.backendPort, peeked);
+          } else {
+            client.end('HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n');
+          }
+        });
+        return;
+      }
       cleanup();
       const target = decision === true ? opts.backendPort : internalPort;
       spliceToTcpEndpoint(client, target, peeked);

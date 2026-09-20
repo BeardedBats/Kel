@@ -13,8 +13,8 @@ Status legend: **DONE** · **DONE (core)** · **PARTIAL** · **IN PROGRESS** · 
 | D0-005 | `FINAL_V16_RESIDUAL_CLEANUP` records | §D0 | DONE | `288a53c` | IMPLEMENTATION_STATUS.md table |
 | D1 | Provider + model onboarding (human statuses, Set up → Save + Verify) | §6–7 | DONE (core) | `0279a1d` | `providerStatus.ts` + 11 tests; page wiring pins; live key validation unavailable (no external creds) — see KNOWN_LIMITATIONS |
 | D2 | Update reliability: donor CDN feed severed; fail-closed Kel GitHub check; installer upgrade path documented | §8 | DONE (core) | `7c9df63` | `updateFeed` returns null; `_feedConfigured` guards; `update-policy.test.ts`; packaged upgrade + Properties re-verify at package phase |
-| D3 | Remote / WebUI (+security) | §9–10 | QUEUED | — | starts at `desktop/packages/web-host` (see MARATHON_STATE) |
-| D4 | Transcription first-class workflow | §11 | QUEUED | — | — |
+| D3 | Remote / WebUI (+security) | §9–10 | DONE (core) | D3 commit (revert `b13301a`) | gateway session enforcement (`gateway-session.unit.test.ts`, 10 tests); anon allowlist; `/qr-login` proxy; WS gating; logout cache invalidation; real-stack matrix + browser evidence in `evidence/d3/`; see KNOWN_LIMITATIONS for aioncore-side constraints |
+| D4 | Transcription first-class workflow | §11 | IN PROGRESS | — | — |
 | D5 | Needs Your Attention + notifications | §12–13 | QUEUED | — | — |
 | D6 | Continuation / resumability | §14–15 | QUEUED | — | — |
 | D7 | Long-running autonomy | §16–17 | QUEUED | — | — |

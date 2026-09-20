@@ -2,14 +2,24 @@
 
 Read order: `MARATHON_STATE.md` → this file → `IMPLEMENTATION_STATUS.md` → `FEATURE_LEDGER.md`.
 
-## Checkpoint (2026-09-19)
+## Checkpoint (2026-09-20)
 
 - D0 residuals CLOSED (`9bdf338`, `777fefe`, `cce55d0`, `f594282`; records `288a53c`).
 - Engine claims re-pin done (`80c4ba2`) — full engine suite green (1019 OK).
 - D1 providers core done (`0279a1d`) — tsc 0, Vitest 18/177.
 - D2 update path done (`7c9df63`) — donor CDN severed, fail-closed Kel GitHub check.
-- **NEXT: D3 — Remote / WebUI.** Start with `desktop/packages/web-host` (static-server,
-  backend-launcher, auth) and `WebuiModalContent.tsx`; then §9–§10 requirements.
+- **D3 Remote/WebUI done (this commit).** Architecture truth: the desktop app runs BOTH aioncore
+  (the UI/conversation backend the web-host proxies to — its own cookie auth is the browser
+  boundary) and the Kel engine (main-process only, per-process bearer token). The shipped remote
+  surface's hole: aioncore runs in local mode and never gated business routes, so any LAN client
+  could read data AND call `POST /api/webui/reset-password` anonymously. Fix = session enforcement
+  inside the web-host gateway (validate against `/api/auth/user`; 5s positive / 2s negative cache;
+  invalidate on logout; anonymous allowlist only: /login /logout /qr-login /api/auth/*;
+  `/qr-login` now proxied; WS upgrades validated). Verified against the real stack: anon → 401
+  (loopback + LAN + reset-password), authed → 200, revoked replay → 401, browser login → app,
+  phone 390 no overflow. Evidence: `evidence/d3/` + TEST_EVIDENCE rows.
+- **NEXT: D4 — Transcription first-class workflow** (§11). Start with the transcription page and
+  the engine's transcription routes; preserve "NO spacebar start/stop shortcut".
 
 ## Where
 
