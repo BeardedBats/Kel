@@ -1,0 +1,25 @@
+== AionUi : total=12 (showing up to 8) ==
+  AionUI-LICENSE.txt :: ier identification within third-party archives. Copyright 2025 AionUi (aionui.com) Licensed under the Apache License, Version 2.0 (the "Li
+  hub\index.json ::  "description": "Integrates Augment Code as an ACP adapter in AionUi.", "author": "Aionui Official", "engines": { 
+  hub\index.json :: iption": "Integrates Anthropic's Claude Code CLI as an ACP adapter in AionUi.", "author": "Aionui Official", "engines": { 
+  hub\index.json ::  "description": "Integrates CodeBuddy as an ACP adapter in AionUi.", "author": "Aionui Official", "engines": { 
+  hub\index.json ::  "description": "Integrates OpenAI Codex CLI as an ACP adapter in AionUi.", "author": "Aionui Official", "engines": { 
+  hub\index.json :: 0", "description": "Integrates Goose as an ACP adapter in AionUi.", "author": "Aionui Official", "engines": { 
+
+== aionui : total=14 (showing up to 8) ==
+  AionUI-LICENSE.txt ::  identification within third-party archives. Copyright 2025 AionUi (aionui.com) Licensed under the Apache License, Version 2.0 (the "License");
+  hub\index.json :: author": "Aionui Official", "engines": { "aionui": "^1.0.0" }, "hubs": [ "acpA
+
+== AionCore : total=3 (showing up to 8) ==
+
+== aioncore : total=5 (showing up to 8) ==
+
+== iOfficeAI : total=12 (showing up to 8) ==
+  hub\index.json ::  Extension Builder v1.0.0", "repository": "https://github.com/iOfficeAI/AionHub/" } } 
+  hub\manifest.json :: 9-20T02:10:43.083Z", "indexUrl": "https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/index.json", "extensions": [ { "name"
+  hub\manifest.json :: , "size": 3107, "url": "https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/aionext-auggie.zip" }, { "name": "a
+  hub\manifest.json :: , "size": 2677, "url": "https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/aionext-claude.zip" }, { "name": "a
+  hub\manifest.json :: , "size": 3544, "url": "https://raw.githubusercontent.com/iOfficeAI/AionHub/dist-latest/aionext-codebuddy.zip" }, { "name":
+
+== Butler : total=0 (showing up to 8) ==
+

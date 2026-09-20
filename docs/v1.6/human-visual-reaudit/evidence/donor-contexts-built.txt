@@ -1,0 +1,128 @@
+== AionUi : total=570 (showing up to 14) ==
+  main\builtin-mcp-browser.js :: > { child.kill(signal); }); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ 
+  main\builtin-mcp-image-gen.js :: :", error2); process.exit(1); }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /*! Bundled l
+  main\chunks\cdpBridge-Iy7D9rDm.js :: t require$$0 = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_
+  main\chunks\cdpBridge-Iy7D9rDm.js :: eAt(i); } return diff === 0; }; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const HOST = 
+  main\chunks\ensureAdminUser-BbInqote.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 * * One-shot bo
+  main\chunks\petManager-pj4qVDhi.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ path.join(__d
+  main\chunks\petManager-pj4qVDhi.js :: isteners("pet:confirm-drag-end"); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ function isPe
+  main\chunks\resetPasswordCLI-DaeszqTa.js :: .toStringTag, { value: "Module" }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 * * Reset passw
+  main\chunks\runBackendMigrations-3yQeyiGN.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ function assi
+  main\chunks\runBackendMigrations-3yQeyiGN.js :: "/api/settings/client", entries); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const IMAGE_G
+  main\chunks\runBackendMigrations-3yQeyiGN.js :: e next[key]; }); return next; } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const BUILTIN
+  main\chunks\runBackendMigrations-3yQeyiGN.js :: nDone(configFile); return true; } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const BUILTIN
+  main\index.js ::  */ _interopNamespaceDefault(zlib); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const GPU_CON
+  main\index.js ::  } writeConfig(next); }); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ require$$0$1.
+
+== aionui : total=813 (showing up to 14) ==
+  main\builtin-mcp-browser.js :: child.kill(signal); }); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ 
+  main\builtin-mcp-image-gen.js :: TIN_IMAGE_GEN_ID = "builtin-image-gen"; var BUILTIN_IMAGE_GEN_NAME = "aionui-image-generation"; // packages/desktop/src/common/chat/imageGenCore.
+  main\builtin-mcp-image-gen.js :: out, defaultHeaders: { "HTTP-Referer": "https://aionui.com", "X-Title": "Kel" }, ...options.
+  main\builtin-mcp-image-gen.js :: out, defaultHeaders: { "HTTP-Referer": "https://aionui.com", "X-Title": "Kel" }, ...options.
+  main\builtin-mcp-image-gen.js :: UILTIN_IMAGE_GEN_NAME, version: "1.0.0" }); server.tool( "aionui_image_generation", `REQUIRED tool for generating or editing image
+  main\builtin-mcp-image-gen.js :: r2); process.exit(1); }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /*! Bundled license i
+  main\chunks\cdpBridge-Iy7D9rDm.js :: e$$0 = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_TARGET_I
+  main\chunks\cdpBridge-Iy7D9rDm.js ::  * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_TARGET_ID = "aionui-browser-target"; const SINGLE_SESSION_ID = "aionui-browser-session"; 
+  main\chunks\cdpBridge-Iy7D9rDm.js :: INGLE_TARGET_ID = "aionui-browser-target"; const SINGLE_SESSION_ID = "aionui-browser-session"; const SINGLE_BROWSER_CONTEXT_ID = "aionui-browser-c
+  main\chunks\cdpBridge-Iy7D9rDm.js :: ION_ID = "aionui-browser-session"; const SINGLE_BROWSER_CONTEXT_ID = "aionui-browser-context"; const buildTargetInfo = (title, url) => ({ target
+  main\chunks\cdpBridge-Iy7D9rDm.js ::  } return diff === 0; }; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const HOST = "127.0.0
+  main\chunks\cdpBridge-Iy7D9rDm.js :: dentifier: Apache-2.0 */ const HOST = "127.0.0.1"; const WS_PATH = "/aionui-cdp"; let attached = null; let sockets = /* @__PURE__ */ new Set(); c
+  main\chunks\ensureAdminUser-BbInqote.js :: lectron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 * * One-shot boot-time 
+  main\chunks\petManager-pj4qVDhi.js :: lectron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ path.join(__dirname, 
+
+== AionCore : total=0 (showing up to 14) ==
+
+== aioncore : total=52 (showing up to 14) ==
+  main\chunks\ensureAdminUser-BbInqote.js :: gration: move legacy admin credentials from * webui.config.json into aioncore's SQLite `users` table. * * Runs after backendManager.start() resol
+  main\index.js :: ST_FILE_NAME = "manifest.json"; const BUNDLED_AIONCORE_DIR = "bundled-aioncore"; function getString$2(value) { return typeof value === "string" &&
+  main\index.js :: st missingBundledAioncoreDir = !resourcesDirEntries.includes("bundled-aioncore/"); const missingRuntimeDir = details.runtimeDirExists === false &&
+  main\index.js :: ng"; const missingResources = missingBundledAioncoreDir ? ["bundled-aioncore/"] : []; if (details.runtimeDirExists === false && typeof details.r
+  main\index.js :: details.runtimeKey === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/`); } const runtimeDirEntries = getStringAr
+  main\index.js :: details.runtimeKey === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/managed-resources/`); } const missingRuntim
+  main\index.js :: details.binaryName === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/${details.binaryName}`); } if (missingResou
+  main\index.js :: .setTag(tag, value); } if (details) { scope.setContext("aioncore_startup", details); scope.setExtra("aioncore_startup", details)
+  main\index.js ::  scope.setContext("aioncore_startup", details); scope.setExtra("aioncore_startup", details); } scope.setContext("aioncore_startup_clas
+  main\index.js :: pe.setExtra("aioncore_startup", details); } scope.setContext("aioncore_startup_classification", { ...failureInfo }); scope.setExtra("aio
+  main\index.js :: ore_startup_classification", { ...failureInfo }); scope.setExtra("aioncore_startup_classification", failureInfo); scope.setContext("aioncore
+  main\index.js :: aioncore_startup_classification", failureInfo); scope.setContext("aioncore_install_diagnostics", installDiagnostics); scope.setExtra("aionco
+  main\index.js :: oncore_install_diagnostics", installDiagnostics); scope.setExtra("aioncore_install_diagnostics", installDiagnostics); if (autoUpdateDiagnost
+  main\index.js :: .app.isPackaged ? false : CONSOLE_LOG_LEVEL; const BACKEND_PREFIX = "[aioncore]"; const ANSI_RE = new RegExp(String.raw`\u001B\[[0-9;]*m`, "g"); con
+
+== Butler : total=0 (showing up to 14) ==
+
+== iOfficeAI : total=2 (showing up to 14) ==
+  renderer\assets\index--Rq2X6gO.js :: * SPDX-License-Identifier: Apache-2.0 */const yt="https://github.com/iOfficeAI/AionUi/wiki/ACP-Setup",Et=()=>{const{t,i18n:s}=se(),i=Pe(),c=De()?.is
+  renderer\assets\index-D1jOsF5f.js :: NDBOX:"preview.office.errors.outsideSandbox"},Kjo="https://github.com/iOfficeAI/OfficeCLI/releases";function qjo(e,t){const n=e.match(/^\/api\/(?:off
+
+########## OUT/MAIN + OUT/PRELOAD ##########
+== AionUi : total=85 (showing up to 12) ==
+  builtin-mcp-browser.js :: > { child.kill(signal); }); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ 
+  builtin-mcp-image-gen.js :: :", error2); process.exit(1); }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /*! Bundled l
+  chunks\cdpBridge-Iy7D9rDm.js :: t require$$0 = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_
+  chunks\cdpBridge-Iy7D9rDm.js :: eAt(i); } return diff === 0; }; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const HOST = 
+  chunks\ensureAdminUser-BbInqote.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 * * One-shot bo
+  chunks\petManager-pj4qVDhi.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ path.join(__d
+  chunks\petManager-pj4qVDhi.js :: isteners("pet:confirm-drag-end"); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ function isPe
+  chunks\resetPasswordCLI-DaeszqTa.js :: .toStringTag, { value: "Module" }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 * * Reset passw
+  chunks\runBackendMigrations-3yQeyiGN.js :: quire("electron-squirrel-startup"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ function assi
+  chunks\runBackendMigrations-3yQeyiGN.js :: "/api/settings/client", entries); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const IMAGE_G
+  chunks\runBackendMigrations-3yQeyiGN.js :: e next[key]; }); return next; } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const BUILTIN
+  chunks\runBackendMigrations-3yQeyiGN.js :: nDone(configFile); return true; } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const BUILTIN
+
+== aionui : total=177 (showing up to 12) ==
+  builtin-mcp-browser.js :: child.kill(signal); }); } /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ 
+  builtin-mcp-image-gen.js :: TIN_IMAGE_GEN_ID = "builtin-image-gen"; var BUILTIN_IMAGE_GEN_NAME = "aionui-image-generation"; // packages/desktop/src/common/chat/imageGenCore.
+  builtin-mcp-image-gen.js :: out, defaultHeaders: { "HTTP-Referer": "https://aionui.com", "X-Title": "Kel" }, ...options.
+  builtin-mcp-image-gen.js :: out, defaultHeaders: { "HTTP-Referer": "https://aionui.com", "X-Title": "Kel" }, ...options.
+  builtin-mcp-image-gen.js :: UILTIN_IMAGE_GEN_NAME, version: "1.0.0" }); server.tool( "aionui_image_generation", `REQUIRED tool for generating or editing image
+  builtin-mcp-image-gen.js :: r2); process.exit(1); }); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /*! Bundled license i
+  chunks\cdpBridge-Iy7D9rDm.js :: e$$0 = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_TARGET_I
+  chunks\cdpBridge-Iy7D9rDm.js ::  * SPDX-License-Identifier: Apache-2.0 */ const SINGLE_TARGET_ID = "aionui-browser-target"; const SINGLE_SESSION_ID = "aionui-browser-session"; 
+  chunks\cdpBridge-Iy7D9rDm.js :: INGLE_TARGET_ID = "aionui-browser-target"; const SINGLE_SESSION_ID = "aionui-browser-session"; const SINGLE_BROWSER_CONTEXT_ID = "aionui-browser-c
+  chunks\cdpBridge-Iy7D9rDm.js :: ION_ID = "aionui-browser-session"; const SINGLE_BROWSER_CONTEXT_ID = "aionui-browser-context"; const buildTargetInfo = (title, url) => ({ target
+  chunks\cdpBridge-Iy7D9rDm.js ::  } return diff === 0; }; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const HOST = "127.0.0
+  chunks\cdpBridge-Iy7D9rDm.js :: dentifier: Apache-2.0 */ const HOST = "127.0.0.1"; const WS_PATH = "/aionui-cdp"; let attached = null; let sockets = /* @__PURE__ */ new Set(); c
+
+== AionCore : total=0 (showing up to 12) ==
+
+== aioncore : total=52 (showing up to 12) ==
+  chunks\ensureAdminUser-BbInqote.js :: gration: move legacy admin credentials from * webui.config.json into aioncore's SQLite `users` table. * * Runs after backendManager.start() resol
+  index.js :: ST_FILE_NAME = "manifest.json"; const BUNDLED_AIONCORE_DIR = "bundled-aioncore"; function getString$2(value) { return typeof value === "string" &&
+  index.js :: st missingBundledAioncoreDir = !resourcesDirEntries.includes("bundled-aioncore/"); const missingRuntimeDir = details.runtimeDirExists === false &&
+  index.js :: ng"; const missingResources = missingBundledAioncoreDir ? ["bundled-aioncore/"] : []; if (details.runtimeDirExists === false && typeof details.r
+  index.js :: details.runtimeKey === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/`); } const runtimeDirEntries = getStringAr
+  index.js :: details.runtimeKey === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/managed-resources/`); } const missingRuntim
+  index.js :: details.binaryName === "string") { missingResources.push(`bundled-aioncore/${details.runtimeKey}/${details.binaryName}`); } if (missingResou
+  index.js :: .setTag(tag, value); } if (details) { scope.setContext("aioncore_startup", details); scope.setExtra("aioncore_startup", details)
+  index.js ::  scope.setContext("aioncore_startup", details); scope.setExtra("aioncore_startup", details); } scope.setContext("aioncore_startup_clas
+  index.js :: pe.setExtra("aioncore_startup", details); } scope.setContext("aioncore_startup_classification", { ...failureInfo }); scope.setExtra("aio
+  index.js :: ore_startup_classification", { ...failureInfo }); scope.setExtra("aioncore_startup_classification", failureInfo); scope.setContext("aioncore
+  index.js :: aioncore_startup_classification", failureInfo); scope.setContext("aioncore_install_diagnostics", installDiagnostics); scope.setExtra("aionco
+
+== iOfficeAI : total=0 (showing up to 12) ==
+
+== Butler : total=0 (showing up to 12) ==
+
+== AionUi : total=5 (showing up to 8) ==
+  index.js ::  { } } } } hookupIpc(); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const ADAPTER
+  index.js :: T_KEY = "office-ai-bridge-adapter"; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.cont
+  petConfirmPreload.js :: nst electron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.cont
+  petHitPreload.js :: nst electron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.cont
+  petPreload.js :: nst electron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.cont
+
+== aionui : total=6 (showing up to 8) ==
+  index.js ::  } } } } hookupIpc(); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ const ADAPTER_BRIDGE_
+  index.js :: "office-ai-bridge-adapter"; /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.contextBridg
+  index.js :: initialLanguage ?? null); electron.contextBridge.exposeInMainWorld("__aionuiE2ETest", process.env.AIONUI_E2E_TEST === "1"); electron.contextBridge
+  petConfirmPreload.js :: tron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.contextBridg
+  petHitPreload.js :: tron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.contextBridg
+  petPreload.js :: tron = require("electron"); /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ electron.contextBridg
+
+== AionCore : total=0 (showing up to 8) ==
+
+== aioncore : total=0 (showing up to 8) ==
+
+== iOfficeAI : total=0 (showing up to 8) ==
+
+== Butler : total=0 (showing up to 8) ==
+

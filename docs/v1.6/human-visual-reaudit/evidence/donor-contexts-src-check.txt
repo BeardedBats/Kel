@@ -1,0 +1,20 @@
+== UpdateMigrationDialog.tsx ==
+== LocalAgents.tsx ==
+== AionUi : total=10 (showing up to 6) ==
+  AgentCard.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React
+  AgentRepairPage.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React
+  AgentRepairPanel.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React
+  AgentRepairPanel.tsx :: y.Text> {/* What configuring env vars can fix — grounded in how AionUi injects them per-agent at spawn time. Deliberately excludes
+  BoundAssistants.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import { ipc
+  EnvVarEditor.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React
+
+== aionui : total=8 (showing up to 6) ==
+  AgentCard.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React from 'r
+  AgentRepairPage.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React, { useC
+  AgentRepairPanel.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React, { useC
+  BoundAssistants.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import { ipcBridge }
+  EnvVarEditor.tsx :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ import React, { useC
+== renderer/main.tsx + Layout.tsx + constants.ts contexts ==
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/main.tsx
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/constants.ts

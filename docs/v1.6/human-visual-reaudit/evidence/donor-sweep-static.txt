@@ -1,0 +1,131 @@
+=== (1) source tree src/ files with donor tokens (counts) ===
+   1726 C
+
+=== (2) built renderer token counts ===
+AionUi=480
+AionUI=0
+aionui=630
+AionCore=0
+aioncore=0
+Butler=0
+iOfficeAI=2
+
+=== (3) built renderer AionUi sample contexts ===
+
+=== (4) built main token counts ===
+AionUi=85
+AionUI=0
+aionui=177
+AionCore=0
+aioncore=52
+Butler=0
+iOfficeAI=0
+
+=== (5) installer material donor references (source) ===
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-errors-sentry.nsh:32:      ${AIONUI_MSG_INSTALLER_LOG_ZH}:$\r$\n$AionUiSessionLogPath$\r$\n$\r$\n\
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-errors-sentry.nsh:39:      ${AIONUI_MSG_INSTALLER_LOG_EN}:$\r$\n$AionUiSessionLogPath$\r$\n$\r$\n\
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-errors-sentry.nsh:94:  File /oname=$PLUGINSDIR\aionui-report-installer-failure.ps1 "${PROJECT_DIR}\resources\windows\support\report-installer-failure.ps1"
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-errors-sentry.nsh:95:  nsExec::Exec `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$PLUGINSDIR\aionui-report-installer-failure.ps1" -Dsn "${AIONUI_SENTRY_DSN}" -LogPath "$AionUiSessionLogPath" -Code "${_CODE}" -Detail "${_DETAIL}" -Release "${VERSION}" -Arch "${AIONUI_TARGET_ARCH}" -Session "$AionUiSessionId" -Updated "$AionUiIsUpdated" ${_NO_UI}`
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:8:Var /GLOBAL AionUiSessionId
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:9:Var /GLOBAL AionUiIsUpdated
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:10:Var /GLOBAL AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:11:Var /GLOBAL AionUiSessionLogPath
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:14:  !insertmacro AIONUI_SLOG "event=header arch=${AIONUI_TARGET_ARCH} updated=$AionUiIsUpdated instDir=$INSTDIR version=${VERSION} log=$AionUiSessionLogPath detail=customHeader"
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:21:    $$log = '$AionUiSessionLogPath'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:23:    $$session = '$AionUiSessionId'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:28:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = $$session; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = $$event; message = $$message }; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:40:    $$log = '$AionUiSessionLogPath'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:42:    $$session = '$AionUiSessionId'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:47:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = $$session; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = $$event; message = $$message }; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:59:    $$log = '$AionUiSessionLogPath'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:61:    $$session = '$AionUiSessionId'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:63:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = $$session; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = '${_EVENT}' }; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:77:    StrCpy $AionUiSessionLogPath $R8
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:82:    StrCpy $AionUiSessionId $R8
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:85:  ${If} $AionUiSessionLogPath == ""
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:86:    nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "$$id = '$AionUiSessionId'; if (-not $$id) { $$id = [guid]::NewGuid().ToString('N').Substring(0,12) }; $$stamp = Get-Date -Format 'yyyyMMdd'; $$name = 'kel-installer-${VERSION}-' + $$stamp + '-log.jsonl'; $$log = Join-Path $$env:TEMP $$name; [Console]::Out.Write($$id + '|' + $$log)"`
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:87:    Pop $AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:88:    Pop $AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:89:    StrCpy $AionUiSessionId $AionUiSessionLogResult 12
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:90:    StrCpy $AionUiSessionLogPath $AionUiSessionLogResult 1024 13
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:91:  ${ElseIf} $AionUiSessionId == ""
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:93:    Pop $AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:94:    Pop $AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:95:    StrCpy $AionUiSessionId $AionUiSessionLogResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:100:  StrCpy $AionUiIsUpdated "0"
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:102:    StrCpy $AionUiIsUpdated "1"
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:4:Var /GLOBAL AionUiStopResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:5:Var /GLOBAL AionUiLockerResult
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:6:Var /GLOBAL AionUiLockerList
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:7:Var /GLOBAL AionUiLockerListZh
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:8:Var /GLOBAL AionUiLockerListEn
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:9:Var /GLOBAL AionUiLockerListFile
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:10:Var /GLOBAL AionUiCurrentOutDir
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:15:    $$log = '$AionUiSessionLogPath'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:21:    function Test-AionUiOwnedProcess($$proc) { \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:28:    $$hits = @(Get-CimInstance -ClassName Win32_Process | Where-Object { Test-AionUiOwnedProcess $$_ }); \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:29:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find'; ownedPrefix = $$ownedPrefix; installerPid = $$installerPid; hits = $$hits.Count; owned = ($$hits.Count -gt 0) }; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:31:    if ($$hits.Count -gt 0) { $$hitPayload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-find-hits'; processes = @($$hits | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,Path,CommandLine) }; Add-Content -LiteralPath $$log -Encoding UTF8 -Value ($$hitPayload | ConvertTo-Json -Compress -Depth 10); exit 0 } \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:40:    $$log = '$AionUiSessionLogPath'; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:46:    function Test-AionUiOwnedProcess($$proc) { \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:54:    $$owned = @($$all | Where-Object { Test-AionUiOwnedProcess $$_ }); \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:58:      $$children = @($$all | Where-Object { $$frontier -contains [int]$$_.ParentProcessId -and [int]$$_.ProcessId -ne [int]$$installerPid } | Where-Object { Test-AionUiOwnedProcess $$_ }); \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:63:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'start' }; \
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:66:    $$payload = [ordered]@{ schemaVersion = 1; ts = (Get-Date -Format o); session = '$AionUiSessionId'; version = '${VERSION}'; arch = '${AIONUI_TARGET_ARCH}'; updated = ('$AionUiIsUpdated' -eq '1'); instDir = '$INSTDIR'; event = 'process-stop'; ids = @($$ids); result = 'done' }; \
+
+=== (6) counts by area (installer material) ===
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/windows-installer-x64.nsh:9
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/windows-installer-arm64.nsh:5
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/support/verify-bundled-aioncore-install.ps1:11
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/support/report-installer-failure.ps1:7
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/support/query-lockers.ps1:8
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/support/_sentry-dsn.generated.nsh:0
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-update-verify.nsh:40
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-repair-heal.nsh:56
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-remove-registry.nsh:75
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-process-control.nsh:75
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-observability.nsh:28
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-messages.nsh:0
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-errors-sentry.nsh:4
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/resources/windows/installer-common.nsh:0
+== src tree donor-token files ==
+     40 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/sentry.ts
+     40 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/styles/markdown.css
+     27 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts
+     20 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/styles/arco-override.css
+     14 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/utils.ts
+     14 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/initStorage.ts
+     14 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/database/migrations.ts
+     12 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/startup/backendStartupFailure.ts
+     11 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/storage.ts
+     10 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/InstallationIntegrityDialog.tsx
+      9 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/conversation/GroupedHistory/ConversationSearchPopover.css
+      9 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/base/AionModal.tsx
+      9 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/configureChromium.ts
+      9 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/backend/binaryResolver.test.ts
+      9 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/appEnv.ts
+      8 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/conversation/Messages/hooks.ts
+      7 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/conversation/platforms/acp/buildSendFailureError.ts
+      7 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/main.tsx
+      7 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx
+      7 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/constants.ts
+      6 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/services/i18n/format.ts
+      6 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/conversation/SourceControl/scmModel.ts
+      6 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/configureConsoleLog.ts
+      6 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/backend/binaryResolver.ts
+      6 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/storageKeys.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/useUpdateNotificationController.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/webuiConfig.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/utils/deepLink.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/services/autoUpdaterService.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/resources/builtinMcp/cdpTargetProtocol.ts
+      5 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/process/bridge/webuiBridge.ts
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/settings/AppearanceSettings/backgroundUtils.ts
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/settings/AgentSettings/LocalAgents.tsx
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/cron/useCronJobs.ts
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/pages/conversation/explorer/monitorTransport.ts
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/media/WebviewHost.tsx
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/base/ModalWrapper.tsx
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/base/index.ts
+      4 C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/base/AionSteps.tsx
