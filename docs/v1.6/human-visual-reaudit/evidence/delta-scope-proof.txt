@@ -1,0 +1,6 @@
+== non-(desktop|docs) paths in 05a076b..6d957ee9 ==
+NONE — production changes confined to desktop/
+== runtime/ diff in range ==
+(empty = engine untouched in range)
+== third_party/ scripts(root)/ packaging/ ==
+(empty = untouched)
