@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D7 complete; entering D8)
+Updated: 2026-09-20 (D0–D7 complete; D8 slice 1 landed, D8 continuing)
 
 ## Lane
 
@@ -52,10 +52,14 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   human side now classifies an orphaned run as needs-you (with the engine's own reason) while a
   route-blocked job stays auto-resuming, and the landing brief preserves reasons, dedupes, and
   reports counts from what it actually shows.
+- **D8 slice 1** (this commit) — adaptive staffing: the engine ladder (D0–D4, hard rules, ceilings,
+  8 workforce test files) was verified complete; the Work page's internals table (role versions,
+  digests, budget meters) was replaced with user language — "Kel is using an independent review." +
+  per-specialist plain sentences (`staffingLanguage.ts`, 4 pins). REMAINING: Team-page roster
+  exposure decision + D0–D3 selection/boundary evidence.
 
 ## Next item
 
-- **D8 — Adaptive staffing** (§18–20): smallest sufficient tier via the existing workforce
-  architecture (D0 Kel alone → D1 Kel + specialist → D2 builder/reviewer pod → D3 parallel teams →
-  D4 exceptional), with authority/budget ceilings, no recursive spawning, no roster management, and
-  user language that never exposes workforce internals.
+- **D8 remainder** (§18–20): decide the Kel Team page's Roster view (normal-user roster management is
+  out of scope — developer-only disclosure or removal) and record the D0/D1/D2/D3 selection/boundary
+  evidence; then **D9 — Controlled learning promotion** (§21–22).

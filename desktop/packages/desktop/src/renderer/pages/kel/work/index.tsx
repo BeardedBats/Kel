@@ -17,6 +17,7 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { NeedsAttention } from '@renderer/components/kel/KelNeedsAttention';
+import { assignmentLine, staffingSummary } from '@renderer/components/kel/staffingLanguage';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelArtifact,
@@ -343,32 +344,19 @@ const WorkCenter: React.FC = () => {
               why="Kel assigns a specialist only when a milestone actually runs — there are never decorative specialists."
             />
           ) : (
-            <KelTable
-              head={['Specialist', 'Role version', 'State', 'Provider', 'Budget', 'Updated']}
-              rows={assignments.map((assignment) => [
-                <span className="kel-strong" key={`${assignment.assignment_id}-role`}>
-                  {assignment.role}
-                </span>,
-                <span className="kel-meta" key={`${assignment.assignment_id}-v`}>
-                  {`v${assignment.role_version} · ${assignment.snapshot_digest.slice(0, 8)}`}
-                </span>,
-                <KelStatusChip
-                  key={`${assignment.assignment_id}-state`}
-                  status={statusFromDerived(assignment.derived_state)}
-                />,
-                <span className="kel-meta" key={`${assignment.assignment_id}-p`}>
-                  {assignment.provider ? `${assignment.provider} / ${assignment.model ?? 'default'}` : '—'}
-                </span>,
-                <KelMeter
-                  key={`${assignment.assignment_id}-budget`}
-                  used={assignment.spent ?? 0}
-                  total={assignment.budget ?? 8}
-                />,
-                <span className="kel-meta" key={`${assignment.assignment_id}-when`}>
-                  {formatWhen(assignment.updated)}
-                </span>,
-              ])}
-            />
+            <div>
+              <p className='kel-meta' style={{ margin: '0 0 6px' }}>
+                {staffingSummary(assignments)}
+              </p>
+              {assignments.map((assignment) => (
+                <div className='kel-attention__row' key={assignment.assignment_id}>
+                  <div className='kel-attention__text'>
+                    <strong>{assignmentLine(assignment)}</strong>
+                    <span className='kel-meta'>{`${assignment.role} · updated ${formatWhen(assignment.updated)}`}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </KelCard>
       </main>
