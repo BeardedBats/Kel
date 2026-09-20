@@ -11,6 +11,7 @@ import { networkInterfaces } from 'os';
 import { getSystemDir } from './initStorage';
 import { httpRequest } from '@/common/adapter/httpBridge';
 import { startWebHost, type WebHostHandle } from '@aionui/web-host';
+import { kelEngineDescriptor } from '../services/kel/KelService';
 import { getDataPath } from './utils';
 
 const WEBUI_CONFIG_FILE = 'webui.config.json';
@@ -58,8 +59,7 @@ async function writeWebUIDesktopEnabled(enabled: boolean): Promise<void> {
 export type WebUIUserConfig = {
   port?: number | string;
   allowRemote?: boolean;
-  // Legacy fields, retired in favor of SQLite users table. Present only when
-  // reading an older webui.config.json; stripped on every rewrite.
+  /** D3: the web-host auth store keeps the scrypt password hash in this file. */
   passwordHash?: string;
   passwordUpdatedAt?: string;
   adminUsername?: string;
@@ -87,18 +87,26 @@ export const parseBooleanEnv = (value?: string): boolean | null => {
 
 export const loadUserWebUIConfig = (): { config: WebUIUserConfig; path: string | null; exists: boolean } => {
   try {
-    const userDataPath = app.getPath('userData');
-    const configPath = path.join(userDataPath, WEBUI_CONFIG_FILE);
-    if (!fs.existsSync(configPath)) {
-      return { config: {}, path: configPath, exists: false };
+    // D3: the web-host auth store and this reader share one file next to the Kel data root.
+    const configPath = path.join(getDataPath(), WEBUI_CONFIG_FILE);
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return { config: parsed as WebUIUserConfig, path: configPath, exists: true };
+      }
     }
-
-    const raw = fs.readFileSync(configPath, 'utf-8');
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') {
-      return { config: {}, path: configPath, exists: false };
+    // Legacy location (Electron userData): read port/allowRemote once for continuity; the next
+    // save writes the unified location.
+    const legacyPath = path.join(app.getPath('userData'), WEBUI_CONFIG_FILE);
+    if (app.getPath('userData') !== getDataPath() && fs.existsSync(legacyPath)) {
+      const raw = fs.readFileSync(legacyPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return { config: parsed as WebUIUserConfig, path: configPath, exists: false };
+      }
     }
-    return { config: parsed as WebUIUserConfig, path: configPath, exists: true };
+    return { config: {}, path: configPath, exists: false };
   } catch {
     return { config: {}, path: null, exists: false };
   }
@@ -111,7 +119,7 @@ export const loadUserWebUIConfig = (): { config: WebUIUserConfig; path: string |
  * Write-to-tmp-then-rename prevents corruption if the process is killed mid-write.
  */
 export const saveUserWebUIConfig = async (config: WebUIUserConfig): Promise<void> => {
-  const userDataPath = app.getPath('userData');
+  const userDataPath = getDataPath();
   const configPath = path.join(userDataPath, WEBUI_CONFIG_FILE);
   const tmpPath = `${configPath}.tmp`;
 
@@ -119,6 +127,12 @@ export const saveUserWebUIConfig = async (config: WebUIUserConfig): Promise<void
   if (config.port !== undefined) sanitized.port = config.port;
   if (config.allowRemote !== undefined) sanitized.allowRemote = config.allowRemote;
   if (config.adminUsername !== undefined) sanitized.adminUsername = config.adminUsername;
+  // D3: the web-host auth store owns these fields in the same file — never drop them on write.
+  const existing = loadUserWebUIConfig().config;
+  const passwordHash = config.passwordHash ?? existing.passwordHash;
+  const passwordUpdatedAt = config.passwordUpdatedAt ?? existing.passwordUpdatedAt;
+  if (passwordHash !== undefined) sanitized.passwordHash = passwordHash;
+  if (passwordUpdatedAt !== undefined) sanitized.passwordUpdatedAt = passwordUpdatedAt;
 
   await fs.promises.mkdir(userDataPath, { recursive: true });
   const payload = JSON.stringify(sanitized, null, 2) + '\n';
@@ -229,7 +243,13 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
   // Spawning a second backend here would race the first on the same SQLite file.
   const backendPort = (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
   if (!backendPort) {
-    throw new Error('[WebUI] Cannot start: aioncore is not running (globalThis.__backendPort unset)');
+    throw new Error('[WebUI] Cannot start: the Kel engine is not running yet');
+  }
+  // D3: the gateway authenticates browsers against its own session store and injects this token
+  // when proxying, so the engine credential never reaches a browser.
+  const engineDescriptor = kelEngineDescriptor();
+  if (!engineDescriptor?.token) {
+    throw new Error('[WebUI] Cannot start: the Kel engine descriptor is unavailable');
   }
 
   const handle = await startWebHost({
@@ -247,6 +267,7 @@ export async function startDesktopWebUI(opts: { port?: number; allowRemote?: boo
     staticDir: path.join(__dirname, '../renderer'),
     port: preferredPort,
     allowRemote,
+    auth: { bearerToken: engineDescriptor.token },
     // Must align with the desktop IPC path's backend dataDir (src/index.ts), otherwise
     // users see divergent SQLite state between desktop app and bundled WebUI.
     dataDir: getDataPath(),
