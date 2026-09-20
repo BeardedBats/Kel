@@ -1,15 +1,15 @@
 {
-  "dataDir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d4-nm2FfG",
+  "dataDir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d4-QRbrVp",
   "checks": {
     "status": {
       "mode": "fixture",
       "label": "Practice mode",
-      "has_key": false,
+      "has_key_at_start": false,
       "live_capable": true,
       "detail": "Practice mode transcribes locally with clear, repeatable text — add a Meta API key in Settings to use Muse."
     },
     "upload": {
-      "id": "252d5d71-54a4-4a24-b62b-66dc55a0b65c",
+      "id": "aae2657f-8aee-4146-b824-094bfeb14d19",
       "status": "complete",
       "has_audio": true,
       "duration_ms": 4200,
@@ -24,7 +24,7 @@
       "duration_ms": 4600
     },
     "save_recording": {
-      "id": "30d9b71d-aeab-4b8f-85e9-abadf1bf8321",
+      "id": "6c4d9976-ea9e-4590-a012-1f51afefc5ac",
       "has_audio": true,
       "name": "Local Practice Transcript So the Recording and Saving Flow"
     },
@@ -76,6 +76,6 @@
       }
     ]
   },
-  "startedAt": "2026-09-20T13:37:50.315Z",
-  "finishedAt": "2026-09-20T13:37:51.938Z"
+  "startedAt": "2026-09-20T15:28:58.927Z",
+  "finishedAt": "2026-09-20T15:29:00.748Z"
 }

@@ -92,7 +92,9 @@ async function main() {
     results.checks.status = {
       mode: status.mode,
       label: status.label,
-      has_key: status.has_key,
+      // A fresh data dir legitimately has no key yet (one is set later in this run, then cleared);
+      // this field is informational, not a verdict. What matters is that the state is honest.
+      has_key_at_start: status.has_key,
       live_capable: status.live_capable,
       detail: status.detail,
     };

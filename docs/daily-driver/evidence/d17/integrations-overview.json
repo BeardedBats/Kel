@@ -1,7 +1,7 @@
 {
   "phase": "D17",
-  "when": "2026-09-20T15:19:46.178Z",
-  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d17-j8x7Hc",
+  "when": "2026-09-20T15:25:43.550Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d17-buYGim",
   "verdict": {
     "inventory_returns_rows": true,
     "every_row_has_honest_state": true,
