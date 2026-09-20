@@ -44,6 +44,12 @@ describe('desktop pet truthfulness (RA-MINOR-003)', () => {
     expect(page).toMatch(/getPetEnabled\.invoke\(\)/);
     expect(page).toContain('void settle();');
   });
+
+  it('the refusal explanation collapses to a single toast (HVRA-SUG-002)', () => {
+    const page = read('packages/desktop/src/renderer/pages/settings/PetSettings.tsx');
+    // One explanation per attempt: the stable message id makes duplicate emissions impossible.
+    expect(page).toContain("id: 'pet-enable-refused'");
+  });
 });
 
 describe('Kel build identity (AUD-MINOR-009)', () => {
@@ -85,5 +91,13 @@ describe('installer message branding (RA-MINOR-002)', () => {
     expect(report).toContain("'Kel installer failure ' + $code");
     expect(report).toContain("'To Kel Team'");
     expect(report).not.toMatch(/AionUi Team/);
+  });
+});
+
+describe('installer metadata branding (HVRA-MINOR-002)', () => {
+  it('the packaged app description carries no donor naming', () => {
+    const pkg = JSON.parse(read('package.json')) as { description?: string };
+    expect(pkg.description).toBe('Kel');
+    expect(pkg.description).not.toMatch(/AionUi/i);
   });
 });
