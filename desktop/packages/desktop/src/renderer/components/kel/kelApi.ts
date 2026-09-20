@@ -119,24 +119,42 @@ declare global {
   }
 }
 
+// D13 — the gateway's failure codes are for machines; the person in front of the remote browser
+// gets a sentence. Unknown codes fall back to the engine's own message, never to a raw string.
+const GATEWAY_FAILURE_TEXT: Record<string, string> = {
+  KEL_ENGINE_UNAVAILABLE:
+    "Kel isn't running on the computer that serves this page right now. Open Kel there, then try again.",
+  KEL_ENGINE_UNREACHABLE:
+    'Kel stopped answering on that computer. Your work is kept — try again in a moment.',
+};
+
 async function call<T>(route: string, body?: unknown): Promise<T> {
   const api = typeof window === 'undefined' ? undefined : window.kelAPI;
   if (api) return (await api.request(route, body)) as T;
   // D11 — away from the desktop (the remote browser) the same renderer talks to the engine through
   // the desktop web-host's session-gated gateway: /kel/* is proxied server-side with the
-  // process-held bearer token, so no credential ever reaches the browser.
-  const response = await fetch(`/kel${route}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
-  });
+  // process-held bearer token, so no credential ever reaches the browser. Bodyless calls are GETs,
+  // exactly like the preload bridge, because the engine serves its reads as GET-with-query.
+  const hasBody = body !== undefined;
+  let response: Response;
+  try {
+    response = await fetch(`/kel${route}`, {
+      method: hasBody ? 'POST' : 'GET',
+      ...(hasBody
+        ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+        : {}),
+    });
+  } catch {
+    // The browser itself could not reach the page's own origin — a network drop, not a Kel fault.
+    throw new Error("This device can't reach Kel right now — check the connection and try again.");
+  }
   const payload = (await response.json().catch((): null => null)) as unknown;
   if (!response.ok) {
-    const message =
+    const code =
       payload && typeof payload === 'object' && 'error' in payload
         ? String((payload as { error: unknown }).error)
-        : `Kel is not answering right now (${response.status}).`;
-    throw new Error(message);
+        : '';
+    throw new Error(GATEWAY_FAILURE_TEXT[code] ?? `Kel is not answering right now (${response.status}).`);
   }
   return payload as T;
 }
@@ -519,12 +537,28 @@ export const kelTeam = {
     call<{ events: KelTeamEvent[] }>('/api/team', { action: 'timeline', assignment_id: assignmentId }),
 };
 
+/** D12: why the engine routed a run to a provider — selected/fallbacks/excluded + policy flags. */
+export interface KelJobRoute {
+  provider?: string | null;
+  route: {
+    selected: string;
+    fallbacks?: string[];
+    excluded?: Record<string, string[]>;
+    policy?: string;
+    unknown_cost?: boolean;
+    unknown_quota?: boolean;
+  };
+  at?: number;
+}
+
 export const kelState = () =>
   call<{
     jobs: KelWorkJob[];
     continuation?: KelContinuationCandidate[];
     approvals?: Array<Record<string, unknown>>;
     providers: string[];
+    /** D12: routing decisions for active jobs, keyed by job id. */
+    routes?: Record<string, KelJobRoute>;
     projects: Array<{ id: string; name: string }>;
     engine_version?: string;
     draining?: boolean;

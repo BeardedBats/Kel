@@ -83,8 +83,23 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   journey all-green: real engine + real `bun run webui` (shipped aioncore) + login → a
   desktop-seeded job is visible to the remote session; the token never reaches the browser
   (`packaging/verify-remote-kel.cjs`, `evidence/d11/`).
+- **D12 complete** (this commit) — smarter provider routing: `router.select` was verified complete
+  (eligible-cost-v1: hard filters with reasons, fallbacks, unknown cost/quota flags). The chosen
+  route was invisible, so `/api/state` now exposes the `run.claimed` decision per active job and
+  the Work page renders one plain sentence ("Running on X — the cheapest eligible option", a
+  fallback offer, up to 3 skipped providers with translated reasons, honest unknowns). Also fixed a
+  real D11 gap found here: the remote fallback always POSTed, so bodyless reads now GET like the
+  preload bridge (pinned). Live journey all-green (`packaging/verify-route-transparency.cjs`,
+  `evidence/d12/`).
+- **D13 complete** (this commit) — failure recovery polish: the remote gateway's machine codes are
+  now sentences in the user's view (`KEL_ENGINE_UNAVAILABLE` → "Kel isn't running on the computer
+  that serves this page right now…"; `KEL_ENGINE_UNREACHABLE` → "Kel stopped answering on that
+  computer. Your work is kept — try again in a moment."), a browser-level network drop reads as a
+  device problem, and unknown codes fall back to the engine's own message — a raw code can no
+  longer appear as UI copy. Engine full suite re-run green (1023 OK) after the D12 change.
 
 ## Next item
 
-- **D12 — Smarter provider routing** (§26–27): verify what the engine already decides (task fit,
-  health, cost where known, honest fallbacks) and close the smallest honest gap in the user's view.
+- **D14 — Optional Advanced Activity view** (§29): implement a high-level, optional Activity surface
+  over existing state (no leases/epochs/internal IDs outside developer disclosure), only if it fits
+  cleanly.

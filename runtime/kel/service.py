@@ -584,9 +584,23 @@ class Service:
             except Exception:
                 continuation=[]  # the Work surface must render even if continuation state is unavailable
         jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
+        # D12 — the routing decision behind each active run (why this provider/model). The engine
+        # already records it on run.claimed; user surfaces translate it into plain language.
+        routes={}
+        active={j['id'] for j in jobs if j['state'] not in ('CLOSED','CANCELLED')}
+        for event in self.store.events():
+            if event.get('type')!='run.claimed' or event.get('aggregate_id') not in active:
+                continue
+            try:
+                detail=(json.loads(event.get('payload') or '{}') or {}).get('detail') or {}
+            except (TypeError, ValueError):
+                continue
+            route=detail.get('route')
+            if route:
+                routes[event['aggregate_id']]={'provider':detail.get('provider'),'route':route,'at':event.get('at')}
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
-                'providers':list(self.engine.adapters),'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
+                'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
                 'restore':_restore_outcome(self.store.root)}
 
     def action(self,path,data):

@@ -87,7 +87,18 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   the renderer falls back from the missing preload bridge to it, so one UI works remotely; desktop
   app + dev CLI wire the engine data root in. Real-stack journey all-green
   (`packaging/verify-remote-kel.cjs` + `evidence/d11/`).
-- **Next: D12 — smarter provider routing** (directive §26–27).
+- **D12 done (this commit).** Smarter provider routing: the chosen route is now visible — `/api/state`
+  exposes the engine's `run.claimed` decision per active job, and the Work page renders one plain
+  sentence (cheapest-eligible reasoning, fallback offer, up to 3 skipped providers with translated
+  reasons, honest unknowns). Fixed a real D11 gap found here: bodyless reads over the remote
+  gateway now GET (bridge semantics). Live journey all-green
+  (`packaging/verify-route-transparency.cjs` + `evidence/d12/`).
+- **D13 done (D12+D13 commit).** Failure recovery polish: the remote gateway's machine codes are now
+  sentences (`KEL_ENGINE_UNAVAILABLE` / `KEL_ENGINE_UNREACHABLE`), a browser-level network drop
+  reads as a device problem, unknown codes fall back to the engine's message — no raw code as UI
+  copy. Codes live-verified in D11; language layer source-pinned. Engine suite re-run green
+  (1023 OK).
+- **Next: D14 — optional Advanced Activity view** (directive §29).
 
 ## Where
 
