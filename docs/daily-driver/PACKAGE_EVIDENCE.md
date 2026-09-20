@@ -34,6 +34,15 @@ source HEAD → renderer build → engine build → installer → installed cand
       residual fix and pinned by `tests/unit/donor-org-references.test.ts`).
 - [x] Installed probe (engine): the installed `resources/kel-engine/KelEngine.exe` ran against a
       throwaway data dir, published its descriptor and answered `/api/state` (version `1.7.0-dev`).
+- [x] Installed probe (app boot): the **installed app itself** (`Kel.exe`, production build) launched
+      against `KEL_DATA_DIR=C:\Users\Nick\KelDailyDriverRuns\prepared\engine`, started its bundled
+      engine, and that engine answered `/api/state` live (`1.7.0-dev`); a forced close left **no
+      orphaned KelEngine process** behind. Boot also revealed the app's agent-browser bridge
+      (`[CDP] Agent browser control enabled`, single-target, ephemeral port) — located via `netstat`
+      on the app's main PID and confirmed with a `/json/version` probe, and the app's local backend
+      answered `GET /api/settings/client` on its ephemeral port (local trust, as designed). Both are
+      the tooling for the GUI-pass probes below (`webui.desktop.enabled` can be flipped through the
+      backend settings route, then a relaunch starts the web-host for browser-driven checks).
 - [x] Installed candidate registration points at `C:\Users\Nick\KelDailyDriverCandidate`.
 - [ ] Installed probe: Permissions Work column shows the work's request — **D0-001 live replay** (GUI).
 - [ ] Installed probe: Desktop-Pet enable refusal shows exactly ONE toast — **D0-004 live replay** (GUI).
