@@ -50,3 +50,10 @@ Honest, current list (grows/shrinks as phases complete):
   last-seen marker, and the brief reports durable truth rather than inventing recency. Resuming
   remains human-gated: the engine never auto-resumes; the chat reply "continue" (and the Work page)
   is the mechanism, and the brief only points at it.
+- Long-running autonomy (D7): the engine never auto-replays an unconfirmed/orphaned run — that is
+  deliberate (reconcile first) and now surfaces as needs-you with the engine's reason; a
+  route-blocked job waits and resumes by itself, so it deliberately does not interrupt. Live
+  verification of an orphaned run in this environment is limited to the engine unit pins
+  (`test_v16_r6_liveness`, `test_v16_r3_retry_durability`) plus the desktop-side derivation tests:
+  creating a genuinely mid-flight job here would require a live provider credential, which this
+  environment does not have.

@@ -142,3 +142,35 @@ describe('collectAttention — D5 connection setup needs', () => {
     expect(items).toEqual([]);
   });
 });
+
+describe('collectAttention — D7 orphaned runs need a person', () => {
+  it('surfaces a reconciled-required run as needs-you, with the engine reason', () => {
+    const items = collectAttention({
+      jobs: [
+        job({
+          id: 'o1',
+          state: 'WAITING_RESOURCE',
+          milestones: { m1: { state: 'UNCERTAIN', error: 'Expired run; native state requires reconciliation' } },
+        }),
+      ],
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0].kind).toBe('input');
+    expect(items[0].id).toBe('input-o1');
+    expect(items[0].title).toMatch(/fresh start/i);
+    expect(items[0].detail).toContain('requires reconciliation');
+    expect(items[0].action?.to).toBe('/conversation/conv-a');
+  });
+
+  it('never treats a route-blocked job as an interruption (it resumes by itself)', () => {
+    const items = collectAttention({
+      jobs: [job({ id: 'w1', state: 'WAITING_RESOURCE', route_block: 'No model is available right now' })],
+    });
+    expect(items).toEqual([]);
+  });
+
+  it('stays quiet for a waiting job with no recorded reason at all', () => {
+    const items = collectAttention({ jobs: [job({ id: 'w2', state: 'WAITING_RESOURCE' })] });
+    expect(items).toEqual([]);
+  });
+});

@@ -51,9 +51,18 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   Cap 3 per section, quiet when empty, real actions only. Verified live: engine restart on the same
   data dir → fresh pid, stable version, durable counts stable, planted restore-outcome surfaced
   (`evidence/d6/continuation-restart.json`, verdict all true).
-- **NEXT: D7 — Long-running autonomy** (§16–17). Recon `/api/autonomy` + guardrails + job lifecycle
-  and the shell failure surfaces; strengthen durable-objective continuation and recovery within the
-  existing architecture; test provider interruption and engine restart during active work.
+- **D7 Long-running autonomy done (this commit).** The engine basis was already complete and pinned
+  (orphan fencing with reconcile-first/never-auto-retry, durable attempt budgets, provider circuit,
+  automatic-resume refusal when exhausted, route blocks that clear themselves). D7 changed the
+  human-facing classification: an orphaned run (WAITING_RESOURCE without `route_block`, with a
+  recorded milestone reason) is now a Needs-Your-Attention item carrying the engine's own sentence,
+  while a route-blocked job is explicitly not an interruption. The landing brief's "stopped"
+  section is paused-only, keeps engine reasons, dedupes against needs-you items, and its summary
+  counts come from the emitted lines. `KelWorkJob` gained `route_block` + milestone `error` in the
+  client types (always returned by the engine).
+- **NEXT: D8 — Adaptive staffing** (§18–20). Recon `/api/team` + assignments/derived_state and the
+  recipes/pods architecture; add smallest-sufficient-tier selection with authority ceilings inside
+  the existing system; normal UI says only "Kel is using an independent review".
 
 ## Where
 

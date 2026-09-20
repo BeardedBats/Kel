@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D6 complete; entering D7)
+Updated: 2026-09-20 (D0–D7 complete; entering D8)
 
 ## Lane
 
@@ -47,10 +47,15 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   (failed restore first, needs-you, finished, stopped, go-ahead continuation lines, still-running,
   fresh restore) with 8 unit pins and a live restart/resume verification whose verdict is all-true
   (`evidence/d6/continuation-restart.json`). Continuation stays human-gated.
+- **D7** (this commit) — long-running autonomy: the engine's orphan fencing / durable budgets /
+  provider circuit / self-clearing route blocks were verified as already complete and pinned; the
+  human side now classifies an orphaned run as needs-you (with the engine's own reason) while a
+  route-blocked job stays auto-resuming, and the landing brief preserves reasons, dedupes, and
+  reports counts from what it actually shows.
 
 ## Next item
 
-- **D7 — Long-running autonomy** (§16–17): durable objective/step continuation, retry and recovery,
-  provider-interruption and engine-restart recovery, unresolved-effect reconciliation, completion
-  criteria distinct from step completion, human-gate classification — all inside the existing
-  execution architecture (no second supervisor, no blind retries).
+- **D8 — Adaptive staffing** (§18–20): smallest sufficient tier via the existing workforce
+  architecture (D0 Kel alone → D1 Kel + specialist → D2 builder/reviewer pod → D3 parallel teams →
+  D4 exceptional), with authority/budget ceilings, no recursive spawning, no roster management, and
+  user language that never exposes workforce internals.

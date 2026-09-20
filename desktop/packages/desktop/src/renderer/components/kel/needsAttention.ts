@@ -111,6 +111,25 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
           at: job.updated ?? 0,
         });
       }
+    } else if (job.state === 'WAITING_RESOURCE' && !job.route_block) {
+      // D7: an expired/orphaned run lands here. The engine fences the run and never replays it on
+      // its own (reconcile first), so this genuinely needs a person. A route-blocked job
+      // (`route_block` set) is the opposite: it resumes automatically once a model is available,
+      // so it must NOT be an interruption — it stays in the continuation/Work surfaces.
+      const reason = Object.values(job.milestones ?? {}).find(
+        (entry) => entry.state === 'UNCERTAIN' && entry.error
+      )?.error;
+      if (reason) {
+        items.push({
+          id: `input-${job.id}`,
+          kind: 'input',
+          title: 'A run stopped mid-flight and needs a fresh start',
+          detail: `${requestTitle(job)} — ${reason}. Kel will not replay it on its own.`,
+          projectId: jobProject(job),
+          action: openAction(jobConversation(job), 'Open the chat'),
+          at: job.updated ?? 0,
+        });
+      }
     }
   }
 
