@@ -1,0 +1,88 @@
+# FIX_CAPTURE — V2.0 preflight
+
+*Status: implemented, tested, packaged, installed and verified in the installed app. The rest of V2.0
+has deliberately not been started.*
+
+The Daily Driver marathon closed with a candidate Nick could use; this tranche is the small tool that
+makes using it worth something: **Fix Capture** — Ctrl+Shift+F, click the part of Kel that bothers you,
+say why, save, keep working. Fifteen seconds, not sixty, and nothing to fill in: Kel captures the
+context itself.
+
+## What it is, and what it is not
+
+| | |
+|---|---|
+| Invoke | **Ctrl+Shift+F** (again stops a recording), **Esc** cancels, clicking the highlighted area stops |
+| Select | click buttons, cards, text areas, settings rows, sidebar items, conversation areas, panels — the hovered element gets a full-perimeter highlight and the cursor says "selecting" |
+| Say | a compact panel opens beside the target (never on top of it when there is room) with the live transcript from Kel's own transcription |
+| Decide | **Save Fix** / **Record Again**; clicking outside or Esc cancels without saving |
+| Review | `/dogfood` — Open / Batched / Fixed / Dismissed, transcript previews, and a detail pane with the words, the captured context and the screenshot with the target outlined by the view |
+| Batch | **Prepare Fix Prompt** turns the selected OPEN fixes into one structured development prompt |
+
+It is **not** an issue tracker: four statuses, and a schema pin (engine) plus a vocabulary pin
+(desktop) that there are no assignees, priorities, due dates, labels, sprints, comments or boards.
+
+## Built out of what Kel already had
+
+| Need | Reused, not rebuilt |
+|---|---|
+| Words | `/api/transcription` — `stream_start` / `stream_chunk` / `stream_status` / `stream_finish`, with the `quick_transcribe` fallback; `friendlyMicError` for device problems. Raw audio is never kept: only the words are stored |
+| Durable state | the engine's SQLite store and its migration pattern (`runtime/kel/dogfood.py`, migration **22**) |
+| Screenshot | the main process reads **Kel's own window** (`webContents.capturePage`), the same technique the donor's feedback bridge already used — never the desktop, never another app |
+| Shell plumbing | the `kel:request` bridge and its route allowlist, the preload surface, the `assertTrustedSender` guard used by every privileged channel |
+| UI | Kel's tokens and primitives, the layout-mounted overlay pattern (the command palette's neighbour), 8px geometry, no pills, no accent rails |
+| Prompt | rendered in the engine, deterministically; no model call and no upload anywhere in the feature |
+
+## The hotkey conflict, resolved deliberately
+
+The donor's conversation-search modal already bound Ctrl+Shift+F (a document-level capture listener
+that opens the search). Fix Capture is the primary consumer of that chord now, so the layer listens on
+`window` in the **capture phase** and stops the event before the search handler sees it. The search
+keeps its own trigger in the conversation header and the Ctrl+K palette path; its binding is left in
+the source as the documented trade, pinned by `fix-capture.dom.test.ts`. Nick asked for Ctrl+Shift+F,
+so the capture wins the chord.
+
+## Storage
+
+```
+<engine data root>/
+  kel.sqlite3                      dogfood_fixes (id, created, updated, status, transcript, …)
+  dogfood/
+    screenshots/FIX-0001.png       committed by the engine under the fix id
+    tmp/<uuid>.png                 in-flight captures; deleted on cancel, swept when stale
+    prompts/PROMPT-<stamp>.md      the generated fix prompt, kept next to its findings
+```
+
+Screenshots never enter the repository, are never uploaded and never reach a model during capture; the
+stored target box is metadata, so the highlight is **not** baked into the PNG. Only files inside
+`dogfood/tmp` can be deleted by a cancel, and only PNGs directly inside `dogfood/screenshots` can be
+read back for the view.
+
+## Statuses and the prompt
+
+`OPEN → BATCHED → FIXED / DISMISSED`, with Reopen. `prepare_prompt` includes every OPEN fix by default
+(or exactly the ids the view sends), writes `dogfood/prompts/<id>.md` **first**, and only then marks
+those fixes BATCHED — a prompt that was never written changes nothing. The rendered prompt carries each
+Fix id, Nick's transcript, the capture time, the route and page, the selected element, the locator, the
+target box, the window/scale, the build, the project/conversation context where relevant, the
+screenshot reference, and the ten instructions a fixing session must follow (reconcile, reproduce,
+group root causes, smallest coherent fix, north star, regression coverage, verify the UI, don't call it
+fixed because code changed, report the ids).
+
+## Test evidence
+
+**Engine** — `runtime/tests/test_dogfood.py`, 22 tests: id allocation, screenshot commit and refusal
+outside `dogfood/`, honest saves when a capture vanished, in-flight discard (and the refusal to touch
+anything else), status validation, subset prompts, determinism, the ten instructions, project
+resolution from a conversation, the stale-tmp sweep, durability across a reopen, and the schema pin
+against tracking fields. Full engine suite: **1051 tests OK**.
+
+**Desktop** — `fix-capture.dom.test.ts` (pure helpers + pins) and `fix-capture-layer.dom.test.tsx`
+(seven integration tests through the real layer with a stubbed microphone and engine): hotkey opens,
+Esc cancels, a click selects and starts recording, the live transcript arrives, the hotkey stops and
+the transcript reaches review, Record Again replaces the words and keeps the target, Save produces
+exactly one fix with the full payload, a missing microphone becomes a typed capture, click-outside
+cancels without saving and hands the temp screenshot back — and the pins that matter: the bridge
+allowlist admits the dogfood routes, the capture-phase claim over the donor search, no spacebar
+shortcut, no single-side borders, exactly four statuses, screenshot path safety. Full desktop suite:
+**38 files / 303 tests** (tsc clean).

@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-09-20T21:26:19.069Z",
+  "installDir": "C:\\Users\\Nick\\KelDogfoodCandidate",
+  "appExe": "C:\\Users\\Nick\\KelDogfoodCandidate\\Kel.exe",
+  "dataRoot": "C:\\Users\\Nick\\KelDogfoodRuns\\prepared\\engine",
+  "fakeMicrophone": true,
+  "journeys": {
+    "a": {
+      "saved": true,
+      "fixId": "FIX-0001",
+      "transcriptPresent": true,
+      "transcript": "This is a local practice transcript so the recording and saving flow can be used before a transcription key is connected.",
+      "survivedRestart": true,
+      "showsTranscript": true
+    },
+    "b": {
+      "saved": true,
+      "fixId": "FIX-0002",
+      "transcriptPresent": true,
+      "exactlyOneFixForTheCapture": true,
+      "transcript": "This is a local practice transcript so the recording and saving flow can be used before a transcription key is connected."
+    },
+    "c": {
+      "cancelled": true,
+      "nothingSaved": true,
+      "panelGone": true,
+      "tempFilesLeft": 0
+    },
+    "d": {
+      "prepared": true,
+      "newFixIdsInPrompt": 2,
+      "newFixIdsExpected": 2,
+      "allBatched": true,
+      "openTabShowedTheNewFixes": true,
+      "promptHasTenInstructions": true
+    },
+    "e": {
+      "screenshotExists": true,
+      "screenshotBytes": 60470,
+      "imageWidth": 2065,
+      "imageHeight": 1392,
+      "recordedRoute": "/settings/about",
+      "recordedTag": "span",
+      "recordedVersion": "1.7.0-dev",
+      "targetBoxInsideTheImage": true,
+      "scale": 1,
+      "detailFound": true,
+      "outlineRendered": false
+    }
+  },
+  "consoleErrors": [],
+  "checks": {
+    "dogfoodPage": {
+      "noRawInternalIds": true,
+      "offenderCount": 0,
+      "donorTerms": [],
+      "horizontalOverflowPx": 0
+    },
+    "files": {
+      "prompts": [
+        "PROMPT-20260920-172708.md"
+      ],
+      "screenshots": [
+        "FIX-0001.png",
+        "FIX-0002.png",
+        "FIX-0003.png",
+        "FIX-0004.png"
+      ],
+      "temporaryLeft": []
+    }
+  },
+  "fixesBefore": 0,
+  "counts": {
+    "BATCHED": 4
+  },
+  "orphanEngineProcesses": 0
+}
