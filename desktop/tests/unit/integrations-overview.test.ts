@@ -20,7 +20,7 @@ describe('integrations overview (D17)', () => {
   it('reads the engine inventory, not a copy', () => {
     expect(kelApi).toContain('export interface KelCapabilityRow');
     expect(kelApi).toContain("call<KelCapabilityRow[]>('/api/capabilities', { action: 'get', conversation })");
-    expect(providersPage).toContain('kelCapabilities().catch(() => [])');
+    expect(providersPage).toContain('kelCapabilities().catch((): KelCapabilityRow[] => [])');
     expect(service).toContain("if action in ('get','list'):");
     expect(service).toContain('return snapshot(self.store,conversation)');
   });

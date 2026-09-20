@@ -107,3 +107,12 @@ Honest, current list (grows/shrinks as phases complete):
   "enable once" stay in the composer's tools pill, and actual setup happens on the Settings → Tools
   surface. Unavailable entries explain the engine's reason and offer no button — there is nothing to
   click when the machine genuinely cannot run something.
+- Donor residual (D19): the Office-preview install link and the agent-hub contribution link (both
+  pointing at the donor org's GitHub) were removed; the only tolerated occurrence of the donor org
+  name in renderer source is one maintenance comment in `siderTooltip.ts` that records the upstream
+  issue being tracked (pinned by `donor-org-references.test.ts`; the shipped bundle contains zero
+  occurrences).
+- Silent install (D19): NSIS update mode targets the *registered* install directory, not `/D` — the
+  documented V1.6 heal behaviour. Fresh installs to a new path require clearing the app's
+  registration keys first (`HKCU\Software\9280710d-…` + the Uninstall key); the incident and its
+  repair are recorded in `PACKAGE_EVIDENCE.md`.
