@@ -101,6 +101,7 @@ export interface AutoUpdaterEvents {
 
 class AutoUpdaterService extends EventEmitter {
   private _isInitialized = false;
+  private _feedConfigured = false;
   private _eventHandlersSetup = false;
   private _allowPrerelease = false;
   private _statusBroadcastCallback: StatusBroadcastCallback | null = null;
@@ -133,22 +134,30 @@ class AutoUpdaterService extends EventEmitter {
     this.configureDevAutoUpdateDebug();
     const cdnFeedOptions = buildCdnFeedOptions();
 
-    // Set the correct update channel based on platform and architecture before
-    // any update checks are performed
-    const channel = getUpdateChannel();
-    if (channel !== undefined) {
-      autoUpdater.channel = channel;
-      log.info(`Update channel set to: ${channel}`);
+    if (cdnFeedOptions) {
+      this._feedConfigured = true;
+      // Set the correct update channel based on platform and architecture before
+      // any update checks are performed
+      const channel = getUpdateChannel();
+      if (channel !== undefined) {
+        autoUpdater.channel = channel;
+        log.info(`Update channel set to: ${channel}`);
+      }
+      autoUpdater.setFeedURL(cdnFeedOptions);
+      log.info('Update feed configured');
+      log.debug('[auto-update] Update feed configured', {
+        provider: cdnFeedOptions.provider,
+        url: cdnFeedOptions.url,
+        channel: channel ?? 'latest',
+        platform: process.platform,
+        arch: process.arch,
+      });
+    } else {
+      // Kel ships without an update CDN: never contact donor infrastructure. The manual GitHub
+      // release check in updateBridge.ts is the single source of truth (fail closed until Kel
+      // publishes release assets).
+      log.info('[auto-update] No update feed configured; electron-updater channel disabled');
     }
-    autoUpdater.setFeedURL(cdnFeedOptions);
-    log.info('Update feed set to CDN provider');
-    log.debug('[auto-update] CDN feed configured', {
-      provider: cdnFeedOptions.provider,
-      url: cdnFeedOptions.url,
-      channel: channel ?? 'latest',
-      platform: process.platform,
-      arch: process.arch,
-    });
   }
 
   private configureDevAutoUpdateDebug(): void {
@@ -195,10 +204,14 @@ class AutoUpdaterService extends EventEmitter {
   private ensureDevUpdateConfig(): void {
     try {
       const cdnFeedOptions = buildCdnFeedOptions();
+      if (!cdnFeedOptions) {
+        log.info('[auto-update] No update feed configured; skipping dev update config');
+        return;
+      }
       const devConfig = [
         'provider: generic',
         `url: ${cdnFeedOptions.url}`,
-        'updaterCacheDirName: com.aionui.app',
+        'updaterCacheDirName: com.kel.desktop',
         '',
       ].join('\n');
       const configPath = path.join(app.getPath('userData'), 'dev-app-update.yml');
@@ -609,6 +622,11 @@ class AutoUpdaterService extends EventEmitter {
         throw new Error('AutoUpdaterService not initialized');
       }
 
+      if (!this._feedConfigured) {
+        log.debug('[auto-update] No update feed configured; skipping electron-updater check');
+        return { success: true };
+      }
+
       log.debug('[auto-update] checkForUpdates requested', {
         allowPrerelease: this._allowPrerelease,
         channel: autoUpdater.channel ?? 'latest',
@@ -904,6 +922,10 @@ class AutoUpdaterService extends EventEmitter {
    */
   async checkForUpdatesAndNotify(): Promise<void> {
     try {
+      if (!this._feedConfigured) {
+        log.info('[auto-update] No update feed configured; skipping startup update check');
+        return;
+      }
       // Ensure clean state: prevent stale allowDowngrade=true from prior setAllowPrerelease(true) calls
       autoUpdater.allowDowngrade = false;
       await autoUpdater.checkForUpdatesAndNotify();
