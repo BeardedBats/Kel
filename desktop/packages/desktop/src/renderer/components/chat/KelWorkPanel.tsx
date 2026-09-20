@@ -89,31 +89,8 @@ type State = {
   approvals: { id: string; job_id: string; action: string }[];
   continuation?: ContinuationEntry[];
 };
-declare global {
-  interface Window {
-    kelAPI?: {
-      request: (route: string, body?: unknown) => Promise<unknown>;
-      history: (id: string) => Promise<unknown>;
-      conversation: (id: string) => Promise<unknown>;
-      historySearch: (query: string) => Promise<unknown>;
-      /** Batch 6: the shell's honest engine-link view + support actions. */
-      engineState?: () => Promise<unknown>;
-      engineRetry?: () => Promise<unknown>;
-      diagnostics?: () => Promise<unknown>;
-      onEngineState?: (callback: (frame: unknown) => void) => () => void;
-      /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
-      credentials?: {
-        status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
-        set: (
-          provider: string,
-          field: string,
-          value: string
-        ) => Promise<{ provider: string; fields: string[] }>;
-        remove: (provider: string) => Promise<{ provider: string; removed: number }>;
-      };
-    };
-  }
-}
+// The window.kelAPI shape is declared once, next to the client that uses it
+// (`components/kel/kelApi.ts`); this module deliberately does not declare it again.
 async function request<T>(route: string, body?: unknown): Promise<T> {
   if (!window.kelAPI) throw Error('Kel connection is unavailable');
   return (await window.kelAPI.request(route, body)) as T;

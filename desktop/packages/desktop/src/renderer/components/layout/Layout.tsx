@@ -17,6 +17,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import brandMark from '@renderer/assets/logos/brand/app.png';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
+import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
@@ -416,6 +417,8 @@ const Layout: React.FC<{
           </a>
           {/* Kel V1.4: Ctrl+K anywhere (or `/` to search) opens the command palette. */}
           <KelCommandPalette />
+          {/* V2.0 preflight: Ctrl+Shift+F anywhere captures one fix (selection overlay + record panel). */}
+          <FixCaptureLayer />
           <Titlebar workspaceAvailable={workspaceAvailable} />
           {/* 移动端左侧边栏蒙板 / Mobile left sider backdrop */}
           {isMobile && !collapsed && (

@@ -115,12 +115,31 @@ declare global {
         ) => Promise<{ provider: string; fields: string[] }>;
         remove: (provider: string) => Promise<{ provider: string; removed: number }>;
       };
+      /**
+       * Fix Capture: one screenshot of Kel's own window, written into the data root. Absent on the
+       * remote surface, where reading Kel's window is impossible by design.
+       */
+      dogfood?: {
+        capture: () => Promise<{
+          screenshot: string;
+          image: { width: number; height: number };
+          content: { width: number; height: number };
+          display: { scale: number };
+          captured_at: number;
+        }>;
+        screenshot: (relpath: string) => Promise<{ data_url: string }>;
+      };
+      /** Reveal a store-relative path in the OS file manager (best effort on the remote surface). */
+      revealArtifact?: (relpath: string) => Promise<unknown>;
     };
   }
 }
 
 // D13 — the gateway's failure codes are for machines; the person in front of the remote browser
 // gets a sentence. Unknown codes fall back to the engine's own message, never to a raw string.
+
+/** One engine call with the bridge/gateway fallback rules; for feature modules that own a route. */
+export const kelRequest = <T,>(route: string, body?: unknown): Promise<T> => call<T>(route, body);
 const GATEWAY_FAILURE_TEXT: Record<string, string> = {
   KEL_ENGINE_UNAVAILABLE:
     "Kel isn't running on the computer that serves this page right now. Open Kel there, then try again.",
@@ -424,6 +443,107 @@ export const kelProviders = {
       '/api/providers',
       { action: 'usage', provider }
     ),
+};
+
+// ---------------------------------------------------------------------------------------------
+// Fix Capture (V2.0 preflight): a fix is Nick's own words plus the context Kel captured for it.
+// The statuses are deliberately the only workflow this has.
+// ---------------------------------------------------------------------------------------------
+export const FIX_STATUSES = ['OPEN', 'BATCHED', 'FIXED', 'DISMISSED'] as const;
+export type KelFixStatus = (typeof FIX_STATUSES)[number];
+
+export interface KelFixElement {
+  tag?: string;
+  role?: string | null;
+  text?: string;
+  label?: string | null;
+  selector?: string;
+  rect?: { x: number; y: number; width: number; height: number };
+}
+
+export interface KelFixWindow {
+  width?: number;
+  height?: number;
+  scale?: number;
+}
+
+export interface KelFix {
+  id: string;
+  created: number;
+  updated: number;
+  status: KelFixStatus;
+  transcript: string;
+  screenshot?: string | null;
+  has_screenshot?: boolean;
+  route?: string | null;
+  page_title?: string | null;
+  element?: KelFixElement | null;
+  window?: KelFixWindow | null;
+  project_id?: string | null;
+  conversation?: string | null;
+  version?: string | null;
+  prompt_id?: string | null;
+}
+
+export interface KelFixList {
+  fixes: KelFix[];
+  counts: Record<KelFixStatus, number>;
+  statuses: KelFixStatus[];
+}
+
+/** What the main process hands back for one captured window. */
+export interface KelFixCapture {
+  screenshot: string;
+  image: { width: number; height: number };
+  content: { width: number; height: number };
+  display: { scale: number };
+  captured_at: number;
+}
+
+export const kelDogfood = {
+  list: (status?: KelFixStatus) =>
+    call<KelFixList>('/api/dogfood', status ? { action: 'list', status } : undefined),
+  get: (id: string) => call<KelFix>(`/api/dogfood?action=get&id=${encodeURIComponent(id)}`),
+  save: (body: {
+    transcript: string;
+    screenshot?: string | null;
+    route?: string | null;
+    page_title?: string | null;
+    element?: KelFixElement | null;
+    window?: KelFixWindow | null;
+    version?: string | null;
+    conversation?: string | null;
+  }) => call<KelFix>('/api/dogfood', { action: 'save', ...body }),
+  setStatus: (id: string, status: KelFixStatus) =>
+    call<KelFix>('/api/dogfood', { action: 'set_status', id, status }),
+  preparePrompt: (fixIds?: string[]) =>
+    call<{ prompt: string; prompt_id: string; path: string; fix_ids: string[]; marked: string }>(
+      '/api/dogfood',
+      { action: 'prepare_prompt', ...(fixIds && fixIds.length ? { fix_ids: fixIds } : {}) }
+    ),
+  /**
+   * One window capture, written by the main process into the data root. Returns null on surfaces
+   * that cannot read Kel's window (the remote browser) so the caller can say so honestly.
+   */
+  capture: async (): Promise<KelFixCapture | null> => {
+    const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+    if (!api?.dogfood?.capture) return null;
+    try {
+      return (await api.dogfood.capture()) as KelFixCapture;
+    } catch {
+      return null;
+    }
+  },
+  /** A saved screenshot as a data URL for display; null when it cannot be read here. */
+  screenshot: async (relpath: string | null | undefined): Promise<string | null> => {
+    const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+    if (!relpath || !api?.dogfood?.screenshot) return null;
+    try {
+      return ((await api.dogfood.screenshot(relpath)) as { data_url: string }).data_url;
+    } catch {
+      return null;
+    }
+  },
 };
 
 export const kelAutonomy = {

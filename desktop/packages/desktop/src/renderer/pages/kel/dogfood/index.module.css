@@ -1,0 +1,129 @@
+/**
+ * Dogfood Fixes — a quiet list, not a board. Neutral full-perimeter borders, Kel tokens, compact rows.
+ */
+.pickList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--kel-space-2);
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  gap: var(--kel-space-2);
+  font-family: var(--kel-font);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--kel-text-1);
+}
+
+.list {
+  list-style: none;
+  margin: var(--kel-space-3) 0 0;
+  padding: 0;
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-surface-1);
+  overflow: hidden;
+}
+
+.item + .item {
+  border-top: 1px solid var(--kel-border);
+}
+
+.itemButton {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  grid-template-areas:
+    'id preview'
+    'id meta';
+  gap: 2px var(--kel-space-3);
+  padding: var(--kel-space-3) var(--kel-space-4);
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--kel-font);
+}
+
+.itemButton > .kel-strong {
+  grid-area: id;
+}
+
+.itemButton > .preview {
+  grid-area: preview;
+}
+
+.itemButton > .kel-meta {
+  grid-area: meta;
+}
+
+.itemButton:hover {
+  background: var(--kel-surface-2);
+}
+
+.detail {
+  padding: var(--kel-space-3) var(--kel-space-4) var(--kel-space-4);
+  border-top: 1px solid var(--kel-border);
+  background: var(--kel-surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--kel-space-2);
+}
+
+.transcript {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--kel-text-1);
+  white-space: pre-wrap;
+}
+
+.prompt {
+  width: 100%;
+  resize: vertical;
+  padding: var(--kel-space-3);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-control);
+  background: var(--kel-surface-2);
+  color: var(--kel-text-1);
+  font-family: var(--kel-font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.shotWrap {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-card);
+  overflow: hidden;
+  background: var(--kel-surface-1);
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.shotTarget {
+  position: absolute;
+  border: 2px solid var(--kel-accent);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-accent-soft);
+  opacity: 0.6;
+  pointer-events: none;
+}

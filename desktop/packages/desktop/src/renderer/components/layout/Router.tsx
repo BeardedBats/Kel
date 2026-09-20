@@ -34,6 +34,7 @@ const KelAutonomy = React.lazy(() => import('@renderer/pages/kel/autonomy'));
 const KelActivity = React.lazy(() => import('@renderer/pages/kel/activity'));
 const KelOnboarding = React.lazy(() => import('@renderer/pages/kel/onboarding'));
 const KelDiagnostics = React.lazy(() => import('@renderer/pages/kel/diagnostics'));
+const KelDogfoodFixes = React.lazy(() => import('@renderer/pages/kel/dogfood'));
 
 const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => (
   <Suspense fallback={<AppLoader />}>
@@ -186,6 +187,8 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/activity' element={withRouteFallback(KelActivity)} />
           <Route path='/onboarding' element={withRouteFallback(KelOnboarding)} />
           <Route path='/diagnostics' element={withRouteFallback(KelDiagnostics)} />
+          {/* V2.0 preflight: reached from Fix Capture and the command palette, deliberately not a sider item. */}
+          <Route path='/dogfood' element={withRouteFallback(KelDogfoodFixes)} />
         </Route>
         <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
       </Routes>
