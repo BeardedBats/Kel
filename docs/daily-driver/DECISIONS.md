@@ -143,4 +143,19 @@
   exposed a real contract bug: `/api/work` passes the stored JSON column through as a string, so
   the client's `value?: Record<string, unknown>` was wrong — now `string | Record<string, unknown>`.
   No global "learnings inbox" was created; the review lives where the knowledge lives (Projects).
+- **D-021 — D10 approach.** The recipe engine was complete *and unreachable*: `RecipeLibrary.save`
+  (confirmation-gated) and `propose_from_job` (draft from a settled job) had no callers, and
+  `/api/recipes` exposed only list/get/preview — the desktop Recipes tab could dry-run but never
+  run. D10 therefore closed the loop with the existing primitives instead of new machinery:
+  `propose_from_job` and `save` are now real HTTP actions (save passes `confirm` straight to the
+  library, so the refusal message is the engine's own), the Recipes tab gained Run (submitting a
+  normal job and pointing at the Work page), and the Work page gained Save as a recipe — draft
+  first, save only on the explicit second click. Executing the previously-dead primitive exposed a
+  real bug: `propose_from_job` copied milestone ids straight into step ids, but milestone ids are
+  engine-internal and often shorter than the 3-char recipe slug floor (`m1`), so the draft failed
+  its own validator for the engine's documented contract shape. Fixed by mapping ids to slugs and
+  carrying the mapping through `depends_on`, with an engine regression test. Verified live over
+  HTTP (`packaging/verify-recipe-loop.cjs`): nothing stored by the draft; save without confirmation
+  refused; confirm persists; re-save idempotent; run + run-again accepted; the first run is a real
+  job. No second workflow engine, no recipe marketplace, no scheduler.
 - (append as work proceeds; every non-obvious choice gets a line)

@@ -1,0 +1,26 @@
+{
+  "phase": "D10",
+  "when": "2026-09-20T14:30:37.769Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d10-5cTj3r",
+  "job": "337fccad-0ffe-4efc-a03e-c267586ac880",
+  "verdict": {
+    "engine_booted": true,
+    "draft_from_job": true,
+    "draft_is_not_stored": true,
+    "save_without_confirmation_is_refused": true,
+    "save_with_confirmation_persists": true,
+    "saved_recipe_is_listed": true,
+    "saving_the_same_version_is_idempotent": true,
+    "run_submits_a_job": true,
+    "run_again_submits_another": true,
+    "first_run_is_a_real_job": true,
+    "run_jobs_states": [
+      {
+        "state": "READY",
+        "request": "Run recipe Saved run: Do the work v1.0.0 (job-337fccad0ffe)."
+      }
+    ],
+    "engine_stopped": true
+  },
+  "all_green": true
+}

@@ -76,7 +76,13 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   accept/defer/reject_proposal, 5-visible cap). Live HTTP journey all-true
   (`packaging/verify-learning-proposals.cjs` + `evidence/d9/`); found + fixed a real contract bug
   (`/api/work` returns record `value` as a JSON string — the client type now matches).
-- **Next: D10 — Recipes** (directive §23–24).
+- **D10 done (this commit).** Recipes: `propose_from_job` (draft from a settled job, preview only)
+  and the confirmation-gated `save` are now HTTP actions; Run on the Recipes tab (submit → follow on
+  the Work page); Save as a recipe on the Work page (draft → explicit confirm). Fixed a real engine
+  bug the dead primitive had: short milestone ids (`m1`) failed recipe-slug validation — now mapped
+  (depends_on included) + pinned. Live HTTP journey all-true (`packaging/verify-recipe-loop.cjs` +
+  `evidence/d10/`).
+- **Next: D11 — cross-device continuity** (directive §25).
 
 ## Where
 

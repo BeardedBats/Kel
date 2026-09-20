@@ -22,6 +22,8 @@ import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelArtifact,
   kelControl,
+  kelRecipePropose,
+  kelRecipeSave,
   kelState,
   kelTeam,
   type KelAssignment,
@@ -58,6 +60,10 @@ const WorkCenter: React.FC = () => {
   const [continuation, setContinuation] = useState<KelContinuationCandidate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [artifact, setArtifact] = useState<{ milestone: string; text: string } | null>(null);
+  const [recipeDraft, setRecipeDraft] = useState<{
+    recipe: Record<string, unknown>;
+    preview: { steps: string[]; kind: string; milestones: number };
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -229,6 +235,17 @@ const WorkCenter: React.FC = () => {
                     Cancel
                   </KelButton>
                 )}
+                <KelButton
+                  variant="quiet"
+                  disabled={busy}
+                  onClick={() =>
+                    void act('Recipe draft', async () => {
+                      setRecipeDraft(await kelRecipePropose(activeJob.id));
+                    })
+                  }
+                >
+                  Save as a recipe
+                </KelButton>
               </span>
             }
           >
@@ -238,6 +255,31 @@ const WorkCenter: React.FC = () => {
                 ? VERDICT_TEXT[activeJob.verdict] ?? `verification status: ${activeJob.verdict.toLowerCase().replace(/_/g, ' ')}`
                 : 'verification runs after the checks pass'}
             </p>
+            {recipeDraft && (
+              <KelSection title="Save as a recipe">
+                <p className="kel-sub">
+                  {`Draft from this job: ${recipeDraft.preview.milestones} steps (${recipeDraft.preview.kind}). It is saved only when you confirm.`}
+                </p>
+                <p className="kel-meta">{recipeDraft.preview.steps.join(' · ')}</p>
+                <div className="kel-row">
+                  <KelButton
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      void act('Recipe saved', async () => {
+                        await kelRecipeSave(recipeDraft.recipe);
+                        setRecipeDraft(null);
+                      })
+                    }
+                  >
+                    Save recipe
+                  </KelButton>
+                  <KelButton variant="quiet" onClick={() => setRecipeDraft(null)}>
+                    Cancel
+                  </KelButton>
+                </div>
+              </KelSection>
+            )}
             {activeMilestones.length === 0 ? (
               <KelEmpty
                 title="No milestone has started yet."

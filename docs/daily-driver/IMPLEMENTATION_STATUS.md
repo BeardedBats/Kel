@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D9 complete; D10 starting)
+Updated: 2026-09-20 (D0–D10 complete; D11 starting)
 
 ## Lane
 
@@ -68,8 +68,15 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   and a live HTTP journey proves the whole loop (`packaging/verify-learning-proposals.cjs`, verdict
   all-true, `evidence/d9/`). Found + fixed a real contract bug along the way: `/api/work` returns a
   record's `value` as a JSON string; the client type now matches reality.
+- **D10 complete** (this commit) — recipes: the engine shipped `propose_from_job` (draft from a
+  settled job) and a confirmation-gated `save`, but neither had a caller and `/api/recipes` exposed
+  only list/get/preview. They are now real actions; the Recipes tab gained Run (submit → follow on
+  the Work page); the Work page gained Save as a recipe (draft first, save on explicit confirm).
+  Running the dead primitive exposed a real engine bug — short milestone ids (`m1`) are not valid
+  recipe slugs — fixed by slug-mapping ids (depends_on included) with an engine regression test.
+  Live HTTP journey all-true (`packaging/verify-recipe-loop.cjs`, `evidence/d10/`).
 
 ## Next item
 
-- **D10 — Recipes** (§23–24): map the recipe library (`recipes.py`: entries/preview/compile) and its
-  human surface, then close the smallest honest gap.
+- **D11 — Cross-device continuity** (§25): inventory what already survives across the desktop and the
+  remote surface (server-authoritative state) and close the smallest honest gap.

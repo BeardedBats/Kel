@@ -32,6 +32,29 @@ def simple_recipe(version='1.0.0', steps=2):
             'retry_policy': {'max_attempts_per_milestone': 4, 'provider_switch_after': 2}}
 
 
+class RecipeFromJobTests(unittest.TestCase):
+    def test_draft_from_a_job_maps_short_milestone_ids(self):
+        # D10: this primitive previously had no caller, so nothing exercised it with the engine's
+        # own short milestone ids ('m1'); the draft must validate as a real recipe.
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        store = Store(temp.name)
+        Context(store)
+        contract = {'request': 'Do the work', 'milestones': [
+            {'id': 'm1', 'objective': 'Draft the thing', 'filename': 'out.md',
+             'depends_on': [], 'checks': [{'kind': 'min_chars', 'value': 40}]},
+            {'id': 'm2', 'objective': 'Second step', 'filename': 'two.md',
+             'depends_on': ['m1'], 'checks': [{'kind': 'min_chars', 'value': 40}]}]}
+        job = store.create(contract, conversation='main')
+        job_id = job['id'] if isinstance(job, dict) else job
+        out = RecipeLibrary(store).propose_from_job(job_id)
+        recipe = out['recipe']
+        self.assertEqual(recipe['source'], 'from_job:' + job_id)
+        self.assertEqual([step['id'] for step in recipe['steps']], ['step-m1', 'step-m2'])
+        self.assertEqual(recipe['steps'][1]['depends_on'], ['step-m1'])
+        validate_recipe(recipe)
+
+
 class RecipeCase(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

@@ -712,15 +712,35 @@ class RecipeLibrary:
             raise PolicyError('Only jobs with 1 to %d milestones can become recipes' % MAX_STEPS)
         kind = contract.get('kind') if contract.get('kind') in ('coding', 'document', 'research') \
             else 'document'
+        # Milestone ids are engine-internal (often short, like 'm1'); recipe step ids must be
+        # 3-64 char slugs, so map them and carry the mapping through depends_on.
+        slug_for = {}
+        used = set()
+        for index, spec in enumerate(specs):
+            raw = re.sub(r'[^a-z0-9-]+', '-', str(spec.get('id') or '').lower()).strip('-')
+            if len(raw) < 3:
+                raw = ('step-' + raw).strip('-')
+            if not raw:
+                raw = 'step-%d' % (index + 1)
+            slug = raw
+            if slug in used:
+                suffix = 2
+                base = slug[:60]
+                while ('%s-%d' % (base, suffix)) in used:
+                    suffix += 1
+                slug = '%s-%d' % (base, suffix)
+            used.add(slug)
+            slug_for[spec['id']] = slug
         steps = []
         for spec in specs:
             checks = [dict(check) for check in spec.get('checks', [])
                       if check.get('kind') in CHECK_KINDS]
             if not checks:
                 checks = [{'kind': 'min_chars', 'value': 40}]
-            steps.append({'id': spec['id'], 'title': spec['id'], 'action': 'work',
+            steps.append({'id': slug_for[spec['id']], 'title': str(spec['id'])[:80],
+                          'action': 'work',
                           'objective': str(spec.get('objective', spec['id']))[:600],
-                          'depends_on': list(spec.get('depends_on', [])),
+                          'depends_on': [slug_for.get(dep, dep) for dep in spec.get('depends_on', [])],
                           'checks': checks,
                           'retries': {'max_attempts': 2, 'on_fail': 'escalate'}})
         name = ('Saved run: ' + str(contract.get('request', 'work'))[:60]).strip()[:80]
