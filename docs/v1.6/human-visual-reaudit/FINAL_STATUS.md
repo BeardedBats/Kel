@@ -19,7 +19,8 @@
 - [x] Final verdict complete (`FINAL_VERDICT.md`)
 - [x] No production repairs made — audit worktree contains docs/evidence only; the production
       target and the source worktree were not modified
-- [ ] Audit branch pushed to origin — executed as the final step (recorded in the audit log)
+- [x] Audit branch pushed to origin — `origin/audit/v16-human-visual-final` pushed successfully
+      (tip recorded in the final audit response; push #1 = `11a7c02f467438ef1fd8ecb38984aab5cb0146e6`)
 
 ## Preservation
 
