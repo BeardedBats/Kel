@@ -35,7 +35,7 @@ Fix work this phase produced, each already committed with its own tests:
 9. The chosen provider/model was invisible → one honest sentence on Work (`879804e`, D12).
 10. Roster management was exposed to normal users → Kel manages its own roster; developer-only disclosure (`82ff501`, D8).
 11. Two shipped links still pointed at the donor org's GitHub (Office-preview install, agent-hub PR) → removed in the D19 residual fix, pinned by `donor-org-references.test.ts`; the built bundle now has zero donor-org hits (D19 commit).
-12. An interrupted run could not actually be continued: the person's "continue" attached a conversation link and left the fenced job waiting forever, while the Work page promised that state would "continue automatically" → `Continuation.execute_resume` now re-arms the fenced milestone at the person's own request (`Store.reopen`), the Work page names the person's next step instead of an automatic continuation it would never get, both pinned (`interrupted-run-promise.test.ts`, `test_v13_continuation.py`) and proven by journey J3 (`a95b46e`, D19).
+12. An interrupted run could not actually be continued: the person's "continue" attached a conversation link and left the fenced job waiting forever, while the Work page promised that state would "continue automatically" → `Continuation.execute_resume` now re-arms the fenced milestone at the person's own request (`Store.reopen`), the Work page names the person's next step instead of an automatic continuation it would never get, both pinned (`interrupted-run-promise.test.ts`, `test_v13_continuation.py`) and proven by journey J3 (`3e6b544`, D19).
 
 ## Records
 
