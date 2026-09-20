@@ -20,22 +20,7 @@ import {
   type KelCredentialMetadata,
   type KelProviderStatus,
 } from '@renderer/components/kel/kelApi';
-
-const chipClass = (status: string): string => {
-  if (status === 'healthy' || status === 'quota') return 'kel-chip kel-chip--ok';
-  if (status === 'degraded' || status === 'quota_not_reported') return 'kel-chip kel-chip--uncertain';
-  if (status === 'installed_not_authenticated') return 'kel-chip kel-chip--wait';
-  if (status === 'not_installed' || status === 'unavailable') return 'kel-chip kel-chip--failed';
-  return 'kel-chip';
-};
-
-const statusText = (provider: KelProviderStatus): string => {
-  if (provider.status === 'quota') {
-    return `${provider.quota}% left${provider.quota_reset ? ` · resets ${formatWhen(provider.quota_reset)}` : ''}`;
-  }
-  if (provider.status === 'quota_not_reported') return 'quota not reported';
-  return provider.status.replace(/_/g, ' ');
-};
+import { presentProvider, toneChipClass, usableNow } from '@renderer/components/kel/providerStatus';
 
 const Providers: React.FC = () => {
   const [providers, setProviders] = useState<KelProviderStatus[] | null>(null);
@@ -55,6 +40,7 @@ const Providers: React.FC = () => {
     null
   );
   const [storeDraft, setStoreDraft] = useState({ provider: 'deepseek', field: 'api_key', value: '' });
+  const [keyDraft, setKeyDraft] = useState<{ provider: string; value: string } | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -95,35 +81,48 @@ const Providers: React.FC = () => {
     }
   }, [capability, prefer]);
 
-  const setMetadata = useCallback(
+  const saveKey = useCallback(
     async (provider: string) => {
+      const draft = keyDraft;
+      if (!draft || draft.provider !== provider || !draft.value) return;
+      const field = 'api_key';
       setBusy(true);
       setNote(null);
       try {
-        await kelProviders.setCredential(provider, ['api_key'], `kel:provider:${provider}:api_key`);
+        await window.kelAPI?.credentials?.set(provider, field, draft.value);
+        await kelProviders.setCredential(provider, [field], `kel:provider:${provider}:${field}`);
+        const status = await window.kelAPI?.credentials?.status();
+        if (status) setSecure(status);
+        const listedBack = Boolean(status?.providers?.[provider]?.includes(field));
+        setKeyDraft(null);
         await load();
         setNote(
-          `Recorded credential metadata for ${provider}. The value itself lives in the OS store, never in the engine.`
+          listedBack
+            ? `Saved and verified ${provider}: the key is in the OS store and recorded for the engine. Kel starts using it the next time its engine starts.`
+            : `Saved ${provider}, but the OS store did not list the key back — check it again before relying on it.`
         );
       } catch (err) {
-        setNote(`Couldn't record the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+        setNote(`Couldn't save the key for ${provider}. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
     },
-    [load]
+    [keyDraft, load]
   );
 
-  const deleteMetadata = useCallback(
+  const removeKey = useCallback(
     async (provider: string) => {
       setBusy(true);
       setNote(null);
       try {
+        await window.kelAPI?.credentials?.remove(provider);
         await kelProviders.deleteCredential(provider);
+        const status = await window.kelAPI?.credentials?.status();
+        if (status) setSecure(status);
         await load();
-        setNote(`Removed credential metadata for ${provider}.`);
+        setNote(`Removed the stored key and its engine metadata for ${provider}.`);
       } catch (err) {
-        setNote(`Couldn't remove the metadata. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+        setNote(`Couldn't remove the key for ${provider}. ${failureSentence(err, 'The engine did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
@@ -143,7 +142,7 @@ const Providers: React.FC = () => {
             <p className="kel-sub">
               {providers === null
                 ? 'Reading provider state…'
-                : `${providers.length} providers · ${providers.filter((p) => p.status === 'healthy' || p.status === 'quota').length} usable right now`}
+                : `${providers.length} providers · ${providers.filter(usableNow).length} usable right now`}
             </p>
           </div>
           <span className="kel-grow" />
@@ -157,30 +156,44 @@ const Providers: React.FC = () => {
         {note && <p className="kel-meta">{note}</p>}
 
         {!error &&
-          (providers ?? []).map((provider) => (
+          (providers ?? []).map((provider) => {
+            const view = presentProvider(provider);
+            const needsSetup = view.label === 'Needs setup';
+            const hasStored = credentialRows.some((row) => row.provider === provider.provider);
+            return (
             <KelCard
               key={provider.provider}
               title={provider.label}
-              chip={<span className={chipClass(provider.status)}>{statusText(provider)}</span>}
+              chip={<span className={toneChipClass(view.tone)}>{view.label}</span>}
               actions={
                 <span className="kel-row">
                   {provider.class === 'api' ? (
                     <>
                       <KelButton
-                        variant="secondary"
+                        variant={needsSetup ? 'primary' : 'secondary'}
                         disabled={busy}
-                        onClick={() => void setMetadata(provider.provider)}
+                        onClick={() =>
+                          setKeyDraft((draft) =>
+                            draft?.provider === provider.provider ? null : { provider: provider.provider, value: '' }
+                          )
+                        }
                       >
-                        Set credential metadata
+                        {needsSetup ? 'Set up' : 'Update key'}
                       </KelButton>
-                      <KelButton
-                        variant="quiet"
-                        disabled={busy}
-                        onClick={() => void deleteMetadata(provider.provider)}
-                      >
-                        Remove
-                      </KelButton>
+                      {hasStored && (
+                        <KelButton
+                          variant="quiet"
+                          disabled={busy}
+                          onClick={() => void removeKey(provider.provider)}
+                        >
+                          Remove key
+                        </KelButton>
+                      )}
                     </>
+                  ) : needsSetup ? (
+                    <KelButton variant="secondary" disabled={busy} onClick={() => void load()}>
+                      Check again
+                    </KelButton>
                   ) : null}
                 </span>
               }
@@ -191,11 +204,37 @@ const Providers: React.FC = () => {
                 {provider.base_url ? ` · ${provider.base_url}` : ''}
               </p>
               <p className="kel-meta">
-                {provider.note}
-                {provider.failures ? ` · ${provider.failures} recent failures` : ''}
-                {provider.circuit_until ? ` · circuit open until ${formatWhen(provider.circuit_until)}` : ''}
+                {view.reason}
+                {view.until ? ` · Kel tries again ${formatWhen(view.until)}` : ''}
                 {provider.planType ? ` · plan ${provider.planType}` : ''}
               </p>
+              {keyDraft?.provider === provider.provider && (
+                <div className="kel-row">
+                  <input
+                    className="kel-input"
+                    type="password"
+                    aria-label={`${provider.label} API key`}
+                    placeholder="paste the key — it goes to the OS store, never the engine"
+                    value={keyDraft.value}
+                    onChange={(event) => setKeyDraft({ provider: provider.provider, value: event.target.value })}
+                  />
+                  <KelButton
+                    variant="primary"
+                    disabled={busy || !keyDraft.value || !secure?.available}
+                    onClick={() => void saveKey(provider.provider)}
+                  >
+                    Save + Verify
+                  </KelButton>
+                  <KelButton variant="quiet" disabled={busy} onClick={() => setKeyDraft(null)}>
+                    Cancel
+                  </KelButton>
+                </div>
+              )}
+              {provider.class === 'api' && !secure?.available && (
+                <p className="kel-meta">
+                  OS-backed storage is unavailable on this system, so Kel cannot store a key here.
+                </p>
+              )}
               <KelTable
                 head={['Model', 'Capabilities']}
                 rows={(provider.models ?? []).map((model) => [
@@ -208,7 +247,8 @@ const Providers: React.FC = () => {
                 ])}
               />
             </KelCard>
-          ))}
+            );
+          })}
 
         <KelCard title="Readiness preflight">
           <p className="kel-sub">
