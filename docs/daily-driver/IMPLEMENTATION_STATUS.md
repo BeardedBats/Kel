@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS — `dev/daily-driver`
 
-Updated: 2026-09-20 (D0–D5 complete; entering D6)
+Updated: 2026-09-20 (D0–D6 complete; entering D7)
 
 ## Lane
 
@@ -43,10 +43,14 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   user language, routed to Providers, project-unbound, sorted below live asks) and the shell gained
   restrained transition-driven desktop notifications (silent first snapshot, meaningful kinds only,
   30-min cooldown, 3/tick, existing focus/setting gating). Snooze/Later omitted by design.
+- **D6** (this commit) — "While you were away": a derived-only resumption brief on the landing page
+  (failed restore first, needs-you, finished, stopped, go-ahead continuation lines, still-running,
+  fresh restore) with 8 unit pins and a live restart/resume verification whose verdict is all-true
+  (`evidence/d6/continuation-restart.json`). Continuation stays human-gated.
 
 ## Next item
 
-- **D6 — Continuation / resumability** (§14–15): reopening Kel becomes effortless — resumption
-  briefs from durable truth (completed / active / stopped / needs-Nick / resumable / blockers), real
-  actions only (Resume, Retry, Continue, Review, Approve, Change provider, Open result, Open
-  conversation), restart-during-active-work testing.
+- **D7 — Long-running autonomy** (§16–17): durable objective/step continuation, retry and recovery,
+  provider-interruption and engine-restart recovery, unresolved-effect reconciliation, completion
+  criteria distinct from step completion, human-gate classification — all inside the existing
+  execution architecture (no second supervisor, no blind retries).

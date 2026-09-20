@@ -1,0 +1,38 @@
+{
+  "dataDir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d6-RpSGig",
+  "checks": {
+    "firstBootPid": 33700,
+    "firstBoot": {
+      "connected": true,
+      "engine_version": "1.7.0-dev",
+      "restore": null,
+      "continuation": [],
+      "jobs": 0,
+      "conversations": 1
+    },
+    "secondBootPid": 45900,
+    "secondBoot": {
+      "connected": true,
+      "engine_version": "1.7.0-dev",
+      "restore": {
+        "at": 1789912467,
+        "detail": "fixture: a restore attempt was interrupted before it finished",
+        "ok": false
+      },
+      "continuation": [],
+      "jobs": 0,
+      "conversations": 1
+    },
+    "verdict": {
+      "fresh_process": true,
+      "engine_version_stable": true,
+      "connection_restored": true,
+      "restore_absent_before": true,
+      "restore_record_survives": true,
+      "continuation_derived_cleanly": true,
+      "durable_counts_stable": true
+    }
+  },
+  "startedAt": "2026-09-20T13:54:25.797Z",
+  "finishedAt": "2026-09-20T13:54:29.318Z"
+}

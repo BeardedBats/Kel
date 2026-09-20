@@ -1,12 +1,12 @@
 # MARATHON_STATE — Kel Daily Driver Expansion Marathon
 
-Last updated: 2026-09-20 (**D3–D5 landed and verified; D6 next**)
+Last updated: 2026-09-20 (**D3–D6 landed and verified; D7 next**)
 
 - MARATHON_MODE: ACTIVE — implementation marathon; no independent audit, no release, no freeze.
 - LANE: branch `dev/daily-driver` · worktree `C:\Users\Nick\Desktop\Kel\kel-daily-driver`
 - directive: `docs/daily-driver/MARATHON_DIRECTIVE.md` — the complete governing program (D3–D19, package, install). Read it before acting; it outranks chat history.
 - BASE SHA: `37b1f27faf02dfa5feb96449fc3768c0ec4e9692` (production tree == `6d957ee9…`; diff was records/evidence only)
-- CURRENT HEAD: `dde6c1e` (D5) + this directive/records commit (see `git log --oneline`; prior: `e4d4215`, `b13301a`, `78d8f1d` (D3), `e57d4a3` (D4))
+- CURRENT HEAD: the D6 commit (see `git log --oneline`; prior: `a8c27ba` (directive), `dde6c1e` (D5), `e57d4a3` (D4), `78d8f1d` (D3), `b13301a`, `e4d4215`)
 - COMPLETED:
   - intake + lane open `3f83be7` (`1.7.0-dev` identity + durable state)
   - **D0 closed** — `9bdf338` (HVRA-MINOR-001) · `777fefe` (HVRA-MINOR-002) · `cce55d0` (HVRA-SUG-001) · `f594282` (HVRA-SUG-002) · records `288a53c`
@@ -16,13 +16,14 @@ Last updated: 2026-09-20 (**D3–D5 landed and verified; D6 next**)
   - **D3 wrong-layer correction** — `33fbbeb` (gateway built on a wrong assumption) reverted in `b13301a`
   - **D3 core** — gateway session enforcement in the web-host + `/qr-login` proxy + real-browser verification `78d8f1d`
   - **D4 core** — transcription verified live (practice mode) + searchable recents + policy pins `e57d4a3`
-  - **D5 core** — connection setup needs in the attention surface + restrained transition-driven notifications (this commit)
-- COMPLETED PHASES: intake/lane-open · D0 · ENG-001 · D1 · D2 · D3 · D4 · D5 (commit list above; tree clean).
-- CURRENT PHASE: **D6 — Continuation / resumability** (`MARATHON_DIRECTIVE.md` §D6)
-- CURRENT ITEM: D6 — the "while you were away" resumption brief + real resume actions, built only from durable truth.
-- EXACT NEXT ACTION: recon the `state.continuation` producers (engine) and the existing resume/retry touch points (Work page, GUID, Needs-Attention actions); implement the brief + real actions; test a restart during active work; record; commit; then D7.
-- REMAINING QUEUE: D6 continuation → D7 autonomy → D8 adaptive staffing → D9 learning promotion → D10 Recipes → D11 cross-device → D12 provider routing → D13 failure recovery → D14 Advanced Activity → D15 security/containment → D16 live capability revision → D17 integration/dev surface → D18 dogfood journeys → D19 full regression → fresh package → installed candidate + final battery. (`ROADMAP.md` keeps the compact table.)
-- LATEST TESTS: desktop tsc exit 0 · Vitest 21 files / 199 PASS · engine 1019 OK (unchanged) · D3 real-stack matrix green · D4 live transcription E2E green · D5 transition-core + connection derivations green
+  - **D5 core** — connection setup needs in the attention surface + restrained transition-driven notifications `dde6c1e`
+  - **D6 core** — "While you were away" resumption brief on the landing page + live restart/resume verification (this commit)
+- COMPLETED PHASES: intake/lane-open · D0 · ENG-001 · D1 · D2 · D3 · D4 · D5 · D6 (commit list above; tree clean).
+- CURRENT PHASE: **D7 — Long-running autonomy** (`MARATHON_DIRECTIVE.md` §D7)
+- CURRENT ITEM: D7 — durable objective/step continuation, retry/recovery, engine-restart recovery, unresolved-effect reconciliation, completion criteria, human-gate classification (a step finishing is not the goal finishing).
+- EXACT NEXT ACTION: recon the engine's autonomy/supervision surface (`/api/autonomy`, guardrails, job lifecycle + `continuation`/`retry` paths) and the shell's failure surfaces; strengthen continuation/recovery within the existing architecture; test provider interruption + engine restart during active work; record; commit; then D8.
+- REMAINING QUEUE: D7 autonomy → D8 adaptive staffing → D9 learning promotion → D10 Recipes → D11 cross-device → D12 provider routing → D13 failure recovery → D14 Advanced Activity → D15 security/containment → D16 live capability revision → D17 integration/dev surface → D18 dogfood journeys → D19 full regression → fresh package → installed candidate + final battery. (`ROADMAP.md` keeps the compact table.)
+- LATEST TESTS: desktop tsc exit 0 · Vitest 22 files / 207 PASS · engine 1019 OK (unchanged) · D3 real-stack matrix green · D4 live transcription E2E green · D5 transition-core green · D6 live restart/resume verdict all-green (`evidence/d6/`)
 - LATEST PACKAGE: none yet — package phase pending; checklist ready in `PACKAGE_EVIDENCE.md`
 - BLOCKERS: none
 - UNAVAILABLE EXTERNAL CREDENTIALS: no provider keys in this environment; live provider validation impossible (fixture/local validation documented)

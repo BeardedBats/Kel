@@ -460,6 +460,8 @@ export const kelState = () =>
     projects: Array<{ id: string; name: string }>;
     engine_version?: string;
     draining?: boolean;
+    /** D6: the engine's recorded restore outcome (audit PER-02); null when never attempted. */
+    restore?: { ok: boolean; detail?: string; at?: number } | null;
   }>('/api/state');
 
 /** Markdown artifact text for an ACCEPTED milestone (the engine refuses anything unverified). */

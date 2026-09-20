@@ -16,8 +16,8 @@ Status legend: **DONE** · **DONE (core)** · **PARTIAL** · **IN PROGRESS** · 
 | D3 | Remote / WebUI (+security) | §9–10 | DONE (core) | D3 commit (revert `b13301a`) | gateway session enforcement (`gateway-session.unit.test.ts`, 10 tests); anon allowlist; `/qr-login` proxy; WS gating; logout cache invalidation; real-stack matrix + browser evidence in `evidence/d3/`; see KNOWN_LIMITATIONS for aioncore-side constraints |
 | D4 | Transcription first-class workflow | §11 | DONE (core) | D4 commit | engine family + page already complete; + client-side searchable recents; `transcription-policy.test.ts` (4 pins); live fixture flow `packaging/verify-transcription-e2e.cjs` + `evidence/d4/`; live Muse path needs a Meta key (see KNOWN_LIMITATIONS) |
 | D5 | Needs Your Attention + notifications | §12–13 | DONE (core) | D5 commit | `connection` kind (provider setup needs) in `needsAttention.ts` + component wiring; transition-only notification core (`attentionNotificationCore.ts`, 8 tests) + `useKelAttentionNotification` in the shell; needs-attention suite extended (16 combined PASS); Snooze/Later omitted by design (see DECISIONS D-015) |
-| D6 | Continuation / resumability | §14–15 | IN PROGRESS | — | — |
-| D7 | Long-running autonomy | §16–17 | QUEUED | — | — |
+| D6 | Continuation / resumability | §14–15 | DONE (core) | D6 commit | derived-only "While you were away" brief (`resumptionBrief.ts` + `KelResumptionBrief.tsx` on the landing page) with 8 unit pins; live restart/resume verdict all-true (`packaging/verify-continuation-restart.cjs` + `evidence/d6/`); continuation stays human-gated (reply "continue") |
+| D7 | Long-running autonomy | §16–17 | IN PROGRESS | — | — |
 | D8 | Adaptive staffing | §18–20 | QUEUED | — | — |
 | D9 | Learning promotion | §21–22 | QUEUED | — | — |
 | D10 | Recipes | §23–24 | QUEUED | — | — |
