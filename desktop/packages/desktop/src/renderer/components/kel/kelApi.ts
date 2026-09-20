@@ -121,8 +121,24 @@ declare global {
 
 async function call<T>(route: string, body?: unknown): Promise<T> {
   const api = typeof window === 'undefined' ? undefined : window.kelAPI;
-  if (!api) throw new Error('Kel bridge unavailable — restart Kel and try again');
-  return (await api.request(route, body)) as T;
+  if (api) return (await api.request(route, body)) as T;
+  // D11 — away from the desktop (the remote browser) the same renderer talks to the engine through
+  // the desktop web-host's session-gated gateway: /kel/* is proxied server-side with the
+  // process-held bearer token, so no credential ever reaches the browser.
+  const response = await fetch(`/kel${route}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body ?? {}),
+  });
+  const payload = (await response.json().catch((): null => null)) as unknown;
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === 'object' && 'error' in payload
+        ? String((payload as { error: unknown }).error)
+        : `Kel is not answering right now (${response.status}).`;
+    throw new Error(message);
+  }
+  return payload as T;
 }
 
 // ---------------------------------------------------------------------------------------------

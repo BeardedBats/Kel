@@ -40,6 +40,8 @@ export type WebHostOptions = {
    * (anonymous allowlist: /login, /logout, /qr-login, /api/auth/*).
    */
   requireAuth?: boolean;
+  /** D11 — directory holding the Kel engine's `desktop-session.json`; enables the `/kel/*` gateway. */
+  kelDataDir?: string;
   dataDir?: string;
   logDir?: string;
   dirs?: BackendSystemDirs;

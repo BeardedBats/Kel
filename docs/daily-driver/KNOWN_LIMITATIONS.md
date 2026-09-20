@@ -75,3 +75,8 @@ Honest, current list (grows/shrinks as phases complete):
   verified, provider execution is not. Run sends no inputs from the UI yet: recipes that declare
   required inputs surface the engine's own "needs input" refusal as a plain note rather than a form
   (an input form is a candidate for a later phase, not invented now).
+- Cross-device (D11): the remote browser reaches Kel's engine through the desktop web-host's
+  session-gated `/kel` gateway, so the engine must be running on the same machine as the web-host
+  (the desktop app, or `bun run webui` with `KEL_DATA_DIR` pointed at a running engine). Live Kel
+  updates do not stream over the gateway yet — pages show state as of load/refresh (aioncore's own
+  `/ws` is untouched); a Kel streaming channel is deliberately not invented in this phase.

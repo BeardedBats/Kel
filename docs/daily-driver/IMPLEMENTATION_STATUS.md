@@ -75,8 +75,16 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   Running the dead primitive exposed a real engine bug — short milestone ids (`m1`) are not valid
   recipe slugs — fixed by slug-mapping ids (depends_on included) with an engine regression test.
   Live HTTP journey all-true (`packaging/verify-recipe-loop.cjs`, `evidence/d10/`).
+- **D11 complete** (this commit) — cross-device continuity: the web-host now proxies `/kel/*` to the
+  Kel engine, session-gated by the same authority as everything else, with the engine bearer
+  server-side only (descriptor read per request; no engine → 503, dead → 502; browser cookie
+  stripped). The renderer falls back from the missing preload bridge to that gateway, so the same UI
+  works away from the desktop; desktop app + dev CLI both wire the engine data root in. Real-stack
+  journey all-green: real engine + real `bun run webui` (shipped aioncore) + login → a
+  desktop-seeded job is visible to the remote session; the token never reaches the browser
+  (`packaging/verify-remote-kel.cjs`, `evidence/d11/`).
 
 ## Next item
 
-- **D11 — Cross-device continuity** (§25): inventory what already survives across the desktop and the
-  remote surface (server-authoritative state) and close the smallest honest gap.
+- **D12 — Smarter provider routing** (§26–27): verify what the engine already decides (task fit,
+  health, cost where known, honest fallbacks) and close the smallest honest gap in the user's view.

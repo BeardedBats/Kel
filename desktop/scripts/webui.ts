@@ -236,6 +236,9 @@ async function main(): Promise<void> {
     requireAuth: true,
     dataDir: workDir,
     logDir,
+    // D11 — when a Kel engine is running on this machine (KEL_DATA_DIR points at its data root),
+    // expose its state to the remote browser through the session-gated /kel gateway.
+    kelDataDir: process.env.KEL_DATA_DIR?.trim() || undefined,
     // Surface the same work dir on /api/system/info so the browser UI shows
     // where standalone webui is actually persisting data. Without this the
     // backend inherits process.env and may report the parent shell's cwd.

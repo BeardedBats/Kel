@@ -20,8 +20,8 @@ migration, public A2A, fashionable rewrites.
 | D8 | Adaptive staffing (D0–D4 tiers; guardrails; hidden internally) | **DONE (core)** |
 | D9 | Learning promotion (high-confidence, low-risk only; provenance/retraction preserved) | **DONE (core)** |
 | D10 | Recipes (declarative; compile into existing execution; evidence-based suggestions) | **DONE (core)** |
-| D11 | Cross-device continuity (server-authoritative state) | **IN PROGRESS** |
-| D12 | Smarter provider routing (task fit, health, cost where known; honest fallbacks) | QUEUED |
+| D11 | Cross-device continuity (server-authoritative state) | **DONE (core)** |
+| D12 | Smarter provider routing (task fit, health, cost where known; honest fallbacks) | **IN PROGRESS** |
 | D13 | Failure recovery polish (provider/CLI/engine/network/remote/transcription/update) | QUEUED |
 | D14 | Optional Advanced Activity view (high-level only; optional + unobtrusive) | QUEUED |
 | D15 | Security / sandbox boundary improvements (no bespoke hypervisor) | QUEUED |

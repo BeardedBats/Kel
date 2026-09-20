@@ -57,6 +57,7 @@ export async function startWebHost(opts: WebHostOptions): Promise<WebHostHandle>
       port: opts.port,
       allowRemote: opts.allowRemote ?? false,
       requireAuth: opts.requireAuth,
+      kelDataDir: opts.kelDataDir,
     });
   } catch (err) {
     // If static-server fails, clean up backend
