@@ -21,6 +21,7 @@ import {
   statusFromDerived,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { assignmentLine, staffingSummary } from '@renderer/components/kel/staffingLanguage';
 import {
   KelAssignment,
   KelRole,
@@ -57,6 +58,10 @@ export default function KelTeamPage() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [view, setView] = useState<View>(viewFromPath(pathname));
+  // D8: the workforce views (roster/studio, internals columns) are a developer surface. Normal
+  // use shows the Office in plain language and Kel manages its own roster.
+  const [developerView, setDeveloperView] = useState(false);
+  const effectiveView: View = developerView ? view : 'office';
   useEffect(() => {
     setView(viewFromPath(pathname));
   }, [pathname]);
@@ -152,31 +157,46 @@ export default function KelTeamPage() {
           <KelTabs
             tabs={[
               { id: 'office', label: 'Office' },
-              { id: 'roster', label: 'Roster' },
-              { id: 'studio', label: 'Studio' },
+              ...(developerView
+                ? [
+                    { id: 'roster', label: 'Roster' },
+                    { id: 'studio', label: 'Studio' },
+                  ]
+                : []),
             ]}
-            active={view}
+            active={effectiveView}
             onSelect={(id) => {
               setView(id as View);
               navigate('/team/' + id);
             }}
           />
+          <KelButton
+            variant="quiet"
+            data-testid="team-developer-toggle"
+            onClick={() => {
+              setDeveloperView((current) => !current);
+              if (developerView) {
+                setView('office');
+                navigate('/team/office');
+              }
+            }}
+          >
+            {developerView ? 'Exit developer view' : 'Developer view'}
+          </KelButton>
         </div>
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
 
         {!error && assignments === null && <KelLoading rows={4} />}
 
-        {!error && assignments !== null && view === 'office' && (
+        {!error && assignments !== null && effectiveView === 'office' && (
           <KelCard title="Office" chip={<span className="kel-meta">real assignments only</span>}>
             {assignments.length === 0 ? (
               <KelEmpty
                 title="No specialists are working right now."
-                why="Assignments appear here as soon as Kel staffs a step of a real job."
-                actionLabel="Seed the default roster"
-                onAction={() => void load()}
+                why="Assignments appear here as soon as Kel staffs a step of a real job — Kel manages its own roster."
               />
-            ) : (
+            ) : developerView ? (
               <KelTable
                 head={['Specialist', 'State', 'Step', 'Provider', 'Budget', 'Updated']}
                 rows={assignments.map((row) => [
@@ -197,11 +217,25 @@ export default function KelTeamPage() {
                   <span className="kel-meta">{formatWhen(row.updated)}</span>,
                 ])}
               />
+            ) : (
+              <div>
+                <p className="kel-meta" style={{ margin: '0 0 6px' }}>
+                  {staffingSummary(assignments)}
+                </p>
+                {assignments.map((assignment) => (
+                  <div className="kel-attention__row" key={assignment.assignment_id}>
+                    <div className="kel-attention__text">
+                      <strong>{assignmentLine(assignment)}</strong>
+                      <span className="kel-meta">{`${assignment.role} · updated ${formatWhen(assignment.updated)}`}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </KelCard>
         )}
 
-        {!error && view === 'office' && selected && (
+        {!error && effectiveView === 'office' && selected && developerView && (
           <KelCard
             title="Assignment activity"
             chip={<span className="kel-meta">{selected}</span>}
@@ -227,7 +261,7 @@ export default function KelTeamPage() {
           </KelCard>
         )}
 
-        {!error && view === 'roster' && (
+        {!error && effectiveView === 'roster' && (
           <KelCard title="Roster" chip={<span className="kel-meta">{roles.length} roles</span>}>
             {roles.length === 0 ? (
               <KelEmpty
@@ -262,7 +296,7 @@ export default function KelTeamPage() {
           </KelCard>
         )}
 
-        {!error && view === 'studio' && !detail && (
+        {!error && effectiveView === 'studio' && !detail && (
           <KelEmpty
             title="Choose a role to configure."
             why="Studio shows the structured instructions, tool policy, budget, and version history."
@@ -271,7 +305,7 @@ export default function KelTeamPage() {
           />
         )}
 
-        {!error && view === 'studio' && detail && (
+        {!error && effectiveView === 'studio' && detail && (
           <>
             <KelCard
               title={`Studio — ${detail.template_id}`}

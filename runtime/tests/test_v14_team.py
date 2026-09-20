@@ -40,6 +40,19 @@ class TeamCase(unittest.TestCase):
         return self.store.create(contract(), conversation=self.conversation)
 
 
+class RosterSelfSeedingTests(TeamCase):
+    def test_a_shipped_role_is_seeded_on_first_use(self):
+        # Kel manages its own roster: resolving a role that ships with the product seeds the
+        # defaults first, so a person never has to manage rosters.
+        resolved = self.team.resolve_role('independent-reviewer')
+        self.assertEqual(resolved['template_id'], 'independent-reviewer')
+        self.assertGreaterEqual(resolved['role_version'], 1)
+
+    def test_unknown_roles_still_fail_closed(self):
+        with self.assertRaises(PolicyError):
+            self.team.resolve_role('not-a-real-role')
+
+
 class RoleTests(TeamCase):
     def test_define_role_and_version(self):
         self.team.define_role('impl', 'Implementation Engineer', 'Engineering', role_fields())
