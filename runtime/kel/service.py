@@ -1009,6 +1009,8 @@ class Service:
                                       self._required(data,'status','Pick a status first.'))
         if action=='prepare_prompt':
             return service.prepare_prompt(data.get('fix_ids') or None)
+        if action=='discard':
+            return service.discard_tmp(self._required(data,'screenshot','Pick a capture first.'))
         raise PolicyError('Unknown fix action')
 
     def _vetting_all_answered(self,questions):
