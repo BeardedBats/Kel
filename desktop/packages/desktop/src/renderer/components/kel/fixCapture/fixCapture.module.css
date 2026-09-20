@@ -1,0 +1,181 @@
+/**
+ * Fix Capture surfaces. Kel's tokens, full-perimeter borders only, compact geometry — the feature
+ * should feel like a tool that was already there, not a modal product of its own.
+ *
+ * Layering follows the app's existing ladder: under Arco's message/modal layers (999+) so engine
+ * toasts and confirmations stay visible, above app chrome (100), the settings surfaces (300) and the
+ * command palette (400) so a capture always sits on top of what it describes.
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 450;
+  pointer-events: none;
+  cursor: crosshair;
+}
+
+.highlight {
+  position: fixed;
+  z-index: 451;
+  pointer-events: none;
+  border: 2px solid var(--kel-accent);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-accent-soft);
+  opacity: 0.55;
+  transition: all var(--kel-dur-state) var(--kel-ease);
+}
+
+.hint {
+  position: fixed;
+  top: var(--kel-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 452;
+  pointer-events: none;
+  padding: var(--kel-space-2) var(--kel-space-3);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-surface-1);
+  color: var(--kel-text-2);
+  font-family: var(--kel-font);
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgb(20 22 26 / 12%);
+}
+
+.panel {
+  position: fixed;
+  z-index: 452;
+  width: 340px;
+  padding: var(--kel-space-4);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-card);
+  background: var(--kel-surface-1);
+  color: var(--kel-text-1);
+  font-family: var(--kel-font);
+  box-shadow: 0 10px 30px rgb(20 22 26 / 18%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--kel-space-2);
+}
+
+.heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kel-text-1);
+}
+
+.timer {
+  margin: 0;
+  font-family: var(--kel-font-mono);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--kel-text-1);
+}
+
+.live {
+  margin: 0;
+  min-height: 44px;
+  max-height: 96px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--kel-text-2);
+}
+
+.target {
+  margin: 0;
+  font-size: 12px;
+  color: var(--kel-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transcript {
+  width: 100%;
+  resize: vertical;
+  min-height: 76px;
+  padding: var(--kel-space-2);
+  border: 1px solid var(--kel-border);
+  border-radius: var(--kel-radius-control);
+  background: var(--kel-surface-2);
+  color: var(--kel-text-1);
+  font-family: var(--kel-font);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.transcript:focus {
+  outline: none;
+  border-color: var(--kel-border-strong);
+  background: var(--kel-surface-1);
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--kel-text-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--kel-space-2);
+  align-items: center;
+}
+
+.primary,
+.secondary,
+.quiet {
+  border-radius: var(--kel-radius-control);
+  border: 1px solid transparent;
+  padding: 6px 14px;
+  font-family: var(--kel-font);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background-color var(--kel-dur-state) var(--kel-ease),
+    border-color var(--kel-dur-state) var(--kel-ease);
+}
+
+.primary {
+  background: var(--kel-accent);
+  color: var(--kel-accent-ink);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--kel-accent-hover);
+}
+
+.secondary {
+  background: var(--kel-surface-2);
+  border-color: var(--kel-border);
+  color: var(--kel-text-1);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--kel-border-strong);
+}
+
+.quiet {
+  background: transparent;
+  color: var(--kel-text-2);
+}
+
+.quiet:hover:not(:disabled) {
+  color: var(--kel-text-1);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.hintLine {
+  margin: 0;
+  font-size: 11px;
+  color: var(--kel-text-3);
+}

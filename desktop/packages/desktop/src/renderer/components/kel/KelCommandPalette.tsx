@@ -31,6 +31,7 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
   { id: 'nav-providers', label: 'Providers', hint: 'connect a model', path: '/providers' },
   { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
+  { id: 'nav-dogfood', label: 'Dogfood Fixes', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
 ];
 
 // Plain-language job states for hints; the raw states stay on the Work page.

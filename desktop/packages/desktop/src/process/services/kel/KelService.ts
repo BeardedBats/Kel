@@ -8,6 +8,7 @@ import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
 import { registerKelCredentialIpc } from './kelCredentialIpc';
+import { registerKelDogfoodIpc } from './kelDogfoodIpc';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
@@ -589,6 +590,9 @@ export async function initializeKel(port: number): Promise<void> {
     remove: removeCredential,
     syncProviders: (body) => kelRequest('/api/providers', body),
   });
+  // Fix Capture (V2.0 preflight): the window screenshot is written into the engine data root's
+  // dogfood/tmp; the engine commits it under the fix id when the fix is saved.
+  registerKelDogfoodIpc({ dataRoot });
 }
 
 export const kelEngineDataRoot = (): string => dataRoot();
