@@ -8,7 +8,10 @@ Honest, current list (grows/shrinks as phases complete):
   work is validated locally (LAN/local browser) with explicit "external validation unavailable" notes.
 - D0-002 installer metadata fix is source-level until the next fresh package build; packaged
   Properties re-check is scheduled in the package phase (PACKAGE_EVIDENCE checklist).
-- HVRA-SUG-002: the duplicate pet-toast emission path was not fully isolatable from audit evidence
-  alone (single toast call site is guarded; audit observed two identical messages). The repair makes
-  the refusal toast idempotent at the UI layer so any duplicate emission renders once.
+- HVRA-SUG-002: the audit's "two identical toasts" was a probe double-count artifact (the probe
+  matched both `.arco-message` and its inner `.arco-message-content` for a single toast; the campaign
+  harness saw a single message). The refusal toast was additionally made idempotent (stable message
+  id) so duplicate emission is impossible; truthful OFF-state synchronization untouched.
+- Full engine suite: verbose run in progress at D0 close; one failure seen in an earlier partial run
+  must be identified and resolved (tracked in TEST_EVIDENCE.md) before the D19 regression.
 - V1.6 release evidence and frozen tags intentionally not updated (historical record).
