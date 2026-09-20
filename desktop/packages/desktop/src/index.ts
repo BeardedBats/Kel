@@ -252,6 +252,7 @@ let backendStartupFailed = false;
 let backendStartupFailureInfo: BackendStartupFailureInfo | null = null;
 let rendererInitialLanguage: string | null = null;
 let backendMigrationsScheduled = false;
+let ensureAdminUserPromise: Promise<void> | null = null;
 
 // Privileged IPC (Campaign C AUD-MAJOR-002): one shared sender guard across the whole
 // surface; refusals fail closed (sync lookups answer null, recovery rejects).
@@ -384,6 +385,20 @@ function exposeBackendPort(backendPort: number): void {
   (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort = backendPort;
 }
 
+function ensureAdminUserOnce(backendPort: number): Promise<void> {
+  if (!ensureAdminUserPromise) {
+    ensureAdminUserPromise = (async () => {
+      try {
+        const { ensureAdminUser } = await import('./process/utils/ensureAdminUser');
+        await ensureAdminUser(backendPort);
+      } catch (err) {
+        console.error('[WebUI] ensureAdminUser failed:', err);
+      }
+    })();
+  }
+  return ensureAdminUserPromise;
+}
+
 function markBackendReady(backendPort: number, source: string): void {
   if (backendStartedOk) return;
   console.log(`[Kel] ${source} ready (port=${backendPort})`);
@@ -395,6 +410,7 @@ function markBackendReady(backendPort: number, source: string): void {
   (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = false;
   // Backend is ready: tell the renderer to drop any "starting" view and show the App.
   broadcastBackendStartupState(null);
+  void ensureAdminUserOnce(backendPort);
   scheduleBackendMigrations();
 }
 
@@ -887,10 +903,13 @@ const handleAppReady = async (): Promise<void> => {
       }
     }
 
-    // D3: browser credentials live in the web-host auth store — no boot-time migration needed.
+    // One-shot WebUI admin credential migration. Must run after the backend is
+    // up (__backendPort set) and before any mode branch below that might log the
+    // user in. Swallows its own errors; the next boot retries.
     const bootBackendPort = (globalThis as typeof globalThis & { __backendPort?: number }).__backendPort;
     if (backendStartedOk && bootBackendPort) {
-      kelBoot(`backend ok -> initializeKel (port=${bootBackendPort})`);
+      kelBoot(`backend ok -> ensureAdminUser + initializeKel (port=${bootBackendPort})`);
+      await ensureAdminUserOnce(bootBackendPort);
       kelBoot('before initializeKel');
       await initializeKel(bootBackendPort);
       kelBoot('after initializeKel');

@@ -6,6 +6,7 @@
 
 import { WEBUI_DEFAULT_PORT } from '@/common/config/constants';
 import { shell, webui, type IWebUIStatus } from '@/common/adapter/ipcBridge';
+import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { configService } from '@/common/config/configService';
 import AionModal from '@/renderer/components/base/AionModal';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
@@ -407,22 +408,11 @@ const WebuiModalContent: React.FC = () => {
       const values = await form.validate();
       setPasswordLoading(true);
 
-      // D3: credential operations are desktop IPC against the web-host auth store; policy
-      // failures come back as codes, translated below.
-      const result = await webui.changePassword.invoke({
+      // changePassword goes through httpBridge; on 4xx/5xx it throws
+      // BackendHttpError, caught below and translated via errorCodeMap.
+      await webui.changePassword.invoke({
         newPassword: values.newPassword,
       });
-      if (!result?.ok) {
-        const errorCodeMap: Record<string, string> = {
-          PASSWORD_TOO_SHORT: t('settings.webui.passwordTooShort'),
-          PASSWORD_TOO_LONG: t('settings.webui.passwordTooLong'),
-          PASSWORD_TOO_COMMON: t('settings.webui.passwordTooCommon'),
-        };
-        Message.error(
-          (result?.code && errorCodeMap[result.code]) || result?.message || t('settings.webui.passwordChangeFailed')
-        );
-        return;
-      }
       Message.success(t('settings.webui.passwordChanged'));
       setSetPasswordModalVisible(false);
       form.resetFields();
@@ -432,7 +422,20 @@ const WebuiModalContent: React.FC = () => {
       setStatus((prev) => (prev ? { ...prev, initialPassword: undefined } : null));
     } catch (error) {
       console.error('Set new password error:', error);
-      Message.error(t('settings.webui.passwordChangeFailed'));
+      const errorCodeMap: Record<string, string> = {
+        PASSWORD_TOO_SHORT: t('settings.webui.passwordTooShort'),
+        PASSWORD_TOO_LONG: t('settings.webui.passwordTooLong'),
+        PASSWORD_TOO_COMMON: t('settings.webui.passwordTooCommon'),
+      };
+      const rawMsg =
+        isBackendHttpError(error) && error.backendMessage
+          ? error.backendMessage
+          : error instanceof Error
+            ? error.message
+            : '';
+      const codes = rawMsg.split('; ');
+      const translated = codes.map((code) => errorCodeMap[code]).filter(Boolean);
+      Message.error(translated.length > 0 ? translated.join('; ') : rawMsg || t('settings.webui.passwordChangeFailed'));
     } finally {
       setPasswordLoading(false);
     }
@@ -443,26 +446,21 @@ const WebuiModalContent: React.FC = () => {
       const values = await usernameForm.validate();
       setUsernameLoading(true);
 
+      // HTTP bridge: changeUsername returns { username: string } directly;
+      // httpBridge throws BackendHttpError on 4xx/5xx — caught below.
       const result = await webui.changeUsername.invoke({
         newUsername: values.newUsername,
       });
-      if (!result?.ok) {
-        const codeMap: Record<string, string> = {
-          USERNAME_TOO_SHORT: t('settings.webui.usernameMinLength'),
-          USERNAME_TOO_LONG: t('settings.webui.usernameMaxLength'),
-          USERNAME_FORMAT: t('settings.webui.usernameFormatError'),
-        };
-        Message.error((result?.code && codeMap[result.code]) || t('settings.webui.usernameChangeFailed'));
-        return;
-      }
-      const nextUsername = result.username ?? values.newUsername.trim();
+      const nextUsername = result?.username ?? values.newUsername.trim();
       Message.success(t('settings.webui.usernameChanged'));
       setSetUsernameModalVisible(false);
       usernameForm.resetFields();
       setStatus((prev) => (prev ? { ...prev, adminUsername: nextUsername } : null));
     } catch (error) {
       console.error('Set new username error:', error);
-      Message.error(t('settings.webui.usernameChangeFailed'));
+      const fallback = t('settings.webui.usernameChangeFailed');
+      const msg = isBackendHttpError(error) && error.backendMessage ? error.backendMessage : fallback;
+      Message.error(msg);
     } finally {
       setUsernameLoading(false);
     }
@@ -474,11 +472,12 @@ const WebuiModalContent: React.FC = () => {
 
     setQrLoading(true);
     try {
-      // D3: the desktop asks the web-host for a QR token; the scannable URL is composed here from
-      // the current status so it points at the right host (networkUrl when remote is enabled).
+      // Backend returns only { token, expires_at_ms }; the scannable URL is
+      // composed here from the current status so it points at the right host
+      // (networkUrl for remote-enabled servers, localUrl otherwise).
       const qrData = await webui.generateQRToken.invoke();
 
-      if (qrData?.ok && qrData.token && qrData.expires_at_ms) {
+      if (qrData) {
         const baseUrl =
           status.allowRemote && status.networkUrl
             ? status.networkUrl
@@ -498,7 +497,7 @@ const WebuiModalContent: React.FC = () => {
           4 * 60 * 1000
         );
       } else {
-        console.error('Generate QR code failed', qrData);
+        console.error('Generate QR code failed: no data returned');
         Message.error(t('settings.webui.qrGenerateFailed'));
       }
     } catch (error) {
