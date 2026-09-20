@@ -4,13 +4,13 @@ Status legend: **DONE** · **PARTIAL** · **IN PROGRESS** · **QUEUED** · **BLO
 
 | ID | Feature | Source | Status | Commit(s) | Evidence / notes |
 | --- | --- | --- | --- | --- | --- |
-| L-000 | Lane open: `dev/daily-driver` from `37b1f27`; durable state; `1.7.0-dev` identity | §1–3 | IN PROGRESS | — | MARATHON_STATE.md; DECISIONS.md |
-| D0-001 | Permissions "Work" column shows human work label; raw job id only in advanced/copy detail | HVRA-MINOR-001 | QUEUED | — | — |
-| D0-002 | Installer/uninstaller FileDescription Kel-native (no donor phrase); neighbor version-resource audit | HVRA-MINOR-002 | QUEUED | — | — |
-| D0-003 | Remove donor wiki help destination (no fake Kel URL) | HVRA-SUG-001 | QUEUED | — | — |
-| D0-004 | Single pet-refusal toast (keep truthful OFF-state sync) | HVRA-SUG-002 | QUEUED | — | — |
-| D0-005 | Durable records section `FINAL_V16_RESIDUAL_CLEANUP` with audit IDs + repair commits | §D0 | QUEUED | — | — |
-| D1 | Provider + model onboarding | §6–7 | QUEUED | — | — |
+| L-000 | Lane open: `dev/daily-driver` from `37b1f27`; durable state; `1.7.0-dev` identity | §1–3 | DONE | `3f83be7` | MARATHON_STATE.md; engine identity test updated + OK |
+| D0-001 | Permissions "Work" column human label; raw id behind support detail | HVRA-MINOR-001 | DONE | `9bdf338` | `jobLabels.ts`; `job-labels.test.ts` 5 tests; tsc+Vitest green |
+| D0-002 | Installer/uninstaller FileDescription Kel-native | HVRA-MINOR-002 | DONE (source) | `777fefe` | desc `Kel`; donor-policy pin; packaged re-verify at package phase |
+| D0-003 | Remove donor wiki help destination | HVRA-SUG-001 | DONE | `cce55d0` | `LocalAgents.tsx` constant+button removed |
+| D0-004 | Single pet-refusal toast | HVRA-SUG-002 | DONE | `f594282` | artifact root cause documented; idempotent toast id; OFF sync untouched |
+| D0-005 | `FINAL_V16_RESIDUAL_CLEANUP` records | §D0 | DONE | (this records commit) | IMPLEMENTATION_STATUS.md table |
+| D1 | Provider + model onboarding | §6–7 | IN PROGRESS | — | — |
 | D2 | Update reliability | §8 | QUEUED | — | — |
 | D3 | Remote / WebUI (+security) | §9–10 | QUEUED | — | — |
 | D4 | Transcription first-class workflow | §11 | QUEUED | — | — |
