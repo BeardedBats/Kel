@@ -1,0 +1,44 @@
+=== SMOKE messagebox: all scenarios, compile-only ===
+MSG_EXIT=0
+    "E1030",
+    "E1031",
+    "E1040",
+    "E1050",
+    "E1060",
+    "E1070",
+    "E1090"
+  ],
+  "coveredScenarios": [
+    "uninstaller-copy-or-rebuild-failed",
+    "old-uninstall-failed",
+    "install-dir-remove-or-locked",
+    "extract-failed",
+    "disk-insufficient",
+    "bundled-aioncore-incomplete",
+    "core-app-files-incomplete",
+    "arch-mismatch",
+    "active-installer-conflict",
+    "registry-state-invalid",
+    "active-marker-write-failed",
+    "invalid-install-path"
+  ],
+  "count": 12,
+  "mode": "compile-only"
+}
+=== SMOKE self-lock (full) ===
+LOCK_EXIT=0
+[self-lock] makensis: C:\Users\Nick\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\makensis.exe
+[self-lock] ok: C:\Users\Nick\AppData\Local\Temp\kel-installer-self-lock-20260920-022725-log.jsonl
+=== SMOKE rstrtmgr: compile-only ===
+RS_EXIT=0
+[rstrtmgr-ui] makensis: C:\Users\Nick\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\makensis.exe
+[rstrtmgr-ui] install dir: C:\Users\Nick\AppData\Local\Temp\aionui-rm-ui-nyl8p7\install-dir
+[rstrtmgr-ui] locked file: C:\Users\Nick\AppData\Local\Temp\aionui-rm-ui-nyl8p7\install-dir\locked-by-smoke.txt
+[rstrtmgr-ui] compiling harness...
+[rstrtmgr-ui] compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-rm-ui-nyl8p7\aionui-rstrtmgr-ui-smoke.exe
+=== SMOKE report script ===
+REPORT_EXIT=0
+status=skipped
+code=E1003
+wrapperCode=E1002
+copyTextLength=613

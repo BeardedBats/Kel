@@ -1,0 +1,57 @@
+[failure-messagebox] makensis: C:\Users\Nick\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\makensis.exe
+[failure-messagebox] E1001: compiling harness...
+[failure-messagebox] E1001: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1001-KedCFr\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1002: compiling harness...
+[failure-messagebox] E1002: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1002-nHlP9f\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1003: compiling harness...
+[failure-messagebox] E1003: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1003-0y1H4I\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1010: compiling harness...
+[failure-messagebox] E1010: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1010-sqNLXd\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1020: compiling harness...
+[failure-messagebox] E1020: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1020-jsW64y\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1030: compiling harness...
+[failure-messagebox] E1030: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1030-6zjjWt\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1031: compiling harness...
+[failure-messagebox] E1031: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1031-47Oa9U\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1040: compiling harness...
+[failure-messagebox] E1040: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1040-MNdznx\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1050: compiling harness...
+[failure-messagebox] E1050: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1050-8vZRlG\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1060: compiling harness...
+[failure-messagebox] E1060: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1060-q0GCRG\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1070: compiling harness...
+[failure-messagebox] E1070: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1070-CdFbcI\aionui-failure-messagebox-smoke.exe
+[failure-messagebox] E1090: compiling harness...
+[failure-messagebox] E1090: compile-only ok: C:\Users\Nick\AppData\Local\Temp\aionui-failure-messagebox-E1090-y6N3ez\aionui-failure-messagebox-smoke.exe
+{
+  "coveredCodes": [
+    "E1001",
+    "E1002",
+    "E1003",
+    "E1010",
+    "E1020",
+    "E1030",
+    "E1031",
+    "E1040",
+    "E1050",
+    "E1060",
+    "E1070",
+    "E1090"
+  ],
+  "coveredScenarios": [
+    "uninstaller-copy-or-rebuild-failed",
+    "old-uninstall-failed",
+    "install-dir-remove-or-locked",
+    "extract-failed",
+    "disk-insufficient",
+    "bundled-aioncore-incomplete",
+    "core-app-files-incomplete",
+    "arch-mismatch",
+    "active-installer-conflict",
+    "registry-state-invalid",
+    "active-marker-write-failed",
+    "invalid-install-path"
+  ],
+  "count": 12,
+  "mode": "compile-only"
+}

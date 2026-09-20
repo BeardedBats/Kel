@@ -32,7 +32,7 @@ const rootDir = path.resolve(process.argv[3]);
 const outDir = path.resolve(process.argv[4]);
 fs.mkdirSync(outDir, { recursive: true });
 
-const R = { startedAt: new Date().toISOString(), appDir, rootDir, probes: {}, shots: [], consoleErrors: [], pageErrors: [], notes: [] };
+const R = { startedAt: new Date().toISOString(), appDir, rootDir, probes: {}, shots: [], consoleErrors: [], httpErrors: [], pageErrors: [], notes: [] };
 const V = (name, detail) => { R.probes[name] = detail; console.log('[probe] ' + name + ' :: ' + JSON.stringify(detail).slice(0, 600)); };
 
 const DONOR = /aionui|aion core|aioncore|butler/i;
@@ -40,8 +40,9 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
 (async () => {
   const convMapPath = path.join(rootDir, 'kelwork', 'aion-conversations.json');
   const convMap = JSON.parse(fs.readFileSync(convMapPath, 'utf8'));
-  const donorIds = Object.values(convMap);
-  const expectedMain = convMap['main'];
+  const donorIds = Object.keys(convMap); // map is donorId -> kel name
+  const donorOfKel = (kel) => Object.keys(convMap).find((k) => convMap[k] === kel);
+  const expectedMain = donorOfKel('main');
 
   const app = await electron.launch({
     executablePath: path.join(appDir, 'Kel.exe'),
@@ -58,6 +59,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
   const page = await app.firstWindow({ timeout: 60000 });
   page.on('console', (m) => { if (m.type() === 'error') R.consoleErrors.push(m.text()); });
   page.on('pageerror', (e) => R.pageErrors.push(String((e && e.message) || e)));
+  page.on('response', (r) => { try { if (r.status() >= 400) R.httpErrors.push({ status: r.status(), url: r.url() }); } catch (e) {} });
   await page.waitForLoadState('domcontentloaded');
   // Keep the audit window off-screen during runs (never disturb the desktop).
   try {
@@ -65,6 +67,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       for (const w of BrowserWindow.getAllWindows()) { w.setPosition(-32000, -32000); w.setSkipTaskbar(true); }
     });
   } catch (e) {}
+  await injectGlobals(page);
 
   const hash = () => page.evaluate(() => window.location.hash);
   const settle = (ms) => page.waitForTimeout(ms || 700);
@@ -99,8 +102,8 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     const fn = new Function('return (' + body + ')')();
     const el = fn();
     if (!el) return false;
-    el.click();
-    return true;
+    if (typeof el.click === 'function') { el.click(); return true; }
+    return el === true; // predicates that click internally and report a boolean
   }, predicate);
 
   try {
@@ -237,6 +240,10 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       };
     });
     await shot('permissions-language-top');
+    const permRow = await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('.kel-table tbody tr, .kel-table tr'));
+      return rows.slice(0, 4).map((r) => (r.innerText || '').replace(/\s+/g, ' ').slice(0, 180));
+    });
     const advClicked = await page.evaluate(() => { const b = Array.from(document.querySelectorAll('button')).find((x) => (x.textContent || '').trim() === 'Advanced details'); if (!b) return false; b.click(); return true; });
     await settle(800);
     const permAdv = await page.evaluate(() => {
@@ -245,11 +252,6 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     });
     await shot('permissions-advanced');
     V('permissionsLanguage', Object.assign(permLang, { advClicked, afterAdvanced: permAdv }));
-    // extra observations: expiry correctness on the active row + revoke button states
-    const permRow = await page.evaluate(() => {
-      const rows = Array.from(document.querySelectorAll('.kel-table tbody tr, .kel-table tr'));
-      return rows.slice(0, 4).map((r) => (r.innerText || '').replace(/\s+/g, ' ').slice(0, 180));
-    });
     V('permissionsRows', permRow);
     if (advClicked) { await page.evaluate(() => { const b = Array.from(document.querySelectorAll('button')).find((x) => (x.textContent || '').trim() === 'Hide advanced details'); if (b) b.click(); }); await settle(400); }
 
@@ -288,7 +290,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     }
     V('workToChat', { attentionRows: attentionRows.slice(0, 4), openChatCount, opened, expectedMain });
     // manual second conversation render (independence check for conversation routing)
-    const secondDonor = convMap['demo-quick'];
+    const secondDonor = donorOfKel('demo-quick');
     await nav('#/conversation/' + secondDonor, 1500);
     await shot('conversation-manual-' + secondDonor);
     const manualConv = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 240));
@@ -335,7 +337,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     await settle(800);
     const sysBefore = await page.evaluate(() => {
       const t = document.body.innerText || '';
-      return { hasAdvancedFolders: /Advanced — folders/.test(t), hasShow: /\bShow\b/.test(t), hasWorkDir: /Work Directory/i.test(t), hasDonorPath: /aionui|kelwork/i.test(t), textSample: t.slice(0, 600) };
+      return { hasAdvancedFolders: /Advanced — folders/.test(t), hasShow: /\bShow\b/.test(t), hasWorkDir: /Work Directory/i.test(t), hasDonorPath: /aionui/i.test(t), textSample: t.slice(0, 600) };
     });
     const sysClicked = await domClick("() => Array.from(document.querySelectorAll('button')).find(b => (b.textContent||'').trim() === 'Show')");
     await settle(700);
@@ -357,14 +359,25 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     await shot('appearance');
     // theme switching: click Dark then Light then Follow System (record theme attributes)
     const themeTry = async (label) => {
-      const clicked = await domClick("() => { const els = Array.from(document.querySelectorAll('div,span,[role],button')); const cand = els.find(e => (e.textContent||'').trim() === '" + label + "' && e.closest('[class*=card],[class*=theme],[class*=cover]')); if (!cand) return false; cand.click(); return true; }");
+      let clicked = false; let error = null;
+      try {
+        clicked = await page.evaluate((lbl) => {
+          const leaves = Array.from(document.querySelectorAll('div,span,button,li,p'))
+            .filter((e) => e.children.length === 0 && (e.textContent || '').trim() === lbl);
+          if (!leaves.length) return false;
+          const leaf = leaves[0];
+          const target = leaf.closest('button,[role="button"],[class*=cover],[class*=card],[class*=theme]') || leaf.parentElement || leaf;
+          target.click();
+          return true;
+        }, label);
+      } catch (e) { error = String(e && e.message); }
       await settle(900);
       const state = await page.evaluate(() => ({
         bodyAttr: document.body.getAttribute('arco-theme'),
         htmlClass: document.documentElement.className.slice(0, 120),
         bg: getComputedStyle(document.body).backgroundColor,
       }));
-      return { label, clicked, state };
+      return { label, clicked, error, state };
     };
     const darkTry = await themeTry('Dark');
     const lightTry = await themeTry('Light');
@@ -396,7 +409,7 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       const t = document.body.innerText || '';
       return { switches: sw, textSample: t.slice(0, 500) };
     });
-    const petClicked = await domClick("() => { const s = document.querySelector('.arco-switch'); if (s) { s.click(); return true; } return false; }");
+    const petClicked = await page.evaluate(() => { const s = document.querySelectorAll('.arco-switch')[0]; if (s) { s.click(); return true; } return false; });
     await settle(1800);
     const petAfter = await page.evaluate(() => {
       const s = document.querySelector('.arco-switch');
@@ -406,9 +419,11 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
       return { firstChecked: s ? s.getAttribute('aria-checked') : null, msgs, switches: others, radios };
     });
     await shot('pet-after-refusal');
-    await nav('#/guid', 800);
-    await nav('#/settings/pet', 1400);
-    await settle(1200);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await settle(2600);
+    await injectGlobals(page);
+    await waitFor(() => !!document.querySelector('.arco-switch'), 15000);
+    await settle(800);
     const petReload = await page.evaluate(() => {
       const s = document.querySelector('.arco-switch');
       return { firstChecked: s ? s.getAttribute('aria-checked') : null };
@@ -487,11 +502,13 @@ const DONOR = /aionui|aion core|aioncore|butler/i;
     fs.writeFileSync(path.join(outDir, 'reaudit-probes-summary.txt'), buildSummary(R));
     console.log('=== REAUDIT PROBES DONE ===');
     console.log(buildSummary(R));
+    process.exit(0);
   } catch (fatal) {
     R.fatal = String((fatal && fatal.stack) || fatal);
     try { fs.writeFileSync(path.join(outDir, 'reaudit-probes.json'), JSON.stringify(R, null, 2)); } catch (e) {}
     console.log('=== REAUDIT PROBES FATAL ===');
     console.log(R.fatal);
+    process.exit(3);
   } finally {
     try { await app.close(); } catch (e) {}
   }
