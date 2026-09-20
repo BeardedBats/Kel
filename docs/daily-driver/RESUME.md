@@ -119,9 +119,7 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   continuity, routing), 3 engine-live-but-partial (conversation, coding, autonomy — the model turn
   needs a provider key this machine lacks), 1 pinned (update; packaged re-verify deferred to the
   package phase). The friction ledger lists the ten journey-driven fixes, each committed with tests.
-- **Next: finish D18 (journeys 1–3 where a provider exists; re-run the battery on the installed
-  candidate), then D19 — full regression → fresh package → installed candidate** (directive §39–42).
-- **D19 regression GREEN (b28e91b).** Engine 1025 OK (324.1s) · desktop tsc 0 + Vitest 34 files /
+- **D19 regression GREEN (`b28e91b`).** Engine 1025 OK (324.1s) · desktop tsc 0 + Vitest 34 files /
   260 PASS · all seven live journeys green on fresh data dirs · transcription E2E pass · workforce
   277+ OK.
 - **Fresh package built + installed (this commit).** Engine `17c08c57…` (PyInstaller 51/51 OK),
@@ -130,9 +128,33 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   Installed at `C:\Users\Nick\KelDailyDriverCandidate` (engine hash verified); V1.6
   `KelVisualFixInstall` restored to its recorded state after an NSIS update-mode incident
   (procedure + evidence in `PACKAGE_EVIDENCE.md`); other preserved installs untouched.
-- **Next: D19 installed GUI battery** (D0-001, D0-004, D1, D2 replays + upgrade preservation) against
-  the installed candidate, then `DAILY_DRIVER_CANDIDATE.md` (candidate head record) and the marathon
-  close-out.
+- ~~Next: D19 installed GUI battery~~ → **done, see below.**
+- **Two D19 fixes landed while closing the battery.** (1) `3e6b544` — an interrupted run can actually
+  be continued: `Continuation.execute_resume` re-arms a fenced (orphaned/uncertain) milestone through
+  `Store.reopen` instead of attaching a link and waiting forever, and the Work page stopped promising
+  an automatic continuation for that state (engine 1029 OK; desktop 36 files / 268 PASS). (2) Provider
+  ids no longer reach user copy — the route sentence, the provider save confirmation and the readiness
+  choices name providers from the engine's inventory labels (`provider-language.test.ts`). Journeys
+  1–3 were closed with a synthetic provider turn: `packaging/verify_synthetic_journeys.py` 16/16 green
+  (real kill → fence → the person's continuation → the same job VERIFIED).
+- **Installed battery GREEN on the re-cut build (final).** Nine shipped surfaces (no raw error
+  patterns, no horizontal overflow, no donor terms, 0 console errors; startup-to-window 11.5 s,
+  3.0–4.3 s per surface), plus the four replays: D0-001 (Permissions Work column shows the job's
+  request while the engine's job id `0482b75e-…` is absent — cross-checked against the engine's own
+  database), D0-004 (exactly one pet-refusal message; toggle settles OFF), D1 (human provider
+  statuses; Set up → key field → **Save + Verify** answers "Saved and verified Anthropic API: …"; the
+  synthetic key was removed again), D2 (update check fails closed: `Update metadata request failed
+  (404)`, no release card), upgrade preservation (durable work byte-identical before/after) and zero
+  orphaned `KelEngine` processes. Evidence: `evidence/d19/installed-battery.json` (+ screenshots);
+  checklist and bind chain in `PACKAGE_EVIDENCE.md`.
+- **Re-cut package installed (final).** Installer `f5c8f2672ba3561270f5a906befa3f18c4167e76916025a373cba491d563a397`
+  (213,633,457 B), Kel.exe `de1109c8…`, engine `01c58bdf…` (unchanged between cuts; source did not
+  move), installed at `C:\Users\Nick\KelDailyDriverCandidate` with `Uninstall Kel.exe` metadata
+  Kel / 1.7.0-dev.
+- **STATUS: MARATHON ENDPOINT REACHED (D19 · fresh package · installed Daily Driver Candidate).**
+  Nothing is in flight. The only remainders are environment-limited and recorded in
+  `KNOWN_LIMITATIONS.md`: no provider credential on this machine (so no live model turn) and no phone
+  for the remote web-host's QR login. `DAILY_DRIVER_CANDIDATE.md` is the candidate's head record.
 
 ## Where
 

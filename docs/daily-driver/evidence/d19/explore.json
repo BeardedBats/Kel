@@ -1,0 +1,250 @@
+{
+  "startedAt": "2026-09-20T17:43:45.940Z",
+  "installDir": "C:\\Users\\Nick\\KelDailyDriverCandidate",
+  "appExe": "C:\\Users\\Nick\\KelDailyDriverCandidate\\Kel.exe",
+  "dataRoot": "C:\\Users\\Nick\\KelDailyDriverRuns\\prepared\\engine",
+  "cdpPort": 62925,
+  "checks": {},
+  "consoleErrors": [],
+  "cdp": {
+    "Browser": "Chrome/138.0.7204.251",
+    "Protocol-Version": "1.3",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Kel/1.7.0-dev Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
+    "V8-Version": "13.8.258.32",
+    "WebKit-Version": "537.36 (@e9338f3ca35356d29b834450ba248c96511395e0)",
+    "webSocketDebuggerUrl": "ws://127.0.0.1:62925/devtools/browser/609e0b1b-af43-43d2-9005-4af503e4787d"
+  },
+  "appUrl": "file:///C:/Users/Nick/KelDailyDriverCandidate/resources/app.asar/out/renderer/index.html#/guid",
+  "structure": {
+    "url": "file:///C:/Users/Nick/KelDailyDriverCandidate/resources/app.asar/out/renderer/index.html#/guid",
+    "hash": "#/guid",
+    "title": "Kel",
+    "heading": "While you were away",
+    "interactive": [
+      {
+        "tag": "a",
+        "role": null,
+        "testid": null,
+        "href": "#kel-shell-content",
+        "text": "Skip to main content"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "New Chat"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Work"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Projects"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Activity"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Permissions"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Transcription"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "Badge chat"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "status"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "Hey! I wanted to test this out. How far along are we?"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "I'm sending a test message here"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "Hey! What fonts are you using?"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "I want to create a little app that allows me to control my microphone's mute but"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "I want to create a little app that allows me to control my microphone's mute but"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "I want to create a little app that allows me to control my microphone's mute but"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "Hey! How do I configure the agents inside this app?"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Work & context"
+      },
+      {
+        "tag": "div",
+        "role": "button",
+        "testid": null,
+        "href": null,
+        "text": "Settings"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Set it up"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Set it up"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Open the chat"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Open Providers"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": "preset-pill-kel",
+        "href": null,
+        "text": "Kel"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": "file-upload-btn",
+        "href": null,
+        "text": ""
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": "kel-mic-toggle",
+        "href": null,
+        "text": ""
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": "guid-send-btn",
+        "href": null,
+        "text": ""
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": "workspace-selector-btn",
+        "href": null,
+        "text": "Work in a project"
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Explain this project in plain words."
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "testid": null,
+        "href": null,
+        "text": "Review this project and suggest the next useful change."
+      }
+    ],
+    "testIds": [
+      "conversation-row-menu-dc5487a7",
+      "conversation-row-menu-8469bd3d",
+      "conversation-row-menu-67cb9b1a",
+      "conversation-row-menu-53ffd6fc",
+      "conversation-row-menu-3e7cddd9",
+      "conversation-row-menu-5767b2a2",
+      "conversation-row-menu-b203b396",
+      "conversation-row-menu-a14ea887",
+      "conversation-row-menu-25613169",
+      "conversation-row-menu-e74db366",
+      "resumption-brief",
+      "preset-pill-kel",
+      "guid-input",
+      "file-upload-btn",
+      "kel-mic",
+      "kel-mic-toggle",
+      "guid-send-btn",
+      "workspace-selector-btn"
+    ],
+    "bodyText": "Skip to main content Kel New Chat Work Projects Activity Permissions Transcription Project conversations Workspace Badge chat work status main Hey! I wanted to test this out. How far along are we? Conversations I'm sending a test message here Hey! What fonts are you using? I want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard I want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard I want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard Hey! How do I configure the agents inside this app? Work & context Settings Hi, what's your plan for today? While you were away 2 need you · 1 finished A connection needs setup Anthropic API — finish setting it up so Kel can keep it available. Set it up A connection needs setup DeepSeek API — finish setting it up so Kel can keep it available. Set it up Finished: Summarise the Q3 customer feedback into a one-page brief The result passed its checks. Open the chat None of your connected models is available right now, so Kel will wait instead of guessing. Open Providers Kel Automatic Work in a project Try these instructions Explain this project in plain words. Review this project and suggest the next useful change."
+  }
+}

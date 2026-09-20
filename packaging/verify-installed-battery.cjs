@@ -44,6 +44,7 @@ const DATA_ROOT =
   process.env.KEL_BATTERY_DATA || 'C:\\Users\\Nick\\KelDailyDriverRuns\\prepared\\engine';
 const OUT_DIR = path.resolve(__dirname, '..', 'docs', 'daily-driver', 'evidence', 'd19');
 const TOUR = process.argv.includes('--tour');
+const DUMP_PROVIDERS = process.argv.includes('--dump-providers');
 const KEEP_OPEN = process.argv.includes('--keep-open');
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -124,6 +125,124 @@ async function clickByText(page, label, { exact = true } = {}) {
 
 const DONOR_TERMS = ['aionui', 'iOfficeAI'];
 
+const { execFileSync } = require('child_process');
+
+/**
+ * The engine's own record of what the prepared data root holds (read-only). Used to check the UI
+ * against the engine's identifiers instead of trusting the page alone.
+ */
+function engineFacts() {
+  const script = [
+    'import json, sqlite3, pathlib, sys',
+    "con = sqlite3.connect(f'file:{pathlib.Path(sys.argv[1]).as_posix()}?mode=ro', uri=True)",
+    "lease = con.execute('SELECT job_id, lease_id, state FROM capability_leases LIMIT 1').fetchone()",
+    "job = con.execute(\"SELECT id, json_extract(data,'$.contract.request') FROM jobs LIMIT 1\").fetchone()",
+    "print(json.dumps({'lease': lease, 'job': job}))",
+  ].join('\n');
+  try {
+    return JSON.parse(
+      execFileSync('python', ['-c', script, path.join(DATA_ROOT, 'kel.sqlite3')], {
+        encoding: 'utf8',
+      })
+    );
+  } catch (error) {
+    return { error: String((error && error.message) || error) };
+  }
+}
+
+/** Strings a person should never meet on a finished surface (the directive's `raw errors`). */
+const RAW_ERROR_PATTERNS = [
+  /TypeError/,
+  /ReferenceError/,
+  /is not a function/,
+  /Cannot read propert/,
+  /\[object Object\]/,
+  /Uncaught/,
+  /Failed to fetch dynamically imported module/,
+  /undefined is not/,
+];
+
+async function surfaceHealth(page, label, checks) {
+  const facts = await page.evaluate(() => ({
+    hash: location.hash,
+    overflowX: Math.max(0, document.documentElement.scrollWidth - window.innerWidth),
+    text: document.body.innerText,
+  }));
+  const rawErrors = RAW_ERROR_PATTERNS.filter((pattern) => pattern.test(facts.text)).map(String);
+  const donorTerms = DONOR_TERMS.filter((term) => facts.text.toLowerCase().includes(term.toLowerCase()));
+  const key = `surface_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+  checks[key] = {
+    pass: rawErrors.length === 0 && facts.overflowX <= 2 && donorTerms.length === 0,
+    hash: facts.hash,
+    horizontalOverflowPx: facts.overflowX,
+    rawErrorPatterns: rawErrors,
+    donorTerms,
+  };
+  return checks[key];
+}
+
+/** Visit one installed surface, time it, and check what a person would see there. */
+async function visit(page, label, hash, checks, click = true) {
+  const started = Date.now();
+  const nav = await goTo(page, click ? label : null, hash);
+  await wait(1200);
+  checks.timings = checks.timings || {};
+  checks.timings[label] = Date.now() - started;
+  const health = await surfaceHealth(page, label, checks);
+  health.navigatedBy = nav.clicked ? 'click' : 'route';
+  health.screenshotError = await safeShot(
+    page,
+    `surface-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`
+  );
+  return health;
+}
+
+/** The installed pass: startup, every shipped surface, then the four replays. */
+async function runBattery(page, results) {
+  const checks = results.checks;
+  await visit(page, 'Landing', '#/guid', checks, false);
+  const landing = await bodyText(page);
+  const briefPresent = await page.evaluate(
+    () => !!document.querySelector('[data-testid="resumption-brief"]')
+  );
+  checks.landing_brief = {
+    pass:
+      briefPresent &&
+      /Anthropic API/.test(landing) &&
+      /Set it up/.test(landing) &&
+      /Summarise the Q3 customer feedback/.test(landing),
+    resumptionBriefPresent: briefPresent,
+    sample: landing.slice(0, 500),
+  };
+  checks.timings.startupToWindow = results.startupMs;
+
+  for (const [label, hash] of [
+    ['Work', '#/work'],
+    ['Projects', '#/projects/knowledge'],
+    ['Recipes', '#/projects/recipes'],
+    ['Activity', '#/activity'],
+    ['Transcription', '#/transcription'],
+    ['Team', '#/team/roster'],
+    ['Settings', '#/settings/appearance'],
+    ['Tools', '#/settings/tools'],
+  ]) {
+    await visit(page, label, hash, checks);
+  }
+
+  for (const probe of [probePermissions, probePetRefusal, probeProviders, probeUpdate]) {
+    try {
+      await probe(page, checks);
+    } catch (error) {
+      checks[probe.name] = { pass: false, error: String((error && error.message) || error) };
+    }
+  }
+  checks.pet_nav = checks.pet_nav || null;
+  results.allPassed = Object.values(checks).every((entry) => !entry || entry.pass !== false);
+  results.donorTermsInConsole = (results.consoleErrors || []).filter((line) =>
+    DONOR_TERMS.some((term) => line.toLowerCase().includes(term.toLowerCase()))
+  ).length;
+}
+
 /** Navigate the way a person does: click the entry by name, else fall back to the route. */
 async function goTo(page, label, hash) {
   const clicked = label ? await clickByText(page, label) : false;
@@ -175,34 +294,27 @@ async function probePermissions(page, checks) {
     return;
   }
   const workCell = leaseTable.rows[0][0];
-  // The identifiers live behind the support-detail disclosure; open it so the evidence can show
-  // both the human label and the raw id side by side.
-  const supportToggle = page.getByText(/Support detail/i).first();
-  if (await supportToggle.count().catch(() => 0)) {
-    await supportToggle.click({ timeout: 5000 }).catch(() => {});
-    await wait(1200);
-  }
-  const afterToggle = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('table.kel-table')).map((table) => ({
-      head: Array.from(table.querySelectorAll('thead th')).map((th) => th.innerText.trim()),
-      rows: Array.from(table.querySelectorAll('tbody tr')).map((tr) =>
-        Array.from(tr.querySelectorAll('td')).map((td) => td.innerText.trim())
-      ),
-    }))
-  );
-  const supportTable = afterToggle.find((table) => table.head.includes('Job id'));
-  const jobId = supportTable && supportTable.rows.length ? supportTable.rows[0][1] : null;
+  // Cross-check the page against the engine's own record: the label must be the job's request, and
+  // the engine's identifiers must live in the support detail, never in the column a person reads.
+  const engine = engineFacts();
+  const jobId = engine.job ? engine.job[0] : null;
+  const leaseJobId = engine.lease ? engine.lease[0] : null;
+  const request = engine.job ? engine.job[1] : null;
   const pageText = await bodyText(page);
-  checks.permissions_support_table = supportTable ? supportTable.head : null;
   checks.permissions_work_column = {
     pass:
-      /summarise the q3 customer feedback/i.test(workCell) &&
-      (!jobId || workCell !== jobId) &&
+      !!request &&
+      workCell.includes(request) &&
+      workCell !== jobId &&
+      workCell !== leaseJobId &&
       !/^[0-9a-f]{6,}$/i.test(workCell),
     workCell,
-    jobIdFromSupportTable: jobId,
-    identifierIsDifferentFromTheLabel: jobId ? workCell !== jobId : null,
-    supportTableKeepsTheIdentifier: jobId ? pageText.includes(jobId) : null,
+    engineJobId: jobId,
+    engineLeaseJobId: leaseJobId,
+    engineRequest: request,
+    labelEqualsTheRequest: !!request && workCell.includes(request),
+    labelIsNotAnIdentifier: workCell !== jobId && workCell !== leaseJobId,
+    identifiersHiddenFromTheColumn: !pageText.includes(jobId || '\u0000'),
   };
   checks.permissions_no_donor_terms = !DONOR_TERMS.some((term) =>
     pageText.toLowerCase().includes(term.toLowerCase())
@@ -296,6 +408,8 @@ async function probeProviders(page, checks) {
   const after = await bodyText(page);
   const messages = await toastTexts(page);
   const savedLine = (after.match(/Saved[^\n]*/) || [null])[0];
+  // D19: the confirmation must name the card the person set up, never the engine's id.
+  const namesTheProvider = !!savedLine && savedLine.includes('Anthropic API') && !savedLine.includes('internal');
   // Honest outcomes only: the key is either verified into the OS store, or reported as not read
   // back. A bogus key must never produce a claim that the provider now works.
   const honest =
@@ -304,15 +418,23 @@ async function probeProviders(page, checks) {
       savedLine + ' ' + messages.join(' ')
     );
   checks.providers_setup_flow = {
-    pass: inputShown && saveEnabled && honest,
+    pass: inputShown && saveEnabled && honest && namesTheProvider,
     keyFieldAppeared: inputShown,
     saveEnabled,
+    namesTheProvider,
     messages,
     savedLine,
   };
-  checks.providers_no_false_health = !/Connected/.test(
-    (await bodyText(page)).slice((await bodyText(page)).indexOf('Anthropic'))
-  );
+  const anthropicAfter = await page.evaluate(() => {
+    const card = Array.from(document.querySelectorAll('.kel-card')).find((node) =>
+      (node.innerText || '').includes('Anthropic')
+    );
+    return card ? card.innerText.replace(/\s+/g, ' ').trim().slice(0, 300) : null;
+  });
+  checks.providers_no_false_health = {
+    pass: !anthropicAfter || !/\bConnected\b/.test(anthropicAfter),
+    anthropicCardAfterSave: anthropicAfter,
+  };
   // Leave the prepared data root as it was found: drop the synthetic key again.
   const remove = page.getByRole('button', { name: 'Remove key', exact: true }).first();
   checks.providers_key_removed = (await remove.count().catch(() => 0)) > 0;
@@ -370,6 +492,28 @@ async function probeUpdate(page, checks) {
   checks.update_screenshotError = await safeShot(page, 'probe-d2-update.png');
 }
 
+/** Inventory of the Providers page: every card, its heading, and its own controls. */
+async function dumpProviders(page) {
+  await goTo(page, null, '#/providers');
+  await wait(2500);
+  const inventory = await page.evaluate(() => {
+    const text = (node) => (node.innerText || '').replace(/\s+/g, ' ').trim();
+    const cards = Array.from(document.querySelectorAll('.kel-card'));
+    return cards.map((card, index) => ({
+      index,
+      nested: cards.some((other) => other !== card && other.contains(card)),
+      containsCards: cards.some((other) => other !== card && card.contains(other)),
+      title: text(card).slice(0, 60),
+      buttons: Array.from(card.querySelectorAll('button'))
+        .map((button) => text(button))
+        .filter(Boolean),
+      text: text(card).slice(0, 240),
+    }));
+  });
+  console.log(JSON.stringify(inventory, null, 2));
+  return inventory;
+}
+
 /** Walk the installed UI so the probes are written against what is really there. */
 async function tour(page, out) {
   const steps = [];
@@ -397,6 +541,7 @@ async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   if (!fs.existsSync(APP_EXE)) throw new Error(`installed app missing: ${APP_EXE}`);
   const port = await freePort();
+  const startedAt = Date.now();
   const logPath = path.join(OUT_DIR, 'app-console.log');
   const log = fs.createWriteStream(logPath);
   const child = spawn(APP_EXE, [`--remote-debugging-port=${port}`], {
@@ -432,27 +577,21 @@ async function main() {
     await page.waitForLoadState('domcontentloaded');
     await wait(3500);
     results.appUrl = page.url();
+    results.startupMs = Date.now() - startedAt;
 
     if (TOUR) {
       await tour(page, results);
+    } else if (DUMP_PROVIDERS) {
+      results.providers = await dumpProviders(page);
     } else {
-      for (const probe of [probePermissions, probePetRefusal, probeProviders, probeUpdate]) {
-        try {
-          await probe(page, results.checks);
-        } catch (error) {
-          results.checks[probe.name] = { pass: false, error: String((error && error.message) || error) };
-        }
-      }
-      results.allPassed = Object.values(results.checks).every(
-        (entry) => !entry || entry.pass !== false
-      );
-      results.donorTermsInConsole = (results.consoleErrors || []).filter((line) =>
-        DONOR_TERMS.some((term) => line.toLowerCase().includes(term.toLowerCase()))
-      ).length;
+      await runBattery(page, results);
     }
 
     fs.writeFileSync(
-      path.join(OUT_DIR, TOUR ? 'tour.json' : 'installed-battery.json'),
+      path.join(
+        OUT_DIR,
+        TOUR ? 'tour.json' : DUMP_PROVIDERS ? 'providers-dump.json' : 'installed-battery.json'
+      ),
       JSON.stringify(results, null, 2),
       'utf8'
     );

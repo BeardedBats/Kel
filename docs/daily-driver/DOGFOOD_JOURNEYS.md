@@ -36,6 +36,7 @@ Fix work this phase produced, each already committed with its own tests:
 10. Roster management was exposed to normal users → Kel manages its own roster; developer-only disclosure (`82ff501`, D8).
 11. Two shipped links still pointed at the donor org's GitHub (Office-preview install, agent-hub PR) → removed in the D19 residual fix, pinned by `donor-org-references.test.ts`; the built bundle now has zero donor-org hits (D19 commit).
 12. An interrupted run could not actually be continued: the person's "continue" attached a conversation link and left the fenced job waiting forever, while the Work page promised that state would "continue automatically" → `Continuation.execute_resume` now re-arms the fenced milestone at the person's own request (`Store.reopen`), the Work page names the person's next step instead of an automatic continuation it would never get, both pinned (`interrupted-run-promise.test.ts`, `test_v13_continuation.py`) and proven by journey J3 (`3e6b544`, D19).
+13. Engine provider ids reached user copy on the installed build: the route sentence said "Running on internal", the provider confirmation read "Saved and verified internal", and the readiness choices were labelled with ids → all three name the provider from the engine's own inventory labels now (`internal` is the legacy id of the Anthropic API entry; renaming the id is recorded as debt, not attempted at the package gate). Pinned by `provider-language.test.ts` (D19).
 
 ## Records
 

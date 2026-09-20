@@ -6,20 +6,23 @@ Historical V1.6 candidate evidence lives in `docs/v1.6/…` and is untouched (no
 
 source HEAD → renderer build → engine build → installer → installed candidate
 
-- **Source HEAD at final build:** `b28e91b715b8e0adac7ac454b32a9ed6f278d8bb`
-  (`test(daily-driver): D19 regression battery green — checkpoint before packaging`) plus the D19
-  donor-residual fix commit (see git log at the commit that carries this file update).
+- **Source HEAD at final build:** `cc3e859` (`docs(daily-driver): point the D19 friction entry at its
+  commit`) plus the D19 fix commits it follows (`3e6b544` interrupted-run continuation) and the
+  provider-language fix committed together with this record (see git log at the commit that carries
+  this file update).
 - **Engine build:** `scripts/build-runtime.ps1` → `dist/runtime/KelEngine/KelEngine.exe`
-  sha256 `17c08c57718afbf1af20010a6ef7bafb05e9db7e293628945785edcc306b1fc9` (3,329,912 bytes);
-  `packaging/verify_engine_pyz.py` → matched 51, MISMATCH [], RESULT: OK.
+  sha256 `01c58bdfcdb94c34acb1bf811cbf1faf06a29f9068c06c53fd6a97a5058b2a9c` (3,330,256 bytes);
+  `packaging/verify_engine_pyz.py` → matched 51, MISMATCH [], RESULT: OK. Unchanged between the two
+  cuts — the engine source did not move, only the renderer did.
 - **Package build:** `node scripts/build-with-builder.js x64 --win --x64 --config.win.signExecutable=false`
   (kel-builder.json; resource editing ON, signing skipped by config).
-- **Installer:** `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`
-  sha256 `364065d316d8837863d69a3a9b4d28487d91f58ae2c5cd9321745ac3a054d1b8` (213,622,841 bytes).
-- **App executable:** `dist/package-r12/win-unpacked/Kel.exe`
-  sha256 `019e4f47a4583af348e79dbca2a789732374aba7105cb2c3e7f7dad00576c649`;
+- **Installer (re-cut, installed):** `dist/package-r12/Kel-1.7.0-dev-win-x64.exe`
+  sha256 `f5c8f2672ba3561270f5a906befa3f18c4167e76916025a373cba491d563a397` (213,633,457 bytes).
+- **App executable (re-cut):** `dist/package-r12/win-unpacked/Kel.exe`
+  sha256 `de1109c8a4094516472b9313ab78e9ff4ca0b3dbdb2ce4e0f76d90af7726326a`;
   ProductName **Kel**, FileDescription **Kel**, FileVersion **1.7.0-dev**.
-- **Engine bundled:** `resources/kel-engine/KelEngine.exe`, installed hash verified == build hash.
+- **Engine bundled:** `resources/kel-engine/KelEngine.exe`, installed hash verified == build hash
+  (`01c58bdf…`).
 
 ## Checklist (verified at this package phase)
 
@@ -44,15 +47,32 @@ source HEAD → renderer build → engine build → installer → installed cand
       the tooling for the GUI-pass probes below (`webui.desktop.enabled` can be flipped through the
       backend settings route, then a relaunch starts the web-host for browser-driven checks).
 - [x] Installed candidate registration points at `C:\Users\Nick\KelDailyDriverCandidate`.
-- [ ] Installed probe: Permissions Work column shows the work's request — **D0-001 live replay** (GUI).
-- [ ] Installed probe: Desktop-Pet enable refusal shows exactly ONE toast — **D0-004 live replay** (GUI).
-- [ ] Installed probe: Providers page shows human statuses; Set up → Save + Verify — **D1 replay** (GUI).
-- [ ] Update check fails closed truthfully in the installed app — **D2 replay** (GUI).
-- [x] Upgrade preservation: install-over-self on the candidate preserved the durable work — before
-      the reinstall the prepared engine root held 1 job ("Summarise the Q3 customer feedback into a
-      one-page brief") + 1 lease; the installer updated the candidate in place (correct update-mode
-      target), `Kel.exe` refreshed, the bundled engine hash unchanged (`17c08c57…`), and **both the
-      job and the lease were intact afterwards** (data root untouched by the installer).
+- [x] Installed probe: Permissions Work column shows the work's request — **D0-001 live replay, PASS**.
+      The column read "Summarise the Q3 customer feedback into a one-page brief" while the engine's own
+      record (`capability_leases.job_id`) is `0482b75e-…`, which appears nowhere in the column
+      (`labelEqualsTheRequest`, `labelIsNotAnIdentifier`, `identifiersHiddenFromTheColumn` all true).
+- [x] Installed probe: Desktop-Pet enable refusal shows exactly ONE toast — **D0-004 live replay, PASS**.
+      The distinct-toast count (outermost Arco nodes) is 1, the sentence is "The desktop pet is not
+      available in this build, so it stays off.", and the switch settles OFF.
+- [x] Installed probe: Providers page shows human statuses; Set up → Save + Verify — **D1 replay, PASS**.
+      Statuses are Needs setup / Available (no raw engine enums); Set up opened the key field, Save +
+      Verify was enabled and answered honestly: "Saved and verified **Anthropic API**: the key is in
+      the OS store and recorded for the engine." The synthetic key was removed again afterwards and the
+      two setup rows returned (2 × Needs setup). The card does not claim "Connected".
+- [x] Update check fails closed truthfully in the installed app — **D2 replay, PASS**. Version shown
+      `v1.7.0-dev`; the manual check answered `Update metadata request failed (404)` (no Kel release
+      feed exists yet), no release card appeared, and no donor terms are on the page.
+- [x] Installed pass over nine surfaces (Landing, Work, Projects, Recipes, Activity, Transcription,
+      Team → chat redirect, Settings, Tools): **no raw error patterns, no horizontal overflow, zero
+      donor terms**; navigation 3.0–4.3 s per surface, startup-to-window 11.5 s, **0 console errors**,
+      and the forced close left **no orphaned `KelEngine` process**. Evidence:
+      `docs/daily-driver/evidence/d19/installed-battery.json` (+ surface and probe screenshots).
+- [x] Upgrade preservation (re-proven on the re-cut): the prepared engine root held 1 job
+      ("Summarise the Q3 customer feedback into a one-page brief", CLOSED/VERIFIED) + 1 lease + 1
+      publication + 2 runs + 2 messages before the install; the installer updated the candidate in
+      place (correct update-mode target) and every one of those counts is identical afterwards. The
+      only delta is the app's own chat surface creating an empty "New conversation" row at launch
+      (9 → 12 rows across the battery runs) — app behaviour, not installer damage.
 - [x] Install dir: `C:\Users\Nick\KelDailyDriverCandidate`; data root prepared at
       `C:\Users\Nick\KelDailyDriverRuns\prepared`.
 - [x] Preserved installs: `KelV16ReviewInstall` (Sep 19 17:17) and `KelVisualReauditInstall`
@@ -82,15 +102,29 @@ describe. Recovery performed, mirroring the documented procedure:
 | Phase | Artifact | SHA-256 | Notes |
 | --- | --- | --- | --- |
 | build-01 (superseded) | `Kel-1.7.0-dev-win-x64.exe` (fast build, no engine staged) | `50c107eb…` | proved the pipeline; superseded (engine missing, exe metadata skipped via fast flag) |
-| build-02 (final) | `Kel-1.7.0-dev-win-x64.exe` | `364065d3…` | engine bundled + exe resource editing applied; donor-org sweep 0 hits; installed to the candidate and re-verified in place after the D19 residual rebuild |
-| engine | `dist/runtime/KelEngine/KelEngine.exe` | `17c08c57…` | PyInstaller from this lane's `runtime/`; structural check 51/51 OK; installed hash verified equal |
+| build-02 (superseded) | `Kel-1.7.0-dev-win-x64.exe` | `364065d3…` | engine bundled + exe resource editing applied; donor-org sweep 0 hits; installed to the candidate and re-verified in place after the D19 residual rebuild |
+| build-03 (re-cut, installed) | `Kel-1.7.0-dev-win-x64.exe` | `f5c8f267…` | re-cut after the D19 provider-language fix (renderer only; engine hash unchanged `01c58bdf…`); donor-org sweep 0 files / 0 occurrences; installed over the candidate in place and fully batteries |
+| engine | `dist/runtime/KelEngine/KelEngine.exe` | `01c58bdf…` | PyInstaller from this lane's `runtime/`; structural check 51/51 OK; installed hash verified equal |
 
-## Installed battery status at this checkpoint
+## Installed battery — final state
 
-- Done (machine-verifiable): engine-from-install live smoke; installer + uninstaller metadata;
-  donor-org sweep on the built bundle; install/registration/engine-hash verification; preserved
-  installs verified side by side; V1.6 install restored to its recorded state.
-- Remaining (GUI-driven, next pass): D0-001 (Work column), D0-004 (single pet toast), D1
-  (providers Set up → Save + Verify), D2 (update fail-closed), upgrade preservation — run against
-  the installed candidate at `C:\Users\Nick\KelDailyDriverCandidate` with the data root
-  `C:\Users\Nick\KelDailyDriverRuns\prepared`.
+The four GUI-driven replays left open by the first pass are now done, on the installed re-cut build
+(`install dir C:\Users\Nick\KelDailyDriverCandidate`, data root
+`C:\Users\Nick\KelDailyDriverRuns\prepared`):
+
+- **D0-001 PASS** — Permissions Work column shows the work's request; the engine's job id is not in it
+  (cross-checked against the engine's own database).
+- **D0-004 PASS** — exactly one refusal message, truthful OFF state.
+- **D1 PASS** — human provider statuses; Set up → Save + Verify answers honestly and names the
+  provider the person clicked (`Saved and verified Anthropic API: …`); the synthetic key was removed
+  again, leaving the prepared state as found.
+- **D2 PASS** — update check fails closed with the transport truth, no donor infrastructure.
+- **Upgrade preservation PASS** — durable work identical before/after the install (see the checklist
+  entry); the installed UI reads it live (finished job + active lease + resumption brief).
+- **Surfaces PASS** — nine shipped surfaces with no raw errors, no overflow, no donor terms; startup
+  11.5 s, 3.0–4.3 s per surface, no orphaned processes.
+
+Replay: `node packaging/verify-installed-battery.cjs` (drives the installed app through its own
+window; `--tour` and `--dump-providers` are the structural inspection modes). The engine-side
+journeys that support this battery are re-runnable with
+`cd runtime && python ../packaging/verify_synthetic_journeys.py`.

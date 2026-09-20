@@ -128,3 +128,10 @@ Honest, current list (grows/shrinks as phases complete):
   transport-level truth (`Update metadata request failed (404)`) rather than a friendly guess. Honest
   and fail-closed, but technical; a friendlier closed-channel sentence is a candidate for a later
   phase, not invented at the package gate.
+- Provider ids (D19): the engine's inventory still carries the legacy id `internal` for the Anthropic
+  API entry (`runtime/kel/providers.py`). Stored credential references and the engine's own identity
+  for that provider are keyed by it, so renaming it is a migration-class change and was deliberately
+  not attempted at the package gate. The user surfaces no longer show it — the Work route sentence,
+  the provider save confirmation and the readiness choices all name the provider from the inventory
+  label (`provider-language.test.ts` pins it). Any future surface must do the same: the raw id is not
+  user copy.
