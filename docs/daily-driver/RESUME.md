@@ -114,7 +114,13 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
 - **D17 done (D16+D17 commit).** Integrations overview on Providers: Connected / Needs setup /
   Unavailable with the engine's reason, from `/api/capabilities` — the same rows the per-chat tools
   pill draws; Set up points at Settings → Tools. Live journey all-green.
-- **Next: D18 — synthetic daily-driver dogfood journeys** (directive §36).
+- **D18 in progress (D18 slice commit).** All ten dogfood journeys are recorded in
+  `DOGFOOD_JOURNEYS.md` with evidence pointers: 6 live (transcription, remote, recipes, learning,
+  continuity, routing), 3 engine-live-but-partial (conversation, coding, autonomy — the model turn
+  needs a provider key this machine lacks), 1 pinned (update; packaged re-verify deferred to the
+  package phase). The friction ledger lists the ten journey-driven fixes, each committed with tests.
+- **Next: finish D18 (journeys 1–3 where a provider exists; re-run the battery on the installed
+  candidate), then D19 — full regression → fresh package → installed candidate** (directive §39–42).
 
 ## Where
 
