@@ -44,3 +44,9 @@ Honest, current list (grows/shrinks as phases complete):
   beyond the derived-only surface). Update/restart attention items are omitted until an authoritative
   renderer-visible flag exists (update channel closed in D2). The connection item covers engine
   provider setup needs; the Providers page remains the deeper surface.
+- Continuation (D6): the landing brief is a point-in-time snapshot (fetched on mount), not a live
+  subscription — it reflects durable state at open time; the Work page and conversations update
+  normally. There is deliberately no "since you were last here" diff: Kel persists no client-side
+  last-seen marker, and the brief reports durable truth rather than inventing recency. Resuming
+  remains human-gated: the engine never auto-resumes; the chat reply "continue" (and the Work page)
+  is the mechanism, and the brief only points at it.

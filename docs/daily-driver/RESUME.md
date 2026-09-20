@@ -40,9 +40,20 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   the shell: silent first snapshot, meaningful kinds only, 30-min per-item cooldown, 3 events/tick,
   delivery via the existing notification bridge (focus + setting gating unchanged). Snooze/Later
   intentionally absent (would grow a second state store).
-- **NEXT: D6 — Continuation / resumability** (§14–15). Start from `state.continuation` and the
-  existing resume/retry touch points (Work/GUID/Needs-Attention actions); make reopening Kel
-  effortless with real actions only; test restart during active work.
+- **D6 Continuation / resumability done (this commit).** The engine already owned durable
+  continuation (`Continuation.candidates` over job states READY/PAUSED/WAITING_RESOURCE/
+  AWAITING_USER + open milestones, project-scoped) and the recorded restore outcome
+  (`restore-outcome.json`, audit PER-02). D6 adds the human side: a derived-only "While you were
+  away" brief on the landing page (`resumptionBrief.ts` + `KelResumptionBrief.tsx`, above the
+  provider notice) covering failed restores, what needs you (reusing the attention aggregator),
+  what finished, what stopped, what waits for your go-ahead (continuation candidates, reply
+  "continue" — Kel never auto-resumes), what is still running, and a fresh successful restore.
+  Cap 3 per section, quiet when empty, real actions only. Verified live: engine restart on the same
+  data dir → fresh pid, stable version, durable counts stable, planted restore-outcome surfaced
+  (`evidence/d6/continuation-restart.json`, verdict all true).
+- **NEXT: D7 — Long-running autonomy** (§16–17). Recon `/api/autonomy` + guardrails + job lifecycle
+  and the shell failure surfaces; strengthen durable-objective continuation and recovery within the
+  existing architecture; test provider interruption and engine restart during active work.
 
 ## Where
 

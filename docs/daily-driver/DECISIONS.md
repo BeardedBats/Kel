@@ -74,4 +74,17 @@
   implemented: it would require a second state store the derived-only surface must not grow.
   Update/restart items are omitted because no authoritative renderer-visible restart flag exists
   (the update channel is closed in D2) — invented items are worse than none.
+- **D-016 — D6 approach.** The engine already owned durable continuation (`Continuation.candidates`
+  over READY/PAUSED/WAITING_RESOURCE/AWAITING_USER jobs and open milestones, project-scoped) and the
+  recorded restore outcome (`restore-outcome.json`, PER-02). D6 stays derived-only: a pure
+  `resumptionBrief.ts` (sections: failed restore first, needs-you reusing the D5 attention
+  aggregator, finished VERIFIED work, stopped work, continuation candidates as human-gated
+  "reply continue" lines, still-running, and a fresh successful restore) rendered by a
+  self-contained `KelResumptionBrief.tsx` on the landing page above the provider notice; cap 3 per
+  section, quiet when empty, actions only to surfaces that already own the follow-up. The brief
+  never claims a "since you left" diff (no invented client state) — it reports durable truth as it
+  stands. The restore freshness check accepts epoch seconds or milliseconds so the engine's unit
+  cannot make it lie. `kelState`'s type now includes the `restore` field the engine always returned.
+  Restart verification plants the engine's OWN restore-outcome file on a throwaway data dir and
+  asserts a fresh process restores durable truth and surfaces it (`evidence/d6/`).
 - (append as work proceeds; every non-obvious choice gets a line)
