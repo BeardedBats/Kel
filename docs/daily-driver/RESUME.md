@@ -102,7 +102,12 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   existing state only — Happening now (routing sentence included), Waiting on you (Open Work),
   Recently finished (plain verdicts), provider count; internals banned by pin. Shared
   `workLanguage.ts` keeps Work and Activity sentences identical. tsc 0 · Vitest 30 files / 249 PASS.
-- **Next: D15 — security / sandbox boundary improvements** (directive §30–31).
+- **D15 done (this commit).** Security/containment verified end to end (existing suites, ~20 pinned
+  behaviours) and the emergency stop made deliberate: arm → confirm ("Yes — stop everything") with
+  the effect spelled out; the engine call exists only in the confirmed branch. Live journey
+  all-green: lease ACTIVE → stop → REVOKED (`reason: emergency stop`), work PAUSED, forged `actor`
+  refused by the engine itself (`packaging/verify-emergency-stop.cjs` + `evidence/d15/`).
+- **Next: D16 — live capability revision** (directive §32).
 
 ## Where
 

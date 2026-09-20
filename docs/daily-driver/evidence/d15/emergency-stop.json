@@ -1,0 +1,20 @@
+{
+  "phase": "D15",
+  "when": "2026-09-20T15:11:01.661Z",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d15-9Vzywv",
+  "seeded": {
+    "job": "bb8cce78-004b-4d3b-85e8-50ce572fed17",
+    "lease": "72658f44-c9c7-4cbd-a094-389bcf3794fb"
+  },
+  "verdict": {
+    "lease_is_active_before": true,
+    "stop_is_accepted": true,
+    "lease_is_revoked": true,
+    "revocation_reason_is_recorded": true,
+    "job_state_after": "PAUSED",
+    "work_was_paused": true,
+    "hostile_actor_response": "Actor identity comes from the authenticated Kel session, not from the request payload",
+    "hostile_actor_input_is_ignored": true
+  },
+  "all_green": true
+}

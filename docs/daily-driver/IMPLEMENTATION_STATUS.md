@@ -101,8 +101,14 @@ Source audit: `audit/v16-human-visual-final` @ `554f79987399dae10e3b03ecf2a9b2c9
   entirely from existing state (Happening now with the routing sentence, Waiting on you with an Open
   Work link, Recently finished with plain verdicts, provider count). No internals — pinned. Work and
   Activity now share their sentences through `workLanguage.ts`, so they can never drift.
+- **D15 complete** (this commit) — containment verified end to end (autonomy + boundary suites,
+  ~20 pinned behaviours) and the one human-risk gap closed: the emergency stop is now two-step
+  (arm → "Yes — stop everything" / "Keep going") with its effect spelled out, and the engine call
+  exists only in the confirmed branch. Live journey all-green: lease ACTIVE → stop → REVOKED
+  (`reason: emergency stop`), work PAUSED, forged `actor` refused by the engine itself
+  (`packaging/verify-emergency-stop.cjs`, `evidence/d15/`).
 
 ## Next item
 
-- **D15 — Security / sandbox boundary improvements** (§30–31): verify the existing containment
-  (guardrails, boundary requests, permissions) end to end and close the smallest honest gap.
+- **D16 — Live capability revision** (§32): verify that revocation narrows immediately and nothing
+  widens silently, then close the smallest honest gap.
