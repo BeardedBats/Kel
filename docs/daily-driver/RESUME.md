@@ -121,6 +121,18 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
   package phase). The friction ledger lists the ten journey-driven fixes, each committed with tests.
 - **Next: finish D18 (journeys 1–3 where a provider exists; re-run the battery on the installed
   candidate), then D19 — full regression → fresh package → installed candidate** (directive §39–42).
+- **D19 regression GREEN (b28e91b).** Engine 1025 OK (324.1s) · desktop tsc 0 + Vitest 34 files /
+  260 PASS · all seven live journeys green on fresh data dirs · transcription E2E pass · workforce
+  277+ OK.
+- **Fresh package built + installed (this commit).** Engine `17c08c57…` (PyInstaller 51/51 OK),
+  installer `364065d3…` (213,622,841 B), Kel.exe `019e4f47…`, metadata Kel / 1.7.0-dev on both the
+  app and the uninstaller, asar donor-org sweep **0 hits** after removing two shipped donor links.
+  Installed at `C:\Users\Nick\KelDailyDriverCandidate` (engine hash verified); V1.6
+  `KelVisualFixInstall` restored to its recorded state after an NSIS update-mode incident
+  (procedure + evidence in `PACKAGE_EVIDENCE.md`); other preserved installs untouched.
+- **Next: D19 installed GUI battery** (D0-001, D0-004, D1, D2 replays + upgrade preservation) against
+  the installed candidate, then `DAILY_DRIVER_CANDIDATE.md` (candidate head record) and the marathon
+  close-out.
 
 ## Where
 

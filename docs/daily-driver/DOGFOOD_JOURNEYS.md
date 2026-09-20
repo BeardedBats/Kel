@@ -34,6 +34,7 @@ Fix work this phase produced, each already committed with its own tests:
 8. An unknown boundary scope silently filed a dead grant → refused loudly (`8216e48`, D16).
 9. The chosen provider/model was invisible → one honest sentence on Work (`879804e`, D12).
 10. Roster management was exposed to normal users → Kel manages its own roster; developer-only disclosure (`82ff501`, D8).
+11. Two shipped links still pointed at the donor org's GitHub (Office-preview install, agent-hub PR) → removed in the D19 residual fix, pinned by `donor-org-references.test.ts`; the built bundle now has zero donor-org hits (D19 commit).
 
 ## Records
 
