@@ -1,11 +1,14 @@
 """V1.3 Gate 4: first-class continuation (docs/v1.3/KEL_V1.3_CONTINUATION_SPEC.md; CONT-*)."""
 import contextlib
 import tempfile
+import time
 import unittest
 
 from kel.core import PolicyError, Store
 from kel.context import Context
 from kel.continuation import Continuation
+from kel.engine import Engine
+from kel.native import FixtureAdapter
 
 
 def contract(request='Do the work'):
@@ -134,6 +137,44 @@ class ContinuationCase(unittest.TestCase):
         out2 = self.cont.execute_resume(waiting, self.c1)
         self.assertEqual(out2['state'], 'READY')
 
+    def test_execute_resume_after_an_interrupted_run_rearms_the_fenced_work(self):
+        # An expired/orphaned run leaves its milestone fenced as UNCERTAIN so the engine never
+        # replays an unconfirmed writer by itself (D7). The person saying "continue" is the
+        # authority that lifts the fence; before D19 this call attached the link and did nothing
+        # else, so the promise the Work page makes (reply "continue") was silently empty.
+        job = self.make_job('Interrupted task', state='WAITING_RESOURCE', verdict='UNCERTAIN',
+                            milestones={'m1': {'state': 'UNCERTAIN', 'attempts': 1,
+                                               'error': 'Expired run; native state requires '
+                                                        'reconciliation'}})
+        out = self.cont.execute_resume(job, self.c1, reason='user: continue')
+        self.assertEqual(out['state'], 'READY')
+        row = self.store.get(job)
+        self.assertEqual(row['state'], 'READY')
+        self.assertEqual(row['milestones']['m1']['state'], 'NEEDS_REPAIR')
+        self.assertIsNone(row['milestones']['m1']['artifact'])
+        self.assertEqual(row['milestones']['m1']['attempts'], 1, 'the fresh attempt is not pre-spent')
+        with contextlib.closing(self.store.connect()) as db:
+            kinds = [r['type'] for r in db.execute(
+                'SELECT type FROM events WHERE aggregate_id=?', (job,))]
+        self.assertIn('job.reopened', kinds)
+
+    def test_execute_resume_keeps_an_automatic_route_wait_separate(self):
+        # A route-blocked job resumes by itself once a worker appears, so a person asking early
+        # clears the block and must never take the fence-lifting path.
+        job = self.make_job('Waiting on a worker', state='WAITING_RESOURCE', verdict='UNCERTAIN',
+                            route_block='No eligible route',
+                            milestones={'m1': {'state': 'READY', 'attempts': 0}})
+        out = self.cont.execute_resume(job, self.c1)
+        self.assertEqual(out['state'], 'READY')
+        row = self.store.get(job)
+        self.assertEqual(row['milestones']['m1']['state'], 'READY')
+        self.assertIsNone(row.get('route_block'))
+        with contextlib.closing(self.store.connect()) as db:
+            kinds = [r['type'] for r in db.execute(
+                'SELECT type FROM events WHERE aggregate_id=?', (job,))]
+        self.assertIn('route.retry', kinds)
+        self.assertNotIn('job.reopened', kinds)
+
     def test_execute_resume_closed_reopens_with_event(self):
         job = self.make_job('Closed task', state='CLOSED', verdict='FAILED',
                             milestones={'m1': {'state': 'NEEDS_REPAIR'}})
@@ -229,6 +270,54 @@ class ContinuationCase(unittest.TestCase):
         self.assertEqual(second['state'], 'READY')
         self.assertFalse(second['link_created'])
         self.assertEqual(len(self.cont.links(job)), 1)
+
+
+class InterruptedRunCase(unittest.TestCase):
+    """The interrupted-run journey end to end: a lost run, then the person's continuation."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.store = Store(self.temp.name)
+        self.context = Context(self.store)
+        self.p1 = self.context.project('One', project_id='p1')
+        self.c1 = self.context.conversation('p1', title='First')
+
+    def test_continue_after_a_lost_run_finishes_the_same_job(self):
+        job = self.store.create(contract('Write the interrupted report'), conversation=self.c1)
+        lost = self.store.claim(job, 'm1')
+        self.store.recover_expired(now=time.time() + 100000)  # what startup recovery does
+        fenced = self.store.get(job)
+        self.assertEqual(fenced['state'], 'WAITING_RESOURCE')
+        self.assertEqual(fenced['milestones']['m1']['state'], 'UNCERTAIN')
+
+        engine = Engine(self.store, {'fixture': FixtureAdapter(output='x' * 80)})
+        self.addCleanup(engine.close)
+        out = Continuation(self.store).execute_resume(job, self.c1, reason='user: continue')
+        self.assertEqual(out['state'], 'READY')
+        result = engine.wait(job, 60)
+        for _ in range(5):
+            if result.get('state') == 'CLOSED':
+                break
+            result = engine.wait(job, 60)
+        row = self.store.get(job)
+        self.assertEqual(row['state'], 'CLOSED')
+        self.assertEqual(row['verdict'], 'VERIFIED')
+        self.assertEqual(row['milestones']['m1']['state'], 'ACCEPTED')
+        self.assertEqual(row['milestones']['m1']['attempts'], 2, 'a fresh attempt ran')
+        # The accepted artifact comes from the new run, never from a replayed fenced run.
+        self.assertNotEqual(row['milestones']['m1']['artifact']['run_id'], lost['id'])
+        self.assertIsNone(row['milestones']['m1']['error'])
+
+    def test_continue_still_refuses_verified_work(self):
+        job = self.store.create(contract('Already finished'), conversation=self.c1)
+        with self.store.transaction() as db:
+            row = self.store._get(db, job)
+            row.update(state='CLOSED', verdict='VERIFIED')
+            row['milestones']['m1'].update(state='ACCEPTED', artifact={'hi': 'there'})
+            self.store._save(db, row, 'test.fixture')
+        with self.assertRaises(PolicyError):
+            Continuation(self.store).execute_resume(job, self.c1)
 
 
 if __name__ == '__main__':

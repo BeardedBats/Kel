@@ -220,8 +220,13 @@ class Continuation:
         if state == 'PAUSED':
             self.store.control(job_id, 'resume')
         elif state == 'WAITING_RESOURCE' and job.get('route_block'):
+            # A routing block clears itself as soon as a worker is available; the person asking
+            # early just stops the waiting.
             self.store.retry_route(job_id)
-        elif state == 'CLOSED':
+        elif state in ('WAITING_RESOURCE', 'CLOSED'):
+            # WAITING_RESOURCE without a route_block is an interrupted run: the engine fenced its
+            # milestone and will not replay it on its own. Reaching here *is* the person's
+            # decision, so the fenced milestone is re-armed for a fresh attempt.
             self.store.reopen(job_id, reason=reason)
         created = self.attach(job_id, conversation_id, reason=reason)
         final = self.store.get(job_id)

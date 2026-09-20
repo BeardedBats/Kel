@@ -42,6 +42,19 @@ const WAIT_REASON: Record<string, string> = {
   BLOCKED: 'Blocked by a safety rule; the reason is recorded.',
 };
 
+/**
+ * What a waiting job is actually waiting for (D7/D19). A route-blocked job resumes by itself when
+ * a model becomes available; a job waiting without a route block is an *interrupted run* — the
+ * engine fenced it and will not replay it on its own, so promising an automatic continuation there
+ * would be a state lie. That one names the person's own next step instead.
+ */
+const waitReason = (job: KelWorkJob): string | null => {
+  if (job.state === 'WAITING_RESOURCE' && !job.route_block) {
+    return 'A run stopped mid-flight. Your work is preserved — reply “continue” in the chat for a fresh attempt.';
+  }
+  return WAIT_REASON[job.state] ?? null;
+};
+
 // Human-visual repair: milestone states in user language — no raw engine enums.
 // (VERDICT_TEXT and the routing sentence live in workLanguage.ts, shared with the Activity view.)
 const MILESTONE_STATE_TEXT: Record<string, string> = {
@@ -186,10 +199,10 @@ const WorkCenter: React.FC = () => {
                 <KelStatusChip key={`${job.id}-state`} status={statusFromDerived(job.state)} />,
                 <span key={`${job.id}-step`}>
                   {job.contract?.milestones?.[0]?.objective ?? '—'}
-                  {WAIT_REASON[job.state] ? (
+                  {waitReason(job) ? (
                     <>
                       <br />
-                      <span className="kel-meta">{WAIT_REASON[job.state]}</span>
+                      <span className="kel-meta">{waitReason(job)}</span>
                     </>
                   ) : null}
                 </span>,

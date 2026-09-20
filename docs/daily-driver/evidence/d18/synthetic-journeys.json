@@ -1,0 +1,36 @@
+{
+  "phase": "D18",
+  "when": "2026-09-20T17:42:37Z",
+  "mode": "synthetic provider (engine fixture adapter), real execution paths",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d18-qar78ylo",
+  "verdict": {
+    "j1_conversation_round_trip": true,
+    "j2_task_closed": true,
+    "j2_verdict_verified": true,
+    "j2_publication_has_heading": true,
+    "j2_artifact_written": true,
+    "j2_attempts": 1,
+    "j3_child_was_killed_abruptly": true,
+    "j3_run_was_in_flight": true,
+    "j3_fenced_and_waiting": true,
+    "j3_no_silent_replay": true,
+    "j3_continue_rearms_the_fenced_run": true,
+    "j3_after_continue_finishes": true,
+    "j3_attempts_bounded": true,
+    "j3_state_and_attempts": {
+      "state": "CLOSED",
+      "attempts": 2
+    },
+    "j4_pause_holds": true,
+    "j4_resume_completes": true,
+    "j5_failure_is_terminal_and_recorded": true,
+    "j5_surfaces_as_needs_person": true,
+    "j5_retry_ladder_ran": true,
+    "j5_state_and_verdict": {
+      "state": "CLOSED",
+      "verdict": "FAILED",
+      "attempts": 4
+    }
+  },
+  "all_green": true
+}
