@@ -81,6 +81,8 @@ import './styles/arco-override.css';
 import './styles/kel-tokens.css';
 import './styles/themes/index.css';
 import './styles/markdown.css';
+import './styles/figma-variables.css';
+import './styles/kel-shell.css';
 import { loadKelFonts } from './utils/theme/kelFonts';
 
 // Config service — kick off initialization before i18n / theme modules load,

@@ -61,3 +61,26 @@ Component paint styles can override variable values. Use the source component wh
 | `color/newchat/base` | `VariableID:134:1211` | `--kel-figma-color-newchat-base` | `rgba(15, 45, 100, 1)` |
 | `color/newchat/light` | `VariableID:134:1212` | `--kel-figma-color-newchat-light` | `rgba(154, 178, 234, 1)` |
 | `color/newchat/rim` | `VariableID:134:1213` | `--kel-figma-color-newchat-rim` | `rgba(169, 191, 240, 1)` |
+
+## Typography authority
+
+The user selected DS v2 Foundations / Type v2 over the older screen text styles. Inter is not used.
+The supplied [Type v2 reference](evidence/figma/type-v2-user-authority.png) is retained without edits.
+
+| Role | Family and weight | Size / line height | Color |
+|---|---|---|---|
+| Page title | Instrument Sans 600 | 26 / 32 | off-white |
+| Eyebrow | Instrument Sans 500 | 13 / 18 | ice-blue |
+| Card title | Instrument Sans 700 | 15 / 20 | #FFC481 |
+| Section label | Instrument Sans 500 | 12 / 16 | ice-blue |
+| Body / chat | SF Pro Text 400 | 16 / 25 | primary |
+| Row label | Instrument Sans 500 | 14 / 20 | primary |
+| Row metadata | SF Pro Text 400 | 12 / 16 | muted |
+| Button | Instrument Sans 500 | 14 / 20 | #E4DCCF |
+| Danger button | Instrument Sans 600 | 14 / 20 | #FFF1F0 |
+| Navigation row | Instrument Sans 500 | 14 / 20 | primary / muted |
+| Sidebar hero | Instrument Sans 600 | 15 / 20 | source role color |
+| Composer model | Instrument Sans 600 | 14 / 20 | #9FC3FF |
+| Transcript | SF Pro Text 400 | 15 / 26 | primary |
+
+Existing explicit font choices remain supported through Appearance. These values define the default shell.

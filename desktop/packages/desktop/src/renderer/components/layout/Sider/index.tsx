@@ -11,6 +11,8 @@ import { blurActiveElement } from '@renderer/utils/ui/focus';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { SiderToolbar, SiderSearchEntry } from './SiderNav';
 import KelNavEntries from './SiderNav/KelNavEntries';
+import KelToolsSection from '@renderer/components/kel/KelToolsSection';
+import settingsIcon from '@renderer/assets/figma/settings.svg';
 import SiderFooter from './SiderFooter';
 import siderStyles from './Sider.module.css';
 
@@ -155,6 +157,10 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
 
   return (
     <div className='size-full flex flex-col'>
+      {isSettings && <>
+        <SiderToolbar isMobile={isMobile} isBatchMode={isBatchMode} collapsed={collapsed} siderTooltipProps={siderTooltipProps} onNewChat={handleNewChat} onToggleBatchMode={() => setIsBatchMode(prev => !prev)} />
+        <button type='button' className='kel-shell-back kel-shell-settings-back' onClick={handleSettingsClick}>← Back to Kel</button>
+      </>}
       {/* Main content area */}
       <div className='flex-1 min-h-0 overflow-hidden'>
         {isSettings ? (
@@ -171,6 +177,9 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
               onNewChat={handleNewChat}
               onToggleBatchMode={() => setIsBatchMode((prev) => !prev)}
             />
+            <button type='button' className='kel-shell-settings' onClick={handleSettingsClick}>
+              <img src={settingsIcon} alt='' width={22} height={22} /><span>Settings</span>
+            </button>
             {/* Search entry — desktop moves this into the titlebar toolbar;
                 mobile keeps it here in the sidebar. */}
             {isMobile && (
@@ -201,6 +210,7 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
           </div>
         )}
       </div>
+      {!isSettings && <KelToolsSection collapsed={collapsed} />}
       <KelWorkPanel />
       {/* Footer */}
       <SiderFooter

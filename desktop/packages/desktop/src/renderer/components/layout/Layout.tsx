@@ -15,7 +15,7 @@ import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
-import brandMark from '@renderer/assets/logos/brand/app.png';
+import brandMark from '@renderer/assets/figma/kel-mark.png';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
 import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
@@ -98,7 +98,7 @@ const useDebug = () => {
 
 const UpdateModal = React.lazy(() => import('@/renderer/components/settings/UpdateModal'));
 
-const DEFAULT_SIDER_WIDTH = 260;
+const DEFAULT_SIDER_WIDTH = 256;
 const DESKTOP_COLLAPSED_WIDTH = 0;
 // 桌面侧栏连续可调：下限 200；低于此值拖拽即吸附收起（消灭旧 130 死区）。
 // 上限 = 窗口宽 50%（动态随窗口）。
@@ -410,7 +410,7 @@ const Layout: React.FC<{
   return (
     <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed }}>
       <NavigationHistoryProvider>
-        <div className='app-shell flex flex-col size-full min-h-0'>
+        <div className='app-shell kel-v2-shell flex flex-col size-full min-h-0' data-surface={location.pathname}>
           {/* Kel V1.4: the shell's first tab stop — jumps past the sider to the routed content. */}
           <a className='kel-skip' href='#kel-shell-content'>
             Skip to main content
