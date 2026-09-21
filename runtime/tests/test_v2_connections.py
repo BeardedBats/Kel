@@ -1,27 +1,39 @@
-"""Connections (V2.0 / V2-01): one product term, one store, one place to manage them.
+"""Connections (V2.0 / V2-01 / V2-02): one product term, one store, one place to manage them.
 
 The pins here are about product shape, not plumbing. A Connection is what Nick adds when he wants Kel
 to be able to use a service: a name he recognises, where its API lives, how the credential is
 presented, and whether a credential is actually stored. It is deliberately NOT a plugin, not a
 per-service app/database/worker/workflow, and never a place a secret value can land — the engine keeps
 metadata and a pointer, and the OS-backed store keeps the value.
+
+V2-02 adds Test Connection: one request to the service through the single choke point, and an honest
+result. The tests below keep that honest — a refusal is a result, an unreachable address is not a
+failed credential, and the value never appears in the store, the note or the answer.
 """
 import ast
+import base64
 import contextlib
+import http.server
+import json
 import os
 import re
+import socket
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, STATES, Connections,
-                            ensure_schema, slug)
+                             ensure_schema, scrub, slug)
 from kel.core import PolicyError, Store
 
 EXPECTED_COLUMNS = {
     'id', 'name', 'kind', 'base_url', 'auth_method', 'auth_header', 'docs_url', 'test_endpoint',
     'notes', 'credential_ref', 'credential_fields', 'created', 'updated',
+    # V2-02: what the last check of the service found. Still no column a value could live in.
+    'last_test_at', 'last_test_state', 'last_test_status', 'last_test_ms', 'last_test_note',
 }
 
 MODULE = Path(__file__).resolve().parents[1] / 'kel' / 'connections.py'
@@ -247,6 +259,20 @@ class ConnectionServiceCase(unittest.TestCase):
         cleared = self.action({'action': 'delete_credential', 'id': 'stripe'})
         self.assertEqual(cleared['state'], 'needs_credentials')
 
+    def test_a_check_travels_through_the_api_without_the_value(self):
+        # V2-02: the shell sends the credential for this one request; the answer is all that comes back.
+        service = LocalService()
+        self.addCleanup(service.stop)
+        service.status = 401
+        self.action({'action': 'save', 'name': 'Stripe', 'base_url': service.base})
+        result = self.action({'action': 'test', 'id': 'stripe',
+                              'credentials': {'api_key': 'sk_live_secret_value'}})
+        self.assertEqual(result['last_test_state'], 'refused')
+        self.assertEqual(result['last_test_status'], 401)
+        self.assertNotIn('sk_live_secret_value', json.dumps(result))
+        with self.assertRaises(PolicyError):
+            self.action({'action': 'test', 'id': 'nope', 'credentials': {}})
+
     def test_refusals_stay_plain_sentences_and_unknown_actions_are_closed(self):
         with self.assertRaises(PolicyError) as caught:
             self.action({'action': 'save', 'name': ''})
@@ -263,6 +289,201 @@ class ConnectionServiceCase(unittest.TestCase):
         self.assertNotIn('get_credential', block)
         self.assertNotIn('decrypt', block)
         self.assertNotRegex(block, re.compile(r"'value'"))
+
+
+class LocalService:
+    """A stand-in for a service on this computer only.
+
+    Everything these tests do stays on the loopback interface: the suite never needs the internet, and
+    a real service is never contacted.
+    """
+
+    def __init__(self):
+        self.status = 200
+        self.delay = 0.0
+        self.seen = []
+        probe = self
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                probe.seen.append({'path': self.path,
+                                   'headers': {k.lower(): v for k, v in self.headers.items()}})
+                if probe.delay:
+                    time.sleep(probe.delay)
+                self.send_response(probe.status)
+                self.send_header('Content-Length', '0')
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        self.server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+
+    @property
+    def base(self):
+        return 'http://127.0.0.1:%d' % self.server.server_address[1]
+
+    def stop(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+def closed_port():
+    """An address nothing is listening on — the honest 'could not reach it' case."""
+    with contextlib.closing(socket.socket()) as probe:
+        probe.bind(('127.0.0.1', 0))
+        return 'http://127.0.0.1:%d' % probe.getsockname()[1]
+
+
+class ConnectionTestRequestTests(unittest.TestCase):
+    """V2-02 — Test Connection: one request, an honest result, and never a stored value."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(self.tmp.name)
+        self.connections = Connections(self.store)
+        self.service = LocalService()
+        self.addCleanup(self.service.stop)
+        self.value = 'sk_live_CONNECTION_test_value'
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def add(self, **extra):
+        fields = {'name': 'Stripe', 'base_url': self.service.base, 'auth_method': 'header',
+                  'auth_header': 'X-Api-Key'}
+        fields.update(extra)
+        return self.connections.save(**fields)
+
+    def test_the_engine_has_exactly_one_place_that_calls_a_service(self):
+        source = (Path(__file__).resolve().parents[1] / 'kel' / 'connections.py').read_text(encoding='utf-8')
+        self.assertEqual(source.count('urlopen('), 1)
+        self.assertIn('def perform_request(', source)
+
+    def test_a_service_that_answers_is_recorded_as_ok_with_its_status(self):
+        self.add(test_endpoint=self.service.base + '/v1/account')
+        result = self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(result['last_test_state'], 'ok')
+        self.assertEqual(result['last_test_status'], 200)
+        self.assertGreaterEqual(result['last_test_ms'], 0)
+        self.assertEqual(result['last_test_note'], 'The service answered 200.')
+        self.assertIsNotNone(result['last_test_at'])
+        self.assertEqual(self.service.seen[0]['path'], '/v1/account')
+
+    def test_the_credential_reaches_the_service_and_is_written_nowhere(self):
+        self.add(test_endpoint=self.service.base + '/v1/account', auth_header='X-Api-Key')
+        result = self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(self.service.seen[0]['headers'].get('x-api-key'), self.value)
+        self.assertNotIn(self.value, json.dumps(result))
+        with contextlib.closing(self.store.connect()) as db:
+            row = dict(db.execute('SELECT * FROM connections').fetchone())
+        self.assertNotIn(self.value, json.dumps(row))
+        self.assertNotIn(self.value, row['last_test_note'] or '')
+
+    def test_a_bearer_connection_sends_a_bearer_token(self):
+        self.add(auth_method='bearer', auth_header='', test_endpoint=self.service.base + '/me')
+        self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'),
+                         'Bearer ' + self.value)
+
+    def test_a_plain_authorization_header_gets_the_scheme_but_a_custom_header_does_not(self):
+        self.add(auth_method='header', auth_header='Authorization', test_endpoint=self.service.base)
+        self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'),
+                         'Bearer ' + self.value)
+        self.connections.save('Stripe', connection_id='stripe', auth_method='header',
+                              auth_header='Authorization', base_url=self.service.base)
+        self.connections.test('stripe', {'api_key': 'Bearer ' + self.value})
+        self.assertEqual(self.service.seen[1]['headers'].get('authorization'),
+                         'Bearer ' + self.value)
+
+    def test_a_query_connection_puts_the_credential_in_the_address(self):
+        self.add(auth_method='query', auth_header='key', test_endpoint=self.service.base + '/v1/posts')
+        self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(self.service.seen[0]['path'], '/v1/posts?key=' + self.value)
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'), None)
+
+    def test_a_basic_connection_needs_both_halves_and_says_so(self):
+        self.add(auth_method='basic', auth_header='', test_endpoint=self.service.base)
+        with self.assertRaises(PolicyError) as caught:
+            self.connections.test('stripe', {'api_key': self.value})
+        self.assertIn('username and the password', str(caught.exception))
+        self.assertEqual(self.service.seen, [])
+        self.assertIsNone(self.connections.get('stripe')['last_test_at'])
+        result = self.connections.test('stripe', {'username': 'nick', 'password': self.value})
+        self.assertEqual(result['last_test_state'], 'ok')
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'),
+                         'Basic ' + base64.b64encode(('nick:' + self.value).encode()).decode())
+
+    def test_a_refusal_is_a_result_not_an_error(self):
+        self.add(test_endpoint=self.service.base)
+        self.connections.set_credential('stripe', ['api_key'], 'kel:connection:stripe')
+        self.service.status = 401
+        result = self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(result['last_test_state'], 'refused')
+        self.assertEqual(result['last_test_status'], 401)
+        self.assertIn('refused the credential', result['last_test_note'])
+        # A refused check does not quietly change what the connection claims to hold.
+        self.assertTrue(result['has_credentials'])
+        self.assertEqual(result['state'], 'ready')
+
+    def test_the_other_answers_are_named_honestly(self):
+        self.add(test_endpoint=self.service.base)
+        for status, state in ((404, 'not_found'), (429, 'busy'), (500, 'error'), (418, 'error')):
+            self.service.status = status
+            result = self.connections.test('stripe', {'api_key': self.value})
+            self.assertEqual((result['last_test_state'], result['last_test_status']), (state, status))
+            self.assertIn(str(status), result['last_test_note'])
+
+    def test_a_closed_port_is_unreachable_not_a_failed_credential(self):
+        self.add(test_endpoint=closed_port())
+        result = self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(result['last_test_state'], 'unreachable')
+        self.assertIsNone(result['last_test_status'])
+        self.assertEqual(result['last_test_note'], 'Kel could not reach that address.')
+
+    def test_a_slow_service_times_out(self):
+        self.connections = Connections(self.store, timeout=0.5)
+        self.add(test_endpoint=self.service.base)
+        self.service.delay = 1.5
+        result = self.connections.test('stripe', {'api_key': self.value})
+        self.assertEqual(result['last_test_state'], 'timeout')
+        self.assertEqual(result['last_test_note'],
+                         'The service did not answer within 0.5 seconds.')
+
+    def test_a_connection_with_no_address_is_refused_before_anything_is_sent(self):
+        self.connections.save('Stripe')
+        with self.assertRaises(PolicyError) as caught:
+            self.connections.test('stripe', {'api_key': self.value})
+        self.assertIn('test address or an API address', str(caught.exception))
+        self.assertFalse(self.connections.get('stripe')['can_test'])
+        self.assertEqual(self.service.seen, [])
+
+    def test_a_connection_without_a_credential_still_asks_the_service(self):
+        self.add(test_endpoint=self.service.base)
+        self.service.status = 401
+        result = self.connections.test('stripe', {})
+        self.assertEqual(self.service.seen[0]['headers'].get('x-api-key'), None)
+        self.assertEqual(result['last_test_state'], 'refused')
+        self.assertEqual(self.connections.get('stripe')['state'], 'needs_credentials')
+
+    def test_a_value_that_somehow_reached_a_sentence_is_scrubbed(self):
+        sentence = 'The service refused %s for key %s.' % (self.value, self.value)
+        cleaned = scrub(sentence, {'api_key': self.value})
+        self.assertNotIn(self.value, cleaned)
+        self.assertEqual(cleaned, 'The service refused [redacted] for key [redacted].')
+        self.assertEqual(scrub('nothing to hide', {}), 'nothing to hide')
+
+    def test_testing_a_connection_that_does_not_exist_is_a_plain_refusal(self):
+        with self.assertRaises(PolicyError) as caught:
+            self.connections.test('nope', {})
+        self.assertIn('not found', str(caught.exception))
 
 
 if __name__ == '__main__':
