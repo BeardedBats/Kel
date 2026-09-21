@@ -10,6 +10,11 @@
  * `/api/providers` and `/api/connections` — so the sync is routed by namespace here, and the pointer
  * the engine records says which kind it is (`kel:provider:…` / `kel:connection:…`). Values stay in
  * this process; only field names and the pointer travel.
+ *
+ * V2-04a adds one deliberate exception: after a connection credential changes (and at engine boot, in
+ * KelService), the decrypted values are handed to the engine's in-memory custody (`supply` on
+ * `/api/connections`) so the assistant runtime's calls can use them. They live in the engine's memory
+ * only — never a column, never a file, never a log — and a renderer still never receives a value.
  */
 import { ipcMain } from 'electron';
 import { assertTrustedSender } from '../../../common/senderGuard';
@@ -77,6 +82,15 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
     return values;
   };
 
+  /** V2-04a: keep the engine's in-memory custody current for one connection (values in transit only). */
+  const pushCustody = async (id: string): Promise<void> => {
+    const values = valuesFor(id);
+    if (Object.keys(values).length === 0) return;
+    await deps
+      .sync('/api/connections', { action: 'supply', id, credentials: values })
+      .catch((): undefined => undefined);
+  };
+
   ipcMain.handle('kel:credential-status', (event) => {
     assertTrustedSender(event, { allowDevServer: true });
     return deps.status();
@@ -101,6 +115,7 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
       const stored = deps.set(provider, field, value);
       const target = metadataFor(provider, stored.fields, field);
       await deps.sync(target.route, target.body).catch((): undefined => undefined);
+      if (isConnection(provider)) await pushCustody(connectionId(provider));
       return { provider: stored.provider, fields: stored.fields };
     }
   );
@@ -116,6 +131,11 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
       await deps
         .sync(isConnection(provider) ? '/api/connections' : '/api/providers', body)
         .catch((): undefined => undefined);
+      if (isConnection(provider)) {
+        await deps
+          .sync('/api/connections', { action: 'supply', id: connectionId(provider), clear: true })
+          .catch((): undefined => undefined);
+      }
       return removed;
     }
   );

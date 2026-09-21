@@ -1076,6 +1076,31 @@ class Service:
             return service.run(self._required(data,'id','Pick a connection first.'),
                                data.get('action_id'),data.get('credentials') or {},
                                data.get('params') or {},bool(data.get('confirmed')))
+        if action=='supply':
+            # V2-04a: the shell hands the engine the values the assistant runtime needs. They stay in
+            # this process's memory only (kel.connections custody); the runtime never receives one.
+            from .connections import supply_credentials, clear_credentials
+            if not data.get('id'):
+                raise PolicyError('Pick a connection first.')
+            if data.get('clear'):
+                clear_credentials(data.get('id'))
+                return {'id':str(data.get('id')),'fields':[],'stored':False}
+            return {'id':str(data.get('id')),
+                    'fields':supply_credentials(data.get('id'),data.get('credentials') or {}),
+                    'stored':True}
+        if action=='catalog':
+            # V2-04a: what the assistant runtime may do right now, resolved through the same
+            # capability controls the app shows.
+            from .connection_tools import catalog
+            return catalog(self.store,job=data.get('job'),conversation=data.get('conversation'))
+        if action=='call':
+            # V2-04a: one action, through the bridge. No credential is accepted from the caller —
+            # the engine uses what the shell pushed, once, in memory.
+            from .connection_tools import call
+            return call(self.store,data.get('action_id'),data.get('params') or {},
+                        connection_id=data.get('id') or data.get('connection'),
+                        job=data.get('job'),run=data.get('run'),
+                        conversation=data.get('conversation'),confirmation=data.get('confirm'))
         if action=='events':
             return {'events':service.events(data.get('id'),data.get('limit') or 20)}
         raise PolicyError('Unknown connection action')
@@ -1087,6 +1112,8 @@ class Service:
 
 def serve(root,port=0):
     service=Service(root);token=secrets.token_urlsafe(32);assets=Path(__file__).parent/'web'
+    # V2-04a: everything spawned under this engine (runtimes, helpers) finds the session file here.
+    os.environ['KEL_DATA_DIR']=str(root)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
         def reply(self,status,value,kind='application/json'):

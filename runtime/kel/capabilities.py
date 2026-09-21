@@ -39,8 +39,9 @@ CREATE TABLE IF NOT EXISTS capability_grants(
 """
 
 # Plain names only; the tools behind them stay hidden (they differ per runtime and are Kel's problem).
-# Google Drive and Connected apps are deliberately absent: this release has no production effect path
-# that could honour them, so they are not offered as switches that could not be kept.
+# Connected apps (V2-04a): the assistant can genuinely call a Connection action now, through the
+# bridge in kel.connection_tools, so the switch this rule describes is offered and kept. Google
+# Drive still has no action until the account sign-in step exists (V2-04b).
 CAPABILITIES = (
     {'id': 'web', 'label': 'Web', 'description': 'Look things up and browse the web',
      'tools': ('browser', 'web', 'research'), 'probe': 'engine'},
@@ -50,6 +51,8 @@ CAPABILITIES = (
      'tools': ('shell', 'run_tests', 'run_command'), 'probe': 'runtime'},
     {'id': 'github', 'label': 'GitHub', 'description': 'Work with repositories and their history',
      'tools': ('git', 'repo'), 'probe': 'runtime'},
+    {'id': 'connections', 'label': 'Connections', 'description': 'Use the services you connected',
+     'tools': ('connection',), 'probe': 'connections'},
 )
 BY_ID = {entry['id']: entry for entry in CAPABILITIES}
 STATES = ('default', 'on', 'off')
@@ -108,6 +111,22 @@ def _runtime_available(store):
     return False
 
 
+def _connections_available(store):
+    """True when at least one Connection has a credential the machine can actually use."""
+    try:
+        with contextlib.closing(store.connect()) as db:
+            if not _table(db, 'connections'):
+                return 'needs_setup', 'Add a service in Connections first.'
+            rows = db.execute('SELECT credential_ref FROM connections LIMIT 200').fetchall()
+    except Exception:
+        return 'needs_setup', 'Connections are not set up yet.'
+    if not rows:
+        return 'needs_setup', 'Add a service in Connections first.'
+    if not any(row['credential_ref'] for row in rows):
+        return 'needs_setup', 'Store a credential for one of your connected services first.'
+    return 'available', 'Kel can use your connected services'
+
+
 def availability(store, capability):
     """(state, plain reason) for one capability: what is actually configured right now."""
     _validate(capability)
@@ -120,6 +139,8 @@ def availability(store, capability):
         if _runtime_available(store):
             return 'available', 'A coding assistant is ready on this computer'
         return 'needs_setup', 'Connect a coding assistant to use this here'
+    if probe == 'connections':
+        return _connections_available(store)
     # DEAD-08: an explicit fail-closed total fallback. A probe value without its own branch must
     # never be assumed available; the capability reads as unavailable and resolve() denies it.
     return 'unavailable', '%s is not available on this computer.' % BY_ID[capability]['label']
@@ -337,6 +358,7 @@ _WORD = {
     'files': ('files', 'file access', 'local files', 'my files'),
     'terminal': ('terminal', 'shell', 'shell commands', 'terminal commands', 'command line'),
     'github': ('github', 'repositories', 'repos', 'repository'),
+    'connections': ('connections', 'connected services'),
 }
 _ALIASES = {alias: capability for capability, aliases in _WORD.items() for alias in aliases}
 _ALIAS_PATTERN = '|'.join(sorted((re.escape(alias) for alias in _ALIASES), key=len, reverse=True))
@@ -363,7 +385,7 @@ _TO_DEFAULT_RX = re.compile(r'^(?:please\s+)?(?:set|reset|switch|put|change)\s+'
 # is considered. Only canonical capability names (web, files, terminal, github) and canonical states
 # (on, off, default) are valid inside the embedded form; human-friendly aliases stay exclusive to the
 # standalone whole-message grammar.
-_KEL_CLAUSE_RX = re.compile(r'(?<![\w\[])\[kel:(?P<cap>web|files|terminal|github)='
+_KEL_CLAUSE_RX = re.compile(r'(?<![\w\[])\[kel:(?P<cap>web|files|terminal|github|connections)='
                             r'(?P<state>on|off|default)\](?![\w\]])', re.I)
 
 

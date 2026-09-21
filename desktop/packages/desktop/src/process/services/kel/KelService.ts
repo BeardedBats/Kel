@@ -346,6 +346,26 @@ export async function initializeKel(port: number): Promise<void> {
       await core('/api/assistants/' + a.id + '/state', { enabled: a.id === 'kel' }, 'PATCH');
   }
   console.log('[KEL-BOOT] initializeKel assistants enforced');
+  // V2-04a: hand the engine the connection values the assistant runtime needs. They live in the
+  // engine's memory only (nothing durable), and a renderer still never receives a value.
+  try {
+    let pushed = 0;
+    const held = connectionCredentialStatus();
+    for (const id of Object.keys(held)) {
+      const credentials: Record<string, string> = {};
+      for (const field of held[id] ?? []) {
+        const value = getCredential(connectionCredentialKey(id), field);
+        if (value) credentials[field] = value;
+      }
+      if (Object.keys(credentials).length > 0) {
+        await kelRequest('/api/connections', { action: 'supply', id, credentials });
+        pushed += 1;
+      }
+    }
+    console.log('[KEL-BOOT] initializeKel connection custody pushed (' + pushed + ')');
+  } catch (error) {
+    console.warn('[Kel] Connection custody push failed; the assistant will ask again when a credential changes.', error);
+  }
   const mapPath = path.join(root, 'aion-conversations.json');
   const historyPath = path.join(root, 'aion-history.json');
   const mapping: Record<string, string> = fs.existsSync(mapPath) ? JSON.parse(fs.readFileSync(mapPath, 'utf8')) : {};
