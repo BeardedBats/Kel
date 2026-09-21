@@ -56,3 +56,20 @@ limits are appended as phases land.
   kills, blocked-domain attempts) rather than by hostile scenarios.
 - **Upgrade reliability must be proven without touching the dogfood install.** V2 upgrade tests use V2
   data roots and the V2 candidate only; the protected dogfood pair is never the subject.
+
+## V2-05 — what a phone still cannot do (measured, not assumed)
+
+1. **Voice → Muse is not wired from the browser.** The phone records (timer, Cancel, Stop all work) but
+   stopping sends no `/api/transcription` request and produces no transcript. Desktop voice was repaired
+   and verified in the Daily Driver line; the browser path is still unconnected.
+2. **Sending needs a connected model.** With none connected the composer's send stays disabled (proved
+   with both paste-shaped input and real key presses) and Kel says so plainly ("so Kel will wait instead
+   of guessing" + Open Providers). Connecting one is reachable from the phone (4 providers · 2 usable),
+   but no model turn was spent in this increment, so send-then-continue was not exercised end to end.
+3. **Attention actions were exercised only for the kind of attention this instance actually had** — a
+   connection needing setup, which opens Providers from the phone. Approval, deny, grant, resume, stop and
+   review attach to job state that did not exist here.
+4. **The phone's drawer was not opened by the automation.** A conversation seeded through the engine's own
+   `/api/send` is authoritative and visible through `/api/state`, but the history entry was never reached
+   on the phone. The collapsed rail visible at 393px is inert by design (`x=-11`, `pointer-events: none`)
+   — the drawer, not the rail, is the phone's navigation.

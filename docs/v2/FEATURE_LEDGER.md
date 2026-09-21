@@ -43,3 +43,13 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 
 Removed from the intended V2 connection list by the directive: **Gmail** and **Slack** (they are not
 V2 scope; do not re-add them without a recorded decision).
+
+## V2-05 — iPhone Kel PWA V1: PARTIAL (phone journeys proved; voice/send/job-attention open)
+
+Done and evidenced: the phone answers "what is happening with Kel?" (running context, "2 need you",
+honest holds), the attention action it offers works from the phone (→ Providers, real provider state),
+paste into the composer works, the PWA contract holds in the built app (Kel manifest, SW registered and
+controlling, 0 cached `/api/`, 0 horizontal overflow, clean console), and the gateway blocker that made
+all of it impossible is fixed. Still open, in `RESUME.md` order: browser voice → Muse, send with a model
+connected, job-driven attention actions, conversation history from the phone. V2-04a and V2-04b remain
+untouched and unclaimed.

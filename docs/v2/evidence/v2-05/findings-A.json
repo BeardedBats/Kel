@@ -1,0 +1,52 @@
+[
+  {
+    "journey": "A",
+    "step": "home",
+    "path": "/",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "A",
+    "step": "home-answer",
+    "needsAttention": true,
+    "status": false,
+    "honestHold": true
+  },
+  {
+    "journey": "A",
+    "step": "drawer-Work",
+    "count": 1,
+    "onScreen": true
+  },
+  {
+    "journey": "A",
+    "step": "drawer-Work-failed",
+    "error": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Work$/ }).filter({ visible: true }).first()\u001b["
+  },
+  {
+    "journey": "A",
+    "step": "work",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "A",
+    "step": "post-signin-failures",
+    "wsFailures": [],
+    "failedResponses": [],
+    "consoleErrors": [
+      "[useCronJobsMap] Failed to fetch jobs: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js:5:2888)\n    at V (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js"
+    ]
+  }
+]

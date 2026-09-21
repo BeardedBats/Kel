@@ -1,0 +1,262 @@
+[
+  {
+    "journey": "A",
+    "step": "home",
+    "path": "/",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "A",
+    "step": "home-answer",
+    "needsAttention": true,
+    "status": false,
+    "honestHold": true
+  },
+  {
+    "journey": "A",
+    "step": "drawer-Work",
+    "count": 1,
+    "onScreen": true
+  },
+  {
+    "journey": "A",
+    "step": "drawer-Work-failed",
+    "error": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Work$/ }).filter({ visible: true }).first()\u001b["
+  },
+  {
+    "journey": "A",
+    "step": "work",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "A",
+    "step": "post-signin-failures",
+    "wsFailures": [],
+    "failedResponses": [],
+    "consoleErrors": [
+      "[useCronJobsMap] Failed to fetch jobs: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js:5:2888)\n    at V (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js"
+    ]
+  },
+  {
+    "journey": "B",
+    "step": "composer",
+    "count": 1
+  },
+  {
+    "journey": "B",
+    "step": "send-control",
+    "typed": "Phone journey paste check: 3 lines\nsecond line\nthird line",
+    "before": {
+      "count": 1,
+      "box": {
+        "x": 335.5,
+        "y": 685,
+        "width": 32,
+        "height": 32
+      },
+      "disabled": true
+    },
+    "afterKey": {
+      "disabled": true
+    }
+  },
+  {
+    "journey": "B",
+    "step": "composer-layout",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "B",
+    "step": "composer-reachable",
+    "box": {
+      "x": 335.5,
+      "y": 685,
+      "width": 32,
+      "height": 32
+    },
+    "viewport": {
+      "width": 393,
+      "height": 852
+    }
+  },
+  {
+    "journey": "B",
+    "step": "history-entry",
+    "count": 0
+  },
+  {
+    "journey": "C",
+    "step": "attention",
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "C",
+    "step": "action-control",
+    "count": 1,
+    "name": "Set it up"
+  },
+  {
+    "journey": "C",
+    "step": "after-action",
+    "path": "/",
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\nSkip to main content\nProviders\n\n4 providers · 2 usable right now\n\nReload\nClaude (Claude Code)\nAvailable\n\nNative CLI · subscription session\n\nReady to use — this provider does not report usage.\n\nModel\tCapabilities\nclaude-native\ttext · tools · edit · shell\nCodex\nAvailable\n\nNative CLI · subscription session\n\nReady to use — this provider does not report usage.\n\nModel\tCapabilities\ncodex-native\ttext · tools · edit · shell\nAnthropic API\nNeeds setup\nSet up\n\nAPI · API key (billed per use) · https://api.anthropic.com\n\nNo API key is stored for this provider yet.\n\nOS-backed storage is unavailable on this system, so Kel cannot store a key here.\n\nModel\tCapabilities\nclaude-sonnet-4-6\ttext · vision · tools\nDeepSeek API\nNeeds setup\nSet up\n\nAPI · API key (billed per use) · https://api.deepseek.com/v1\n\nNo API key is stored for this provider yet.\n\nOS-backed storage is unavailable on this system, so Kel cannot store a key here.\n\nModel\tCapabilities\ndeepseek-chat\ttext · tools\ndeepseek-reasoner\ttext · tools\nIntegrations\nall available\n\nThe tools Kel can use in this app, straight from the engine — connected, needing setup, or unavailable, with the reaso",
+    "changed": true
+  },
+  {
+    "journey": "C",
+    "step": "after-action-layout",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "button class=\"kel-btn kel-btn--primary\" right=901"
+    }
+  },
+  {
+    "journey": "D",
+    "step": "drawer-Projects",
+    "count": 1,
+    "onScreen": true
+  },
+  {
+    "journey": "D",
+    "step": "drawer-Projects-failed",
+    "error": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Projects$/ }).filter({ visible: true }).first"
+  },
+  {
+    "journey": "D",
+    "step": "projects",
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    }
+  },
+  {
+    "journey": "D",
+    "step": "controls",
+    "controls": [
+      "Skip to main content",
+      "Expand More",
+      "Search messages",
+      "Work",
+      "Projects",
+      "Activity",
+      "Permissions",
+      "Transcription",
+      "Work & context",
+      "Settings",
+      "Set it up",
+      "Set it up",
+      "Open Providers",
+      "Record a message",
+      "Work in a project"
+    ]
+  },
+  {
+    "journey": "D",
+    "step": "rail-hit-test",
+    "hitTest": {
+      "box": {
+        "x": -11,
+        "y": 162,
+        "width": 20,
+        "height": 34
+      },
+      "pointerEvents": "none",
+      "visibility": "visible",
+      "opacity": "1",
+      "topElement": null,
+      "topIsTarget": false
+    }
+  },
+  {
+    "journey": "E",
+    "step": "mic-control",
+    "count": 1,
+    "box": {
+      "x": 294.5,
+      "y": 663,
+      "width": 35,
+      "height": 32
+    }
+  },
+  {
+    "journey": "E",
+    "step": "recording",
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nRecording 0:03\nCancel\nWork in a project"
+  },
+  {
+    "journey": "E",
+    "step": "stop-control",
+    "count": 1
+  },
+  {
+    "journey": "E",
+    "step": "after-stop",
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project",
+    "composer": "",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "init theme failed Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0.1:25809/assets/applyTh",
+      "Failed to initialize language: Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0.1:25809/a",
+      "Failed to initialize config: Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0.1:25809/ass",
+      "Failed to apply persisted font sizes: Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0.1:",
+      "Failed to apply persisted font families: Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0"
+    ]
+  },
+  {
+    "journey": "F",
+    "manifest": {
+      "ok": true,
+      "href": "./manifest.webmanifest",
+      "name": "Kel",
+      "shortName": "Kel",
+      "display": "standalone",
+      "icons": 2,
+      "donorWords": null
+    },
+    "serviceWorker": {
+      "registered": true,
+      "controller": true,
+      "scope": "http://127.0.0.1:25809/",
+      "caches": [
+        "kel-webui-v2"
+      ]
+    },
+    "apiCacheHitCount": 0,
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    }
+  },
+  {
+    "journey": "F",
+    "step": "post-signin-failures",
+    "failedResponses": [],
+    "consoleErrors": [],
+    "wsFailures": 0
+  }
+]
