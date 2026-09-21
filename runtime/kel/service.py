@@ -387,6 +387,48 @@ class Service:
                                       'digest':section.get('digest'),
                                       'sources':section.get('sources',[])}
                                      for name,section in latest['sections'].items()]}
+        # V2-11: the work brief the person sees. Live facts only — what shipped, what is open, why
+        # it stopped, and what (if anything) only they can do. Nothing here re-runs any work.
+        from .continuation import Continuation
+        cont=Continuation(self.store)
+        now=time.time()
+        with contextlib.closing(self.store.connect()) as db:
+            pending={row['job_id']:row['n'] for row in db.execute(
+                "SELECT job_id,COUNT(*) AS n FROM approvals WHERE status='PENDING' GROUP BY job_id")}
+            last={row['aggregate_id']:row['at'] for row in db.execute(
+                "SELECT aggregate_id,MAX(at) AS at FROM events GROUP BY aggregate_id")}
+        jobs=[]
+        needs=0
+        closed_shown=0
+        for job in self.store.list_jobs():
+            if job['conversation']!=cid:
+                continue
+            active=job['state'] not in ('CLOSED','CANCELLED')
+            if not active:
+                if closed_shown>=3 or (last.get(job['id']) or 0)<now-86400:
+                    continue
+                closed_shown+=1
+            milestones=job.get('milestones') or {}
+            brief=cont.resume_brief(job['id'])
+            entry={'job_id':job['id'],'title':brief['title'],'state':job['state'],
+                   'verdict':job.get('verdict'),
+                   'accepted':len(brief['shipped']),'total':len(milestones),
+                   'open':len(brief['open']),'fenced':brief['fenced'],
+                   'needs_you':brief['needs_you'],'why':brief['why'],'next':brief['next'],
+                   'last_at':last.get(job['id'])}
+            if pending.get(job['id']):
+                entry.update(needs_you=True,why='Waiting for your decision on a gated step.',
+                             next='Decide on the request card in the conversation — or in Work context.')
+            if not active:
+                entry.update(needs_you=False,
+                             why=('Done and verified.' if job.get('verdict')=='VERIFIED'
+                                  else 'Settled: '+str(job.get('verdict') or 'unresolved').lower()+'.'),
+                             next='Nothing needed — ask for a new change for more work.')
+            if entry['needs_you']:
+                needs+=1
+            jobs.append(entry)
+        jobs.sort(key=lambda item:(not item['needs_you'],-(item['last_at'] or 0)))
+        data['work']={'generated':now,'needs_you':needs,'jobs':jobs}
         return data
 
     def _owned_memory(self,project_id,memory_id):

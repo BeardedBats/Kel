@@ -244,3 +244,52 @@ class Continuation:
         return ('Continuing "%s": %d/%d milestones already accepted; resuming %d open '
                 'milestone(s).' % (title or job['id'], len(accepted), len(milestones),
                                    len(remaining)))
+
+    def resume_brief(self, job_id):
+        """The plain-words brief the Work surface shows (V2-11): shipped, open, why, next.
+
+        Derived from persisted state only — the plan, the milestones, and the error the fence
+        wrote. Nothing here re-runs work or guesses: a fenced job says so and says that
+        continuing is the person's decision. `needs_you` is true only when no automatic step can
+        move the job forward.
+        """
+        job = self.store.get(job_id)
+        plan = self.plan_resume(job_id)
+        milestones = job.get('milestones') or {}
+        title = str((job.get('contract') or {}).get('request', ''))[:120]
+        shipped = [{'id': mid, 'filename': (m.get('artifact') or {}).get('filename')}
+                   for mid, m in sorted(milestones.items())
+                   if m.get('state') == 'ACCEPTED']
+        opens = [{'id': mid, 'state': m.get('state'), 'attempts': m.get('attempts'),
+                  'error': m.get('error')}
+                 for mid, m in sorted(milestones.items())
+                 if m.get('state') in OPEN_MILESTONE_STATES and (m.get('attempts') or 0) < 4]
+        fenced = any('requires reconciliation' in str(m.get('error') or '')
+                     for m in milestones.values())
+        state = job.get('state')
+        if state == 'CLOSED' and job.get('verdict') == 'VERIFIED':
+            why, nxt, needs = 'Done and verified.', 'Nothing needed — ask for a new change for more work.', False
+        elif fenced:
+            why = ('An attempt was interrupted and fenced; Kel will not replay it on its own, and '
+                   'the file-changing steps were not repeated.')
+            nxt = 'Say "continue" to re-arm it as a fresh attempt.'
+            needs = True
+        elif job.get('route_block'):
+            why = 'No model was free: ' + str(job['route_block'])[:160]
+            nxt = 'Kel retries automatically as soon as a capable model is healthy.'
+            needs = False
+        elif state in ('PAUSED', 'PAUSING'):
+            why, nxt, needs = 'Paused at your request.', 'Say "continue" to resume it.', True
+        elif state == 'AWAITING_USER':
+            why = 'Waiting for your decision on a gated step.'
+            nxt = 'Decide on the request card in this conversation — or in Work context.'
+            needs = True
+        elif any(m.get('state') == 'RUNNING' for m in milestones.values()):
+            why, nxt, needs = 'Kel is working on it now.', 'Nothing needed right now.', False
+        else:
+            why, nxt, needs = ('Queued; Kel has not claimed it yet.',
+                               'Nothing needed right now.', False)
+        return {'job_id': job_id, 'title': title or job_id, 'state': state,
+                'verdict': job.get('verdict'), 'shipped': shipped, 'open': opens,
+                'fenced': fenced, 'session': plan['session'], 'why': why, 'next': nxt,
+                'needs_you': needs}

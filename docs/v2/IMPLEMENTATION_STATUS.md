@@ -261,3 +261,19 @@ statement passes. Live `/api/memory` loop on this code: empty evidence → 0 sug
 runs → 1 pending proposal; accept → learning `model.coding.codex`; explain carried the evidence and
 the boundary sentence; disable → out of the default list (still inspectable, `enabled=False`); enable
 → back. D-39.
+
+## V2-11 — Long-running work 2.0 (BUILT, 2026-09-21)
+
+The V1.6 liveness truths (no automatic replay of an interrupted attempt; waiting is not completion)
+already ruled the floor, but `recover_expired` was reachable only from the CLI — a run killed without
+a broker stayed RUNNING forever. V2-11 adds the runtime half and the person's half. **Runtime:**
+`Store.recover_abandoned` fences only runs nothing durable can carry — expired lease, no broker row,
+not active in this engine — and `Engine.tick` calls it every tick; broker-backed runs are left for
+adoption, live leases are left alone, and an unreadable recovery question fences nothing. Fencing is
+truth-preserving (ORPHANED + fresh epoch, milestone UNCERTAIN with the reconciliation sentence, job
+WAITING_RESOURCE) and never re-arms anything. **Person:** `Continuation.resume_brief` (surfaced in
+`_work()['work']`) reports per job what shipped, what is open, why it stopped, the exact next step and
+`needs_you` — true only when no automatic step can move it (a routing block clears itself; a fenced
+attempt waits for the person's “continue”; a pending approval waits on the request card). Live on the
+real data root: 7 broker-backed runs survived startup untouched (`orphaned` total 0) and the Work
+brief rendered a settled job in plain words. D-40.

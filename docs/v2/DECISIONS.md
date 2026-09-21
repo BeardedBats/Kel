@@ -364,3 +364,17 @@ spending authority, filesystem access or irreversible authority is refused outri
 even suggested — because those are the person's decision every time. *Forbids:* suggesting from thin
 evidence; applying a suggestion without review; deleting a learning to silence it; recording or
 suggesting authority from any non-user source.
+
+## D-40 — runtime recovery is narrow, and the brief never guesses (V2-11)
+
+The V1.6 liveness truths already said what recovery must never do (no automatic replay of an
+interrupted attempt). V2-11 gives them a runtime: `Store.recover_abandoned` fences only runs that
+**nothing durable can carry** — an expired lease, no broker row, and not active in this engine — and
+`Engine.tick` runs it on every tick. A run a broker owns is left for adoption, a live lease is left
+alone, and an unreadable recovery question fences nothing (conservative failure). Fencing keeps the
+old semantics exactly: ORPHANED + fresh epoch, milestone UNCERTAIN with the reconciliation sentence,
+job WAITING_RESOURCE; continuing stays the person's decision through `execute_resume`. The person's
+side is one brief built only from persisted facts (`Continuation.resume_brief`, surfaced in
+`_work()['work']`): what shipped, what is open, why it stopped, the exact next step, and `needs_you`
+true only when no automatic step can move the job. *Forbids:* auto-retrying a fenced attempt; fencing
+a broker-backed, in-process or unexpired run; briefing from anything but persisted state.
