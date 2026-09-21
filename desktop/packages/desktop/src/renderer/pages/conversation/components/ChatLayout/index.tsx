@@ -1,6 +1,6 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import { AgentLogoIcon } from '@/renderer/components/agent/AgentBadge';
 import type { PresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
-import FlexFullContainer from '@/renderer/components/layout/FlexFullContainer';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useResizableSplit } from '@/renderer/hooks/ui/useResizableSplit';
 import ChatTitleEditor from '@/renderer/pages/conversation/components/ChatTitleEditor';
@@ -202,7 +202,8 @@ const ChatLayout: React.FC<{
         'min-h-44px flex items-center justify-between px-16px pt-8px pb-10px gap-16px !bg-1 chat-layout-header chat-layout-header--glass overflow-hidden'
       )}
     >
-      <FlexFullContainer className='h-full min-w-0' containerClassName='flex items-center'>
+      <div className='kel-shell-chat-heading min-w-0 flex-1'>
+        <ShellWorkspaceLink />
         <ChatTitleEditor
           editingTitle={editingTitle}
           titleDraft={titleDraft}
@@ -227,7 +228,7 @@ const ChatLayout: React.FC<{
             ))
           }
         />
-      </FlexFullContainer>
+      </div>
       <div className='flex items-center gap-12px shrink-0'>{props.headerExtra}</div>
     </ArcoLayout.Header>
   );
@@ -258,7 +259,7 @@ const ChatLayout: React.FC<{
             flexBasis: 0,
           }}
         >
-          <div className='shrink-0 !bg-1'>{headerBlock}</div>
+          <div className='shrink-0 kel-shell-chat-header-wrap'>{headerBlock}</div>
           <div className='flex flex-1 min-h-0 relative'>
             {/* Chat area - always mounted, never unmounted on preview toggle */}
             <div

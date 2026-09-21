@@ -20,6 +20,7 @@ import AssistantSelectionArea from './components/AssistantSelectionArea';
 import GuidActionRow from './components/GuidActionRow';
 import GuidInputCard from './components/GuidInputCard';
 import KelProviderNotice from './components/KelProviderNotice';
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import KelResumptionBrief from './components/KelResumptionBrief';
 import GuidModelSelector from './components/GuidModelSelector';
 import FeedbackReportModal from '@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal';
@@ -676,10 +677,11 @@ const GuidPage: React.FC = () => {
 
   return (
     <ConfigProvider getPopupContainer={() => guidContainerRef.current || document.body}>
-      <div ref={guidContainerRef} className={styles.guidContainer}>
-        <div className={styles.guidLayout}>
-          <div className={styles.heroHeader}>
-            <p className='text-2xl font-semibold mb-0 text-t-primary text-center'>{t('conversation.welcome.title')}</p>
+      <div ref={guidContainerRef} className={`${styles.guidContainer} kel-shell-home`}>
+        <div className={`${styles.guidLayout} kel-shell-home-layout`}>
+          <div className={`${styles.heroHeader} kel-shell-home-header`}>
+            <ShellWorkspaceLink />
+            <h1 className='kel-shell-home-title'>New chat</h1>
           </div>
 
           <KelResumptionBrief />
@@ -691,30 +693,6 @@ const GuidPage: React.FC = () => {
             assistants={agentSelection.assistants}
             localeKey={localeKey}
             onSelectAssistant={handleSelectAssistant}
-          />
-
-          <GuidInputCard
-            focusRequestKey={navState?.focusPrefill && navState.prefillPrompt ? location.key : undefined}
-            input={guidInput.input}
-            onInputChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
-            onPaste={guidInput.onPaste}
-            onFocus={guidInput.handleTextareaFocus}
-            onBlur={guidInput.handleTextareaBlur}
-            placeholder={typewriterPlaceholder || t('conversation.welcome.placeholder')}
-            isInputActive={guidInput.isInputFocused}
-            isFileDragging={guidInput.isFileDragging}
-            activeBorderColor={activeBorderColor}
-            inactiveBorderColor={inactiveBorderColor}
-            activeShadow={activeShadow}
-            dragHandlers={guidInput.dragHandlers}
-            files={displayFilePaths}
-            onRemoveFile={guidInput.handleRemoveFile}
-            actionRow={actionRowNode}
-            slashCommandMenu={slashCommandMenuNode}
-            workspaceDir={guidInput.dir}
-            onSelectWorkspace={(dir) => guidInput.setDir(dir)}
-            onClearWorkspace={() => guidInput.setDir('')}
           />
 
           {selectedAssistantPrompts.length > 0 ? (
@@ -745,6 +723,32 @@ const GuidPage: React.FC = () => {
               </div>
             </div>
           ) : null}
+
+          <GuidInputCard
+            focusRequestKey={navState?.focusPrefill && navState.prefillPrompt ? location.key : undefined}
+            input={guidInput.input}
+            onInputChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+            onPaste={guidInput.onPaste}
+            onFocus={guidInput.handleTextareaFocus}
+            onBlur={guidInput.handleTextareaBlur}
+            placeholder="What's up?"
+            isInputActive={guidInput.isInputFocused}
+            isFileDragging={guidInput.isFileDragging}
+            activeBorderColor={activeBorderColor}
+            inactiveBorderColor={inactiveBorderColor}
+            activeShadow={activeShadow}
+            dragHandlers={guidInput.dragHandlers}
+            files={displayFilePaths}
+            onRemoveFile={guidInput.handleRemoveFile}
+            actionRow={actionRowNode}
+            slashCommandMenu={slashCommandMenuNode}
+            workspaceDir={guidInput.dir}
+            onSelectWorkspace={(dir) => guidInput.setDir(dir)}
+            onClearWorkspace={() => guidInput.setDir('')}
+          />
+
+
         </div>
 
         <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />

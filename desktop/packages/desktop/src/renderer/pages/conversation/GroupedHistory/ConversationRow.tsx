@@ -14,7 +14,6 @@ import { cleanupSiderTooltips, getSiderTooltipProps } from '@/renderer/utils/ui/
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { Checkbox, Dropdown, Menu, Spin, Tooltip } from '@arco-design/web-react';
 import {
-  Attention,
   EditOne,
   Export,
   FolderClose,
@@ -98,7 +97,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     // avatar), and always in the collapsed rail, where it is the row's only
     // visible content (visual batch 5; findings 03 §4 / 04 §4.2).
     if (leadingMark.decorative && !collapsed) {
-      return null;
+      return <span className={`kel-shell-history-dot ${hasUnread ? 'is-unread' : ''}`} aria-label={hasUnread ? 'Unread' : 'Read'} />;
     }
     if (leadingMark.kind === 'emoji') {
       return (
@@ -158,7 +157,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
   const showWaitingConfirmation = isWaitingConfirmation && !batchMode;
 
   const renderCompletionUnreadDot = () => {
-    if (batchMode || !hasUnread || isGenerating || isWaitingConfirmation) {
+    if (!collapsed || batchMode || !hasUnread || isGenerating || isWaitingConfirmation) {
       return null;
     }
 
@@ -184,6 +183,8 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     >
       <div
         id={'c-' + conversation.id}
+        aria-current={selected ? 'page' : undefined}
+        data-shell-status={isWaitingConfirmation || isGenerating ? 'working' : hasUnread ? 'unread' : 'read'}
         className={classNames(
           'chat-history__item h-34px rd-8px flex items-center group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px min-w-0 transition-colors',
           collapsed ? 'justify-center px-0' : 'justify-start gap-8px pe-32px',
@@ -218,12 +219,11 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
           </span>
         )}
         {showLeadingSlot && (
-          <span className='size-22px flex items-center justify-center shrink-0 relative'>
+          <span className='size-16px flex items-center justify-center shrink-0 relative'>
             {showWaitingConfirmation ? (
-              <Attention
-                theme='filled'
-                size='16'
-                className='line-height-0 flex-shrink-0 text-warning animate-wiggle'
+              <span
+                aria-label='Needs your attention'
+                className='kel-shell-history-dot is-waiting'
                 data-testid={`conversation-waiting-confirmation-${conversation.id}`}
               />
             ) : isGenerating && !batchMode ? (

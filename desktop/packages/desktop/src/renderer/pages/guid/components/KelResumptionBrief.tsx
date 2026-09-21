@@ -53,17 +53,18 @@ const KelResumptionBrief: React.FC = () => {
   if (!brief || brief.quiet) return null;
 
   return (
-    <section className='kel-card' style={{ marginBottom: 12 }} data-testid='resumption-brief' aria-label='While you were away'>
+    <section className='kel-card' data-testid='resumption-brief' aria-label='Needs your attention'>
       <div className='kel-row' style={{ alignItems: 'baseline', gap: 12 }}>
         <h2 className='kel-h2' style={{ margin: 0 }}>
-          {brief.headline}
+          Needs your attention
         </h2>
         <span className='kel-grow' />
         <span className='kel-meta'>{brief.summary}</span>
       </div>
-      <div className='kel-divider' />
+
       {brief.lines.map((line) => (
-        <div className='kel-attention__row' key={line.id}>
+        <div className='kel-attention__row' data-kind={line.kind} key={line.id}>
+          <span className='kel-shell-status-dot' aria-hidden='true' />
           <div className='kel-attention__text'>
             <strong>{line.title}</strong>
             <span className='kel-meta'>{line.detail}</span>

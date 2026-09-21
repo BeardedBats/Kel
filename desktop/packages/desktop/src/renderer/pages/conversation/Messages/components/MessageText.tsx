@@ -1,3 +1,4 @@
+import kelMark from '@renderer/assets/figma/kel-mark.png';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -9,7 +10,6 @@ import { parseFileMarker, resolveMessageFilePath } from './fileMarker';
 import SessionMentionAction from './SessionMentionAction';
 import { parseSessionMessageBlock, parseSessionsBlock } from './sessionMarkers';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
 import { Alert, Message, Tooltip } from '@arco-design/web-react';
@@ -166,8 +166,6 @@ const MessageText: React.FC<{
   const shouldRenderPlainText = isUserMessage || Boolean(contextResetNotice);
   const conversationContext = useConversationContextSafe();
   const forkConversation = useForkConversation(conversationContext?.conversation_id);
-  const layout = useLayoutContext();
-  const isMobile = layout?.isMobile ?? false;
   const handleLocalFileLink = useLocalFilePreview(conversationContext?.workspace);
   const resolvedFiles = useMemo(
     () => files.map((file_path) => resolveMessageFilePath(file_path, conversationContext?.workspace)),
@@ -197,13 +195,15 @@ const MessageText: React.FC<{
 
   const copyButton = (
     <Tooltip content={t('common.copy', { defaultValue: 'Copy' })}>
-      <div
-        className='p-4px rd-4px cursor-pointer hover:bg-3 transition-colors opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto'
+      <button
+        type='button'
+        aria-label={t('common.copy', { defaultValue: 'Copy' })}
+        className='kel-shell-message-action'
         onClick={handleCopy}
         style={{ lineHeight: 0 }}
       >
         <Copy theme='outline' size='16' fill={iconColors.secondary} />
-      </div>
+      </button>
     </Tooltip>
   );
 
@@ -216,14 +216,16 @@ const MessageText: React.FC<{
   });
   const forkButton = showForkButton ? (
     <Tooltip content={t('messages.fork.action')}>
-      <div
-        className='p-4px rd-4px cursor-pointer hover:bg-3 transition-colors opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto'
+      <button
+        type='button'
+        aria-label={t('messages.fork.action')}
+        className='kel-shell-message-action'
         onClick={() => void forkConversation(message.msg_id ?? message.id)}
         style={{ lineHeight: 0 }}
         data-testid='message-fork-button'
       >
         <ForkBranchIcon size={16} fill={iconColors.secondary} />
-      </div>
+      </button>
     </Tooltip>
   ) : null;
 
@@ -235,7 +237,11 @@ const MessageText: React.FC<{
 
   return (
     <>
-      <div className={classNames('min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
+      <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
+        {message.created_at && <div className='kel-shell-message-meta'>
+          {!isUserMessage && !isTeammateMessage && <img src={kelMark} alt='Kel' width={22} height={22} />}
+          <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at)}</time>
+        </div>}
         {cronMeta && <MessageCronBadge meta={cronMeta} />}
         {isTeammateMessage && displaySenderName && (
           <div className='flex items-center gap-6px mb-4px'>
@@ -307,7 +313,7 @@ const MessageText: React.FC<{
           </div>
         )}
         <div
-          className={classNames('min-w-0 [&>p:first-child]:mt-0px [&>p:last-child]:mb-0px', {
+          className={classNames('kel-shell-message-text min-w-0 [&>p:first-child]:mt-0px [&>p:last-child]:mb-0px', {
             'bg-aou-2 p-6px md:p-8px': isUserMessage || cronMeta,
             'bg-3 p-6px md:p-8px': isTeammateMessage,
             'w-full': !(isUserMessage || cronMeta || isTeammateMessage),
@@ -318,7 +324,7 @@ const MessageText: React.FC<{
               : isTeammateMessage
                 ? {
                     borderRadius: '0 8px 8px 8px',
-                    ...(teammateColor ? { borderLeft: `3px solid ${teammateColor}` } : {}),
+                    ...(teammateColor ? { border: `1px solid ${teammateColor}` } : {}),
                   }
                 : undefined),
           }}
@@ -354,7 +360,7 @@ const MessageText: React.FC<{
             so we drop the row entirely — system-level long-press still copies.
             For AI replies split across several text messages, only the last text
             of the turn shows this row (showCopyRow); user messages always do. */}
-        {!isMobile && showCopyRow && (
+        {showCopyRow && (
           <div
             className={classNames('h-32px flex items-center mt-4px gap-8px', {
               'flex-row-reverse': isUserMessage,
@@ -362,11 +368,7 @@ const MessageText: React.FC<{
           >
             {copyButton}
             {forkButton}
-            {message.created_at && (
-              <span className='text-12px text-t-secondary opacity-0 group-hover:opacity-100 transition-opacity select-none'>
-                {formatMessageTime(message.created_at)}
-              </span>
-            )}
+
           </div>
         )}
       </div>
