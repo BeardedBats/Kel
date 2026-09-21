@@ -1,0 +1,35 @@
+{
+  "mode": "transcriptions",
+  "phrase": "a",
+  "startedAt": "2026-09-21T02:17:48.365Z",
+  "app": "C:/Users/Nick/KelDogfoodCandidate/Kel.exe",
+  "dataRoot": "C:/Users/Nick/KelMuseVerify/scratch/engine",
+  "consoleErrors": [],
+  "before": {
+    "fixes": 0,
+    "transcripts": 1
+  },
+  "transcriptions": {
+    "timedOut": false,
+    "diagnostics": null,
+    "modeLabel": "Muse",
+    "liveText": "Regular transcription muse verification",
+    "transcript": "Regular transcription muse verification orange",
+    "expectedPhrase": "Regular transcription Muse verification, orange baseball forty-seven.",
+    "recognisedWords": [
+      "orange"
+    ],
+    "recognisedAll": false,
+    "usedPracticeText": false
+  },
+  "after": {
+    "fixes": 0,
+    "newestFix": null,
+    "newestTranscript": {
+      "id": "542b74ae-7fc1-448b-9bb9-ad1785c6587f",
+      "name": "Regular Transcription Muse Verification Orange",
+      "text": "Regular transcription muse verification orange"
+    }
+  },
+  "orphanEngineProcesses": 0
+}

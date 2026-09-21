@@ -1,0 +1,37 @@
+{
+  "mode": "transcriptions",
+  "phrase": "a",
+  "startedAt": "2026-09-21T02:18:22.568Z",
+  "app": "C:/Users/Nick/KelDogfoodCandidate/Kel.exe",
+  "dataRoot": "C:/Users/Nick/KelDogfoodRuns/prepared/engine",
+  "consoleErrors": [],
+  "before": {
+    "fixes": 4,
+    "transcripts": 1
+  },
+  "transcriptions": {
+    "timedOut": false,
+    "diagnostics": null,
+    "modeLabel": "Muse",
+    "liveText": "Regular transcription",
+    "transcript": "Regular transcription muse verification",
+    "expectedPhrase": "Regular transcription Muse verification, orange baseball forty-seven.",
+    "recognisedWords": [],
+    "recognisedAll": false,
+    "usedPracticeText": false
+  },
+  "after": {
+    "fixes": 4,
+    "newestFix": {
+      "id": "FIX-0004",
+      "status": "BATCHED",
+      "transcript": "This is a local practice transcript so the recording and saving flow can be used before a transcription key is connected."
+    },
+    "newestTranscript": {
+      "id": "e8e553d6-d509-48fc-aa51-bbb188536e35",
+      "name": "Regular Transcription Muse Verification",
+      "text": "Regular transcription muse verification"
+    }
+  },
+  "orphanEngineProcesses": 0
+}

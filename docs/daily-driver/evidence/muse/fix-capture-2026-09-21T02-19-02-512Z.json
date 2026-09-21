@@ -1,0 +1,35 @@
+{
+  "mode": "fix-capture",
+  "phrase": "b",
+  "startedAt": "2026-09-21T02:19:02.513Z",
+  "app": "C:/Users/Nick/KelDogfoodCandidate/Kel.exe",
+  "dataRoot": "C:/Users/Nick/KelDogfoodRuns/prepared/engine",
+  "consoleErrors": [],
+  "before": {
+    "fixes": 4,
+    "transcripts": 2
+  },
+  "fixCapture": {
+    "fixId": "FIX-0005",
+    "transcript": "fix capture muse verification",
+    "expectedPhrase": "Fix Capture Muse verification, blue baseball eighty-three.",
+    "recognisedWords": [],
+    "recognisedAll": false,
+    "usedPracticeText": false,
+    "visibleInDogfood": true
+  },
+  "after": {
+    "fixes": 5,
+    "newestFix": {
+      "id": "FIX-0005",
+      "status": "OPEN",
+      "transcript": "fix capture muse verification"
+    },
+    "newestTranscript": {
+      "id": "e8e553d6-d509-48fc-aa51-bbb188536e35",
+      "name": "Regular Transcription Muse Verification",
+      "text": "Regular transcription muse verification"
+    }
+  },
+  "orphanEngineProcesses": 0
+}
