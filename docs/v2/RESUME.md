@@ -5,12 +5,14 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-05-voice**: finish the iPhone
-   Kel PWA journey work. The phone surface, the PWA contract and the gateway blocker are done and
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-05-send**: finish the iPhone
+   Kel PWA journey work. The phone surface, the PWA contract, the gateway blocker and **mobile voice**
+   (real browser → gateway → engine → Muse, the transcript landing in the composer) are done and
    evidenced in `docs/v2/evidence/v2-05/README.md`; what remains, in order:
-   (a) **wire browser voice to the production Muse path** — on the phone the mic records and stops, but
-       no `/api/transcription` request is sent and no transcript appears (desktop voice was repaired in
-       the Daily Driver line; the browser path was never connected). Do not add a second setup surface.
+   (a) **browser voice — done.** `KelMicButton` now uses the shared `kelRequest` transport (preload on the
+       desktop, the `/kel` gateway in a browser) and never swallows a failed `stream_start`. Keep both
+       properties if you touch it again. Follow-up only: multi-utterance dictation (see
+       `KNOWN_LIMITATIONS.md`).
    (b) **send with a model connected** — the composer's send is gated on a connected model; connect one
        (the phone can reach Providers: 4 providers, 2 usable) and prove type/paste → send → continue.
    (c) **job-driven attention actions on the phone** — approvals, grants, resume, stop and review need

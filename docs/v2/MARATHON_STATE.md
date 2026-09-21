@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: phone journeys run in a real browser; the gateway 403 blocker is fixed; voice, model-gated send and job-driven attention are open
-next_item: V2-05-voice      # wire browser voice to the production Muse path, then send-with-a-model and the job-driven attention actions (see RESUME.md)
+next_item: V2-05-send       # mobile voice is done; next is sending with a connected model, then the phone drawer/history, job-driven attention, project routing (see RESUME.md)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -32,7 +32,7 @@ phases:
   V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
-  V2-05: partial     # iPhone Kel PWA V1 — real-browser phone journeys done (C:/Users/Nick/Desktop/Kel/kel-v2/docs/v2/evidence/v2-05/README.md); voice + send + job-driven attention open
+  V2-05: partial     # iPhone Kel PWA V1 — phone journeys green incl. real Muse dictation (docs/v2/evidence/v2-05/README.md); send-with-model, drawer history, job attention, project routing open
   V2-06: queued      # Needs Your Attention 2.0
   V2-07: queued      # Recipes 2.0
   V2-08: queued      # Activity 2.0
