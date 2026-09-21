@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel D14 — Activity: an optional, high-level view of what Kel is doing, built entirely from state
  * other surfaces already expose. Permission grants, internal counters, worker identifiers, routing
@@ -59,7 +60,7 @@ const KelActivityPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className='kel-page'>
+      <div className='kel-page kel-shell-activity'>
         <KelFailureCard error={error} onRetry={() => void load()} />
       </div>
     );
@@ -73,9 +74,9 @@ const KelActivityPage: React.FC = () => {
   const waiting = continuation.slice(0, 3);
 
   return (
-    <div className='kel-page'>
+    <div className='kel-page kel-shell-activity'>
       <div className='kel-page__head'>
-        <h1 className='kel-title'>Activity</h1>
+        <div><ShellWorkspaceLink /><h1 className='kel-h1'>Activity</h1></div>
         <p className='kel-sub'>
           {providers.length === 1 ? '1 provider connected' : `${providers.length} providers connected`}
         </p>

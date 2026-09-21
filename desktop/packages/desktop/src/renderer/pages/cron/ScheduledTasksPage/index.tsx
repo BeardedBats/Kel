@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -102,14 +103,15 @@ const ScheduledTasksPage: React.FC = () => {
   );
 
   return (
-    <div className='w-full h-full min-h-0 box-border bg-1 flex flex-col overflow-hidden'>
+    <div className='kel-shell-scheduled w-full h-full min-h-0 box-border bg-1 flex flex-col overflow-hidden'>
       <div
         className={classNames(
           'shrink-0 bg-1',
           isMobile ? 'px-16px pt-14px pb-14px' : 'px-12px pt-14px pb-14px md:px-40px md:pt-32px md:pb-16px'
         )}
       >
-        <div className='mx-auto w-full max-w-800px box-border'>
+        <div className='mx-auto w-full max-w-920px box-border'>
+          <ShellWorkspaceLink />
           <SettingsPageHeader
             sticky={false}
             data-testid='scheduled-tasks-header'
@@ -147,7 +149,7 @@ const ScheduledTasksPage: React.FC = () => {
       >
         <div
           className={classNames(
-            'mx-auto flex w-full max-w-800px box-border flex-col',
+            'mx-auto flex w-full max-w-920px box-border flex-col',
             isMobile ? 'gap-14px' : 'gap-16px'
           )}
         >
