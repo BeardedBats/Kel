@@ -44,13 +44,13 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 Removed from the intended V2 connection list by the directive: **Gmail** and **Slack** (they are not
 V2 scope; do not re-add them without a recorded decision).
 
-**Kibble Build Update (queue Priority 9) — resolved without guessing (D-44).** `Kibble` is undefined
-in the directive and roadmap; its only in-repo placement is Ramble/Kibble presentation in Astra's
-Shell lane. The queue line's promotion gate already exists as recorded-never-applied machinery
-(`learning.queue_promotion`, `learning.shadow_proposal`) and is now inspectable, read-only, through
-`Team.apply({action:'promotions'|'shadow'})` (5 tests). The dev-mission schema and candidate model are
-**deferred pending Nick's definition** — the requirement is kept in `MARATHON_STATE.md` (`deferred:`) and
-`RESUME.md`, and nothing marks the item complete.
+**Kibble Build Update (queue Priority 9) — corrected and active (D-46).** Kibble is the user-facing
+name for **Fix Capture / Dogfood behavior** (the authoritative definition arrived in Nick's session
+handoff; internal identifiers stay unchanged). The promotion-gate machinery already existed,
+recorded-never-applied, and is now inspectable read-only through
+`Team.apply({action:'promotions'|'shadow'})` (5 tests). The Build Update backend contract is built on
+the reuse map in `docs/v2/evidence/kibble-build-update/README.md`; Team `promotions`/`shadow` are
+**not** candidate approval, and their mapping is proved by tests rather than assumed.
 
 ## V2-05 — iPhone Kel PWA V1: PARTIAL (voice and send proved; history/attention/routing open)
 

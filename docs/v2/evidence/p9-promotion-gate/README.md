@@ -1,5 +1,11 @@
 # Priority 9 — Kibble Build Update: scope resolution and the promotion gate's door (2026-09-21)
 
+> **CORRECTED (D-46):** the “undefined” conclusion below was wrong. Kibble IS defined — it is the
+> user-facing name for Fix Capture / Dogfood behavior (the definition lives in Nick's session
+> handoff). The authoritative definition, the workflow and the reuse map are recorded in
+> `docs/v2/evidence/kibble-build-update/README.md`. What remains valid from this file: the promotion
+> gate (recorded-never-applied machinery) and the read-only door added for it.
+
 ## The measured problem: the item is undefined in the durable directive
 
 `Kibble` appears **nowhere** in `MARATHON_DIRECTIVE.md` or `ROADMAP.md`, and nowhere in the runtime

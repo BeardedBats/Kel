@@ -456,3 +456,24 @@ the second apply is a no-op, the live credentials file survives, and re-opening 
 ensuring its schema changes no count and no ledger row. *Forbids:* an updater, an update server or
 background update checks; a backup that carries credentials; a restore that deletes the live
 credentials file; claiming survival from a count of one table (the inventory is all of them).
+
+## D-46 — Kibble is defined; the Build Update backend contract is the real work (corrects D-44)
+
+D-44's deferral was **wrong**, and this decision corrects it: it concluded Kibble was undefined
+because the directive, roadmap and source never use the name. The authoritative definition lives in
+Nick's session handoff — **Kibble is the user-facing name for the existing Fix Capture / Dogfood
+behavior**, and every internal identifier stays unchanged (`dogfood_fixes`, `Dogfood`, migration 22
+`v20-fix-capture`, `/api/dogfood`). The workflow: Nick captures issues in Kibble; selects findings
+and chooses **Build Update**; Kel creates an **isolated development mission**; a coding runtime
+repairs Kel's source; Kel runs bounded tests and verification; Kel produces a **separate candidate
+build**; Nick reviews it; **promotion or installation requires explicit human approval**. Build
+Update authorizes creating and verifying the candidate — never installing, never modifying the
+running app. The dev mission rides the existing machinery (a `compile_coding` contract claimed and
+dispatched by the engine, an isolated `repositories/<job_id>` worktree, `code_evidence` +
+`check_evidence`, the `manual_review` rubric, the existing approval vocabulary); findings carry
+their screenshot/route/transcript/version context; the candidate lives under `candidates/<id>/` with
+its own revision, test/verification evidence, fixed and unresolved findings, limitations and review
+state. Team `promotions`/`shadow` views are **not** candidate approval — their mapping must be
+proved, never assumed. *Forbids:* editing installed files in place; automatic promotion or a
+consumer update platform; a second workflow, task or permission system; concluding a feature is
+absent because its product name is not in the repository.
