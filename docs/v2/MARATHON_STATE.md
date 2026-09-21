@@ -10,8 +10,8 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain
-next_item: V2-05-history    # the phone chooses Kel and sends for real now; next is conversation history from the phone (a /conversation/<id> deep link rendered blank once — measured), then job-driven attention actions, then conversational project routing (see RESUME.md)
+phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
+next_item: V2-04a           # V2-05-history is deferred for shell integration (requirement kept, phase NOT complete); next safe backend item: V2-04a assistant-callable Connection action bridge (reconnaissance committed at 7a82996)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -32,7 +32,7 @@ phases:
   V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
-  V2-05: partial     # iPhone Kel PWA V1 — voice (real Muse) and the send round trip (real model, continued) proved on the phone; drawer history, job attention, project routing open
+  V2-05: partial     # iPhone Kel PWA V1 — voice (real Muse) and the send round trip (real model, continued) proved on the phone; drawer history (DEFERRED for shell integration), job attention, project routing open
   V2-06: queued      # Needs Your Attention 2.0
   V2-07: queued      # Recipes 2.0
   V2-08: queued      # Activity 2.0
@@ -209,6 +209,24 @@ The assistant bridge's landing points, read from the tree:
   engine observe the runtime's tool calls or provide tools to it?), where Projects state lives for
   per-Project gating (V2-02), and how the access-history writer receives call facts (V2-04's
   connection/action/domain/status/duration shape).
+
+## Parallel-ownership change (2026-09-21) — V2-05-history deferred for shell integration
+
+Astra is actively implementing the Figma Shell on `ux/v2-shell` and now owns the phone drawer/history
+presentation, the conversation shell, the composer, the responsive/mobile shell, Tools and Ramble/Kibble
+presentation, and the global visual tokens. Implementing V2-05-history (the phone drawer and conversation
+opening) now would collide with that work, so it is **temporarily deferred for shell integration**:
+
+- **V2-05 stays PARTIAL.** Its history/attention/routing requirements are kept in this record and in
+  `RESUME.md` — they are not dropped, and the phase is not marked complete.
+- The measured notes for the history increment (the blank `/conversation/<id>` deep load, the inert rail
+  at phone width, the home-entry tap timeout, the drawer as the phone's real navigation) remain valid;
+  they are recorded in `KNOWN_LIMITATIONS.md` and stay the checklist for the Shell integration pass.
+- **The next safe backend item is V2-04a** (assistant-callable Connection action bridge), whose
+  reconnaissance is committed at `7a82996`. Do not start V2-05-history without a fresh recorded decision
+  that the Shell integration has landed.
+- If a backend change needs a renderer contract Astra will eventually absorb, write it in
+  `docs/v2/PARALLEL_SHELL_TOUCHES.md` instead of editing renderer files.
 
 ## V2-04 build notes (historical — the phase is closed)
 
