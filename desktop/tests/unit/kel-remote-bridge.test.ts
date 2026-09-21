@@ -32,6 +32,15 @@ describe('remote Kel bridge (D11)', () => {
     expect(staticServer).toContain("KEL_ENGINE_UNAVAILABLE");
   });
 
+  it('the gateway reaches the engine the way the desktop does, not the way a browser does', () => {
+    // Kel's engine authorizes a request only when Host is its own and Origin is absent or its own
+    // (`runtime/kel/service.py`). A phone browser always sends the gateway's own Origin, so forwarding
+    // it made every mutating Kel route answer 403 — Kel on a phone could read /api/state and nothing
+    // else. The gateway holds the token and is the trusted local client, so it must look like one.
+    expect(staticServer).toContain("delete headers.origin;");
+    expect(staticServer).toContain("delete headers.referer;");
+  });
+
   it('both launchers hand the gateway the engine data root', () => {
     expect(webuiConfig).toContain('kelDataDir: kelEngineDataRoot()');
     expect(webui).toContain('kelDataDir: process.env.KEL_DATA_DIR?.trim() || undefined');
