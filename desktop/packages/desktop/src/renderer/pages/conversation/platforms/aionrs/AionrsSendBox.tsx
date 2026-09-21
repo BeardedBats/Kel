@@ -5,6 +5,8 @@
  */
 
 import { ipcBridge } from '@/common';
+import ShellComposerMetrics from '@renderer/components/kel/ShellComposerMetrics';
+import AionrsModelSelector from './AionrsModelSelector';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
@@ -49,7 +51,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
 import { Button, Message, Tag } from '@arco-design/web-react';
-import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
+import { Brain, FolderClose, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { classifyConversationBusyError } from '../conversationBusyError';
@@ -144,7 +146,7 @@ const AionrsSendBox: React.FC<{
   const teamPermission = useTeamPermission();
   const propagateMode = teamPermission?.propagateMode;
 
-  const { thought, running, turnStartedAtMs, setActiveMsgId, setWaitingResponse, resetState } = useAionrsMessage(
+  const { thought, running, tokenUsage, turnStartedAtMs, setActiveMsgId, setWaitingResponse, resetState } = useAionrsMessage(
     conversation_id,
     {
       onConfigChanged: (capabilities) => {
@@ -727,7 +729,7 @@ const AionrsSendBox: React.FC<{
   const sendBoxWidthClass = getChatSurfaceWidthClass();
 
   return (
-    <div className={`${sendBoxWidthClass} flex flex-col mt-auto mb-16px`}>
+    <div className={`${sendBoxWidthClass} kel-shell-chat-composer flex flex-col mt-auto`}>
       <CommandQueuePanel
         items={queuedCommands}
         mode={queueMode}
@@ -799,23 +801,21 @@ const AionrsSendBox: React.FC<{
           />
         }
         rightTools={
-          <div className='flex items-center gap-8px min-w-0'>
-            <AgentModeSelector
-              backend='aionrs'
-              conversation_id={conversation_id}
-              compact
-              initialMode={session_mode}
-              dynamicModes={dynamicModes}
-              compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
-              modeLabelFormatter={(mode) => t(`agentMode.${mode.value}`, { defaultValue: mode.label })}
-              compactLabelPrefix={t('agentMode.permission')}
-              hideCompactLabelPrefixOnMobile
-              onModeChanged={propagateMode}
-              beforeRuntimeSync={prepareRuntimeConfig}
-              beforeRuntimeSet={teamPermission?.warmupSession}
-              configOptionsPort={teamPermission?.configOptionsPort}
-            />
-          </div>
+          <AionrsModelSelector
+            selection={modelSelection}
+            thoughtLevel={runtimeThoughtLevel}
+            setStatus={runtimeConfig.setStatus}
+            onSetThoughtLevel={async (optionId, value) => {
+              try {
+                const result = await runtimeConfig.setConfigOption(optionId, value);
+                Message.success(t('agent.thoughtLevel.switchSuccess'));
+                return result;
+              } catch (error) {
+                Message.error(t(configErrorMessageKey(error)));
+                throw error;
+              }
+            }}
+          />
         }
         prefix={
           <>
@@ -886,6 +886,27 @@ const AionrsSendBox: React.FC<{
           ) : undefined
         }
       />
+      <div className='kel-shell-composer-footer'>
+        {conversationContext?.workspace && <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
+          <FolderClose size={14} />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+        </span>}
+        <AgentModeSelector
+              backend='aionrs'
+              conversation_id={conversation_id}
+              compact
+              initialMode={session_mode}
+              dynamicModes={dynamicModes}
+              compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
+              modeLabelFormatter={(mode) => t(`agentMode.${mode.value}`, { defaultValue: mode.label })}
+              compactLabelPrefix={t('agentMode.permission')}
+              hideCompactLabelPrefixOnMobile
+              onModeChanged={propagateMode}
+              beforeRuntimeSync={prepareRuntimeConfig}
+              beforeRuntimeSet={teamPermission?.warmupSession}
+              configOptionsPort={teamPermission?.configOptionsPort}
+            />
+        <ShellComposerMetrics usage={tokenUsage} />
+      </div>
       {isMobile && (
         <>
           <MobileActionSheet

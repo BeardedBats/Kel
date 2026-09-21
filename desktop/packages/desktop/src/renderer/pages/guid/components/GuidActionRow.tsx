@@ -638,17 +638,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
           <div className={styles.actionConfigGroup} data-mobile={isMobile ? 'true' : undefined}>
             {modelSelectorNode}
 
-            {showModeSwitch && (
-              <AgentModeSelector
-                backend={modeBackend}
-                compact
-                initialMode={selectedMode}
-                onModeSelect={onModeSelect}
-                dynamicModes={dynamicModes}
-                compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
-                modeLabelFormatter={getModeDisplayLabel}
-              />
-            )}
+
           </div>
         )}
 

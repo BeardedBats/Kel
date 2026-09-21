@@ -40,13 +40,13 @@ describe('Kel shell navigation', () => {
     expect(screen.getByTestId('route').textContent).toBe('/activity');
     expect(close).toHaveBeenCalledWith(true);
   });
-  it('keeps New Chat and batch management as separate native button actions', () => {
+  it('keeps New Chat and removes the three-dot batch action', () => {
     const newChat = vi.fn(); const batch = vi.fn();
     render(<SiderToolbar collapsed={false} isMobile={false} isBatchMode={false} siderTooltipProps={{ disabled: true }} onNewChat={newChat} onToggleBatchMode={batch} />);
     fireEvent.click(screen.getByRole('button', { name: 'New Chat' }));
     expect(newChat).toHaveBeenCalledTimes(1);
     expect(batch).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'conversation.history.batchManage' }));
-    expect(batch).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'conversation.history.batchManage' })).toBeNull();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 });

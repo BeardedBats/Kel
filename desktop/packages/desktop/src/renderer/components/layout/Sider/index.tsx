@@ -1,4 +1,3 @@
-import KelWorkPanel from '@/renderer/components/chat/KelWorkPanel';
 // Modified for Kel: single-assistant navigation.
 import classNames from 'classnames';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -10,10 +9,7 @@ import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { blurActiveElement } from '@renderer/utils/ui/focus';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { SiderToolbar, SiderSearchEntry } from './SiderNav';
-import KelNavEntries from './SiderNav/KelNavEntries';
-import KelToolsSection from '@renderer/components/kel/KelToolsSection';
 import settingsIcon from '@renderer/assets/figma/settings.svg';
-import SiderFooter from './SiderFooter';
 import siderStyles from './Sider.module.css';
 
 const WorkspaceGroupedHistory = React.lazy(() => import('@renderer/pages/conversation/GroupedHistory'));
@@ -191,16 +187,6 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
                 onSessionClick={onSessionClick}
               />
             )}
-            {/* Kel navigation (Work, Team) — V1.4 information architecture */}
-            <KelNavEntries collapsed={collapsed} isMobile={isMobile} siderTooltipProps={siderTooltipProps} />
-
-            {/* Divider between fixed top nav and scrollable content area */}
-            <div
-              className={classNames(
-                'shrink-0 mt-6px mb-2px h-1px bg-[var(--color-border-2)]',
-                collapsed ? 'mx-6px' : 'mx-10px'
-              )}
-            />
             {/* Scrollable content: pinned → team (slot) → projects → conversations */}
             <div className={classNames('flex-1 min-h-0 overflow-y-auto', siderStyles.scrollArea)}>
               <Suspense fallback={<div className='min-h-200px' />}>
@@ -210,20 +196,6 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
           </div>
         )}
       </div>
-      {!isSettings && <KelToolsSection collapsed={collapsed} />}
-      <KelWorkPanel />
-      {/* Footer */}
-      <SiderFooter
-        isMobile={isMobile}
-        isSettings={isSettings}
-        collapsed={collapsed}
-        theme={theme}
-        siderTooltipProps={siderTooltipProps}
-        onSettingsClick={handleSettingsClick}
-        onThemeToggle={handleQuickThemeToggle}
-        showLogout={showLogout}
-        onLogoutClick={handleLogout}
-      />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import ShellComposerMetrics from '@renderer/components/kel/ShellComposerMetrics';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -42,6 +43,7 @@ type GuidInputCardProps = {
   slashCommandMenu?: React.ReactNode;
 
   // Workspace
+  modeSelector?: React.ReactNode;
   workspaceDir: string;
   onSelectWorkspace: (dir: string) => void;
   onClearWorkspace: () => void;
@@ -66,6 +68,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   onRemoveFile,
   actionRow,
   slashCommandMenu,
+  modeSelector,
   workspaceDir,
   onSelectWorkspace,
   onClearWorkspace,
@@ -150,11 +153,11 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
         {actionRow}
         {slashCommandMenu && <div className='absolute start-0 end-0 top-[calc(100%+4px)] z-70'>{slashCommandMenu}</div>}
       </div>
-      <GuidWorkspaceFootnote
+      <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote
         workspaceDir={workspaceDir}
         onSelectWorkspace={onSelectWorkspace}
         onClearWorkspace={onClearWorkspace}
-      />
+      />{modeSelector}<ShellComposerMetrics /></div>
     </div>
   );
 };
