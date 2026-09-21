@@ -12,6 +12,7 @@ import subprocess
 import threading
 import time
 from .core import uid
+from .containment import cleanup_session, scrub_secrets, session_dir
 from .internal import SECRET_ENV_KEYS
 
 
@@ -35,20 +36,25 @@ _NATIVE_PROVIDER_CREDENTIALS = {
 }
 
 
-def child_env(provider, base=None):
+def child_env(provider, base=None, session=None):
     """Environment for a native CLI child: never CLAUDECODE, never another provider's key.
 
-    A native child receives at most its own provider's credentials; every other Kel-managed
-    provider key is removed (for providers with no declared credentials, every one of them
-    is), so a Codex child never sees the Anthropic or DeepSeek key and a Claude child never
-    sees the OpenAI or DeepSeek one.
+    A native child receives at most its own provider's credentials; every other provider key is
+    removed, and V2-13 widens the rule from a fixed three-name list to the **shape** of the name:
+    anything ending in KEY/TOKEN/SECRET/PASSWORD/CREDENTIAL/AUTH is dropped unless it is this
+    provider's own credential (Kel's own KEL_* helpers are configuration, not a service secret).
+    When `session` is given, TMP/TEMP/TMPDIR point at the run's disposable directory.
     """
     env = dict(os.environ if base is None else base)
     env.pop('CLAUDECODE', None)
     allowed = set(_NATIVE_PROVIDER_CREDENTIALS.get(provider, ()))
+    scrub_secrets(env, keep=allowed)
     for name in SECRET_ENV_KEYS:
         if name not in allowed:
             env.pop(name, None)
+    if session is not None:
+        for name in ('TMP', 'TEMP', 'TMPDIR'):
+            env[name] = str(session)
     return env
 
 
@@ -99,7 +105,8 @@ class NativeAdapter:
         run_id = run_id or uid()
         stdout_path, stderr_path = self.logs/(run_id+'.stdout'), self.logs/(run_id+'.stderr')
         started = time.monotonic()
-        env = child_env(self.provider)
+        session = session_dir(self.logs.parent, run_id)
+        env = child_env(self.provider, session=session)
         try:
             with stdout_path.open('wb') as out, stderr_path.open('wb') as err:
                 process = subprocess.Popen(self.argv(session_id), cwd=self.workspace, stdin=subprocess.PIPE,
@@ -141,6 +148,7 @@ class NativeAdapter:
         finally:
             with self.lock:
                 self.processes.pop(run_id, None)
+            cleanup_session(session)
 
     def parse(self, output, session_id=None):
         if self.provider == 'claude':

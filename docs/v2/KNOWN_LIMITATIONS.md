@@ -272,3 +272,18 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   decay window — unlike routing (V2-09), which decays. Counts are reported so the reader can judge.
 - **Caps and budgets unchanged**: R8 caps (≤6 workers, depth ≤2, ≤4 children per agent, ≤10
   grandchildren per mission) and budget reservations are untouched by the advice.
+
+## V2-13 — local execution isolation: the honest edges (2026-09-21)
+
+- **The child environment is a scrubbed inherit, not an allowlist.** PATH/SystemRoot and the rest of
+  the OS environment still pass through (installed CLIs depend on them); what is enforceable without
+  live CLI testing — secret-shaped names dropped, provider credential kept — is what is enforced.
+- **Sessions cover native CLI children.** Broker processes are Kel's own and inherit the engine
+  environment; they already get per-run broker logs and locks.
+- **The sensitive list is a rule at Kel's own seams, not an OS sandbox.** It refuses Kel-driven
+  snapshot and apply roots; it does not constrain what an installed CLI could read on the machine
+  (that would need OS-level isolation, explicitly out of scope for V2).
+- **`KEL_PROTECTED_PATHS` is environment-driven.** The desktop must set it (semicolon-separated) for
+  stable-app folders to be refused; with it unset, only the built-in rules apply.
+- **Read-only execution is the leaf’s own mode.** Verifier-style read-only runs rely on the
+  tool-disabled argv and the isolated copy; there is no separate fs-level read-only mount.

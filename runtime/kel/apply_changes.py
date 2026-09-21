@@ -33,6 +33,8 @@ def apply_checked(store,job_id,actor='kel'):
     if decision['outcome']!='ALLOW':
         raise PolicyError('Application is not authorized: '+
                           (decision.get('reason') or decision.get('rule') or 'permission required'))
+    from .containment import assert_usable_root
+    assert_usable_root(root,purpose='an application of changes',store=store)
     metadata=Path(git(root,'rev-parse','--absolute-git-dir').decode().strip()).resolve(strict=True)
     if not metadata.is_relative_to(root):raise PolicyError('Linked Git metadata cannot own an application lock')
     lockroot=metadata/'kel-application';lockroot.mkdir(exist_ok=True)

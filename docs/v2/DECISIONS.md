@@ -393,3 +393,18 @@ refuses with its own explicit routing sentence. Every `staffing.decided` event n
 beside the decision, so a recorded staffing decision always shows both what the shape said and what
 the history said. *Forbids:* more than one tier of movement; acting on thin or mixed history; a raise
 smuggled past the path's own support; any advice that outranks R1–R10, the caps or `tier_max`.
+
+## D-42 — containment is a rule at the seams, not a claim of sandboxing (V2-13)
+
+Kel already runs native leaves read-only with tools disabled, kills through an identity-bound handle,
+snapshots coding work into an isolated copy and applies changes transactionally. V2-13 adds the three
+things that were missing, all in `kel/containment.py` and wired at the seams that perform autonomous
+work: **sensitive folders** (`assert_usable_root`: Windows/Program Files, credential folders, the
+engine's own data root, and `KEL_PROTECTED_PATHS` for the desktop's stable-app folders) refuse a
+snapshot source (`coding.snapshot` for every caller, `CodingAdapter.execute` on every execute) and an
+apply destination (`apply_changes.apply_checked` before any staging); **disposable sessions** (one
+temp directory per native run, pointed at by the child's TMP/TEMP/TMPDIR, removed on return); and a
+**widened env scrub** (secret-*shaped* names are dropped from a native child unless they are its own
+provider credential — the R7 rule by shape instead of by list). *Forbids:* snapshotting or applying
+into a sensitive root; leaving a run's temp behind; handing a child another service's token; treating
+this as an OS-level sandbox — it is a rule enforced where Kel itself acts.

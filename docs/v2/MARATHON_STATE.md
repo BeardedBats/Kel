@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: isolation (Priority 7) # V2-12 adaptive staffing is BUILT (2026-09-21; D-41; evidence/v2-12/README.md): one bounded, explained step of outcome-history advice on the existing staffing paths (never through R1/R3-R6 floors, tier_max or the caps), plus the two acceptance checks (learning removal satisfied by the guarded forget path; unbrokered abrupt-stop recovery proved live by the running engine's own tick). Next safe backend item: Priority 7 of the run directive — Local execution isolation (filesystem path restrictions, sensitive-folder protection, read-only execution, temporary writable workspace; child-process restrictions, full process-tree kill, restricted environment, disposable sessions; explicitly NOT a VM platform or a Rust sandbox rewrite — see MARATHON_DIRECTIVE §18), then network permissions (8), Kibble Build Update (9), migration reliability (10)
+next_item: network permissions (Priority 8) # V2-13 isolation is BUILT (2026-09-21; D-42; evidence/v2-13/README.md): sensitive-root refusal at the coding snapshot and before any change application, disposable per-run sessions for native children (TMP/TEMP/TMPDIR, removed on return), and the R7 env rule widened to secret-shaped names - on top of the existing read-only tool-disabled argv, identity-bound kill and transactional apply. Next safe backend item: Priority 8 of the run directive — Network permissions (modes NO INTERNET / APPROVED DOMAINS / FULL INTERNET; per-tool and per-Project rules; show contacted domains; block unexpected domains; ask before a new domain; access history - see MARATHON_DIRECTIVE §19), implemented on the existing V2-14 network-rule seam in kel.connections (NETWORK_RULES); then Kibble Build Update (9), migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -40,7 +40,7 @@ phases:
   V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
   V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
   V2-12: done        # Adaptive staffing 2.0 — one bounded step of outcome-history advice on the existing staffing paths (advice recorded on every staffing.decided)
-  V2-13: queued      # Local execution isolation
+  V2-13: done        # Local execution isolation — sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
   V2-14: queued      # Network permissions
   V2-15: queued      # Real dogfood integration pass
   V2-16: queued      # Performance + UX polish

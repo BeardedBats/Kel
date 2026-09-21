@@ -293,3 +293,18 @@ decision. Two acceptance checks closed this turn: _learning removal_ is satisfie
 guarded memory `forget` path (new surface pin), and _unbrokered abrupt-stop recovery_ was proved live
 — a 5 s unbrokered lease was fenced by the running engine's own tick (`recovery: runtime`), distinct
 from the V2-11 probe where seven broker-backed runs were adopted and never fenced. D-41.
+
+## V2-13 — Local execution isolation (BUILT, 2026-09-21)
+
+The containment Kel already had is real (read-only tool-disabled native argv — codex `-s read-only`
+with `sandbox_mode="read-only"` and a long `--disable` list, claude `--safe-mode --tools ''`;
+identity-bound process kill with group semantics; coding snapshots into `repositories/<job_id>` with
+linked-path refusals; the guarded transactional apply). V2-13 adds the three missing pieces in
+`kel/containment.py`, wired where Kel acts autonomously: **sensitive-root refusal**
+(`assert_usable_root`: Windows/Program Files, credential folders, Kel's own data root,
+`KEL_PROTECTED_PATHS`) at the coding snapshot (every caller and every execute) and before any
+application staging; **disposable sessions** (one temp directory per native run, TMP/TEMP/TMPDIR
+pointed at it, removed when the transport returns); and the **R7 env rule widened to the shape of the
+name** (KEY/TOKEN/SECRET/PASSWORD/CREDENTIAL/AUTH dropped unless it is the provider's own credential;
+`KEL_*` helpers kept). Honest edges: a scrubbed inherit, not an allowlist; sessions for native
+children only; a rule at Kel's own seams, explicitly not an OS-level sandbox. D-42.
