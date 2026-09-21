@@ -248,3 +248,29 @@ handler imports `from .service` — while the module form initializes cleanly fr
 `PYTHONPATH` set. The packed engine (`--acp`) never hit this; the desktop's source branch did, and the
 new webui bootstrap would have. Both now register the module form. *Forbids:* registering the
 script-path form as the agent command again.
+
+## D-32 — the assistant calls a Connection action through the existing systems (V2-04a)
+
+The runtime's door is the shell command it already has, not a new tool system: `python -m kel.conn
+list` / `call <id> [--param k=v] [--confirm auto|id]` asks the engine (`catalog` / `call` on
+`/api/connections`), and every call runs through the systems that already exist — the capability
+control (`connections`, a switch offered only because a production path can now honour it), the
+approval rows (`request_approval` + `announce_approval`, resolved through `/api/approval`; mutating
+actions wait for the exact action digest), and the one-request rule in `connections.run()` (the only
+outbound path; answers stay parsed, bounded and credential-scrubbed). Reads run under the resolved
+capability; a one-shot grant is consumed atomically at execution time, never at the ask. Provenance
+gains a `source` fact per call (`shell` | `runtime`, migration 27). *Forbids:* an MCP subsystem, a
+second action catalogue, a second permission path for connection effects, and any helper output that
+could carry a credential or an unbounded answer.
+
+## D-33 — connection values live in engine memory, pushed by the shell (V2-04a)
+
+A runtime-initiated call happens with no click, so the value has to reach the engine somehow. The
+shell (Electron main) pushes every stored connection value into the engine's memory at boot and after
+each credential change (`supply` on `/api/connections`, `kelCredentialIpc.ts` + `initializeKel`);
+the engine keeps them in `kel.connections` custody — memory only, never a column, never a file, never
+a log — and every call still uses a value once, in memory. The renderer still never receives a value,
+and the runtime receives none at all. Lines without a shell (the standalone webui/phone profile) have
+no custody, and the bridge says so in plain words instead of guessing. *Forbids:* persisting a value
+on the engine side, expanding custody beyond the connection namespace, and any bridge path that
+accepts a credential from the caller.

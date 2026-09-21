@@ -179,3 +179,17 @@ enabled), and the desktop's source branch spawns the same module form. Journey H
 positive path live: pills `["kel"]` → send enabled → turn lands → real reply → settle → second turn →
 second reply ("still here"), post-auth watch clean. Assistant markdown renders inside a shadow root, so
 the journey reads `.markdown-shadow-body` explicitly.
+
+## V2-04a — the assistant bridge to Connections (BUILT, 2026-09-21)
+
+The assistant can call a Connection action through the systems that already exist: a `connections`
+capability (offered only because a production path can now honour it), the `kel.connection_tools`
+bridge behind `catalog`/`call` on `/api/connections`, and the `kel.conn` helper the runtime runs as
+an ordinary shell command. Values reach the engine through a shell push into process memory only
+(`kelCredentialIpc.ts` at boot and on change; D-33); the runtime never receives one. Mutating
+actions wait on the existing approval rows (exact action digest) and appear as ordinary chat cards;
+provenance gains a `source` fact (`shell`/`runtime`, migration 27). Proved two ways: the engine
+journey test (helper subprocess → real engine → stand-in service, 16 tests) and a live work turn on
+the running engine where a real runtime called `github-whoami` behind the stored credential and used
+the bounded login (`evidence/v2-04a/README.md`). The live run also found and fixed a real defect:
+the engine now exports `python -m kel` to its runtimes (`d3bbf65`).

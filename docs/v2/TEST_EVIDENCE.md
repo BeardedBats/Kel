@@ -167,3 +167,24 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
 - Broader: whole desktop suite `bunx vitest run` — 43 files, 358 passed; `bunx tsc --noEmit` clean.
 - One authed probe: a full-page load of `/conversation/<id>` on the phone rendered a blank body; the
   drawer/history increment must verify or fix it. (Single observation, not a claim.)
+
+### V2-04a — the assistant bridge (engine journey + live run, 2026-09-21)
+
+- `runtime/tests/test_v2_connection_bridge.py` — 16 tests, all pass: discovery (catalog) through a
+  real engine over HTTP; the `kel.conn` helper executed as a subprocess; argument validation; the
+  capability control (off → recommendation; one-shot grant consumed exactly once); the mutating
+  flow (ask created + announced in the conversation, duplicate asks reused, resolved through the
+  real `/api/approval`, executes only then, wrong approval refused, no-run case honest); bounded and
+  scrubbed answers; `source: runtime` provenance; the value asserted absent from helper output,
+  events, approvals, messages and the database.
+- Full engine suite at `d3bbf65`: `python -m unittest discover -s tests` → **1142 tests, OK** (652 s).
+- Live runtime journey on the prepared engine: job `3c35e589…` ran a real work turn; the worker
+  (codex-code) found the connector via `python -m kel.conn list`, called `github-whoami`, and wrote
+  the bounded login into `notes.txt` (`bridge check` / `kel-bridge-live-account`); the stand-in
+  service logged `GET /user 200`; the access history recorded `{"action": "github-whoami",
+  "source": "runtime", "state": "ok"}`. Raw material: `evidence/v2-04a/live-run.txt`; write-up:
+  `evidence/v2-04a/README.md`.
+- Measured limits of that run: Claude Code is quota-blocked on this machine today (codex carried the
+  work; the fallback is the engine's own); the job closed UNCERTAIN (its verification path shared the
+  quota) while the bridge evidence stands; the phone line cannot reach a work turn yet (its turns are
+  conversational by design), so Journey J is held, not delivered.

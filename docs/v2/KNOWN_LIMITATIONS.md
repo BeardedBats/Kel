@@ -172,3 +172,21 @@ blank-body deep link — below), job-driven attention actions, conversational pr
 - **`bun run resetpass`'s fast path 401s when the webui is running** (its reset goes through the
   session-gated proxy). Workarounds: direct loopback POST to `/api/webui/reset-password` on the backend
   port, or stop the webui and use the documented slow path. Operator note, not a phone defect.
+
+## V2-04a — the bridge's honest limits (measured 2026-09-21)
+
+- **The phone cannot reach a work turn yet.** A phone conversation turn is answered by the engine's
+  conversational path (measured: a 4.8 s "saved context" reply, no job and no runtime for a turn that
+  asked for a connected-service call). Work turns need a selected project (the Shell's Work surface —
+  Astra's territory) or a work-verb route; until that lands, the bridge is reachable from the phone
+  only through chat's controls, not through a runtime. Journey J is held for that integration.
+- **Claude Code was quota-blocked on this machine** ("session limit · resets 3:50pm"); its runtime
+  attempts fail instantly ("Native Claude did not finish") and the engine falls back to codex-code,
+  which carried the live journey. The bridge is runtime-agnostic (a plain shell command), but the
+  claude path was not exercisable today.
+- **A live job can close UNCERTAIN while the bridge worked**: the codex attempt produced the change
+  and reported its smoke command passing, but the milestone's full verification path shared the same
+  quota, so the job closed with the honest "could not fully verify" message. The bridge evidence
+  (event + bounded result + written login) stands independently.
+- **The standalone webui/phone profile has no credential custody** (no shell pushes values); its
+  `catalog` says so per connection in plain words, and calls refuse honestly instead of guessing.

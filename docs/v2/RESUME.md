@@ -5,8 +5,10 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-04a**: build the
-   assistant-callable Connection action bridge (reconnaissance committed at `7a82996`). **V2-05-history is
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-04b**: the OAuth
+   foundation (initiate / PKCE / callback / token custody / refresh / revoke, Google Drive first).
+   **V2-04a is built and proved live** — the assistant bridge (`621d337` + fix `d3bbf65`;
+   `docs/v2/evidence/v2-04a/README.md`) — do not rebuild it. **V2-05-history is
    temporarily DEFERRED FOR SHELL INTEGRATION** — Astra owns the phone drawer/history presentation on
    `ux/v2-shell`, and implementing it now would overlap; V2-05 stays PARTIAL and items (c)/(d) below
    remain requirements, not removed. The phone surface, the PWA contract, the gateway blocker, **mobile
@@ -34,9 +36,9 @@
        Tapping the home's recent entry text timed out once — try the drawer path first. Pick this up only
        after the Shell integration lands (see `MARATHON_STATE.md`, parallel-ownership section); the
        requirement is kept, not dropped.
-   The Connections program (V2-01 … V2-04) is closed; two of its needs are carried as explicit
-   follow-ups in `FEATURE_LEDGER.md` (V2-04a: a tool the assistant can call an action through; V2-04b: the
-   OAuth sign-in flow) — pick one up deliberately, do not assume it was done.
+   The Connections program (V2-01 … V2-04) is closed; V2-04a (the assistant bridge) is now built and
+   proved live; the remaining carried follow-up is V2-04b (the OAuth sign-in flow) — pick it up
+   deliberately, do not assume it was done.
 5. Per increment: understand → narrow design → implement → self-review → focused tests → commit
    atomically → update durable state (`MARATHON_STATE.md`, `FEATURE_LEDGER.md`,
    `IMPLEMENTATION_STATUS.md`, `TEST_EVIDENCE.md`, `DECISIONS.md`, and `DOGFOOD_FINDINGS.md` when real
