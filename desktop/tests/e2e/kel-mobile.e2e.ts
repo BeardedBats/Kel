@@ -536,6 +536,70 @@ test.describe('Kel on a phone (V2-05)', () => {
     save('findings-G.json');
   });
 
+  test('H — choose an assistant on the phone, then send', async ({ page }) => {
+    test.setTimeout(180_000);
+    await signIn(page);
+    await leaveFirstRun(page, 'H');
+    await page.waitForTimeout(1500);
+
+    // The shell gates send on a selected assistant (`useGuidSend`: loading || !selectedAssistantId). The
+    // pills carry their own identity, so the journey can pick one exactly as a thumb would.
+    const pills = page.locator('[data-assistant-id]');
+    let count = await pills.count();
+    note({ journey: 'H', step: 'assistant-pills', count });
+    if (count === 0) {
+      const more = page.locator('[data-testid="assistant-more-btn"]').first();
+      note({ journey: 'H', step: 'assistant-more', count: await more.count() });
+      await more.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'assistant-more-failed', error: String(error).slice(0, 160) }));
+      await page.waitForTimeout(1200);
+      count = await pills.count();
+      note({ journey: 'H', step: 'assistant-pills-after-more', count });
+    }
+
+    if (count > 0) {
+      const first = pills.first();
+      const id = await first.getAttribute('data-assistant-id');
+      const name = (await first.textContent().catch(() => '')) || '';
+      note({ journey: 'H', step: 'assistant-chosen', id, name: name.trim().slice(0, 40) });
+      await first.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'assistant-click-failed', error: String(error).slice(0, 160) }));
+      await page.waitForTimeout(1500);
+      note({
+        journey: 'H',
+        step: 'assistant-selected',
+        selected: await pills.first().getAttribute('data-assistant-selected'),
+      });
+
+      const composer = page.locator('textarea, [contenteditable="true"]').first();
+      const reachable = await composer.isVisible().catch(() => false);
+      note({ journey: 'H', step: 'composer-reachable', reachable });
+      if (reachable) {
+        await composer.click({ timeout: 5000 }).catch(() => undefined);
+        // A real turn on a real CLI provider — deliberately harmless and file-free.
+        await page.keyboard.insertText('Phone send check: reply with one short sentence. Change no files.');
+        await page.waitForTimeout(600);
+        const send = page.locator('button.send-button-custom').first();
+        const sendable = !(await send.isDisabled().catch(() => true));
+        await page.screenshot({ path: path.join(EVIDENCE, 'H1-before-send.png') });
+        note({ journey: 'H', step: 'send-possible', sendable });
+        if (sendable) {
+          await send.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'send-failed', error: String(error).slice(0, 160) }));
+          await page.waitForTimeout(30_000);
+          await page.screenshot({ path: path.join(EVIDENCE, 'H2-after-send.png') });
+          const after = await text(page, 1500);
+          note({
+            journey: 'H',
+            step: 'after-send',
+            text: after,
+            messageLanded: /phone send check/i.test(after),
+            composerEmpty: (await composer.inputValue().catch(() => 'x')) === '',
+            overflow: await overflow(page),
+          });
+        }
+      }
+    }
+    save('findings-H.json');
+  });
+
   test('F — the PWA contract holds on the phone', async ({ page }) => {
     await signIn(page);
     const seen = watch(page);

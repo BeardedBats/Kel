@@ -120,3 +120,14 @@ selection area is where a desktop picks it, and this increment did not establish
 for it. Next run: select an assistant on the phone (or verify the shell persists a desktop pick into the
 profile the phone uses), then prove type → send → model reply → continued context, with no model turn
 spent until the send actually goes through.
+
+### V2-05 — the phone shows no assistant to choose (measured, so send stays blocked)
+
+`AssistantSelectionArea` renders its pills only when there are enabled assistants for the current view,
+and returns nothing at all when there are none. Journey H measured the phone's home surface: **zero**
+elements with `data-assistant-id` and **zero** `assistant-more-btn`, while the shell's own
+`GET /api/assistants` answers with enabled entries. So a fresh phone profile has nothing to tap: the
+composer's send stays disabled by `useGuidSend`'s gate and no model turn can be started from the phone
+until either a desktop pick is persisted into the profile the phone uses, or the assistant area renders
+at phone width. Journey H records the measurement (`findings-H.json`); nothing was faked and no model
+turn was spent.
