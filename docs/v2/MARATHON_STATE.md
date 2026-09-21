@@ -147,6 +147,16 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   through Muse from the phone on the existing transcription path. Verification is synthetic (a desktop
   browser at a phone viewport over the gateway) plus the installed-app tether check; real iOS Safari
   behaviour can only be confirmed by Nick — recorded in `KNOWN_LIMITATIONS.md`.
+- **Layout audit done (so the next run does not go looking):** the shell already handles the notch and
+  home indicator — `viewport-fit=cover` is declared in the renderer shell and `env(safe-area-inset-*)` is
+  used in `styles/layout.css`, `styles/themes/base.css`, the guid page and the chat action sheet. The Kel
+  surfaces' own CSS has no phone-breaking widths: `kel-tokens.css` contains one 132px element, one 560px
+  max-width, and `min-width: 0` on the flex children (the pattern that stops a row overflowing). So the
+  remaining V2-05 work is **not** a CSS rescue: it is the phone *journeys* — a home screen that shows
+  running/recent/failed work and Needs Your Attention one-handed with answer/approve/deny/grant/review/
+  resume/stop, and voice through Muse from the phone — and verifying them in a real browser at a phone
+  viewport against the built app (which needs a build + the gateway, so it is its own increment, not a
+  quick check).
 
 ## V2-04 build notes (historical — the phase is closed)
 
