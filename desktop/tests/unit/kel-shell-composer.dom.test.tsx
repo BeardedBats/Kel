@@ -60,4 +60,3 @@ describe('Figma composer preserves production input behavior', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 });
-

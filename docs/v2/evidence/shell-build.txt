@@ -1,0 +1,286 @@
+$ electron-vite build --config packages/desktop/electron.vite.config.ts
+vite v6.4.1 building SSR bundle for production...
+transforming...
+✓ 582 modules transformed.
+rendering chunks...
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/configureChromium.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/index.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/utils.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/initStorage.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/webuiConfig.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/initStorage.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/zoom.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/applicationBridgeCore.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/notificationBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/systemSettingsBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/i18n/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/closeToTraySetting.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/keepAwake.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/migrateAssistants.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/runBackendMigrations.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/webuiConfig.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/cdpBridgeRegistry.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/applicationBridge.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/updateBridge.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/updateBridge.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/index.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/i18n/index.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/updateBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/services/autoUpdaterService.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/bridge/systemSettingsBridge.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/index.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/pet/petConfirmManager.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/pet/petManager.ts, C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/desktop/src/process/utils/tray.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter]
+(!) C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/web-host/src/backend-launcher.ts is dynamically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/web-host/src/index.ts but also statically imported by C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop/packages/web-host/src/index.ts, dynamic import will not move module into another chunk.
+
+out/main/chunks/recoverCorruptedDatabase-Dk_RJS1h.js      0.81 kB
+out/main/chunks/BetterSqlite3Driver-BI766XRT.js           0.83 kB
+out/main/chunks/resetPasswordCLI-DaeszqTa.js              2.36 kB
+out/main/chunks/ensureAdminUser-BbInqote.js               3.14 kB
+out/main/chunks/petManager-pj4qVDhi.js                    7.51 kB
+out/main/chunks/static-server-D3-gJXnu.js                11.54 kB
+out/main/chunks/cdpBridge-Iy7D9rDm.js                    11.58 kB
+out/main/chunks/runBackendMigrations-3yQeyiGN.js         45.51 kB
+out/main/chunks/index-DTyfevvC.js                       328.59 kB
+out/main/index.js                                     3,973.27 kB
+[vite-plugin-static-copy] Copied 1 items.
+✓ built in 1.78s
+vite v6.4.1 building SSR bundle for production...
+transforming...
+✓ 6 modules transformed.
+rendering chunks...
+out/preload/petPreload.js         0.50 kB
+out/preload/petHitPreload.js      0.67 kB
+out/preload/petConfirmPreload.js  0.97 kB
+out/preload/index.js              8.30 kB
+✓ built in 21ms
+vite v6.4.1 building for production...
+transforming...
+node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/index.mjs (11:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/index.mjs" was ignored.
+node_modules/.bun/swr@2.4.1+b1ab299f0a400331/node_modules/swr/dist/_internal/config-context-12s-CCVTDPOP.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/swr@2.4.1+b1ab299f0a400331/node_modules/swr/dist/_internal/config-context-12s-CCVTDPOP.mjs" was ignored.
+node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/dom-export.mjs (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/react-router@7.13.1+bf16f8eded5e12ee/node_modules/react-router/dist/development/dom-export.mjs" was ignored.
+node_modules/.bun/@iconify+react@6.0.2+b1ab299f0a400331/node_modules/@iconify/react/dist/iconify.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/.bun/@iconify+react@6.0.2+b1ab299f0a400331/node_modules/@iconify/react/dist/iconify.js" was ignored.
+✓ 8437 modules transformed.
+rendering chunks...
+../../../../out/renderer/pet/pet.html                                            0.64 kB
+../../../../out/renderer/pet/pet-hit.html                                        0.69 kB
+../../../../out/renderer/index.html                                              2.12 kB
+../../../../out/renderer/assets/KaTeX_Size3-Regular-CTq5MqoE.woff                4.42 kB
+../../../../out/renderer/pet/pet-confirm.html                                    4.90 kB
+../../../../out/renderer/assets/KaTeX_Size4-Regular-Dl5lxZxV.woff2               4.93 kB
+../../../../out/renderer/assets/KaTeX_Size2-Regular-Dy4dx90m.woff2               5.21 kB
+../../../../out/renderer/assets/KaTeX_Size1-Regular-mCD8mA8B.woff2               5.47 kB
+../../../../out/renderer/assets/KaTeX_Size4-Regular-BF-4gkZK.woff                5.98 kB
+../../../../out/renderer/assets/KaTeX_Size2-Regular-oD1tc_U0.woff                6.19 kB
+../../../../out/renderer/assets/lark-9hxxyz3-.svg                                6.21 kB
+../../../../out/renderer/assets/KaTeX_Size1-Regular-C195tn64.woff                6.50 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Regular-Di6jR-x-.woff2         6.91 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Bold-Dq_IR9rO.woff2            6.91 kB
+../../../../out/renderer/assets/KaTeX_Size3-Regular-DgpXs0kz.ttf                 7.59 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Regular-CTRA-rTL.woff          7.66 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Bold-BEiXGLvX.woff             7.72 kB
+../../../../out/renderer/assets/KaTeX_Script-Regular-D3wIWfF6.woff2              9.64 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Regular-DDBCnlJ7.woff2          10.34 kB
+../../../../out/renderer/assets/KaTeX_Size4-Regular-DWFBv043.ttf                10.36 kB
+../../../../out/renderer/assets/KaTeX_Script-Regular-D5yQViql.woff              10.59 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Regular-CTYiF6lA.woff2            11.32 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Bold-CL6g_b3V.woff2               11.35 kB
+../../../../out/renderer/assets/KaTeX_Size2-Regular-B7gKUWhC.ttf                11.51 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Italic-C3H0VqGB.woff2           12.03 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Bold-D1sUS0GD.woff2             12.22 kB
+../../../../out/renderer/assets/KaTeX_Size1-Regular-Dbsnue_I.ttf                12.23 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Regular-CS6fqUqJ.woff           12.32 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Regular-wX97UBjC.ttf          12.34 kB
+../../../../out/renderer/assets/KaTeX_Caligraphic-Bold-ATXxdsX0.ttf             12.37 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Regular-Dxdc4cR9.woff             13.21 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Bold-BsDP51OF.woff                13.30 kB
+../../../../out/renderer/assets/KaTeX_Typewriter-Regular-CO6r4hn1.woff2         13.57 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Italic-DN2j7dab.woff            14.11 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Bold-DbIhKOiC.woff              14.41 kB
+../../../../out/renderer/assets/KaTeX_Typewriter-Regular-C0xS9mPB.woff          16.03 kB
+../../../../out/renderer/assets/KaTeX_Math-BoldItalic-CZnvNsCZ.woff2            16.40 kB
+../../../../out/renderer/assets/KaTeX_Math-Italic-t53AETM-.woff2                16.44 kB
+../../../../out/renderer/assets/KaTeX_Script-Regular-C5JkGWo-.ttf               16.65 kB
+../../../../out/renderer/assets/KaTeX_Main-BoldItalic-DxDJ3AOS.woff2            16.78 kB
+../../../../out/renderer/assets/KaTeX_Main-Italic-NWA7e6Wa.woff2                16.99 kB
+../../../../out/renderer/assets/KaTeX_Math-BoldItalic-iY-2wyZ7.woff             18.67 kB
+../../../../out/renderer/assets/KaTeX_Math-Italic-DA0__PXp.woff                 18.75 kB
+../../../../out/renderer/assets/KaTeX_Main-BoldItalic-SpSLRI95.woff             19.41 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Regular-BNo7hRIc.ttf            19.44 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Regular-CB_wures.ttf              19.57 kB
+../../../../out/renderer/assets/KaTeX_Fraktur-Bold-BdnERNNW.ttf                 19.58 kB
+../../../../out/renderer/assets/KaTeX_Main-Italic-BMLOBm91.woff                 19.68 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Italic-YYjJ1zSn.ttf             22.36 kB
+../../../../out/renderer/assets/KaTeX_SansSerif-Bold-CFMepnvq.ttf               24.50 kB
+../../../../out/renderer/assets/KaTeX_Main-Bold-Cx986IdX.woff2                  25.32 kB
+../../../../out/renderer/assets/KaTeX_Main-Regular-B22Nviop.woff2               26.27 kB
+../../../../out/renderer/assets/KaTeX_Typewriter-Regular-D3Ib7_Hf.ttf           27.56 kB
+../../../../out/renderer/assets/KaTeX_AMS-Regular-BQhdFMY1.woff2                28.08 kB
+../../../../out/renderer/assets/KaTeX_Main-Bold-Jm3AIy58.woff                   29.91 kB
+../../../../out/renderer/assets/KaTeX_Main-Regular-Dr94JaBh.woff                30.77 kB
+../../../../out/renderer/assets/KaTeX_Math-BoldItalic-B3XSjfu4.ttf              31.20 kB
+../../../../out/renderer/assets/KaTeX_Math-Italic-flOr_0UB.ttf                  31.31 kB
+../../../../out/renderer/assets/KaTeX_Main-BoldItalic-DzxPMmG6.ttf              32.97 kB
+../../../../out/renderer/assets/KaTeX_AMS-Regular-DMm9YOAa.woff                 33.52 kB
+../../../../out/renderer/assets/KaTeX_Main-Italic-3WenGoN9.ttf                  33.58 kB
+../../../../out/renderer/assets/kel-mark-CL4UNBuB.png                           33.72 kB
+../../../../out/renderer/assets/KaTeX_Main-Bold-waoOVXN0.ttf                    51.34 kB
+../../../../out/renderer/assets/KaTeX_Main-Regular-ypZvNtVU.ttf                 53.58 kB
+../../../../out/renderer/assets/KaTeX_AMS-Regular-DRggAlZN.ttf                  63.63 kB
+../../../../out/renderer/assets/app-Bq_S8k2x.png                               965.28 kB
+../../../../out/renderer/assets/index-BzE5jDVY.css                               0.26 kB
+../../../../out/renderer/assets/ModeSettings--7RDZSt1.css                        0.70 kB
+../../../../out/renderer/assets/SettingsPageWrapper-Cp63D2i9.css                 0.82 kB
+../../../../out/renderer/assets/index-EKB8Skjr.css                               2.13 kB
+../../../../out/renderer/assets/index-Cuy7c_XP.css                               2.26 kB
+../../../../out/renderer/assets/useActiveLease-B_aXBAQb.css                      3.69 kB
+../../../../out/renderer/assets/useOpenFileSelector-C7KeqHH4.css                 4.19 kB
+../../../../out/renderer/assets/index-Dqv7fsPj.css                               5.03 kB
+../../../../out/renderer/assets/index-CEzNigGs.css                               5.48 kB
+../../../../out/renderer/assets/MessageList-DM2LNqr5.css                        10.90 kB
+../../../../out/renderer/assets/index-CyLRN5t7.css                              11.46 kB
+../../../../out/renderer/assets/vendor-diff-BgE3edmZ.css                        17.08 kB
+../../../../out/renderer/assets/conversationTurnClock-CPAQTvgA.css              17.50 kB
+../../../../out/renderer/assets/index-C-Fc1hLX.css                             169.66 kB
+../../../../out/renderer/assets/vendor-DMNS9Ldg.css                            598.38 kB
+../../../../out/renderer/assets/clone-vpVh-lSp.js                                0.10 kB
+../../../../out/renderer/assets/channel-DpfSk4WB.js                              0.11 kB
+../../../../out/renderer/assets/init-Gi6I4Gst.js                                 0.15 kB
+../../../../out/renderer/assets/chunk-QZHKN3VN-DilphEuR.js                       0.19 kB
+../../../../out/renderer/assets/chunk-4BX2VUAB-Bd7g804P.js                       0.22 kB
+../../../../out/renderer/assets/chunk-55IACEB6-d6cHTHod.js                       0.23 kB
+../../../../out/renderer/assets/assistantDisplay-CjxZ6P12.js                     0.23 kB
+../../../../out/renderer/assets/jobLabels-BxM8KNB2.js                            0.25 kB
+../../../../out/renderer/assets/list-DmsaW-qc.js                                 0.30 kB
+../../../../out/renderer/assets/chunk-FMBD7UC4-C4qRSguV.js                       0.36 kB
+../../../../out/renderer/assets/FlexFullContainer-CawKYMhL.js                    0.37 kB
+../../../../out/renderer/assets/ShellWorkspaceLink-Bj7--5JU.js                   0.42 kB
+../../../../out/renderer/assets/stateDiagram-v2-FVOUBMTO-CEMh-0lm.js             0.45 kB
+../../../../out/renderer/assets/chunk-KX2RTZJC-BVcL2RMc.js                       0.50 kB
+../../../../out/renderer/assets/PreferenceRow-DAkAZG1Q.js                        0.52 kB
+../../../../out/renderer/assets/classDiagram-VBA2DB6C-CDahv-l6.js                0.53 kB
+../../../../out/renderer/assets/classDiagram-v2-RAHNMMFH-CDahv-l6.js             0.53 kB
+../../../../out/renderer/assets/ForkBranchIcon-6nl5okpD.js                       0.60 kB
+../../../../out/renderer/assets/useConversationAssistants-CXLLFJQI.js            0.64 kB
+../../../../out/renderer/assets/conversationRuntime-C2qFJ88q.js                  0.74 kB
+../../../../out/renderer/assets/infoDiagram-LFFYTUFH-k0q6tQgW.js                 0.74 kB
+../../../../out/renderer/assets/catalog-BNM8AMPC.js                              0.79 kB
+../../../../out/renderer/assets/staffingLanguage-Be_xcpJm.js                     0.94 kB
+../../../../out/renderer/assets/FeedbackButton-DBKR_mf8.js                       0.96 kB
+../../../../out/renderer/assets/SettingsCreateMenu-NblAar_A.js                   1.00 kB
+../../../../out/renderer/assets/pet-CKZ1wK1K.js                                  1.13 kB
+../../../../out/renderer/assets/ordinal-Cboi1Yqb.js                              1.19 kB
+../../../../out/renderer/assets/LegacyReadOnlyConversation-vLWz_jJg.js           1.23 kB
+../../../../out/renderer/assets/SkillUsedByStack-Dh-2jwRu.js                     1.28 kB
+../../../../out/renderer/assets/KelFailureCard-Ct3nsA3P.js                       1.37 kB
+../../../../out/renderer/assets/assistantSelection-Hze4fxu4.js                   1.46 kB
+../../../../out/renderer/assets/acpMapping-Dbq73S-u.js                           1.48 kB
+../../../../out/renderer/assets/workLanguage-Dd5N6W_3.js                         1.48 kB
+../../../../out/renderer/assets/pet-hit-BWW8apdB.js                              1.55 kB
+../../../../out/renderer/assets/useSendBoxDraft-B7JHZOdD.js                      1.67 kB
+../../../../out/renderer/assets/SettingsPageHeader-B7QbDkcN.js                   1.76 kB
+../../../../out/renderer/assets/chunk-JSJVCQXG-vL9oD5iM.js                       1.88 kB
+../../../../out/renderer/assets/pet-confirm-DMPbaQuO.js                          2.14 kB
+../../../../out/renderer/assets/useManagedAgents-O4kKh5SC.js                     2.15 kB
+../../../../out/renderer/assets/AssistantAvatar-Cjspl9uK.js                      2.22 kB
+../../../../out/renderer/assets/runtimeSelectorOptions-8Lpvn71e.js               2.35 kB
+../../../../out/renderer/assets/GoogleModelSelector-cmvF1QAx.js                  2.42 kB
+../../../../out/renderer/assets/skillImportMessages-D1rFIgxw.js                  2.47 kB
+../../../../out/renderer/assets/_basePickBy-CGInjD0d.js                          2.58 kB
+../../../../out/renderer/assets/ExtensionSettingsPage-CVmBrzLc.js                2.63 kB
+../../../../out/renderer/assets/conversationCreateError-BYWqaNVc.js              2.74 kB
+../../../../out/renderer/assets/index-vny8RAEt.js                                3.14 kB
+../../../../out/renderer/assets/useModelProviderList-zzvzxCWI.js                 3.26 kB
+../../../../out/renderer/assets/PetSettings-CFa9F3jN.js                          3.30 kB
+../../../../out/renderer/assets/arc-BdR-2PP7.js                                  3.43 kB
+../../../../out/renderer/assets/agentRuntimeCatalog-DSI_XriR.js                  4.10 kB
+../../../../out/renderer/assets/SettingsPageWrapper-B4kXloCe.js                  4.14 kB
+../../../../out/renderer/assets/EnvVarEditor-Z1CBEvbJ.js                         4.14 kB
+../../../../out/renderer/assets/diagram-P4PSJMXO-CFgT_u9a.js                     4.38 kB
+../../../../out/renderer/assets/defaultLocale-DX6XiGOO.js                        4.69 kB
+../../../../out/renderer/assets/TestShowcase-BVVcQacA.js                         5.09 kB
+../../../../out/renderer/assets/FilePreview-Dw8_NAk1.js                          5.11 kB
+../../../../out/renderer/assets/index-Drn929zA.js                                5.25 kB
+../../../../out/renderer/assets/pieDiagram-SKSYHLDU-BRfwInTy.js                  5.32 kB
+../../../../out/renderer/assets/linear-CQBbm0S-.js                               5.65 kB
+../../../../out/renderer/assets/graph-By8H4HkS.js                                5.91 kB
+../../../../out/renderer/assets/diagram-IFDJBPK2-2u5_g_QF.js                     5.99 kB
+../../../../out/renderer/assets/useCronJobs-Cv7B7OTo.js                          6.12 kB
+../../../../out/renderer/assets/index-CVm0JK6U.js                                6.50 kB
+../../../../out/renderer/assets/KelModelControl-DqysBa5y.js                      6.79 kB
+../../../../out/renderer/assets/index-CGE4oDU6.js                                7.06 kB
+../../../../out/renderer/assets/RuntimeSelectorPill-BL1orCIc.js                  7.31 kB
+../../../../out/renderer/assets/index-MzwthhZB.js                                7.46 kB
+../../../../out/renderer/assets/index-1Wo-p1N2.js                                7.50 kB
+../../../../out/renderer/assets/index-CkNAPxHd.js                                7.52 kB
+../../../../out/renderer/assets/index-D57NKE18.js                                7.58 kB
+../../../../out/renderer/assets/EmojiPicker-h_ZjrfoB.js                          7.86 kB
+../../../../out/renderer/assets/AgentRepairPage-BrmzAx8c.js                      8.11 kB
+../../../../out/renderer/assets/index-67m9SU2V.js                                8.25 kB
+../../../../out/renderer/assets/UpdateModal-E3rS7WGp.js                          8.61 kB
+../../../../out/renderer/assets/useGuidAssistantSelection--TqStfYN.js            9.23 kB
+../../../../out/renderer/assets/index-VlOi9o97.js                                9.71 kB
+../../../../out/renderer/assets/index-Do59sIJv.js                                9.91 kB
+../../../../out/renderer/assets/SkillDetailPage-C6xBj3X-.js                     10.41 kB
+../../../../out/renderer/assets/stateDiagram-RAJIS63D-r_U6IAot.js               10.46 kB
+../../../../out/renderer/assets/dagre-KLK3FWXG-i2UO0-V6.js                      11.07 kB
+../../../../out/renderer/assets/_baseUniq-B1VAAUep.js                           11.88 kB
+../../../../out/renderer/assets/index-BjV1UufR.js                               12.47 kB
+../../../../out/renderer/assets/index-Cl1xhqLs.js                               13.42 kB
+../../../../out/renderer/assets/TaskDetailPage-IJbqGC-E.js                      14.92 kB
+../../../../out/renderer/assets/index-DRNfBDWI.js                               15.20 kB
+../../../../out/renderer/assets/useSpeechInput-BZPVBhAd.js                      15.53 kB
+../../../../out/renderer/assets/SettingsSider-Di-OFxtZ.js                       15.65 kB
+../../../../out/renderer/assets/diagram-E7M64L7V-VdZYkgwZ.js                    15.93 kB
+../../../../out/renderer/assets/WebuiSettings-CILLnJgK.js                       16.34 kB
+../../../../out/renderer/assets/index-sBgcXFsJ.js                               16.68 kB
+../../../../out/renderer/assets/ishikawaDiagram-PHBUUO56-Cy36UYHs.js            17.54 kB
+../../../../out/renderer/assets/index-DE2aDg6V.js                               20.09 kB
+../../../../out/renderer/assets/kanban-definition-K7BYSVSG-X3BSOk4U.js          20.31 kB
+../../../../out/renderer/assets/AionrsChat-C_jpbjZT.js                          20.57 kB
+../../../../out/renderer/assets/mindmap-definition-YRQLILUH-tZ6ohzyM.js         21.02 kB
+../../../../out/renderer/assets/sankeyDiagram-WA2Y5GQK-5_HOgNKK.js              22.19 kB
+../../../../out/renderer/assets/index-CQlF-xYU.js                               22.91 kB
+../../../../out/renderer/assets/journeyDiagram-4ABVD52K-B_r87nDt.js             23.61 kB
+../../../../out/renderer/assets/timeline-definition-YZTLITO2-in0654l_.js        23.66 kB
+../../../../out/renderer/assets/gitGraphDiagram-K3NZZRJ6-gCZjg0DJ.js            24.19 kB
+../../../../out/renderer/assets/jobAgentMeta-BkigLvPO.js                        24.53 kB
+../../../../out/renderer/assets/SkillsHubSettings-CxHd5cke.js                   24.97 kB
+../../../../out/renderer/assets/index-CX4kHePx.js                               25.16 kB
+../../../../out/renderer/assets/erDiagram-INFDFZHY-CqyIwC_c.js                  26.02 kB
+../../../../out/renderer/assets/layout-BIjuIb4j.js                              27.38 kB
+../../../../out/renderer/assets/index-B4p9XNHL.js                               29.43 kB
+../../../../out/renderer/assets/useOpenFileSelector-DkCGfLnX.js                 29.84 kB
+../../../../out/renderer/assets/requirementDiagram-Z7DCOOCP-Crx2jAge.js         30.37 kB
+../../../../out/renderer/assets/quadrantDiagram-337W2JSQ-C3a2QH7_.js            33.92 kB
+../../../../out/renderer/assets/AcpChat-C0_3UT11.js                             35.01 kB
+../../../../out/renderer/assets/chunk-NQ4KR5QH-B51Rx3Z6.js                      36.41 kB
+../../../../out/renderer/assets/SystemSettings-D7o7GEtP.js                      39.34 kB
+../../../../out/renderer/assets/xychartDiagram-JWTSCODW-BFKGX-p8.js             40.26 kB
+../../../../out/renderer/assets/useUpdateNotificationController-DiW8HU7E.js     41.33 kB
+../../../../out/renderer/assets/vennDiagram-LZ73GAT5-CsFoDWoV.js                41.50 kB
+../../../../out/renderer/assets/ModeSettings-D3Jy4oQt.js                        43.37 kB
+../../../../out/renderer/assets/index-BH6VVXeI.js                               44.21 kB
+../../../../out/renderer/assets/vendor-diff-AIAqKCH4.js                         44.70 kB
+../../../../out/renderer/assets/sortable.esm-Ck3cqsJh.js                        45.92 kB
+../../../../out/renderer/assets/chunk-WL4C6EOR-BB-4yqFY.js                      46.30 kB
+../../../../out/renderer/assets/useActiveLease-DzpwlMaC.js                      47.13 kB
+../../../../out/renderer/assets/index-CfcbRepH.js                               50.20 kB
+../../../../out/renderer/assets/flowDiagram-PKNHOUZH-DEyZUVOC.js                60.94 kB
+../../../../out/renderer/assets/ganttDiagram-A5KZAMGK-CAyHCxlX.js               64.52 kB
+../../../../out/renderer/assets/index-CuVpxWRf.js                               67.64 kB
+../../../../out/renderer/assets/c4Diagram-IC4MRINW-CpG9MLOd.js                  70.22 kB
+../../../../out/renderer/assets/blockDiagram-WCTKOSBZ-DvxWA5jP.js               70.81 kB
+../../../../out/renderer/assets/cose-bilkent-S5V4N54A-Da20lgf-.js               81.77 kB
+../../../../out/renderer/assets/index-BvBWgTK2.js                               87.57 kB
+../../../../out/renderer/assets/conversationTurnClock-ClnoKxuI.js               87.99 kB
+../../../../out/renderer/assets/applyTheme-QrZ2aQZr.js                         104.80 kB
+../../../../out/renderer/assets/ChannelModalContent-cFr7GvFc.js                106.79 kB
+../../../../out/renderer/assets/sequenceDiagram-2WXFIKYE-YqGawwZ0.js           111.33 kB
+../../../../out/renderer/assets/MessageList-so3PnkDs.js                        118.30 kB
+../../../../out/renderer/assets/architectureDiagram-2XIMDMQ5-Bvuw2m3z.js       149.19 kB
+../../../../out/renderer/assets/index-DQXhCJEQ.js                              420.40 kB
+../../../../out/renderer/assets/cytoscape.esm-C-N-7XAP.js                      442.42 kB
+../../../../out/renderer/assets/treemap-KZPCXAKY-gzGW6To5.js                   453.36 kB
+../../../../out/renderer/assets/index-D__OojxG.js                            3,747.74 kB
+../../../../out/renderer/assets/vendor-Dn2hF6rK.js                           4,751.75 kB
+
+(!) Some chunks are larger than 1500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 34.30s
