@@ -7,6 +7,7 @@ import { recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import {
+  connectionCredentialKey,
   connectionCredentialStatus,
   credentialStatus,
   getCredential,
@@ -598,6 +599,10 @@ export async function initializeKel(port: number): Promise<void> {
     set: setCredential,
     remove: removeCredential,
     sync: (route, body) => kelRequest(route, body),
+    fieldsFor: (id) => connectionCredentialStatus()[id] ?? [],
+    read: (id, field) => getCredential(connectionCredentialKey(id), field),
+    // V2-02 Test Connection: the value is decrypted here and used by the engine for one request.
+    test: (body) => kelRequest('/api/connections', body),
   });
   // Fix Capture (V2.0 preflight): the window screenshot is written into the engine data root's
   // dogfood/tmp; the engine commits it under the fix id when the fix is saved.

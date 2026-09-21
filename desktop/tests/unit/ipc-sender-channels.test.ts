@@ -164,6 +164,9 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       set: vi.fn(() => ({ provider: 'anthropic', fields: ['api_key'] })),
       remove: vi.fn(() => ({ provider: 'anthropic', removed: 1 })),
       sync: vi.fn(async () => undefined),
+      fieldsFor: vi.fn(() => ['api_key']),
+      read: vi.fn(() => 'sk-live-value'),
+      test: vi.fn(async () => ({ id: 'stripe', last_test_state: 'ok' })),
     };
 
     beforeEach(() => {
@@ -172,6 +175,9 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       deps.set.mockClear();
       deps.remove.mockClear();
       deps.sync.mockClear();
+      deps.fieldsFor.mockClear();
+      deps.read.mockClear();
+      deps.test.mockClear();
       registerKelCredentialIpc(deps);
     });
 
@@ -223,6 +229,27 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       expect(deps.sync).toHaveBeenCalledWith('/api/providers', {
         action: 'delete_credential',
         provider: 'anthropic',
+      });
+    });
+
+    it('kel:connection-test refuses spoofed senders and hands the engine only what it holds', async () => {
+      const test = handleAt('kel:connection-test');
+      for (const [label, makeEvent] of refusalEvents) {
+        await expect(test(makeEvent(), 'stripe'), label).rejects.toThrow(REFUSAL);
+      }
+      expect(deps.read).not.toHaveBeenCalled();
+      expect(deps.test).not.toHaveBeenCalled();
+      await expect(test(legitEvent(), 'stripe')).resolves.toEqual({
+        id: 'stripe',
+        last_test_state: 'ok',
+      });
+      expect(deps.fieldsFor).toHaveBeenCalledWith('stripe');
+      // The value is decrypted here and used once: it goes to the engine with the check, never back
+      // to a renderer, which is why the handler returns the engine's answer instead.
+      expect(deps.test).toHaveBeenCalledWith({
+        action: 'test',
+        id: 'stripe',
+        credentials: { api_key: 'sk-live-value' },
       });
     });
 

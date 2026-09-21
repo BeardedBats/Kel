@@ -61,6 +61,9 @@ describe('connection credential custody (V2-01)', () => {
     set: vi.fn(() => ({ provider: 'connection:stripe', fields: ['api_key'] })),
     remove: vi.fn(() => ({ provider: 'connection:stripe', removed: 1 })),
     sync: vi.fn(async () => ({ ok: true })),
+    fieldsFor: vi.fn(() => ['api_key']),
+    read: vi.fn(() => 'the-stored-value'),
+    test: vi.fn(async () => ({ id: 'stripe', last_test_state: 'ok' })),
   };
 
   beforeEach(() => {
@@ -174,6 +177,15 @@ describe('the Connections surface is wired and reachable (V2-01)', () => {
     expect(router).toContain("import('@renderer/pages/kel/connections')");
     expect(router).toContain("path='/connections'");
     expect(palette).toContain("path: '/connections'");
+  });
+
+  it('names the custody entry for a connection the same way in both processes', () => {
+    // The renderer and the main process each build this key. If either side changes the shape, the
+    // credential the shell stored stops being the credential the engine is told about — so pin both.
+    // The exact template on each side, and the namespace constant they must agree on.
+    expect(custody).toContain("CONNECTION_NAMESPACE = 'connection'");
+    expect(custody).toContain('`${CONNECTION_NAMESPACE}:${connectionId}`');
+    expect(kelApi).toContain('`connection:${id}`');
   });
 
   it('lets the shell ask the engine about connections', () => {

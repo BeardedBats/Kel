@@ -5,6 +5,9 @@
  * There is no per-service screen anywhere else, no per-service store, and no place on this page where
  * a credential value is shown after it is saved — the value goes to the OS-backed store in the main
  * process, and the engine only ever records that one exists.
+ *
+ * V2-02 adds Test connection: the shell decrypts the value, the engine makes one request, and this
+ * page shows what came back — working, refused, nothing there, not reachable, no answer.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -18,6 +21,7 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   CONNECTION_KIND_LABELS,
+  connectionCheckSentence,
   connectionCredentialField,
   connectionCustodyKey,
   kelConnections,
@@ -68,8 +72,12 @@ const AUTH_METHODS: Array<{ id: KelConnection['auth_method']; label: string }> =
 ];
 
 /** How a person reads this connection's state — derived, never stored. */
-const stateSentence = (connection: KelConnection): string =>
-  connection.state === 'ready' ? 'Ready — Kel has a credential' : 'Needs a credential';
+const stateSentence = (connection: KelConnection): string => {
+  if (!connection.has_credentials) return 'Needs a credential';
+  if (connection.last_test_state === 'ok') return 'Ready — checked and working';
+  if (connection.last_test_state === 'refused') return 'Ready, but the check was refused';
+  return 'Ready — Kel has a credential';
+};
 
 const Connections: React.FC = () => {
   const [list, setList] = useState<KelConnectionList | null>(null);
@@ -189,6 +197,31 @@ const Connections: React.FC = () => {
     [load]
   );
 
+  /**
+   * V2-02 Test Connection. The shell decrypts the credential, the engine makes one request, and what
+   * comes back is the record — the value never reaches this page.
+   */
+  const checkConnection = useCallback(
+    async (connection: KelConnection) => {
+      setBusy(true);
+      setNote(null);
+      try {
+        const custody = window.kelAPI?.credentials;
+        if (!custody?.testConnection)
+          throw new Error('Checking a connection is only available in the Kel app.');
+        const checked = await custody.testConnection(connection.id);
+        await load();
+        // The row carries the detail sentence the engine recorded; the note is just the confirmation.
+        setNote(`Checked ${checked.name}.`);
+      } catch (err) {
+        setNote(failureSentence(err, 'Kel could not check that connection — try again.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load]
+  );
+
   const removeConnection = useCallback(
     async (connection: KelConnection) => {
       setBusy(true);
@@ -275,6 +308,11 @@ const Connections: React.FC = () => {
                       again to restore the link.
                     </span>
                   )}
+                  {connection.last_test_at ? (
+                    <span className="kel-meta">
+                      {connectionCheckSentence(connection, formatWhen(connection.last_test_at))}
+                    </span>
+                  ) : null}
                   {connection.docs_url && (
                     <span className="kel-meta">
                       Docs: {connection.docs_url}
@@ -288,6 +326,15 @@ const Connections: React.FC = () => {
                   </span>
                 </div>
                 <span className="kel-grow" />
+                {connection.can_test && (
+                  <KelButton
+                    variant="quiet"
+                    disabled={busy}
+                    onClick={() => void checkConnection(connection)}
+                  >
+                    Test connection
+                  </KelButton>
+                )}
                 <KelButton
                   variant={connection.has_credentials ? 'quiet' : 'primary'}
                   disabled={busy}

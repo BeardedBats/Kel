@@ -26,6 +26,12 @@ export interface KelCredentialIpcDeps {
     route: '/api/providers' | '/api/connections',
     body: Record<string, unknown>
   ) => Promise<unknown>;
+  /** Which field names the shell holds for a connection (names only). */
+  fieldsFor: (connectionId: string) => string[];
+  /** The decrypted value of one field. Main process only — it is never handed to a renderer. */
+  read: (connectionId: string, field: string) => string | null;
+  /** Ask the engine to check a connection, with these values for this one request. */
+  test: (body: Record<string, unknown>) => Promise<unknown>;
 }
 
 const isConnection = (provider: string): boolean => provider.startsWith(`${CONNECTION_NAMESPACE}:`);
@@ -101,4 +107,20 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
       return removed;
     }
   );
+
+  /**
+   * V2-02 Test Connection: the one place a stored value is *used* — decrypted in the main process,
+   * handed to the engine for this single request, and never returned to the renderer. The renderer
+   * asks for the check and gets the result; it cannot ask for the value.
+   */
+  ipcMain.handle('kel:connection-test', async (event, connectionId: string): Promise<unknown> => {
+    assertTrustedSender(event, { allowDevServer: true });
+    const id = String(connectionId ?? '');
+    const credentials: Record<string, string> = {};
+    for (const field of deps.fieldsFor(id)) {
+      const value = deps.read(id, field);
+      if (value) credentials[field] = value;
+    }
+    return deps.test({ action: 'test', id, credentials });
+  });
 };
