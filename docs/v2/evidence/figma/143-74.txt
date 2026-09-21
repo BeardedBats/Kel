@@ -1,0 +1,48 @@
+const imgStateOnInteractionDefault = "https://www.figma.com/api/mcp/asset/eafad92e-76aa-451b-b5b9-1e49263f461f.svg";
+const imgStateOnInteractionHover = "https://www.figma.com/api/mcp/asset/39fdb9bf-2f0f-41f2-92b6-ac1f2ce2beb6.svg";
+const imgStateOnInteractionDisabled = "https://www.figma.com/api/mcp/asset/f010d0ee-9af7-4162-bbe1-5509774928b0.svg";
+const imgStateOffInteractionDefault = "https://www.figma.com/api/mcp/asset/2d1557a6-037f-4d04-99d4-67354c4aec30.svg";
+const imgStateOffInteractionHover = "https://www.figma.com/api/mcp/asset/3393bceb-65ed-4e53-a4f7-e814c8e74646.svg";
+const imgStateOffInteractionDisabled = "https://www.figma.com/api/mcp/asset/1dd4b9ed-f80e-4e46-aaba-3462486c8968.svg";
+
+type ToggleV2Props = {
+  className?: string;
+  interaction?: "Default" | "Hover" | "Disabled";
+  state?: boolean;
+};
+
+export default function ToggleV2({ className, interaction = "Default", state = true }: ToggleV2Props) {
+  const isNotStateAndDisabled = !state && interaction === "Disabled";
+  const isNotStateAndHover = !state && interaction === "Hover";
+  const isStateAndDisabled = state && interaction === "Disabled";
+  const isStateAndHover = state && interaction === "Hover";
+  return (
+    <div className={className || "h-[22px] relative w-[40px]"} id={isNotStateAndDisabled ? "node-143_72" : isNotStateAndHover ? "node-143_70" : !state && interaction === "Default" ? "node-143_68" : isStateAndDisabled ? "node-143_66" : isStateAndHover ? "node-143_64" : "node-143_62"}>
+      {state && (
+        <div className={`absolute ${isStateAndHover ? "inset-[-63.64%_-35%]" : "inset-[-45.45%_-25%]"}`}>
+          <img alt="" className="block max-w-none size-full" src={isStateAndDisabled ? imgStateOnInteractionDisabled : isStateAndHover ? imgStateOnInteractionHover : imgStateOnInteractionDefault} />
+        </div>
+      )}
+      {!state && <img alt="" className="absolute block inset-0 max-w-none size-full" src={isNotStateAndDisabled ? imgStateOffInteractionDisabled : isNotStateAndHover ? imgStateOffInteractionHover : imgStateOffInteractionDefault} />}
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Toggle v2
+**Node ID:** 143:74
+
+On / Off × Default / Hover / Disabled. Hover brightens the glow (On) or the track (Off).
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.

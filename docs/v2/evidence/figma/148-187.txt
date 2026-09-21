@@ -1,0 +1,104 @@
+const imgIconPlus = "https://www.figma.com/api/mcp/asset/73b0f7b4-a452-4099-921f-44ee76c4685c.svg";
+const imgIconChevronDown = "https://www.figma.com/api/mcp/asset/471aaba4-930e-48e5-b056-b83564eddcb0.svg";
+const imgIconMic = "https://www.figma.com/api/mcp/asset/3791afde-d4d2-43ac-a4e9-7c1333a08ee2.svg";
+const imgIconSend = "https://www.figma.com/api/mcp/asset/0c18a80c-fd86-486a-bb81-3878813cdcdc.svg";
+const imgIconLoader = "https://www.figma.com/api/mcp/asset/a198db4d-1e65-45c8-afde-b24c463839cf.svg";
+
+type ComposerV2StatesProps = {
+  className?: string;
+  model?: string;
+  state?: "Empty" | "Typing" | "Sending" | "Disabled" | "Drop target";
+};
+
+export default function ComposerV2States({ className, model = "DeepSeek", state = "Empty" }: ComposerV2StatesProps) {
+  const isDisabled = state === "Disabled";
+  const isDropTarget = state === "Drop target";
+  const isSending = state === "Sending";
+  const isTyping = state === "Typing";
+  return (
+    <div className={className || `border content-stretch flex gap-[14px] h-[60px] items-center px-[18px] relative rounded-[12px] shadow-[0px_10px_30px_0px_rgba(0,0,0,0.3),0px_2px_16px_0px_rgba(47,95,204,0.18)] w-[920px] ${isDropTarget ? "border-[rgba(127,160,255,0.9)] border-dashed" : isDisabled ? "border-[rgba(221,233,255,0.5)] border-solid opacity-50" : "border-[rgba(221,233,255,0.5)] border-solid"}`} id={isDropTarget ? "node-148_171" : isDisabled ? "node-148_155" : isSending ? "node-148_136" : isTyping ? "node-148_120" : "node-148_104"}>
+      <div aria-hidden className={`absolute backdrop-blur-[15px] inset-0 pointer-events-none rounded-[12px] ${isDropTarget ? "bg-[rgba(47,107,224,0.16)]" : ""}`} style={["Empty", "Typing", "Sending", "Disabled"].includes(state) ? { backgroundImage: "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 920 60' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(12.88 0 0 7.2 0 30)'><stop stop-color='rgba(127,160,255,0.16)' offset='0'/><stop stop-color='rgba(127,160,255,0)' offset='1'/></radialGradient></defs></svg>\"), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 920 60' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(36.8 0 0 9.6 901.6 63)'><stop stop-color='rgba(154,178,234,0.3)' offset='0'/><stop stop-color='rgba(74,106,186,0.12)' offset='0.5'/><stop stop-color='rgba(30,63,134,0)' offset='1'/></radialGradient></defs></svg>\"), linear-gradient(90deg, rgba(47, 107, 224, 0.14) 0%, rgba(47, 107, 224, 0.14) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.42) 0%, rgba(15, 45, 100, 0.42) 100%)" } : undefined} />
+      <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[8px] shrink-0 size-[28px]" id={isDropTarget ? "node-148_172" : isDisabled ? "node-148_156" : isSending ? "node-148_137" : isTyping ? "node-148_121" : "node-148_105"} data-name="Attach">
+        <div className="relative shrink-0 size-[22px]" id={isDropTarget ? "node-148_173" : isDisabled ? "node-148_157" : isSending ? "node-148_138" : isTyping ? "node-148_122" : "node-148_106"} data-name="Icon/plus">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconPlus} />
+        </div>
+      </div>
+      <p className={`[word-break:break-word] flex-[1_0_0] font-["SF_Pro:Regular"] font-normal leading-[25px] min-w-px relative text-[16px] ${isDropTarget ? "text-[#9fc3ff]" : isTyping ? "text-[#edf2fa]" : "text-[#8fa9d6]"}`} id={isDropTarget ? "node-148_174" : isDisabled ? "node-148_158" : isSending ? "node-148_139" : isTyping ? "node-148_123" : "node-148_107"} style={{ fontVariationSettings: '"wdth" 100' }}>
+        {isDropTarget ? "Drop files to attach" : isDisabled ? "Waiting for a model…" : isSending ? "Draft a few questions for step 1" : isTyping ? "Draft a few questions for step 1|" : "What's up?"}
+      </p>
+      <div className="content-stretch flex gap-[6px] h-[28px] items-center overflow-clip pl-[10px] pr-[8px] relative rounded-[8px] shrink-0" id={isDropTarget ? "node-148_175" : isDisabled ? "node-148_159" : isSending ? "node-148_140" : isTyping ? "node-148_124" : "node-148_108"} data-name="Model">
+        <p className="[word-break:break-word] font-['Instrument_Sans:SemiBold'] font-semibold leading-[20px] relative shrink-0 text-[#9fc3ff] text-[14px] whitespace-nowrap" data-node-id="148:109" style={{ fontVariationSettings: '"wdth" 100' }}>
+          {model}
+        </p>
+        <div className="relative shrink-0 size-[16px]" id={isDropTarget ? "node-148_177" : isDisabled ? "node-148_161" : isSending ? "node-148_142" : isTyping ? "node-148_126" : "node-148_110"} data-name="Icon/chevron-down">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconChevronDown} />
+        </div>
+      </div>
+      <div className="bg-[rgba(191,216,255,0.18)] h-[26px] relative shrink-0 w-px" id={isDropTarget ? "node-148_178" : isDisabled ? "node-148_162" : isSending ? "node-148_143" : isTyping ? "node-148_127" : "node-148_111"} data-name="Divider" />
+      <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[8px] shrink-0 size-[28px]" id={isDropTarget ? "node-148_179" : isDisabled ? "node-148_163" : isSending ? "node-148_144" : isTyping ? "node-148_128" : "node-148_112"} data-name="Mic">
+        <div className="relative shrink-0 size-[22px]" id={isDropTarget ? "node-148_180" : isDisabled ? "node-148_164" : isSending ? "node-148_145" : isTyping ? "node-148_129" : "node-148_113"} data-name="Icon/mic">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconMic} />
+        </div>
+      </div>
+      <div className={`content-stretch flex items-center justify-center overflow-clip relative rounded-[8px] shrink-0 size-[28px] ${isTyping ? "bg-[#2f6be0] shadow-[0px_0px_10px_0px_rgba(47,107,224,0.5)]" : ""}`} id={isDropTarget ? "node-148_181" : isDisabled ? "node-148_165" : isSending ? "node-148_146" : isTyping ? "node-148_130" : "node-148_114"} data-name="Send">
+        {["Empty", "Typing", "Disabled", "Drop target"].includes(state) && (
+          <div className="relative shrink-0 size-[22px]" id={isDropTarget ? "node-148_182" : isDisabled ? "node-148_166" : isTyping ? "node-148_131" : "node-148_115"} data-name="Icon/send">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconSend} />
+          </div>
+        )}
+        {isSending && (
+          <div className="relative shrink-0 size-[22px]" data-node-id="148:147" data-name="Icon/loader">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconLoader} />
+          </div>
+        )}
+      </div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_-1px_-1px_6px_0px_rgba(154,178,234,0.22),inset_0px_1px_0px_0px_rgba(255,255,255,0.08)]" />
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+These styles are contained in the design: v2/Body: Font(family: "SF Pro", style: Regular, size: 16, weight: 400, lineHeight: 25, letterSpacing: 0), v2/Model label: Font(family: "Instrument Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 20, letterSpacing: 0), v2/Composer: Effect(type: BACKGROUND_BLUR, radius: 30); Effect(type: INNER_SHADOW, color: #FFFFFF14, offset: (0, 1), radius: 0, spread: 0); Effect(type: INNER_SHADOW, color: #9AB2EA38, offset: (-1, -1), radius: 6, spread: 0); Effect(type: DROP_SHADOW, color: #2F5FCC2E, offset: (0, 2), radius: 16, spread: 0); Effect(type: DROP_SHADOW, color: #0000004D, offset: (0, 10), radius: 30, spread: -6), v2/Composer edge: .
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Composer v2 states
+**Node ID:** 148:187
+
+Empty / Typing (send lights up) / Sending (spinner) / Disabled (no model) / Drop target (dashed accent edge while dragging files over it). Attachment chips row sits directly above.
+
+## State=Empty
+**Node ID:** 148:104
+
+Chat box: card glass plus a corner light; model name pale blue semibold; mic and send are icons only.
+
+## State=Typing
+**Node ID:** 148:120
+
+Chat box: card glass plus a corner light; model name pale blue semibold; mic and send are icons only.
+
+## State=Sending
+**Node ID:** 148:136
+
+Chat box: card glass plus a corner light; model name pale blue semibold; mic and send are icons only.
+
+## State=Disabled
+**Node ID:** 148:155
+
+Chat box: card glass plus a corner light; model name pale blue semibold; mic and send are icons only.
+
+## State=Drop target
+**Node ID:** 148:171
+
+Chat box: card glass plus a corner light; model name pale blue semibold; mic and send are icons only.
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.

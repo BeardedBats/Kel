@@ -1,0 +1,428 @@
+const imgIcon = "https://www.figma.com/api/mcp/asset/07d22220-bae3-499b-b8cd-bb5972fe1c75.svg";
+const imgIcon1 = "https://www.figma.com/api/mcp/asset/ff08ad26-018b-4d5a-877e-d05567af2c48.svg";
+const imgIcon2 = "https://www.figma.com/api/mcp/asset/5a731a75-ec54-4ad6-9844-da614cd01f61.svg";
+const imgIcon3 = "https://www.figma.com/api/mcp/asset/bb11b58f-f235-469f-a3ec-1d29be169e92.svg";
+const imgBrandKelMark = "https://www.figma.com/api/mcp/asset/0138a03f-fe26-4aeb-987b-bb6224206c57.png";
+const imgComposer = "https://www.figma.com/api/mcp/asset/09e76aa1-a4a1-4e53-b935-8fd23a3da3fa.png";
+const imgKelChatPlpdBg2 = "https://www.figma.com/api/mcp/asset/5bd8feaf-c6e3-4ae8-add4-198f42f9aa2e.svg";
+const imgIcon4 = "https://www.figma.com/api/mcp/asset/d3b5e89f-956b-46e1-8886-dc322e21fd2c.svg";
+const imgIconSettings = "https://www.figma.com/api/mcp/asset/0fefbccb-24c8-4a87-a947-7980e5c788cf.svg";
+const imgStatusWrap = "https://www.figma.com/api/mcp/asset/91f0e4fe-0293-41a2-a7f8-c9c521b7b774.svg";
+const imgStatusWrap1 = "https://www.figma.com/api/mcp/asset/0ba4d648-9ad6-4f86-8077-f00198e5972c.svg";
+const imgStatusWrap2 = "https://www.figma.com/api/mcp/asset/c0901335-a90b-46cc-87b7-5179116f6cac.svg";
+const imgThread = "https://www.figma.com/api/mcp/asset/4ce291d6-5682-4634-b911-31acf5c601f8.svg";
+const imgIconThumbsUp = "https://www.figma.com/api/mcp/asset/e14fc34f-ebdf-4ab7-a1b7-d0420f5fd8b7.svg";
+const imgIconThumbsDown = "https://www.figma.com/api/mcp/asset/ad3f1fcb-554a-4b49-b0ea-34859063f6c7.svg";
+const imgIconMore = "https://www.figma.com/api/mcp/asset/62586996-e914-47d1-be76-1033e2784c06.svg";
+const imgIconPlus = "https://www.figma.com/api/mcp/asset/c1b896b3-f2d5-44e3-8ebb-5fa5061f098c.svg";
+const imgIconChevronDown = "https://www.figma.com/api/mcp/asset/4b22c859-e213-4658-bf99-6b5cb1302f9d.svg";
+const imgIconMic = "https://www.figma.com/api/mcp/asset/f9319e41-a214-4ccb-b7f9-e790cf095f2b.svg";
+const imgIconSend = "https://www.figma.com/api/mcp/asset/dfc8a633-0105-4f35-aaf5-f9787543e5de.svg";
+const imgIconFolder = "https://www.figma.com/api/mcp/asset/78bb7d49-8a0f-49b4-849e-20d611563d59.svg";
+const imgIconChevronDown1 = "https://www.figma.com/api/mcp/asset/a570ae50-fcf4-43a9-a0f1-03213f0cdef8.svg";
+const imgIconActivity = "https://www.figma.com/api/mcp/asset/8210547a-6798-4fae-ab8b-eeddf94974bb.svg";
+const imgIconProjects = "https://www.figma.com/api/mcp/asset/5ffb3cbe-7215-4b27-969e-84b6ab663fab.svg";
+const imgIconChevronDown2 = "https://www.figma.com/api/mcp/asset/cc368b89-b0eb-40e4-ab9c-e0e0d49c3268.svg";
+const imgIconMore1 = "https://www.figma.com/api/mcp/asset/50872491-b16e-4a8e-9ff0-7b94996f7141.svg";
+
+type StatChipProps = {
+  className?: string;
+  type?: "Cost" | "Tokens" | "Cache" | "Context";
+  value?: string;
+};
+
+function StatChip({ className, type = "Cost", value = "62% remaining" }: StatChipProps) {
+  const isCache = type === "Cache";
+  const isContext = type === "Context";
+  const isTokens = type === "Tokens";
+  return (
+    <div className={className || "content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[var(--kel-size-control-sm,28px)] items-center px-[8px] relative rounded-[6px]"} id={isContext ? "node-7_62" : isCache ? "node-7_56" : isTokens ? "node-7_51" : "node-7_46"}>
+      <div className="relative shrink-0 size-[14px]" id={isContext ? "node-7_63" : isCache ? "node-7_57" : isTokens ? "node-7_52" : "node-7_47"} data-name="Icon">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={isContext ? imgIcon3 : isCache ? imgIcon2 : isTokens ? imgIcon1 : imgIcon} />
+      </div>
+      {["Cost", "Tokens", "Cache"].includes(type) && (
+        <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-secondary,#c4d4e8)] whitespace-nowrap" data-node-id="7:50">
+          {value}
+        </p>
+      )}
+      {isContext && (
+        <>
+          <div className="bg-[var(--kel-color-glass-hover,rgba(191,216,255,0.14))] content-stretch flex h-[6px] items-start overflow-clip relative rounded-[999px] shrink-0 w-[160px]" data-node-id="7:65" data-name="Track">
+            <div className="bg-[var(--kel-color-accent-warm,#fcac51)] h-[6px] relative rounded-[999px] shrink-0 w-[99px]" data-node-id="7:66" data-name="Fill" />
+          </div>
+          <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-muted,#a2b5d7)] whitespace-nowrap" data-node-id="7:67">
+            {value}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BrandKelMark({ className }: { className?: string }) {
+  return (
+    <div className={className || "h-[33px] relative w-[32px]"} data-node-id="10:2" data-name="Brand/Kel mark">
+      <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={imgBrandKelMark} />
+    </div>
+  );
+}
+
+export default function KelChatPlpdBg2() {
+  return (
+    <div className="content-stretch flex items-start overflow-clip relative rounded-[12px] size-full" data-node-id="76:3001" data-name="Kel / Chat — PLPD bg 2">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgKelChatPlpdBg2} />
+      <div className="absolute bg-[rgba(30,75,176,0.1)] inset-0" data-node-id="76:3010" data-name="Canvas / Blue wash" />
+      <div className="absolute bg-gradient-to-b from-[rgba(21,26,51,0.7)] h-[168px] left-0 right-0 to-[rgba(21,26,51,0)] top-0" data-node-id="76:3011" data-name="Header fade" />
+      <div className="content-stretch flex flex-col gap-[2px] h-full items-start overflow-clip px-[8px] py-[16px] relative shrink-0 w-[256px]" data-node-id="76:3012" data-name="Sidebar">
+        <div className="content-stretch flex gap-[8px] items-center overflow-clip pb-[14px] pl-[4px] relative shrink-0" data-node-id="76:3013" data-name="Logo">
+          <BrandKelMark className="h-[31px] relative shrink-0 w-[30px]" />
+          <p className="[word-break:break-word] font-['Instrument_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[22px] text-[color:var(--kel-color-text-primary,#edf2fa)] whitespace-nowrap" data-node-id="76:3015" style={{ fontVariationSettings: '"wdth" 100' }}>
+            Kel
+          </p>
+        </div>
+        <div className="border border-[rgba(46,92,176,0.18)] border-solid content-stretch drop-shadow-[0px_2px_7px_rgba(47,95,204,0.28)] flex gap-[12px] h-[40px] items-center px-[14px] relative rounded-[10px] shrink-0 w-full" data-node-id="76:3016" data-name="New Chat">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[10px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(62, 107, 192, 0.45) 0%, rgba(62, 107, 192, 0) 12%, rgba(62, 107, 192, 0) 100%), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 240 40' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(5.28 0 0 4.8 0 20)'><stop stop-color='rgba(42,95,181,0.5)' offset='0'/><stop stop-color='rgba(42,95,181,0)' offset='1'/></radialGradient></defs></svg>\"), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 240 40' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(14.88 0 0 6 235.2 42)'><stop stop-color='rgba(154,178,234,0.9)' offset='0'/><stop stop-color='rgba(114,142,210,0.725)' offset='0.175'/><stop stop-color='rgba(74,106,186,0.55)' offset='0.35'/><stop stop-color='rgba(30,63,134,0.22)' offset='0.7'/><stop stop-color='rgba(30,63,134,0)' offset='1'/></radialGradient></defs></svg>\"), linear-gradient(90deg, rgb(15, 45, 100) 0%, rgb(15, 45, 100) 100%)" }} />
+          <div className="relative shrink-0 size-[22px]" data-node-id="76:3017" data-name="Icon">
+            <div className="absolute inset-[-27.8%]">
+              <img alt="" className="block max-w-none size-full" src={imgIcon4} />
+            </div>
+          </div>
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#edf2fa] text-[15px] whitespace-nowrap" data-node-id="76:3018">
+            New Chat
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_-1px_-1px_6px_0px_rgba(154,178,234,0.5)]" />
+        </div>
+        <div className="content-stretch flex gap-[12px] h-[40px] items-center overflow-clip pl-[15px] pr-[14px] relative rounded-[10px] shrink-0 w-full" data-node-id="76:3019" data-name="Settings">
+          <div className="relative shrink-0 size-[22px]" data-node-id="76:3020" data-name="Icon/settings">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconSettings} />
+          </div>
+          <p className="[word-break:break-word] font-['Instrument_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#ffc260] text-[15px] whitespace-nowrap" data-node-id="76:3021" style={{ fontVariationSettings: '"wdth" 100' }}>
+            Settings
+          </p>
+        </div>
+        <div className="content-stretch flex items-start overflow-clip pb-[4px] pl-[6px] pt-[16px] relative shrink-0 w-[46px]" data-node-id="76:3022" data-name="Section/Pinned">
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[normal] min-w-px not-italic overflow-hidden relative text-[12px] text-[color:var(--kel-color-text-accent,#adccf6)] text-ellipsis whitespace-nowrap" data-node-id="76:3023">
+            Pinned
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3024" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3025" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#c4d4e8] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3027">
+            Homepage refresh
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3028" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3029" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap1} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#edf2fa] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3031">
+            Q3 launch plan
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3032" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3033" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#8fa3c4] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3035">
+            User research notes
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3036" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3037" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#8fa3c4] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3039">
+            Competitive analysis
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3040" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3041" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#8fa3c4] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3043">
+            Design system ideas
+          </p>
+        </div>
+        <div className="content-stretch flex flex-col items-start justify-center overflow-clip pb-[7.75px] pt-[2.25px] relative shrink-0 w-full" data-node-id="76:3044" data-name="Divider">
+          <div className="bg-[rgba(191,216,255,0.12)] h-px relative shrink-0 w-full" data-node-id="76:3045" data-name="Line" />
+        </div>
+        <div className="content-stretch flex items-start overflow-clip pb-[4px] pl-[6px] relative shrink-0 w-[47px]" data-node-id="76:3046" data-name="Section/Recent">
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[normal] min-w-px not-italic overflow-hidden relative text-[12px] text-[color:var(--kel-color-text-accent,#adccf6)] text-ellipsis whitespace-nowrap" data-node-id="76:3047">
+            Recent
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3048" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3049" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap1} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#edf2fa] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3051">
+            API strategy questions
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3052" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3053" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#c4d4e8] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3055">
+            Error debugging help
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3056" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3057" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#8fa3c4] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3059">
+            Onboarding flow copy
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="76:3060" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="76:3061" data-name="Status wrap">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgStatusWrap2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic overflow-hidden relative text-[#8fa3c4] text-[14px] text-ellipsis whitespace-nowrap" data-node-id="76:3063">
+            Analytics event tracking
+          </p>
+        </div>
+      </div>
+      <div className="content-stretch flex flex-[1_0_0] flex-col h-full items-start min-w-px overflow-clip relative" data-node-id="76:3064" data-name="Main">
+        <div className="flex-[1_0_0] min-h-px relative w-full" data-node-id="76:3065" data-name="Thread (masked)">
+          <div className="absolute content-stretch flex flex-col gap-[30px] inset-0 items-start justify-end mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-size-[100%_100%] overflow-clip pb-[24px] pt-[112px] px-[132px]" data-node-id="76:3067" style={{ maskImage: `url("${imgThread}")` }} data-name="Thread">
+            <div className="content-stretch flex flex-col gap-[10px] items-end relative shrink-0 w-full" data-node-id="76:3068" data-name="User turn">
+              <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[16px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-timestamp,#cfe7ff)] tracking-[0.1px] whitespace-nowrap" data-node-id="76:3069">
+                10:24 AM
+              </p>
+              <div className="content-stretch flex flex-col items-start overflow-clip py-[2px] relative rounded-[16px] shrink-0" data-node-id="76:3070" data-name="Bubble">
+                <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[25px] max-w-[520px] not-italic relative shrink-0 text-[#f2d4a6] text-[16px] w-[390px]" data-node-id="76:3071">
+                  I want to plan the homepage refresh. Can you help me outline the key steps, and use our latest brief as context?
+                </p>
+              </div>
+            </div>
+            <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full" data-node-id="76:3072" data-name="Assistant turn">
+              <div className="content-stretch flex gap-[10px] items-center overflow-clip pb-[2px] relative shrink-0" data-node-id="76:3073" data-name="Header">
+                <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[999px] shrink-0 size-[24px]" data-node-id="76:3074" data-name="Avatar">
+                  <BrandKelMark className="h-[23px] relative shrink-0 w-[22px]" />
+                </div>
+                <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[16px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-timestamp,#cfe7ff)] tracking-[0.1px] whitespace-nowrap" data-node-id="76:3076">
+                  10:25 AM
+                </p>
+              </div>
+              <div className="[word-break:break-word] content-stretch flex flex-col items-start not-italic overflow-clip relative shrink-0 text-[16px] w-full" data-node-id="76:3077" data-name="Body">
+                <p className="font-['Inter:Regular'] font-normal leading-[25px] min-w-full relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[min-content]" data-node-id="76:3078">{`Absolutely. Here's a focused plan for the homepage refresh, based on your latest brief.`}</p>
+                <div className="content-stretch flex flex-col gap-[14px] items-start leading-[normal] overflow-clip pb-[6px] pt-[10px] relative shrink-0 w-full" data-node-id="76:3079" data-name="Steps">
+                  <div className="content-stretch flex gap-[16px] items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3080" data-name="Step">
+                    <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[16px]" data-node-id="76:3081">
+                      1
+                    </p>
+                    <div className="content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start min-w-px overflow-clip relative whitespace-nowrap" data-node-id="76:3082" data-name="Text">
+                      <p className="font-['Inter:Medium'] font-medium relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="76:3083">{`Align on goals & audience`}</p>
+                      <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3084">
+                        Confirm key objectives, target users, and success metrics.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="content-stretch flex gap-[16px] items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3085" data-name="Step">
+                    <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[16px]" data-node-id="76:3086">
+                      2
+                    </p>
+                    <div className="content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start min-w-px overflow-clip relative whitespace-nowrap" data-node-id="76:3087" data-name="Text">
+                      <p className="font-['Inter:Medium'] font-medium relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="76:3088">
+                        Define content structure
+                      </p>
+                      <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3089">
+                        Map sections, messaging, and key CTAs.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="content-stretch flex gap-[16px] items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3090" data-name="Step">
+                    <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[16px]" data-node-id="76:3091">
+                      3
+                    </p>
+                    <div className="content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start min-w-px overflow-clip relative whitespace-nowrap" data-node-id="76:3092" data-name="Text">
+                      <p className="font-['Inter:Medium'] font-medium relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="76:3093">
+                        Explore design directions
+                      </p>
+                      <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3094">
+                        Create 2–3 visual concepts based on brand and brief.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="content-stretch flex gap-[16px] items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3095" data-name="Step">
+                    <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[16px]" data-node-id="76:3096">
+                      4
+                    </p>
+                    <div className="content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start min-w-px overflow-clip relative whitespace-nowrap" data-node-id="76:3097" data-name="Text">
+                      <p className="font-['Inter:Medium'] font-medium relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="76:3098">
+                        Build and iterate
+                      </p>
+                      <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3099">
+                        Develop in a branch, gather feedback, and refine.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="content-stretch flex gap-[16px] items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3100" data-name="Step">
+                    <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] w-[16px]" data-node-id="76:3101">
+                      5
+                    </p>
+                    <div className="content-stretch flex flex-[1_0_0] flex-col gap-[2px] items-start min-w-px overflow-clip relative whitespace-nowrap" data-node-id="76:3102" data-name="Text">
+                      <p className="font-['Inter:Medium'] font-medium relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="76:3103">
+                        Prepare for launch
+                      </p>
+                      <p className="font-['Inter:Regular'] font-normal relative shrink-0 text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3104">
+                        Final QA, performance checks, and rollout plan.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p className="font-['Inter:Regular'] font-normal leading-[normal] relative shrink-0 text-[color:var(--kel-color-text-primary,#edf2fa)] whitespace-nowrap" data-node-id="76:3105">
+                  Want me to expand any of these steps, or start a more detailed task list?
+                </p>
+              </div>
+              <div className="content-stretch flex gap-[4px] items-start overflow-clip relative shrink-0" data-node-id="76:3106" data-name="Actions">
+                <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[var(--kel-radius-md,8px)] shrink-0 size-[28px]" data-node-id="76:3107" data-name="Action/thumbs-up">
+                  <div className="relative shrink-0 size-[16px]" data-node-id="76:3108" data-name="Icon/thumbs-up">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconThumbsUp} />
+                  </div>
+                </div>
+                <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[var(--kel-radius-md,8px)] shrink-0 size-[28px]" data-node-id="76:3109" data-name="Action/thumbs-down">
+                  <div className="relative shrink-0 size-[16px]" data-node-id="76:3110" data-name="Icon/thumbs-down">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconThumbsDown} />
+                  </div>
+                </div>
+                <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[var(--kel-radius-md,8px)] shrink-0 size-[28px]" data-node-id="76:3111" data-name="Action/more">
+                  <div className="relative shrink-0 size-[16px]" data-node-id="76:3112" data-name="Icon/more">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconMore} />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="content-stretch flex flex-col gap-[10px] items-end relative shrink-0 w-full" data-node-id="76:3113" data-name="User turn">
+              <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[16px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-timestamp,#cfe7ff)] tracking-[0.1px] whitespace-nowrap" data-node-id="76:3114">
+                10:27 AM
+              </p>
+              <div className="content-stretch flex flex-col items-start overflow-clip py-[2px] relative rounded-[16px] shrink-0" data-node-id="76:3115" data-name="Bubble">
+                <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[25px] max-w-[520px] not-italic relative shrink-0 text-[#f2d4a6] text-[16px] w-[390px]" data-node-id="76:3116">{`This looks great. Let's start with step 1 — can you draft a few questions we should answer?`}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="content-stretch flex flex-col items-start overflow-clip pb-[6px] px-[132px] relative shrink-0 w-full" data-node-id="76:3117" data-name="Composer wrap">
+          <div className="border border-[rgba(221,233,255,0.5)] border-solid content-stretch flex gap-[14px] h-[60px] items-center px-[18px] py-[12px] relative rounded-[12px] shadow-[0px_10px_30px_0px_rgba(0,0,0,0.3),0px_2px_16px_0px_rgba(47,95,204,0.18)] shrink-0 w-full" data-node-id="76:3118" data-name="Composer">
+            <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[12px]">
+              <img alt="" className="absolute max-w-none object-bottom rounded-[12px] size-full" src={imgComposer} />
+              <div className="absolute inset-0 rounded-[12px]" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 920 60' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(12.88 0 0 7.2 0 30)'><stop stop-color='rgba(127,160,255,0.16)' offset='0'/><stop stop-color='rgba(127,160,255,0)' offset='1'/></radialGradient></defs></svg>\"), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 920 60' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(36.8 0 0 9.6 901.6 63)'><stop stop-color='rgba(154,178,234,0.3)' offset='0'/><stop stop-color='rgba(74,106,186,0.12)' offset='0.5'/><stop stop-color='rgba(30,63,134,0)' offset='1'/></radialGradient></defs></svg>\"), linear-gradient(90deg, rgba(159, 195, 255, 0.06) 0%, rgba(159, 195, 255, 0.06) 100%)" }} />
+            </div>
+            <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[var(--kel-radius-md,8px)] shrink-0 size-[28px]" data-node-id="76:3119" data-name="Attach">
+              <div className="relative shrink-0 size-[22px]" data-node-id="76:3120" data-name="Icon/plus">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconPlus} />
+              </div>
+            </div>
+            <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Regular'] font-normal leading-[25px] min-w-px not-italic relative text-[16px] text-[color:var(--kel-color-text-muted,#a2b5d7)]" data-node-id="76:3121">{`What's up?`}</p>
+            <div className="content-stretch flex gap-[6px] h-[28px] items-center overflow-clip pl-[10px] pr-[8px] relative rounded-[var(--kel-radius-md,8px)] shrink-0" data-node-id="76:3122" data-name="Model">
+              <p className="[word-break:break-word] font-['Inter:Semi_Bold'] font-semibold leading-[18px] not-italic relative shrink-0 text-[#9fc3ff] text-[16px] whitespace-nowrap" data-node-id="76:3123">
+                DeepSeek
+              </p>
+              <div className="relative shrink-0 size-[16px]" data-node-id="76:3124" data-name="Icon/chevron-down">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconChevronDown} />
+              </div>
+            </div>
+            <div className="bg-[var(--kel-color-glass-border-strong,rgba(191,216,255,0.22))] h-[26px] relative shrink-0 w-px" data-node-id="76:3125" data-name="Divider" />
+            <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[var(--kel-radius-md,8px)] shrink-0 size-[28px]" data-node-id="76:3126" data-name="Mic">
+              <div className="relative shrink-0 size-[22px]" data-node-id="76:3127" data-name="Icon/mic">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconMic} />
+              </div>
+            </div>
+            <div className="content-stretch flex items-center justify-center overflow-clip relative rounded-[10px] shrink-0 size-[36px]" data-node-id="76:3128" data-name="Send">
+              <div className="relative shrink-0 size-[22px]" data-node-id="76:3129" data-name="Icon/send">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconSend} />
+              </div>
+            </div>
+            <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_-1px_-1px_6px_0px_rgba(154,178,234,0.22),inset_0px_1px_0px_0px_rgba(255,255,255,0.08)]" />
+          </div>
+        </div>
+        <div className="content-stretch flex flex-col items-start overflow-clip pb-[12px] px-[132px] relative shrink-0 w-full" data-node-id="76:3130" data-name="Footer wrap">
+          <div className="content-stretch flex gap-[16px] h-[36px] items-center overflow-clip relative shrink-0 w-full" data-node-id="76:3131" data-name="Footer">
+            <div className="content-stretch flex gap-[6px] items-center overflow-clip relative shrink-0" data-node-id="76:3132" data-name="Crumb">
+              <div className="relative shrink-0 size-[14px]" data-node-id="76:3133" data-name="Icon/folder">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconFolder} />
+              </div>
+              <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[16px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-muted,#a2b5d7)] tracking-[0.1px] whitespace-nowrap" data-node-id="76:3134">
+                Website Redesign
+              </p>
+              <div className="relative shrink-0 size-[12px]" data-node-id="76:3135" data-name="Icon/chevron-down">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconChevronDown1} />
+              </div>
+            </div>
+            <div className="content-stretch flex gap-[6px] items-center overflow-clip relative shrink-0" data-node-id="76:3136" data-name="Crumb">
+              <div className="relative shrink-0 size-[14px]" data-node-id="76:3137" data-name="Icon/activity">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconActivity} />
+              </div>
+              <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[16px] not-italic relative shrink-0 text-[13px] text-[color:var(--kel-color-text-muted,#a2b5d7)] tracking-[0.1px] whitespace-nowrap" data-node-id="76:3138">
+                Planning
+              </p>
+              <div className="relative shrink-0 size-[12px]" data-node-id="76:3139" data-name="Icon/chevron-down">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconChevronDown1} />
+              </div>
+            </div>
+            <div className="flex-[1_0_0] h-[10px] min-w-px relative" data-node-id="76:3140" data-name="Frame" />
+            <StatChip className="content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[28px] items-center px-[8px] relative rounded-[6px] shrink-0" value="$0.02" />
+            <StatChip className="content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[28px] items-center px-[8px] relative rounded-[6px] shrink-0" type="Tokens" value="1.4K tokens" />
+            <StatChip className="content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[28px] items-center px-[8px] relative rounded-[6px] shrink-0" type="Cache" value="78% cache" />
+            <StatChip className="content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[28px] items-center px-[8px] relative rounded-[6px] shrink-0" type="Context" />
+          </div>
+        </div>
+        <div className="absolute content-stretch flex flex-col gap-[6px] items-start left-0 overflow-clip pt-[22px] px-[132px] top-0 w-[1184px]" data-node-id="76:3145" data-name="Header">
+          <div className="content-stretch flex gap-[8px] items-center overflow-clip relative shrink-0" data-node-id="76:3146" data-name="Workspace">
+            <div className="relative shrink-0 size-[16px]" data-node-id="76:3147" data-name="Icon/projects">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconProjects} />
+            </div>
+            <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[15px] whitespace-nowrap" data-node-id="76:3148">
+              Workspace
+            </p>
+            <div className="relative shrink-0 size-[14px]" data-node-id="76:3149" data-name="Icon/chevron-down">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconChevronDown2} />
+            </div>
+          </div>
+          <div className="[word-break:break-word] content-stretch flex gap-[22px] items-baseline leading-[normal] overflow-clip relative shrink-0 whitespace-nowrap" data-node-id="76:3150" data-name="Title row">
+            <p className="font-['Instrument_Sans:SemiBold'] font-semibold relative shrink-0 text-[#edf2fa] text-[26px]" data-node-id="76:3151" style={{ fontVariationSettings: '"wdth" 100' }}>
+              Website Redesign
+            </p>
+            <p className="font-['Inter:Regular'] font-normal not-italic relative shrink-0 text-[#8fa9d6] text-[17px]" data-node-id="76:3152">
+              Planning
+            </p>
+          </div>
+        </div>
+        <div className="absolute right-[132px] size-[18px] top-[28px]" data-node-id="76:3153" data-name="Icon/more">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconMore1} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+These styles are contained in the design: Label/M: Font(family: "Inter", style: Medium, size: 14, weight: 500, lineHeight: 20, letterSpacing: 0), Label/S: Font(family: "Inter", style: Medium, size: 13, weight: 500, lineHeight: 16, letterSpacing: 0.10000000149011612), Body/M: Font(family: "Inter", style: Regular, size: 16, weight: 400, lineHeight: 25, letterSpacing: 0), Body/S: Font(family: "Inter", style: Regular, size: 13, weight: 400, lineHeight: 20, letterSpacing: 0).
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Brand/Kel mark
+**Node ID:** 10:2
+
+Kel K mark — raster crop from the root mock. Replace fill with the SVG when available.
+
+## Stat Chip
+**Node ID:** 7:68
+
+Footer telemetry: cost, tokens, cache hit rate, context remaining (with bar). Mono text, quiet by default. Value is a text prop; the Context bar width is set per instance.
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.
