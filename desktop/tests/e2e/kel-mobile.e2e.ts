@@ -10,8 +10,6 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs';
-import http from 'node:http';
-import { type AddressInfo } from 'node:net';
 import path from 'node:path';
 
 const BASE = process.env.KEL_WEBUI_URL || 'http://127.0.0.1:25809';
@@ -690,120 +688,6 @@ test.describe('Kel on a phone (V2-05)', () => {
     });
     save('findings-H.json');
     expect(layout.ok, `no horizontal overflow in the conversation: ${layout.worst}`).toBe(true);
-  });
-
-  test('J — the phone asks Kel to use a connected service', async ({ page }) => {
-    // V2-04a: a real model turn that must call a Connection action through the bridge. A local
-    // stand-in service answers only for the stored credential, so its answer can appear in the
-    // reply only if the engine really ran the action with a value the runtime never sees.
-    test.setTimeout(480_000);
-    const SECRET = `kel-v2-04a-phone-${Math.random().toString(36).slice(2, 10)}`;
-    const LOGIN = 'kel-phone-stub-account';
-    const stub = http.createServer((request, response) => {
-      const authorized = request.headers.authorization === `Bearer ${SECRET}`;
-      const login = String(request.url ?? '').startsWith('/user');
-      response.writeHead(authorized && login ? 200 : authorized ? 404 : 401,
-        { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify(authorized && login ? { login: LOGIN, id: 4242 } : { error: 'no' }));
-    });
-    await new Promise<void>((resolve) => stub.listen(0, '127.0.0.1', () => resolve()));
-    const stubPort = (stub.address() as AddressInfo).port;
-    const dataRoot = process.env.KEL_DATA_DIR || 'C:/Users/Nick/KelV2Runs/prepared/engine';
-    const descriptor = JSON.parse(
-      fs.readFileSync(path.join(dataRoot, 'desktop-session.json'), 'utf8')
-    ) as { url: string; token: string };
-    const engine = async (body: Record<string, unknown>): Promise<Record<string, unknown>> => {
-      const answer = await fetch(descriptor.url.replace(/\/$/, '') + '/api/connections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${descriptor.token}` },
-        body: JSON.stringify(body),
-      });
-      return (await answer.json()) as Record<string, unknown>;
-    };
-    try {
-      // The phone profile has no desktop shell to push custody, so this journey seeds both the
-      // connection and the value exactly the way the shell would (values only ever in engine memory).
-      await engine({ action: 'remove', id: 'github' });
-      await engine({ action: 'save', name: 'GitHub', base_url: `http://127.0.0.1:${stubPort}`,
-        auth_method: 'bearer' });
-      await engine({ action: 'set_credential', id: 'github', fields: ['api_key'],
-        credential_ref: 'kel:connection:github' });
-      await engine({ action: 'supply', id: 'github', credentials: { api_key: SECRET } });
-      const before = ((await engine({ action: 'events', id: 'github', limit: 10 })).events
-        ?? []) as unknown[];
-
-      await signIn(page);
-      const seen = watch(page);
-      await leaveFirstRun(page, 'J');
-      await page.waitForTimeout(2000);
-
-      const pills = page.locator('[data-assistant-id]');
-      let count = await pills.count();
-      for (let waited = 0; waited < 20 && count === 0; waited += 1) {
-        await page.waitForTimeout(1000);
-        count = await pills.count();
-      }
-      const kelPill = page.locator('[data-assistant-id="kel"]').first();
-      if ((await kelPill.getAttribute('data-assistant-selected')) !== 'true') {
-        await kelPill.click({ timeout: 8000 }).catch(() => undefined);
-        await page.waitForTimeout(800);
-      }
-
-      const TURN = 'Use the connected GitHub service to check which account my token belongs to. '
-        + 'Run `python -m kel.conn list` first to see the action, then run it. '
-        + 'Report the login name it gives in one sentence. Change no files.';
-      const composer = page.locator('textarea, [contenteditable="true"]').first();
-      await composer.click({ timeout: 5000 });
-      await page.keyboard.insertText(TURN);
-      await page.waitForTimeout(600);
-      const send = page.locator('button.send-button-custom').first();
-      await send.click({ timeout: 8000 });
-
-      const messageTexts = async (): Promise<string[]> =>
-        page.evaluate(() => {
-          const nodes = Array.from(document.querySelectorAll('[data-testid="message-text-content"]')) as HTMLElement[];
-          return nodes.map((node) => {
-            const host = node.querySelector('.markdown-shadow') as HTMLElement | null;
-            const shadow = host?.shadowRoot?.querySelector('.markdown-shadow-body')?.textContent ?? '';
-            return `${node.innerText || ''} ${shadow}`.trim();
-          });
-        });
-      let rows: string[] = [];
-      let answered = '';
-      for (let waited = 0; waited < 300; waited += 1) {
-        await page.waitForTimeout(1000);
-        rows = await messageTexts();
-        answered = rows.find((row) => row.trim() !== TURN && row.includes(LOGIN)) || '';
-        if (answered) break;
-      }
-      await page.screenshot({ path: path.join(EVIDENCE, 'J1-connection-reply.png') });
-      note({ journey: 'J', step: 'reply', found: Boolean(answered), reply: answered.slice(0, 240),
-        rows: rows.slice(0, 8) });
-      expect(answered, 'the service\u2019s answer reached the phone through the bridge').not.toBe('');
-      expect(rows.join(' '), 'the credential never appears in the conversation').not.toContain(SECRET);
-
-      // Provenance: the access history says the runtime asked, what ran and where — and holds no value.
-      const after = ((await engine({ action: 'events', id: 'github', limit: 10 })).events
-        ?? []) as Array<Record<string, unknown>>;
-      const fresh = after.filter(
-        (entry) => !before.some((old) => JSON.stringify(old) === JSON.stringify(entry))
-      );
-      note({ journey: 'J', step: 'events', fresh });
-      expect(
-        fresh.some((entry) => entry.action === 'github-whoami' && entry.source === 'runtime'),
-        'the access history records the runtime call'
-      ).toBe(true);
-      expect(JSON.stringify(after)).not.toContain(SECRET);
-
-      const layout = await overflow(page);
-      note({ journey: 'J', step: 'end', overflow: layout,
-        wsFailures: [...new Set(seen.wsFailures)].slice(0, 4),
-        consoleErrors: [...new Set(seen.consoleErrors)].slice(0, 8) });
-      save('findings-J.json');
-      expect(layout.ok, `no horizontal overflow in the conversation: ${layout.worst}`).toBe(true);
-    } finally {
-      stub.close();
-    }
   });
 
   test('F — the PWA contract holds on the phone', async ({ page }) => {

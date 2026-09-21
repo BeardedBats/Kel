@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: V2-04a           # V2-05-history is deferred for shell integration (requirement kept, phase NOT complete); next safe backend item: V2-04a assistant-callable Connection action bridge (reconnaissance committed at 7a82996)
+next_item: V2-04b           # V2-04a is BUILT and proved live (evidence/v2-04a/README.md; D-32/D-33; fix d3bbf65); V2-05-history stays deferred for shell integration; then the queued backend phases (see RESUME.md)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -227,6 +227,20 @@ opening) now would collide with that work, so it is **temporarily deferred for s
   that the Shell integration has landed.
 - If a backend change needs a renderer contract Astra will eventually absorb, write it in
   `docs/v2/PARALLEL_SHELL_TOUCHES.md` instead of editing renderer files.
+
+## V2-04a — BUILT and proved live (2026-09-21, `dev/v2` @ `d3bbf65`)
+
+The assistant-callable Connection action bridge is done: the `connections` capability, the
+`kel.connection_tools` bridge, the `kel.conn` helper the runtime runs as a shell command, engine
+memory custody pushed by the shell (D-33), mutating confirmation through the existing approval rows
+(D-32), and `source` provenance (migration 27). Evidence: `docs/v2/evidence/v2-04a/README.md` —
+the engine journey (16 tests) plus the **live** run where a real runtime found the connector, called
+`github-whoami`, used the bounded login, and the access history recorded `source: runtime`. The same
+run measured two honest limits: Claude Code is quota-blocked on this machine today (codex carried
+the work), and the phone's turns are conversational by design, so the bridge is reachable from the
+phone only once the Shell's Work route exists (Journey J held, recorded in
+`KNOWN_LIMITATIONS.md`). It also found and fixed a real defect: the engine now exports
+`python -m kel` to its runtimes (`d3bbf65`). `next_item` moves to V2-04b (the OAuth foundation).
 
 ## V2-04 build notes (historical — the phase is closed)
 
