@@ -287,3 +287,16 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   stable-app folders to be refused; with it unset, only the built-in rules apply.
 - **Read-only execution is the leaf’s own mode.** Verifier-style read-only runs rely on the
   tool-disabled argv and the isolated copy; there is no separate fs-level read-only mount.
+
+## V2-14 — network permissions: the honest edges (2026-09-21)
+
+- **The rules govern Kel's own outbound paths**, not the operating system: an installed CLI carries
+  its own network stack (the provider's sandbox governs it); §19 is about Kel's traffic, and every
+  Connection path shares the one function.
+- **Contacted domains are visible for Connection traffic** (`network_events` for decisions and
+  `connection_events` for performed calls); traffic from an installed CLI is not enumerated here.
+- **A pending ask is resolved on the Connections surface** — there is no chat notification for it yet.
+- **Approval adds exactly the host a request named** (its subdomains then match); a person who wants a
+  whole domain adds the parent domain on the list directly.
+- **The default stays `full` until a person chooses otherwise** — V2-14 adds the controls; it does not
+  silently tighten an existing install.

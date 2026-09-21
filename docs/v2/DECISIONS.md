@@ -408,3 +408,19 @@ temp directory per native run, pointed at by the child's TMP/TEMP/TMPDIR, remove
 provider credential — the R7 rule by shape instead of by list). *Forbids:* snapshotting or applying
 into a sensitive root; leaving a run's temp behind; handing a child another service's token; treating
 this as an OS-level sandbox — it is a rule enforced where Kel itself acts.
+
+## D-43 — network permissions are the rule source behind the one seam (V2-14)
+
+`NETWORK_RULES` was already the single hook every outbound path shares (asked before anything leaves
+the computer, again for a redirect's host, fail-closed when the source errors). V2-14 makes
+`kel/network_policy` its default source: modes `none`/`approved`/`full` per scope (`default`,
+`project:<id>`) with exact-string per-tool overrides; with no rows the default stays `full`, so
+nothing changes until a person chooses. In `approved`, an unlisted host is **never sent** — it is
+recorded as one pending request and refused with a sentence naming the fix; `resolve_request`
+approves (adding the host to that scope's list) or denies, and every decision lands in
+`network_events` for the access history (performed calls stay in `connection_events`). The tool and
+project travel with the call (`perform_request(context=…)` from `Connections.test/run`), and the
+policy binds per store around exactly that call — **an explicitly configured rule source always
+wins**, so no test or embedding loses its own hook. *Forbids:* a second outbound path; sending an
+unapproved host “just once”; a policy that silently replaces a deliberately installed hook; blocking
+or allowing anything without a recorded decision.

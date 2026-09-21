@@ -308,3 +308,19 @@ pointed at it, removed when the transport returns); and the **R7 env rule widene
 name** (KEY/TOKEN/SECRET/PASSWORD/CREDENTIAL/AUTH dropped unless it is the provider's own credential;
 `KEL_*` helpers kept). Honest edges: a scrubbed inherit, not an allowlist; sessions for native
 children only; a rule at Kel's own seams, explicitly not an OS-level sandbox. D-42.
+
+## V2-14 — Network permissions (BUILT, 2026-09-21)
+
+The `NETWORK_RULES` seam already existed (one hook all outbound paths share; asked before send and
+for a redirect's host; fail-closed; `None` = open). V2-14 makes `kel/network_policy` its default
+source: modes `none`/`approved`/`full` per scope (`default`, `project:<id>`) plus exact per-tool
+rules; with no rows the default stays `full`, so nothing changes until a person chooses. In
+`approved`, an unlisted host is never sent — one pending request is recorded and the refusal names
+the fix; `resolve_request` approves (adds the host to that scope's list) or denies; every decision is
+recorded in `network_events` (`allowed`/`blocked`/`ask`) beside the performed calls in
+`connection_events`. The tool and project travel with the call (`perform_request(context=…)`),
+the policy binds per store around exactly that call, and **an explicitly configured hook always
+wins**. The `/api/connections {action:'network'}` surface carries get/set_mode/set_tool/clear_tool/
+requests/resolve/history. Live: mode none refused with “You set Kel to no internet for default, so
+nothing is sent.”; approved refused an unlisted host with the ask sentence and one pending request;
+history showed `[ask, blocked]`; mode restored to full. D-43.

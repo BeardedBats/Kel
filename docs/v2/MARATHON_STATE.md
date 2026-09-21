@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: network permissions (Priority 8) # V2-13 isolation is BUILT (2026-09-21; D-42; evidence/v2-13/README.md): sensitive-root refusal at the coding snapshot and before any change application, disposable per-run sessions for native children (TMP/TEMP/TMPDIR, removed on return), and the R7 env rule widened to secret-shaped names - on top of the existing read-only tool-disabled argv, identity-bound kill and transactional apply. Next safe backend item: Priority 8 of the run directive — Network permissions (modes NO INTERNET / APPROVED DOMAINS / FULL INTERNET; per-tool and per-Project rules; show contacted domains; block unexpected domains; ask before a new domain; access history - see MARATHON_DIRECTIVE §19), implemented on the existing V2-14 network-rule seam in kel.connections (NETWORK_RULES); then Kibble Build Update (9), migration reliability (10)
+next_item: Kibble Build Update (Priority 9) # V2-14 network permissions is BUILT (2026-09-21; D-43; evidence/v2-14/README.md): modes none/approved/full per scope plus exact per-tool rules behind the one NETWORK_RULES seam, ask-before-a-new-domain with one pending request and a plain refusal, access history, and a live-proved loop (none refused; approved asked; restored). Next safe backend item: Priority 9 of the run directive — the Kibble Build Update backend foundation (dev mission schema, candidate model, human promotion gate; grep `Kibble` in MARATHON_DIRECTIVE.md and read the ROADMAP line before designing; reuse the existing workforce/learning/promotion paths - do not invent a second promotion system); then migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -41,7 +41,7 @@ phases:
   V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
   V2-12: done        # Adaptive staffing 2.0 — one bounded step of outcome-history advice on the existing staffing paths (advice recorded on every staffing.decided)
   V2-13: done        # Local execution isolation — sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
-  V2-14: queued      # Network permissions
+  V2-14: done        # Network permissions — modes + per-tool/per-Project rules behind the one seam, ask-before-a-new-domain, access history
   V2-15: queued      # Real dogfood integration pass
   V2-16: queued      # Performance + UX polish
   V2-17: queued      # Manual upgrade reliability / migration validation

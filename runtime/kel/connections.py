@@ -303,12 +303,20 @@ def custody_for(connection_id):
 NETWORK_RULES = None
 
 
-def network_rule(host):
-    """(allowed, reason) for one host from whatever rules are configured; open by default."""
+def network_rule(host, context=None):
+    """(allowed, reason) for one host from whatever rules are configured; open by default.
+
+    V2-14: a rule source may take (host, context) — the context carries the tool
+    (`connection.action`) and the project the call belongs to, so per-tool and per-Project rules
+    are possible without a second choke point. A one-argument hook keeps working unchanged.
+    """
     if NETWORK_RULES is None:
         return True, ''
     try:
-        allowed, reason = NETWORK_RULES(str(host or ''))
+        try:
+            allowed, reason = NETWORK_RULES(str(host or ''), context or {})
+        except TypeError:
+            allowed, reason = NETWORK_RULES(str(host or ''))
     except Exception:
         return False, 'Kel could not check its network rules, so this request was not sent.'
     return bool(allowed), str(reason or '')
@@ -359,7 +367,8 @@ def _attempt(url, headers, timeout, method='GET', read_body=False, payload=None)
 
 
 def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS,
-                    sleep=None, budget=REQUEST_BUDGET, method='GET', read_body=False, payload=None):
+                    sleep=None, budget=REQUEST_BUDGET, method='GET', read_body=False, payload=None,
+                    context=None):
     """The one place a Connection's request leaves this computer.
 
     Every future network rule (V2-14: no internet / approved domains / ask before a new domain) has a
@@ -381,7 +390,7 @@ def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPT
     Returns (status, final_url, attempts, elapsed_ms, body_bytes).
     """
     host = urlparse(url).hostname or ''
-    allowed, refusal = network_rule(host)
+    allowed, refusal = network_rule(host, context)
     if not allowed:
         raise PolicyError(refusal or ('Kel is not allowed to reach %s.' % host))
     stated = time.monotonic()
@@ -402,7 +411,7 @@ def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPT
         final_host = urlparse(final or '').hostname or ''
         if final_host and final_host != host:
             # A redirect must not smuggle a host the rules would have refused.
-            allowed_final, final_refusal = network_rule(final_host)
+            allowed_final, final_refusal = network_rule(final_host, context)
             if not allowed_final:
                 raise PolicyError(final_refusal or ('Kel is not allowed to reach %s.' % final_host))
         if status in RETRY_STATUSES and tried < attempts:
@@ -679,7 +688,7 @@ class Connections:
         return self.get(item['id'])
 
     # -- talking to the service (V2-02) ------------------------------------------------------------
-    def test(self, connection_id, credentials=None):
+    def test(self, connection_id, credentials=None, context=None):
         """Ask the service whether this works, and record only what happened.
 
         `credentials` is the shell's own map of field name to value for this one request: it is used
@@ -702,10 +711,13 @@ class Connections:
             pairs = parse_qsl(parsed.query, keep_blank_values=True) + list(query.items())
             url = urlunparse(parsed._replace(query=urlencode(pairs)))
         state, status, elapsed, note = 'error', None, 0, 'The check did not finish.'
+        from . import network_policy
+        token = network_policy.bind(self.store)
         try:
             status, final, tried, elapsed, _body = perform_request(url, headers, timeout=self.timeout,
                                                                    attempts=self.attempts,
-                                                                   sleep=self.sleep)
+                                                                   sleep=self.sleep,
+                                                                   context=context)
             state, note = classify(status, connection, final, tried)
         except PolicyError:
             raise
@@ -719,6 +731,8 @@ class Connections:
         except Exception:
             state = 'error'
             note = 'The check did not finish.'
+        finally:
+            network_policy.unbind(token)
         note = scrub(note, credentials)
         with self.store.transaction() as db:
             db.execute('UPDATE connections SET last_test_at=?, last_test_state=?, last_test_status=?,'
@@ -728,7 +742,7 @@ class Connections:
 
     # -- doing something with the service (V2-04) ---------------------------------------------------
     def run(self, connection_id, action_id, credentials=None, params=None, confirmed=False,
-            source='shell'):
+            source='shell', context=None):
         """Do one thing with a service, and hand back what it said.
 
         The answer goes to the caller and is never written down. What is recorded is that the action ran,
@@ -762,10 +776,12 @@ class Connections:
             target = urlunparse(parsed._replace(query=urlencode(pairs)))
         state, status, tried, elapsed = 'error', None, 0, 0
         note, answer = 'The action did not finish.', None
+        from . import network_policy
+        token = network_policy.bind(self.store)
         try:
             status, final, tried, elapsed, body = perform_request(
                 target, headers, timeout=self.timeout, attempts=self.attempts, sleep=self.sleep,
-                method=row['method'], read_body=True)
+                method=row['method'], read_body=True, context=context)
             state, note = classify(status, connection, final, tried)
             if len(body) >= MAX_ANSWER_BYTES:
                 # The answer hit the reading cap: say so instead of pretending it was complete.
@@ -783,6 +799,8 @@ class Connections:
         except Exception:
             state = 'error'
             note = 'The action did not finish.'
+        finally:
+            network_policy.unbind(token)
         note = scrub(note, credentials)
         self._record(connection['id'], row['id'], target, status, state, tried, elapsed, source)
         return {'connection': connection['id'], 'action': row['id'], 'name': row['name'],

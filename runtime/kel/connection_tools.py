@@ -249,10 +249,13 @@ def call(store, action_id, params=None, connection_id=None, job=None, run=None,
     if not final.get('allowed'):
         return _refusal(final)
 
+    project=(store.get(job).get('contract') or {}).get('project_id') if job else None
     try:
         result = service.run(connection['id'], row['id'],
                              credentials=custody_for(connection['id']),
-                             params=clean, confirmed=confirmed, source=source)
+                             params=clean, confirmed=confirmed, source=source,
+                             context={'tool':'%s.%s'%(connection['id'],row['id']),
+                                      'project':project})
     except PolicyError as exc:
         return {'state': 'cannot_do', 'capability': 'connections',
                 'connection': connection['id'], 'action': row['id'], 'note': str(exc)}
