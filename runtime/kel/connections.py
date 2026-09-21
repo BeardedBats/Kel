@@ -33,6 +33,7 @@ from .core import PolicyError
 MIGRATIONS = (
     (23, 'v20-connections', 'Connections: credentials for a service'),
     (24, 'v20-connection-tests', 'Connections: what the last check found'),
+    (25, 'v20-connection-prefix', 'Connections: how a service wants its credential presented'),
 )
 MIGRATION_VERSION = MIGRATIONS[-1][0]
 MIGRATION_NAME = MIGRATIONS[-1][1]
@@ -57,6 +58,7 @@ ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,59}$')
 MAX_NAME = 80
 MAX_URL = 500
 MAX_NOTES = 2000
+MAX_PREFIX = 40
 LIST_LIMIT = 200
 
 DDL = """
@@ -83,6 +85,9 @@ CREATE INDEX IF NOT EXISTS connections_by_name ON connections(name);
 # database keeps working, and a connection that has never been checked simply has no result.
 TEST_COLUMNS = ('last_test_at REAL', 'last_test_state TEXT', 'last_test_status INTEGER',
                 'last_test_ms INTEGER', 'last_test_note TEXT')
+# Migration 25 (V2-03): the word a service wants in front of the credential. NULL means Kel works it out
+# (the old behaviour); '' means the value goes exactly as it is (ClickUp, Figma, Raptive).
+PREFIX_COLUMNS = ('auth_prefix TEXT',)
 
 
 def _exec(db, ddl):
@@ -94,17 +99,25 @@ def _create_connections(db):
     _exec(db, DDL)
 
 
-def _add_test_columns(db):
+def _add_columns(db, columns):
     """Additive and safe to re-run: a database that already has a column keeps it as it is."""
     existing = {row[1] for row in db.execute('PRAGMA table_info(connections)').fetchall()}
-    for column in TEST_COLUMNS:
+    for column in columns:
         if column.split()[0] not in existing:
             db.execute('ALTER TABLE connections ADD COLUMN ' + column)
 
 
+def _add_test_columns(db):
+    _add_columns(db, TEST_COLUMNS)
+
+
+def _add_prefix_column(db):
+    _add_columns(db, PREFIX_COLUMNS)
+
+
 # Every step must be safe to run again on a database that already has it: a resumed upgrade may
 # re-apply the newest step when its marker was lost.
-STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns}
+STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns, 25: _add_prefix_column}
 
 
 def _table(db, name):
@@ -168,6 +181,22 @@ def _auth_method(value, fallback='header'):
     return cleaned
 
 
+def _prefix(value):
+    """The word a service wants in front of the credential. '' means send it exactly as it is.
+
+    The trailing space is significant — `Bearer ` is a word *and* a separator — so it is preserved
+    while repeated spaces inside the word are collapsed.
+    """
+    if value is None:
+        return None
+    cleaned = ''.join(ch for ch in str(value) if ch.isprintable())
+    separator = ' ' if cleaned.strip() and cleaned != cleaned.rstrip(' ') else ''
+    cleaned = ' '.join(cleaned.split()) + separator
+    if len(cleaned) > MAX_PREFIX:
+        raise PolicyError('That prefix is too long — keep it under %d characters.' % MAX_PREFIX)
+    return cleaned
+
+
 def slug(name):
     """A stable, readable id from a service name — 'Pitcher List' becomes 'pitcher-list'."""
     base = re.sub(r'[^a-z0-9]+', '-', str(name or '').strip().lower()).strip('-')[:48]
@@ -228,11 +257,17 @@ def auth_for(connection, credentials):
     if method == 'query':
         return {}, {connection['auth_header'] or 'api_key': value}, None
     name = connection['auth_header'] or 'Authorization'
-    # A token in `Authorization` is nearly always a scheme plus the value; a service that wants a bare
-    # value in a custom header (X-Api-Key) gets exactly that. A value that already carries a scheme is
-    # sent as it is.
-    if name.lower() == 'authorization' and not re.match(r'^[A-Za-z]+\s+\S', value):
-        return {name: 'Bearer ' + value}, None, None
+    declared = connection.get('auth_prefix')
+    if declared is None:
+        # Nothing declared: a token in `Authorization` is nearly always a scheme plus the value, and a
+        # service that wants a bare value in a custom header (X-Api-Key) gets exactly that. A value that
+        # already carries a scheme is sent as it is.
+        if name.lower() == 'authorization' and not re.match(r'^[A-Za-z]+\s+\S', value):
+            return {name: 'Bearer ' + value}, None, None
+        return {name: value}, None, None
+    # Declared: the service's own shape wins, and a value that already carries the prefix is not doubled.
+    if declared and not value.lower().startswith(declared.lower()):
+        return {name: declared + value}, None, None
     return {name: value}, None, None
 
 
@@ -274,6 +309,8 @@ class Connections:
             'base_url': row['base_url'] or '',
             'auth_method': row['auth_method'],
             'auth_header': row['auth_header'] or '',
+            # None means Kel works the prefix out; '' means the service wants the value as it is.
+            'auth_prefix': row['auth_prefix'],
             'docs_url': row['docs_url'] or '',
             'test_endpoint': row['test_endpoint'] or '',
             'notes': row['notes'] or '',
@@ -325,7 +362,7 @@ class Connections:
         return candidate
 
     def save(self, name, *, connection_id=None, kind='api_key', base_url=None, auth_method=None,
-             auth_header=None, docs_url=None, test_endpoint=None, notes=None):
+             auth_header=None, auth_prefix=None, docs_url=None, test_endpoint=None, notes=None):
         """Create a connection, or update the one with this id. Never stores a credential value."""
         clean_name = _text(name, MAX_NAME, 'name')
         if not clean_name:
@@ -349,7 +386,7 @@ class Connections:
             fields = dict(
                 name=clean_name, kind=clean_kind,
                 base_url=_url(base_url, 'address'),
-                auth_method=method, auth_header=header,
+                auth_method=method, auth_header=header, auth_prefix=_prefix(auth_prefix),
                 docs_url=_url(docs_url, 'documentation address'),
                 test_endpoint=_url(test_endpoint, 'test address'),
                 notes=_text(notes, MAX_NOTES, 'note'),
@@ -358,19 +395,19 @@ class Connections:
                 # Credential metadata is custody state, not a form field: editing a connection never
                 # silently drops the pointer to a stored credential.
                 db.execute('UPDATE connections SET name=?, kind=?, base_url=?, auth_method=?,'
-                           ' auth_header=?, docs_url=?, test_endpoint=?, notes=?, updated=?'
-                           ' WHERE id=?',
+                           ' auth_header=?, auth_prefix=?, docs_url=?, test_endpoint=?, notes=?,'
+                           ' updated=? WHERE id=?',
                            (fields['name'], fields['kind'], fields['base_url'],
-                            fields['auth_method'], fields['auth_header'], fields['docs_url'],
-                            fields['test_endpoint'], fields['notes'], now, target))
+                            fields['auth_method'], fields['auth_header'], fields['auth_prefix'],
+                            fields['docs_url'], fields['test_endpoint'], fields['notes'], now, target))
             else:
                 db.execute('INSERT INTO connections(id, name, kind, base_url, auth_method,'
-                           ' auth_header, docs_url, test_endpoint, notes, credential_ref,'
+                           ' auth_header, auth_prefix, docs_url, test_endpoint, notes, credential_ref,'
                            ' credential_fields, created, updated)'
-                           ' VALUES(?,?,?,?,?,?,?,?,?,NULL,NULL,?,?)',
+                           ' VALUES(?,?,?,?,?,?,?,?,?,?,NULL,NULL,?,?)',
                            (target, fields['name'], fields['kind'], fields['base_url'],
-                            fields['auth_method'], fields['auth_header'], fields['docs_url'],
-                            fields['test_endpoint'], fields['notes'], now, now))
+                            fields['auth_method'], fields['auth_header'], fields['auth_prefix'],
+                            fields['docs_url'], fields['test_endpoint'], fields['notes'], now, now))
         return self.get(target)
 
     def remove(self, connection_id):

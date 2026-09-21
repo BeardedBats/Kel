@@ -25,6 +25,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from kel.connection_services import catalogue, entry
 from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, STATES, Connections,
                              ensure_schema, scrub, slug)
 from kel.core import PolicyError, Store
@@ -34,9 +35,14 @@ EXPECTED_COLUMNS = {
     'notes', 'credential_ref', 'credential_fields', 'created', 'updated',
     # V2-02: what the last check of the service found. Still no column a value could live in.
     'last_test_at', 'last_test_state', 'last_test_status', 'last_test_ms', 'last_test_note',
+    # V2-03: the word a service wants in front of its credential.
+    'auth_prefix',
 }
 
 MODULE = Path(__file__).resolve().parents[1] / 'kel' / 'connections.py'
+# The part of a catalogue row that is a Connection field; the rest is what Nick is asked to go and get.
+CATALOGUE_FIELDS = ('name', 'kind', 'base_url', 'auth_method', 'auth_header', 'auth_prefix',
+                    'docs_url', 'test_endpoint')
 
 
 class ConnectionCase(unittest.TestCase):
@@ -289,6 +295,111 @@ class ConnectionServiceCase(unittest.TestCase):
         self.assertNotIn('get_credential', block)
         self.assertNotIn('decrypt', block)
         self.assertNotRegex(block, re.compile(r"'value'"))
+
+
+class KnownServiceTests(unittest.TestCase):
+    """V2-03 — the services Kel already knows about are data, and nothing else."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(self.tmp.name)
+        self.connections = Connections(self.store)
+        self.service = LocalService()
+        self.addCleanup(self.service.stop)
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def test_the_catalogue_is_data_with_no_per_service_behaviour(self):
+        source = (Path(__file__).resolve().parents[1] / 'kel'
+                  / 'connection_services.py').read_text(encoding='utf-8')
+        # Two functions: hand out the list, hand out one row. Anything else here would be a per-service
+        # code path, which is exactly what this program forbids.
+        self.assertEqual(source.count('\ndef '), 2)
+        self.assertNotIn('if service_id', source)
+        self.assertNotIn('import', source.split('"""')[2])
+
+    def test_every_known_service_is_a_usable_connection_row(self):
+        rows = catalogue()
+        self.assertEqual([row['id'] for row in rows],
+                         ['github', 'stripe', 'figma', 'clickup', 'discord', 'google-drive',
+                          'pitcher-list', 'raptive'])
+        self.assertEqual([row['name'] for row in rows],
+                         ['GitHub', 'Stripe', 'Figma', 'ClickUp', 'Discord', 'Google Drive',
+                          'Pitcher List', 'Raptive'])
+        for row in rows:
+            self.assertIn(row['kind'], KINDS)
+            self.assertIn(row['auth_method'], AUTH_METHODS)
+            self.assertIn(row['source'], ('documented', 'assumed', 'to-confirm'))
+            self.assertTrue(row['credential'], row['id'])
+            for key in ('base_url', 'docs_url', 'test_endpoint'):
+                value = row[key]
+                if value:
+                    self.assertTrue(value.startswith('http://') or value.startswith('https://'),
+                                    '%s.%s' % (row['id'], key))
+
+    def test_a_known_service_can_be_added_as_a_connection_unchanged(self):
+        row = entry('github')
+        saved = self.connections.save(**{key: row[key] for key in CATALOGUE_FIELDS if key in row})
+        self.assertEqual(saved['id'], 'github')
+        self.assertEqual(saved['auth_prefix'], 'Bearer ')
+        self.assertEqual(saved['test_endpoint'], 'https://api.github.com/user')
+        self.assertIsNone(entry('nope'))
+
+    def test_a_known_service_added_by_name_gets_the_id_the_catalogue_uses(self):
+        # Nothing has to carry the id around: adding "Pitcher List" by name already produces
+        # `pitcher-list`, so the catalogue and the store cannot disagree about which connection it is.
+        for row in catalogue():
+            connection = self.connections.save(row['name'])
+            self.assertEqual(connection['id'], row['id'], row['name'])
+            self.connections.remove(connection['id'])
+
+    def test_the_declared_prefix_is_what_the_service_gets(self):
+        # GitHub and Discord want a scheme in front of the value; ClickUp and Figma want it untouched.
+        for service, prefix in (('github', 'Bearer '), ('discord', 'Bot '), ('clickup', ''),
+                                ('figma', '')):
+            row = entry(service)
+            connection = self.connections.save(row['name'], kind=row['kind'],
+                                               auth_method=row['auth_method'],
+                                               auth_header=row['auth_header'],
+                                               auth_prefix=row['auth_prefix'],
+                                               base_url=self.service.base)
+            self.service.seen.clear()
+            self.connections.test(connection['id'], {'api_key': 'the-credential'})
+            header = (self.service.seen[0]['headers'].get('authorization')
+                      or self.service.seen[0]['headers'].get('x-figma-token'))
+            self.assertEqual(header, prefix + 'the-credential', service)
+            self.connections.remove(connection['id'])
+
+    def test_a_prefix_is_not_added_twice(self):
+        self.connections.save('Discord', kind='bot', auth_method='header',
+                              auth_header='Authorization', auth_prefix='Bot ',
+                              base_url=self.service.base)
+        self.connections.test('discord', {'api_key': 'Bot the-credential'})
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'), 'Bot the-credential')
+
+    def test_a_connection_without_a_declared_prefix_still_works_out_its_own(self):
+        # The old behaviour, kept: a bare value in Authorization gets a scheme, a custom header does not.
+        self.connections.save('Anything', auth_method='header', auth_header='X-Api-Key',
+                              base_url=self.service.base)
+        self.assertEqual(self.connections.get('anything')['auth_prefix'], None)
+        self.connections.test('anything', {'api_key': 'the-credential'})
+        self.assertEqual(self.service.seen[0]['headers'].get('x-api-key'), 'the-credential')
+
+    def test_an_absurd_prefix_is_refused(self):
+        with self.assertRaises(PolicyError) as caught:
+            self.connections.save('Anything', auth_prefix='x' * 41)
+        self.assertIn('prefix is too long', str(caught.exception))
+
+    def test_the_separator_after_a_prefix_survives_being_saved(self):
+        # 'Bearer ' is a word and a separator: trimming it away would send 'Bearerthe-credential'.
+        self.assertEqual(self.connections.save('Anything', auth_prefix='  Bearer   ')['auth_prefix'],
+                         'Bearer ')
+        self.assertEqual(self.connections.save('Other', auth_prefix='   ')['auth_prefix'], '')
 
 
 class LocalService:

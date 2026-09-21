@@ -1041,8 +1041,13 @@ class Service:
             return service.save(data.get('name',''),connection_id=data.get('id'),
                                 kind=data.get('kind'),base_url=data.get('base_url'),
                                 auth_method=data.get('auth_method'),auth_header=data.get('auth_header'),
+                                auth_prefix=data.get('auth_prefix'),
                                 docs_url=data.get('docs_url'),test_endpoint=data.get('test_endpoint'),
                                 notes=data.get('notes'))
+        if action=='catalogue':
+            # V2-03: what Kel already knows about the services Nick uses. Data, not behaviour.
+            from .connection_services import catalogue
+            return {'services':catalogue()}
         if action=='remove':
             return service.remove(self._required(data,'id','Pick a connection first.'))
         if action=='set_credential':
