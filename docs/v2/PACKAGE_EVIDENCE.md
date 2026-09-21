@@ -28,6 +28,12 @@ modify, uninstall, overwrite, reset, migrate, clean or point a V2 run at it.
 | When to install | only when an implementation checkpoint genuinely needs installed-app verification (V2-05 iPhone reachability, V2-13/14 isolation and network rules, V2-17 upgrade/migration, V2-18/19/20 acceptance and regression) |
 | Never | one install per phase; a V2 install that shares the dogfood data root; a second registry identity that would break the dogfood registration |
 
+## Phase record (no candidate has been built yet)
+
+| Phase | Candidate | Installed check |
+| --- | --- | --- |
+| V2-00 … V2-04 | none built | none performed. The Connections work is verified by engine tests, renderer type checking, jsdom tests through the shipped components and the real bridge contract, and source pins — recorded in `TEST_EVIDENCE.md`. Installing was not needed and `C:\Users\Nick\KelV2Candidate` still does not exist |
+
 ## Rules carried over from the predecessor program (learned the hard way)
 
 - NSIS updates heal to the *registered* install directory: repoint the registration deliberately (and
