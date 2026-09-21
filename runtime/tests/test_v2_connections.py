@@ -22,12 +22,15 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
+from kel.connection_framework import request_policy, template, templates
 from kel.connection_services import catalogue, entry
-from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, STATES, Connections,
-                             ensure_schema, scrub, slug)
+from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, REQUEST_ATTEMPTS,
+                             RETRY_STATUSES, STATES, TEST_TIMEOUT, Connections, ensure_schema,
+                             perform_request, scrub, slug)
 from kel.core import PolicyError, Store
 
 EXPECTED_COLUMNS = {
@@ -402,6 +405,90 @@ class KnownServiceTests(unittest.TestCase):
         self.assertEqual(self.connections.save('Other', auth_prefix='   ')['auth_prefix'], '')
 
 
+class FrameworkPolicyTests(unittest.TestCase):
+    """V2-04 — the framework's standard parts: the retry policy and the three templates."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(self.tmp.name)
+        # No real waiting in a test: the pauses are counted instead.
+        self.pauses = []
+        self.connections = Connections(self.store, attempts=3, sleep=self.pauses.append)
+        self.service = LocalService()
+        self.addCleanup(self.service.stop)
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def test_a_busy_service_is_asked_again(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        self.service.statuses = [503, 200]
+        result = self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertEqual(result['last_test_state'], 'ok')
+        self.assertEqual(result['last_test_status'], 200)
+        self.assertIn('Kel tried 2 times.', result['last_test_note'])
+        self.assertEqual(len(self.service.seen), 2)
+        self.assertEqual(len(self.pauses), 1)
+
+    def test_saying_no_is_an_answer_and_is_never_retried(self):
+        # A 401 and a 404 are information. Asking again would just be rude, and would raise the chance of
+        # a service locking the credential out.
+        for status in (401, 403, 404):
+            self.connections.save('Service %d' % status, base_url=self.service.base)
+            self.service.seen.clear()
+            self.service.statuses = []
+            self.service.status = status
+            result = self.connections.test('service-%d' % status, {'api_key': 'the-credential'})
+            self.assertEqual(len(self.service.seen), 1, status)
+            self.assertNotIn('tried', result['last_test_note'], status)
+        self.assertEqual(self.pauses, [])
+
+    def test_kel_stops_after_the_policy_allows(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        self.service.statuses = [500, 500, 500, 200]
+        result = self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertEqual(result['last_test_state'], 'error')
+        self.assertIn('Kel tried 3 times.', result['last_test_note'])
+        self.assertEqual(len(self.service.seen), 3)
+        # The fourth answer was never collected: Kel gave up where the policy says it gives up.
+        self.assertEqual(self.service.statuses, [200])
+
+    def test_a_dropped_connection_is_tried_again(self):
+        with socket.socket() as probe:
+            probe.bind(('127.0.0.1', 0))
+            closed = 'http://127.0.0.1:%d' % probe.getsockname()[1]
+        with self.assertRaises(urllib.error.URLError):
+            perform_request(closed, {}, timeout=1, attempts=3, sleep=self.pauses.append)
+        self.assertEqual(len(self.pauses), 2)
+
+    def test_the_policy_is_the_same_one_for_every_service(self):
+        policy = request_policy()
+        self.assertEqual(policy['attempts'], REQUEST_ATTEMPTS)
+        self.assertEqual(policy['timeout'], TEST_TIMEOUT)
+        self.assertEqual(policy['retry_statuses'], list(RETRY_STATUSES))
+        self.assertIn('never keeps the body', policy['note'])
+
+    def test_the_three_templates_are_the_three_kinds_of_credential(self):
+        rows = templates()
+        self.assertEqual([row['id'] for row in rows], list(KINDS))
+        for row in rows:
+            self.assertTrue(row['label'] and row['hint'] and row['credential_field'])
+            self.assertTrue(row['check'].endswith('.'))
+        self.assertEqual(template('oauth')['credential_field'], 'access_token')
+        self.assertIsNone(template('nope'))
+
+    def test_the_framework_knows_no_service(self):
+        source = (Path(__file__).resolve().parents[1] / 'kel'
+                  / 'connection_framework.py').read_text(encoding='utf-8')
+        for service in ('stripe', 'github', 'figma', 'discord', 'clickup', 'raptive', 'pitcher',
+                        'wordpress', 'drive'):
+            self.assertNotIn(service, source.lower())
+
+
 class LocalService:
     """A stand-in for a service on this computer only.
 
@@ -411,6 +498,9 @@ class LocalService:
 
     def __init__(self):
         self.status = 200
+        # A scripted run of answers: the next request takes the next status, so a busy service can be
+        # stood up honestly (503 then 200) instead of mocked.
+        self.statuses = []
         self.delay = 0.0
         self.seen = []
         probe = self
@@ -421,7 +511,7 @@ class LocalService:
                                    'headers': {k.lower(): v for k, v in self.headers.items()}})
                 if probe.delay:
                     time.sleep(probe.delay)
-                self.send_response(probe.status)
+                self.send_response(probe.statuses.pop(0) if probe.statuses else probe.status)
                 self.send_header('Content-Length', '0')
                 self.end_headers()
 

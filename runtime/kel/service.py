@@ -1029,13 +1029,17 @@ class Service:
 
     def _connections_list(self):
         from .connections import Connections
-        return Connections(self.store).list()
+        from .connection_framework import templates
+        listing=Connections(self.store).list()
+        # V2-04: the three kinds travel with the list, so a surface never has to invent their words.
+        listing['templates']=templates()
+        return listing
 
     def _connections_dispatch(self,data):
         from .connections import Connections
         service=Connections(self.store)
         action=data.get('action')
-        if action in ('list',None):return service.list()
+        if action in ('list',None):return self._connections_list()
         if action=='get':return service.get(self._required(data,'id','Pick a connection first.'))
         if action=='save':
             return service.save(data.get('name',''),connection_id=data.get('id'),
