@@ -73,3 +73,15 @@ limits are appended as phases land.
    `/api/send` is authoritative and visible through `/api/state`, but the history entry was never reached
    on the phone. The collapsed rail visible at 393px is inert by design (`x=-11`, `pointer-events: none`)
    — the drawer, not the rail, is the phone's navigation.
+
+### V2-05 voice — where the browser path actually breaks (diagnosed)
+
+`KelMicButton.start()` starts capture, then calls `/api/transcription`
+`{action:'stream_start'}` — but that call sits in a `try { … } catch { liveRef.current = false;
+sessionRef.current = null }`. Every failure is swallowed: the phone shows a running recording timer and
+then nothing, with no transcript and no message. In the measured run **no `/api/transcription` request
+reached the gateway at all** (0 hits in the gateway log, HTTP or otherwise), so the browser's transport
+for that route is the thing to connect — the engine and the gateway were both healthy at the time.
+Required by V2-05 itself: when the microphone path cannot reach transcription, the phone must say so
+truthfully instead of silently recording. Next run: find the browser transport for `/api/transcription`,
+fix or wire it, replace the silent catch with a plain sentence, then verify against Muse.
