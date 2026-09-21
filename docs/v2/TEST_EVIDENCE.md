@@ -368,3 +368,19 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   for default. Approve it in Connections, or change that scope to full internet, then ask again.”
   with `pending asks → 1`; `history` → `[('203.0.113.9','ask'), ('203.0.113.9','blocked')]`; mode
   restored to `full`; the engine was stopped by its own pid and its port shows only TIME_WAIT.
+
+### Priority 9 — the promotion gate's inspection door (2026-09-21)
+
+- Scope resolution first (D-44): `Kibble` is undefined in the directive and roadmap; its only in-repo
+  placement is Astra's presentation lane. The queue line's third term — the promotion gate — already
+  exists as recorded-never-applied machinery; only a **door** was missing.
+- `tests/test_v2_kibble_gate.py` (new, 5 tests) — an empty queue reads as zero with the honest note; a
+  queued promotion is visible and project-scoped; a shadow proposal is visible with its prediction and
+  mission filter; the door is **read-only** (team_events and memories counts unchanged by reads); and
+  with the shadow flag off nothing is recorded, so the door stays empty.
+- Bounded group: `test_v2_kibble_gate test_workforce_learning test_v14_team test_v2_staffing
+  test_v15_roles` → **67 OK** (19 s).
+- **Deferred, not removed:** the dev-mission schema and candidate model wait on Nick's definition of a
+  Kibble Build Update (a product concept owned by Nick/Astra; absent from the durable directive). The
+  requirement stays in `MARATHON_STATE.md` and `RESUME.md`; the item is NOT complete.
+  Evidence: `docs/v2/evidence/p9-promotion-gate/README.md`.
