@@ -384,3 +384,21 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   Kibble Build Update (a product concept owned by Nick/Astra; absent from the durable directive). The
   requirement stays in `MARATHON_STATE.md` and `RESUME.md`; the item is NOT complete.
   Evidence: `docs/v2/evidence/p9-promotion-gate/README.md`.
+
+### V2-17 — manual upgrade reliability / migration validation (2026-09-21)
+
+- `tests/test_v2_upgrade.py` (new, 6 tests) — the inventory covers the V2 tables with counts and a
+  readable ledger; a backup carries every V2 row and never the credentials file; a restore brings
+  every table and the ledger back **exactly** (post-backup mutations gone); a staged restore touches
+  nothing live until applied and the second apply is a no-op; the live credentials file survives the
+  restore (merge never deletes); re-opening with every V2 module ensuring its schema again changes no
+  count and no ledger row.
+- Bounded group on the final code: `test_v2_upgrade test_v14_upgrade test_v15_upgrade
+  test_v16_r8_migrations test_migration` → **18 OK** (7.5 s).
+- Live demonstration (engine restarted on `C:\Users\Nick\KelV2Runs\prepared\engine`, driven only
+  through `/api/backup`): `inventory → 107 tables, ledger = 24 migrations`; the real accumulated V2
+  spread `{connections: 3, connection_events: 1, network_policy: 1, network_events: 2,
+  routing_outcomes: 3, memories: 3, memory_proposals: 1, team_events: 3, oauth_flows: 1}`; `create` →
+  description with the V2 counts (`connections 3, conversations 12, jobs 3, memories 3, messages 26,
+  projects 2`); `inspect` matched; the copied database's counts matched the live inventory exactly;
+  the probe folder was removed and the engine stopped by its own pid.

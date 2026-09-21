@@ -311,3 +311,14 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   (`action:'promotions'` / `action:'shadow'`) only show them and write nothing.
 - **No promotion is applied by any path.** Applying still requires the recorded explicit user
   judgment; this increment changed nothing about that.
+
+## V2-17 — manual upgrade reliability: the honest edges (2026-09-21)
+
+- **The inventory counts tables, not content**: an equal inventory proves no row was lost, not that
+  every row is semantically intact (the V2 suites cover semantics).
+- **The restore is whole-database**: it replaces the database file (through SQLite) rather than merging
+  rows; the `…pre-restore-<timestamp>` rollback copy is the recovery for a wrong restore.
+- **Credentials are excluded by design**: after restoring onto a machine, provider keys must be
+  reconnected (the backup's own notes say so) — a restore never resurrects secrets.
+- **No updater infrastructure** (by directive): upgrades are manual — stop, back up, replace, start;
+  the inventory is the check before and after.

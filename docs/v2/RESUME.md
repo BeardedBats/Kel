@@ -5,22 +5,21 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Manual upgrade reliability /
-   migration validation** (run-directive Priority 10; ROADMAP V2-17): a safe manual upgrade that
-   preserves Projects, conversations, memory, credentials, settings, transcripts, Recipes,
-   Connections and Fix Capture data where appropriate; safe migrations; failure without data loss; a
-   practical developer rollback — reusing the existing backup path (`/api/backup`) and the migration
-   ledger suites, and explicitly **no updater infrastructure**. Read the directive's manual-upgrade
-   section and `ROADMAP.md`'s V2-17 line before designing; do not build Astra-owned presentation, and
-   keep the OAuth controls and contracts intact for the Shell. **Priority 9 (the promotion gate's
-   door) is done and the Kibble dev-mission/candidate-model definition is DEFERRED pending Nick's
-   definition** (D-44; `docs/v2/evidence/p9-promotion-gate/README.md`) — do not invent the Kibble
-   concept. **V2-14 network permissions, V2-13 isolation, V2-12 staffing, V2-11 long-running work,
-   V2-10 learning, V2-09 routing, V2-04b and the V2-04 execution hardening are BUILT** (D-34…D-44;
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **V2-18 synthetic V2 acceptance
+   journeys** (backend-safe): synthetic journeys over the V2 backend surfaces on the real paths (the
+   engine at `C:\Users\Nick\KelV2Runs\prepared\engine`, no fixtures where a real path exists),
+   bounded and grouped so they run one stack at a time. Read `ROADMAP.md`'s V2-18 line and the
+   directive before designing; do not build Astra-owned presentation. **The carried priority queue
+   (3-10) is exhausted**: V2-15 needs Nick's real dogfood batches, V2-16 is largely renderer/Shell,
+   V2-19 (full regression) and V2-20 (release candidate) are whole-system phases, and V2-20's
+   promotion gate is Nick's. **V2-17 upgrade reliability, V2-14 network permissions, V2-13 isolation,
+   V2-12 staffing, V2-11 long-running work, V2-10 learning, V2-09 routing, V2-04b and the V2-04
+   execution hardening are BUILT** (D-34…D-45; `docs/v2/evidence/v2-17/README.md`,
    `docs/v2/evidence/v2-14/README.md`, `docs/v2/evidence/v2-13/README.md`,
    `docs/v2/evidence/v2-12/README.md`, `docs/v2/evidence/v2-11/README.md`,
    `docs/v2/evidence/v2-10/README.md`, `docs/v2/evidence/v2-09/README.md`,
-   `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them.
+   `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them. **Priority 9's Kibble dev-mission/
+   candidate-model definition stays DEFERRED pending Nick's definition** (D-44).
    **V2-05-history is temporarily DEFERRED
    FOR SHELL INTEGRATION** — Astra owns the
    phone drawer/history presentation on `ux/v2-shell`, and implementing it now would overlap; V2-05

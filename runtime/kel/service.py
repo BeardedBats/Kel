@@ -893,6 +893,10 @@ class Service:
             return backup.create(data.get('target'))
         if action=='inspect':
             return backup.inspect(data.get('source'))
+        if action=='inventory':
+            # V2-17: the manual-upgrade before/after — every table with its row count.
+            from .backup import table_inventory
+            return table_inventory(self.store.db_path)
         if action=='restore':
             return backup.stage_restore(data.get('source'))
         raise PolicyError('Unknown backup action')
