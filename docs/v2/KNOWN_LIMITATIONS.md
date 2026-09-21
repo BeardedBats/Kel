@@ -97,3 +97,14 @@ Still open after this pass, in `RESUME.md` order: send with a connected model (t
 Providers and Connections but no model was selected), conversation history from the phone's drawer,
 job-driven attention actions, conversational project routing, and multi-utterance dictation (the
 first utterance's partial is lost when Muse never marks it final).
+
+### V2-05 — the "Work & context" panel is not reachable at phone width (measured)
+
+The panel that holds Kel's conversation history, the attention-first work list and the conversation
+selector is opened by the rail's footer trigger (`KelWorkPanel.tsx`, class `kel-work-context-btn`). At
+393×852 that trigger sits in the collapsed rail — off-canvas and inert, exactly like the rail's named
+entries — so clicking it times out and the panel never opens. Journey B records it
+(`drawer-failed`, then the unchanged home text). Consequence: the phone cannot reach conversation
+history, the conversation selector or the attention-first work list in this build; the phone's own
+entry point for that panel (if one exists) was not identified in this increment. This is a real V2-05
+gap, not a spec artifact: the trigger exists, resolves, and cannot be tapped.
