@@ -10,8 +10,8 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-01                # completed by the Connections commit (model + central management)
-next_item: V2-02            # Generic REST Connection (see ROADMAP.md)
+phase: V2-02                # Test Connection through the single choke point
+next_item: V2-03            # personal Connections (see ROADMAP.md)
 status: phase-complete
 
 paths:
@@ -28,7 +28,7 @@ protected_paths:            # never modify, uninstall, overwrite, reset, migrate
 phases:
   V2-00: done        # developer line + durable program state (this setup commit)
   V2-01: done        # Connections model + central management (migration 23, /connections surface)
-  V2-02: queued      # Generic REST Connection
+  V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
   V2-03: queued      # personal Connections (Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma, Discord)
   V2-04: queued      # Connection Framework + templates/docs/testing
   V2-05: queued      # iPhone Kel PWA V1
@@ -73,6 +73,23 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   it, and an honest result state (there is no test-result column yet).
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-01 block); engine 1085 OK; desktop 334 pass; `tsc` clean.
 - **No candidate was installed** for V2-01 — `C:\Users\Nick\KelV2Candidate` still does not exist.
+
+## V2-02 notes for the next run
+
+- **What exists now:** `Connections.test(id, credentials)` in `runtime/kel/connections.py` with
+  `perform_request` as the single outbound choke point, migration 24 (`v20-connection-tests`) holding the
+  last check's state/status/duration/sentence, the `test` action on `/api/connections`, the privileged
+  `kel:connection-test` channel (sender-guarded; returns the record and never a value), and a
+  `Test connection` button on the page.
+- **The rule to keep:** nothing calls a service except a click on Test connection. V2-14's network rules
+  belong inside `perform_request`; do not add a second HTTP client, and do not add network code to the
+  renderer.
+- **V2-03 starts from:** the eight personal services still need no code — a service is a Connection Nick
+  adds, and what Kel can *do* with it is a tool (V2-04). What V2-03 adds is a real, live check against
+  each service and the smallest useful action for each; nothing about the model should change to make
+  that possible.
+- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-02 block); engine 1101 OK; desktop 338 pass; `tsc` clean.
+- **No candidate was installed** for V2-02 either, and no real service has been contacted by a test yet.
 
 ## Model preferences recorded at setup
 

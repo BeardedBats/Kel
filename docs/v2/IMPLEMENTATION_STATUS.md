@@ -20,7 +20,7 @@ gateway for remote browser use.
 
 ## Not built yet (V2 scope, all queued)
 
-Connections (Generic REST, personal services, framework), iPhone PWA V1, Needs Your
+Connections (personal services, framework), iPhone PWA V1, Needs Your
 Attention 2.0, Recipes 2.0, Activity 2.0, routing intelligence, Learning 2.0, long-running work 2.0,
 adaptive staffing 2.0, local execution isolation, network permissions, performance polish, manual
 upgrade reliability, V2 acceptance and regression.
@@ -61,3 +61,26 @@ One product term, one store, one place to manage them, and nothing per service.
   developer framework (V2-02 / V2-03 / V2-04); `test_endpoint` is stored but nothing is called.
 - **Installed-app check**: not performed for V2-01. The surface is covered in jsdom through the shipped
   components and the real bridge contract; the live pass belongs to the V2-15 integration phase.
+
+## V2-02 — Generic REST Connection + Test Connection (BUILT)
+
+The fields are V2-01's; what this phase adds is the one thing that talks to a service.
+
+- **Engine** (`runtime/kel/connections.py`, migration 24 `v20-connection-tests`): `test(connection_id,
+  credentials)` calls `test_endpoint` (or the API address when there is none), applies the credential by
+  the method the connection declares (header / bearer / query / basic — a bare value stays bare in a
+  custom header, and `Authorization` gets its scheme), and records the outcome: state, HTTP status,
+  elapsed time and one fixed sentence. `perform_request` is the only place a Connection request leaves
+  the computer — the single choke point V2-14's network rules will live in — and it reads the status and
+  nothing else, so a service payload cannot land in Kel's records.
+- **What a result can say**: `ok`; `refused` (401/403 — a result, not an error); `not_found`; `busy`;
+  `error`; `unreachable`; `timeout`. A failed check never silently clears the credential record, and a
+  recorded credential never silently claims the service works.
+- **The credential is used once, in memory**: the main process decrypts the value and sends it with the
+  check; the engine never stores it, never logs it, and scrubs it out of anything durable. The renderer
+  receives the record and never the value — the new `kel:connection-test` channel runs the shared sender
+  guard and returns the engine's answer only.
+- **Desktop**: a `Test connection` button on every connection that has an address, with the engine's
+  sentence shown in the row and the confirmation in the note.
+- **Not in this phase**: service-specific actions and tools (V2-03 / V2-04) and network rules (V2-14).
+  Nothing is called except when Nick clicks Test connection — no automatic or scheduled checks.

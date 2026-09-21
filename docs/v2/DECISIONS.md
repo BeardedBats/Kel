@@ -84,3 +84,35 @@ what it forbids so a later run cannot quietly undo it.
 16. **The migration inventory covers every module.** `runtime/tests/test_v16_r8_migrations.py` now
     includes `dogfood` (22) and `connections` (23) and expects 23 as the maximum, so a new migration
     cannot collide with an existing number unnoticed.
+
+## V2-02 (Generic REST Connection — Test Connection)
+
+17. **Test Connection is a real request, made only when Nick asks for it.** One click on the Connections
+    page is the only trigger: nothing is called on save, on load, or in the background. *Forbids:* any
+    hidden or scheduled call to a service, and any "check all connections" behaviour that Nick did not ask
+    for.
+
+18. **One place makes the request.** `runtime/kel/connections.py:perform_request` is the only function
+    that opens a socket to a service, so V2-14's network rules (no internet / approved domains / ask
+    before a new domain / show contacted domains) have exactly one place to live. *Forbids:* a second
+    HTTP client for Connections and network code inside the desktop renderer.
+
+19. **The credential is used once, in memory, and never travels back.** The main process decrypts the
+    value and sends it with the check; the engine uses it for that request, never stores it, and scrubs
+    it out of anything that can become durable. The renderer receives the *record* of the check, not the
+    value. *Forbids:* a value in the engine's rows, notes, events or backups; a value returned over IPC.
+
+20. **What is recorded is the result, in plain words.** State (`ok`, `refused`, `not_found`, `busy`,
+    `error`, `unreachable`, `timeout`), the HTTP status when the service answered, the elapsed time, and
+    one fixed sentence. The response body is not read at all. *Forbids:* storing a service's payload, and
+    showing a raw status code or a stack trace as the explanation.
+
+21. **A refusal is a result, not a failure of the connection.** A 401/403 is recorded as `refused` and
+    does not silently clear the credential record; the surface says "Ready, but the check was refused"
+    rather than hiding either fact. *Forbids:* quietly marking a connection broken because a check failed,
+    and quietly claiming it works because a credential exists.
+
+22. **Every migration step must be safe to re-run.** Migration 24 (`v20-connection-tests`) adds five
+    nullable result columns and checks for them before altering; the module's migrations are now named
+    steps rather than one DDL blob, because a resumed upgrade can legitimately re-apply the newest step
+    when its marker was lost. *Forbids:* a step that only works on a database that has never seen it.
