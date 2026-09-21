@@ -11,7 +11,7 @@ test.beforeEach(async ({ context }) => { await context.clearCookies(); });
 
 async function open(page: Page, route: string) {
   if (!page.url().startsWith(BASE) || !(await page.locator('.kel-v2-shell').count())) {
-    await page.goto(`${BASE}/#/guid`);
+    await page.goto(`${BASE}/#/login`);
     await expect(page.locator('.kel-v2-shell, input[name="username"]').first()).toBeVisible();
     if (await page.locator('input[name="username"]').count()) {
       if (!process.env.KEL_DEV_PASSWORD) throw new Error('Supply the isolated WebUI KEL_DEV_PASSWORD.');
@@ -23,6 +23,10 @@ async function open(page: Page, route: string) {
     await page.waitForTimeout(700);
     if (await page.getByRole('button', { name: 'Skip setup', exact: true }).count()) {
       await page.getByRole('button', { name: 'Skip setup', exact: true }).click();
+      await expect(page.getByTestId('guid-input')).toBeVisible();
+    }
+    if (await page.getByRole('button', { name: 'Start using Kel', exact: true }).count()) {
+      await page.getByRole('button', { name: 'Start using Kel', exact: true }).click();
       await expect(page.getByTestId('guid-input')).toBeVisible();
     }
     await page.evaluate(() => { location.hash = '/settings/appearance'; });
@@ -39,7 +43,7 @@ async function open(page: Page, route: string) {
 async function record(page: Page, name: string) {
   const geometry = await page.evaluate(() => {
     const root = document.documentElement;
-    const boxes = Object.fromEntries(['.layout-sider', '.kel-shell-home-header', '.chat-layout-header', '.sendbox-panel', '.kel-shell-composer', '.kel-page', '.settings-page-content', '.kel-shell-model-modal', '.kel-shell-ramble > aside', '.kel-shell-ramble > main'].map(selector => {
+    const boxes = Object.fromEntries(['.layout-sider', '.kel-shell-home-header', '.chat-layout-header', '.sendbox-panel', '.kel-shell-composer', '.kel-page', '.settings-page-content', '.kel-shell-model-modal', '.kel-shell-ramble > aside', '.kel-shell-ramble > main', '.kel-shell-appearance > div', '[data-testid=theme-colors-section]', '.kel-shell-source-card-head', '[data-settings-id=model]', '[data-settings-id=appearance]'].map(selector => {
       const el = document.querySelector(selector);
       if (!el) return [selector, null];
       const rect = el.getBoundingClientRect(); const css = getComputedStyle(el);
@@ -80,7 +84,9 @@ for (const width of [1920, 1024, 393, 360]) {
     if (width < 768) {
       await page.getByRole('button', { name: 'Expand More', exact: true }).click();
       await record(page, `${width}-drawer`);
-      await page.getByRole('button', { name: 'Ramble', exact: true }).click();
+      await page.getByRole('button', { name: 'Settings', exact: true }).click();
+      await expect(page.locator('.layout-sider')).not.toBeVisible();
+      await open(page, '/transcription');
       await expect(page.getByRole('heading', { name: 'Ramble', exact: true })).toBeVisible();
       await expect(page.locator('.layout-sider')).not.toBeVisible();
       const folderInput = page.getByPlaceholder('New folder', { exact: true });
@@ -89,7 +95,8 @@ for (const width of [1920, 1024, 393, 360]) {
       await record(page, `${width}-ramble`);
       await open(page, '/guid');
       await page.getByRole('button', { name: 'Expand More', exact: true }).click();
-      await page.getByRole('button', { name: 'Kibble', exact: true }).click();
+      await page.getByRole('button', { name: 'Settings', exact: true }).click();
+      await open(page, '/dogfood');
       await expect(page.getByRole('heading', { name: 'Kibble', exact: true })).toBeVisible();
       await record(page, `${width}-kibble`);
       await open(page, '/guid');
@@ -149,7 +156,7 @@ test('source button states and keyboard focus remain visible', async ({ page }) 
 test('conversation rendering keeps real message components and touch actions', async ({ page, context }) => {
   const id = 'shell-visual-fixture';
   const at = Date.UTC(2026, 8, 21, 13, 32);
-  const conversation = { id, name: 'Shell conversation fixture', type: 'aionrs', createTime: at, modifyTime: at, extra: {}, model: { provider_id: 'fixture', use_model: 'fixture' } };
+  const conversation = { id, name: 'Shell conversation fixture', type: 'aionrs', created_at: at, modified_at: at, extra: {}, model: { provider_id: 'fixture', use_model: 'fixture' } };
   await page.route(/\/api\/conversations(?:\?.*)?$/, route => route.fulfill({ json: { success: true, data: {
     items: [{ ...conversation, extra: { pinned: true, pinned_at: at } }, { ...conversation, id: 'shell-recent-fixture', name: 'Recent conversation fixture' }], total: 2, has_more: false,
   } } }));
@@ -172,6 +179,13 @@ test('conversation rendering keeps real message components and touch actions', a
   await expect(page.locator('.kel-shell-message-turn')).toHaveCount(2);
   await expect(page.locator('.conversation-item')).toHaveCount(2);
   await expect(page.getByText('Pinned', { exact: true })).toBeVisible();
+  await expect(page.locator('.kel-shell-chat-composer').getByTestId('aionrs-model-selector')).toBeVisible();
+  await expect(page.getByTestId('sendbox-add-to-draft-btn')).not.toBeVisible();
+  await expect(page.locator('.chat-layout-header').getByTestId('aionrs-model-selector')).toHaveCount(0);
+  await page.getByTestId('aionrs-model-selector').click();
+  await expect(page.locator('.arco-dropdown')).toBeVisible();
+  await page.getByTestId('chat-title-editor-trigger').click();
+  await page.keyboard.press('Escape');
   const body = page.locator('.markdown-shadow-body p').first();
   await expect(body).toHaveCSS('font-family', /SF Pro Text/);
   await expect(body).toHaveCSS('font-weight', '400');
@@ -218,8 +232,8 @@ test('provider rows reveal real controls and onboarding keeps five sections', as
   for (const title of ['Kel runs on this machine', 'Connect a model', 'Where work happens', 'How much Kel does on its own', "You're set"]) {
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeAttached();
   }
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.getByRole('button', { name: 'Start using Kel', exact: true })).toBeVisible();
+  await expect(page.getByRole('progressbar')).toHaveCount(0);
 });
 
 
@@ -242,4 +256,49 @@ test('Foundations typography loads the specified fonts and role metrics', async 
   await expect(page.locator('.kel-v2-shell')).toHaveCSS('font-family', /SF Pro Text/);
   expect(await page.evaluate(() => document.fonts.check('400 16px "SF Pro Text"'))).toBe(true);
   expect(await page.evaluate(() => [...document.fonts].some(font => font.family === 'Inter'))).toBe(false);
+});
+
+
+test('audit 2 matches sidebar geometry and visible literal source copy', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, '/guid');
+  await expect(page.locator('.kel-shell-settings')).toHaveCSS('color', 'rgb(255, 212, 151)');
+  await expect(page.locator('.kel-shell-batch')).toHaveCount(0);
+  await expect(page.locator('.kel-shell-primary-row, .kel-shell-tools, .kel-work-context-btn, .sider-footer')).toHaveCount(0);
+  await expect(page.locator('[data-testid="resumption-brief"] h2')).toHaveText('Needs you');
+  await expect(page.locator('.kel-shell-attention-line').first()).toContainText('needs setup so Kel can keep it available.');
+  const box = await page.locator('[data-testid="resumption-brief"]').boundingBox();
+  expect(box?.x).toBe(388); expect(box?.y).toBe(112); expect(box?.width).toBe(920);
+  await open(page, '/work');
+  await expect(page.getByText('Select or customize a theme', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add Theme', exact: true })).toHaveCount(0);
+  const workBox = await page.getByRole('heading', { name: 'Jobs', exact: true }).boundingBox();
+  expect(workBox?.x).toBe(409); expect(workBox?.y).toBe(129);
+  await open(page, '/settings/appearance');
+  await expect(page.locator('[data-settings-id="pet"]')).toBeVisible();
+  const modelBox = await page.locator('[data-settings-id="model"]').boundingBox();
+  expect(modelBox?.y).toBe(151);
+  await page.getByRole('button', { name: 'Add Theme', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await page.waitForTimeout(300);
+  await record(page, '1440-source-theme-action');
+});
+
+
+test('scheduled source list selects a task and shows its stored instructions', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const task = (id: string, name: string) => ({ id, name, enabled: true, schedule: { kind: 'every', everyMs: 7200000, description: 'Every 2 hours' }, target: { payload: { kind: 'message', text: `Instructions for ${name}` }, execution_mode: 'new_conversation' }, metadata: { conversation_id: '', agent_type: 'aionrs', created_by: 'user', created_at: 1, updated_at: 1 }, state: { run_count: 0, retry_count: 0, max_retries: 0, queue_enabled: true } });
+  await open(page, '/guid');
+  await page.route('**/api/cron/jobs', route => route.fulfill({ json: { success: true, data: [task('first', 'Morning brief'), task('second', 'Weekly rankings refresh')] } }));
+  await open(page, '/scheduled');
+  await expect(page.locator('.kel-shell-task-row')).toHaveCount(2);
+  const listBox = await page.getByRole('region', { name: 'Scheduled tasks', exact: true }).boundingBox();
+  expect(listBox?.x).toBe(388);
+  expect(listBox?.y).toBe(112);
+  await page.getByRole('button', { name: /Weekly rankings refresh/ }).click();
+  await expect(page.locator('.kel-shell-task-detail')).toContainText('Instructions for Weekly rankings refresh');
+  await expect(page.getByRole('button', { name: 'Go to conversation' })).toBeDisabled();
+  await record(page, '1440-scheduled-fixture');
 });

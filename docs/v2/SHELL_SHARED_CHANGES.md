@@ -1,3 +1,5 @@
+> Audit 2 supersedes the older sidebar, setup navigation and extra-disclosure notes below. See [SHELL_AUDIT_2.md](SHELL_AUDIT_2.md) for the current presentation and behavior changes.
+
 # Shell shared changes
 
 Base: dev/v2 772b2c357943cf9793639bbf660171c49d809c38.
