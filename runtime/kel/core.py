@@ -193,7 +193,12 @@ class Store:
                 db.execute('ALTER TABLE runs ADD COLUMN model TEXT')
             # V1.5 G5: bounded routing-outcome learning needs the task class and escalation context.
             outcome_columns = {r[1] for r in db.execute('PRAGMA table_info(routing_outcomes)')}
-            for column, kind in (('job_kind', 'TEXT'), ('attempts', 'INTEGER'), ('escalated', 'INTEGER')):
+            for column, kind in (('job_kind', 'TEXT'), ('attempts', 'INTEGER'), ('escalated', 'INTEGER'),
+                                 # V2-09: the fuller evidence row — still one table, still no payloads.
+                                 ('model', 'TEXT'), ('ms', 'INTEGER'), ('at', 'REAL'),
+                                 ('fallback', 'INTEGER'), ('source', 'TEXT'),
+                                 ('review_provider', 'TEXT'), ('review_model', 'TEXT'),
+                                 ('cost', 'REAL')):
                 if column not in outcome_columns:
                     db.execute('ALTER TABLE routing_outcomes ADD COLUMN %s %s' % (column, kind))
 
@@ -452,6 +457,16 @@ class Store:
                 else:
                     m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
                              recommendation=result.get('recommendation'))
+                    # V2-09: a failed attempt is routing evidence too, not only a reviewed verdict.
+                    # One row per run (idempotent); a later review refines it, never the other way.
+                    try:
+                        from .routing_evidence import record as _record_outcome
+                        _record_outcome(self, run['id'], run['provider'], 'FAILED',
+                                        job_kind=job['contract'].get('kind'),
+                                        attempts=m.get('attempts'), model=run['model'],
+                                        source='milestone', db=db)
+                    except Exception:
+                        pass  # evidence is additive; it never blocks settlement
                 held = 1 if m['state'] == 'CHECKING' else 0
                 job['reserved'] -= run['reservation'] - held
                 job['spent'] += 1  # The other reserved unit remains available for immediate verification.
@@ -562,14 +577,22 @@ class Store:
                 runs=db.execute('SELECT provider FROM runs WHERE job_id=? AND milestone_id=? ORDER BY rowid',
                                 (job_id,milestone_id)).fetchall()
                 escalated=int(bool(runs) and len(runs)>1 and runs[0]['provider']!=m['provider'])
-                db.execute('INSERT OR IGNORE INTO routing_outcomes(run_id,provider,verdict,job_kind,attempts,escalated) '
-                           'VALUES(?,?,?,?,?,?)',
-                           (m['artifact']['run_id'],m['provider'],combined,
-                            job['contract'].get('kind'),len(runs),escalated))
-                samples=db.execute('SELECT verdict FROM routing_outcomes WHERE provider=?',(m['provider'],)).fetchall()
+                # V2-09: one evidence row, written through the routing-evidence module: the reviewed
+                # verdict, the model that ran, the observed span, and the reviewer's provenance.
+                from .routing_evidence import record as _record_outcome, score as _evidence_score
+                from .routing_evidence import observed_ms as _observed_ms
+                _record_outcome(self, m['artifact']['run_id'], m['provider'], combined,
+                                job_kind=job['contract'].get('kind'), attempts=len(runs),
+                                escalated=escalated, model=m.get('model'),
+                                ms=_observed_ms(self, m['artifact']['run_id'], db=db),
+                                source='review', review_provider=reviewer_provider,
+                                review_model=reviewer_model, db=db)
+                # The provider's quality is now a decayed, windowed reading: it recovers as old
+                # failures age out, and it stays None until the evidence floor is met.
+                scored=_evidence_score(self, m['provider'], db=db)
                 old=db.execute('SELECT data FROM providers WHERE id=?',(m['provider'],)).fetchone()
                 provider_state=json.loads(old['data']) if old else {'failures':0,'circuit_until':0,'quota':None}
-                provider_state.update(quality_samples=len(samples),quality=sum(r['verdict']=='VERIFIED' for r in samples)/len(samples) if len(samples)>=3 else None)
+                provider_state.update(quality_samples=scored['samples'],quality=scored['verified_rate'])
                 db.execute('INSERT INTO providers VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data',(m['provider'],encode(provider_state)))
             self._save(db,job,'review.recorded',{'reviewer_id':reviewer_id,'reviewer_provider':reviewer_provider,'reviewer_model':reviewer_model,'verdict':combined})
             return combined

@@ -221,3 +221,22 @@ redirect's host, and a rule source that errors fails closed; an answer that hits
 labelled in the note; and a refusal from the choke point reaches the person as its own sentence
 (`test()`/`run()` re-raise `PolicyError`). No rules are configured yet — behaviour is unchanged
 except where a service (or a stand-in) asks for otherwise. D-36.
+
+## V2-09 — routing intelligence (BUILT, 2026-09-21)
+
+The routing path already existed (`routing_outcomes`, `router.select`, `model_prefs`, the provider
+state row, the `run.claimed` route the state surface reads); V2-09 makes it *intelligent and
+answerable* without adding a second system. `kel/routing_evidence.py` owns the evidence store: one
+fact row per run (verdict, task kind, attempts, escalation, model, observed span, source, reviewer
+provenance), decayed at a seven-day half-life inside a thirty-day window, with **no rate reported**
+until ~three fresh runs’ worth of weight exists — so small samples never move the defaults. A reviewed
+verdict refines an inferred failure, never the reverse. `router.select` takes that evidence as data
+and may **demote** a recently-failing eligible model — never removing it, never touching an explicit
+choice or a preference — then returns the decision with its own explanation (`why`, `chain`,
+`demoted`, `evidence`, `excluded`; policy `eligible-cost-v2`). `/api/model` gained `action: 'why'`,
+which reads the stored route back and answers in one plain sentence; `state()` already publishes the
+same route per active run. The measured phone gap is closed: `needs_work()` in `kel/router.py` keeps a
+command-shaped or connected-service request out of the conversational branch, so it becomes a real
+work turn. Live probe on this code: the measured phone turn created a real job (`codex`, chain
+`[codex, claude]`), “Why this model?” answered plainly, and the chat control created no job. D-37,
+D-38.

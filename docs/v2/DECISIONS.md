@@ -316,3 +316,33 @@ A refusal raised here is a `PolicyError` and reaches the person as its own sente
 `run()` re-raise it instead of folding it into a generic failure. *Forbids:* opening a URL anywhere
 but the single opener; honouring an unbounded Retry-After; letting a redirect smuggle a host the
 rules would refuse; silently allowing traffic when the rule source errors.
+
+## D-37 — routing evidence is decayed, floored, and read back (V2-09)
+
+Kel keeps **one** routing-evidence store — the `routing_outcomes` table V1.5 already writes — and
+V2-09 makes it answer properly. Every finished run contributes one fact row (verdict, task kind,
+attempts, escalation, model, observed span, when, source, reviewer provenance) and never a payload:
+no prompt, no answer, no path, no credential. An outcome’s influence **halves every seven days**
+inside a thirty-day window, so a provider that failed last month is not punished today and recovery
+is real; below ~three fresh runs of decayed weight **no rate is reported at all**, so small samples
+can never overrule the safe cost/health defaults; and a reviewed verdict (`source='review'`) may
+refine an inferred failure (`source='milestone'`) but never the other way round. Evidence may only
+*reorder otherwise-eligible* models: an explicit choice and a preference are protected, nothing is
+excluded by evidence, and demotion is applied after the existing cost/latency/quota ordering so the
+defaults stand when evidence is thin. The decision the engine stores on `run.claimed` now carries its
+own explanation (`why`, `chain`, `demoted`, `evidence`, `excluded`), and “Why this model?” reads
+**that** back instead of computing a second opinion. *Forbids:* a second outcome store; evidence
+influence without decay or a sample floor; demoting a person’s explicit choice or preference;
+explaining a routing decision from anything but the stored route.
+
+## D-38 — a tool request is a work request (V2-09)
+
+Measured gap: a phone turn that asked Kel to run `python -m kel.conn list` and use a connected service
+was answered conversationally by the saved-context path, so nothing ran. `needs_work()` (in
+`kel/router.py`) recognises a command-shaped or connected-service request, and `service._plan` keeps
+such a message out of the conversational branch so it becomes a real work turn — the only path in Kel
+that can actually run something. The patterns are deliberately narrow (a known runner in backticks,
+`python -m …`, `git/npm/bun/… <verb>`, “run the tests/the command”, “use the connected service”,
+“check the repository”) and pinned by tests that include the exact measured sentence; ordinary chat
+is proved to stay conversational (a live probe: **no** job for the chat control). *Forbids:* treating
+a tool request as chit-chat; widening the predicate for ordinary prose without a measured case.

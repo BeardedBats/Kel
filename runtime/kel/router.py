@@ -11,6 +11,26 @@ GREENFIELD_RE = re.compile(
     r'\b(create|build|make|write|develop|code)\b.{0,100}\b(app|application|program|tool|script|bot|game|cli|website|utility|extension|project)\b',
     re.IGNORECASE)
 
+# Explicit tool/work requests (V2-09). Measured gap: a phone turn that asked Kel to run
+# `python -m kel.conn list` and use a connected service was answered conversationally by the
+# saved-context path, so nothing ran. A message that asks for a command or a connected service is a
+# work request; the runtime is the only part of Kel that can honour it.
+TOOL_REQUEST_RE = re.compile(
+    r'`(?:python\w*|git|npm|npx|bun|node|cargo|go|pytest|pip|kel)\b[^`\n]*`'  # a real command
+    r'|\bpython3?\s+-m\s+\S+'                                                 # python -m <module>
+    r'|\bpython3?\s+[\w./\\-]+\.py\b'                                        # python script.py
+    r'|\b(?:git|npm|npx|bun|node|cargo|pytest|pip)\s+[a-z][\w-]*'              # git status, npm test
+    r'|\buse\s+the\s+connected\s+(?:service|services|accounts?|connections?)\b'
+    r'|\b(?:run|use|call)\s+the\s+(?:connected|connection)\b'
+    r'|\b(?:run|execute)\s+the\s+(?:command|commands|tests?|script|scripts?)\b'
+    r'|\b(?:check|read|look\s+(?:at|in))\s+the\s+(?:repository|repo|project\s+files?|source\s+tree)\b',
+    re.IGNORECASE)
+
+
+def needs_work(text):
+    """True when the message asks for something only real work can do (a command, a service)."""
+    return bool(TOOL_REQUEST_RE.search(str(text or '')))
+
 
 @dataclass
 class Candidate:
@@ -26,7 +46,8 @@ class Candidate:
     privacy: str = 'cloud'
 
 
-def select(candidates, required=None, explicit=None, quality_floor=None, local_only=False, prefer=None):
+def select(candidates, required=None, explicit=None, quality_floor=None, local_only=False, prefer=None,
+           evidence=None):
     required = required or {'text'}
     eligible, excluded = [], {}
     for c in candidates:
@@ -47,9 +68,34 @@ def select(candidates, required=None, explicit=None, quality_floor=None, local_o
                     c.cost is None, c.cost if c.cost is not None else 0,
                     c.latency is None, c.latency if c.latency is not None else 0,
                     -(c.quota if c.quota is not None else -1), c.name))
-    return {'selected': eligible[0].name, 'fallbacks': [c.name for c in eligible[1:]],
-            'excluded': excluded, 'policy': 'eligible-cost-v1',
-            'unknown_cost': eligible[0].cost is None, 'unknown_quota': eligible[0].quota is None}
+    # V2-09: measured outcomes may move a recently-failing provider DOWN — never out of the list,
+    # never past an explicit choice or a preference (the person's own ordering is not evidence), and
+    # only when the evidence floor was met (`routing_evidence.summary` decides that, not this file).
+    protected = {name for name in (prefer, explicit) if name}
+    demoted = [c.name for c in eligible
+               if c.name not in protected and (evidence or {}).get(c.name, {}).get('demote')]
+    if demoted:
+        eligible.sort(key=lambda c: (1 if c.name in demoted else 0))
+    chosen = eligible[0]
+    return {'selected': chosen.name, 'fallbacks': [c.name for c in eligible[1:]],
+            'excluded': excluded, 'policy': 'eligible-cost-v2',
+            'preferred': prefer or None, 'explicit': explicit or None,
+            'demoted': demoted, 'chain': [c.name for c in eligible],
+            'evidence': {c.name: (evidence or {})[c.name] for c in eligible
+                         if (evidence or {}).get(c.name)},
+            'why': _why(chosen, explicit, prefer, demoted),
+            'unknown_cost': chosen.cost is None, 'unknown_quota': chosen.quota is None}
+
+
+def _why(chosen, explicit, prefer, demoted):
+    """One plain fragment for "Why this model?": the first fact that actually decided it."""
+    if explicit and chosen.name == explicit:
+        return 'your chosen model'
+    if prefer and chosen.name == prefer:
+        return 'your preferred model'
+    if demoted:
+        return 'recent results moved a failing model down'
+    return 'lowest cost among the models that are healthy and capable here'
 
 
 def classify(text):

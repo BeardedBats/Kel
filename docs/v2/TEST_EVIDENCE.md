@@ -235,3 +235,26 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   under machine load (the identical module set had taken 527 s twenty minutes earlier), so this
   increment's verification is the focused run — recorded plainly rather than presented as a
   full-suite pass.
+
+### V2-09 — routing intelligence (2026-09-21)
+
+- `tests/test_v2_routing.py` (new, 13 tests) — decay and recovery (four month-old failures read below
+  the floor and cannot demote anyone; four fresh verified runs outweigh them), the small-sample floor
+  (two runs report **no** rate; the sentence says so), review precedence over an inferred failure, the
+  richer fact row (kind/attempts/escalation/model/ms/at/source/reviewer/cost), the half-life constant,
+  the demotion reordering plus the explanation shape, preference and explicit choice never demoted,
+  and the tool-request predicate — including the **exact measured phone sentence**.
+- Bounded groups on the final code (one stack at a time, no monolithic run):
+  `test_v2_routing test_service_routing test_model_prefs test_v14_providers test_v15_completion` →
+  **57 OK**; `test_workforce_assignment` (via `discover -s tests`) → **43 OK**;
+  `test_v16_r8_migrations test_v14_diagnostics test_v14_upgrade test_v15_reliability test_v15_roles
+  test_v13_continuation_service test_review_recovery` → **41 OK**; `test_research
+  test_v13_work_context test_acp_host` → **41 OK**; `test_coding_boundaries test_coding_recovery
+  test_coding_transport` → **22 OK**. Total **204 tests green**.
+- Live probe (engine restarted on this code, `C:\Users\Nick\KelV2Runs\prepared\engine`): the measured
+  phone turn through `/api/send` created a real job (`state=RUNNING`, provider `codex`, chain
+  `['codex','claude']`, `why='lowest cost among the models that are healthy and capable here'`);
+  `/api/model {action:'why'}` answered “Kel is using Codex: the lowest cost among the models that are
+  healthy and capable here.” and carried `chain/demoted/evidence/excluded/job/provider/selected/why`;
+  the chat control created **no** job (delta 0). The probe stack was stopped afterwards (ownership
+  checked by PID; nothing of Astra’s was touched).

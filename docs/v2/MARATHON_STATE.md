@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: routing intelligence # V2-04b (OAuth foundation) and the V2-04 execution hardening are BUILT (evidence/v2-04b/README.md; D-34/D-35/D-36); next safe backend item: Priority 3 of the run directive — routing intelligence (durable outcome evidence, Automatic-routing improvement, the "Why this model?" payload), which includes the measured phone-routing gap (phone turns route conversationally even when they ask for tool work); then learning (Priority 4), long-running work (5), staffing (6), isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
+next_item: learning (Priority 4) # V2-09 routing intelligence is BUILT (2026-09-21; D-37/D-38; evidence/v2-09/README.md): decayed bounded outcomes over the existing routing_outcomes table, evidence-aware Automatic ordering behind a small-sample floor, the authoritative "Why this model?" payload (/api/model action=why plus routes in /api/state), and the measured phone gap closed (tool-shaped turns become real work turns; live-probed). Next safe backend item: Priority 4 of the run directive — Learning 2.0 (evidence threshold; propose/accept/reject/remove; never silent authority), implemented on the existing memory/approval paths; then long-running work (5), staffing (6), isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -36,7 +36,7 @@ phases:
   V2-06: queued      # Needs Your Attention 2.0
   V2-07: queued      # Recipes 2.0
   V2-08: queued      # Activity 2.0
-  V2-09: queued      # Routing intelligence
+  V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
   V2-10: queued      # Learning 2.0
   V2-11: queued      # Long-running work 2.0
   V2-12: queued      # Adaptive staffing 2.0

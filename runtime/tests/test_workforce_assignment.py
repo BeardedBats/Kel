@@ -115,7 +115,7 @@ class ModeTests(Base):
         self.assertEqual(binding['selected']['provider'], 'codex')
         self.assertEqual(binding['selected']['model'], 'codex-native')
         self.assertEqual(binding['selected']['runtime'], 'native-cli')
-        self.assertEqual(binding['policy'], 'eligible-cost-v1')
+        self.assertEqual(binding['policy'], 'eligible-cost-v2')
         self.assertEqual(binding['fallback_basis'], 'eligible-cost-order')
         self.assertEqual([f['provider'] for f in binding['fallbacks']], ['claude-code'])
 

@@ -28,7 +28,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-06 | Needs Your Attention 2.0 | queued | — |
 | V2-07 | Recipes 2.0 | queued | — |
 | V2-08 | Activity 2.0 | queued | — |
-| V2-09 | Routing intelligence | queued | — |
+| V2-09 | Routing intelligence | **BUILT** (2026-09-21) | `kel/routing_evidence.py` (decayed, windowed, floored outcomes over the existing `routing_outcomes` table) + evidence-aware `router.select` (`why`/`chain`/`demoted`/`evidence`, policy `eligible-cost-v2`) + `action: 'why'` on `/api/model` + `needs_work()` so tool requests become real work turns. 204 tests green in bounded groups (13 new) and a live probe of the measured phone turn (job created, route readable, chat control stayed conversational). D-37/D-38; `docs/v2/evidence/v2-09/README.md` |
 | V2-10 | Learning 2.0 | queued | — |
 | V2-11 | Long-running work 2.0 | queued | — |
 | V2-12 | Adaptive staffing 2.0 | queued | — |
@@ -53,5 +53,6 @@ chooses Kel and sends for real** (one `kel` pill → send → real reply → sec
 PWA contract holds in the built app (Kel manifest, SW registered and controlling, 0 cached `/api/`, 0
 horizontal overflow, clean console), and the gateway blocker that made all of it impossible is fixed.
 Still open, in `RESUME.md` order: conversation history from the phone (deep link measured blank once),
-job-driven attention actions, conversational project routing. V2-04a and V2-04b remain untouched and
-unclaimed — they are the next deliberate program items.
+job-driven attention actions, conversational project routing. V2-04a and V2-04b are built (2026-09-21)
+and no longer unclaimed; **V2-09 routing intelligence is built** and the measured routing gap is
+closed (a tool-shaped phone turn now becomes real work — `docs/v2/evidence/v2-09/README.md`).
