@@ -33,7 +33,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 | V2-01 | Connections model + central management | engine `1085 tests OK`; `tests.test_v2_connections` **25 OK**; desktop `40 files / 334 tests pass`; `tsc --noEmit` clean; `tests/unit/connections-page.dom.test.tsx` **11 pass**; `tests/unit/connections-surface.test.ts` **12 pass** (details below) |
 | V2-02 | Generic REST Connection + Test Connection | engine `1101 tests OK`; `tests.test_v2_connections` **41 OK**; desktop `40 files / 338 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **13 pass** (details below) |
 | V2-03 | Personal Connections | engine `1110 tests OK`; `tests.test_v2_connections` **50 OK**; desktop `40 files / 340 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **15 pass** (details below) |
-| V2-04 | Connection Framework (standard parts) | engine `1117 tests OK`; `tests.test_v2_connections` **57 OK**; desktop `40 files / 341 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **16 pass**, `connections-surface.test.ts` **13 pass** (details below) |
+| V2-04 | Connection Framework (standard parts, then actions) | engine `1126 tests OK`; `tests.test_v2_connections` **66 OK**; desktop `40 files / 344 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **18 pass**, `ipc-sender-channels.test.ts` **21 pass** (both increments below) |
 
 ### V2-01 — what each command actually proves
 
@@ -76,7 +76,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 
 **Not verified for V2-03:** no real service was contacted — Kel knows the eight services' addresses and shapes, but testing them needs Nick's credentials, so nothing here says a service works. No installed-app check either.
 
-### V2-04 — what each command actually proves
+### V2-04 — the framework's standard parts
 
 | Suite | Command | Result |
 | --- | --- | --- |
