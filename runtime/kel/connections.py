@@ -34,6 +34,7 @@ MIGRATIONS = (
     (23, 'v20-connections', 'Connections: credentials for a service'),
     (24, 'v20-connection-tests', 'Connections: what the last check found'),
     (25, 'v20-connection-prefix', 'Connections: how a service wants its credential presented'),
+    (26, 'v20-connection-actions', 'Connections: what Kel has asked a service to do'),
 )
 MIGRATION_VERSION = MIGRATIONS[-1][0]
 MIGRATION_NAME = MIGRATIONS[-1][1]
@@ -93,6 +94,16 @@ TEST_COLUMNS = ('last_test_at REAL', 'last_test_state TEXT', 'last_test_status I
 # Migration 25 (V2-03): the word a service wants in front of the credential. NULL means Kel works it out
 # (the old behaviour); '' means the value goes exactly as it is (ClickUp, Figma, Raptive).
 PREFIX_COLUMNS = ('auth_prefix TEXT',)
+# Migration 26 (V2-04): what Kel asked a service to do, and what came back — the fact of the call, never
+# its payload. V2-14's "show contacted domains, access history" reads this.
+ACTION_DDL = """
+CREATE TABLE IF NOT EXISTS connection_events(
+  at REAL NOT NULL, connection_id TEXT NOT NULL, action TEXT NOT NULL, domain TEXT,
+  status INTEGER, state TEXT, attempts INTEGER, ms INTEGER);
+CREATE INDEX IF NOT EXISTS connection_events_by_connection ON connection_events(connection_id, at);
+"""
+# An answer is read so it can be handed to the caller; it is never written down, and never wholesale.
+MAX_ANSWER_BYTES = 200000
 
 
 def _exec(db, ddl):
@@ -120,9 +131,14 @@ def _add_prefix_column(db):
     _add_columns(db, PREFIX_COLUMNS)
 
 
+def _add_actions_table(db):
+    _exec(db, ACTION_DDL)
+
+
 # Every step must be safe to run again on a database that already has it: a resumed upgrade may
 # re-apply the newest step when its marker was lost.
-STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns, 25: _add_prefix_column}
+STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns, 25: _add_prefix_column,
+                   26: _add_actions_table}
 
 
 def _table(db, name):
@@ -217,41 +233,52 @@ def scrub(text, credentials):
     return cleaned
 
 
-def _attempt(url, headers, timeout):
-    """One GET. A refusal is a result: 401 is an answer, not an error."""
-    request = urllib.request.Request(url, method='GET', headers=dict(headers or {}))
+def _attempt(url, headers, timeout, method='GET', read_body=False):
+    """One request. A refusal is a result: 401 is an answer, not an error."""
+    request = urllib.request.Request(url, method=method, headers=dict(headers or {}))
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return int(getattr(response, 'status', None) or 200), response.geturl()
+            body = response.read(MAX_ANSWER_BYTES) if read_body else b''
+            return int(getattr(response, 'status', None) or 200), response.geturl(), body
     except urllib.error.HTTPError as error:
         status = int(error.code)
         final = getattr(error, 'url', url)
+        body = b''
+        if read_body:
+            try:
+                body = error.read(MAX_ANSWER_BYTES)
+            except Exception:
+                body = b''
         error.close()
-        return status, final
+        return status, final, body
 
 
 def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS,
-                    sleep=None, budget=REQUEST_BUDGET):
+                    sleep=None, budget=REQUEST_BUDGET, method='GET', read_body=False):
     """The one place a Connection's request leaves this computer.
 
     Every future network rule (V2-14: no internet / approved domains / ask before a new domain) has a
-    single place to live because of this function. Kel reads the status and nothing else — the body is
-    never kept, so a service's data cannot end up in Kel's records by accident.
+    single place to live because of this function.
 
-    V2-04 gives it the framework's retry policy: a GET is tried again when the service is busy (429 or a
-    5xx) or the connection dropped, never when the service answered with a real answer (a 401 or a 404 is
+    V2-04 gives it the framework's retry policy: a request is tried again when the service is busy (429 or
+    a 5xx) or the connection dropped, never when the service answered with a real answer (a 401 or a 404 is
     information, not a hiccup). Every attempt is bounded by the timeout, and the whole request by the
     budget, so a click never turns into an indefinite wait.
 
-    Returns (status, final_url, attempts, elapsed_ms).
+    A check reads nothing back (`read_body=False`): the status is the answer. An action asks for its answer
+    (`read_body=True`), bounded and handed to the caller — never written down.
+
+    Returns (status, final_url, attempts, elapsed_ms, body_bytes).
     """
     stated = time.monotonic()
     pause = sleep or time.sleep
     tried = 0
+    body = b''
     while True:
         tried += 1
         try:
-            status, final = _attempt(url, headers, timeout)
+            status, final, body = _attempt(url, headers, timeout, method=method,
+                                           read_body=read_body)
         except urllib.error.URLError:
             if tried >= attempts or time.monotonic() - stated >= budget:
                 raise
@@ -263,7 +290,23 @@ def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPT
             pause(RETRY_BACKOFF * tried)
             continue
         break
-    return status, final, tried, int((time.monotonic() - stated) * 1000)
+    return status, final, tried, int((time.monotonic() - stated) * 1000), body
+
+
+def _action_url(connection, row, params):
+    """Where an action's request goes: the service's address plus the path its documentation gives."""
+    base = connection['base_url'] or connection['test_endpoint']
+    if not base:
+        raise PolicyError('Kel needs this service\'s API address before it can do anything with it.')
+    url = base.rstrip('/') + str(row['path'])
+    allowed = {str(name) for name in (row.get('params') or ())}
+    extra = {str(key): str(value)[:200] for key, value in (params or {}).items()
+             if str(key) in allowed and value not in (None, '')}
+    if extra:
+        parsed = urlparse(url)
+        pairs = parse_qsl(parsed.query, keep_blank_values=True) + list(extra.items())
+        url = urlunparse(parsed._replace(query=urlencode(pairs)))
+    return url
 
 
 def auth_for(connection, credentials):
@@ -322,6 +365,17 @@ def classify(status, connection, final_url, attempts=1):
     if status >= 500:
         return 'error', 'The service answered with its own error (%d).%s' % (status, redirect)
     return 'error', 'The service answered %d.%s' % (status, redirect)
+
+
+def _answer(body, credentials):
+    """A service's answer, as data when it is JSON and as text otherwise. Bounded, redacted, not stored."""
+    if not body:
+        return None
+    text = scrub(body[:MAX_ANSWER_BYTES].decode('utf-8', 'replace'), credentials)
+    try:
+        return json.loads(text)
+    except ValueError:
+        return text
 
 
 class Connections:
@@ -510,9 +564,9 @@ class Connections:
             url = urlunparse(parsed._replace(query=urlencode(pairs)))
         state, status, elapsed, note = 'error', None, 0, 'The check did not finish.'
         try:
-            status, final, tried, elapsed = perform_request(url, headers, timeout=self.timeout,
-                                                             attempts=self.attempts,
-                                                             sleep=self.sleep)
+            status, final, tried, elapsed, _body = perform_request(url, headers, timeout=self.timeout,
+                                                                   attempts=self.attempts,
+                                                                   sleep=self.sleep)
             state, note = classify(status, connection, final, tried)
         except (TimeoutError, socket.timeout):
             state = 'timeout'
@@ -530,3 +584,75 @@ class Connections:
                        ' last_test_ms=?, last_test_note=? WHERE id=?',
                        (time.time(), state, status, elapsed, note, connection['id']))
         return self.get(connection['id'])
+
+    # -- doing something with the service (V2-04) ---------------------------------------------------
+    def run(self, connection_id, action_id, credentials=None, params=None, confirmed=False):
+        """Do one thing with a service, and hand back what it said.
+
+        The answer goes to the caller and is never written down. What is recorded is that the action ran,
+        against which service, and how it went — `events()` reads that back.
+        """
+        from .connection_actions import action as action_row
+        connection = self.get(connection_id)
+        row = action_row(action_id)
+        if row is None:
+            raise PolicyError('Kel does not know that action.')
+        if row['service'] and row['service'] != connection['id']:
+            raise PolicyError('%s is an action for %s, not for %s.'
+                              % (row['name'], row['service'], connection['name']))
+        if row['mutating'] and not confirmed:
+            raise PolicyError('%s changes something in %s, so Kel asks first.'
+                              % (row['name'], connection['name']))
+        target = _action_url(connection, row, params or {})
+        headers, query, problem = auth_for(connection, credentials)
+        if problem:
+            raise PolicyError(problem)
+        if query:
+            parsed = urlparse(target)
+            pairs = parse_qsl(parsed.query, keep_blank_values=True) + list(query.items())
+            target = urlunparse(parsed._replace(query=urlencode(pairs)))
+        state, status, tried, elapsed = 'error', None, 0, 0
+        note, answer = 'The action did not finish.', None
+        try:
+            status, final, tried, elapsed, body = perform_request(
+                target, headers, timeout=self.timeout, attempts=self.attempts, sleep=self.sleep,
+                method=row['method'], read_body=True)
+            state, note = classify(status, connection, final, tried)
+            answer = _answer(body, credentials)
+        except (TimeoutError, socket.timeout):
+            state = 'timeout'
+            seconds = int(self.timeout) if float(self.timeout).is_integer() else self.timeout
+            note = 'The service did not answer within %s seconds.' % seconds
+        except urllib.error.URLError:
+            state = 'unreachable'
+            note = 'Kel could not reach that address.'
+        except Exception:
+            state = 'error'
+            note = 'The action did not finish.'
+        note = scrub(note, credentials)
+        self._record(connection['id'], row['id'], target, status, state, tried, elapsed)
+        return {'connection': connection['id'], 'action': row['id'], 'name': row['name'],
+                'state': state, 'status': status, 'attempts': tried, 'ms': elapsed,
+                'note': note, 'result': answer, 'at': time.time()}
+
+    def _record(self, connection_id, action_id, url, status, state, attempts, ms):
+        """Record the fact of a call. The domain, never the path or a query string, and never an answer."""
+        with self.store.transaction() as db:
+            db.execute('INSERT INTO connection_events(at, connection_id, action, domain, status, state,'
+                       ' attempts, ms) VALUES(?,?,?,?,?,?,?,?)',
+                       (time.time(), connection_id, action_id, urlparse(url).netloc, status, state,
+                        attempts, ms))
+
+    def events(self, connection_id=None, limit=20):
+        """What Kel has asked for, most recent first — the access history, with no payloads in it."""
+        with contextlib.closing(self.store.connect()) as db:
+            if connection_id:
+                rows = db.execute('SELECT * FROM connection_events WHERE connection_id=?'
+                                  ' ORDER BY at DESC LIMIT ?',
+                                  (connection_id, int(limit))).fetchall()
+            else:
+                rows = db.execute('SELECT * FROM connection_events ORDER BY at DESC LIMIT ?',
+                                  (int(limit),)).fetchall()
+        return [{'at': row['at'], 'connection': row['connection_id'], 'action': row['action'],
+                 'domain': row['domain'] or '', 'status': row['status'], 'state': row['state'],
+                 'attempts': row['attempts'], 'ms': row['ms']} for row in rows]

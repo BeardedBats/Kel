@@ -1063,6 +1063,21 @@ class Service:
             # The shell passes the credential for this one request; the engine records only the result.
             return service.test(self._required(data,'id','Pick a connection first.'),
                                 data.get('credentials') or {})
+        if action=='actions':
+            # V2-04: what Kel can do with this connection, as data.
+            from .connection_actions import actions, actions_for
+            if data.get('id'):
+                item=service.get(self._required(data,'id','Pick a connection first.'))
+                return {'connection':item['id'],'actions':actions_for(item['id'])}
+            return {'actions':actions()}
+        if action=='run':
+            # The shell passes the credential for this one request; the answer goes back to the caller
+            # and only the fact of the call is written down.
+            return service.run(self._required(data,'id','Pick a connection first.'),
+                               data.get('action_id'),data.get('credentials') or {},
+                               data.get('params') or {},bool(data.get('confirmed')))
+        if action=='events':
+            return {'events':service.events(data.get('id'),data.get('limit') or 20)}
         raise PolicyError('Unknown connection action')
 
     def _vetting_all_answered(self,questions):
