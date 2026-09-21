@@ -105,3 +105,21 @@ per-service code anywhere.
 - **Not in this phase**: what Kel can *do* with each service (that is a tool — V2-04) and a live check
   against the real services, which needs Nick's credentials. Nothing here claims a service works because
   it is listed.
+
+## V2-04 — Connection Framework (PARTIAL)
+
+The standard parts of a Connection, in one place: the three credential templates and the request policy.
+
+- **`runtime/kel/connection_framework.py`**: the three templates (API key, Account authorization, Bot or
+  webhook) with their labels, hints, credential field names and a plain sentence about what a check does;
+  plus the request policy's numbers, re-presented from the one place they live. It knows no service by
+  name, and a test fails if it learns one.
+- **Bounded, honest retries** in `connections.perform_request`: a GET is tried again only when the service
+  is busy (429 or a 5xx) or the connection dropped; a 401/403/404 is never retried. Each attempt is bounded
+  by the timeout, the whole request by a budget, and the record says how many times Kel tried.
+- **One vocabulary**: the kind labels, hints and credential field names travel with the list, and the
+  renderer's own copy was deleted — a test fails if one grows back, so the engine's words and the engine's
+  behaviour cannot drift apart.
+- **Not built in this phase, and not claimed**: what Kel can *do* with a service (actions/tools) and the
+  OAuth account sign-in step. Google Drive stays uncheckable beyond a pasted token because of the second
+  one, and no connection can be used for anything but Test connection because of the first.
