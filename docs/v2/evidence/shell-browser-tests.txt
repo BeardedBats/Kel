@@ -1,0 +1,21 @@
+
+Running 12 tests using 1 worker
+
+(node:62720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62720) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\e2e\kel-shell.e2e.ts:55:5 › desktop surfaces use the built renderer and real state (56.2s)
+  ok  2 tests\e2e\kel-shell.e2e.ts:75:7 › responsive shell at 1920px (8.2s)
+  ok  3 tests\e2e\kel-shell.e2e.ts:75:7 › responsive shell at 1024px (8.0s)
+  ok  4 tests\e2e\kel-shell.e2e.ts:75:7 › responsive shell at 393px (9.8s)
+  ok  5 tests\e2e\kel-shell.e2e.ts:75:7 › responsive shell at 360px (9.8s)
+  ok  6 tests\e2e\kel-shell.e2e.ts:102:5 › Kibble shortcut and project deep links preserve their routes (8.3s)
+  ok  7 tests\e2e\kel-shell.e2e.ts:114:5 › appearance choices change live paint and restore cleanly (8.5s)
+  ok  8 tests\e2e\kel-shell.e2e.ts:134:5 › source button states and keyboard focus remain visible (8.5s)
+  ok  9 tests\e2e\kel-shell.e2e.ts:149:5 › conversation rendering keeps real message components and touch actions (11.5s)
+  ok 10 tests\e2e\kel-shell.e2e.ts:192:5 › model configuration modal keeps cancel and disabled validation (9.3s)
+  ok 11 tests\e2e\kel-shell.e2e.ts:209:5 › provider rows reveal real controls and onboarding keeps five sections (8.4s)
+  ok 12 tests\e2e\kel-shell.e2e.ts:226:5 › Foundations typography loads the specified fonts and role metrics (7.6s)
+
+  12 passed (2.6m)
