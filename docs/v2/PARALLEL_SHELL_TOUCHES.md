@@ -23,3 +23,18 @@ in `runtime/kel/connection_tools.py`):
 
 No renderer change is required for any of the above — this note exists so the Shell work can reflect
 the capability and the source fact deliberately when it lands.
+
+## V2-04b — the account sign-in (2026-09-21, `dev/v2` @ the V2-04b commit)
+
+- Connection rows now carry the sign-in state in plain words: `auth_state` (`''` | `pending` |
+  `connected` | `disconnected` | `needs_reconnect`), `auth_scopes` (what the provider granted),
+  `auth_expires`, `oauth_provider`. Never a token, and never mandatory for other kinds.
+- The desktop shell owns the sign-in end to end: `kel:connection-oauth-connect` (opens the system
+  browser, waits boundedly, claims the finished authorization into the OS-backed custody, pushes it
+  to the engine) and `kel:connection-oauth-revoke`, both exposed as
+  `window.kelAPI.credentials.oauthConnect / oauthRevoke` and both refusing spoofed senders. The
+  Connections page shows a plain-words status line and one Connect / Reconnect / Sign out button for
+  `kind: 'oauth'` connections — no visual redesign; keep those two strings if the page is redrawn.
+- The engine serves exactly one public route, `/oauth/callback`; a sign-in started on a remote
+  surface (the phone) finishes only where the engine's own loopback is reachable. The Shell work may
+  decide later whether the phone should start sign-ins; no renderer change is needed for that today.

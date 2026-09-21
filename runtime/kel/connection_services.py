@@ -87,6 +87,8 @@ KNOWN_SERVICES = (
         'id': 'google-drive',
         'name': 'Google Drive',
         'kind': 'oauth',
+        # V2-04b: which sign-in provider this service authorizes through (connection_oauth.py).
+        'oauth_provider': 'google',
         'base_url': 'https://www.googleapis.com/drive/v3',
         'auth_method': 'header',
         'auth_header': 'Authorization',

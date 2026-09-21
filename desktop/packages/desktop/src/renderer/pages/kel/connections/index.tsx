@@ -283,6 +283,43 @@ const Connections: React.FC = () => {
   );
 
   /**
+   * V2-04b: the account sign-in. Only the Kel app can finish it — the main process opens the system
+   * browser, claims the finished sign-in into the OS-backed custody, and hands this page the
+   * outcome. A signed-in connection signs out here too.
+   */
+  const signInConnection = useCallback(
+    async (connection: KelConnection) => {
+      setBusy(true);
+      setNote(null);
+      try {
+        const custody = window.kelAPI?.credentials;
+        if (connection.auth_state === 'connected') {
+          if (!custody?.oauthRevoke)
+            throw new Error('Signing out of a service is only available in the Kel app.');
+          const done = await custody.oauthRevoke(connection.id);
+          await load();
+          setNote(String(done?.note ?? `${connection.name} is signed out.`));
+          return;
+        }
+        if (!custody?.oauthConnect)
+          throw new Error('Signing in is only available in the Kel app, where the credential lives.');
+        const outcome = await custody.oauthConnect(connection.id);
+        await load();
+        setNote(
+          outcome?.state === 'connected'
+            ? `${connection.name} is connected.`
+            : String(outcome?.note ?? 'The sign-in did not finish.')
+        );
+      } catch (err) {
+        setNote(failureSentence(err, 'Kel could not finish that sign-in — try again.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load]
+  );
+
+  /**
    * V2-04: do one thing with a service. The shell decrypts the credential, the engine makes the request
    * and records that it happened, and the service's answer comes back here — where it is shown and
    * nowhere else.
@@ -441,6 +478,17 @@ const Connections: React.FC = () => {
                       ? `Credential fields: ${connection.credential_fields.join(', ')} · updated ${formatWhen(connection.updated)}`
                       : `Added ${formatWhen(connection.created)}`}
                   </span>
+                  {connection.kind === 'oauth' && (
+                    <span className="kel-meta">
+                      {connection.auth_state === 'connected'
+                        ? `Signed in${connection.auth_scopes.length ? ` · ${connection.auth_scopes.length} permission${connection.auth_scopes.length === 1 ? '' : 's'}` : ''}`
+                        : connection.auth_state === 'needs_reconnect'
+                          ? 'The sign-in no longer works — connect again'
+                          : connection.auth_state === 'pending'
+                            ? 'Sign-in started in your browser'
+                            : 'Not signed in'}
+                    </span>
+                  )}
                 </div>
                 <span className="kel-grow" />
                 {connection.can_test && (
@@ -450,6 +498,19 @@ const Connections: React.FC = () => {
                     onClick={() => void checkConnection(connection)}
                   >
                     Test connection
+                  </KelButton>
+                )}
+                {connection.kind === 'oauth' && (
+                  <KelButton
+                    variant={connection.auth_state === 'connected' ? 'quiet' : 'primary'}
+                    disabled={busy}
+                    onClick={() => void signInConnection(connection)}
+                  >
+                    {connection.auth_state === 'connected'
+                      ? 'Sign out'
+                      : connection.auth_state === 'needs_reconnect'
+                        ? 'Reconnect'
+                        : 'Connect'}
                   </KelButton>
                 )}
                 <KelButton

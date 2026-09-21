@@ -190,3 +190,17 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   (event + bounded result + written login) stands independently.
 - **The standalone webui/phone profile has no credential custody** (no shell pushes values); its
   `catalog` says so per connection in plain words, and calls refuse honestly instead of guessing.
+
+## V2-04b — the sign-in's honest limits (measured 2026-09-21)
+
+- **Real Google OAuth was not exercised.** The whole framework is proved against a local stand-in
+  provider (real HTTP, real S256 PKCE, real callback); a real Google sign-in needs Nick's own OAuth
+  client ID stored for the connection and a browser visit — that step is his to take.
+- **The phone cannot finish a sign-in yet.** The callback lands on the engine's own loopback, which a
+  remote browser cannot reach; the desktop (or a local browser) is the place sign-ins complete. The
+  Shell work may revisit this; nothing is claimed for the phone line.
+- **A sign-in that finishes while nobody claims it lives in engine memory only** — if the engine
+  restarts between the callback and the shell's claim, the sign-in must be repeated (the connection
+  then reads `needs_reconnect`/`disconnected`, never a stale success).
+- **A pasted token still works exactly as before** for `kind: 'oauth'` connections that were never
+  signed in — the framework adds the sign-in; it does not remove the manual path.

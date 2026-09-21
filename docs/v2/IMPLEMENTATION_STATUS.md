@@ -193,3 +193,20 @@ journey test (helper subprocess → real engine → stand-in service, 16 tests) 
 the running engine where a real runtime called `github-whoami` behind the stored credential and used
 the bounded login (`evidence/v2-04a/README.md`). The live run also found and fixed a real defect:
 the engine now exports `python -m kel` to its runtimes (`d3bbf65`).
+
+## V2-04b — the OAuth foundation (BUILT, 2026-09-21)
+
+One reusable sign-in for account-authorization services (D-34): providers as data
+(`kel.connection_oauth`), the flow in `oauth_flows` (migration 28 — single-use state, PKCE verifier,
+never a token), the trade through `perform_request` (the one outbound choke point, now with a bounded
+form body), the tokens in the same in-memory custody every connection value uses. Durability works
+like every other value: the shell claims a finished authorization exactly once into the OS-backed
+custody and pushes it back; the engine keeps only its working copy. The connection row carries
+`auth_state` / `auth_scopes` / `auth_expires` / `oauth_provider` in plain words. Refresh runs on
+expiry (failed → `needs_reconnect` + the plain reconnect sentence everywhere); sign-out hits the
+provider's revoke endpoint, then clears both custodies. The only public route is `/oauth/callback`
+(D-35): the single-use state is the proof, PKCE S256 where the provider supports it. Google Drive is
+the first reference (`gdrive-files`, scope `drive.metadata.readonly`, missing granted scope named in
+plain words). Desktop: the main process runs the sign-in end to end (browser → bounded wait → claim
+→ custody → supply); the Connections page has one Connect/Reconnect/Sign out button and a status
+line. Real Google OAuth was not exercised — it needs Nick's own client ID and a browser sign-in.

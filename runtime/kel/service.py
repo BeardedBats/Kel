@@ -1017,6 +1017,14 @@ class Service:
         raise PolicyError('Unknown fix action')
 
     # -- Connections (V2.0) ------------------------------------------------------------------------
+    def _oauth_callback(self,query):
+        # One place the browser's sign-in answer lands: state-validated, single-use, plain words out.
+        from .connection_oauth import complete
+        state=(query.get('state') or [''])[0]
+        code=(query.get('code') or [''])[0]
+        refused=(query.get('error') or [''])[0]
+        return complete(self.store,state,code=code or None,refused=refused or None)
+
     def _connections_action(self,data):
         # Same contract as the other families: one plain sentence for an unexpected failure, and
         # PolicyError keeps the sentence it was raised with.
@@ -1047,7 +1055,7 @@ class Service:
                                 auth_method=data.get('auth_method'),auth_header=data.get('auth_header'),
                                 auth_prefix=data.get('auth_prefix'),
                                 docs_url=data.get('docs_url'),test_endpoint=data.get('test_endpoint'),
-                                notes=data.get('notes'))
+                                notes=data.get('notes'),oauth_provider=data.get('oauth_provider'))
         if action=='catalogue':
             # V2-03: what Kel already knows about the services Nick uses. Data, not behaviour.
             from .connection_services import catalogue
@@ -1103,6 +1111,21 @@ class Service:
                         conversation=data.get('conversation'),confirmation=data.get('confirm'))
         if action=='events':
             return {'events':service.events(data.get('id'),data.get('limit') or 20)}
+        if action=='oauth-initiate':
+            # V2-04b: build the sign-in URL for one connection; state + PKCE live in the flow table.
+            from .connection_oauth import begin
+            item=service.get(self._required(data,'id','Pick a connection first.'))
+            return begin(self.store,item,str(data.get('_redirect_base') or ''),
+                         provider_id=data.get('provider'),scopes=data.get('scopes'))
+        if action=='oauth-claim':
+            # The shell takes custody of a finished sign-in exactly once (the engine keeps memory).
+            from .connection_oauth import claim
+            return claim(self.store,self._required(data,'id','Pick a connection first.'))
+        if action=='oauth-revoke':
+            # Sign out: the provider's revoke endpoint when it has one, then local custody, plainly.
+            from .connection_oauth import revoke
+            item=service.get(self._required(data,'id','Pick a connection first.'))
+            return revoke(self.store,item)
         raise PolicyError('Unknown connection action')
 
     def _vetting_all_answered(self,questions):
@@ -1132,6 +1155,21 @@ def serve(root,port=0):
             return self.headers.get('Host')==host and (not origin or origin=='http://'+host) and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+token)
         def do_GET(self):
             parsed=urlparse(self.path)
+            if parsed.path=='/oauth/callback':
+                # V2-04b: the browser's sign-in answer comes back here. It carries no bearer — the
+                # single-use state is the proof, checked inside complete(); no token ever reaches
+                # this page, only a plain sentence about what happened.
+                query=parse_qs(parsed.query)
+                try:
+                    outcome=service._oauth_callback(query)
+                except Exception:
+                    outcome={'ok':False,'note':'Kel could not finish that sign-in.'}
+                escape=lambda text:str(text).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
+                title='Kel — sign-in finished' if outcome.get('ok') else 'Kel — sign-in not finished'
+                html=('<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title>'
+                      '</head><body><h1>'+title+'</h1><p>'+escape(outcome.get('note') or '')+'</p>'
+                      '<p>You can close this tab and return to Kel.</p></body></html>')
+                self.reply(200,html.encode('utf-8'),'text/html; charset=utf-8');return
             if parsed.path.startswith('/api/'):
                 if not self.authorized():self.reply(403,{'error':'Local session authorization required'});return
                 try:
@@ -1170,6 +1208,9 @@ def serve(root,port=0):
                 if not 0<size<8_000_000:raise PolicyError('Request body is too large or empty')
                 data=json.loads(self.rfile.read(size))
                 route=urlparse(self.path).path
+                if route=='/api/connections':
+                    # The engine's own address, never the caller's: where a sign-in can come back to.
+                    data={**data,'_redirect_base':f'http://127.0.0.1:{self.server.server_port}'}
                 result=service.action(route,data)
                 self.reply(200,result)
                 if route=='/api/shutdown-idle':threading.Thread(target=self.server.shutdown,daemon=True).start()

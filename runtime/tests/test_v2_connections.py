@@ -41,6 +41,8 @@ EXPECTED_COLUMNS = {
     'last_test_at', 'last_test_state', 'last_test_status', 'last_test_ms', 'last_test_note',
     # V2-03: the word a service wants in front of its credential.
     'auth_prefix',
+    # V2-04b: the account sign-in state — plain words, granted scopes, expiry, provider. No value.
+    'auth_state', 'auth_scopes', 'auth_expires', 'oauth_provider',
 }
 
 MODULE = Path(__file__).resolve().parents[1] / 'kel' / 'connections.py'

@@ -188,3 +188,32 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   work; the fallback is the engine's own); the job closed UNCERTAIN (its verification path shared the
   quota) while the bridge evidence stands; the phone line cannot reach a work turn yet (its turns are
   conversational by design), so Journey J is held, not delivered.
+
+### V2-04b — the OAuth foundation (2026-09-21)
+
+- `runtime/tests/test_v2_oauth.py` — 10 tests, all pass: the whole lifecycle engine-level
+  (disconnected → connect → callback → connected → Test Connection → authorized read → refresh →
+  revoke → disconnected) against a local stand-in provider that performs a REAL S256 PKCE check;
+  state mismatch / replay / malformed / expired answers refused (and never traded); verifier
+  mismatch refused; refresh on expiry serves the call with the new token; failed refresh reads
+  `needs_reconnect` and stays refused; revoke tells the provider and returns to disconnected;
+  one connection's token never rides another's request; missing granted scopes named in plain words;
+  tokens absent from every durable table; plus a real-HTTP journey (engine `serve()`, the browser
+  callback with **no bearer**, one-time claim, the bridge `call` path, revoke) and untrusted-callback
+  refusals.
+- Desktop: 5 new unit tests (`connections-surface.test.ts`) — browser open → bounded wait → claim
+  once → custody fields → engine pointer + supply; honest refusal when the person does not finish;
+  bounded timeout; sign-out clears shell custody and engine memory; spoofed sender refused before
+  any call. Whole desktop suite `bunx vitest run` — 43 files, 363 passed; `bunx tsc --noEmit` clean.
+- Migration ledger: `v20-oauth` (28) — the migration-set suite updated and green.
+- Verification split (this machine, under load): the monolithic `discover` run was replaced by two
+  bounded runs with identical coverage — the bulk regression (75 modules: every suite except the two
+  HTTP-journey files) → **1126 tests, OK** (527 s), and the two HTTP-journey suites together
+  (`test_v2_oauth` + `test_v2_connection_bridge`) → **26 tests, OK** (59 s).
+- Live check against the real provider: `oauth-initiate` built a real Google authorize URL
+  (S256 `code_challenge`, `offline`+`consent`, the engine's own loopback redirect); the
+  unauthenticated callback drove a real token exchange at `https://oauth2.googleapis.com/token`, and
+  Google's own answer came back in plain words (“Google did not accept the sign-in — The OAuth client
+  was not found.” — a placeholder client id); the page carried no token; the connection read
+  `disconnected`; replaying the state answered “That sign-in answer was already used.” A real
+  *sign-in* still needs Nick's client ID (`evidence/v2-04b/README.md`).

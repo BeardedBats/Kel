@@ -274,3 +274,31 @@ and the runtime receives none at all. Lines without a shell (the standalone webu
 no custody, and the bridge says so in plain words instead of guessing. *Forbids:* persisting a value
 on the engine side, expanding custody beyond the connection namespace, and any bridge path that
 accepts a credential from the caller.
+
+## D-34 — the OAuth foundation: providers as data, the flow in the store, tokens in the same custody (V2-04b)
+
+One reusable sign-in for account-authorization services: no per-service auth app, no second
+credential store. A provider is a row of data (`kel.connection_oauth.PROVIDERS`: authorize / token /
+revoke addresses, whether PKCE applies, the permissions in plain words). The flow lives in
+`oauth_flows` (migration 28): one single-use state, its 10-minute window, the PKCE verifier the trade
+needs, the redirect URI, the requested scopes — and **never a token**. The engine completes the trade
+through `perform_request` (the single outbound choke point, now with a bounded form body); the tokens
+land in the same in-memory custody every connection value uses. The finished authorization reaches
+durability the same way every other value does: the shell claims it **once** (`oauth-claim`) into the
+OS-backed custody and pushes it back (`supply`); the engine keeps only its working copy. The
+connection row carries the sign-in state in plain words (`auth_state`, `auth_scopes`, `auth_expires`,
+`oauth_provider` — never a token). Expiry refreshes engine-side from the refresh token; a failed
+refresh reads `needs_reconnect` and every caller gets the plain reconnect sentence. Sign-out hits the
+provider's revoke endpoint when it has one, then clears shell custody and engine memory. *Forbids:*
+tokens in any column, log, message, approval, access-history row, model prompt, tool output or
+renderer state; a second credential database; a per-service auth path.
+
+## D-35 — the callback is public by state, not by bearer (V2-04b)
+
+A browser cannot hold Kel's bearer token, so `/oauth/callback` (the only public route the engine
+serves) trusts nothing but the single-use `state`: 256-bit random, ten-minute TTL, bound to one
+connection and one redirect URI, marked USED **before** any trade so a replay can never trade twice,
+and paired with PKCE S256 whenever the provider supports it (the fixture suite proves a verifier
+mismatch is refused by a real S256 check). The page shows a plain sentence — no script, no token,
+no connection data beyond what the person just did. *Forbids:* any other public route; resolving a
+callback by anything but state; putting a code, token or verifier into the page.
