@@ -38,3 +38,8 @@ intent so a resume run does not have to guess.
 - Disk hygiene: temporary trees die once their findings are committed; no obsolete `node_modules`,
   build output, duplicate installers, or accumulating data roots.
 - Dogfood feedback from the stable candidate outranks synthetic tests; priority changes are recorded.
+
+- **V2-05 — iPhone Kel PWA V1: partial.** Real-browser phone journeys now exist and pass
+  (`docs/v2/evidence/v2-05/`); the phase closes when browser voice reaches Muse, a connected model makes
+  send real, and the job-driven attention actions are exercised on the phone. PWA plumbing itself was
+  already pinned and stayed green.

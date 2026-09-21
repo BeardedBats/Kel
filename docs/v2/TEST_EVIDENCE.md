@@ -121,3 +121,17 @@ row names the command and the result, so a resume run can re-run it instead of t
   result, or the installed-app check and its evidence file.
 - When a check cannot run here (no hardware, no credential, no network), say exactly that and record what
   *was* verified instead — never mark it green.
+
+## V2-05 — Kel on a phone (real browser engine)
+
+Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the step screenshots.
+
+- `desktop/tests/unit/kel-remote-bridge.test.ts` — new pin: the gateway must drop the browser's
+  `origin`/`referer` when it forwards to the engine (a browser's Origin can never be the engine's own, so
+  every mutating Kel route answered 403 from a browser before the fix).
+- `desktop/tests/e2e/kel-mobile.e2e.ts` (new) — the phone journeys, in real Chromium at 393x852 with an
+  iPhone UA, against the built renderer served by the real gateway: A home/attention, B composer+paste,
+  C attention action, D project surface, E voice, F PWA contract. Measured: 0 horizontal overflow on
+  every surface; post-sign-in console clean and no failed reads; manifest/SW/`/api/` cache contract green.
+- Reproduce (engine + `bun run package` + `bun run webui` + `KEL_DEV_PASSWORD=… bunx playwright test
+  tests/e2e/kel-mobile.e2e.ts`) — exact commands in the evidence README.

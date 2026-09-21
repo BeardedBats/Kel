@@ -149,3 +149,12 @@ states each rule beside the test that enforces it).
   connection — the assistant's tools come from the coding runtime the desktop agent runs, and that bridge
   is carried as follow-up V2-04a in `FEATURE_LEDGER.md`. V2-04's own scope (the framework) is complete;
   that bridge is a deliberate product step, not a missing row.
+
+## V2-05 increment — the phone can reach Kel at all
+
+`packages/web-host/src/static-server.ts`: `forwardToKel` now drops `origin` and `referer` alongside the
+session cookie. Kel's engine authorizes on `Host` + (`Origin` absent or its own) + bearer
+(`runtime/kel/service.py`); forwarding the browser's Origin made `/kel/api/providers`, `/kel/api/autonomy`
+and every other mutating Kel route answer 403 from a browser, so a phone could read `/api/state` and
+nothing else. The gateway holds the token and is session-gated: it now reaches the engine exactly the way
+the desktop does.

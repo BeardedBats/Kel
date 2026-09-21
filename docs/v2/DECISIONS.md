@@ -216,3 +216,14 @@ V2-04 is the framework, not the consumer: templates, one request path, data-decl
 confirmation gate, honest errors, bounded retries, the access history, and the developer page. What it
 deliberately leaves open is named in `FEATURE_LEDGER.md` (the assistant bridge) and in
 `KNOWN_LIMITATIONS.md` (no real service contacted, no OAuth sign-in flow, no write action shipped).
+
+## D-29 — the gateway reaches the engine the way the desktop does
+
+The engine authorizes a request only when `Host` is its own and `Origin` is absent or its own origin —
+a deliberate local-session guard. A browser on a phone always sends the *gateway's* origin, which can
+never satisfy that, so forwarding it verbatim turned every mutating Kel route into 403 and the shell into
+"Kel is not answering right now (403)". We do **not** widen the engine's guard (that would weaken the
+only thing standing between a local web page and the engine) and we do **not** rewrite the Origin to the
+engine's own (that would assert something false). The gateway is already the trusted local client — it
+holds the bearer, it is session-gated, and it already strips the browser's session cookie — so it strips
+`origin`/`referer` too and presents itself exactly as the desktop does.
