@@ -5,17 +5,17 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **routing intelligence**
-   (run-directive Priority 3): durable routing evidence (task type, chosen provider/model, latency,
-   completion state, fallback chain, provider failure, tool requirement and success, reviewer outcome,
-   approximate cost where available), Automatic-routing improvement from that evidence (explicit fixed
-   choice always wins; preferred stays meaningful; small samples never overrule safe defaults;
-   degradation decays and recovers), an authoritative explanation payload for “Why this model?”, and
-   the **measured routing gap**: phone turns route conversationally even when they ask for tool work —
-   explicit tool/work requests must become eligible for real work turns. Do not build Astra-owned
-   presentation. Then learning (Priority 4) and the rest of the queue. **V2-04b and the V2-04
-   execution hardening are BUILT** (D-34/D-35/D-36; `docs/v2/evidence/v2-04b/README.md`) — do not
-   rebuild them. **V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION** — Astra owns the
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Learning 2.0** (run-directive
+   Priority 4): evidence accumulates behind a floor before anything is proposed (the same shape V2-09
+   used for routing), a proposal moves through proposed → accepted / rejected / removed on the existing
+   memory and approval paths, the person can always see and undo what Kel believes, and no learning
+   path may write an authority the person did not accept. Read `ROADMAP.md`'s V2-10 section before
+   designing; do not build Astra-owned presentation, and keep the OAuth controls and contracts intact
+   for the Shell. Then long-running work (5), staffing (6), isolation (7), network permissions (8),
+   Kibble Build Update (9), migration reliability (10). **V2-09 routing intelligence, V2-04b and the
+   V2-04 execution hardening are BUILT** (D-34…D-38; `docs/v2/evidence/v2-09/README.md`,
+   `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them. **V2-05-history is temporarily DEFERRED
+   FOR SHELL INTEGRATION** — Astra owns the
    phone drawer/history presentation on `ux/v2-shell`, and implementing it now would overlap; V2-05
    stays PARTIAL and items (c)/(d) below remain requirements, not removed. The phone surface, the PWA
    contract, the gateway blocker, **mobile voice** (real browser → gateway → engine → Muse, the
@@ -43,9 +43,10 @@
        Tapping the home's recent entry text timed out once — try the drawer path first. Pick this up only
        after the Shell integration lands (see `MARATHON_STATE.md`, parallel-ownership section); the
        requirement is kept, not dropped.
-   The Connections program (V2-01 … V2-04) is closed; V2-04a (the assistant bridge) is now built and
-   proved live; the remaining carried follow-up is V2-04b (the OAuth sign-in flow) — pick it up
-   deliberately, do not assume it was done.
+   The Connections program (V2-01 … V2-04) is closed; V2-04a (the assistant bridge) and V2-04b (the
+   OAuth sign-in flow) are both built and evidenced (`docs/v2/evidence/v2-04a/README.md`,
+   `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them; a real Google sign-in still needs
+   Nick's own client ID and a browser visit.
 5. Per increment: understand → narrow design → implement → self-review → focused tests → commit
    atomically → update durable state (`MARATHON_STATE.md`, `FEATURE_LEDGER.md`,
    `IMPLEMENTATION_STATUS.md`, `TEST_EVIDENCE.md`, `DECISIONS.md`, and `DOGFOOD_FINDINGS.md` when real
@@ -58,6 +59,10 @@
    goes through the session gate and 401s, measured).
    Kill the gateway by PID when restarting it — a stopped session left the first one listening and the
    old code kept answering (that cost a full diagnosis cycle).
+   Verify with **bounded groups**, never the monolithic run, and record exactly which groups passed on
+   the final code (the groups V2-09 used are listed in `docs/v2/evidence/v2-09/README.md`). Inspect
+   listener and process ownership before stopping anything — the engine's pid is in the data root's
+   `desktop-session.json` — and stop only this run's stack; Astra's worktree processes stay untouched.
 
 Guard rails: `C:\Users\Nick\KelDogfoodCandidate` and `C:\Users\Nick\KelDogfoodRuns\prepared` are
 protected (never install/clean/modify them); V2 test data goes to `C:\Users\Nick\KelV2Runs\prepared`;

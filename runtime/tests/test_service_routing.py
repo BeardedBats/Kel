@@ -45,15 +45,25 @@ class RoutingTests(unittest.TestCase):
         job = self.service.store.create(contract, conversation='main')
         job_id = job['id'] if isinstance(job, dict) else job
         route = {'selected': 'fixture', 'fallbacks': ['other'],
-                 'excluded': {'alt': ['quota exhausted']}, 'policy': 'eligible-cost-v1',
+                 'excluded': {'alt': ['quota exhausted']}, 'policy': 'eligible-cost-v2',
+                 'demoted': [], 'chain': ['fixture', 'other'],
+                 'why': 'lowest cost among the models that are healthy and capable here',
                  'unknown_cost': True, 'unknown_quota': True}
         self.service.store.claim(job_id, 'm1', provider='fixture', route=route, model='fixture-1')
         state = self.service.state('main')
         decision = state['routes'][job_id]
         self.assertEqual(decision['provider'], 'fixture')
         self.assertEqual(decision['route']['selected'], 'fixture')
-        self.assertEqual(decision['route']['policy'], 'eligible-cost-v1')
+        self.assertEqual(decision['route']['policy'], 'eligible-cost-v2')
         self.assertEqual(decision['route']['excluded'], {'alt': ['quota exhausted']})
+        # V2-09: “Why this model?” is read back from the stored decision, in plain words.
+        why = self.service.action('/api/model', {'action': 'why', 'conversation': 'main'})
+        self.assertEqual(why['job'], job_id)
+        self.assertEqual(why['selected'], 'fixture')
+        self.assertEqual(why['chain'], ['fixture', 'other'])
+        self.assertEqual(why['answer'],
+                         'Kel is using fixture: the lowest cost among the models that are '
+                         'healthy and capable here.')
 
     def test_classify_maps_request_kinds(self):
         self.assertEqual(classify('status')['kind'], 'status')

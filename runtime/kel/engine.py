@@ -257,8 +257,10 @@ class Engine:
                         pref = ModelPrefs.resolve_for_job(self.store, job['id'])
                     except Exception:
                         pref = None
+                    from .routing_evidence import summary as _routing_evidence_summary
+                    evidence=_routing_evidence_summary(self.store,[c.name for c in candidates])
                     try:
-                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=(pref or {}).get('provider') or None)
+                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=(pref or {}).get('provider') or None,evidence=evidence)
                     except PolicyError as exc:
                         self.store.wait_for_route(job['id'],str(exc))
                         continue

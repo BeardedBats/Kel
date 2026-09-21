@@ -20,6 +20,7 @@ from .native import NativeAdapter
 from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
+from .router import needs_work
 
 # Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
 # whose reported version differs from the app it shipped with, so this literal must match
@@ -233,7 +234,7 @@ class Service:
                 # adopting a temp/donor workspace as the project root.
                 self.store.add_message('This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.', 'assistant', cid)
                 jid=None
-            elif (kind in ('chat','conversation') and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(('research','search','look up','find current','write','create','draft','summarize','fix','build','implement','change','add','remove','update','make','refactor','test','review','analyze','compare','prepare'))):
+            elif not needs_work(text) and ((kind in ('chat','conversation') and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(('research','search','look up','find current','write','create','draft','summarize','fix','build','implement','change','add','remove','update','make','refactor','test','review','analyze','compare','prepare')))):
                 model=self.model
                 if model is None:
                     available=next((n for n in ('codex','claude') if n in self.engine.adapters),None)
@@ -865,6 +866,40 @@ class Service:
         from .model_prefs import ModelPrefs, provider_label, model_label
         action=data.get('action')
         prefs=ModelPrefs(self.store)
+        if action=='why':
+            # V2-09 — “Why this model?”: the authoritative explanation is the one the engine stored
+            # with the run it actually chose, read back rather than recomputed.
+            conversation=str(data.get('conversation') or 'main')
+            jobs=[j['id'] for j in self.store.list_jobs() if j.get('conversation')==conversation]
+            latest=None
+            for event in self.store.events():
+                if event.get('type')!='run.claimed' or event.get('aggregate_id') not in jobs:
+                    continue
+                try:
+                    detail=(json.loads(event.get('payload') or '{}') or {}).get('detail') or {}
+                except (TypeError, ValueError):
+                    continue
+                route=detail.get('route')
+                if route and (latest is None or (event.get('at') or 0) > latest['at']):
+                    latest={'job_id':event['aggregate_id'],'provider':detail.get('provider'),
+                            'route':route,'at':event.get('at') or 0}
+            if latest is None:
+                return {'answer':'No model choice has been made for this conversation yet.'}
+            route=latest['route']
+            chosen=route.get('selected') or latest.get('provider') or ''
+            label=provider_label(chosen) or chosen
+            why=str(route.get('why') or '')
+            if why in ('your chosen model','your preferred model'):
+                answer='Kel is using %s because you chose it.' % label
+            elif why=='recent results moved a failing model down':
+                answer=('Kel is using %s; recent results moved another model down for now.' % label)
+            else:
+                answer=('Kel is using %s: the lowest cost among the models that are healthy and '
+                        'capable here.' % label)
+            return {'job':latest['job_id'],'provider':latest.get('provider'),'selected':chosen,
+                    'why':why,'chain':route.get('chain') or ([chosen]+list(route.get('fallbacks') or [])),
+                    'demoted':route.get('demoted') or [],'evidence':route.get('evidence') or {},
+                    'excluded':route.get('excluded') or {},'answer':answer}
         if action in ('get','list'):
             # Both actions carry the provider listing: the Kel model control reads the choice
             # and the choices from one payload, and a missing list is what made the settings

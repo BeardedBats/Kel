@@ -213,3 +213,19 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   approved domains / full internet, per-tool and per-Project rules) are V2-14's work.
 - **The redirect bound is three hops** (`MAX_REDIRECTS`) and the imposed pause is capped at five
   seconds (`RETRY_AFTER_CAP`); both are framework constants, not per-connection settings yet.
+
+## V2-09 — routing intelligence: the honest edges (2026-09-21)
+
+- **Latency is an observation, not a stopwatch.** `ms` is the span between a run’s first and last
+  native event, so a run that left no events records `NULL` instead of a guess.
+- **No cost source is wired yet**, so the `cost` column is present but stays `NULL`; routing still
+  uses the provider state row’s own cost figure, exactly as before.
+- **The window and half-life are framework constants** (30 days, 7 days), not per-connection or
+  per-project settings.
+- **Evidence can only reorder eligible models.** A provider whose circuit is open or whose quota is
+  exhausted is still refused by the pre-existing hard filters; evidence never re-admits it.
+- **Routing evidence is per run/milestone, not per project or conversation** — there is no per-project
+  evidence model yet, and the preference (which *is* per conversation/default) stays a preference.
+- **The phone still needs the Shell’s Work route** to *show* a job it created: this increment makes the
+  tool-shaped turn become real work at the engine, and the plain-probe proof above is the engine’s;
+  the presentation of that work on the phone is the Shell lane’s.
