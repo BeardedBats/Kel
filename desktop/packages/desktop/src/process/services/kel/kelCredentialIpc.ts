@@ -39,6 +39,12 @@ export interface KelCredentialIpcDeps {
   test: (body: Record<string, unknown>) => Promise<unknown>;
   /** Ask the engine to do something with a connection, with these values for this one request. */
   run: (body: Record<string, unknown>) => Promise<unknown>;
+  /** V2-04b: open a sign-in address in the system browser (the main process owns this). */
+  openExternal?: (url: string) => void;
+  /** Test seam: how often the sign-in wait checks the engine, in milliseconds. */
+  oauthPollMs?: number;
+  /** Test seam: how many checks the sign-in wait makes before giving up. */
+  oauthAttempts?: number;
 }
 
 const isConnection = (provider: string): boolean => provider.startsWith(`${CONNECTION_NAMESPACE}:`);
@@ -90,6 +96,10 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
       .sync('/api/connections', { action: 'supply', id, credentials: values })
       .catch((): undefined => undefined);
   };
+
+  const oauthCall = (body: Record<string, unknown>): Promise<Record<string, unknown>> =>
+    deps.sync('/api/connections', body) as Promise<Record<string, unknown>>;
+  const pause = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
   ipcMain.handle('kel:credential-status', (event) => {
     assertTrustedSender(event, { allowDevServer: true });
@@ -176,6 +186,78 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
         confirmed: Boolean(confirmed),
         credentials: valuesFor(id),
       });
+    }
+  );
+
+  /**
+   * V2-04b: the account sign-in. The engine builds the authorization address (state + PKCE stay with
+   * it), the system browser opens it, and this process waits — bounded — for the sign-in to finish.
+   * A finished authorization is claimed ONCE into the OS-backed custody and pushed into engine memory
+   * the way every other connection value is; the renderer sees only the outcome, never a token.
+   */
+  ipcMain.handle(
+    'kel:connection-oauth-connect',
+    async (event, connectionIdValue: string): Promise<Record<string, unknown>> => {
+      assertTrustedSender(event, { allowDevServer: true });
+      const id = String(connectionIdValue ?? '');
+      const started = await oauthCall({ action: 'oauth-initiate', id });
+      const authorizeUrl = String(started.authorize_url ?? '');
+      if (!authorizeUrl) throw new Error('Kel could not build the sign-in address.');
+      deps.openExternal?.(authorizeUrl);
+      const attempts = Math.max(1, Number(deps.oauthAttempts ?? 150));
+      const interval = Math.max(1, Number(deps.oauthPollMs ?? 2000));
+      for (let waited = 0; waited < attempts; waited += 1) {
+        await pause(interval);
+        const row = await oauthCall({ action: 'get', id }).catch((): undefined => undefined);
+        const state = String(row?.auth_state ?? '');
+        if (state === 'connected') {
+          const claimed = await oauthCall({ action: 'oauth-claim', id });
+          const values = (claimed.credentials ?? {}) as Record<string, unknown>;
+          let fields: string[] = deps.fieldsFor(id);
+          for (const [field, value] of Object.entries(values)) {
+            if (typeof value === 'string' && value) {
+              fields = deps.set(`${CONNECTION_NAMESPACE}:${id}`, field, value).fields;
+            }
+          }
+          await deps
+            .sync('/api/connections', {
+              action: 'set_credential',
+              id,
+              fields,
+              credential_ref: `kel:connection:${id}`,
+            })
+            .catch((): undefined => undefined);
+          await pushCustody(id);
+          return { state: 'connected', fields };
+        }
+        // `oauth-initiate` leaves the connection `pending`, so a `disconnected` answer here is the
+        // person not finishing on the provider page — say so instead of waiting out the clock.
+        if (state === 'disconnected') {
+          return { state: 'disconnected', note: 'The sign-in was not finished on the provider page.' };
+        }
+      }
+      return {
+        state: 'timeout',
+        note: 'The sign-in did not finish; the browser tab may still be open.',
+      };
+    }
+  );
+
+  /** V2-04b: sign out — the provider, then this shell's custody, then the engine's memory. */
+  ipcMain.handle(
+    'kel:connection-oauth-revoke',
+    async (event, connectionIdValue: string): Promise<unknown> => {
+      assertTrustedSender(event, { allowDevServer: true });
+      const id = String(connectionIdValue ?? '');
+      const outcome = await oauthCall({ action: 'oauth-revoke', id });
+      deps.remove(`${CONNECTION_NAMESPACE}:${id}`);
+      await deps
+        .sync('/api/connections', { action: 'supply', id, clear: true })
+        .catch((): undefined => undefined);
+      await deps
+        .sync('/api/connections', { action: 'delete_credential', id })
+        .catch((): undefined => undefined);
+      return outcome;
     }
   );
 };

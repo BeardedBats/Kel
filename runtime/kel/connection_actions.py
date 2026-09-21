@@ -115,6 +115,20 @@ ACTIONS = (
         'mutating': False,
         'source': 'assumed',
     },
+    {
+        'id': 'gdrive-files',
+        'service': 'google-drive',
+        'name': 'List your Drive files',
+        'description': 'The files in your Drive, through the account sign-in Kel keeps for Google.',
+        'method': 'GET',
+        'path': '/files?pageSize=10&fields=files(id,name,mimeType),nextPageToken',
+        'params': (),
+        'returns': 'Up to ten files with their names and types.',
+        'mutating': False,
+        'source': 'documented',
+        # V2-04b: the permission this action needs — refused in plain words when not granted.
+        'scopes': ('https://www.googleapis.com/auth/drive.metadata.readonly',),
+    },
 )
 
 

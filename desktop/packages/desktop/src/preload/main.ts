@@ -147,6 +147,12 @@ contextBridge.exposeInMainWorld('kelAPI', {
       params?: Record<string, unknown>,
       confirmed?: boolean
     ) => ipcRenderer.invoke('kel:connection-run', connectionId, actionId, params, confirmed),
+    // V2-04b: the account sign-in runs in the main process end to end (it holds the custody); the
+    // renderer only asks for it and receives the outcome — never a token.
+    oauthConnect: (connectionId: string) =>
+      ipcRenderer.invoke('kel:connection-oauth-connect', connectionId),
+    oauthRevoke: (connectionId: string) =>
+      ipcRenderer.invoke('kel:connection-oauth-revoke', connectionId),
   },
   // Fix Capture (V2.0 preflight): the window screenshot + metrics come from the main process, and
   // the path handed back is relative to the engine data root. The view can read one saved screenshot

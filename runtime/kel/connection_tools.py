@@ -61,7 +61,9 @@ def catalog(store, job=None, conversation=None):
         if not rows:
             continue
         custody = custody_for(connection['id'])
-        if not connection.get('has_credentials'):
+        if str(connection.get('auth_state') or '') == 'needs_reconnect':
+            usable, why = False, 'Kel needs you to reconnect %s.' % connection['name']
+        elif not connection.get('has_credentials'):
             usable, why = False, 'Store a credential for %s first.' % connection['name']
         elif not custody:
             usable, why = False, ('Kel cannot reach the stored credential for %s on this '

@@ -125,6 +125,11 @@ declare global {
           params?: Record<string, unknown>,
           confirmed?: boolean
         ) => Promise<KelConnectionRun>;
+        /** V2-04b: finish the account sign-in in the main process; tokens never come back here. */
+        oauthConnect?: (
+          connectionId: string
+        ) => Promise<{ state: string; note?: string; fields?: string[] }>;
+        oauthRevoke?: (connectionId: string) => Promise<{ state?: string; note?: string }>;
       };
       /**
        * Fix Capture: one screenshot of Kel's own window, written into the data root. Absent on the
@@ -318,6 +323,11 @@ export interface KelConnection {
   last_test_note: string;
   created: number;
   updated: number;
+  /** V2-04b: the account sign-in state in plain words (empty for kinds that do not sign in). */
+  auth_state: string;
+  auth_scopes: string[];
+  auth_expires: number | null;
+  oauth_provider: string;
 }
 
 export interface KelConnectionList {

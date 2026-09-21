@@ -628,6 +628,10 @@ export async function initializeKel(port: number): Promise<void> {
     test: (body) => kelRequest('/api/connections', body),
     // V2-04 actions: same rule — one request, the answer comes back, nothing is kept.
     run: (body) => kelRequest('/api/connections', body),
+    // V2-04b: the account sign-in opens in the system browser; the tokens land in this custody.
+    openExternal: (url) => {
+      void shell.openExternal(url).catch((): undefined => undefined);
+    },
   });
   // Fix Capture (V2.0 preflight): the window screenshot is written into the engine data root's
   // dogfood/tmp; the engine commits it under the fix id when the fix is saved.

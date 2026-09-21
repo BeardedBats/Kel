@@ -5,15 +5,21 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-04b**: the OAuth
-   foundation (initiate / PKCE / callback / token custody / refresh / revoke, Google Drive first).
-   **V2-04a is built and proved live** — the assistant bridge (`621d337` + fix `d3bbf65`;
-   `docs/v2/evidence/v2-04a/README.md`) — do not rebuild it. **V2-05-history is
-   temporarily DEFERRED FOR SHELL INTEGRATION** — Astra owns the phone drawer/history presentation on
-   `ux/v2-shell`, and implementing it now would overlap; V2-05 stays PARTIAL and items (c)/(d) below
-   remain requirements, not removed. The phone surface, the PWA contract, the gateway blocker, **mobile
-   voice** (real browser → gateway → engine → Muse, the transcript landing in the composer) and **send**
-   are done and evidenced in `docs/v2/evidence/v2-05/README.md`; what remains, in order:
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **Connection execution
+   hardening** (run-directive Priority 2): timeouts, bounded retries, rate limits, malformed/oversized
+   responses, redirect handling, auth expiration, reconnect state, domain allowlisting, argument
+   validation, action-level authority, mutating confirmation, result sanitization, access-history
+   redaction — all at the single `perform_request` choke point, honouring the V2-04a rule that the
+   runtime invokes Connection actions only through the existing capability/authority path. Then
+   **routing intelligence** (Priority 3), which includes the measured gap: phone turns route
+   conversationally even when they ask for tool work. **V2-04a and V2-04b are BUILT** (`621d337` /
+   `d3bbf65` / the V2-04b commit; `docs/v2/evidence/v2-04a|v2-04b/README.md`) — do not rebuild them.
+   **V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION** — Astra owns the phone
+   drawer/history presentation on `ux/v2-shell`, and implementing it now would overlap; V2-05 stays
+   PARTIAL and items (c)/(d) below remain requirements, not removed. The phone surface, the PWA
+   contract, the gateway blocker, **mobile voice** (real browser → gateway → engine → Muse, the
+   transcript landing in the composer) and **send** are done and evidenced in
+   `docs/v2/evidence/v2-05/README.md`; what remains, in order:
    (a) **browser voice — done.** `KelMicButton` now uses the shared `kelRequest` transport (preload on the
        desktop, the `/kel` gateway in a browser) and never swallows a failed `stream_start`. Keep both
        properties if you touch it again. Follow-up only: multi-utterance dictation (see

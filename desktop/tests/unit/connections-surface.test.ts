@@ -229,3 +229,120 @@ describe('the Connections surface is wired and reachable (V2-01)', () => {
     expect(page).toContain('connectionCustodyKey(');
   });
 });
+
+describe('the account sign-in (V2-04b)', () => {
+  const deps = {
+    status: vi.fn(() => ({ available: true, providers: {} })),
+    connectionStatus: vi.fn(() => ({ stripe: ['client_id', 'access_token', 'refresh_token'] })),
+    set: vi.fn(() => ({
+      provider: 'connection:stripe',
+      fields: ['client_id', 'access_token', 'refresh_token'],
+    })),
+    remove: vi.fn(() => ({ provider: 'connection:stripe', removed: 1 })),
+    sync: vi.fn(async () => ({ ok: true })),
+    fieldsFor: vi.fn(() => ['client_id']),
+    read: vi.fn(() => 'the-stored-value'),
+    test: vi.fn(async () => ({ id: 'stripe' })),
+    run: vi.fn(async () => ({ ok: true })),
+    openExternal: vi.fn(),
+    oauthPollMs: 1,
+    oauthAttempts: 40,
+  };
+
+  beforeEach(() => {
+    handlers.clear();
+    for (const fn of Object.values(deps)) {
+      if (typeof (fn as { mockClear?: unknown }).mockClear === 'function')
+        (fn as { mockClear: () => void }).mockClear();
+    }
+    registerKelCredentialIpc(deps);
+  });
+
+  it('finishes a sign-in: opens the browser, claims once into custody, pushes to the engine', async () => {
+    const calls: Array<{ route: string; body: Record<string, unknown> }> = [];
+    let polls = 0;
+    deps.sync.mockImplementation(async (route: string, body: Record<string, unknown>) => {
+      calls.push({ route, body });
+      if (body.action === 'oauth-initiate')
+        return { authorize_url: 'https://provider.example/auth?state=xyz' };
+      if (body.action === 'get') {
+        polls += 1;
+        return { auth_state: polls > 1 ? 'connected' : 'pending' };
+      }
+      if (body.action === 'oauth-claim')
+        return { claimed: true, credentials: { access_token: 'at-1', refresh_token: 'rt-1' } };
+      return { ok: true };
+    });
+    const outcome = (await handlerAt('kel:connection-oauth-connect')(
+      legitEvent(),
+      'stripe'
+    )) as Record<string, unknown>;
+    expect(outcome.state).toBe('connected');
+    expect(deps.openExternal).toHaveBeenCalledWith('https://provider.example/auth?state=xyz');
+    // The finished sign-in lands in the OS-backed custody, field by field…
+    expect(deps.set).toHaveBeenCalledWith('connection:stripe', 'access_token', 'at-1');
+    expect(deps.set).toHaveBeenCalledWith('connection:stripe', 'refresh_token', 'rt-1');
+    // …the engine records only the pointer and the field names…
+    const metadata = calls.find((call) => call.body.action === 'set_credential');
+    expect(metadata?.body.credential_ref).toBe('kel:connection:stripe');
+    // …and the engine's memory receives the values the way every other connection value arrives.
+    expect(calls.some((call) => call.body.action === 'supply' && call.body.stored !== false)).toBe(true);
+    // The outcome the renderer receives never carries a token.
+    expect(JSON.stringify(outcome)).not.toContain('at-1');
+  });
+
+  it('stops honestly when the person does not finish the sign-in', async () => {
+    deps.sync.mockImplementation(async (_route: string, body: Record<string, unknown>) => {
+      if (body.action === 'oauth-initiate') return { authorize_url: 'https://provider.example/auth' };
+      if (body.action === 'get') return { auth_state: 'disconnected' };
+      return { ok: true };
+    });
+    const outcome = (await handlerAt('kel:connection-oauth-connect')(
+      legitEvent(),
+      'stripe'
+    )) as Record<string, unknown>;
+    expect(outcome.state).toBe('disconnected');
+    expect(deps.set).not.toHaveBeenCalled();
+  });
+
+  it('gives up waiting when the sign-in never lands', async () => {
+    deps.sync.mockImplementation(async (_route: string, body: Record<string, unknown>) => {
+      if (body.action === 'oauth-initiate') return { authorize_url: 'https://provider.example/auth' };
+      if (body.action === 'get') return { auth_state: 'pending' };
+      return { ok: true };
+    });
+    const outcome = (await handlerAt('kel:connection-oauth-connect')(
+      legitEvent(),
+      'stripe'
+    )) as Record<string, unknown>;
+    expect(outcome.state).toBe('timeout');
+  });
+
+  it('signs out: the provider is told, custody and engine memory are cleared', async () => {
+    const calls: Array<Record<string, unknown>> = [];
+    deps.sync.mockImplementation(async (_route: string, body: Record<string, unknown>) => {
+      calls.push(body);
+      return { state: 'disconnected', note: 'stripe is signed out on this computer.' };
+    });
+    const outcome = (await handlerAt('kel:connection-oauth-revoke')(
+      legitEvent(),
+      'stripe'
+    )) as Record<string, unknown>;
+    expect(outcome.state).toBe('disconnected');
+    expect(deps.remove).toHaveBeenCalledWith('connection:stripe');
+    expect(calls.some((body) => body.action === 'oauth-revoke')).toBe(true);
+    expect(calls.some((body) => body.action === 'supply' && body.clear === true)).toBe(true);
+    expect(calls.some((body) => body.action === 'delete_credential')).toBe(true);
+  });
+
+  it('refuses a spoofed sender before anything else happens', async () => {
+    await expect(
+      handlerAt('kel:connection-oauth-connect')(
+        { senderFrame: subframe, sender: { mainFrame } },
+        'stripe'
+      )
+    ).rejects.toThrow();
+    expect(deps.sync).not.toHaveBeenCalled();
+    expect(deps.openExternal).not.toHaveBeenCalled();
+  });
+});

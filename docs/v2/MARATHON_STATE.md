@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: V2-04b           # V2-04a is BUILT and proved live (evidence/v2-04a/README.md; D-32/D-33; fix d3bbf65); V2-05-history stays deferred for shell integration; then the queued backend phases (see RESUME.md)
+next_item: V2-04b hardening # V2-04b (OAuth foundation) is BUILT (evidence/v2-04b/README.md; D-34/D-35); next safe backend item: Priority 2 of the run directive — Connection execution hardening (timeouts, rate limits, malformed responses, redirects, domain allowlisting at the single `perform_request` choke point); then routing intelligence (Priority 3), which now includes the measured phone-routing gap
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -227,6 +227,20 @@ opening) now would collide with that work, so it is **temporarily deferred for s
   that the Shell integration has landed.
 - If a backend change needs a renderer contract Astra will eventually absorb, write it in
   `docs/v2/PARALLEL_SHELL_TOUCHES.md` instead of editing renderer files.
+
+## V2-04b — BUILT (2026-09-21)
+
+The OAuth foundation is done: providers as data (`kel.connection_oauth`), the flow in `oauth_flows`
+(migration 28 — single-use state + PKCE verifier, never a token), the trade through
+`perform_request`, tokens in the same in-memory custody (`auth_state`/`auth_scopes`/`auth_expires`/
+`oauth_provider` on the row in plain words), the shell claims a finished sign-in once into the
+OS-backed custody, refresh on expiry (`needs_reconnect` when it fails), revoke through the provider.
+The only public route is `/oauth/callback`, protected by the single-use state (D-34, D-35). Google
+Drive is the reference (`gdrive-files`). Evidence: `docs/v2/evidence/v2-04b/README.md` — engine
+suite 10/10 incl. a real-HTTP lifecycle with a real S256 PKCE check, desktop 363 passed, tsc clean.
+Honest limits: real Google sign-in needs Nick's client ID + browser; the phone cannot finish a
+sign-in yet (loopback callback); the sign-in between callback and claim lives in engine memory only.
+`next_item` moves to Connection execution hardening, then routing intelligence.
 
 ## V2-04a — BUILT and proved live (2026-09-21, `dev/v2` @ `d3bbf65`)
 

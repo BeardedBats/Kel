@@ -36,6 +36,7 @@ MIGRATIONS = (
     (25, 'v20-connection-prefix', 'Connections: how a service wants its credential presented'),
     (26, 'v20-connection-actions', 'Connections: what Kel has asked a service to do'),
     (27, 'v20-connection-sources', 'Connections: who asked — a click or the assistant runtime'),
+    (28, 'v20-oauth', 'Connections: the account sign-in flow (state, PKCE, tokens)'),
 )
 MIGRATION_VERSION = MIGRATIONS[-1][0]
 MIGRATION_NAME = MIGRATIONS[-1][1]
@@ -98,6 +99,19 @@ PREFIX_COLUMNS = ('auth_prefix TEXT',)
 # Migration 27 (V2-04a): who asked for a call — 'shell' (a click in the app) or 'runtime' (the
 # assistant, through the bridge). Additive and nullable; an older database keeps working.
 SOURCE_COLUMNS = ('source TEXT',)
+# Migration 28 (V2-04b): the account sign-in state, in plain words — never a token. `auth_state`
+# moves disconnected -> pending -> connected -> needs_reconnect -> disconnected; `auth_scopes` is
+# what the provider actually granted; `auth_expires` is when the access token ages out.
+OAUTH_COLUMNS = ('auth_state TEXT', 'auth_scopes TEXT', 'auth_expires REAL', 'oauth_provider TEXT')
+# The flow table holds no credential: one single-use state per begun authorization, the PKCE
+# verifier the token trade needs, and the one-time claim flag for the shell's custody.
+OAUTH_FLOW_DDL = """
+CREATE TABLE IF NOT EXISTS oauth_flows(
+  state TEXT PRIMARY KEY, connection_id TEXT NOT NULL, provider TEXT NOT NULL, verifier TEXT,
+  redirect_uri TEXT, scopes TEXT, created REAL NOT NULL, expires REAL NOT NULL,
+  status TEXT NOT NULL DEFAULT 'PENDING', claimed INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS oauth_flows_by_connection ON oauth_flows(connection_id, created);
+"""
 # Migration 26 (V2-04): what Kel asked a service to do, and what came back — the fact of the call, never
 # its payload. V2-14's "show contacted domains, access history" reads this.
 ACTION_DDL = """
@@ -143,10 +157,15 @@ def _add_source_column(db):
     _add_columns(db, SOURCE_COLUMNS, 'connection_events')
 
 
+def _add_oauth(db):
+    _add_columns(db, OAUTH_COLUMNS)
+    _exec(db, OAUTH_FLOW_DDL)
+
+
 # Every step must be safe to run again on a database that already has it: a resumed upgrade may
 # re-apply the newest step when its marker was lost.
 STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns, 25: _add_prefix_column,
-                   26: _add_actions_table, 27: _add_source_column}
+                   26: _add_actions_table, 27: _add_source_column, 28: _add_oauth}
 
 
 def _table(db, name):
@@ -273,9 +292,9 @@ def custody_for(connection_id):
     return dict(_CUSTODY.get(str(connection_id or ''), {}))
 
 
-def _attempt(url, headers, timeout, method='GET', read_body=False):
+def _attempt(url, headers, timeout, method='GET', read_body=False, payload=None):
     """One request. A refusal is a result: 401 is an answer, not an error."""
-    request = urllib.request.Request(url, method=method, headers=dict(headers or {}))
+    request = urllib.request.Request(url, data=payload, method=method, headers=dict(headers or {}))
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = response.read(MAX_ANSWER_BYTES) if read_body else b''
@@ -294,7 +313,7 @@ def _attempt(url, headers, timeout, method='GET', read_body=False):
 
 
 def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS,
-                    sleep=None, budget=REQUEST_BUDGET, method='GET', read_body=False):
+                    sleep=None, budget=REQUEST_BUDGET, method='GET', read_body=False, payload=None):
     """The one place a Connection's request leaves this computer.
 
     Every future network rule (V2-14: no internet / approved domains / ask before a new domain) has a
@@ -318,7 +337,7 @@ def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPT
         tried += 1
         try:
             status, final, body = _attempt(url, headers, timeout, method=method,
-                                           read_body=read_body)
+                                           read_body=read_body, payload=payload)
         except urllib.error.URLError:
             if tried >= attempts or time.monotonic() - stated >= budget:
                 raise
@@ -364,7 +383,8 @@ def auth_for(connection, credentials):
             return None, None, 'Kel needs both the username and the password for this connection.'
         token = base64.b64encode(('%s:%s' % (user, password)).encode('utf-8')).decode('ascii')
         return {'Authorization': 'Basic ' + token}, None, None
-    value = values.get('api_key') or next(iter(values.values()), '')
+    value = (values.get('access_token') or values.get('api_key') or values.get('token')
+             or next(iter(values.values()), ''))
     if not value:
         return {}, None, None
     if method == 'bearer':
@@ -455,6 +475,12 @@ class Connections:
             'last_test_status': row['last_test_status'],
             'last_test_ms': row['last_test_ms'],
             'last_test_note': row['last_test_note'],
+            # V2-04b: the sign-in state in plain words (never a token): what the provider granted,
+            # when the access token ages out, and which provider the sign-in belongs to.
+            'auth_state': row['auth_state'] or '',
+            'auth_scopes': json.loads(row['auth_scopes']) if row['auth_scopes'] else [],
+            'auth_expires': row['auth_expires'],
+            'oauth_provider': row['oauth_provider'] or '',
         }
         item['state'] = 'ready' if item['has_credentials'] else 'needs_credentials'
         return item
@@ -492,7 +518,8 @@ class Connections:
         return candidate
 
     def save(self, name, *, connection_id=None, kind='api_key', base_url=None, auth_method=None,
-             auth_header=None, auth_prefix=None, docs_url=None, test_endpoint=None, notes=None):
+             auth_header=None, auth_prefix=None, docs_url=None, test_endpoint=None, notes=None,
+             oauth_provider=None):
         """Create a connection, or update the one with this id. Never stores a credential value."""
         clean_name = _text(name, MAX_NAME, 'name')
         if not clean_name:
@@ -505,6 +532,10 @@ class Connections:
         if method in ('bearer', 'basic'):
             header = None
         now = time.time()
+        provider_id = None
+        if oauth_provider not in (None, ''):
+            from .connection_oauth import provider as oauth_provider_row
+            provider_id = oauth_provider_row(oauth_provider)['id']
         with self.store.transaction() as db:
             existing = None
             if connection_id:
@@ -523,21 +554,23 @@ class Connections:
             )
             if existing:
                 # Credential metadata is custody state, not a form field: editing a connection never
-                # silently drops the pointer to a stored credential.
+                # silently drops the pointer to a stored credential (or its sign-in provider).
                 db.execute('UPDATE connections SET name=?, kind=?, base_url=?, auth_method=?,'
                            ' auth_header=?, auth_prefix=?, docs_url=?, test_endpoint=?, notes=?,'
-                           ' updated=? WHERE id=?',
+                           ' updated=?, oauth_provider=COALESCE(?, oauth_provider) WHERE id=?',
                            (fields['name'], fields['kind'], fields['base_url'],
                             fields['auth_method'], fields['auth_header'], fields['auth_prefix'],
-                            fields['docs_url'], fields['test_endpoint'], fields['notes'], now, target))
+                            fields['docs_url'], fields['test_endpoint'], fields['notes'], now,
+                            provider_id, target))
             else:
                 db.execute('INSERT INTO connections(id, name, kind, base_url, auth_method,'
-                           ' auth_header, auth_prefix, docs_url, test_endpoint, notes, credential_ref,'
-                           ' credential_fields, created, updated)'
-                           ' VALUES(?,?,?,?,?,?,?,?,?,?,NULL,NULL,?,?)',
+                           ' auth_header, auth_prefix, docs_url, test_endpoint, notes, oauth_provider,'
+                           ' credential_ref, credential_fields, created, updated)'
+                           ' VALUES(?,?,?,?,?,?,?,?,?,?,?,NULL,NULL,?,?)',
                            (target, fields['name'], fields['kind'], fields['base_url'],
                             fields['auth_method'], fields['auth_header'], fields['auth_prefix'],
-                            fields['docs_url'], fields['test_endpoint'], fields['notes'], now, now))
+                            fields['docs_url'], fields['test_endpoint'], fields['notes'],
+                            provider_id, now, now))
         return self.get(target)
 
     def remove(self, connection_id):
@@ -552,6 +585,7 @@ class Connections:
             if not row:
                 raise PolicyError('That connection was not found.')
             db.execute('DELETE FROM connections WHERE id=?', (row['id'],))
+            db.execute('DELETE FROM oauth_flows WHERE connection_id=?', (row['id'],))
         _CUSTODY.pop(str(row['id']), None)
         return {'id': row['id'], 'removed': True}
 
@@ -591,6 +625,8 @@ class Connections:
         read from the answer except its status.
         """
         connection = self.get(connection_id)
+        from .connection_oauth import ensure_fresh
+        credentials = ensure_fresh(self.store, connection, credentials)
         target = connection['test_endpoint'] or connection['base_url']
         if not target:
             raise PolicyError('Kel needs a test address or an API address before it can check this '
@@ -635,7 +671,9 @@ class Connections:
         against which service, and how it went — `events()` reads that back.
         """
         from .connection_actions import action as action_row
+        from .connection_oauth import ensure_fresh, missing_scopes, scope_labels
         connection = self.get(connection_id)
+        credentials = ensure_fresh(self.store, connection, credentials)
         row = action_row(action_id)
         if row is None:
             raise PolicyError('Kel does not know that action.')
@@ -645,6 +683,11 @@ class Connections:
         if row['mutating'] and not confirmed:
             raise PolicyError('%s changes something in %s, so Kel asks first.'
                               % (row['name'], connection['name']))
+        lacking = missing_scopes(connection, row.get('scopes') or ())
+        if lacking:
+            raise PolicyError('%s needs a permission it was not granted: %s. Reconnect %s and approve '
+                              'it.' % (row['name'], '; '.join(scope_labels(lacking)),
+                                      connection['name']))
         target = _action_url(connection, row, params or {})
         headers, query, problem = auth_for(connection, credentials)
         if problem:
