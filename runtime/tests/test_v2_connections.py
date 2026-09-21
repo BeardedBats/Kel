@@ -26,6 +26,7 @@ import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
+from kel.connection_actions import action, actions, actions_for
 from kel.connection_framework import request_policy, template, templates
 from kel.connection_services import catalogue, entry
 from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, REQUEST_ATTEMPTS,
@@ -489,6 +490,125 @@ class FrameworkPolicyTests(unittest.TestCase):
             self.assertNotIn(service, source.lower())
 
 
+class ActionTests(unittest.TestCase):
+    """V2-04 — what Kel can do with a service: rows of data, one request, an honest answer."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(self.tmp.name)
+        self.pauses = []
+        self.connections = Connections(self.store, attempts=2, sleep=self.pauses.append)
+        self.service = LocalService()
+        self.addCleanup(self.service.stop)
+        self.connections.save('Local Service', base_url=self.service.base)
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def _one_action(self, **over):
+        """A single action row, as if the catalogue had it — used to exercise the machinery honestly."""
+        row = {'id': 'local-read', 'service': '', 'name': 'Read something', 'description': 'd',
+               'method': 'GET', 'path': '/something', 'params': (), 'returns': 'r',
+               'mutating': False, 'source': 'documented'}
+        row.update(over)
+        return patch('kel.connection_actions.ACTIONS', (row,))
+
+    def test_the_action_catalogue_is_data_belonging_to_known_services(self):
+        rows = actions()
+        self.assertEqual(len({row['id'] for row in rows}), len(rows))
+        services = {row['id'] for row in catalogue()}
+        for row in rows:
+            self.assertIn(row['service'], services, row['id'])
+            self.assertEqual(row['method'], 'GET', row['id'])
+            self.assertTrue(row['path'].startswith('/'), row['id'])
+            self.assertIn(row['source'], ('documented', 'assumed'), row['id'])
+            # Nothing Kel can do today changes anything in Nick's account.
+            self.assertFalse(row['mutating'], row['id'])
+        self.assertEqual([row['id'] for row in actions_for('github')],
+                         ['github-whoami', 'github-notifications'])
+        self.assertIsNone(action('nope'))
+
+    def test_a_read_action_hands_back_the_answer_and_records_no_payload(self):
+        self.service.answer_text = '{"login": "nick", "plan": "pro"}'
+        with self._one_action():
+            result = self.connections.run('local-service', 'local-read')
+        self.assertEqual(result['state'], 'ok')
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['result'], {'login': 'nick', 'plan': 'pro'})
+        self.assertEqual(self.service.seen[0]['path'], '/something')
+        # What is written down is the fact of the call: a domain, a status, a duration — no path, no query,
+        # no answer.
+        history = self.connections.events('local-service')
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]['action'], 'local-read')
+        self.assertEqual(history[0]['domain'], '127.0.0.1:%d' % int(self.service.base.rsplit(':', 1)[1]))
+        self.assertNotIn('/something', json.dumps(history))
+        self.assertNotIn('nick', json.dumps(history))
+
+    def test_a_text_answer_comes_back_as_text(self):
+        self.service.answer_text = 'not json at all'
+        with self._one_action():
+            result = self.connections.run('local-service', 'local-read')
+        self.assertEqual(result['result'], 'not json at all')
+
+    def test_an_answer_can_never_carry_a_credential_back_into_the_records(self):
+        self.service.answer_text = '{"echo": "the-credential"}'
+        with self._one_action():
+            result = self.connections.run('local-service', 'local-read',
+                                         {'api_key': 'the-credential'})
+        self.assertNotIn('the-credential', json.dumps(result))
+        self.assertEqual(result['result'], {'echo': '[redacted]'})
+        self.assertEqual(self.service.seen[0]['headers'].get('authorization'),
+                         'Bearer the-credential')
+
+    def test_an_action_for_another_service_is_refused(self):
+        self.connections.save('Stripe')
+        with self.assertRaises(PolicyError) as caught:
+            self.connections.run('stripe', 'github-whoami')
+        self.assertIn('not for Stripe', str(caught.exception))
+        with self.assertRaises(PolicyError):
+            self.connections.run('local-service', 'nope')
+
+    def test_something_that_changes_anything_waits_for_nick(self):
+        # No catalogue row is mutating today, so this proves the gate with one that is.
+        with self._one_action(method='POST', mutating=True, name='Change something'):
+            with self.assertRaises(PolicyError) as caught:
+                self.connections.run('local-service', 'local-read')
+            self.assertIn('Kel asks first', str(caught.exception))
+            self.assertEqual(self.service.seen, [])
+            done = self.connections.run('local-service', 'local-read', confirmed=True)
+        self.assertEqual(done['state'], 'ok')
+        self.assertEqual(self.service.seen[0]['method'], 'POST')
+
+    def test_an_action_needs_an_address_to_go_to(self):
+        self.connections.save('Nowhere')
+        with self._one_action(service='nowhere'):
+            with self.assertRaises(PolicyError) as caught:
+                self.connections.run('nowhere', 'local-read')
+        self.assertIn('API address', str(caught.exception))
+
+    def test_a_busy_service_is_asked_again_by_an_action_too(self):
+        self.service.statuses = [503, 200]
+        with self._one_action():
+            result = self.connections.run('local-service', 'local-read')
+        self.assertEqual(result['state'], 'ok')
+        self.assertEqual(result['attempts'], 2)
+        self.assertIn('Kel tried 2 times.', result['note'])
+
+    def test_the_history_is_the_access_trail(self):
+        with self._one_action():
+            self.connections.run('local-service', 'local-read')
+            self.connections.run('local-service', 'local-read')
+        history = self.connections.events(limit=1)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(len(self.connections.events()), 2)
+        self.assertEqual(self.connections.events('other'), [])
+
+
 class LocalService:
     """A stand-in for a service on this computer only.
 
@@ -502,18 +622,34 @@ class LocalService:
         # stood up honestly (503 then 200) instead of mocked.
         self.statuses = []
         self.delay = 0.0
+        # What the service says back. Answer bodies are only read by actions. 
+        self.answer_text = ''
         self.seen = []
         probe = self
 
         class Handler(http.server.BaseHTTPRequestHandler):
-            def do_GET(self):
-                probe.seen.append({'path': self.path,
+            def _respond(self, method):
+                probe.seen.append({'method': method,
+                                   'path': self.path,
                                    'headers': {k.lower(): v for k, v in self.headers.items()}})
                 if probe.delay:
                     time.sleep(probe.delay)
+                payload = probe.answer_text.encode('utf-8')
                 self.send_response(probe.statuses.pop(0) if probe.statuses else probe.status)
-                self.send_header('Content-Length', '0')
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(payload)))
                 self.end_headers()
+                try:
+                    self.wfile.write(payload)
+                except ConnectionError:
+                    # The client gave up (the timeout test) before the answer was written. Nothing to do.
+                    pass
+
+            def do_GET(self):
+                self._respond('GET')
+
+            def do_POST(self):
+                self._respond('POST')
 
             def log_message(self, *args):
                 pass
