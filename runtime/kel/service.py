@@ -1050,6 +1050,10 @@ class Service:
                                           data.get('fields') or [],data.get('credential_ref',''))
         if action=='delete_credential':
             return service.delete_credential(self._required(data,'id','Pick a connection first.'))
+        if action=='test':
+            # The shell passes the credential for this one request; the engine records only the result.
+            return service.test(self._required(data,'id','Pick a connection first.'),
+                                data.get('credentials') or {})
         raise PolicyError('Unknown connection action')
 
     def _vetting_all_answered(self,questions):

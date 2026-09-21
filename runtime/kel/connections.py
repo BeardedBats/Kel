@@ -11,18 +11,31 @@ Credential values never reach the engine. The shell keeps them in the OS-backed 
 pointer (`credential_ref`) into that store. A connection therefore always reports its state honestly:
 `ready` when the shell has reported a credential for it, `needs_credentials` when it has not.
 
-Design: docs/v2/DECISIONS.md (V2-01).
+V2-02 adds the one thing that talks to a service: `test()`. The shell passes the credential for that
+single request, the request goes out through `perform_request` (the single choke point every future
+network rule can live in), and what is recorded afterwards is the *result* — never the value, which is
+used in memory and dropped.
+
+Design: docs/v2/DECISIONS.md (V2-01, V2-02).
 """
+import base64
 import contextlib
 import json
 import re
+import socket
 import time
-from urllib.parse import urlparse
+import urllib.error
+import urllib.request
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from .core import PolicyError
 
-MIGRATION_VERSION = 23
-MIGRATION_NAME = 'v20-connections'
+MIGRATIONS = (
+    (23, 'v20-connections', 'Connections: credentials for a service'),
+    (24, 'v20-connection-tests', 'Connections: what the last check found'),
+)
+MIGRATION_VERSION = MIGRATIONS[-1][0]
+MIGRATION_NAME = MIGRATIONS[-1][1]
 
 # The three framework templates (directive §8). A row's kind only says how its credential is shaped —
 # the framework that authenticates a request with it is V2-04's job.
@@ -34,6 +47,11 @@ KIND_LABELS = {'api_key': 'API key', 'oauth': 'Account authorization',
 AUTH_METHODS = ('header', 'bearer', 'query', 'basic')
 STATES = ('ready', 'needs_credentials')
 CREDENTIAL_REF_PREFIX = 'kel:connection:'
+# What one check of a service can honestly find (V2-02). `ok` is the only state that means the
+# credential was accepted; everything else says exactly which part of the request did not work.
+TEST_STATES = ('ok', 'refused', 'not_found', 'busy', 'error', 'unreachable', 'timeout')
+TEST_TIMEOUT = 10
+REDACTED = '[redacted]'
 
 ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,59}$')
 MAX_NAME = 80
@@ -61,6 +79,33 @@ CREATE TABLE IF NOT EXISTS connections(
 CREATE INDEX IF NOT EXISTS connections_by_name ON connections(name);
 """
 
+# Migration 24 (V2-02): what the last check of the service found. Additive and nullable — an older
+# database keeps working, and a connection that has never been checked simply has no result.
+TEST_COLUMNS = ('last_test_at REAL', 'last_test_state TEXT', 'last_test_status INTEGER',
+                'last_test_ms INTEGER', 'last_test_note TEXT')
+
+
+def _exec(db, ddl):
+    for statement in filter(None, (part.strip() for part in ddl.split(';'))):
+        db.execute(statement)
+
+
+def _create_connections(db):
+    _exec(db, DDL)
+
+
+def _add_test_columns(db):
+    """Additive and safe to re-run: a database that already has a column keeps it as it is."""
+    existing = {row[1] for row in db.execute('PRAGMA table_info(connections)').fetchall()}
+    for column in TEST_COLUMNS:
+        if column.split()[0] not in existing:
+            db.execute('ALTER TABLE connections ADD COLUMN ' + column)
+
+
+# Every step must be safe to run again on a database that already has it: a resumed upgrade may
+# re-apply the newest step when its marker was lost.
+STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns}
+
 
 def _table(db, name):
     return db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
@@ -68,22 +113,21 @@ def _table(db, name):
 
 
 def ensure_schema(store):
-    """Create the store once. Returns True when this call applied it."""
+    """Create or extend the store once. Returns True when this call applied anything."""
+    applied = False
     with contextlib.closing(store.connect()) as db:
         if not _table(db, 'schema_migrations'):
             db.execute('CREATE TABLE IF NOT EXISTS schema_migrations('
                        'version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied REAL NOT NULL,'
                        ' note TEXT)')
-        if db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
-                      (MIGRATION_VERSION,)).fetchone():
-            return False
-        for statement in filter(None, (part.strip() for part in DDL.split(';'))):
-            db.execute(statement)
-        db.execute('INSERT OR IGNORE INTO schema_migrations(version, name, applied, note) '
-                   'VALUES(?,?,?,?)',
-                   (MIGRATION_VERSION, MIGRATION_NAME, time.time(),
-                    'Connections: credentials for a service'))
-        return True
+        for version, name, note in MIGRATIONS:
+            if db.execute('SELECT 1 FROM schema_migrations WHERE version=?', (version,)).fetchone():
+                continue
+            STEP_BY_VERSION[version](db)
+            db.execute('INSERT OR IGNORE INTO schema_migrations(version, name, applied, note) '
+                       'VALUES(?,?,?,?)', (version, name, time.time(), note))
+            applied = True
+    return applied
 
 
 def _text(value, limit, field):
@@ -130,11 +174,93 @@ def slug(name):
     return base or 'service'
 
 
+def scrub(text, credentials):
+    """Replace any credential value that somehow reached a sentence. Nothing durable may carry one."""
+    cleaned = str(text or '')
+    for value in (credentials or {}).values():
+        if isinstance(value, str) and len(value) >= 4:
+            cleaned = cleaned.replace(value, REDACTED)
+    return cleaned
+
+
+def perform_request(url, headers, timeout=TEST_TIMEOUT):
+    """The one place a Connection's request leaves this computer.
+
+    Every future network rule (V2-14: no internet / approved domains / ask before a new domain) has a
+    single place to live because of this function. Kel reads the status and nothing else — the body is
+    never kept, so a service's data cannot end up in Kel's records by accident.
+
+    Returns (status, final_url, elapsed_ms). A refusal is a result: 401 is an answer, not an error.
+    """
+    request = urllib.request.Request(url, method='GET', headers=dict(headers or {}))
+    started = time.monotonic()
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            status = int(getattr(response, 'status', None) or 200)
+            final = response.geturl()
+    except urllib.error.HTTPError as error:
+        status = int(error.code)
+        final = getattr(error, 'url', url)
+        error.close()
+    return status, final, int((time.monotonic() - started) * 1000)
+
+
+def auth_for(connection, credentials):
+    """Headers and query additions for one request, from the method the connection declares.
+
+    Returns (headers, query, problem). A missing credential is not a problem: the request still goes
+    out, so the answer comes from the service instead of from Kel's guesswork.
+    """
+    values = {str(key): value for key, value in (credentials or {}).items()
+              if isinstance(value, str) and value}
+    method = connection['auth_method']
+    if method == 'basic':
+        user, password = values.get('username'), values.get('password')
+        if not user or not password:
+            return None, None, 'Kel needs both the username and the password for this connection.'
+        token = base64.b64encode(('%s:%s' % (user, password)).encode('utf-8')).decode('ascii')
+        return {'Authorization': 'Basic ' + token}, None, None
+    value = values.get('api_key') or next(iter(values.values()), '')
+    if not value:
+        return {}, None, None
+    if method == 'bearer':
+        return {'Authorization': 'Bearer ' + value}, None, None
+    if method == 'query':
+        return {}, {connection['auth_header'] or 'api_key': value}, None
+    name = connection['auth_header'] or 'Authorization'
+    # A token in `Authorization` is nearly always a scheme plus the value; a service that wants a bare
+    # value in a custom header (X-Api-Key) gets exactly that. A value that already carries a scheme is
+    # sent as it is.
+    if name.lower() == 'authorization' and not re.match(r'^[A-Za-z]+\s+\S', value):
+        return {name: 'Bearer ' + value}, None, None
+    return {name: value}, None, None
+
+
+def classify(status, connection, final_url):
+    """The honest meaning of a status code, in one sentence, with no service data in it."""
+    host = urlparse(final_url or '').netloc
+    asked = urlparse(connection['test_endpoint'] or connection['base_url'] or '').netloc
+    redirect = ' It answered from %s instead.' % host if host and host != asked else ''
+    if 200 <= status < 300:
+        return 'ok', 'The service answered %d.%s' % (status, redirect)
+    if status in (401, 403):
+        return 'refused', 'The service refused the credential (%d).%s' % (status, redirect)
+    if status == 404:
+        return 'not_found', ('The service answered, but there is nothing at that address (404).%s'
+                             % redirect)
+    if status == 429:
+        return 'busy', 'The service is limiting requests right now (%d).%s' % (status, redirect)
+    if status >= 500:
+        return 'error', 'The service answered with its own error (%d).%s' % (status, redirect)
+    return 'error', 'The service answered %d.%s' % (status, redirect)
+
+
 class Connections:
     """The connection store. Rows carry metadata only; values live in the OS-backed store."""
 
-    def __init__(self, store):
+    def __init__(self, store, timeout=TEST_TIMEOUT):
         self.store = store
+        self.timeout = timeout
         ensure_schema(store)
 
     # -- reads ------------------------------------------------------------------------------------
@@ -156,6 +282,12 @@ class Connections:
             'has_credentials': bool(row['credential_ref']),
             'created': row['created'],
             'updated': row['updated'],
+            'can_test': bool(row['test_endpoint'] or row['base_url']),
+            'last_test_at': row['last_test_at'],
+            'last_test_state': row['last_test_state'],
+            'last_test_status': row['last_test_status'],
+            'last_test_ms': row['last_test_ms'],
+            'last_test_note': row['last_test_note'],
         }
         item['state'] = 'ready' if item['has_credentials'] else 'needs_credentials'
         return item
@@ -281,3 +413,45 @@ class Connections:
             db.execute('UPDATE connections SET credential_ref=NULL, credential_fields=NULL,'
                        ' updated=? WHERE id=?', (time.time(), item['id']))
         return self.get(item['id'])
+
+    # -- talking to the service (V2-02) ------------------------------------------------------------
+    def test(self, connection_id, credentials=None):
+        """Ask the service whether this works, and record only what happened.
+
+        `credentials` is the shell's own map of field name to value for this one request: it is used
+        in memory, never written, and scrubbed out of anything that could become durable. Nothing is
+        read from the answer except its status.
+        """
+        connection = self.get(connection_id)
+        target = connection['test_endpoint'] or connection['base_url']
+        if not target:
+            raise PolicyError('Kel needs a test address or an API address before it can check this '
+                              'connection.')
+        headers, query, problem = auth_for(connection, credentials)
+        if problem:
+            raise PolicyError(problem)
+        url = target
+        if query:
+            parsed = urlparse(url)
+            pairs = parse_qsl(parsed.query, keep_blank_values=True) + list(query.items())
+            url = urlunparse(parsed._replace(query=urlencode(pairs)))
+        state, status, elapsed, note = 'error', None, 0, 'The check did not finish.'
+        try:
+            status, final, elapsed = perform_request(url, headers, timeout=self.timeout)
+            state, note = classify(status, connection, final)
+        except (TimeoutError, socket.timeout):
+            state = 'timeout'
+            seconds = int(self.timeout) if float(self.timeout).is_integer() else self.timeout
+            note = 'The service did not answer within %s seconds.' % seconds
+        except urllib.error.URLError:
+            state = 'unreachable'
+            note = 'Kel could not reach that address.'
+        except Exception:
+            state = 'error'
+            note = 'The check did not finish.'
+        note = scrub(note, credentials)
+        with self.store.transaction() as db:
+            db.execute('UPDATE connections SET last_test_at=?, last_test_state=?, last_test_status=?,'
+                       ' last_test_ms=?, last_test_note=? WHERE id=?',
+                       (time.time(), state, status, elapsed, note, connection['id']))
+        return self.get(connection['id'])
