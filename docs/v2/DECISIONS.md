@@ -45,3 +45,42 @@ what it forbids so a later run cannot quietly undo it.
 9. **Transcription stays shared, not re-invented.** V2 keeps the single Muse path (with the credential
    read from the copied Transcriptions app) and the explicit-only practice mode; no new provider, key
    field, setup flow or migration.
+
+## V2-01 (Connections model + central management)
+
+10. **A Connection is one row in one store.** `runtime/kel/connections.py` (migration 23,
+    `v20-connections`) owns the record: service name, kind (API key / OAuth / Bot or webhook), API
+    address, how the credential is sent, documentation and test addresses, notes. *Reason:* the
+    directive forbids a marketplace and one mini-app/database/worker/workflow per service. *Forbids:*
+    per-service tables, modules named after a service, seeding the store with services, and any code
+    that branches on a service name (pinned by `runtime/tests/test_v2_connections.py`).
+
+11. **The engine never holds a credential value.** It records the field names and a pointer
+    (`kel:connection:<id>`), and `set_credential` refuses a pointer that is not in that namespace. The
+    value lives only in the OS-backed store the main process already owned
+    (`desktop/.../process/services/kel/kelCredentials.ts`). *Reason:* one custody implementation, one
+    encrypted file, no value in a process that logs, exports or backs up its database. *Forbids:* a
+    value column, a value getter, and connection secrets in the engine's backups.
+
+12. **Connections share the custody file under their own namespace.** Connection credentials are stored
+    as `connection:<id>:<field>`, and that namespace is a separate key space from a model provider id, so
+    a service named "internal" cannot collide with the model provider `internal`. The providers surface
+    lists the provider namespace only; Connections are listed by the Connections surface.
+
+13. **Connections are a configuration surface, not a primary destination.** Route `/connections`,
+    reachable from the command palette and from the Providers page's integrations card. *Reason:* the
+    primary nav is places Nick does something; Providers, Diagnostics and Team are already configuration
+    surfaces outside it.
+
+14. **State is derived, and a disagreement is said out loud.** A connection is `ready` when the engine
+    has a credential record and `needs_credentials` otherwise; the page also asks the shell what it holds
+    and says so plainly if the computer has a value the engine has no record of. *Forbids:* showing
+    "Ready" for a connection Kel cannot actually use, and showing a saved value again anywhere.
+
+15. **V2-01 deliberately stops at the model.** Test Connection, real requests, service templates and the
+    developer-facing framework are V2-02 and V2-04; `test_endpoint` is stored now but nothing is called
+    by V2-01. *Forbids:* a hidden network call from this phase.
+
+16. **The migration inventory covers every module.** `runtime/tests/test_v16_r8_migrations.py` now
+    includes `dogfood` (22) and `connections` (23) and expects 23 as the maximum, so a new migration
+    cannot collide with an existing number unnoticed.

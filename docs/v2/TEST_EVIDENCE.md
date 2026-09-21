@@ -30,6 +30,21 @@ row names the command and the result, so a resume run can re-run it instead of t
 | Phase | What was verified | Evidence |
 | --- | --- | --- |
 | V2-00 | developer line + durable state (this setup commit) | `docs/v2/`; `git worktree list`; remote `dev/v2` SHA = local |
+| V2-01 | Connections model + central management | engine `1085 tests OK`; `tests.test_v2_connections` **25 OK**; desktop `40 files / 334 tests pass`; `tsc --noEmit` clean; `tests/unit/connections-page.dom.test.tsx` **11 pass**; `tests/unit/connections-surface.test.ts` **12 pass** (details below) |
+
+### V2-01 — what each command actually proves
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Engine (full, regression) | `cd runtime && python -m unittest discover -s tests` | **1085 tests OK** (baseline 1060 + 25 new; no existing test changed behaviour beyond the migration inventory below) |
+| Engine — Connections model | `python -m unittest tests.test_v2_connections` | **25 OK** — exact schema (and no column that could hold a value), idempotent migration, slug ids that survive a rename, duplicate names, validation refusals (no name, unknown kind, non-http address, `javascript:` address, header defaulting, bearer/oauth defaults), list order and counts, remove, credential metadata set/clear with the pointer guard, service-agnostic pin, and the service-level dispatch incl. PolicyError sentences |
+| Engine — migration inventory | `python -m unittest tests.test_v16_r8_migrations` | **4 OK** — the inventory now covers every module (`dogfood` 22, `connections` 23) and expects 23 as the maximum |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **40 files / 334 tests pass** (baseline 38 / 310) |
+| Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **11 pass** — the real page: state said in words, empty state, the shell/engine disagreement sentence, add a service through the form, the engine's own refusal sentence repeated verbatim, no request for an unnamed service, a credential stored under `connection:<id>` and gone from the DOM and from every request afterwards, remove credential, confirm-then-remove, and never a request to `/api/providers` |
+| Desktop — Connections wiring | `bunx vitest run tests/unit/connections-surface.test.ts tests/unit/ipc-sender-channels.test.ts` | **12 + 19 pass** — the credential IPC routes connection metadata to `/api/connections` and provider metadata to `/api/providers`, the new status channel refuses spoofed senders, a failed sync never fails the custody action, and no credential value is ever placed in a sync body |
+
+**Not verified for V2-01:** no installed-app check was run (no candidate was installed by this phase), and nothing in this phase called a service over the network — `test_endpoint` is stored only. That is the V2-02/V2-15 work.
 
 ## Standing rules for this file
 

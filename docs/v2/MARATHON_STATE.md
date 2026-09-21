@@ -10,9 +10,9 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-00                # completed by the setup commit (durable state + developer line)
-next_item: V2-01            # Connections model + central management (see ROADMAP.md)
-status: ready-to-start
+phase: V2-01                # completed by the Connections commit (model + central management)
+next_item: V2-02            # Generic REST Connection (see ROADMAP.md)
+status: phase-complete
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
@@ -27,7 +27,7 @@ protected_paths:            # never modify, uninstall, overwrite, reset, migrate
 
 phases:
   V2-00: done        # developer line + durable program state (this setup commit)
-  V2-01: queued      # Connections model + central management
+  V2-01: done        # Connections model + central management (migration 23, /connections surface)
   V2-02: queued      # Generic REST Connection
   V2-03: queued      # personal Connections (Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma, Discord)
   V2-04: queued      # Connection Framework + templates/docs/testing
@@ -58,6 +58,21 @@ invariants:
 
 temporary_worktrees: []     # disk-hygiene note: none exist right now; record any created here
 ```
+
+## V2-01 notes for the next run
+
+- **What exists now:** `runtime/kel/connections.py` (migration 23 `v20-connections`) with
+  `/api/connections` (`list` / `get` / `save` / `remove` / `set_credential` / `delete_credential`), the
+  `/connections` page in the desktop renderer, and credential custody under the `connection:<id>`
+  namespace in the existing OS-backed store. The engine stores field names plus a `kel:connection:<id>`
+  pointer and never a value.
+- **Deliberately absent (do not "fix" it):** no built-in service list, no per-service module or table, no
+  network call of any kind, no Test Connection, and no seeded rows. `test_endpoint` is stored for V2-02.
+- **V2-02 starts from:** the Generic REST Connection (fields + Test Connection). The store already has
+  every field that phase needs; the missing piece is the request layer, the permission gate in front of
+  it, and an honest result state (there is no test-result column yet).
+- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-01 block); engine 1085 OK; desktop 334 pass; `tsc` clean.
+- **No candidate was installed** for V2-01 — `C:\Users\Nick\KelV2Candidate` still does not exist.
 
 ## Model preferences recorded at setup
 

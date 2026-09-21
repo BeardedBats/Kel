@@ -5,8 +5,8 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-01, Connections model +
-   central management** (see `ROADMAP.md` for its scope).
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-02, Generic REST Connection**
+   (see `ROADMAP.md` for its scope, and the `V2-01 notes for the next run` block for what already exists).
 5. Per increment: understand → narrow design → implement → self-review → focused tests → commit
    atomically → update durable state (`MARATHON_STATE.md`, `FEATURE_LEDGER.md`,
    `IMPLEMENTATION_STATUS.md`, `TEST_EVIDENCE.md`, `DECISIONS.md`, and `DOGFOOD_FINDINGS.md` when real
