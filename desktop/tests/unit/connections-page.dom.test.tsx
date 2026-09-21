@@ -33,6 +33,7 @@ type Row = {
   credential_fields: string[];
   has_credentials: boolean;
   state: 'ready' | 'needs_credentials';
+  auth_prefix: string | null;
   can_test: boolean;
   last_test_at: number | null;
   last_test_state: string | null;
@@ -53,6 +54,7 @@ const row = (id: string, name: string, over: Partial<Row> = {}): Row => ({
   base_url: '',
   auth_method: 'header',
   auth_header: '',
+  auth_prefix: null,
   docs_url: '',
   test_endpoint: '',
   notes: '',
@@ -77,9 +79,42 @@ let calls: Call[] = [];
 let stored: string[] = [];
 let syncFails = false;
 
+/** Two known services: one Kel is sure about, one whose address Nick has to paste in. */
+const KNOWN = [
+  {
+    id: 'github',
+    name: 'GitHub',
+    kind: 'api_key',
+    base_url: 'https://api.github.com',
+    auth_method: 'header',
+    auth_header: 'Authorization',
+    auth_prefix: 'Bearer ',
+    docs_url: 'https://docs.github.com/rest',
+    test_endpoint: 'https://api.github.com/user',
+    credential: 'a personal access token with the scopes you want Kel to have',
+    source: 'documented',
+  },
+  {
+    id: 'raptive',
+    name: 'Raptive',
+    kind: 'api_key',
+    base_url: '',
+    auth_method: 'header',
+    auth_header: 'Authorization',
+    auth_prefix: '',
+    docs_url: '',
+    test_endpoint: '',
+    credential: 'the API credential from your Raptive account',
+    source: 'to-confirm',
+    note: "Raptive's API address comes with your credential — paste it here and Kel will check it.",
+  },
+];
+
 /** The engine, as the page's requests see it. */
 const answer = (body: Record<string, unknown>): unknown => {
   switch (body.action) {
+    case 'catalogue':
+      return { services: KNOWN };
     case 'list':
       return {
         connections: rows,
@@ -380,6 +415,41 @@ describe('Connections — the central management surface', () => {
     renderPage();
     expect(await screen.findByText('Stripe')).toBeTruthy();
     expect(screen.queryByText('Test connection')).toBeNull();
+  });
+
+  it('sets up a known service in one step', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText('Set up GitHub'));
+    // The form arrives filled in: the address, the header, and how GitHub wants the token presented.
+    expect((screen.getByLabelText('Service name') as HTMLInputElement).value).toBe('GitHub');
+    expect((screen.getByLabelText('API address') as HTMLInputElement).value).toBe(
+      'https://api.github.com'
+    );
+    expect((screen.getByLabelText('Header name') as HTMLInputElement).value).toBe('Authorization');
+    expect(
+      (screen.getByLabelText('How the credential is presented') as HTMLSelectElement).value
+    ).toBe('custom');
+    expect((screen.getByLabelText('The word before the credential') as HTMLInputElement).value).toBe(
+      'Bearer '
+    );
+    fireEvent.click(screen.getByText('Add connection'));
+    await waitFor(() => expect(calls.some((call) => call.body.action === 'save')).toBe(true));
+    expect(calls.find((call) => call.body.action === 'save')?.body).toMatchObject({
+      name: 'GitHub',
+      base_url: 'https://api.github.com',
+      auth_header: 'Authorization',
+      auth_prefix: 'Bearer ',
+    });
+  });
+
+  it('says what to fetch and how sure Kel is about the address', async () => {
+    renderPage();
+    expect(await screen.findByText(/Kel needs a personal access token/)).toBeTruthy();
+    expect(
+      await screen.findByText(/Kel knows this address from the service’s own documentation\./)
+    ).toBeTruthy();
+    // Raptive publishes no API address: Kel says so instead of inventing one.
+    expect(await screen.findByText(/Kel does not know this address/)).toBeTruthy();
   });
 
   it('never talks to the model-provider route', async () => {

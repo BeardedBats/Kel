@@ -291,6 +291,8 @@ export interface KelConnection {
   base_url: string;
   auth_method: 'header' | 'bearer' | 'query' | 'basic';
   auth_header: string;
+  /** The word the service wants before the credential; '' means send it as it is; null means Kel works it out. */
+  auth_prefix: string | null;
   docs_url: string;
   test_endpoint: string;
   notes: string;
@@ -332,6 +334,61 @@ export const connectionCredentialField = (kind: KelConnection['kind']): string =
 /** The custody namespace the shell stores a connection's credential under. */
 export const connectionCustodyKey = (id: string): string => `connection:${id}`;
 
+/**
+ * V2-03 — a service Kel already knows about. This is a row of data: address, how the credential is
+ * presented, where the documentation is, and what Nick has to go and get. Nothing here decides how Kel
+ * behaves; a service added by hand is exactly the same kind of connection.
+ */
+export interface KelKnownService {
+  id: string;
+  name: string;
+  kind: KelConnection['kind'];
+  base_url: string;
+  auth_method: KelConnection['auth_method'];
+  auth_header: string;
+  auth_prefix: string | null;
+  docs_url: string;
+  test_endpoint: string;
+  /** What Nick has to fetch, in his words. */
+  credential: string;
+  /** How sure Kel is about the addresses: 'documented' | 'assumed' | 'to-confirm'. */
+  source: 'documented' | 'assumed' | 'to-confirm';
+  note?: string;
+}
+
+/** The form draft a known service fills in when Nick picks it. */
+export interface ConnectionDraft {
+  id?: string;
+  name: string;
+  kind: KelConnection['kind'];
+  base_url: string;
+  auth_method: KelConnection['auth_method'];
+  auth_header: string;
+  auth_prefix: string | null;
+  docs_url: string;
+  test_endpoint: string;
+  notes: string;
+}
+
+export const knownServiceDraft = (service: KelKnownService): ConnectionDraft => ({
+  name: service.name,
+  kind: service.kind,
+  base_url: service.base_url,
+  auth_method: service.auth_method,
+  auth_header: service.auth_header,
+  auth_prefix: service.auth_prefix,
+  docs_url: service.docs_url,
+  test_endpoint: service.test_endpoint,
+  notes: service.note ?? '',
+});
+
+/** What a person should be told about a service Kel is not certain about. */
+export const KNOWN_SERVICE_SOURCE_LABELS: Record<KelKnownService['source'], string> = {
+  documented: 'Kel knows this address from the service’s own documentation.',
+  assumed: 'Kel assumes the usual address — correct it if this service gave you a different one.',
+  'to-confirm': 'Kel does not know this address; the service tells you when it issues your credential.',
+};
+
 /** What a check of a connection found, in the words a person uses. */
 export const CONNECTION_CHECK_LABELS: Record<string, string> = {
   ok: 'Working',
@@ -358,6 +415,9 @@ export const connectionCheckSentence = (connection: KelConnection, when: string)
 
 export const kelConnections = {
   list: () => call<KelConnectionList>('/api/connections', { action: 'list' }),
+  /** V2-03: the services Kel already knows how to talk to, as data. */
+  knownServices: () =>
+    call<{ services: KelKnownService[] }>('/api/connections', { action: 'catalogue' }),
   get: (id: string) => call<KelConnection>('/api/connections', { action: 'get', id }),
   save: (draft: {
     id?: string;
@@ -366,6 +426,7 @@ export const kelConnections = {
     base_url?: string;
     auth_method?: KelConnection['auth_method'];
     auth_header?: string;
+    auth_prefix?: string | null;
     docs_url?: string;
     test_endpoint?: string;
     notes?: string;

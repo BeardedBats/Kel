@@ -8,6 +8,10 @@
  *
  * V2-02 adds Test connection: the shell decrypts the value, the engine makes one request, and this
  * page shows what came back — working, refused, nothing there, not reachable, no answer.
+ *
+ * V2-03 adds the known services: the eight services Nick uses come with their address, the header the
+ * credential goes in, where the documentation is, and what he has to go and fetch. Picking one fills
+ * the form in; adding it by hand works exactly the same way.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -21,12 +25,15 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   CONNECTION_KIND_LABELS,
+  KNOWN_SERVICE_SOURCE_LABELS,
   connectionCheckSentence,
   connectionCredentialField,
   connectionCustodyKey,
   kelConnections,
+  knownServiceDraft,
   type KelConnection,
   type KelConnectionList,
+  type KelKnownService,
 } from '@renderer/components/kel/kelApi';
 
 interface Draft {
@@ -36,6 +43,8 @@ interface Draft {
   base_url: string;
   auth_method: KelConnection['auth_method'];
   auth_header: string;
+  /** null: Kel decides; '': send the value as it is; a word: add that word in front. */
+  auth_prefix: string | null;
   docs_url: string;
   test_endpoint: string;
   notes: string;
@@ -47,6 +56,7 @@ const EMPTY_DRAFT: Draft = {
   base_url: '',
   auth_method: 'header',
   auth_header: '',
+  auth_prefix: null,
   docs_url: '',
   test_endpoint: '',
   notes: '',
@@ -59,10 +69,15 @@ const draftFor = (connection: KelConnection): Draft => ({
   base_url: connection.base_url,
   auth_method: connection.auth_method,
   auth_header: connection.auth_header,
+  auth_prefix: connection.auth_prefix,
   docs_url: connection.docs_url,
   test_endpoint: connection.test_endpoint,
   notes: connection.notes,
 });
+
+/** The three things a person can mean by "how the credential is presented". */
+const prefixMode = (prefix: string | null): 'auto' | 'raw' | 'custom' =>
+  prefix === null || prefix === undefined ? 'auto' : prefix === '' ? 'raw' : 'custom';
 
 const AUTH_METHODS: Array<{ id: KelConnection['auth_method']; label: string }> = [
   { id: 'header', label: 'Header' },
@@ -93,6 +108,7 @@ const Connections: React.FC = () => {
     value: string;
   } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [known, setKnown] = useState<KelKnownService[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -107,6 +123,10 @@ const Connections: React.FC = () => {
     // engine's truth, it just cannot reconcile a disagreement.
     const shell = await window.kelAPI?.credentials?.connectionStatus?.().catch((): undefined => undefined);
     setHeldByShell(shell ?? null);
+    // The services Kel already knows how to talk to. Best effort too: without them Nick types the
+    // addresses himself, which is exactly what an unknown service needs anyway.
+    const services = await kelConnections.knownServices().catch((): null => null);
+    setKnown(services?.services ?? []);
   }, []);
 
   useEffect(() => {
@@ -114,6 +134,12 @@ const Connections: React.FC = () => {
   }, [load]);
 
   const connections = useMemo(() => list?.connections ?? [], [list]);
+
+  /** The known services Kel can add with one click — the ones not already connected. */
+  const addable = useMemo(
+    () => known.filter((service) => !connections.some((connection) => connection.id === service.id)),
+    [known, connections]
+  );
 
   const saveConnection = useCallback(async () => {
     if (!draft) return;
@@ -127,6 +153,7 @@ const Connections: React.FC = () => {
         base_url: draft.base_url,
         auth_method: draft.auth_method,
         auth_header: draft.auth_header,
+        auth_prefix: draft.auth_prefix,
         docs_url: draft.docs_url,
         test_endpoint: draft.test_endpoint,
         notes: draft.notes,
@@ -282,6 +309,30 @@ const Connections: React.FC = () => {
           </KelButton>
         }
       >
+        {addable.length > 0 && (
+          <div className="kel-divider" />
+        )}
+        {addable.map((service) => (
+          <div className="kel-row" key={service.id}>
+            <div className="kel-attention__text">
+              <strong>{service.name}</strong>
+              <span className="kel-meta">
+                {[CONNECTION_KIND_LABELS.find((item) => item.id === service.kind)?.label,
+                  service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
+              </span>
+              <span className="kel-meta">Kel needs {service.credential}.</span>
+              <span className="kel-meta">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
+            </div>
+            <span className="kel-grow" />
+            <KelButton
+              variant="quiet"
+              disabled={busy}
+              onClick={() => setDraft({ ...knownServiceDraft(service) })}
+            >
+              Set up {service.name}
+            </KelButton>
+          </div>
+        ))}
         {connections.length === 0 ? (
           <KelEmpty
             title="No connections yet."
@@ -487,18 +538,60 @@ const Connections: React.FC = () => {
             </select>
           </div>
           {draft.auth_method === 'header' || draft.auth_method === 'query' ? (
-            <div className="kel-row">
-              <label className="kel-meta" htmlFor="kel-connection-header">
-                {draft.auth_method === 'header' ? 'Header name' : 'Parameter name'}
-              </label>
-              <input
-                id="kel-connection-header"
-                className="kel-input"
-                placeholder="Authorization"
-                value={draft.auth_header}
-                onChange={(event) => setDraft({ ...draft, auth_header: event.target.value })}
-              />
-            </div>
+            <>
+              <div className="kel-row">
+                <label className="kel-meta" htmlFor="kel-connection-header">
+                  {draft.auth_method === 'header' ? 'Header name' : 'Parameter name'}
+                </label>
+                <input
+                  id="kel-connection-header"
+                  className="kel-input"
+                  placeholder="Authorization"
+                  value={draft.auth_header}
+                  onChange={(event) => setDraft({ ...draft, auth_header: event.target.value })}
+                />
+              </div>
+              <div className="kel-row">
+                <label className="kel-meta" htmlFor="kel-connection-prefix">
+                  How the credential is presented
+                </label>
+                <select
+                  id="kel-connection-prefix"
+                  className="kel-input"
+                  value={prefixMode(draft.auth_prefix)}
+                  onChange={(event) => {
+                    const mode = event.target.value;
+                    setDraft({
+                      ...draft,
+                      auth_prefix:
+                        mode === 'auto' ? null : mode === 'raw' ? '' : (draft.auth_prefix || 'Bearer '),
+                    });
+                  }}
+                >
+                  <option value="auto">Kel works it out</option>
+                  <option value="raw">Send the value exactly as it is</option>
+                  <option value="custom">Kel adds a word in front</option>
+                </select>
+              </div>
+              {prefixMode(draft.auth_prefix) === 'custom' ? (
+                <div className="kel-row">
+                  <label className="kel-meta" htmlFor="kel-connection-prefix-word">
+                    The word before the credential
+                  </label>
+                  <input
+                    id="kel-connection-prefix-word"
+                    className="kel-input"
+                    placeholder="Bearer "
+                    value={draft.auth_prefix ?? ''}
+                    onChange={(event) => setDraft({ ...draft, auth_prefix: event.target.value })}
+                  />
+                </div>
+              ) : null}
+              <span className="kel-meta">
+                Services expect this differently: GitHub and Stripe want “Bearer ”, Discord wants “Bot ”,
+                Figma and ClickUp want the value exactly as it is.
+              </span>
+            </>
           ) : null}
           <div className="kel-row">
             <label className="kel-meta" htmlFor="kel-connection-base">
