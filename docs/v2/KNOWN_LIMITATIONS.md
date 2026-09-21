@@ -300,3 +300,14 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   whole domain adds the parent domain on the list directly.
 - **The default stays `full` until a person chooses otherwise** — V2-14 adds the controls; it does not
   silently tighten an existing install.
+
+## Priority 9 — the Kibble item's honest edges (2026-09-21)
+
+- **Kibble is undefined in the durable record.** The directive and roadmap contain no Kibble section;
+  the only in-repo placement is Ramble/Kibble presentation in Astra's Shell lane. A dev-mission schema
+  and candidate model are therefore **awaiting Nick's definition** (D-44), not built on a guess.
+- **The promotion gate itself is real and now inspectable**: `queue_promotion` and the shadow
+  proposals were already recorded-never-applied; the new team-surface reads
+  (`action:'promotions'` / `action:'shadow'`) only show them and write nothing.
+- **No promotion is applied by any path.** Applying still requires the recorded explicit user
+  judgment; this increment changed nothing about that.

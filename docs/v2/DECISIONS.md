@@ -424,3 +424,20 @@ policy binds per store around exactly that call — **an explicitly configured r
 wins**, so no test or embedding loses its own hook. *Forbids:* a second outbound path; sending an
 unapproved host “just once”; a policy that silently replaces a deliberately installed hook; blocking
 or allowing anything without a recorded decision.
+
+## D-44 — Kibble is undefined in the directive; the gate gets a door, the concept waits (Priority 9)
+
+The queue item “Kibble Build Update backend foundation (dev mission schema, candidate model,
+promotion gate)” is resolved against the durable record, honestly: `Kibble` appears nowhere in
+`MARATHON_DIRECTIVE.md` or `ROADMAP.md` and nowhere in the runtime/desktop source; its only in-repo
+placement is Ramble/Kibble **presentation** in Astra's Shell lane. Two of its three terms (what a dev
+mission is, what a candidate is) describe a product concept, and inventing them would be exactly the
+kind of invented subsystem the directive forbids. What the third term names already exists as
+recorded-never-applied machinery (`learning.queue_promotion` → `proposal.queued`;
+`learning.shadow_proposal` → `staffing.proposed` with predictions). This increment therefore adds only
+the missing **door**: `Team.apply({action:'promotions'})` and `{action:'shadow'}` read those queues,
+project-scoped, newest-first, with honest notes (“recorded, never applied”), and write nothing
+(pinned). The dev-mission/candidate-model definition is **deferred pending Nick's definition** in the
+same way V2-05-history is deferred for Shell integration — the requirement stays in MARATHON_STATE and
+RESUME, and nothing here marks the item complete. *Forbids:* inventing the Kibble concept; a second
+promotion system; a read door with side effects.

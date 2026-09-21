@@ -540,4 +540,18 @@ class Team:
                                                  data.get('project_id', ''), data.get('task_id', ''))}
         if action == 'staffing':
             return self.staffing(data['brief'], data['entries'])
+        if action == 'promotions':
+            # The promotion gate's inspection door: what Kel has queued for promotion, as recorded.
+            # Read-only by construction — the queue is already append-only, and nothing here applies.
+            from .learning import promotion_queue
+            items = promotion_queue(self.store, project_id=data.get('project_id') or None)
+            return {'promotions': items, 'count': len(items),
+                    'note': 'Recorded, never applied: promotion needs your explicit decision.'}
+        if action == 'shadow':
+            # The shadow staffing proposals with their predictions; recorded, never applied.
+            from .learning import shadow_proposals
+            items = shadow_proposals(self.store, project_id=data.get('project_id') or None,
+                                     mission_id=data.get('mission_id') or None)
+            return {'proposals': items, 'count': len(items),
+                    'note': 'Recorded with predictions; nothing here has been applied.'}
         raise PolicyError('Unknown team action: %s' % action)
