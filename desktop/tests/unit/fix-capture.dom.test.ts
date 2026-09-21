@@ -302,6 +302,37 @@ describe('Fix Capture — where it is reachable from', () => {
   });
 });
 
+describe('Fix Capture — the same capture contract as the Transcriptions feature', () => {
+  it('uses the one microphone implementation and hands the engine the format Muse expects', () => {
+    const audio = read('desktop/packages/desktop/src/renderer/utils/transcription/audio.ts');
+    const page = read('desktop/packages/desktop/src/renderer/pages/kel/transcription/index.tsx');
+    // One recorder for both features: 24 kHz mono PCM16 live chunks, WAV for the one-shot request.
+    expect(hook).toContain("from '@renderer/utils/transcription/audio'");
+    expect(page).toContain("from '@renderer/utils/transcription/audio'");
+    expect(hook).toContain('startMicCapture');
+    expect(page).toContain('startMicCapture');
+    expect(audio).toContain('TARGET_RATE');
+    expect(hook).toContain("action: 'quick_transcribe'");
+    expect(hook).toContain("filename: 'fix-capture.wav'");
+    expect(page).toContain("action: 'save_recording'");
+  });
+
+  it('never invents words of its own', () => {
+    // The only canned sentence the capture UI owns is the honest failure line; practice text lives in
+    // the engine's explicit fixture provider and can never arrive here in production.
+    expect(hook).toContain("Couldn't transcribe this recording.");
+    expect(hook).not.toMatch(/practice transcript/i);
+    expect(hook).not.toMatch(/FIXTURE_SENTENCES/);
+  });
+
+  it('holds the finished recording for a retry and drops it on cancel, Record Again and save', () => {
+    expect(hook).toContain('const audioRef = useRef<{ base64: string; durationMs: number } | null>(null);');
+    expect(hook).toContain('audioRef.current = { base64: recording.base64, durationMs: recording.durationMs };');
+    expect(hook).toContain('audio: audio.base64');
+    expect((hook.match(/audioRef\.current = null;/g) ?? []).length).toBeGreaterThanOrEqual(3);
+  });
+});
+
 describe('Fix Capture — honest failure copy', () => {
   it('turns a device error into a sentence and offers the typed path', () => {
     expect(hook).toContain('friendlyMicError(error)');

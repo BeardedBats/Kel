@@ -120,6 +120,15 @@
   color: var(--kel-text-2);
 }
 
+/* A failed transcription is the state of the panel, not a passing hint: it reads at body weight. */
+.noteStrong {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--kel-text-1);
+}
+
 .actions {
   display: flex;
   gap: var(--kel-space-2);

@@ -35,6 +35,11 @@ type Call = { route: string; body: Record<string, unknown> };
 const calls: Call[] = [];
 let captureResult: Record<string, unknown> | null = null;
 let streamText = 'the button jumps when I click it';
+/** What the engine answers at stop, and on a one-shot transcription: tests drive the failure paths. */
+let finishBehaviour: 'text' | 'empty' | 'throw' = 'text';
+let quickBehaviour: 'text' | 'empty' | 'throw' | 'empty-then-text' = 'text';
+/** The exact audio each one-shot transcription received, so a retry can be proven to reuse it. */
+const quickAudio: string[] = [];
 
 const stubBridge = () => {
   (window as unknown as { kelAPI: unknown }).kelAPI = {
@@ -51,9 +56,24 @@ const stubBridge = () => {
         case 'stream_status':
           return Promise.resolve({ text: 'the button jumps' });
         case 'stream_finish':
-          return Promise.resolve({ text: streamText, duration_ms: 2500 });
-        case 'quick_transcribe':
-          return Promise.resolve({ text: 'from the whole recording' });
+          if (finishBehaviour === 'throw') {
+            return Promise.reject(new Error('Muse did not accept the session.'));
+          }
+          return Promise.resolve({
+            text: finishBehaviour === 'empty' ? '' : streamText,
+            duration_ms: 2500,
+          });
+        case 'quick_transcribe': {
+          quickAudio.push(String(body?.audio ?? ''));
+          if (quickBehaviour === 'throw') {
+            return Promise.reject(new Error('Muse did not accept the session.'));
+          }
+          if (quickBehaviour === 'empty') return Promise.resolve({ text: '' });
+          if (quickBehaviour === 'empty-then-text') {
+            return Promise.resolve({ text: quickAudio.length > 1 ? streamText : '' });
+          }
+          return Promise.resolve({ text: streamText });
+        }
         default:
           return Promise.resolve({});
       }
@@ -85,6 +105,9 @@ beforeEach(() => {
   calls.length = 0;
   captureResult = null;
   streamText = 'the button jumps when I click it';
+  finishBehaviour = 'text';
+  quickBehaviour = 'text';
+  quickAudio.length = 0;
   mic.cancel.mockClear();
   mic.stop.mockClear();
   mic.failWith = null;
@@ -93,6 +116,85 @@ beforeEach(() => {
 
 afterEach(() => {
   delete (window as unknown as { kelAPI?: unknown }).kelAPI;
+});
+
+describe('Fix Capture — when transcription cannot produce the words', () => {
+  const captureAndStop = async () => {
+    renderLayer();
+    hotkey();
+    await waitFor(() => expect(screen.getByTestId('fix-capture-overlay')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('app-target'));
+    await waitFor(() => expect(findCall('stream_start')).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('recording')
+    );
+    hotkey();
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('review')
+    );
+  };
+
+  it('says so honestly, offers Retry, and the retry reuses the same recording', async () => {
+    finishBehaviour = 'empty';
+    quickBehaviour = 'empty-then-text';
+    await captureAndStop();
+
+    const note = await screen.findByTestId('fix-capture-note');
+    expect(note.textContent).toContain("Couldn't transcribe this recording.");
+    const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
+    expect(transcript.value).toBe('');
+    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByTestId('fix-capture-retry')).toBeTruthy();
+    expect(mic.stop).toHaveBeenCalledTimes(1);
+    expect(quickAudio).toEqual(['QUJD']);
+
+    fireEvent.click(screen.getByTestId('fix-capture-retry'));
+    await waitFor(() => expect(transcript.value).toBe('the button jumps when I click it'));
+    // The retry sent the very same recording — no second take was ever asked for.
+    expect(quickAudio).toEqual(['QUJD', 'QUJD']);
+    expect(mic.stop).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('fix-capture-retry')).toBeNull();
+    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('turns an engine error into a truthful sentence, never into invented words', async () => {
+    finishBehaviour = 'throw';
+    await captureAndStop();
+
+    const note = await screen.findByTestId('fix-capture-note');
+    expect(note.textContent).toContain("Couldn't transcribe this recording.");
+    const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
+    expect(transcript.value).toBe('');
+    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByTestId('fix-capture-retry'));
+    await waitFor(() => expect(transcript.value).toBe('the button jumps when I click it'));
+  });
+
+  it('Record Again drops the failed recording and transcribes the new take', async () => {
+    finishBehaviour = 'empty';
+    quickBehaviour = 'empty';
+    await captureAndStop();
+    expect(screen.getByTestId('fix-capture-retry')).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId('fix-capture-again'));
+    await waitFor(() =>
+      expect(calls.filter((entry) => entry.body?.action === 'stream_start').length).toBe(2)
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('recording')
+    );
+    // The failed take is gone: there is nothing left to retry while the new one is recording.
+    expect(screen.queryByTestId('fix-capture-retry')).toBeNull();
+
+    quickBehaviour = 'text';
+    hotkey();
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('review')
+    );
+    const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
+    await waitFor(() => expect(transcript.value).toBe('the button jumps when I click it'));
+    expect(mic.stop).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('Fix Capture — the capture itself', () => {
@@ -245,6 +347,8 @@ describe('Fix Capture — the capture itself', () => {
     await waitFor(() => expect(screen.queryByTestId('fix-capture-panel')).toBeNull());
     expect(findCall('save')).toBeUndefined();
     expect(mic.cancel).toHaveBeenCalled();
+    // Nothing was transcribed from the cancelled recording, so nothing of it can come back.
+    expect(findCall('quick_transcribe')).toBeUndefined();
     // The in-flight screenshot goes back to the engine, which deletes it.
     await waitFor(() => expect(findCall('discard')).toBeTruthy());
     expect(findCall('discard')?.body.screenshot).toBe('dogfood/tmp/cancel-me.png');

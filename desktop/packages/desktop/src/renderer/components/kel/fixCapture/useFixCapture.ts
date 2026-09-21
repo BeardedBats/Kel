@@ -24,6 +24,13 @@ const LIVE_POLL_MS = 900;
 const SAVED_DISMISS_MS = 2400;
 /** Below this the engine is not asked to transcribe at all — a stray click is not feedback. */
 const MIN_AUDIO_MS = 400;
+/** The one sentence a person reads when Muse could not transcribe their recording. */
+const TRANSCRIBE_FAILED = "Couldn't transcribe this recording.";
+
+const failureNote = (error: unknown): string => {
+  const detail = (failureSentence(error, '') || '').trim();
+  return detail && detail !== TRANSCRIBE_FAILED ? `${TRANSCRIBE_FAILED} ${detail}` : TRANSCRIBE_FAILED;
+};
 
 export interface FixCaptureContext {
   route: string | null;
@@ -38,6 +45,8 @@ export interface FixCaptureApi {
   pick: (element: Element) => Promise<void>;
   stop: () => void;
   again: () => void;
+  /** Transcribe the recording that is already captured — never asks for a new one. */
+  retry: () => Promise<void>;
   save: () => Promise<void>;
   dismiss: () => void;
   setDraft: (text: string) => void;
@@ -63,6 +72,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
   const dismissRef = useRef<number | null>(null);
   /** The temp screenshot of a capture that has not been saved yet (or null). */
   const pendingRef = useRef<string | null>(null);
+  /** The completed recording, held so a failed transcription can be retried without re-recording. */
+  const audioRef = useRef<{ base64: string; durationMs: number } | null>(null);
 
   const stopTimers = useCallback(() => {
     if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -105,6 +116,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       discardCapture(pendingRef.current);
       pendingRef.current = null;
     }
+    // Cancel/Esc/click-outside throws the recording away too: nothing is left to retry or save.
+    audioRef.current = null;
   }, [discardCapture, endSession, stopTimers]);
 
   /** Start (or restart) one live recording: microphone first, then the engine session. */
@@ -222,6 +235,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
           return;
         }
         const recording = await capture.stop();
+        // Kept for the whole review: a failed transcription can be retried on this exact recording.
+        audioRef.current = { base64: recording.base64, durationMs: recording.durationMs };
         await chainRef.current.catch(() => {});
         let text = '';
         if (session) {
@@ -240,21 +255,55 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
           });
           text = quick.text || '';
         }
-        dispatch({ type: 'stopped', text });
+        const produced = text.trim();
+        if (produced) {
+          dispatch({ type: 'stopped', text: produced });
+        } else if (recording.durationMs > MIN_AUDIO_MS) {
+          // Real audio came back with no words: that is a failure a person can retry, never a blank.
+          dispatch({ type: 'stopped', text: '', note: TRANSCRIBE_FAILED, retryable: true });
+        } else {
+          // Too short to be feedback at all (a stray click): nothing to transcribe, nothing to retry.
+          dispatch({ type: 'stopped', text: '' });
+        }
       } catch (error) {
         dispatch({
           type: 'stopped',
           text: '',
-          note: failureSentence(error, 'That recording could not be transcribed — type what happened instead.'),
+          note: failureNote(error),
+          retryable: audioRef.current !== null,
         });
       }
     })();
   }, [state.phase, stopTimers]);
 
+  const retry = useCallback(async () => {
+    if (state.phase !== 'review') return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    dispatch({ type: 'note', note: 'Transcribing the recording again…' });
+    try {
+      const quick = await kelRequest<{ text?: string }>('/api/transcription', {
+        action: 'quick_transcribe',
+        filename: 'fix-capture.wav',
+        audio: audio.base64,
+        duration_ms: audio.durationMs,
+      });
+      const text = (quick.text || '').trim();
+      if (!text) {
+        dispatch({ type: 'note', note: TRANSCRIBE_FAILED });
+        return;
+      }
+      dispatch({ type: 'transcribed', text });
+    } catch (error) {
+      dispatch({ type: 'note', note: failureNote(error) });
+    }
+  }, [state.phase]);
+
   const again = useCallback(() => {
     if (state.phase !== 'review' && state.phase !== 'stopping') return;
     stopTimers();
     endSession();
+    audioRef.current = null;
     dispatch({ type: 'again' });
     void startSession();
   }, [endSession, startSession, state.phase, stopTimers]);
@@ -282,6 +331,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       });
       dispatch({ type: 'saved', id: saved.id });
       pendingRef.current = null;
+      audioRef.current = null;
       dismissRef.current = window.setTimeout(() => dispatch({ type: 'dismiss' }), SAVED_DISMISS_MS);
     } catch (error) {
       dispatch({
@@ -306,5 +356,5 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
     [teardown]
   );
 
-  return { state, begin, cancel, pick, stop, again, save, dismiss, setDraft };
+  return { state, begin, cancel, pick, stop, again, retry, save, dismiss, setDraft };
 }

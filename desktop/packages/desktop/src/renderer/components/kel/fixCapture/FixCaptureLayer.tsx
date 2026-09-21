@@ -41,7 +41,7 @@ const FixCaptureLayer: React.FC = () => {
   const capture = useFixCapture(context);
   const api = useRef(capture);
   api.current = capture;
-  const { state, begin, cancel, stop, again, save, dismiss, setDraft } = capture;
+  const { state, begin, cancel, stop, again, retry, save, dismiss, setDraft } = capture;
   const phase = state.phase;
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -235,7 +235,10 @@ const FixCaptureLayer: React.FC = () => {
                   data-testid='fix-capture-transcript'
                 />
                 {state.note && (
-                  <p className={styles.note} data-testid='fix-capture-note'>
+                  <p
+                    className={state.retryable ? styles.noteStrong : styles.note}
+                    data-testid='fix-capture-note'
+                  >
                     {state.note}
                   </p>
                 )}
@@ -249,6 +252,16 @@ const FixCaptureLayer: React.FC = () => {
                   >
                     Save Fix
                   </button>
+                  {state.retryable && (
+                    <button
+                      type='button'
+                      className={styles.secondary}
+                      onClick={() => void retry()}
+                      data-testid='fix-capture-retry'
+                    >
+                      Retry Transcription
+                    </button>
+                  )}
                   <button
                     type='button'
                     className={styles.secondary}
