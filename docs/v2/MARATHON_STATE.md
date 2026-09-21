@@ -183,6 +183,33 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
 - **Evidence:** `TEST_EVIDENCE.md` (V2-05 third pass); desktop 358 pass (43 files); `tsc` clean; 4 new unit
   tests (`kel-integration.unit.test.ts`).
 
+## V2-04a reconnaissance for the next run (source-backed; no code changed)
+
+The assistant bridge's landing points, read from the tree:
+
+- **The runtime's tools are not MCP.** The shipped coding runtime is Claude Code, invoked with
+  `--strict-mcp-config --mcp-config '{"mcpServers":{}}'` (`runtime/kel/native.py:92`), and a test asserts
+  no capability row speaks of MCP (`runtime/tests/test_capabilities.py:40`). The bridge must ride the
+  existing capability/tool plumbing, not a second MCP server.
+- **The capability layer already declares a tool surface.** `runtime/kel/capabilities.py` maps each
+  capability to the runtime's real tool names (≈43–52) and feeds `_TOOL_MAP` / `capability_for_tool`. Its
+  docstring carries the binding rule this bridge flips: *"Google Drive and Connected apps are
+  deliberately absent: this release has no production effect path that could honour them, so they are not
+  offered as switches that could not be kept."* — the bridge lands first, the switch second.
+- **The action side is data and ready to call.** `runtime/kel/connection_actions.py`: `actions()` (121),
+  `actions_for(service_id)` (126), `action(action_id)` (132); the mutating rule sits in the module header
+  (line 14: a mutating action is refused unless Nick confirmed — none ship yet). `runtime/kel/connections.py`
+  owns schema/run/history (migrations incl. `_add_actions_table` 134; `ensure_schema` 149).
+- **A mid-turn confirmation pathway exists.** `runtime/kel/acp_host.py` is poll-based
+  (`Host(client, emit, poll_interval=.25)`: 156), emits `agent_message_chunk` (167), and already has
+  `_resurface()` (188) — *"After an interruption, bring the active vetting prompts back into view"* — a
+  user-prompt/vetting mechanism the bridge's confirmation can build on. `ServiceClient.call()` (129) is
+  the engine transport (reads `desktop-session.json`).
+- **Open questions the next run must answer before designing:** the direction of `_TOOL_MAP` (does the
+  engine observe the runtime's tool calls or provide tools to it?), where Projects state lives for
+  per-Project gating (V2-02), and how the access-history writer receives call facts (V2-04's
+  connection/action/domain/status/duration shape).
+
 ## V2-04 build notes (historical — the phase is closed)
 
 - **Built:** `runtime/kel/connection_framework.py` (the three templates: labels, hints, credential field
