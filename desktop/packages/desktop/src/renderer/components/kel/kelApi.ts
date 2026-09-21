@@ -108,6 +108,8 @@ declare global {
       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
       credentials?: {
         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
+        /** V2-01: what the OS store holds for Connections — field names only, never values. */
+        connectionStatus?: () => Promise<Record<string, string[]>>;
         set: (
           provider: string,
           field: string,
@@ -273,6 +275,80 @@ export interface KelCapabilityRow {
 /** D17 — the integrations inventory (the same rows the per-chat tools pill draws). */
 export const kelCapabilities = (conversation?: string) =>
   call<KelCapabilityRow[]>('/api/capabilities', { action: 'get', conversation });
+
+/**
+ * V2-01 — a Connection: Kel has credentials for this service and can use its API. The engine owns
+ * the record and the state; the credential value itself lives in the OS-backed store, and the shell's
+ * `connection:<id>` entry is the only place it exists.
+ */
+export interface KelConnection {
+  id: string;
+  name: string;
+  kind: 'api_key' | 'oauth' | 'bot';
+  kind_label: string;
+  base_url: string;
+  auth_method: 'header' | 'bearer' | 'query' | 'basic';
+  auth_header: string;
+  docs_url: string;
+  test_endpoint: string;
+  notes: string;
+  /** A pointer the engine keeps (`kel:connection:<id>`) — never the credential. */
+  credential_ref: string | null;
+  credential_fields: string[];
+  has_credentials: boolean;
+  state: 'ready' | 'needs_credentials';
+  created: number;
+  updated: number;
+}
+
+export interface KelConnectionList {
+  connections: KelConnection[];
+  counts: Record<'ready' | 'needs_credentials', number>;
+  states: string[];
+  kinds: Array<KelConnection['kind']>;
+}
+
+/** The kinds a person picks between, in the words a person uses. */
+export const CONNECTION_KIND_LABELS: Array<{ id: KelConnection['kind']; label: string; hint: string }> = [
+  { id: 'api_key', label: 'API key', hint: 'a key Kel sends with its requests' },
+  { id: 'oauth', label: 'Account authorization', hint: 'you sign in and Kel keeps the token' },
+  { id: 'bot', label: 'Bot or webhook', hint: 'a bot token or a webhook address' },
+];
+
+/** The credential field name a service of this kind normally uses. */
+export const connectionCredentialField = (kind: KelConnection['kind']): string =>
+  kind === 'bot' ? 'token' : kind === 'oauth' ? 'access_token' : 'api_key';
+
+/** The custody namespace the shell stores a connection's credential under. */
+export const connectionCustodyKey = (id: string): string => `connection:${id}`;
+
+export const kelConnections = {
+  list: () => call<KelConnectionList>('/api/connections', { action: 'list' }),
+  get: (id: string) => call<KelConnection>('/api/connections', { action: 'get', id }),
+  save: (draft: {
+    id?: string;
+    name: string;
+    kind?: KelConnection['kind'];
+    base_url?: string;
+    auth_method?: KelConnection['auth_method'];
+    auth_header?: string;
+    docs_url?: string;
+    test_endpoint?: string;
+    notes?: string;
+  }) => call<KelConnection>('/api/connections', { action: 'save', ...draft }),
+  remove: (id: string) =>
+    call<{ id: string; removed: boolean }>('/api/connections', { action: 'remove', id }),
+  /** Metadata only: which field names exist and a pointer — the value never leaves the shell. */
+  setCredential: (id: string, fields: string[]) =>
+    call<KelConnection>('/api/connections', {
+      action: 'set_credential',
+      id,
+      fields,
+      credential_ref: `kel:connection:${id}`,
+    }),
+  deleteCredential: (id: string) =>
+    call<KelConnection>('/api/connections', { action: 'delete_credential', id }),
+};
 
 export interface KelMapSection {
   name: string;
