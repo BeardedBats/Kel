@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: V2-04b hardening # V2-04b (OAuth foundation) is BUILT (evidence/v2-04b/README.md; D-34/D-35); next safe backend item: Priority 2 of the run directive — Connection execution hardening (timeouts, rate limits, malformed responses, redirects, domain allowlisting at the single `perform_request` choke point); then routing intelligence (Priority 3), which now includes the measured phone-routing gap
+next_item: routing intelligence # V2-04b (OAuth foundation) and the V2-04 execution hardening are BUILT (evidence/v2-04b/README.md; D-34/D-35/D-36); next safe backend item: Priority 3 of the run directive — routing intelligence (durable outcome evidence, Automatic-routing improvement, the "Why this model?" payload), which includes the measured phone-routing gap (phone turns route conversationally even when they ask for tool work); then learning (Priority 4), long-running work (5), staffing (6), isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -241,6 +241,15 @@ suite 10/10 incl. a real-HTTP lifecycle with a real S256 PKCE check, desktop 363
 Honest limits: real Google sign-in needs Nick's client ID + browser; the phone cannot finish a
 sign-in yet (loopback callback); the sign-in between callback and claim lives in engine memory only.
 `next_item` moves to Connection execution hardening, then routing intelligence.
+
+## V2-04 hardening — BUILT (2026-09-21)
+
+The choke point now carries its own rules (D-36): one opener built once; a bounded redirect chain;
+a service's `Retry-After` honoured but capped; the V2-14 network-rule seam asked **before** anything
+leaves the computer (and again for a redirect's host, failing closed when the rule source errors);
+an answer past the reading cap labelled as cut short; and a choke-point refusal reaching the person
+as its own sentence. Six new tests in `ExecutionHardeningTests` (all green). No rules are configured
+yet, so behaviour is unchanged until V2-14 fills the seam. `next_item` moves to routing intelligence.
 
 ## V2-04a — BUILT and proved live (2026-09-21, `dev/v2` @ `d3bbf65`)
 

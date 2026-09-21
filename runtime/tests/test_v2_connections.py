@@ -18,6 +18,7 @@ import json
 import os
 import re
 import socket
+import sys
 import tempfile
 import threading
 import time
@@ -29,9 +30,10 @@ from unittest.mock import patch
 from kel.connection_actions import action, actions, actions_for
 from kel.connection_framework import request_policy, template, templates
 from kel.connection_services import catalogue, entry
-from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, REQUEST_ATTEMPTS,
-                             RETRY_STATUSES, STATES, TEST_TIMEOUT, Connections, ensure_schema,
-                             perform_request, scrub, slug)
+from kel.connections import (AUTH_METHODS, CREDENTIAL_REF_PREFIX, KINDS, MAX_ANSWER_BYTES,
+                             MAX_REDIRECTS, REQUEST_ATTEMPTS, RETRY_AFTER_CAP, RETRY_STATUSES,
+                             STATES, TEST_TIMEOUT, Connections, ensure_schema, perform_request,
+                             scrub, slug)
 from kel.core import PolicyError, Store
 
 EXPECTED_COLUMNS = {
@@ -626,6 +628,9 @@ class LocalService:
         self.delay = 0.0
         # What the service says back. Answer bodies are only read by actions. 
         self.answer_text = ''
+        # V2-04 hardening knobs: a redirect target, and a Retry-After header on 429/503 answers.
+        self.location = ''
+        self.retry_after = ''
         self.seen = []
         probe = self
 
@@ -637,7 +642,12 @@ class LocalService:
                 if probe.delay:
                     time.sleep(probe.delay)
                 payload = probe.answer_text.encode('utf-8')
-                self.send_response(probe.statuses.pop(0) if probe.statuses else probe.status)
+                code = probe.statuses.pop(0) if probe.statuses else probe.status
+                self.send_response(code)
+                if probe.retry_after and code in (429, 503):
+                    self.send_header('Retry-After', str(probe.retry_after))
+                if probe.location and 300 <= code < 400:
+                    self.send_header('Location', probe.location)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Content-Length', str(len(payload)))
                 self.end_headers()
@@ -702,7 +712,10 @@ class ConnectionTestRequestTests(unittest.TestCase):
 
     def test_the_engine_has_exactly_one_place_that_calls_a_service(self):
         source = (Path(__file__).resolve().parents[1] / 'kel' / 'connections.py').read_text(encoding='utf-8')
-        self.assertEqual(source.count('urlopen('), 1)
+        # One opener, built once (V2-04 hardening put the redirect bound inside it): every request
+        # still goes through perform_request, and nothing else opens a URL.
+        self.assertEqual(source.count('build_opener('), 1)
+        self.assertEqual(source.count('.open('), 1)
         self.assertIn('def perform_request(', source)
 
     def test_a_service_that_answers_is_recorded_as_ok_with_its_status(self):
@@ -823,6 +836,81 @@ class ConnectionTestRequestTests(unittest.TestCase):
         with self.assertRaises(PolicyError) as caught:
             self.connections.test('nope', {})
         self.assertIn('not found', str(caught.exception))
+
+
+class ExecutionHardeningTests(unittest.TestCase):
+    """V2-04 priority 2 — the choke point's own rules: redirects, Retry-After, network authority,
+    honest truncation. Everything runs against a loopback stand-in; nothing here leaves the computer."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._cleanup_tmp)
+        self.store = Store(self.tmp.name)
+        self.pauses = []
+        self.connections = Connections(self.store, attempts=3, sleep=self.pauses.append)
+        self.service = LocalService()
+        self.addCleanup(self.service.stop)
+
+    def _cleanup_tmp(self):
+        try:
+            self.tmp.cleanup()
+        except PermissionError:
+            pass
+
+    def test_a_redirect_chain_is_bounded(self):
+        # A service that redirects to itself forever: the opener stops a few hops in (urllib's own
+        # default would allow ten) and the answer is reported honestly — a 302, not a hang.
+        self.service.status = 302
+        self.service.location = self.service.base + '/again'
+        status, final, tried, elapsed, _body = perform_request(self.service.base + '/start', {},
+                                                               timeout=5, attempts=1,
+                                                               sleep=self.pauses.append)
+        self.assertEqual(status, 302)
+        self.assertGreaterEqual(len(self.service.seen), 2)
+        self.assertLess(len(self.service.seen), 10, 'the bound must be far below urllib’s default')
+
+    def test_a_service_may_ask_for_a_short_pause_and_get_it(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        self.service.statuses = [503, 200]
+        self.service.retry_after = '1'
+        result = self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertEqual(result['last_test_state'], 'ok')
+        self.assertEqual(self.pauses, [1.0])          # the service's own number, honoured
+
+    def test_an_absurd_pause_is_capped(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        self.service.statuses = [429, 200]
+        self.service.retry_after = '600'
+        result = self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertEqual(result['last_test_state'], 'ok')
+        self.assertEqual(self.pauses, [RETRY_AFTER_CAP])   # bounded, never a ten-minute wait
+
+    def test_a_network_rule_stops_a_request_before_it_leaves(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        refusal = 'Kel is not allowed to reach that address right now.'
+        with patch.object(sys.modules['kel.connections'], 'NETWORK_RULES',
+                          lambda host: (False, refusal)):
+            with self.assertRaises(PolicyError) as caught:
+                self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertEqual(str(caught.exception), refusal)
+        self.assertEqual(self.service.seen, [], 'a refused host must never be contacted')
+
+    def test_a_rule_source_that_cannot_answer_fails_closed(self):
+        self.connections.save('Stripe', base_url=self.service.base)
+        with patch.object(sys.modules['kel.connections'], 'NETWORK_RULES',
+                          lambda host: (_ for _ in ()).throw(RuntimeError('no rules'))):
+            with self.assertRaises(PolicyError) as caught:
+                self.connections.test('stripe', {'api_key': 'the-credential'})
+        self.assertIn('could not check its network rules', str(caught.exception))
+        self.assertEqual(self.service.seen, [])
+
+    def test_an_answer_beyond_the_reading_cap_says_it_was_cut_short(self):
+        self.connections.save('GitHub', base_url=self.service.base, auth_method='bearer')
+        self.service.answer_text = 'x' * (MAX_ANSWER_BYTES + 5000)
+        done = self.connections.run('github', 'github-whoami', credentials={'api_key': 'the-credential'})
+        self.assertEqual(done['state'], 'ok')
+        self.assertIn('cut short', done['note'])
+        self.assertLessEqual(len(done['result'] or ''), MAX_ANSWER_BYTES)
 
 
 if __name__ == '__main__':
