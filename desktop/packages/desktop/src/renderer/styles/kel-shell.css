@@ -465,3 +465,10 @@ html[data-theme='dark'] body .kel-shell-model-modal .arco-modal-content { backgr
 /* Record uses the DS danger variant, above the generic Arco button mapping. */
 .kel-v2-shell .kel-shell-ramble .arco-btn[data-testid='record-button'] { background: linear-gradient(var(--kel-figma-color-danger-top),var(--kel-figma-color-danger-bottom)) !important; color: var(--kel-figma-color-danger-text) !important; font: 600 14px/20px var(--kel-shell-heading); }
 @media(min-width:981px) { .kel-v2-shell .kel-shell-ramble > main { padding-top: 44px; } }
+
+.kel-shell-webui-panel { display: flex; flex-direction: column; gap: 12px; }
+.kel-shell-webui-panel .kel-shell-webui-intro { margin-top: -8px; margin-bottom: 40px; }
+.kel-shell-webui-panel .kel-shell-webui-intro > .flex { margin-top: 56px; }
+.kel-shell-webui-panel .kel-shell-webui-row .text-14px { font: 500 14px/20px var(--kel-shell-heading) !important; color: var(--kel-text-1) !important; }
+.kel-shell-webui-panel .kel-h2 { margin-bottom: 10px; }
+@media(max-width:767px) { .kel-shell-webui-panel .kel-shell-webui-intro { margin-bottom: 12px; } .kel-shell-webui-panel .kel-shell-webui-intro > .flex { margin-top: 16px; } }

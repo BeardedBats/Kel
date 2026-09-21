@@ -25,6 +25,7 @@ export const createInitStyle = (
   // Inject external CSS variables into Shadow DOM for dark mode support
   const cssVarsDeclaration = cssVars
     ? Object.entries(cssVars)
+        .filter(([, value]) => value.trim().length > 0)
         .map(([key, value]) => `${key}: ${value};`)
         .join('\n    ')
     : '';

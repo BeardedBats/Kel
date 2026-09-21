@@ -35,7 +35,7 @@ const PreferenceRow: React.FC<{
   extra?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ label, description, extra, children }) => (
-  <div className='flex items-center justify-between gap-12px py-12px'>
+  <div className='kel-shell-webui-row flex items-center justify-between gap-12px py-12px'>
     <div className='min-w-0 flex-1'>
       <div className='flex items-center gap-8px'>
         <span className='text-14px text-t-primary'>{label}</span>
@@ -570,12 +570,12 @@ const WebuiModalContent: React.FC = () => {
 
   const webuiPanel = (
     <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
-      <div className='space-y-12px px-[12px] md:px-[28px]'>
+      <div className={isPageMode ? 'kel-shell-webui-panel' : 'space-y-12px px-[12px] md:px-[28px]'}>
         {/* 标题 / Title */}
-        <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>
+        {!isPageMode && <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>}
 
         {/* 描述说明 / Description */}
-        <div className='space-y-6px'>
+        <div className='kel-shell-webui-intro space-y-6px'>
           <p className='m-0 text-13px text-t-secondary leading-relaxed'>{t('settings.webui.description')}</p>
           <div className='flex flex-wrap gap-x-12px gap-y-6px'>
             {[
@@ -611,6 +611,7 @@ const WebuiModalContent: React.FC = () => {
 
         {/* WebUI 服务卡片 / WebUI Service Card */}
         <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+          <h2 className='kel-h2'>WebUI</h2>
           {/* WebUI 引导提示 / WebUI hint */}
           <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
             <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
@@ -667,7 +668,7 @@ const WebuiModalContent: React.FC = () => {
           <div className='text-14px font-500 mb-8px text-t-primary'>{t('settings.webui.loginInfo')}</div>
 
           {/* 账号 / Account */}
-          <div className='flex items-center justify-between gap-12px py-12px'>
+          <div className='kel-shell-webui-row flex items-center justify-between gap-12px py-12px'>
             <span className='text-14px text-t-secondary shrink-0'>{t('settings.webui.username')}:</span>
             <div className='inline-flex items-center gap-8px rd-100px border border-line bg-fill-1 px-10px py-4px min-w-0'>
               <span className='text-14px text-t-primary truncate'>{displayUsername}</span>
@@ -695,7 +696,7 @@ const WebuiModalContent: React.FC = () => {
           </div>
 
           {/* 密码 / Password */}
-          <div className='flex items-center justify-between gap-12px py-12px'>
+          <div className='kel-shell-webui-row flex items-center justify-between gap-12px py-12px'>
             <span className='text-14px text-t-secondary shrink-0'>{t('settings.webui.initialPassword')}:</span>
             <div className='inline-flex items-center gap-8px rd-100px border border-line bg-fill-1 px-10px py-4px min-w-0'>
               <span className='text-14px text-t-primary truncate'>{displayPassword}</span>
