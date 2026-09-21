@@ -1,0 +1,38 @@
+{
+  "mode": "device-check",
+  "phrase": "b",
+  "startedAt": "2026-09-21T02:22:20.146Z",
+  "app": "C:/Users/Nick/KelDogfoodCandidate/Kel.exe",
+  "dataRoot": "C:/Users/Nick/KelDogfoodRuns/prepared/engine",
+  "consoleErrors": [],
+  "before": {
+    "fixes": 6,
+    "transcripts": 2
+  },
+  "device": {
+    "mics": [
+      "Default - Microphone (MiniFuse 1 Start)",
+      "Communications - Microphone (MiniFuse 1 Start)",
+      "CABLE Output (VB-Audio Virtual Cable)",
+      "Microphone (MiniFuse 1 Start)"
+    ],
+    "opened": true,
+    "peak": 0.0009840189013630152,
+    "error": "",
+    "peakIsSilence": true
+  },
+  "after": {
+    "fixes": 6,
+    "newestFix": {
+      "id": "FIX-0006",
+      "status": "OPEN",
+      "transcript": "Fix capture muse verification, blue baseball 83"
+    },
+    "newestTranscript": {
+      "id": "e8e553d6-d509-48fc-aa51-bbb188536e35",
+      "name": "Regular Transcription Muse Verification",
+      "text": "Regular transcription muse verification"
+    }
+  },
+  "orphanEngineProcesses": 0
+}

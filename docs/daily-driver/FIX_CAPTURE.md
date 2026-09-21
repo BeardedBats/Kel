@@ -33,6 +33,28 @@ It is **not** an issue tracker: four statuses, and a schema pin (engine) plus a 
 | UI | Kel's tokens and primitives, the layout-mounted overlay pattern (the command palette's neighbour), 8px geometry, no pills, no accent rails |
 | Prompt | rendered in the engine, deterministically; no model call and no upload anywhere in the feature |
 
+## Real Muse, and what happens when it cannot answer
+
+Kel transcribes with Meta Muse, using the credential the **copied Transcriptions app already stored on
+this computer** — read read-only from Windows Credential Manager, never migrated, never re-entered,
+never shown. The engine's resolution order is env → Kel's own setting → that shared credential, and
+practice text is now produced **only** when someone asks for it by name (`…=fixture`). This is what
+made Fix Capture return canned text before: the family fell back to `FixtureProvider` whenever its two
+key sources were empty. The full root cause, the guard and the verification live in
+`docs/transcription/11_MUSE_SHARED_CREDENTIAL.md`.
+
+When Muse cannot answer, the panel says so and offers the way out:
+
+- **“Couldn't transcribe this recording.”** plus Muse's own sentence (for example *The Meta API key was
+  not accepted. Replace it in Settings.*). Never a substitute transcript, never a silent blank.
+- **Retry Transcription** re-sends the recording that is already captured — the WAV is held for the
+  whole review, so a failed call never costs a second take.
+- **Record Again** throws the failed recording away and transcribes the new one; **Esc / click-outside**
+  throws it away and cleans the temporary screenshot, leaving nothing behind.
+- The engine refuses to *save* the archived practice sentences as feedback at all
+  (*"That is Kel's practice text, not your words — record again."*) unless practice mode is explicitly on,
+  so a debug build cannot file canned text as a real finding.
+
 ## The hotkey conflict, resolved deliberately
 
 The donor's conversation-search modal already bound Ctrl+Shift+F (a document-level capture listener
@@ -71,21 +93,45 @@ fixed because code changed, report the ids).
 
 ## Test evidence
 
-**Engine** — `runtime/tests/test_dogfood.py`, 22 tests: id allocation, screenshot commit and refusal
+**Engine** — `runtime/tests/test_dogfood.py`, 27 tests: id allocation, screenshot commit and refusal
 outside `dogfood/`, honest saves when a capture vanished, in-flight discard (and the refusal to touch
 anything else), status validation, subset prompts, determinism, the ten instructions, project
-resolution from a conversation, the stale-tmp sweep, durability across a reopen, and the schema pin
-against tracking fields. Full engine suite: **1051 tests OK**.
+resolution from a conversation, the stale-tmp sweep, durability across a reopen, the schema pin
+against tracking fields, and the practice-text guard (refused as feedback in production, allowed when
+practice mode is asked for by name). Full engine suite: **1060 tests OK**.
 
 **Desktop** — `fix-capture.dom.test.ts` (pure helpers + pins) and `fix-capture-layer.dom.test.tsx`
-(seven integration tests through the real layer with a stubbed microphone and engine): hotkey opens,
+(ten integration tests through the real layer with a stubbed microphone and engine): hotkey opens,
 Esc cancels, a click selects and starts recording, the live transcript arrives, the hotkey stops and
 the transcript reaches review, Record Again replaces the words and keeps the target, Save produces
 exactly one fix with the full payload, a missing microphone becomes a typed capture, click-outside
-cancels without saving and hands the temp screenshot back — and the pins that matter: the bridge
-allowlist admits the dogfood routes, the capture-phase claim over the donor search, no spacebar
-shortcut, no single-side borders, exactly four statuses, screenshot path safety. Full desktop suite:
-**38 files / 304 tests** (tsc clean).
+cancels without saving and hands the temp screenshot back, a failed transcription says so honestly
+and its retry re-sends the very same recording, and Record Again drops a failed take — plus the pins
+that matter: the bridge allowlist admits the dogfood routes, the capture-phase claim over the donor
+search, one capture implementation shared with the Transcriptions page, no spacebar shortcut, no
+single-side borders, exactly four statuses, screenshot path safety. Full desktop suite:
+**38 files / 310 tests** (tsc clean).
+
+The Muse repair was packaged on top of this: `dist/package-r12/Kel-1.7.0-dev-win-x64.exe` —
+`007eaaa5…` (213,649,875 bytes), `Kel.exe` `9a2ffbdf…`, engine `e6444991…` — and installed over the same
+candidate (data root untouched: the four earlier fixes and their prompt survived the update).
+Verification for that build, driven through the installed app with the real production Muse path
+(`packaging/verify-muse-live.cjs`; evidence in `docs/daily-driver/evidence/muse/`):
+
+| Run | Result |
+|---|---|
+| Normal Transcriptions (phrase *“Regular transcription Muse verification, orange baseball forty-seven.”*) | **PASS** — page reports **Muse**; live text *“Regular transcription muse verification”*; saved transcript *“Regular transcription muse verification orange”* |
+| Fix Capture (phrase *“Fix Capture Muse verification, blue baseball eighty-three.”*) | **PASS** — **FIX-0006** transcript *“Fix capture muse verification, blue baseball 83”*, visible in Dogfood Fixes, nothing invented |
+| Failure (unusable key, one launch only) | **PASS** — *“Couldn't transcribe this recording. The Meta API key was not accepted. Replace it in Settings.”*, **Retry** present and reusing the recording, Save disabled, **no fix saved**, and the practice-text guard answered 400 |
+| Real microphone | **PASS** — four real inputs listed, the app opened the default device with no error, peak ≈ 0.001 (the room is silent; nobody can speak during an automated run, so the spoken phrases came from a TTS WAV injected as the media input) |
+
+Every run: 0 console errors, 0 orphaned engines; the Dogfood page kept 0 px overflow, no donor terms
+and no raw internal ids across the list, the detail outline and Prepare Fix Prompt (which still produced
+a prompt containing both new Fix ids and the ten instructions, moving them to Batched).
+
+The earlier journey table below was recorded before the Muse repair and therefore shows the practice
+provider answering those recordings — that was the bug this tranche fixed. The journey mechanics
+(hotkey, selection, panel, cancel, prompt, screenshot outline) are unchanged and re-verified above.
 
 ## The package, and what the installed app proved
 

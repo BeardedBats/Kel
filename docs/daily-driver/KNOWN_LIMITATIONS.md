@@ -156,3 +156,21 @@ Honest, current list (grows/shrinks as phases complete):
   chord. The search keeps its own trigger in the conversation header and the Ctrl+K palette path; its
   binding is left in place (pinned as the documented trade in `fix-capture.dom.test.ts`). Nick asked
   for Ctrl+Shift+F as the capture hotkey, so the capture wins the chord.
+- Muse verification audio (2026-09-21): the spoken verification phrases were rendered by Windows TTS to
+  a WAV and injected as the media input (`--use-fake-device-for-media-stream` +
+  `--use-file-for-fake-audio-capture`), because nobody can speak into the microphone during an
+  automated run. The capture path, the engine, the credential lookup and the call to Muse are the
+  shipped ones; the `device-check` run (no fake audio) shows the app opening the real default input
+  with no error and the room at peak ≈ 0.001 — silence, as expected when no one is speaking.
+- Muse endpointing (2026-09-21): the realtime stream returns the utterances it closed before Stop, so a
+  long phrase can arrive in parts — the recorded runs returned “Regular transcription muse
+  verification orange” and the full “Fix capture muse verification, blue baseball 83” (Muse writes
+  “83” for “eighty-three”). That is ASR/stream behaviour, not Kel's copy, and the exact text of each
+  run is recorded in `docs/daily-driver/evidence/muse/`.
+- The shared Meta credential is read from Windows Credential Manager, so the reuse is Windows-only: on
+  another platform `shared_muse_key()` returns nothing and transcription reports `unavailable` unless a
+  key is supplied through the environment or Kel's own setting (pinned by the engine tests).
+- The failure-path verification (2026-09-21) forced an unusable key through `META_API_KEY` for that one
+  launch, so Muse would refuse honestly without touching the stored credential. The stored credential
+  was never read, moved or modified, and the practice-text guard was checked by calling the engine's
+  `/api/dogfood` save with the archived practice sentence (refused, HTTP 400).

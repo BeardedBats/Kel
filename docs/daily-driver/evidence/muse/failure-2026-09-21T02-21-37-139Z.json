@@ -1,0 +1,45 @@
+{
+  "mode": "failure",
+  "phrase": "b",
+  "startedAt": "2026-09-21T02:21:37.140Z",
+  "app": "C:/Users/Nick/KelDogfoodCandidate/Kel.exe",
+  "dataRoot": "C:/Users/Nick/KelDogfoodRuns/prepared/engine",
+  "consoleErrors": [],
+  "before": {
+    "fixes": 6,
+    "transcripts": 2
+  },
+  "failure": {
+    "phase": "review",
+    "transcript": "",
+    "note": "Couldn't transcribe this recording. The Meta API key was not accepted. Replace it in Settings.",
+    "retryAvailable": true,
+    "afterRetry": "",
+    "noteAfterRetry": "Couldn't transcribe this recording. The Meta API key was not accepted. Replace it in Settings.",
+    "saveDisabled": true,
+    "truthfulError": true,
+    "noCannedText": true,
+    "noInventedWords": true
+  },
+  "after": {
+    "fixes": 6,
+    "newestFix": {
+      "id": "FIX-0006",
+      "status": "OPEN",
+      "transcript": "Fix capture muse verification, blue baseball 83"
+    },
+    "newestTranscript": {
+      "id": "e8e553d6-d509-48fc-aa51-bbb188536e35",
+      "name": "Regular Transcription Muse Verification",
+      "text": "Regular transcription muse verification"
+    }
+  },
+  "practiceGuard": {
+    "status": 400,
+    "payload": {
+      "error": "That is Kel's practice text, not your words — record again."
+    }
+  },
+  "noFixSavedOnFailure": true,
+  "orphanEngineProcesses": 0
+}
