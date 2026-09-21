@@ -131,3 +131,14 @@ composer's send stays disabled by `useGuidSend`'s gate and no model turn can be 
 until either a desktop pick is persisted into the profile the phone uses, or the assistant area renders
 at phone width. Journey H records the measurement (`findings-H.json`); nothing was faked and no model
 turn was spent.
+
+### V2-05 — where the phone's assistant choice most likely lives (source-backed next step)
+
+`GuidActionRow` keeps the inline model/permission selectors only on desktop — `{!isMobile && configOptionCount > 0 && …}` —
+and on mobile moves them into `MobileActionSheet` (`sheetEntries`). `AssistantSelectionArea`'s own pills are
+therefore expected inside that sheet on a phone, which is why Journey H found none in the page body. The
+selection hook itself already falls back to a default (`useGuidAssistantSelection`: saved key → generated
+aionrs → any aionrs → first enabled), so the open question is only whether the sheet renders the choices
+at phone width. Next run: type into the composer, open the action sheet (the composer's overflow control),
+confirm the assistant entries appear there, choose one, and then prove type → send → model reply →
+continued context. No model turn spent so far.
