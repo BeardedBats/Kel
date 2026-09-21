@@ -129,6 +129,9 @@ contextBridge.exposeInMainWorld('kelAPI', {
   // cannot reach the renderer even by mistake.
   credentials: {
     status: () => ipcRenderer.invoke('kel:credential-status'),
+    // V2-01: what the OS store holds for Connections, so the Connections surface never claims a
+    // credential is missing while it is still stored. Names only — still no value getter.
+    connectionStatus: () => ipcRenderer.invoke('kel:credential-connection-status'),
     set: (provider: string, field: string, value: string) =>
       ipcRenderer.invoke('kel:credential-set', provider, field, value),
     remove: (provider: string) => ipcRenderer.invoke('kel:credential-delete', provider),

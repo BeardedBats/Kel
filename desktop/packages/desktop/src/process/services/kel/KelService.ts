@@ -6,7 +6,13 @@ import path from 'path';
 import { recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
-import { credentialStatus, getCredential, removeCredential, setCredential } from './kelCredentials';
+import {
+  connectionCredentialStatus,
+  credentialStatus,
+  getCredential,
+  removeCredential,
+  setCredential,
+} from './kelCredentials';
 import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
 import { assertTrustedSender } from '../../../common/senderGuard';
@@ -528,7 +534,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:request', async (event, route: string, body?: unknown) => {
     assertTrustedSender(event, { allowDevServer: true });
     if (
-      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
+      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
         route
       )
     )
@@ -584,11 +590,14 @@ export async function initializeKel(port: number): Promise<void> {
   // Windows) in the main process; the engine only ever receives metadata, and no IPC returns a value.
   // Credential custody IPC (Campaign C AUD-MAJOR-002): the trio now runs the shared sender
   // guard like every other privileged channel; the engine sync stays best-effort.
+  // V2-01: the same custody holds Connections' credentials, and the sync is routed to the store that
+  // owns that kind of credential — model providers and Connections never share a metadata table.
   registerKelCredentialIpc({
     status: credentialStatus,
+    connectionStatus: connectionCredentialStatus,
     set: setCredential,
     remove: removeCredential,
-    syncProviders: (body) => kelRequest('/api/providers', body),
+    sync: (route, body) => kelRequest(route, body),
   });
   // Fix Capture (V2.0 preflight): the window screenshot is written into the engine data root's
   // dogfood/tmp; the engine commits it under the fix id when the fix is saved.

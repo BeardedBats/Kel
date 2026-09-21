@@ -30,6 +30,7 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-map', label: 'Projects · Map', hint: 'project map', path: '/projects/map' },
   { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
   { id: 'nav-providers', label: 'Providers', hint: 'connect a model', path: '/providers' },
+  { id: 'nav-connections', label: 'Connections', hint: 'services Kel can use', path: '/connections' },
   { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
   { id: 'nav-dogfood', label: 'Dogfood Fixes', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
 ];

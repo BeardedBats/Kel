@@ -5,6 +5,11 @@
  * per-user file inside the Kel data root. Only the main process can decrypt; the engine receives
  * per-run environment values and stores metadata only; the renderer can store, list (field names)
  * and delete, but there is deliberately **no IPC that returns a value**.
+ *
+ * Two kinds of credential share this one file, separated by namespace: model providers use their
+ * plain provider id (`anthropic`), Connections (V2.0) use `connection:<id>`. A connection named
+ * "internal" therefore cannot collide with the model provider `internal`, and the provider surfaces
+ * never list a connection's fields.
  */
 import { app, safeStorage } from 'electron';
 import fs from 'fs';
@@ -14,6 +19,11 @@ const storePath = () =>
   path.join(process.env.KEL_DATA_DIR || app.getPath('appData'), 'kel-credentials.json');
 
 type Store = Record<string, string>; // 'provider:field' -> base64 ciphertext
+
+/** Connections keep their credentials in this namespace inside the same custody file. */
+export const CONNECTION_NAMESPACE = 'connection';
+export const connectionCredentialKey = (connectionId: string): string =>
+  `${CONNECTION_NAMESPACE}:${connectionId}`;
 
 function read(): Store {
   try {
@@ -36,7 +46,18 @@ export function credentialsAvailable(): boolean {
   }
 }
 
-/** Which providers have stored fields — names only, never values. */
+/** The field names stored under one custody entry — names only, never values. */
+function storedFields(provider: string): string[] {
+  const prefix = `${provider}:`;
+  return Object.keys(read())
+    .filter((key) => key.startsWith(prefix) && key.length > prefix.length)
+    .map((key) => key.slice(prefix.length));
+}
+
+/**
+ * Which model providers have stored fields — names only, never values. Connection credentials are
+ * a different kind of thing (the Connections surface lists those), so they are excluded here.
+ */
 export function credentialStatus(): { available: boolean; providers: Record<string, string[]> } {
   const providers: Record<string, string[]> = {};
   for (const key of Object.keys(read())) {
@@ -44,10 +65,24 @@ export function credentialStatus(): { available: boolean; providers: Record<stri
     if (separator <= 0) continue;
     const provider = key.slice(0, separator);
     const field = key.slice(separator + 1);
-    if (!provider || !field) continue;
+    if (!provider || !field || provider === CONNECTION_NAMESPACE) continue;
     providers[provider] = [...(providers[provider] ?? []), field];
   }
   return { available: credentialsAvailable(), providers };
+}
+
+/** Connection id -> the field names the shell holds for it. Names only, never values. */
+export function connectionCredentialStatus(): Record<string, string[]> {
+  const connections: Record<string, string[]> = {};
+  for (const entry of storedFields(CONNECTION_NAMESPACE)) {
+    const separator = entry.indexOf(':');
+    if (separator <= 0) continue;
+    const id = entry.slice(0, separator);
+    const field = entry.slice(separator + 1);
+    if (!id || !field) continue;
+    connections[id] = [...(connections[id] ?? []), field];
+  }
+  return connections;
 }
 
 export function setCredential(
@@ -64,7 +99,7 @@ export function setCredential(
   const store = read();
   store[`${provider}:${field}`] = safeStorage.encryptString(value).toString('base64');
   write(store);
-  return { provider, fields: credentialStatus().providers[provider] ?? [field] };
+  return { provider, fields: storedFields(provider) };
 }
 
 export function removeCredential(provider: string): { provider: string; removed: number } {

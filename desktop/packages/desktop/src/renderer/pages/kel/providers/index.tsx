@@ -304,6 +304,16 @@ const Providers: React.FC = () => {
               )}
             </div>
           ))}
+          <div className="kel-row">
+            <span className="kel-meta">
+              These are the tools inside Kel. The services outside it — where Kel needs your own
+              credentials — live in Connections.
+            </span>
+            <span className="kel-grow" />
+            <KelButton variant="quiet" onClick={() => navigate('/connections')}>
+              Manage connections
+            </KelButton>
+          </div>
         </KelCard>
 
         <KelCard title="Readiness preflight">

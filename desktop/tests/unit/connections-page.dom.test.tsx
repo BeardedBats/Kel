@@ -1,0 +1,326 @@
+/**
+ * V2-01 — Connections through the real page (jsdom).
+ *
+ * The engine and the OS credential store are stubbed; the page is not. This is the central
+ * management surface, so what it must prove is: what a person sees is what is true (state in words),
+ * a credential goes to the shell's custody and never comes back into the page, and a removal removes
+ * both halves.
+ *
+ * The custody stub emulates the shipped main-process contract exactly: it stores the value, and it
+ * posts the metadata (field names and a pointer) to the engine — the same two things
+ * `kelCredentialIpc` does, on the other side of the process boundary. `syncFails` drives the case
+ * where that metadata write does not land.
+ */
+import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import Connections from '@renderer/pages/kel/connections';
+
+type Row = {
+  id: string;
+  name: string;
+  kind: 'api_key' | 'oauth' | 'bot';
+  kind_label: string;
+  base_url: string;
+  auth_method: 'header' | 'bearer' | 'query' | 'basic';
+  auth_header: string;
+  docs_url: string;
+  test_endpoint: string;
+  notes: string;
+  credential_ref: string | null;
+  credential_fields: string[];
+  has_credentials: boolean;
+  state: 'ready' | 'needs_credentials';
+  created: number;
+  updated: number;
+};
+
+type Call = { route: string; body: Record<string, unknown> };
+
+const row = (id: string, name: string, over: Partial<Row> = {}): Row => ({
+  id,
+  name,
+  kind: 'api_key',
+  kind_label: 'API key',
+  base_url: '',
+  auth_method: 'header',
+  auth_header: '',
+  docs_url: '',
+  test_endpoint: '',
+  notes: '',
+  credential_ref: null,
+  credential_fields: [],
+  has_credentials: false,
+  state: 'needs_credentials',
+  created: 1760000000,
+  updated: 1760000000,
+  ...over,
+});
+
+let rows: Row[] = [];
+let calls: Call[] = [];
+/** What the OS store really received, so the value can be proven never to reach the engine. */
+let stored: string[] = [];
+let syncFails = false;
+
+/** The engine, as the page's requests see it. */
+const answer = (body: Record<string, unknown>): unknown => {
+  switch (body.action) {
+    case 'list':
+      return {
+        connections: rows,
+        counts: {
+          ready: rows.filter((item) => item.has_credentials).length,
+          needs_credentials: rows.filter((item) => !item.has_credentials).length,
+        },
+        states: ['ready', 'needs_credentials'],
+        kinds: ['api_key', 'oauth', 'bot'],
+      };
+    case 'get':
+      return rows.find((item) => item.id === body.id);
+    case 'save': {
+      const name = String(body.name ?? '').trim();
+      if (!name) throw new Error('Kel needs a name for the service.');
+      const address = String(body.base_url ?? '').trim();
+      if (address && !/^https?:\/\//.test(address)) {
+        throw new Error('The API address must start with http:// or https://.');
+      }
+      const existing = rows.find((item) => item.id === body.id);
+      if (existing) {
+        Object.assign(existing, body, { name });
+        return existing;
+      }
+      const saved = row(String(body.id ?? name.toLowerCase().replace(/\s+/g, '-')), name, {
+        kind: (body.kind as Row['kind']) ?? 'api_key',
+        base_url: String(body.base_url ?? ''),
+      });
+      rows = [...rows, saved];
+      return saved;
+    }
+    case 'remove':
+      rows = rows.filter((item) => item.id !== body.id);
+      return { id: body.id, removed: true };
+    case 'set_credential': {
+      const item = rows.find((entry) => entry.id === body.id);
+      if (!item) throw new Error('Unknown connection');
+      item.has_credentials = true;
+      item.state = 'ready';
+      item.credential_ref = String(body.credential_ref ?? '');
+      item.credential_fields = (body.fields as string[]) ?? [];
+      return item;
+    }
+    case 'delete_credential': {
+      const item = rows.find((entry) => entry.id === body.id);
+      if (!item) throw new Error('Unknown connection');
+      item.has_credentials = false;
+      item.state = 'needs_credentials';
+      item.credential_ref = null;
+      item.credential_fields = [];
+      return item;
+    }
+    default:
+      throw new Error(`unexpected connection action ${String(body.action)}`);
+  }
+};
+
+const syncMetadata = (action: 'set_credential' | 'delete_credential', provider: string): void => {
+  const id = provider.replace(/^connection:/, '');
+  const body: Record<string, unknown> =
+    action === 'set_credential'
+      ? { action, id, fields: ['api_key'], credential_ref: `kel:connection:${id}` }
+      : { action, id };
+  calls.push({ route: '/api/connections', body });
+  answer(body);
+};
+
+const custody = {
+  connectionStatus: vi.fn(async () => ({})),
+  set: vi.fn(async (provider: string, field: string, value: string) => {
+    stored.push(`${provider}:${field}=${value}`);
+    if (!syncFails) syncMetadata('set_credential', provider);
+    return { provider, fields: [field] };
+  }),
+  remove: vi.fn(async (provider: string) => {
+    stored = stored.filter((entry) => !entry.startsWith(`${provider}:`));
+    if (!syncFails) syncMetadata('delete_credential', provider);
+    return { provider, removed: 1 };
+  }),
+};
+
+beforeEach(() => {
+  rows = [];
+  calls = [];
+  stored = [];
+  syncFails = false;
+  custody.connectionStatus.mockClear();
+  custody.connectionStatus.mockResolvedValue({});
+  custody.set.mockClear();
+  custody.remove.mockClear();
+  (window as unknown as { kelAPI: unknown }).kelAPI = {
+    request: (route: string, body?: Record<string, unknown>) => {
+      calls.push({ route, body: body ?? {} });
+      if (route !== '/api/connections') {
+        return Promise.reject(new Error(`the Connections surface must not call ${route}`));
+      }
+      try {
+        return Promise.resolve(answer(body ?? {}));
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    },
+    credentials: custody,
+  };
+});
+
+afterEach(() => {
+  delete (window as unknown as { kelAPI?: unknown }).kelAPI;
+});
+
+const renderPage = () =>
+  render(
+    <MemoryRouter>
+      <Connections />
+    </MemoryRouter>
+  );
+
+describe('Connections — the central management surface', () => {
+  it('lists what Kel can use, with the state said in words', async () => {
+    rows = [
+      row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
+      row('pitcher-list', 'Pitcher List', { base_url: 'https://api.pitcherlist.com' }),
+    ];
+    renderPage();
+    expect(await screen.findByText('Stripe')).toBeTruthy();
+    expect(screen.getByText('Pitcher List')).toBeTruthy();
+    expect(screen.getByText(/Ready — Kel has a credential/)).toBeTruthy();
+    expect(screen.getByText(/Needs a credential/)).toBeTruthy();
+    expect(screen.getByText('1 ready · 1 needing a credential')).toBeTruthy();
+  });
+
+  it('starts empty and says what a connection buys you', async () => {
+    renderPage();
+    expect(await screen.findByText('No connections yet.')).toBeTruthy();
+    expect(screen.getByText(/Kel can work with it directly/)).toBeTruthy();
+  });
+
+  it('says so when this computer holds a credential the engine has no record of', async () => {
+    rows = [row('stripe', 'Stripe')];
+    custody.connectionStatus.mockResolvedValue({ stripe: ['api_key'] });
+    renderPage();
+    expect(await screen.findByText('Stripe')).toBeTruthy();
+    expect(
+      screen.getByText(/This computer still holds a credential for it that Kel has no record of/)
+    ).toBeTruthy();
+  });
+
+  it('adds a service through the form', async () => {
+    renderPage();
+    // The empty state offers the same action as the card header, so take the first of the two.
+    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.change(screen.getByLabelText('Service name'), { target: { value: 'Figma' } });
+    fireEvent.change(screen.getByLabelText('API address'), {
+      target: { value: 'https://api.figma.com' },
+    });
+    fireEvent.click(screen.getByText('Add connection'));
+    await waitFor(() =>
+      expect(calls.some((call) => call.body.action === 'save' && call.body.name === 'Figma')).toBe(true)
+    );
+    expect(await screen.findByText(/Figma is saved\./)).toBeTruthy();
+    expect(await screen.findByText('Figma')).toBeTruthy();
+  });
+
+  it('repeats the engine sentence when it refuses a connection', async () => {
+    renderPage();
+    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.change(screen.getByLabelText('Service name'), { target: { value: 'Figma' } });
+    fireEvent.change(screen.getByLabelText('API address'), { target: { value: 'api.figma.com' } });
+    fireEvent.click(screen.getByText('Add connection'));
+    // The engine's own sentence, word for word — not a generic "something went wrong".
+    expect(
+      await screen.findByText(/The API address must start with http:\/\/ or https:\/\//)
+    ).toBeTruthy();
+  });
+
+  it('will not even ask the engine to save an unnamed service', async () => {
+    renderPage();
+    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.change(screen.getByLabelText('Service name'), { target: { value: '  ' } });
+    expect((screen.getByText('Add connection') as HTMLButtonElement).disabled).toBe(true);
+    expect(calls.some((call) => call.body.action === 'save')).toBe(false);
+  });
+
+  it('stores a credential in the OS store and never shows the value again', async () => {
+    rows = [row('stripe', 'Stripe')];
+    renderPage();
+    fireEvent.click(await screen.findByText('Add credential'));
+    const field = (await screen.findByLabelText('Field name')) as HTMLInputElement;
+    expect(field.value).toBe('api_key');
+    fireEvent.change(screen.getByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
+    fireEvent.click(screen.getByText('Save credential'));
+    await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
+    // The value goes to the shell's custody under the connection namespace, and nowhere else.
+    expect(stored).toEqual(['connection:stripe:api_key=sk_live_4242']);
+    expect(calls.every((call) => call.route === '/api/connections')).toBe(true);
+    expect(JSON.stringify(calls)).not.toContain('sk_live_4242');
+    expect(
+      await screen.findByText(/is ready — the credential is in this computer's secure store/)
+    ).toBeTruthy();
+    // The proof that matters: it is not in the page any more, in state or in the DOM.
+    expect(document.body.innerHTML).not.toContain('sk_live_4242');
+    expect(document.querySelectorAll('input[type="password"]').length).toBe(0);
+  });
+
+  it('says so instead of claiming success when the engine did not record the credential', async () => {
+    rows = [row('stripe', 'Stripe')];
+    syncFails = true; // the metadata write does not land; the value is still in the OS store
+    renderPage();
+    fireEvent.click(await screen.findByText('Add credential'));
+    fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
+    fireEvent.click(screen.getByText('Save credential'));
+    await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText(/Kel did not record it back/)).toBeTruthy();
+    expect(screen.queryByText(/Kel has recorded it/)).toBeNull();
+  });
+
+  it('removes a stored credential and clears the engine record with it', async () => {
+    rows = [
+      row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
+    ];
+    renderPage();
+    fireEvent.click(await screen.findByText('Remove credential'));
+    await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
+    expect(
+      calls.filter((call) => call.body.action === 'delete_credential' && call.body.id === 'stripe')
+    ).toHaveLength(1); // the shell routes the metadata once; the page does not double-post it
+    expect(await screen.findByText(/The stored credential for Stripe is gone/)).toBeTruthy();
+    expect(await screen.findByText(/Needs a credential/)).toBeTruthy();
+  });
+
+  it('asks before removing a connection, then removes the value and the record', async () => {
+    rows = [
+      row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
+    ];
+    renderPage();
+    fireEvent.click(await screen.findByText('Remove'));
+    expect(await screen.findByText('Confirm remove')).toBeTruthy();
+    fireEvent.click(screen.getByText('Confirm remove'));
+    await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
+    await waitFor(() =>
+      expect(calls.some((call) => call.body.action === 'remove' && call.body.id === 'stripe')).toBe(true)
+    );
+    expect(await screen.findByText(/Stripe is removed\./)).toBeTruthy();
+    expect(await screen.findByText('No connections yet.')).toBeTruthy();
+  });
+
+  it('never talks to the model-provider route', async () => {
+    rows = [row('stripe', 'Stripe')];
+    renderPage();
+    fireEvent.click(await screen.findByText('Add credential'));
+    fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
+    fireEvent.click(screen.getByText('Save credential'));
+    await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
+    expect(calls.some((call) => call.route === '/api/providers')).toBe(false);
+  });
+});

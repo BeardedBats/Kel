@@ -160,16 +160,18 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
   describe('Kel credential channels', () => {
     const deps = {
       status: vi.fn(() => ({ available: true, providers: { anthropic: ['api_key'] } })),
+      connectionStatus: vi.fn(() => ({ stripe: ['api_key'] })),
       set: vi.fn(() => ({ provider: 'anthropic', fields: ['api_key'] })),
       remove: vi.fn(() => ({ provider: 'anthropic', removed: 1 })),
-      syncProviders: vi.fn(async () => undefined),
+      sync: vi.fn(async () => undefined),
     };
 
     beforeEach(() => {
       deps.status.mockClear();
+      deps.connectionStatus.mockClear();
       deps.set.mockClear();
       deps.remove.mockClear();
-      deps.syncProviders.mockClear();
+      deps.sync.mockClear();
       registerKelCredentialIpc(deps);
     });
 
@@ -183,18 +185,27 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       expect(status(legitEvent())).toEqual({ available: true, providers: { anthropic: ['api_key'] } });
     });
 
+    it('kel:credential-connection-status refuses spoofed senders', async () => {
+      const status = handleAt('kel:credential-connection-status');
+      for (const [label, makeEvent] of refusalEvents) {
+        expect(() => status(makeEvent()), label).toThrow(REFUSAL);
+      }
+      expect(deps.connectionStatus).not.toHaveBeenCalled();
+      expect(status(legitEvent())).toEqual({ stripe: ['api_key'] });
+    });
+
     it('kel:credential-set refuses spoofed senders before any custody action', async () => {
       const set = handleAt('kel:credential-set');
       for (const [label, makeEvent] of refusalEvents) {
         await expect(set(makeEvent(), 'anthropic', 'api_key', 'sk-test'), label).rejects.toThrow(REFUSAL);
       }
       expect(deps.set).not.toHaveBeenCalled();
-      expect(deps.syncProviders).not.toHaveBeenCalled();
+      expect(deps.sync).not.toHaveBeenCalled();
       await expect(set(legitEvent(), 'anthropic', 'api_key', 'sk-test')).resolves.toEqual({
         provider: 'anthropic',
         fields: ['api_key'],
       });
-      expect(deps.syncProviders).toHaveBeenCalledWith({
+      expect(deps.sync).toHaveBeenCalledWith('/api/providers', {
         action: 'set_credential',
         provider: 'anthropic',
         fields: ['api_key'],
@@ -209,11 +220,14 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       }
       expect(deps.remove).not.toHaveBeenCalled();
       await expect(remove(legitEvent(), 'anthropic')).resolves.toEqual({ provider: 'anthropic', removed: 1 });
-      expect(deps.syncProviders).toHaveBeenCalledWith({ action: 'delete_credential', provider: 'anthropic' });
+      expect(deps.sync).toHaveBeenCalledWith('/api/providers', {
+        action: 'delete_credential',
+        provider: 'anthropic',
+      });
     });
 
     it('a failing provider sync never fails the custody action', async () => {
-      deps.syncProviders.mockRejectedValueOnce(new Error('engine offline'));
+      deps.sync.mockRejectedValueOnce(new Error('engine offline'));
       await expect(handleAt('kel:credential-set')(legitEvent(), 'anthropic', 'api_key', 'sk-test')).resolves.toEqual({
         provider: 'anthropic',
         fields: ['api_key'],
