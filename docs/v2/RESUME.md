@@ -5,10 +5,13 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-05-send**: finish the iPhone
-   Kel PWA journey work. The phone surface, the PWA contract, the gateway blocker and **mobile voice**
-   (real browser → gateway → engine → Muse, the transcript landing in the composer) are done and
-   evidenced in `docs/v2/evidence/v2-05/README.md`; what remains, in order:
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-04a**: build the
+   assistant-callable Connection action bridge (reconnaissance committed at `7a82996`). **V2-05-history is
+   temporarily DEFERRED FOR SHELL INTEGRATION** — Astra owns the phone drawer/history presentation on
+   `ux/v2-shell`, and implementing it now would overlap; V2-05 stays PARTIAL and items (c)/(d) below
+   remain requirements, not removed. The phone surface, the PWA contract, the gateway blocker, **mobile
+   voice** (real browser → gateway → engine → Muse, the transcript landing in the composer) and **send**
+   are done and evidenced in `docs/v2/evidence/v2-05/README.md`; what remains, in order:
    (a) **browser voice — done.** `KelMicButton` now uses the shared `kelRequest` transport (preload on the
        desktop, the `/kel` gateway in a browser) and never swallows a failed `stream_start`. Keep both
        properties if you touch it again. Follow-up only: multi-utterance dictation (see
@@ -25,10 +28,12 @@
        touch either.
    (c) **job-driven attention actions on the phone** — approvals, grants, resume, stop and review need
        real job state; create it honestly (no fixture providers) and exercise the phone's offers.
-   (d) **conversation history from the phone** — the drawer that lists it was not opened in this
-       increment, and a full-page load of `/conversation/<id>` rendered a blank body in one authed probe
-       (measured; this increment must verify or fix it). Tapping the home's recent entry text timed out
-       once — try the drawer path first.
+   (d) **conversation history from the phone — DEFERRED for shell integration (Astra owns the phone
+       drawer/history presentation).** The drawer that lists history was not opened in this increment,
+       and a full-page load of `/conversation/<id>` rendered a blank body in one authed probe (measured).
+       Tapping the home's recent entry text timed out once — try the drawer path first. Pick this up only
+       after the Shell integration lands (see `MARATHON_STATE.md`, parallel-ownership section); the
+       requirement is kept, not dropped.
    The Connections program (V2-01 … V2-04) is closed; two of its needs are carried as explicit
    follow-ups in `FEATURE_LEDGER.md` (V2-04a: a tool the assistant can call an action through; V2-04b: the
    OAuth sign-in flow) — pick one up deliberately, do not assume it was done.
