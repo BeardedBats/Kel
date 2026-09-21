@@ -155,11 +155,11 @@ const DogfoodFixes: React.FC = () => {
       </a>
       <div className='kel-page'>
         <header className='kel-page__head'>
-          <h1 className='kel-h1'>Dogfood Fixes</h1>
+          <div><h1 className='kel-h1'>Kibble</h1>
           <p className='kel-sub'>
             What Ctrl+Shift+F captured while you were using Kel. Everything stays on this computer
             until you deliberately prepare a fix prompt.
-          </p>
+          </p></div>
         </header>
 
         {data === null ? (

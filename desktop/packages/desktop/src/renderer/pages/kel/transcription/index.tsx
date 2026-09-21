@@ -6,6 +6,8 @@
  * behind the engine's `/api/transcription` action family, and transcripts can be sent to chat or
  * routed into a live Vetting Session through the existing ingestion service.
  */
+import { kelRequest as request } from '@renderer/components/kel/kelApi';
+import rambleBrand from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
@@ -47,12 +49,6 @@ type ReviewPayload = {
   potential_conflicts: { statement: string }[];
   buckets?: { requirements: string[]; concerns: string[]; unresolved: string[] };
 };
-
-async function request<T>(route: string, body?: unknown): Promise<T> {
-  const api = window.kelAPI;
-  if (!api) throw new Error('Kel is not connected');
-  return (await api.request(route, body)) as T;
-}
 
 const transcription = <T,>(body: Record<string, unknown>) => request<T>('/api/transcription', body);
 
@@ -621,7 +617,7 @@ const statusCopy =
   return (
     <div className='relative h-full'>
       <div
-        className={styles.shell}
+        className={`${styles.shell} kel-shell-ramble`}
         data-testid='transcription-page'
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes('Files')) {
@@ -633,11 +629,13 @@ const statusCopy =
         onDrop={onDrop}
       >
         <aside className={styles.sidebar} aria-label='Transcript library'>
+          <div className='kel-shell-tool-brand'><img src={rambleBrand} alt='' width={30} height={31} /><span>Kel</span></div>
+          <button type='button' className='kel-shell-back' onClick={() => navigate('/guid')}>← Back to Kel</button>
           {/* Authoritative standalone IA (finding 6): the column keeps the donor's own title and a
               plain-text API Key entry — not a gear — because that is where a user looks for the
               transcription credential. */}
           <div className={styles.sidebarHeader}>
-            <h1 className={styles.sidebarTitle}>Transcriptions</h1>
+            <h1 className={styles.sidebarTitle}>Ramble</h1>
             <button
               type='button'
               className={styles.apiKeyAction}
@@ -648,7 +646,7 @@ const statusCopy =
             </button>
           </div>
           <div className={styles.sectionTitle}>Folders</div>
-          <div className={styles.scrollArea}>
+          <div className={`${styles.scrollArea} kel-shell-ramble-folders`}>
             {library.folders.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px 6px' }}>
                 Group recordings into folders — drag a transcript onto one.

@@ -22,7 +22,7 @@ type PaletteItem = {
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
   { id: 'nav-new-chat', label: 'New Chat', hint: 'start a conversation', path: '/guid' },
   { id: 'nav-work', label: 'Work', hint: 'jobs and what needs you', path: '/work' },
-  { id: 'nav-transcription', label: 'Transcription', hint: 'record, upload, transcripts', path: '/transcription' },
+  { id: 'nav-transcription', label: 'Ramble', hint: 'record, upload, transcripts', path: '/transcription' },
   { id: 'nav-settings', label: 'Settings', hint: 'models, appearance, system', path: '/settings/model' },
   { id: 'nav-settings-appearance', label: 'Settings · Appearance', hint: 'theme and colors', path: '/settings/appearance' },
   { id: 'nav-settings-system', label: 'Settings · System', hint: 'data, backup, updates', path: '/settings/system' },
@@ -32,7 +32,7 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-providers', label: 'Providers', hint: 'connect a model', path: '/providers' },
   { id: 'nav-connections', label: 'Connections', hint: 'services Kel can use', path: '/connections' },
   { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
-  { id: 'nav-dogfood', label: 'Dogfood Fixes', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
+  { id: 'nav-dogfood', label: 'Kibble', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
 ];
 
 // Plain-language job states for hints; the raw states stay on the Work page.
@@ -167,7 +167,7 @@ const KelCommandPalette: React.FC = () => {
           const items: PaletteItem[] = [];
           (data.transcripts ?? []).forEach((row) => items.push({
             id: `found-transcript-${row.id}`, group: 'Transcripts',
-            label: row.title, hint: row.snippet || 'open Transcription',
+            label: row.title, hint: row.snippet || 'open Ramble',
             run: () => navigate('/transcription'),
           }));
           (data.vetting ?? []).forEach((row) => items.push({
