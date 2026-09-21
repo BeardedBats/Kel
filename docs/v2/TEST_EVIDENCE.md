@@ -31,6 +31,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 | --- | --- | --- |
 | V2-00 | developer line + durable state (this setup commit) | `docs/v2/`; `git worktree list`; remote `dev/v2` SHA = local |
 | V2-01 | Connections model + central management | engine `1085 tests OK`; `tests.test_v2_connections` **25 OK**; desktop `40 files / 334 tests pass`; `tsc --noEmit` clean; `tests/unit/connections-page.dom.test.tsx` **11 pass**; `tests/unit/connections-surface.test.ts` **12 pass** (details below) |
+| V2-02 | Generic REST Connection + Test Connection | engine `1101 tests OK`; `tests.test_v2_connections` **41 OK**; desktop `40 files / 338 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **13 pass** (details below) |
 
 ### V2-01 — what each command actually proves
 
@@ -45,6 +46,20 @@ row names the command and the result, so a resume run can re-run it instead of t
 | Desktop — Connections wiring | `bunx vitest run tests/unit/connections-surface.test.ts tests/unit/ipc-sender-channels.test.ts` | **12 + 19 pass** — the credential IPC routes connection metadata to `/api/connections` and provider metadata to `/api/providers`, the new status channel refuses spoofed senders, a failed sync never fails the custody action, and no credential value is ever placed in a sync body |
 
 **Not verified for V2-01:** no installed-app check was run (no candidate was installed by this phase), and nothing in this phase called a service over the network — `test_endpoint` is stored only. That is the V2-02/V2-15 work.
+
+### V2-02 — what each command actually proves
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Engine (full, regression) | `cd runtime && python -m unittest discover -s tests` | **1101 tests OK** (V2-01 left it at 1085; +16 new, no existing behaviour changed) |
+| Engine — Connections incl. checks | `python -m unittest tests.test_v2_connections` | **41 OK** — the V2-01 pins plus: exactly one `urlopen` in the module (the choke point), a 200 recorded with its status and duration, the credential reaching the service and being written nowhere (the whole row is searched for the value), bearer vs plain `Authorization` vs custom header, the query method in the address, basic needing both halves before anything is sent, 401/404/429/500/418 named honestly, a closed port as `unreachable` (not a failed credential), a slow service timing out, a connection with no address refused before any request, a connection with no credential still asking the service, `scrub` redacting, and the service-level `test` action returning the record without the value |
+| Engine — migration inventory | `python -m unittest tests.test_v16_r8_migrations` | **4 OK** — `connections` now owns 23 and 24; 24 is the maximum, and the existing-database test proves the newest step is safe to re-apply |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **40 files / 338 tests pass** (V2-01 left it at 334) |
+| Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **13 pass** — the V2-01 journeys plus: Test connection uses the stored value for the check and reports what came back, the value appears in no part of the rendered page afterwards, and a connection with no address offers no check at all |
+| Desktop — Connections wiring | `bunx vitest run tests/unit/connections-surface.test.ts tests/unit/ipc-sender-channels.test.ts` | **13 + 20 pass** — `kel:connection-test` refuses spoofed senders before reading anything, hands the engine exactly the fields the shell holds, and returns the record; the custody key format is pinned on both sides of the bridge |
+
+**Not verified for V2-02:** no installed-app check, and no real service was contacted by any test — the engine tests run against a local stand-in service on the loopback interface, so "works against the real Pitcher List / Stripe" remains V2-03's and V2-15's evidence, not this phase's.
 
 ## Standing rules for this file
 
