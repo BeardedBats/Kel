@@ -5,6 +5,7 @@
  */
 
 import type { Theme } from '@/common/theme/types';
+import { THEME_TOKENS } from '@/common/theme/tokenContract';
 import { configService } from '@/common/config/configService';
 import { ipcBridge } from '@/common';
 import { resolveActiveTheme } from '@/common/theme/resolveTheme';
@@ -76,6 +77,23 @@ export function themeOverrides(themeId: string): Record<string, string> {
 export function applyTheme(theme: Theme, root: Document = document): void {
   applyAppearanceAttributes(root, theme.appearance);
   const overrides = themeOverrides(theme.id);
+  // Inline user choices win against appearance-specific default selectors.
+  // Remove only contract keys, leaving font settings and unrelated inline styles intact.
+  for (const { key } of THEME_TOKENS) {
+    if (overrides[key]) root.documentElement.style.setProperty(key, overrides[key]);
+    else root.documentElement.style.removeProperty(key);
+  }
+  // Shell glass has several layers. Explicit color choices replace those layers as a unit.
+  const shellColors: Record<string, string> = {
+    '--bg-base': '--kel-shell-custom-canvas', '--bg-1': '--kel-shell-custom-panel',
+    '--bg-2': '--kel-shell-custom-elevated', '--text-primary': '--kel-shell-custom-text',
+    '--text-secondary': '--kel-shell-custom-secondary', '--border-base': '--kel-shell-custom-border',
+    '--primary': '--kel-shell-custom-accent',
+  };
+  for (const [token, alias] of Object.entries(shellColors)) {
+    if (overrides[token]) root.documentElement.style.setProperty(alias, overrides[token]);
+    else root.documentElement.style.removeProperty(alias);
+  }
   const hasOverrides = Object.keys(overrides).length > 0;
   const tokens = hasOverrides ? { ...(theme.tokens ?? {}), ...overrides } : theme.tokens;
   upsertStyle(TOKENS_STYLE_ID, tokensToCss(tokens as Theme['tokens']), root);
