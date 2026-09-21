@@ -282,12 +282,37 @@ test.describe('Kel on a phone (V2-05)', () => {
     note({ journey: 'B', step: 'composer-layout', overflow: layout, text: await text(page, 700) });
     note({ journey: 'B', step: 'composer-reachable', box, viewport: page.viewportSize() });
 
-    // The conversation that already exists must open from the phone, with its context intact.
-    const drawerToggle = page.getByRole('button', { name: /Work & context/ }).filter({ visible: true }).first();
+    // The panel the phone calls "Work & context" — conversation history, attention and work. Its trigger
+    // is a text button in the rail's footer (class `kel-work-context-btn`), not a named button.
+    const drawerToggle = page.locator('.kel-work-context-btn').first();
+    note({ journey: 'B', step: 'drawer', count: await drawerToggle.count(), box: await drawerToggle.boundingBox().catch(() => null) });
     if (await drawerToggle.count()) {
-      await drawerToggle.click({ timeout: 8000 }).catch(() => undefined);
-      await page.waitForTimeout(1200);
-      await page.screenshot({ path: path.join(EVIDENCE, 'B3-history.png') });
+      await drawerToggle.click({ timeout: 8000 }).catch((error) => note({ journey: 'B', step: 'drawer-failed', error: String(error).slice(0, 160) }));
+      await page.waitForTimeout(1800);
+      await page.screenshot({ path: path.join(EVIDENCE, 'B3-drawer.png') });
+      const drawerText = await text(page, 1200);
+      note({
+        journey: 'B',
+        step: 'drawer-open',
+        text: drawerText,
+        showsConversation: /conversation/i.test(drawerText),
+        showsSeededConversation: /phone journey seed/i.test(drawerText),
+        attentionEntries: await page.locator('[data-testid="kel-work-waiting"]').count(),
+        overflow: await overflow(page),
+      });
+
+      // Pick the conversation through the panel's own selector, the way a person would.
+      const select = page.locator('.arco-select').first();
+      if (await select.count()) {
+        await select.click({ timeout: 6000 }).catch(() => undefined);
+        await page.waitForTimeout(900);
+        const option = page.getByText(/Phone journey seed/i).last();
+        note({ journey: 'B', step: 'conversation-option', count: await option.count() });
+        await option.click({ timeout: 6000 }).catch((error) => note({ journey: 'B', step: 'conversation-option-failed', error: String(error).slice(0, 160) }));
+        await page.waitForTimeout(2500);
+        await page.screenshot({ path: path.join(EVIDENCE, 'B4-conversation.png') });
+        note({ journey: 'B', step: 'conversation', text: await text(page, 1200) });
+      }
     }
     const entry = page.getByText(/Phone journey seed/i).first();
     note({ journey: 'B', step: 'history-entry', count: await entry.count() });
