@@ -8,7 +8,7 @@ test('built Electron shell keeps native settings connected', async () => {
   test.setTimeout(180_000);
   const root = path.resolve(__dirname, '../../..');
   const scratch = path.join(root, '.shell-run/electron');
-  const evidence = path.join(root, 'docs/v2/evidence/shell');
+  const evidence = process.env.KEL_SHELL_EVIDENCE || path.join(root, 'docs/v2/evidence/shell');
   fs.mkdirSync(scratch, { recursive: true });
   const app = await electron.launch({
     executablePath: path.join(root, 'desktop/node_modules/electron/dist/electron.exe'),
@@ -37,9 +37,10 @@ test('built Electron shell keeps native settings connected', async () => {
       await page.screenshot({ path: path.join(evidence, `electron-${name}.png`) });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     }
-    await expect(page.getByText('Desktop', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Electron \d+ · React/)).toBeVisible();
     await page.evaluate(() => { location.hash = '/settings/system'; });
     await expect(page.getByTestId('data-folder-path')).toContainText('.shell-run');
+    expect((await page.locator('.settings-page-content').boundingBox())?.x).toBe(388);
     await page.evaluate(() => { location.hash = '/guid'; });
     await page.keyboard.press('Control+Shift+F');
     await expect(page.getByText('Click the part of Kel that bothered you', { exact: false })).toBeVisible();
