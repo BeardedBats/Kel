@@ -346,3 +346,21 @@ that can actually run something. The patterns are deliberately narrow (a known r
 “check the repository”) and pinned by tests that include the exact measured sentence; ordinary chat
 is proved to stay conversational (a live probe: **no** job for the chat control). *Forbids:* treating
 a tool request as chit-chat; widening the predicate for ordinary prose without a measured case.
+
+## D-39 — learning has a person's side, a floor, and a fence (V2-10)
+
+Learnings were already memory records (one store, the V1.3 trust ladder, decay, corrections) and the
+proposal queue already refused to propose `decision`/`preference`. V2-10 adds exactly three things and
+no new store. **A floor:** `suggest_learnings` proposes only from measured evidence — three or more
+decided runs (model-by-task, read from the V2-09 `routing_outcomes` store), three or more repeated
+user corrections, or three or more Connection uses in the last thirty days — and every suggestion is a
+proposal in the existing review queue, so nothing is ever applied by the learner. **A person's side:**
+a learning can be switched off without being deleted (a superseding equal-trust record carries
+`enabled`; the chain keeps every step), a disabled learning never reaches model context
+(`Memory.select`), stays inspectable with `include_disabled`, and comes back with one call; and
+`explain_learning` reports source, trust, decayed confidence, evidence, provenance, the chain and a
+plain `effect` sentence. **A fence:** any non-user source whose insight asserts a permission grant,
+spending authority, filesystem access or irreversible authority is refused outright — not stored, not
+even suggested — because those are the person's decision every time. *Forbids:* suggesting from thin
+evidence; applying a suggestion without review; deleting a learning to silence it; recording or
+suggesting authority from any non-user source.

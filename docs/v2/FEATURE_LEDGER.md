@@ -29,7 +29,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-07 | Recipes 2.0 | queued | — |
 | V2-08 | Activity 2.0 | queued | — |
 | V2-09 | Routing intelligence | **BUILT** (2026-09-21) | `kel/routing_evidence.py` (decayed, windowed, floored outcomes over the existing `routing_outcomes` table) + evidence-aware `router.select` (`why`/`chain`/`demoted`/`evidence`, policy `eligible-cost-v2`) + `action: 'why'` on `/api/model` + `needs_work()` so tool requests become real work turns. 204 tests green in bounded groups (13 new) and a live probe of the measured phone turn (job created, route readable, chat control stayed conversational). D-37/D-38; `docs/v2/evidence/v2-09/README.md` |
-| V2-10 | Learning 2.0 | queued | — |
+| V2-10 | Learning 2.0 | **BUILT** (2026-09-21) | Evidence-thresholded suggestions (`learning.suggest_learnings`: ≥3 decided runs / corrections / connection uses) through the existing proposal queue; off/on without deletion (`enabled` on a superseding equal-trust record; disabled never reaches `Memory.select`); `explain_learning` (source, evidence, chain, effect); the authority fence (no non-user source may assert permission/spending/file access/irreversible authority). 19 new tests; 112 tests green in bounded groups; live `/api/memory` loop proved (suggest → accept → explain → off → on). D-39; `docs/v2/evidence/v2-10/README.md` |
 | V2-11 | Long-running work 2.0 | queued | — |
 | V2-12 | Adaptive staffing 2.0 | queued | — |
 | V2-13 | Local execution isolation | queued | — |

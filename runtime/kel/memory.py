@@ -947,6 +947,15 @@ class Memory:
         for row in candidates:
             if len(chosen) >= limit:
                 break
+            # V2-10: a learning the person switched off never reaches model context. It stays in
+            # the store (inspectable, reversible); only learning records carry the marker.
+            try:
+                value = json.loads(row['value'])
+            except (TypeError, ValueError):
+                value = None
+            if isinstance(value, dict) and value.get('schema') == 'learning.v1' \
+                    and value.get('enabled') is False:
+                continue
             size = len(row['summary']) + len(row['value'])
             if chosen and used + size > max_chars:
                 break
