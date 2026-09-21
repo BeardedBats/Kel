@@ -302,3 +302,17 @@ and paired with PKCE S256 whenever the provider supports it (the fixture suite p
 mismatch is refused by a real S256 check). The page shows a plain sentence — no script, no token,
 no connection data beyond what the person just did. *Forbids:* any other public route; resolving a
 callback by anything but state; putting a code, token or verifier into the page.
+
+## D-36 — the choke point's own rules (V2-04 hardening)
+
+Everything a Connection says outbound, and every rule that could stop it, lives in
+`perform_request`. The hardening keeps that single door and gives it teeth: one opener is built once
+(never `urlopen` ad hoc) and the redirect chain is bounded to `MAX_REDIRECTS`; a service that answers
+429/5xx with `Retry-After` gets exactly that pause, capped by `RETRY_AFTER_CAP`; the configured
+network rules (`NETWORK_RULES`, V2-14's seam) are asked about the host **before anything leaves the
+computer** and again about the host a redirect landed on, and a rule source that cannot answer fails
+closed; an answer that hits the reading cap says so in the note instead of pretending to be whole.
+A refusal raised here is a `PolicyError` and reaches the person as its own sentence — `test()` and
+`run()` re-raise it instead of folding it into a generic failure. *Forbids:* opening a URL anywhere
+but the single opener; honouring an unbounded Retry-After; letting a redirect smuggle a host the
+rules would refuse; silently allowing traffic when the rule source errors.

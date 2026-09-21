@@ -210,3 +210,14 @@ the first reference (`gdrive-files`, scope `drive.metadata.readonly`, missing gr
 plain words). Desktop: the main process runs the sign-in end to end (browser → bounded wait → claim
 → custody → supply); the Connections page has one Connect/Reconnect/Sign out button and a status
 line. Real Google OAuth was not exercised — it needs Nick's own client ID and a browser sign-in.
+
+## V2-04 hardening — the choke point's own rules (BUILT, 2026-09-21)
+
+`perform_request` remains the only door to a service (one opener, built once), and it now carries the
+rules the Connection framework promised: the redirect chain is bounded (`MAX_REDIRECTS`); a service's
+own `Retry-After` on 429/5xx is honoured but capped (`RETRY_AFTER_CAP`); the V2-14 network-rule seam
+(`NETWORK_RULES`) is asked about the host **before anything leaves the computer** and again about a
+redirect's host, and a rule source that errors fails closed; an answer that hits the reading cap is
+labelled in the note; and a refusal from the choke point reaches the person as its own sentence
+(`test()`/`run()` re-raise `PolicyError`). No rules are configured yet — behaviour is unchanged
+except where a service (or a stand-in) asks for otherwise. D-36.

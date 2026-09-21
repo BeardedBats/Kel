@@ -60,6 +60,10 @@ REQUEST_ATTEMPTS = 3
 RETRY_BACKOFF = 0.4
 REQUEST_BUDGET = 30.0
 RETRY_STATUSES = (429, 500, 502, 503, 504)
+# V2-04 hardening: how far a redirect chain may run, and the longest pause a service may impose
+# through Retry-After before Kel falls back to its own (small) backoff.
+MAX_REDIRECTS = 3
+RETRY_AFTER_CAP = 5.0
 REDACTED = '[redacted]'
 
 ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,59}$')
@@ -292,16 +296,58 @@ def custody_for(connection_id):
     return dict(_CUSTODY.get(str(connection_id or ''), {}))
 
 
+# The one hook V2-14's network rules will use: a rule about a host must be able to stop a request
+# BEFORE it leaves the computer, and every Connection path shares this function, so no feature can
+# reach a service around it. No rules are configured yet — every host is allowed exactly as before;
+# a configured hook returns (allowed, plain reason). A hook that cannot answer fails closed.
+NETWORK_RULES = None
+
+
+def network_rule(host):
+    """(allowed, reason) for one host from whatever rules are configured; open by default."""
+    if NETWORK_RULES is None:
+        return True, ''
+    try:
+        allowed, reason = NETWORK_RULES(str(host or ''))
+    except Exception:
+        return False, 'Kel could not check its network rules, so this request was not sent.'
+    return bool(allowed), str(reason or '')
+
+
+class _BoundedRedirects(urllib.request.HTTPRedirectHandler):
+    """Follow a few hops, never an endless chain; the final host is still reported honestly."""
+    max_redirections = MAX_REDIRECTS
+
+
+# One opener for every request: the redirect bound lives here, and nothing else opens URLs.
+_OPENER = urllib.request.build_opener(_BoundedRedirects)
+
+
+def _retry_delay(retry_after):
+    """The service's own Retry-After when it is small and sane, else None (the framework's backoff)."""
+    try:
+        seconds = float(str(retry_after).strip())
+    except (TypeError, ValueError):
+        return None
+    if seconds < 0:
+        return None
+    return min(seconds, RETRY_AFTER_CAP)
+
+
 def _attempt(url, headers, timeout, method='GET', read_body=False, payload=None):
-    """One request. A refusal is a result: 401 is an answer, not an error."""
+    """One request. A refusal is a result: 401 is an answer, not an error.
+
+    Returns (status, final_url, body_bytes, retry_after_header).
+    """
     request = urllib.request.Request(url, data=payload, method=method, headers=dict(headers or {}))
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with _OPENER.open(request, timeout=timeout) as response:
             body = response.read(MAX_ANSWER_BYTES) if read_body else b''
-            return int(getattr(response, 'status', None) or 200), response.geturl(), body
+            return int(getattr(response, 'status', None) or 200), response.geturl(), body, None
     except urllib.error.HTTPError as error:
         status = int(error.code)
         final = getattr(error, 'url', url)
+        retry_after = error.headers.get('Retry-After') if error.headers else None
         body = b''
         if read_body:
             try:
@@ -309,7 +355,7 @@ def _attempt(url, headers, timeout, method='GET', read_body=False, payload=None)
             except Exception:
                 body = b''
         error.close()
-        return status, final, body
+        return status, final, body, retry_after
 
 
 def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS,
@@ -327,26 +373,42 @@ def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPT
     A check reads nothing back (`read_body=False`): the status is the answer. An action asks for its answer
     (`read_body=True`), bounded and handed to the caller — never written down.
 
+    V2-04 hardening: the configured network rules are asked about the host BEFORE anything leaves the
+    computer (and again for the host a redirect landed on), the chain of redirects is bounded, and a
+    service that answers 429/5xx with its own Retry-After gets a pause bounded by `RETRY_AFTER_CAP`
+    instead of Kel's backoff. Nothing here opens a URL of its own: this is the single choke point.
+
     Returns (status, final_url, attempts, elapsed_ms, body_bytes).
     """
+    host = urlparse(url).hostname or ''
+    allowed, refusal = network_rule(host)
+    if not allowed:
+        raise PolicyError(refusal or ('Kel is not allowed to reach %s.' % host))
     stated = time.monotonic()
     pause = sleep or time.sleep
     tried = 0
     body = b''
+    retry_after = None
     while True:
         tried += 1
         try:
-            status, final, body = _attempt(url, headers, timeout, method=method,
-                                           read_body=read_body, payload=payload)
+            status, final, body, retry_after = _attempt(url, headers, timeout, method=method,
+                                                        read_body=read_body, payload=payload)
         except urllib.error.URLError:
             if tried >= attempts or time.monotonic() - stated >= budget:
                 raise
             pause(RETRY_BACKOFF * tried)
             continue
+        final_host = urlparse(final or '').hostname or ''
+        if final_host and final_host != host:
+            # A redirect must not smuggle a host the rules would have refused.
+            allowed_final, final_refusal = network_rule(final_host)
+            if not allowed_final:
+                raise PolicyError(final_refusal or ('Kel is not allowed to reach %s.' % final_host))
         if status in RETRY_STATUSES and tried < attempts:
             if time.monotonic() - stated >= budget:
                 break
-            pause(RETRY_BACKOFF * tried)
+            pause(_retry_delay(retry_after) or (RETRY_BACKOFF * tried))
             continue
         break
     return status, final, tried, int((time.monotonic() - stated) * 1000), body
@@ -645,6 +707,8 @@ class Connections:
                                                                    attempts=self.attempts,
                                                                    sleep=self.sleep)
             state, note = classify(status, connection, final, tried)
+        except PolicyError:
+            raise
         except (TimeoutError, socket.timeout):
             state = 'timeout'
             seconds = int(self.timeout) if float(self.timeout).is_integer() else self.timeout
@@ -703,7 +767,12 @@ class Connections:
                 target, headers, timeout=self.timeout, attempts=self.attempts, sleep=self.sleep,
                 method=row['method'], read_body=True)
             state, note = classify(status, connection, final, tried)
+            if len(body) >= MAX_ANSWER_BYTES:
+                # The answer hit the reading cap: say so instead of pretending it was complete.
+                note += ' The answer was cut short.'
             answer = _answer(body, credentials)
+        except PolicyError:
+            raise
         except (TimeoutError, socket.timeout):
             state = 'timeout'
             seconds = int(self.timeout) if float(self.timeout).is_integer() else self.timeout

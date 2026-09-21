@@ -217,3 +217,21 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   was not found.” — a placeholder client id); the page carried no token; the connection read
   `disconnected`; replaying the state answered “That sign-in answer was already used.” A real
   *sign-in* still needs Nick's client ID (`evidence/v2-04b/README.md`).
+
+### V2-04 hardening — the choke point's own rules (2026-09-21)
+
+- `tests/test_v2_connections.py` → **6 new tests** in `ExecutionHardeningTests`, all pass against a
+  loopback stand-in: a self-redirecting service stops far below urllib's default ten hops and reports
+  the 302 honestly; a service's own `Retry-After: 1` is honoured exactly; an absurd one (600 s) is
+  capped at `RETRY_AFTER_CAP`; a network rule stops the request **before** the stub is ever contacted
+  and its sentence is the one the person reads; a rule source that raises fails closed with its own
+  plain sentence; an answer past the reading cap says “The answer was cut short.” and stays bounded.
+  The single-doorway pin was updated to the new opener (`build_opener(` ×1, `.open(` ×1).
+- Suites at this commit: **141 OK** in one focused run (`test_v2_connections` incl. the six new
+  tests, `test_v2_oauth`, `test_v2_connection_bridge`, `test_capabilities`, `test_v16_r8_migrations`)
+  — that is every suite reaching `perform_request` (its only callers are `connections.py`,
+  `connection_oauth.py` and `connection_framework.py`). The full-module bulk run of the preceding
+  state was green (1126 OK); its re-run after this edit was abandoned after 30 minutes of crawling
+  under machine load (the identical module set had taken 527 s twenty minutes earlier), so this
+  increment's verification is the focused run — recorded plainly rather than presented as a
+  full-suite pass.

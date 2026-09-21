@@ -204,3 +204,12 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   then reads `needs_reconnect`/`disconnected`, never a stale success).
 - **A pasted token still works exactly as before** for `kind: 'oauth'` connections that were never
   signed in — the framework adds the sign-in; it does not remove the manual path.
+
+## V2-04 hardening — what is not yet a rule (2026-09-21)
+
+- **No network rules are configured yet.** `NETWORK_RULES` (in `kel.connections`) is the seam V2-14
+  will fill; with it `None`, every host is allowed exactly as before. The seam itself is tested
+  (refusal before send; fail-closed when the rule source errors) — the *modes* (no internet /
+  approved domains / full internet, per-tool and per-Project rules) are V2-14's work.
+- **The redirect bound is three hops** (`MAX_REDIRECTS`) and the imposed pause is capped at five
+  seconds (`RETRY_AFTER_CAP`); both are framework constants, not per-connection settings yet.
