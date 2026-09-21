@@ -1112,6 +1112,30 @@ class Service:
                                       self._required(data,'status','Pick a status first.'))
         if action=='prepare_prompt':
             return service.prepare_prompt(data.get('fix_ids') or None)
+        if action=='build_update':
+            # Kibble Build Update (D-46): a development mission and a reviewable candidate, on the
+            # existing work machinery. The runtime entry is the same action/bridge pattern as the
+            # rest of Kel; installation is NOT part of it and `promote` refuses by design.
+            from .build_update import BuildUpdate
+            builder=BuildUpdate(self.store)
+            op=data.get('op') or 'status'
+            if op=='start':
+                return builder.start(data.get('findings') or [],
+                                     source_root=self._required(data,'source_root','Pick the repository folder first.'),
+                                     tests=data.get('tests') or [],
+                                     scope=data.get('scope'),
+                                     conversation=data.get('conversation') or 'main',
+                                     project_id=data.get('project_id'))
+            if op=='status':
+                return builder.status(self._required(data,'mission','Which development mission?'))
+            if op=='candidate':
+                return builder.candidate(self._required(data,'mission','Which development mission?'))
+            if op=='review':
+                return builder.review(self._required(data,'candidate','Which candidate?'),
+                                      data.get('decision'),note=data.get('note',''))
+            if op=='promote':
+                return builder.promote(data.get('candidate'))
+            raise PolicyError('Unknown Build Update action.')
         if action=='discard':
             return service.discard_tmp(self._required(data,'screenshot','Pick a capture first.'))
         raise PolicyError('Unknown fix action')
