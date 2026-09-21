@@ -536,68 +536,158 @@ test.describe('Kel on a phone (V2-05)', () => {
     save('findings-G.json');
   });
 
-  test('H — choose an assistant on the phone, then send', async ({ page }) => {
-    test.setTimeout(180_000);
+  test('H — choose Kel on the phone, then send for real', async ({ page }) => {
+    // Two real model turns on a connected provider (send → reply → continue); bounded but genuinely long.
+    test.setTimeout(480_000);
     await signIn(page);
+    // Watch from after sign-in so the recorded dead sockets and failed reads are the signed-in ones.
+    const seen = watch(page);
     await leaveFirstRun(page, 'H');
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
 
-    // The shell gates send on a selected assistant (`useGuidSend`: loading || !selectedAssistantId). The
-    // pills carry their own identity, so the journey can pick one exactly as a thumb would.
+    // The profile must offer the single Kel assistant (the standalone webui ensures it). The pills carry
+    // their own identity, so the journey can pick one exactly as a thumb would.
     const pills = page.locator('[data-assistant-id]');
     let count = await pills.count();
-    note({ journey: 'H', step: 'assistant-pills', count });
-    if (count === 0) {
-      const more = page.locator('[data-testid="assistant-more-btn"]').first();
-      note({ journey: 'H', step: 'assistant-more', count: await more.count() });
-      await more.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'assistant-more-failed', error: String(error).slice(0, 160) }));
-      await page.waitForTimeout(1200);
+    for (let waited = 0; waited < 20 && count === 0; waited += 1) {
+      await page.waitForTimeout(1000);
       count = await pills.count();
-      note({ journey: 'H', step: 'assistant-pills-after-more', count });
     }
+    const pillIds = await pills.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-assistant-id')));
+    note({ journey: 'H', step: 'assistant-pills', count, ids: pillIds });
+    await page.screenshot({ path: path.join(EVIDENCE, 'H1-assistant-pills.png') });
+    expect(count, 'the phone offers an assistant to choose').toBeGreaterThan(0);
+    expect(pillIds, 'the assistant the phone offers is Kel').toContain('kel');
 
-    if (count > 0) {
-      const first = pills.first();
-      const id = await first.getAttribute('data-assistant-id');
-      const name = (await first.textContent().catch(() => '')) || '';
-      note({ journey: 'H', step: 'assistant-chosen', id, name: name.trim().slice(0, 40) });
-      await first.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'assistant-click-failed', error: String(error).slice(0, 160) }));
-      await page.waitForTimeout(1500);
-      note({
-        journey: 'H',
-        step: 'assistant-selected',
-        selected: await pills.first().getAttribute('data-assistant-selected'),
+    const kelPill = page.locator('[data-assistant-id="kel"]').first();
+    const selectedBefore = await kelPill.getAttribute('data-assistant-selected');
+    if (selectedBefore !== 'true') {
+      await kelPill.click({ timeout: 8000 });
+      await page.waitForTimeout(800);
+    }
+    note({
+      journey: 'H',
+      step: 'assistant-selected',
+      selectedBefore,
+      selectedAfter: await kelPill.getAttribute('data-assistant-selected'),
+    });
+
+    // A real turn on a real CLI provider — deliberately harmless and file-free.
+    const TURN_ONE = 'Phone send check: reply with one short sentence. Change no files.';
+    const TURN_TWO = 'Phone continuity check: reply with the words: still here. Change no files.';
+    // The user's own turn is exactly the text that was typed. An assistant reply may quote its words
+    // (measured: "Phone send check received."), so prefix matching would misread the model as the person.
+    const isUserRow = (row: string) => {
+      const trimmed = row.trim();
+      return trimmed === TURN_ONE || trimmed === TURN_TWO;
+    };
+
+    const composer = page.locator('textarea, [contenteditable="true"]').first();
+    await composer.click({ timeout: 5000 });
+    await page.keyboard.insertText(TURN_ONE);
+    await page.waitForTimeout(600);
+    const send = page.locator('button.send-button-custom').first();
+    const sendable = !(await send.isDisabled().catch(() => true));
+    note({ journey: 'H', step: 'send-possible', sendable });
+    expect(sendable, 'send is enabled once Kel is chosen and the profile is settled').toBe(true);
+    await send.click({ timeout: 8000 });
+
+    // The message list carries each message's own words: the phone shows the user turn first, then a real
+    // assistant reply from a connected model. This is the positive send path V2-05 owed.
+    // Assistant replies render markdown inside a shadow root (`ShadowView` portals into it), and
+    // `innerText` does not cross that boundary — measured: the reply bubble existed but read as "".
+    // Read the shadow text explicitly so the journey sees what a person sees on the phone.
+    const messageTexts = async (): Promise<string[]> =>
+      page.evaluate(() => {
+        const nodes = Array.from(document.querySelectorAll('[data-testid="message-text-content"]')) as HTMLElement[];
+        return nodes.map((node) => {
+          const host = node.querySelector('.markdown-shadow') as HTMLElement | null;
+          const shadow = host?.shadowRoot?.querySelector('.markdown-shadow-body')?.textContent ?? '';
+          return `${node.innerText || ''} ${shadow}`.trim();
+        });
       });
-
-      const composer = page.locator('textarea, [contenteditable="true"]').first();
-      const reachable = await composer.isVisible().catch(() => false);
-      note({ journey: 'H', step: 'composer-reachable', reachable });
-      if (reachable) {
-        await composer.click({ timeout: 5000 }).catch(() => undefined);
-        // A real turn on a real CLI provider — deliberately harmless and file-free.
-        await page.keyboard.insertText('Phone send check: reply with one short sentence. Change no files.');
-        await page.waitForTimeout(600);
-        const send = page.locator('button.send-button-custom').first();
-        const sendable = !(await send.isDisabled().catch(() => true));
-        await page.screenshot({ path: path.join(EVIDENCE, 'H1-before-send.png') });
-        note({ journey: 'H', step: 'send-possible', sendable });
-        if (sendable) {
-          await send.click({ timeout: 8000 }).catch((error) => note({ journey: 'H', step: 'send-failed', error: String(error).slice(0, 160) }));
-          await page.waitForTimeout(30_000);
-          await page.screenshot({ path: path.join(EVIDENCE, 'H2-after-send.png') });
-          const after = await text(page, 1500);
-          note({
-            journey: 'H',
-            step: 'after-send',
-            text: after,
-            messageLanded: /phone send check/i.test(after),
-            composerEmpty: (await composer.inputValue().catch(() => 'x')) === '',
-            overflow: await overflow(page),
-          });
-        }
+    const waitFor = async (probe: (rows: string[]) => boolean, seconds: number): Promise<string[]> => {
+      let rows: string[] = [];
+      for (let waited = 0; waited < seconds; waited += 1) {
+        await page.waitForTimeout(1000);
+        rows = await messageTexts();
+        if (probe(rows)) return rows;
       }
+      return rows;
+    };
+
+    let rows = await waitFor((texts) => texts.some(isUserRow), 60);
+    const userOneLanded = rows.some(isUserRow);
+    note({ journey: 'H', step: 'user-turn', userOneLanded, path: new URL(page.url()).pathname, rows: rows.slice(0, 6) });
+    expect(userOneLanded, "the phone's message reached the conversation").toBe(true);
+
+    rows = await waitFor((texts) => texts.some((row) => !isUserRow(row) && row.trim().length > 0), 240);
+    const replyOne = rows.find((row) => !isUserRow(row) && row.trim().length > 0) || '';
+    note({ journey: 'H', step: 'reply-one', reply: replyOne.slice(0, 240), rows: rows.slice(0, 8) });
+    await page.screenshot({ path: path.join(EVIDENCE, 'H2-reply-one.png') });
+    expect(replyOne, 'a connected model answered the phone').not.toBe('');
+
+    // Let the first turn settle: wait for the reply text to stop changing. Advisory and bounded — the
+    // send control's own actionability governs the second send, and its disabled state measured as an
+    // unreliable settle signal on the phone, so it is recorded rather than gated on.
+    const sendboxSend = page.locator('[data-testid="sendbox-send-btn"]').filter({ visible: true }).first();
+    let settled = false;
+    let stable = 0;
+    let previous = '';
+    for (let waited = 0; waited < 30 && !settled; waited += 1) {
+      await page.waitForTimeout(1000);
+      const current = (await messageTexts()).join('\u0000');
+      stable = current === previous ? stable + 1 : 0;
+      previous = current;
+      settled = stable >= 3;
     }
+    note({
+      journey: 'H',
+      step: 'turn-one-settled',
+      settled,
+      sendEnabled: !(await sendboxSend.isDisabled().catch(() => true)),
+    });
+
+    // Continue the same conversation from the same thumb.
+    const beforeTwo = await messageTexts();
+    const sendboxInput = page.locator('[data-testid="sendbox-input"]').filter({ visible: true }).first();
+    const inputVisible = await sendboxInput.isVisible().catch(() => false);
+    note({ journey: 'H', step: 'sendbox', inputVisible });
+    if (inputVisible) {
+      await sendboxInput.click({ timeout: 5000 }).catch(() => undefined);
+    } else {
+      await composer.click({ timeout: 5000 }).catch(() => undefined);
+    }
+    await page.keyboard.insertText(TURN_TWO);
+    await page.waitForTimeout(600);
+    await sendboxSend.click({ timeout: 8000 });
+
+    rows = await waitFor((texts) => texts.some((row) => row.trim() === TURN_TWO), 45);
+    const userTwoLanded = rows.some((row) => row.trim() === TURN_TWO);
+    note({ journey: 'H', step: 'user-turn-two', userTwoLanded });
+    expect(userTwoLanded, 'the conversation continues from the phone').toBe(true);
+
+    rows = await waitFor(
+      (texts) => texts.some((row) => !beforeTwo.includes(row) && row.trim() !== TURN_TWO && row.trim().length > 0),
+      180
+    );
+    const replyTwo =
+      rows.find((row) => !beforeTwo.includes(row) && row.trim() !== TURN_TWO && row.trim().length > 0) || '';
+    note({ journey: 'H', step: 'reply-two', reply: replyTwo.slice(0, 240), rows: rows.slice(0, 10) });
+    await page.screenshot({ path: path.join(EVIDENCE, 'H3-continuity.png') });
+    expect(replyTwo, 'the continued turn got a real reply').not.toBe('');
+
+    const layout = await overflow(page);
+    note({
+      journey: 'H',
+      step: 'end',
+      overflow: layout,
+      wsFailures: [...new Set(seen.wsFailures)].slice(0, 4),
+      failedResponses: [...new Set(seen.failedResponses)].slice(0, 12),
+      consoleErrors: [...new Set(seen.consoleErrors)].slice(0, 8),
+    });
     save('findings-H.json');
+    expect(layout.ok, `no horizontal overflow in the conversation: ${layout.worst}`).toBe(true);
   });
 
   test('F — the PWA contract holds on the phone', async ({ page }) => {
