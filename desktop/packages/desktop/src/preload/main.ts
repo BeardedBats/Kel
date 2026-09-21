@@ -139,6 +139,14 @@ contextBridge.exposeInMainWorld('kelAPI', {
     // process and never comes back here — only the result of the check does.
     testConnection: (connectionId: string) =>
       ipcRenderer.invoke('kel:connection-test', connectionId),
+    // V2-04: do one thing with a connection. Same rule as the check — the value is decrypted in the main
+    // process for that one request and the service's answer comes back, never a credential.
+    runConnection: (
+      connectionId: string,
+      actionId: string,
+      params?: Record<string, unknown>,
+      confirmed?: boolean
+    ) => ipcRenderer.invoke('kel:connection-run', connectionId, actionId, params, confirmed),
   },
   // Fix Capture (V2.0 preflight): the window screenshot + metrics come from the main process, and
   // the path handed back is relative to the engine data root. The view can read one saved screenshot

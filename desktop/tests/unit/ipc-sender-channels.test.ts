@@ -167,6 +167,7 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       fieldsFor: vi.fn(() => ['api_key']),
       read: vi.fn(() => 'sk-live-value'),
       test: vi.fn(async () => ({ id: 'stripe', last_test_state: 'ok' })),
+      run: vi.fn(async () => ({ id: 'stripe', action: 'github-whoami', state: 'ok' })),
     };
 
     beforeEach(() => {
@@ -178,6 +179,7 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       deps.fieldsFor.mockClear();
       deps.read.mockClear();
       deps.test.mockClear();
+      deps.run.mockClear();
       registerKelCredentialIpc(deps);
     });
 
@@ -249,6 +251,27 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       expect(deps.test).toHaveBeenCalledWith({
         action: 'test',
         id: 'stripe',
+        credentials: { api_key: 'sk-live-value' },
+      });
+    });
+
+    it('kel:connection-run refuses spoofed senders and never hands over a value', async () => {
+      const run = handleAt('kel:connection-run');
+      for (const [label, makeEvent] of refusalEvents) {
+        await expect(run(makeEvent(), 'stripe', 'github-whoami'), label).rejects.toThrow(REFUSAL);
+      }
+      expect(deps.read).not.toHaveBeenCalled();
+      expect(deps.run).not.toHaveBeenCalled();
+      await expect(run(legitEvent(), 'stripe', 'github-whoami', { per_page: 5 }, true)).resolves.toEqual(
+        { id: 'stripe', action: 'github-whoami', state: 'ok' }
+      );
+      // The credential travels with the request as values; the confirmation Nick gave travels with it too.
+      expect(deps.run).toHaveBeenCalledWith({
+        action: 'run',
+        id: 'stripe',
+        action_id: 'github-whoami',
+        params: { per_page: 5 },
+        confirmed: true,
         credentials: { api_key: 'sk-live-value' },
       });
     });

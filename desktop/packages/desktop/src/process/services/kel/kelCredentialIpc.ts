@@ -32,6 +32,8 @@ export interface KelCredentialIpcDeps {
   read: (connectionId: string, field: string) => string | null;
   /** Ask the engine to check a connection, with these values for this one request. */
   test: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Ask the engine to do something with a connection, with these values for this one request. */
+  run: (body: Record<string, unknown>) => Promise<unknown>;
 }
 
 const isConnection = (provider: string): boolean => provider.startsWith(`${CONNECTION_NAMESPACE}:`);
@@ -65,6 +67,16 @@ const metadataFor = (
       };
 
 export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
+  /** Only the fields the shell holds, only for this one request. Never a value back to a renderer. */
+  const valuesFor = (id: string): Record<string, string> => {
+    const values: Record<string, string> = {};
+    for (const field of deps.fieldsFor(id)) {
+      const value = deps.read(id, field);
+      if (value) values[field] = value;
+    }
+    return values;
+  };
+
   ipcMain.handle('kel:credential-status', (event) => {
     assertTrustedSender(event, { allowDevServer: true });
     return deps.status();
@@ -116,11 +128,34 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
   ipcMain.handle('kel:connection-test', async (event, connectionId: string): Promise<unknown> => {
     assertTrustedSender(event, { allowDevServer: true });
     const id = String(connectionId ?? '');
-    const credentials: Record<string, string> = {};
-    for (const field of deps.fieldsFor(id)) {
-      const value = deps.read(id, field);
-      if (value) credentials[field] = value;
-    }
-    return deps.test({ action: 'test', id, credentials });
+    return deps.test({ action: 'test', id, credentials: valuesFor(id) });
   });
+
+  /**
+   * V2-04: do something with a connection. Same rule as the check — the value is decrypted here and
+   * used for this one request; the renderer asks for the action and receives the service's answer.
+   * `confirmed` is Nick's answer to the question the surface asked, and the engine refuses anything that
+   * changes something in his account without it.
+   */
+  ipcMain.handle(
+    'kel:connection-run',
+    async (
+      event,
+      connectionId: string,
+      actionId: string,
+      params?: Record<string, unknown>,
+      confirmed?: boolean
+    ): Promise<unknown> => {
+      assertTrustedSender(event, { allowDevServer: true });
+      const id = String(connectionId ?? '');
+      return deps.run({
+        action: 'run',
+        id,
+        action_id: String(actionId ?? ''),
+        params: params ?? {},
+        confirmed: Boolean(confirmed),
+        credentials: valuesFor(id),
+      });
+    }
+  );
 };

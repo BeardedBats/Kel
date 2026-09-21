@@ -24,7 +24,9 @@ import {
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
+  CONNECTION_CHECK_LABELS,
   KNOWN_SERVICE_SOURCE_LABELS,
+  connectionAnswerText,
   connectionCheckSentence,
   connectionCredentialField,
   connectionCustodyKey,
@@ -32,7 +34,9 @@ import {
   kelConnections,
   knownServiceDraft,
   type KelConnection,
+  type KelConnectionAction,
   type KelConnectionList,
+  type KelConnectionRun,
   type KelKnownService,
 } from '@renderer/components/kel/kelApi';
 
@@ -109,11 +113,18 @@ const Connections: React.FC = () => {
   } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [known, setKnown] = useState<KelKnownService[]>([]);
+  const [actionsByConnection, setActionsByConnection] = useState<Record<string, KelConnectionAction[]>>(
+    {}
+  );
+  const [answers, setAnswers] = useState<Record<string, KelConnectionRun>>({});
+  const [confirmAction, setConfirmAction] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    let current: KelConnection[] = [];
     try {
       const listed = await kelConnections.list();
       setList(listed);
+      current = listed.connections;
       setError(null);
     } catch (err) {
       setList({ connections: [], counts: { ready: 0, needs_credentials: 0 }, states: [], kinds: [], templates: [] });
@@ -127,6 +138,16 @@ const Connections: React.FC = () => {
     // addresses himself, which is exactly what an unknown service needs anyway.
     const services = await kelConnections.knownServices().catch((): null => null);
     setKnown(services?.services ?? []);
+    // V2-04: what Kel can do with the services that are actually usable. Best effort again — a connection
+    // without a credential has nothing Kel can do yet, and the page still works without this.
+    const usable = current.filter((item) => item.has_credentials);
+    const found = await Promise.all(
+      usable.map(async (item) => {
+        const row = await kelConnections.actions(item.id).catch((): null => null);
+        return [item.id, row?.actions ?? []] as const;
+      })
+    );
+    setActionsByConnection(Object.fromEntries(found));
   }, []);
 
   useEffect(() => {
@@ -134,6 +155,18 @@ const Connections: React.FC = () => {
   }, [load]);
 
   const connections = useMemo(() => list?.connections ?? [], [list]);
+
+  /** The connections Kel could actually use: the ones with a credential the shell holds. */
+  const usable = useMemo(
+    () => connections.filter((connection) => connection.has_credentials),
+    [connections]
+  );
+
+  /** The ones with something Kel can actually do, so the card never lists an empty service. */
+  const doable = useMemo(
+    () => usable.filter((connection) => (actionsByConnection[connection.id] ?? []).length > 0),
+    [usable, actionsByConnection]
+  );
 
   /** The known services Kel can add with one click — the ones not already connected. */
   const addable = useMemo(
@@ -247,6 +280,39 @@ const Connections: React.FC = () => {
       }
     },
     [load]
+  );
+
+  /**
+   * V2-04: do one thing with a service. The shell decrypts the credential, the engine makes the request
+   * and records that it happened, and the service's answer comes back here — where it is shown and
+   * nowhere else.
+   */
+  const doAction = useCallback(
+    async (connection: KelConnection, action: KelConnectionAction, confirmed = false) => {
+      setBusy(true);
+      setNote(null);
+      try {
+        const custody = window.kelAPI?.credentials;
+        if (!custody?.runConnection)
+          throw new Error('Doing something with a connection is only available in the Kel app.');
+        const done = (await custody.runConnection(
+          connection.id,
+          action.id,
+          {},
+          confirmed
+        )) as KelConnectionRun;
+        setAnswers((current) => ({ ...current, [action.id]: done }));
+        setConfirmAction(null);
+        setNote(
+          done.state === 'ok' ? `${action.name} — done.` : `${action.name} — ${done.note}`
+        );
+      } catch (err) {
+        setNote(failureSentence(err, 'Kel could not do that — try again.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    []
   );
 
   const removeConnection = useCallback(
@@ -429,6 +495,70 @@ const Connections: React.FC = () => {
           })
         )}
       </KelCard>
+
+      {doable.length > 0 && (
+        <KelCard
+          title="What Kel can do"
+          chip={<span className="kel-meta">only when you ask</span>}
+        >
+          <p className="kel-sub">
+            Each one is a single request to the service. Kel records that it happened — never what came
+            back, and never your credential.
+          </p>
+          {doable.map((connection) => {
+            const actions = actionsByConnection[connection.id] ?? [];
+            return actions.map((action) => {
+              const answer = answers[action.id];
+              const waiting = confirmAction === action.id;
+              return (
+                <div className="kel-row" key={action.id}>
+                  <div className="kel-attention__text">
+                    <strong>{action.name}</strong>
+                    <span className="kel-meta">
+                      {connection.name} · {action.description}
+                    </span>
+                    {action.mutating && (
+                      <span className="kel-meta">
+                        This changes something in {connection.name}, so Kel asks first.
+                      </span>
+                    )}
+                    {answer && (
+                      <span className="kel-meta">
+                        {CONNECTION_CHECK_LABELS[answer.state] ?? 'Done'} — {answer.note}
+                      </span>
+                    )}
+                    {answer && connectionAnswerText(answer.result) && (
+                      <pre className="kel-meta">{connectionAnswerText(answer.result)}</pre>
+                    )}
+                  </div>
+                  <span className="kel-grow" />
+                  {waiting ? (
+                    <KelButton
+                      variant="primary"
+                      disabled={busy}
+                      onClick={() => void doAction(connection, action, true)}
+                    >
+                      Yes, do it
+                    </KelButton>
+                  ) : (
+                    <KelButton
+                      variant="quiet"
+                      disabled={busy}
+                      onClick={() =>
+                        action.mutating
+                          ? setConfirmAction(action.id)
+                          : void doAction(connection, action)
+                      }
+                    >
+                      {action.mutating ? 'Do it…' : 'Do it'}
+                    </KelButton>
+                  )}
+                </div>
+              );
+            });
+          })}
+        </KelCard>
+      )}
 
       {credentialDraft && (
         <KelCard

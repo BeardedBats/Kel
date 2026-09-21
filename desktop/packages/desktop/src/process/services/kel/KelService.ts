@@ -603,6 +603,8 @@ export async function initializeKel(port: number): Promise<void> {
     read: (id, field) => getCredential(connectionCredentialKey(id), field),
     // V2-02 Test Connection: the value is decrypted here and used by the engine for one request.
     test: (body) => kelRequest('/api/connections', body),
+    // V2-04 actions: same rule — one request, the answer comes back, nothing is kept.
+    run: (body) => kelRequest('/api/connections', body),
   });
   // Fix Capture (V2.0 preflight): the window screenshot is written into the engine data root's
   // dogfood/tmp; the engine commits it under the fix id when the fix is saved.

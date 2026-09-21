@@ -107,6 +107,34 @@ const TEMPLATES = [
   },
 ];
 
+/** One read action and one that changes something, as the engine sends them (V2-04). */
+const ACTIONS = [
+  {
+    id: 'github-whoami',
+    service: 'github',
+    name: 'See which account the token belongs to',
+    description: 'Asks GitHub who the stored token is.',
+    method: 'GET',
+    path: '/user',
+    params: [],
+    returns: 'Your login name.',
+    mutating: false,
+    source: 'documented',
+  },
+  {
+    id: 'github-comment',
+    service: 'github',
+    name: 'Comment on an issue',
+    description: 'Writes a comment.',
+    method: 'POST',
+    path: '/repos/o/r/issues/1/comments',
+    params: [],
+    returns: 'The comment.',
+    mutating: true,
+    source: 'documented',
+  },
+];
+
 /** Two known services: one Kel is sure about, one whose address Nick has to paste in. */
 const KNOWN = [
   {
@@ -143,6 +171,8 @@ const answer = (body: Record<string, unknown>): unknown => {
   switch (body.action) {
     case 'catalogue':
       return { services: KNOWN };
+    case 'actions':
+      return { connection: body.id, actions: ACTIONS };
     case 'list':
       return {
         connections: rows,
@@ -224,6 +254,34 @@ const custody = {
     return { provider, removed: 1 };
   }),
   /**
+   * V2-04: the shipped contract is "the shell uses the values it holds for one request and returns the
+   * engine's answer". This stands in for the main process: the engine is asked, the credential goes with
+   * it, and what comes back is the record — the page never sees a value.
+   */
+  runConnection: vi.fn(
+    async (connectionId: string, actionId: string, params: unknown, confirmed: boolean) => {
+      const action = ACTIONS.find((item) => item.id === actionId);
+      if (!action) throw new Error('Kel does not know that action.');
+      if (action.mutating && !confirmed) throw new Error(`${action.name} changes something, so Kel asks first.`);
+      calls.push({
+        route: '/api/connections',
+        body: { action: 'run', id: connectionId, action_id: actionId, params, confirmed },
+      });
+      return {
+        connection: connectionId,
+        action: actionId,
+        name: action.name,
+        state: 'ok',
+        status: 200,
+        attempts: 1,
+        ms: 12,
+        note: 'The service answered 200.',
+        result: { login: 'nick' },
+        at: 1760000900,
+      };
+    }
+  ),
+  /**
    * V2-02: the shipped contract is "the shell uses the values it holds for one check and returns the
    * record". This stands in for the main process: it hands the engine what it holds, nothing more.
    */
@@ -260,6 +318,8 @@ beforeEach(() => {
   custody.connectionStatus.mockResolvedValue({});
   custody.set.mockClear();
   custody.remove.mockClear();
+  custody.testConnection.mockClear();
+  custody.runConnection.mockClear();
   (window as unknown as { kelAPI: unknown }).kelAPI = {
     request: (route: string, body?: Record<string, unknown>) => {
       calls.push({ route, body: body ?? {} });
@@ -294,7 +354,8 @@ describe('Connections — the central management surface', () => {
       row('pitcher-list', 'Pitcher List', { base_url: 'https://api.pitcherlist.com' }),
     ];
     renderPage();
-    expect(await screen.findByText('Stripe')).toBeTruthy();
+    // The name can appear twice now — once as the service, once as where an action lives.
+    expect((await screen.findAllByText('Stripe')).length).toBeGreaterThan(0);
     expect(screen.getByText('Pitcher List')).toBeTruthy();
     expect(screen.getByText(/Ready — Kel has a credential/)).toBeTruthy();
     expect(screen.getByText(/Needs a credential/)).toBeTruthy();
@@ -442,7 +503,7 @@ describe('Connections — the central management surface', () => {
   it('offers no check for a connection with no address to call', async () => {
     rows = [row('stripe', 'Stripe', { has_credentials: true, state: 'ready' })];
     renderPage();
-    expect(await screen.findByText('Stripe')).toBeTruthy();
+    expect((await screen.findAllByText('Stripe')).length).toBeGreaterThan(0);
     expect(screen.queryByText('Test connection')).toBeNull();
   });
 
@@ -493,6 +554,34 @@ describe('Connections — the central management surface', () => {
     ).toBeTruthy();
     // Raptive publishes no API address: Kel says so instead of inventing one.
     expect(await screen.findByText(/Kel does not know this address/)).toBeTruthy();
+  });
+
+  it('does one thing with a service when Nick asks', async () => {
+    rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
+    stored = ['connection:github:api_key=ghp_token'];
+    renderPage();
+    fireEvent.click(await screen.findByText('Do it'));
+    await waitFor(() =>
+      expect(custody.runConnection).toHaveBeenCalledWith('github', 'github-whoami', {}, false)
+    );
+    // The answer is shown once, where it arrived, and the confirmation is plain.
+    expect(await screen.findByText('See which account the token belongs to — done.')).toBeTruthy();
+    expect(await screen.findByText(/The service answered 200\./)).toBeTruthy();
+    expect(document.body.innerHTML).toContain('"login"');
+    expect(document.body.innerHTML).not.toContain('ghp_token');
+  });
+
+  it('asks before doing something that changes anything', async () => {
+    rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
+    renderPage();
+    fireEvent.click(await screen.findByText('Do it…'));
+    // Nothing is sent yet: the question comes first.
+    expect(custody.runConnection).not.toHaveBeenCalled();
+    expect(screen.getByText(/This changes something in GitHub, so Kel asks first\./)).toBeTruthy();
+    fireEvent.click(screen.getByText('Yes, do it'));
+    await waitFor(() =>
+      expect(custody.runConnection).toHaveBeenCalledWith('github', 'github-comment', {}, true)
+    );
   });
 
   it('never talks to the model-provider route', async () => {
