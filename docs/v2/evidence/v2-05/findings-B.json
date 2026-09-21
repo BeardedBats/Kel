@@ -45,9 +45,7 @@
     "step": "post-signin-failures",
     "wsFailures": [],
     "failedResponses": [],
-    "consoleErrors": [
-      "[useCronJobsMap] Failed to fetch jobs: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js:5:2888)\n    at V (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js"
-    ]
+    "consoleErrors": []
   },
   {
     "journey": "B",

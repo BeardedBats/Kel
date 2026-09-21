@@ -301,39 +301,5 @@
     "journey": "G",
     "step": "composer-after-providers",
     "reachable": false
-  },
-  {
-    "journey": "F",
-    "manifest": {
-      "ok": true,
-      "href": "./manifest.webmanifest",
-      "name": "Kel",
-      "shortName": "Kel",
-      "display": "standalone",
-      "icons": 2,
-      "donorWords": null
-    },
-    "serviceWorker": {
-      "registered": true,
-      "controller": true,
-      "scope": "http://127.0.0.1:25809/",
-      "caches": [
-        "kel-webui-v2"
-      ]
-    },
-    "apiCacheHitCount": 0,
-    "overflow": {
-      "ok": true,
-      "scrollWidth": 393,
-      "clientWidth": 393,
-      "worst": "div class=\"\" right=393"
-    }
-  },
-  {
-    "journey": "F",
-    "step": "post-signin-failures",
-    "failedResponses": [],
-    "consoleErrors": [],
-    "wsFailures": 0
   }
 ]

@@ -45,9 +45,7 @@
     "step": "post-signin-failures",
     "wsFailures": [],
     "failedResponses": [],
-    "consoleErrors": [
-      "[useCronJobsMap] Failed to fetch jobs: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js:5:2888)\n    at V (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js"
-    ]
+    "consoleErrors": []
   },
   {
     "journey": "B",
@@ -131,6 +129,39 @@
     }
   },
   {
+    "journey": "C",
+    "step": "after-action-controls",
+    "controls": [
+      "Skip to main content",
+      "Expand More",
+      "Search messages",
+      "Work",
+      "Projects",
+      "Activity",
+      "Permissions",
+      "Transcription",
+      "Work & context",
+      "Settings",
+      "Skip to main content",
+      "Reload",
+      "Set up",
+      "Set up",
+      "Manage connections",
+      "text",
+      "vision",
+      "tools",
+      "edit",
+      "shell",
+      "auto",
+      "Claude (Claude Code)",
+      "Codex",
+      "Anthropic API",
+      "DeepSeek API",
+      "Check readiness",
+      "Store credential"
+    ]
+  },
+  {
     "journey": "D",
     "step": "drawer-Projects",
     "count": 1,
@@ -204,7 +235,7 @@
   {
     "journey": "E",
     "step": "recording",
-    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nRecording 0:03\nCancel\nWork in a project"
+    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nRecording 0:04\nCancel\nWork in a project"
   },
   {
     "journey": "E",
@@ -213,9 +244,18 @@
   },
   {
     "journey": "E",
-    "step": "after-stop",
-    "text": "Skip to main content\nKel\nNo chat history\nWork & context\n\nHi, what's your plan for today?\n\nWhile you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project",
-    "composer": "",
+    "step": "transcript",
+    "firstText": "Calmuse verification, green baseball 64",
+    "transcript": "Calmuse verification, green baseball 64",
+    "transcriptionCalls": 28,
+    "transcriptionReplies": [
+      "200 stream :: Calmuse verification, green baseball",
+      "200 stream :: Calmuse verification, green baseball",
+      "200 stream :: Calmuse verification, green baseball",
+      "200 stream :: Calmuse verification, green baseball",
+      "200 stream :: Calmuse verification, green baseball",
+      "200 stream :: Calmuse verification, green baseball 64"
+    ],
     "consoleErrors": [
       "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
       "init theme failed Error: ConfigService GET /api/settings/client failed (401): {\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}\n    at le (http://127.0.0.1:25809/assets/applyTh",

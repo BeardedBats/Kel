@@ -61,3 +61,49 @@ cookie, so it reaches the engine exactly as the desktop does (pinned in
 4. **Conversation history was not reached from the phone in this run** — the seeded conversation
    (`main`, title "Phone journey seed…") exists in authoritative state and shows through
    `/api/state`, but the automation never opened the drawer that lists it.
+
+## Second pass — mobile voice works, through Muse
+
+Root cause (no speculation left in it): `KelMicButton`'s own `request()` required `window.kelAPI`, the
+**desktop preload bridge**, which a phone browser never has. So `start()` threw "Kel is not connected"
+before a single request left the page — and the `try/catch` around `stream_start` swallowed it. That is
+why the recording UI ran, the gateway saw zero `/api/transcription` traffic and nothing ever appeared.
+
+Fix: transcription now goes through `kelRequest` — the same transport as every other Kel call (preload
+on the desktop, the session-gated `/kel` gateway on the phone) — and a failed `stream_start` is said out
+loud in plain words (`Live typing is not available right now — Kel will transcribe the recording when you
+stop.`), with the reason kept for the moment the user stops. Nothing fake is substituted: the engine's
+own practice mode is only entered when it is asked for by name, and `FixtureProvider` signs its work
+("Practice transcript for …"), which the journey asserts must never appear.
+
+Journey E, real Chromium at 393x852, real built app, real gateway, real Muse:
+
+- microphone = Chromium's fake capture device playing **real speech** generated on this machine
+  (`muse-phrase-24k.wav`, 24 kHz mono PCM16 — the shape Kel's own capture produces; Muse rejects other
+  rates with an unmapped status, which is what the earlier 22.05 kHz fixture hit);
+- the phone sent `stream_start` + 27 `stream_chunk` + `stream_finish` through the gateway;
+- Muse answered, and the composer received **`Calmuse verification green baseball 64`** (Muse's own
+  reading of "Mobile Kel Muse verification, green baseball sixty-four." — `Kel Muse` heard as `Calmuse`,
+  the leading word not in the final partial);
+- gate: `transcriptionCalls.length > 0`, transcript matches `/baseball/` and `/64|sixty/`, and no
+  `practice transcript` text.
+
+Engine ground truth, driven directly for comparison: `stream_finish` on the same audio answers
+`mobile Calm use verification green baseball 64`.
+
+### Still open in V2-05 (unchanged by this pass)
+
+- **Send with a connected model.** The phone reaches Providers ("4 providers · 2 usable right now",
+  Claude Code + Codex CLI "Ready to use") and Connections ("The services Kel can use", Add a service,
+  Set up GitHub/Stripe/Figma/Slack), but this pass did not select a model, so the composer stayed
+  disabled and no model turn was spent. The positive send path is not claimed.
+- **Conversation history / drawer.** Journey B opens the composer and pastes into it; the drawer entry
+  that lists conversations is still not reached by the automation.
+- **Job-driven attention actions** (approve / deny / grant / resume / stop / review) — no authoritative
+  job state existed to exercise them.
+- **Conversational project routing** — untouched; not claimed.
+- **Multi-utterance dictation:** recording past one utterance can lose the earlier words, because Muse's
+  realtime frames for the first utterance were never marked final (measured: replies went
+  `Calmuse verification, green baseball 64` → `Mobile` → `Mobile Calmuse`). The engine accumulates
+  *finalized* turns correctly; the follow-up needs Muse's end-of-stream frame semantics before changing
+  anything.

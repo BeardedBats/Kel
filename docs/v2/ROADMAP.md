@@ -43,3 +43,7 @@ intent so a resume run does not have to guess.
   (`docs/v2/evidence/v2-05/`); the phase closes when browser voice reaches Muse, a connected model makes
   send real, and the job-driven attention actions are exercised on the phone. PWA plumbing itself was
   already pinned and stayed green.
+
+- **V2-05 voice: done.** Mobile dictation now reaches the production Muse family through the gateway
+  (real browser, real speech, real transcript). V2-05 stays partial for: send with a connected model,
+  conversation history from the phone, job-driven attention actions, conversational project routing.
