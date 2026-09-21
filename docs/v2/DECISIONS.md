@@ -116,3 +116,32 @@ what it forbids so a later run cannot quietly undo it.
     nullable result columns and checks for them before altering; the module's migrations are now named
     steps rather than one DDL blob, because a resumed upgrade can legitimately re-apply the newest step
     when its marker was lost. *Forbids:* a step that only works on a database that has never seen it.
+
+## V2-03 (Personal Connections — the services Nick uses)
+
+23. **Known services are data, not features.** `runtime/kel/connection_services.py` holds rows — address,
+    header, how the credential is presented, documentation, and what Nick has to go and fetch — and
+    nothing else: two functions that hand out the list and one row, no branching on a service name, and
+    `connections.py` still contains no service name at all. Adding Pitcher List by hand is exactly the
+    same kind of connection as picking GitHub from the list. *Forbids:* per-service modules, tables,
+    workers, workflows, or behaviour switched on a service id.
+
+24. **Kel says how sure it is.** Every entry carries `documented`, `assumed` or `to-confirm`, and the
+    surface repeats that sentence to Nick. Raptive's API address is not invented: Kel says the address
+    comes with the credential. *Forbids:* a guessed URL presented as fact.
+
+25. **How a service wants its credential is part of the connection.** `auth_prefix`: `null` means Kel works
+    it out (a scheme for `Authorization`, the value untouched in a custom header), `''` means send the
+    value exactly as it is (ClickUp, Figma, Raptive), and a word means put that word in front (GitHub and
+    Stripe `Bearer `, Discord `Bot `). The trailing space is significant and is preserved. *Forbids:*
+    per-service auth code, and normalising a prefix into `Bearerthe-value`.
+
+26. **A known service's id is the slug of its name.** `Pitcher List` produces `pitcher-list`, which is the
+    id the catalogue uses, so nothing has to carry an id around and the catalogue and the store cannot
+    disagree about which connection is which. *Forbids:* an id scheme that needs to be kept in step by
+    hand.
+
+27. **The eight services still need their credentials from Nick.** Kel knows their addresses and shapes;
+    what it cannot do is test them without his keys, so live checks against the real services are V2-03/V2-15
+    evidence that does not exist yet and is not claimed anywhere. *Forbids:* describing a service as
+    "working" because it is listed.

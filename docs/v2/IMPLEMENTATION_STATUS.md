@@ -20,10 +20,9 @@ gateway for remote browser use.
 
 ## Not built yet (V2 scope, all queued)
 
-Connections (personal services, framework), iPhone PWA V1, Needs Your
-Attention 2.0, Recipes 2.0, Activity 2.0, routing intelligence, Learning 2.0, long-running work 2.0,
-adaptive staffing 2.0, local execution isolation, network permissions, performance polish, manual
-upgrade reliability, V2 acceptance and regression.
+Connections (framework), iPhone PWA V1, Needs Your Attention 2.0, Recipes 2.0, Activity 2.0, routing
+intelligence, Learning 2.0, long-running work 2.0, adaptive staffing 2.0, local execution isolation,
+network permissions, performance polish, manual upgrade reliability, V2 acceptance and regression.
 
 ## Explicitly absent (and staying absent)
 
@@ -84,3 +83,25 @@ The fields are V2-01's; what this phase adds is the one thing that talks to a se
   sentence shown in the row and the confirmation in the note.
 - **Not in this phase**: service-specific actions and tools (V2-03 / V2-04) and network rules (V2-14).
   Nothing is called except when Nick clicks Test connection — no automatic or scheduled checks.
+
+## V2-03 — Personal Connections (BUILT)
+
+Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma and Discord — known as data, with no
+per-service code anywhere.
+
+- **`runtime/kel/connection_services.py`**: one row per service — address, header, how the credential is
+  presented, documentation, the test endpoint, and what Nick has to go and fetch. Two functions, no
+  branching on a service name, no imports; `connections.py` still contains no service name at all. A
+  service added by hand is exactly the same kind of connection as one picked from this list.
+- **Honest about the addresses**: each entry says `documented`, `assumed` (the standard WordPress layout
+  for Pitcher List) or `to-confirm` (Raptive publishes no API address — Kel says the address comes with
+  the credential instead of inventing one), and the surface repeats that sentence.
+- **How a service wants its credential** is now part of the connection (`auth_prefix`, migration 25):
+  GitHub and Stripe `Bearer `, Discord `Bot `, ClickUp and Figma the value exactly as it is, and `null`
+  keeps Kel's old "work it out" behaviour. The trailing space is significant and preserved.
+- **Desktop**: the services Kel knows appear as "Set up GitHub" rows with the credential sentence; one
+  click fills the form in (name, address, header, how it is presented), and the form asks the
+  presentation question in plain words rather than exposing a prefix field.
+- **Not in this phase**: what Kel can *do* with each service (that is a tool — V2-04) and a live check
+  against the real services, which needs Nick's credentials. Nothing here claims a service works because
+  it is listed.

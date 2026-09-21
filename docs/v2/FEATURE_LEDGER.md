@@ -20,7 +20,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-00 | V2 developer line + durable program state | **DONE** | this `docs/v2/` directory; `dev/v2` @ setup commit |
 | V2-01 | Connections model + central management | **BUILT** | `runtime/kel/connections.py` (migration 23) + 25 engine tests; `/connections` page, bridge routing and 11 jsdom page tests + 12 workspace tests |
 | V2-02 | Generic REST Connection | **BUILT** | `runtime/kel/connections.py` `test()` + `perform_request` (migration 24) and 20 engine tests incl. a local service stub; `Test connection` on the page + 2 jsdom tests + sender-guard coverage |
-| V2-03 | Personal Connections (Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma, Discord) | queued | — |
+| V2-03 | Personal Connections (Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma, Discord) | **BUILT** | `runtime/kel/connection_services.py` (the eight services as data) + `auth_prefix` (migration 25) and 9 engine tests; "Set up …" on the page + 2 jsdom tests. Live checks against the real services need Nick's credentials and are not claimed |
 | V2-04 | Connection Framework + templates | queued | — |
 | V2-05 | iPhone Kel PWA V1 | queued | — |
 | V2-06 | Needs Your Attention 2.0 | queued | — |

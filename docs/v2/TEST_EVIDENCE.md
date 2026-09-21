@@ -32,6 +32,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 | V2-00 | developer line + durable state (this setup commit) | `docs/v2/`; `git worktree list`; remote `dev/v2` SHA = local |
 | V2-01 | Connections model + central management | engine `1085 tests OK`; `tests.test_v2_connections` **25 OK**; desktop `40 files / 334 tests pass`; `tsc --noEmit` clean; `tests/unit/connections-page.dom.test.tsx` **11 pass**; `tests/unit/connections-surface.test.ts` **12 pass** (details below) |
 | V2-02 | Generic REST Connection + Test Connection | engine `1101 tests OK`; `tests.test_v2_connections` **41 OK**; desktop `40 files / 338 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **13 pass** (details below) |
+| V2-03 | Personal Connections | engine `1110 tests OK`; `tests.test_v2_connections` **50 OK**; desktop `40 files / 340 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **15 pass** (details below) |
 
 ### V2-01 — what each command actually proves
 
@@ -59,7 +60,20 @@ row names the command and the result, so a resume run can re-run it instead of t
 | Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **13 pass** — the V2-01 journeys plus: Test connection uses the stored value for the check and reports what came back, the value appears in no part of the rendered page afterwards, and a connection with no address offers no check at all |
 | Desktop — Connections wiring | `bunx vitest run tests/unit/connections-surface.test.ts tests/unit/ipc-sender-channels.test.ts` | **13 + 20 pass** — `kel:connection-test` refuses spoofed senders before reading anything, hands the engine exactly the fields the shell holds, and returns the record; the custody key format is pinned on both sides of the bridge |
 
-**Not verified for V2-02:** no installed-app check, and no real service was contacted by any test — the engine tests run against a local stand-in service on the loopback interface, so "works against the real Pitcher List / Stripe" remains V2-03's and V2-15's evidence, not this phase's.
+**Not verified for V2-02:** no installed-app check, and no real service was contacted by any test — the engine tests run against a local stand-in service on the loopback interface, so "works against the real Pitcher List / Stripe" is not this phase's evidence.
+
+### V2-03 — what each command actually proves
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Engine (full, regression) | `cd runtime && python -m unittest discover -s tests` | **1110 tests OK** |
+| Engine — Connections + known services | `python -m unittest tests.test_v2_connections` | **50 OK** — everything above plus: the catalogue is data (two functions, no imports, no branching on a service name), every entry is a usable connection row with a valid kind, method and http(s) address, a known service added by name lands on the id the catalogue uses, the declared prefix is exactly what the service receives (`Bearer `, `Bot `, raw), a value that already carries its prefix is not doubled, a connection with no declared prefix keeps the old "work it out" behaviour, an absurd prefix is refused, and the separator after a prefix survives being saved |
+| Engine — migration inventory | `python -m unittest tests.test_v16_r8_migrations` | **4 OK** — `connections` now owns 23, 24 and 25; 25 is the maximum |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **40 files / 340 tests pass** |
+| Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **15 pass** — everything above plus: "Set up GitHub" fills the form in (name, address, header, and "Kel adds a word in front" with `Bearer `) and saving posts exactly those fields, and the page states what Nick has to fetch and how sure Kel is about the address (including that Raptive's address is not known) |
+
+**Not verified for V2-03:** no real service was contacted — Kel knows the eight services' addresses and shapes, but testing them needs Nick's credentials, so nothing here says a service works. No installed-app check either.
 
 ## Standing rules for this file
 
