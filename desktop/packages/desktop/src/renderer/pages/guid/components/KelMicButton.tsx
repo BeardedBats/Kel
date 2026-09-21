@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Message } from '@arco-design/web-react';
 import { friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
+import { kelRequest } from '@renderer/components/kel/kelApi';
 
 type MicState = 'idle' | 'requesting' | 'recording' | 'working';
 
@@ -16,10 +17,24 @@ type Props = {
   disabled?: boolean;
 };
 
-async function request(route: string, body?: unknown): Promise<Record<string, unknown>> {
-  const api = window.kelAPI;
-  if (!api) throw new Error('Kel is not connected');
-  return (await api.request(route, body)) as Record<string, unknown>;
+/**
+ * Transcription goes through the same Kel transport as every other call: the desktop's preload bridge,
+ * or — away from the desktop, on a phone — the web-host's session-gated `/kel` gateway. This used to
+ * require `window.kelAPI` directly, which a browser never has, so mobile voice failed before a single
+ * request left the page and the failure was swallowed into a silent recording.
+ */
+const request = <T,>(route: string, body?: unknown): Promise<T> => kelRequest<T>(route, body);
+
+/** Plain sentences for the composer, never transport jargon or internal ids. */
+function transcriptionErrorSentence(error: unknown): string {
+  const raw = String((error as Error)?.message ?? error ?? '');
+  if (/key|credential|unauthor|forbidden|401|403/i.test(raw)) {
+    return 'Voice needs the transcription key that is already set up for Kel on the desktop.';
+  }
+  if (/not connected|unreachable|failed to fetch|network/i.test(raw)) {
+    return 'Kel is not reachable right now, so that recording could not be transcribed.';
+  }
+  return 'Kel could not transcribe that recording — nothing was added to the chat.';
 }
 
 const MicIcon = (
@@ -36,6 +51,7 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
   const sessionRef = useRef<string | null>(null);
   const liveRef = useRef(false);
   const chainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const lastErrorRef = useRef<string>('');
   const timerRef = useRef<number | null>(null);
 
   const stopTimer = useCallback(() => {
@@ -61,7 +77,7 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
         const session = sessionRef.current;
         if (!session) return;
         chainRef.current = chainRef.current
-          .then(() => request('/api/transcription', { action: 'stream_chunk', session, pcm }))
+          .then(() => request<Record<string, unknown>>('/api/transcription', { action: 'stream_chunk', session, pcm }))
           .then((result) => {
             const text = typeof result.text === 'string' ? result.text : '';
             if (text && onLiveTranscript) onLiveTranscript(text);
@@ -72,12 +88,17 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
       });
       captureRef.current = capture;
       try {
-        const started = await request('/api/transcription', { action: 'stream_start' });
+        const started = await request<Record<string, unknown>>('/api/transcription', { action: 'stream_start' });
         sessionRef.current = typeof started.session_id === 'string' ? started.session_id : null;
         liveRef.current = Boolean(started.live && started.session_id);
-      } catch {
+      } catch (error) {
+        // Never pretend live transcription is running. The recording itself is still Kel's to
+        // transcribe when it stops, so say exactly that — and remember the reason for the moment the
+        // user stops, when the fallback either produces the transcript or the plain sentence below.
         liveRef.current = false;
         sessionRef.current = null;
+        lastErrorRef.current = transcriptionErrorSentence(error);
+        Message.info('Live typing is not available right now — Kel will transcribe the recording when you stop.');
       }
       setSeconds(0);
       setState('recording');
@@ -114,11 +135,11 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
         await chainRef.current.catch(() => {});
         let text = '';
         if (session && liveRef.current) {
-          const finished = await request('/api/transcription', { action: 'stream_finish', session });
+          const finished = await request<Record<string, unknown>>('/api/transcription', { action: 'stream_finish', session });
           text = typeof finished.text === 'string' ? finished.text : '';
         }
         if (!text.trim()) {
-          const quick = await request('/api/transcription', {
+          const quick = await request<Record<string, unknown>>('/api/transcription', {
             action: 'quick_transcribe',
             filename: 'dictation.wav',
             audio: recording.base64,
@@ -127,11 +148,21 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
           text = typeof quick.text === 'string' ? quick.text : '';
         }
         onLiveTranscript?.(null);
-        if (text.trim()) onTranscript(text.trim());
-        else Message.warning('Kel could not make out any speech in that recording.');
+        if (text.trim()) {
+          onTranscript(text.trim());
+          lastErrorRef.current = '';
+        } else if (lastErrorRef.current) {
+          // The live channel already learned why nothing could come through: repeat that reason instead
+          // of guessing about the recording.
+          Message.error(lastErrorRef.current);
+          lastErrorRef.current = '';
+        } else {
+          Message.warning('Kel could not make out any speech in that recording.');
+        }
       } catch (error) {
         onLiveTranscript?.(null);
-        Message.error(String((error as Error)?.message || error));
+        // Plain sentences only: never the engine's or the transport's own words.
+        Message.error(transcriptionErrorSentence(error));
       } finally {
         liveRef.current = false;
         setSeconds(0);
