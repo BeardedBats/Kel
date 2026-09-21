@@ -1,0 +1,22 @@
+[
+  {
+    "journey": "H",
+    "step": "assistant-pills",
+    "count": 0
+  },
+  {
+    "journey": "H",
+    "step": "assistant-more",
+    "count": 0
+  },
+  {
+    "journey": "H",
+    "step": "assistant-more-failed",
+    "error": "TimeoutError: locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"assistant-more-btn\"]').first()\u001b[22m\n"
+  },
+  {
+    "journey": "H",
+    "step": "assistant-pills-after-more",
+    "count": 0
+  }
+]
