@@ -781,10 +781,7 @@ const AionrsSendBox: React.FC<{
         }
         placeholder={
           current_model?.use_model
-            ? t('acp.sendbox.placeholder', {
-                backend: agent_name || 'AionCLI',
-                defaultValue: `Send message to {{backend}}...`,
-              })
+            ? "What's up?"
             : t('conversation.chat.noModelSelected')
         }
         onStop={effectiveHandleStop}
@@ -792,8 +789,8 @@ const AionrsSendBox: React.FC<{
         onFilesAdded={handleFilesAdded}
         hasPendingAttachments={uploadFile.length > 0 || atPath.length > 0}
         supportedExts={allSupportedExts}
-        defaultMultiLine={!isMobile}
-        lockMultiLine={!isMobile}
+        defaultMultiLine={false}
+        lockMultiLine={false}
         tools={
           <FileAttachButton
             openFileSelector={openFileSelector}
