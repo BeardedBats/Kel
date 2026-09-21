@@ -310,7 +310,10 @@ export async function initializeKel(port: number): Promise<void> {
   const spec = {
     name: 'Kel',
     command,
-    args: fs.existsSync(packed) ? ['--acp', '--data', root] : [path.join(source, 'kel', 'acp_host.py'), '--data', root],
+    // Source mode must spawn in module form: `python <path>/kel/acp_host.py` cannot resolve the
+    // host's relative imports during ACP `initialize`, while `-m kel.acp_host` does (measured).
+    // The packed engine keeps its own `--acp` entry.
+    args: fs.existsSync(packed) ? ['--acp', '--data', root] : ['-m', 'kel.acp_host', '--data', root],
     env: fs.existsSync(packed) ? [] : [{ name: 'PYTHONPATH', value: source }],
     advanced: { description: 'One assistant. Durable work and checked results.' },
   };
