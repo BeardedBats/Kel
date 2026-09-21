@@ -169,3 +169,27 @@ what it forbids so a later run cannot quietly undo it.
     OAuth account sign-in step. Google Drive therefore stays uncheckable beyond a pasted token, and the
     ledger, the state and this entry all say PARTIAL rather than claiming the framework is done.
     *Forbids:* marking V2-04 built, moving `next_item` past it, or implying Kel can act on a service.
+
+## V2-04 (Connection actions — what Kel can do with a service)
+
+32. **An action is a row, not a code path.** `runtime/kel/connection_actions.py` declares each one —
+    name, description, method, path, params, what it returns, whether it changes anything, and how sure
+    Kel is about the address. `connections.run()` reads a row and makes the request through the same choke
+    point as everything else. *Forbids:* per-service functions, a second request path, and an action for a
+    service whose address Kel does not know (Raptive) or that needs the sign-in step that does not exist
+    yet (Google Drive).
+
+33. **The answer comes back; it is never written down.** What is recorded is the fact of the call:
+    connection, action, domain (never the path or a query string), status, attempts and duration — plus a
+    bounded, credential-scrubbed copy of the answer handed straight to the caller. *Forbids:* a service's
+    payload in Kel's database, logs, exports or backups; and a credential reaching an answer or a record.
+
+34. **Nothing Kel can do changes anything yet.** Every action in the catalogue is a read, and `run()`
+    refuses a `mutating` action unless Nick confirmed it — a gate proven with a mutating row rather than
+    assumed, and a rule that stays even after write actions exist. *Forbids:* shipping a write action in
+    the same increment that introduces the machinery, and running a mutating action on a guess.
+
+35. **The assistant cannot use a connection yet, and that is the next increment.** The engine and the
+    surface can do these things when Nick asks; nothing in chat can, because no tool exposes an action.
+    V2-14 owns the network rules, and they belong inside `perform_request` — not in a second client.
+    *Forbids:* claiming V2-04 is finished while that link is missing from the phase record.

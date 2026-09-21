@@ -90,6 +90,20 @@ row names the command and the result, so a resume run can re-run it instead of t
 
 **Not verified for V2-04, and not claimed:** what Kel can *do* with a service (actions/tools) is not built, the OAuth sign-in step is not built, and no real service has been contacted. The framework's retries are proven against a local stand-in service only.
 
+### V2-04 continued — actions
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Engine (full, regression) | `cd runtime && python -m unittest discover -s tests` | **1126 tests OK** |
+| Engine — actions | `python -m unittest tests.test_v2_connections` | **66 OK** — everything above plus: the action catalogue is rows belonging to known services (unique ids, GET only, a leading-slash path, nothing mutating); a read action hands back the parsed answer, records only the fact of the call (domain, status, duration — no path, no query, no answer, checked over the whole history) and returns text when the answer is not JSON; a credential echoed back in an answer is redacted to `[redacted]` and never appears in the result; an action belonging to another service is refused by name; a mutating action is refused until Nick confirms (and the request then goes out as POST); a connection with no address is refused before anything is sent; a busy service is retried by an action too; and the history is per connection |
+| Engine — migration inventory | `python -m unittest tests.test_v16_r8_migrations` | **4 OK** — 26 (`v20-connection-actions`) is the maximum |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **40 files / 344 tests pass** |
+| Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **18 pass** — everything above plus: "Do it" runs the action with the credential the shell holds and shows the answer once, with the value absent from the whole rendered page; and something that would change Nick's account asks first (nothing is sent until he confirms, then it is sent confirmed) |
+| Desktop — sender guards | `bunx vitest run tests/unit/ipc-sender-channels.test.ts` | **21 pass** — `kel:connection-run` refuses spoofed senders before reading anything, and hands the engine only the fields the shell holds plus the confirmation |
+
+**Not verified for V2-04 actions:** no real service was contacted — every action ran against the local stand-in service; the assistant cannot use an action yet (no chat tool); and nothing Kel can do changes anything, because every catalogue action is a read.
+
 ## Standing rules for this file
 
 - A phase is never "verified" by a plan, a screenshot alone, or a code change: name the command and the

@@ -117,14 +117,18 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   `connections.perform_request` (retry a 429/5xx or a dropped connection; never a 401/403/404; bounded by
   the timeout and a budget; the record says how many tries). The renderer's own kind vocabulary was
   deleted — labels, hints and credential field names come with the list.
-- **Not built, and not claimed:** (a) what Kel can *do* with a connection — actions/tools; today the only
-  thing a Connection can do is be checked; (b) the OAuth account sign-in step, which is what Google Drive
-  needs (its catalogue note says so). Until (a) exists, nothing in Kel uses a service.
-- **Where the next increment starts:** actions/tools. Keep the shape the directive demands: an action is
-  declared as data (name, the request it makes, what it returns) with permissions and an audit trail, and
-  it goes through `perform_request` so V2-14's network rules stay in one place. Do not add per-service code
-  paths; Pitcher List's and GitHub's actions must be rows, not branches.
-- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-04 block); engine 1117 OK; desktop 341 pass; `tsc` clean.
+- **Not built, and not claimed:** (a) a chat tool that lets the assistant use a connection — the engine and
+  the surface can run an action when Nick asks, but nothing in conversation can; (b) the OAuth account
+  sign-in step, which is what Google Drive needs (its catalogue note says so).
+- **Actions (built since the note above):** `runtime/kel/connection_actions.py` holds eight actions as rows
+  over six services; `connections.run()` reads a row, makes the request through the single choke point,
+  leaves the payload nowhere and records the fact of the call (domain, status, duration) in
+  `connection_events` (migration 26); `events()` reads that history back. Every catalogue action is a read,
+  and a `mutating` action is refused unless Nick confirmed. The page has a "What Kel can do" card.
+- **Where the next increment starts:** expose an action as a tool the assistant can call — with the same
+  permission rule (mutating actions ask first) and the same one-request rule — and keep V2-14's network
+  rules inside `perform_request`.
+- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-04 blocks); engine 1126 OK; desktop 344 pass; `tsc` clean.
 - **Still not verified:** no installed-app check; no real service contacted; the retries are proven against
   a local stand-in only.
 
