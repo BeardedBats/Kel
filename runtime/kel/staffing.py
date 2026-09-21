@@ -6,6 +6,11 @@ with recorded reasons, never a spawn; this module ships the constitution-level d
 The scoring and staffing-record functions land with the D1/D2 increments; nothing here
 staffs anything.
 """
+import contextlib
+import json
+import math
+import time
+
 from .core import PolicyError
 
 TIERS = (
@@ -210,3 +215,170 @@ def decide(features, *, flags=(), tier_max=None, budget_class=None):
             'reasons': reasons, 'budget_class': chosen_budget,
             'workers': workers if workers is not None else None,
             'supported': tier in ('D0', 'D1')}
+
+
+# ---- V2-12: learn from outcome history (directive section 17) --------------------------------
+#
+# "Learn from outcome history: when solo succeeds; when specialists help; when independent review
+# helps; when parallelism helps; when high assurance is unnecessary." The rule table above decides
+# from the mission's own shape; this reads what actually HAPPENED on comparable missions (same
+# decided tier, settled) and offers exactly one bounded step of advice, always explainable, never
+# through a hard rule's floor and never past the caps. Thin history is not evidence: below the
+# minimum nothing changes and the reasons say so.
+
+ADVICE_MIN_MISSIONS = 3
+BLOCKER_SEVERITIES = ('blocker', 'critical')
+
+
+def _flag_floor(flags):
+    """The lowest tier the hard flags allow (R3-R6 minimums); D0 when none fire."""
+    floor = 'D0'
+    for flag in flags or ():
+        entry = FLAG_RULES.get(flag)
+        if entry and entry[1] is not None:
+            if _tier_index(entry[1]) > _tier_index(floor):
+                floor = entry[1]
+    return floor
+
+
+def _mission_tiers(store):
+    """mission_id -> decided tier, joined through staffing.decided / contract.issued (as doc 11 §3)."""
+    with contextlib.closing(store.connect()) as db:
+        try:
+            task_to_mission = {row['task_id']: row['mission_id']
+                               for row in db.execute('SELECT mission_id, task_id FROM task_contracts')}
+            events = [dict(row) for row in db.execute('SELECT * FROM team_events ORDER BY seq')]
+            findings = [dict(row) for row in db.execute('SELECT mission_id, severity, status FROM findings')]
+        except Exception as exc:
+            if 'no such table' in str(exc).lower():
+                return {}, {}
+            raise
+    issued, assigned = {}, {}
+    for row in events:
+        if row['kind'] == 'staffing.decided' and row['assignment_id'] and row['detail']:
+            try:
+                detail = json.loads(row['detail'])
+            except (TypeError, ValueError):
+                detail = {}
+            if detail.get('tier'):
+                assigned[row['assignment_id']] = detail['tier']
+    settled = set()
+    for row in events:
+        if row['kind'] == 'contract.issued' and row['assignment_id'] and row['detail']:
+            try:
+                detail = json.loads(row['detail'])
+            except (TypeError, ValueError):
+                detail = {}
+            if detail.get('task_id'):
+                issued[row['assignment_id']] = detail['task_id']
+        elif row['kind'] == 'task.closed' and row['detail']:
+            try:
+                detail = json.loads(row['detail'])
+            except (TypeError, ValueError):
+                detail = {}
+            if detail.get('task_id'):
+                settled.add(detail['task_id'])
+    tiers = {}
+    for assignment_id, task_id in issued.items():
+        mission_id = task_to_mission.get(task_id)
+        tier = assigned.get(assignment_id)
+        if mission_id and tier:
+            tiers.setdefault(mission_id, tier)
+    blockers = {}
+    for row in findings:
+        mission_id = row.get('mission_id')
+        if not mission_id:
+            continue
+        slot = blockers.setdefault(mission_id, False)
+        if row.get('status') != 'dismissed' and row.get('severity') in BLOCKER_SEVERITIES:
+            slot = blockers[mission_id] = True
+    settled_missions = {task_to_mission[task_id] for task_id in settled
+                        if task_id in task_to_mission}
+    return ({mission: tier for mission, tier in tiers.items() if mission in settled_missions},
+            {mission: blockers.get(mission, False) for mission in tiers})
+
+
+def outcome_advice(store, features, *, flags=(), tier_max=None, budget_class=None,
+                   minimum=ADVICE_MIN_MISSIONS, now=None):
+    """One bounded, explained step of advice from settled missions at the same tier.
+
+    Returns `base_tier`, `advised_tier` (identical when nothing changed), `direction`
+    ('raise' / 'lower' / 'none'), `applied` (true only when the step is legal against the
+    module's own floors and caps) and the plain reasons behind it — including the numbers
+    the history showed. It never decides anything by itself: callers record it and apply it
+    only where their path can honour it.
+    """
+    base = decide(features, flags=tuple(flags), tier_max=tier_max, budget_class=budget_class)
+    tiers, blockers = _mission_tiers(store)
+    base_tier = base['tier']
+    history = {'tier': base_tier, 'settled': 0, 'with_blockers': 0, 'clean': 0}
+    same_tier = [mission for mission, tier in tiers.items() if tier == base_tier]
+    history['settled'] = len(same_tier)
+    history['with_blockers'] = sum(1 for mission in same_tier if blockers.get(mission))
+    history['clean'] = len(same_tier) - history['with_blockers']
+    advice = {'base_tier': base_tier, 'advised_tier': base_tier, 'direction': 'none',
+              'applied': False, 'history': history, 'minimum': minimum,
+              'reasons': ['no history advice: %d settled missions at %s (minimum %d)'
+                          % (len(same_tier), base_tier, minimum)]}
+    if len(same_tier) < minimum:
+        return advice
+    index = _tier_index(base_tier)
+    flag_floor = _flag_floor(flags)
+    r1_fired = bool(features.get('sequentiality', 0) >= 2
+                    and features.get('decomposability', 0) <= 1)
+    low_decomp = not (features.get('decomposability', 0) >= 2
+                      and features.get('sequentiality', 0) <= 1)
+    direction = None
+    if history['with_blockers'] >= max(minimum, math.ceil(len(same_tier) / 2)):
+        direction = 'raise'
+        candidate = TIER_ORDER[min(index + 1, len(TIER_ORDER) - 1)]
+    elif history['clean'] == len(same_tier):
+        direction = 'lower'
+        candidate = TIER_ORDER[max(index - 1, 0)]
+    if direction == 'raise':
+        reasons = ['%d of %d settled missions at %s recorded blocker-class findings; one step up'
+                   % (history['with_blockers'], len(same_tier), base_tier)]
+        ceiling = tier_max or 'D4'
+        if _tier_index(ceiling) < _tier_index(candidate):
+            reasons.append('held at %s: tier_max is %s' % (base_tier, ceiling))
+            candidate = base_tier
+        elif r1_fired and _tier_index(candidate) > _tier_index('D2'):
+            reasons.append('held at %s: R1 caps sequential, low-decomposition work at D2' % base_tier)
+            candidate = base_tier
+        elif low_decomp and _tier_index(candidate) > _tier_index('D2'):
+            reasons.append('held at %s: D3+ needs decomposability >= 2 and sequentiality <= 1' % base_tier)
+            candidate = base_tier
+        advice.update(advised_tier=candidate, direction='raise' if candidate != base_tier else 'none',
+                      applied=candidate != base_tier, reasons=reasons)
+        return advice
+    if direction == 'lower':
+        reasons = ['%d settled missions at %s passed without blocker-class findings; one step down'
+                   % (len(same_tier), base_tier)]
+        if _tier_index(candidate) < _tier_index(flag_floor):
+            reasons.append('held at %s: a hard rule requires at least %s' % (base_tier, flag_floor))
+            candidate = base_tier
+        advice.update(advised_tier=candidate, direction='lower' if candidate != base_tier else 'none',
+                      applied=candidate != base_tier, reasons=reasons)
+        return advice
+    advice['reasons'] = ['mixed history at %s (%d with blockers, %d clean); no advice'
+                         % (base_tier, history['with_blockers'], history['clean'])]
+    return advice
+
+
+def resolve(store, features, *, flags=(), tier_max=None, budget_class=None, advice=True,
+            minimum=ADVICE_MIN_MISSIONS):
+    """`decide` plus the outcome advice the callers record beside it.
+
+    When history advice applies, the returned tier already reflects it — but only inside the
+    rule table's own floors and caps. With no comparable history this is exactly `decide`.
+    """
+    decision = decide(features, flags=tuple(flags), tier_max=tier_max, budget_class=budget_class)
+    if advice and store is not None:
+        item = outcome_advice(store, features, flags=tuple(flags), tier_max=tier_max,
+                              budget_class=budget_class, minimum=minimum)
+        decision['advice'] = item
+        if item['applied'] and item['advised_tier'] != decision['tier']:
+            decision['tier'] = item['advised_tier']
+            decision['reasons'] = list(decision['reasons']) + list(item['reasons'])
+            decision['workers'] = {'D0': 0, 'D1': 1}.get(decision['tier'])
+    return decision

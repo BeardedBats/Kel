@@ -204,6 +204,16 @@ def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO
         raise PolicyError('Staffing features are required (doc 05 feature vector)')
     decision = decide(features, flags=tuple(mission_flags), tier_max=tier_max,
                       budget_class=budget_class)
+    # V2-12: what settled missions at this tier actually cost — one bounded step of advice.
+    # The D1 path can honour a step DOWN (history says one specialist was more than enough);
+    # a step UP is recorded as advice, because this path carries exactly one specialist.
+    from .staffing import outcome_advice
+    advice = outcome_advice(store, features, flags=tuple(mission_flags), tier_max=tier_max,
+                            budget_class=budget_class)
+    decision['advice'] = advice
+    if advice['applied'] and advice['advised_tier'] == 'D0':
+        decision['tier'] = 'D0'
+        decision['reasons'] = list(decision['reasons']) + ['history advice applied: D0']
     if decision['tier'] == 'D0':
         return {'delegated': False, 'reason': 'no specialist warranted (D0)',
                 'staffing': decision}
@@ -249,7 +259,8 @@ def delegate(store, job_id, milestone_id, request=None, *, role=None, mode='AUTO
                           'score': decision['score'],
                           'rules': [item['id'] for item in decision['rules_fired']],
                           'reasons': decision['reasons'],
-                          'budget_class': decision['budget_class']})
+                          'budget_class': decision['budget_class'],
+                          'advice': decision.get('advice')})
     team.record_activity(assigned['assignment_id'], 'contract.issued',
                          {'contract_id': contract_id, 'task_id': task_id,
                           'milestone_id': milestone_id, 'digest': digest(contract)})

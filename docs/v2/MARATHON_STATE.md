@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: adaptive staffing (Priority 6) # V2-11 long-running work is BUILT (2026-09-21; D-40; evidence/v2-11/README.md): runtime recovery fences only runs nothing durable can carry (broker-backed runs are adopted, never fenced), and the Work brief reports shipped/open/why/next with needs_you true only when no automatic step can move the job. Next safe backend item: Priority 6 of the run directive — Adaptive staffing 2.0 (outcome-informed staffing, capped spawning), implemented on the existing team/roles/assignment/assurance paths; then isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
+next_item: isolation (Priority 7) # V2-12 adaptive staffing is BUILT (2026-09-21; D-41; evidence/v2-12/README.md): one bounded, explained step of outcome-history advice on the existing staffing paths (never through R1/R3-R6 floors, tier_max or the caps), plus the two acceptance checks (learning removal satisfied by the guarded forget path; unbrokered abrupt-stop recovery proved live by the running engine's own tick). Next safe backend item: Priority 7 of the run directive — Local execution isolation (filesystem path restrictions, sensitive-folder protection, read-only execution, temporary writable workspace; child-process restrictions, full process-tree kill, restricted environment, disposable sessions; explicitly NOT a VM platform or a Rust sandbox rewrite — see MARATHON_DIRECTIVE §18), then network permissions (8), Kibble Build Update (9), migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -39,7 +39,7 @@ phases:
   V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
   V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
   V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
-  V2-12: queued      # Adaptive staffing 2.0
+  V2-12: done        # Adaptive staffing 2.0 — one bounded step of outcome-history advice on the existing staffing paths (advice recorded on every staffing.decided)
   V2-13: queued      # Local execution isolation
   V2-14: queued      # Network permissions
   V2-15: queued      # Real dogfood integration pass

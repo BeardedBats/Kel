@@ -378,3 +378,18 @@ side is one brief built only from persisted facts (`Continuation.resume_brief`, 
 `_work()['work']`): what shipped, what is open, why it stopped, the exact next step, and `needs_you`
 true only when no automatic step can move the job. *Forbids:* auto-retrying a fenced attempt; fencing
 a broker-backed, in-process or unexpired run; briefing from anything but persisted state.
+
+## D-41 — staffing learns from what happened, one bounded step (V2-12)
+
+The rule table decided from the mission's shape; V2-12 adds the directive's other half — outcome
+history. `staffing.outcome_advice` reads settled missions at the *same decided tier* (the
+`staffing.decided` / `contract.issued` / `task.closed` streams that already exist; blockers from
+`findings`) and offers **exactly one** step: three or more settled missions with blocker-class findings
+→ one tier up; three or more all clean → one tier down; mixed or thin history → nothing, with the
+counts said out loud. The step can never cross a hard rule's floor (R3–R6), never pass `tier_max`, R1
+or the D3+ decomposability gate, and callers apply it only where their path can honour it: the D1 path
+applies a step down to D0 and merely records a step up; the D2 path applies a step down and then
+refuses with its own explicit routing sentence. Every `staffing.decided` event now carries the advice
+beside the decision, so a recorded staffing decision always shows both what the shape said and what
+the history said. *Forbids:* more than one tier of movement; acting on thin or mixed history; a raise
+smuggled past the path's own support; any advice that outranks R1–R10, the caps or `tier_max`.

@@ -283,6 +283,24 @@ class SurfaceTests(unittest.TestCase):
                                 {'action': 'learning', 'conversation': 'main',
                                  'id': 'mem_' + '0' * 8})
 
+    def test_removing_a_learning_through_the_surface_purges_it(self):
+        # Directive section 15: a learning can be inspected, corrected, REMOVED, or temporarily
+        # disabled. Removal is the existing memory forget path (purge + tombstone + audit event),
+        # reached by the same guarded action every other record uses — pinned here for learnings.
+        from kel.learning import learnings_view, record_learning
+        result = record_learning(self.service.store, project_id='default', key='removal.probe',
+                                 type='pattern', insight='Temporary insight.', confidence=5,
+                                 source='observed', evidence=['probe'], flags=SHADOW_ON)
+        self.assertTrue(result['recorded'])
+        self.assertEqual(len(learnings_view(self.service.store, project_id='default')), 1)
+        self.service.action('/api/memory', {'action': 'forget', 'exchange': 'x',
+                                            'id': result['memory_id'],
+                                            'conversation': 'main'})
+        self.assertEqual(learnings_view(self.service.store, project_id='default'), [],
+                         'a removed learning leaves every view')
+        self.assertEqual(learnings_view(self.service.store, project_id='default',
+                                        include_disabled=True), [])
+
 
 if __name__ == '__main__':
     unittest.main()
