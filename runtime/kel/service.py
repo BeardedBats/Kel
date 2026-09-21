@@ -111,6 +111,7 @@ class Service:
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
         from .continuation import Continuation
+        from .connections import Connections
         from .memory import Memory
         from .projectmap import ProjectMap
         from .recipes import RecipeLibrary
@@ -126,6 +127,7 @@ class Service:
         ensure_assignment_schema(self.store)
         ensure_delegation_schema(self.store)
         ensure_parallel_schema(self.store)
+        Connections(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -697,6 +699,7 @@ class Service:
         if path=='/api/vetting':return self._vetting_action(data)
         if path=='/api/transcription':return self._transcription_action(data)
         if path=='/api/dogfood':return self._dogfood_action(data)
+        if path=='/api/connections':return self._connections_action(data)
         if path=='/api/model':return self._model_action(data)
         if path=='/api/capabilities':return self._capabilities_action(data)
         if path=='/api/data-path':return {'root':str(self.store.root),'database':str(self.store.db_path)}
@@ -1013,6 +1016,42 @@ class Service:
             return service.discard_tmp(self._required(data,'screenshot','Pick a capture first.'))
         raise PolicyError('Unknown fix action')
 
+    # -- Connections (V2.0) ------------------------------------------------------------------------
+    def _connections_action(self,data):
+        # Same contract as the other families: one plain sentence for an unexpected failure, and
+        # PolicyError keeps the sentence it was raised with.
+        try:
+            return self._connections_dispatch(data)
+        except PolicyError:
+            raise
+        except Exception:
+            raise PolicyError('Kel could not finish that connection action. Try again.') from None
+
+    def _connections_list(self):
+        from .connections import Connections
+        return Connections(self.store).list()
+
+    def _connections_dispatch(self,data):
+        from .connections import Connections
+        service=Connections(self.store)
+        action=data.get('action')
+        if action in ('list',None):return service.list()
+        if action=='get':return service.get(self._required(data,'id','Pick a connection first.'))
+        if action=='save':
+            return service.save(data.get('name',''),connection_id=data.get('id'),
+                                kind=data.get('kind'),base_url=data.get('base_url'),
+                                auth_method=data.get('auth_method'),auth_header=data.get('auth_header'),
+                                docs_url=data.get('docs_url'),test_endpoint=data.get('test_endpoint'),
+                                notes=data.get('notes'))
+        if action=='remove':
+            return service.remove(self._required(data,'id','Pick a connection first.'))
+        if action=='set_credential':
+            return service.set_credential(self._required(data,'id','Pick a connection first.'),
+                                          data.get('fields') or [],data.get('credential_ref',''))
+        if action=='delete_credential':
+            return service.delete_credential(self._required(data,'id','Pick a connection first.'))
+        raise PolicyError('Unknown connection action')
+
     def _vetting_all_answered(self,questions):
         return all((q.get('answer') or {}).get('status') in ('ANSWERED','PARTIALLY_ANSWERED','SKIPPED','DEFERRED')
                    for q in questions)
@@ -1041,6 +1080,7 @@ def serve(root,port=0):
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/dogfood':self.reply(200,service._dogfood_list(query.get('status',[None])[0]));return
+                    if parsed.path=='/api/connections':self.reply(200,service._connections_list());return
                     if parsed.path=='/api/artifact':
                         if 'lineage' in query:
                             out=service.store.lineage_artifact(query['lineage'][0])
