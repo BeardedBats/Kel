@@ -501,7 +501,8 @@ const SystemModalContent: React.FC = () => {
 
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
-          <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
+          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
+            <h2 className='kel-h2'>General</h2>
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {preferenceItems.map((item) => (
                 <PreferenceRow key={item.key} label={item.label} description={item.description}>
@@ -557,7 +558,7 @@ const SystemModalContent: React.FC = () => {
           {/* Working-folder overrides live behind an explicit disclosure: the physical path includes
               a donor-era subfolder name that should not be primary vocabulary for normal users, but
               the exact paths stay available (and editable) here for the people who need them. */}
-          <div className='px-[12px] md:px-[32px] py-16px bg-2 rd-8px'>
+          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-8px'>
             <div className='flex items-center justify-between w-full gap-12px'>
               <div className='flex flex-col'>
                 <span className='text-14px text-1'>Advanced — folders</span>

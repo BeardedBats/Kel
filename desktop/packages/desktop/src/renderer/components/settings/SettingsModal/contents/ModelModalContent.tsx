@@ -30,7 +30,6 @@ import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import { useSettingsViewMode } from '../settingsViewContext';
-import SettingsPageHeader from '@/renderer/pages/settings/components/SettingsPageHeader';
 import { consumePendingDeepLink } from '@/renderer/hooks/system/useDeepLink';
 import '../model-provider.css';
 
@@ -365,7 +364,7 @@ const ModelModalContent: React.FC = () => {
     <div
       className={
         isPageMode
-          ? 'flex flex-col gap-16px'
+          ? 'kel-card kel-shell-custom-models flex flex-col gap-16px'
           : 'flex flex-col bg-2 rd-16px px-16px md:px-24px lg:px-28px py-16px md:py-18px'
       }
     >
@@ -375,14 +374,7 @@ const ModelModalContent: React.FC = () => {
       {addModelModalContext}
 
       {isPageMode ? (
-        <SettingsPageHeader
-          data-testid='model-header'
-          title={t('settings.model')}
-          description={t('settings.modelDescription', {
-            defaultValue: 'Add your own API-backed models. The built-in models are listed above with their current availability.',
-          })}
-          actions={headerActions}
-        />
+        <div className='kel-row'><h2 className='kel-h2'>Custom models</h2><div className='kel-shell-model-actions'>{headerActions}</div></div>
       ) : (
         /* Modal mode keeps its compact self-contained header. */
         <div className='flex-shrink-0 border-b border-[var(--color-border-2)] pb-12px mb-14px flex flex-col gap-10px'>

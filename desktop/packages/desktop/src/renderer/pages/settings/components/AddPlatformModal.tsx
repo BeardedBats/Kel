@@ -403,11 +403,13 @@ const AddPlatformModal = ModalHOC<{
 
   return (
     <AionModal
+      className='kel-shell-model-modal'
+      contentStyle={{ background: 'transparent' }}
       variant='standard'
       visible={modalProps.visible}
       onCancel={modalCtrl.close}
       header={{ title: t('settings.addModel'), showClose: true }}
-      style={{ maxWidth: '92vw' }}
+      style={{ width: 520, maxWidth: 'calc(100vw - 32px)' }}
       onOk={handleSubmit}
       confirmLoading={modalProps.confirmLoading}
       okText={t('common.confirm')}

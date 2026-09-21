@@ -68,7 +68,7 @@ const AppearanceModalContent: React.FC = () => {
     <div className='flex flex-col h-full w-full'>
       {/* 内容区域 / Content Area */}
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
-        <div className='space-y-16px'>
+        <div className='space-y-16px kel-shell-appearance'>
           {/* 主题画廊 / Theme Gallery */}
           <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
             <div className='text-14px text-t-primary leading-22px mb-12px'>{t('settings.theme')}</div>

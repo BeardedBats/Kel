@@ -107,7 +107,7 @@ const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onC
   void key;
 
   return (
-    <div className='flex items-center gap-12px py-8px'>
+    <div className='kel-shell-theme-color-row flex items-center gap-12px py-8px'>
       <input
         type='color'
         aria-label={`${label} color picker`}
@@ -189,7 +189,7 @@ export const ThemeColorsSection: React.FC = () => {
   return (
     <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px' data-testid='theme-colors-section'>
       <div className='flex items-center justify-between mb-4px'>
-        <div className='text-14px text-t-primary leading-22px'>Theme colors</div>
+        <h2 className='kel-h2'>Theme colors</h2>
         {changed > 0 ? (
           <Button
             size='small'

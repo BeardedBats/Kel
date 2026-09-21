@@ -1,3 +1,4 @@
+import ShellSettingsIcon from '@renderer/components/kel/ShellSettingsIcon';
 import classNames from 'classnames';
 import React from 'react';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -75,7 +76,7 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
     about: { id: 'about', label: t('settings.about'), icon: <Info theme='outline' size='16' />, path: 'about' },
   };
 
-  return BUILTIN_TAB_IDS.map((id) => builtinMap[id]);
+  return BUILTIN_TAB_IDS.map((id) => ({ ...builtinMap[id], icon: <ShellSettingsIcon name={id} /> }));
 }
 
 const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, className, contentClassName }) => {
@@ -198,7 +199,14 @@ const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, cla
               })}
             </div>
           )}
-          <div className={contentClass}>{children}</div>
+          <div className={contentClass}>
+            <header className='kel-shell-settings-header'>
+              <p>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/about') ? 'Other' : /\/(model|tools|webui)$/.test(pathname) ? 'Settings' : pathname.endsWith('/archived') ? 'Archived' : 'Application'}</p>
+              <h1>{pathname.endsWith('/model') ? 'Default Kel model' : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
+            </header>
+            {pathname.endsWith('/model') && <p className='kel-shell-model-description'>Kel uses this model for normal conversations. A chat can still pick its own model from the chat header, and Automatic keeps Kel’s routing across every available provider.</p>}
+            {children}
+          </div>
         </div>
       </SettingsTabNavigateProvider>
     </SettingsViewModeProvider>
