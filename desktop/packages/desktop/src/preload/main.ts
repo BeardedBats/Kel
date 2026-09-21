@@ -135,6 +135,10 @@ contextBridge.exposeInMainWorld('kelAPI', {
     set: (provider: string, field: string, value: string) =>
       ipcRenderer.invoke('kel:credential-set', provider, field, value),
     remove: (provider: string) => ipcRenderer.invoke('kel:credential-delete', provider),
+    // V2-02: use a connection's stored credential for one check. The value is decrypted in the main
+    // process and never comes back here — only the result of the check does.
+    testConnection: (connectionId: string) =>
+      ipcRenderer.invoke('kel:connection-test', connectionId),
   },
   // Fix Capture (V2.0 preflight): the window screenshot + metrics come from the main process, and
   // the path handed back is relative to the engine data root. The view can read one saved screenshot

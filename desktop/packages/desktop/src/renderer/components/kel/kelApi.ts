@@ -116,6 +116,8 @@ declare global {
           value: string
         ) => Promise<{ provider: string; fields: string[] }>;
         remove: (provider: string) => Promise<{ provider: string; removed: number }>;
+        /** V2-02: check a connection using its stored credential. Returns the record, not a value. */
+        testConnection?: (connectionId: string) => Promise<KelConnection>;
       };
       /**
        * Fix Capture: one screenshot of Kel's own window, written into the data root. Absent on the
@@ -297,6 +299,14 @@ export interface KelConnection {
   credential_fields: string[];
   has_credentials: boolean;
   state: 'ready' | 'needs_credentials';
+  /** V2-02: whether Kel has an address it could check. */
+  can_test: boolean;
+  /** V2-02: what the last check found — the status is what the service answered, if it answered. */
+  last_test_at: number | null;
+  last_test_state: 'ok' | 'refused' | 'not_found' | 'busy' | 'error' | 'unreachable' | 'timeout' | null;
+  last_test_status: number | null;
+  last_test_ms: number | null;
+  last_test_note: string;
   created: number;
   updated: number;
 }
@@ -321,6 +331,30 @@ export const connectionCredentialField = (kind: KelConnection['kind']): string =
 
 /** The custody namespace the shell stores a connection's credential under. */
 export const connectionCustodyKey = (id: string): string => `connection:${id}`;
+
+/** What a check of a connection found, in the words a person uses. */
+export const CONNECTION_CHECK_LABELS: Record<string, string> = {
+  ok: 'Working',
+  refused: 'Credential refused',
+  not_found: 'Nothing at that address',
+  busy: 'Busy right now',
+  error: 'Not working',
+  unreachable: 'Not reachable',
+  timeout: 'No answer',
+};
+
+/**
+ * The honest one-line result of the last check. `when` is passed in so this stays a pure function of
+ * the record and the clock the surface is showing.
+ */
+export const connectionCheckSentence = (connection: KelConnection, when: string): string | null => {
+  if (!connection.last_test_at) return null;
+  const label = connection.last_test_state
+    ? CONNECTION_CHECK_LABELS[connection.last_test_state] ?? 'Checked'
+    : 'Checked';
+  const detail = connection.last_test_note || 'Kel did not record a result.';
+  return `${label} — checked ${when}. ${detail}`;
+};
 
 export const kelConnections = {
   list: () => call<KelConnectionList>('/api/connections', { action: 'list' }),

@@ -33,6 +33,12 @@ type Row = {
   credential_fields: string[];
   has_credentials: boolean;
   state: 'ready' | 'needs_credentials';
+  can_test: boolean;
+  last_test_at: number | null;
+  last_test_state: string | null;
+  last_test_status: number | null;
+  last_test_ms: number | null;
+  last_test_note: string;
   created: number;
   updated: number;
 };
@@ -54,6 +60,12 @@ const row = (id: string, name: string, over: Partial<Row> = {}): Row => ({
   credential_fields: [],
   has_credentials: false,
   state: 'needs_credentials',
+  can_test: false,
+  last_test_at: null,
+  last_test_state: null,
+  last_test_status: null,
+  last_test_ms: null,
+  last_test_note: '',
   created: 1760000000,
   updated: 1760000000,
   ...over,
@@ -146,6 +158,32 @@ const custody = {
     stored = stored.filter((entry) => !entry.startsWith(`${provider}:`));
     if (!syncFails) syncMetadata('delete_credential', provider);
     return { provider, removed: 1 };
+  }),
+  /**
+   * V2-02: the shipped contract is "the shell uses the values it holds for one check and returns the
+   * record". This stands in for the main process: it hands the engine what it holds, nothing more.
+   */
+  testConnection: vi.fn(async (connectionId: string) => {
+    const prefix = `connection:${connectionId}:`;
+    const credentials: Record<string, string> = {};
+    for (const entry of stored.filter((line) => line.startsWith(prefix))) {
+      const [field, value] = entry.slice(prefix.length).split('=');
+      credentials[field] = value;
+    }
+    calls.push({
+      route: '/api/connections',
+      body: { action: 'test', id: connectionId, credentials },
+    });
+    const item = rows.find((entry) => entry.id === connectionId);
+    if (!item) throw new Error('That connection was not found.');
+    if (!item.can_test)
+      throw new Error('Kel needs a test address or an API address before it can check this connection.');
+    item.last_test_at = 1760000900;
+    item.last_test_state = 'ok';
+    item.last_test_status = 200;
+    item.last_test_ms = 42;
+    item.last_test_note = 'The service answered 200.';
+    return item;
   }),
 };
 
@@ -312,6 +350,36 @@ describe('Connections — the central management surface', () => {
     );
     expect(await screen.findByText(/Stripe is removed\./)).toBeTruthy();
     expect(await screen.findByText('No connections yet.')).toBeTruthy();
+  });
+
+  it('checks a connection with the stored credential and reports what came back', async () => {
+    rows = [
+      row('stripe', 'Stripe', {
+        has_credentials: true,
+        state: 'ready',
+        credential_fields: ['api_key'],
+        can_test: true,
+        test_endpoint: 'https://api.stripe.com/v1/account',
+      }),
+    ];
+    stored = ['connection:stripe:api_key=sk_live_4242'];
+    renderPage();
+    fireEvent.click(await screen.findByText('Test connection'));
+    await waitFor(() => expect(custody.testConnection).toHaveBeenCalledWith('stripe'));
+    // The shell used the value it holds for this one check, and the engine got the value — but the
+    // page only ever sees the record, and it says what happened in words.
+    const check = calls.find((call) => call.body.action === 'test');
+    expect(check?.body.credentials).toEqual({ api_key: 'sk_live_4242' });
+    expect(await screen.findByText(/Working — checked/)).toBeTruthy();
+    expect(await screen.findByText(/The service answered 200\./)).toBeTruthy();
+    expect(document.body.innerHTML).not.toContain('sk_live_4242');
+  });
+
+  it('offers no check for a connection with no address to call', async () => {
+    rows = [row('stripe', 'Stripe', { has_credentials: true, state: 'ready' })];
+    renderPage();
+    expect(await screen.findByText('Stripe')).toBeTruthy();
+    expect(screen.queryByText('Test connection')).toBeNull();
   });
 
   it('never talks to the model-provider route', async () => {
