@@ -10,9 +10,10 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-04                # Connection Framework — DONE (framework); the assistant bridge is V2-04a
-next_item: V2-05            # iPhone Kel PWA V1 (see ROADMAP.md)
-status: phase-complete
+phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: installability exists and is pinned; the phone surface is not done
+next_item: V2-05            # continue V2-05: the phone surface and its journeys (see ROADMAP.md)
+status: partial
+# V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
@@ -128,6 +129,24 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   set_credential / delete_credential / test / run / actions / events / catalogue). If the PWA surfaces any
   of it, the mutating-confirmation rule and the one-request rule apply there too, and the credential stays
   in the shell — a remote client never receives a value.
+- **Reconnaissance done (do not rebuild this):** installability already exists from the donor line and is
+  sound — `desktop/public/manifest.webmanifest` (name/short_name/display standalone/theme + background
+  colour, 192 and 512 icons), icons at `desktop/public/pwa/icon-180|192|512.png`, and a careful service
+  worker at `desktop/public/sw.js` that never caches `/api/`, keeps script/style network-fresh with a
+  content-type guard against the SPA fallback, is network-first for navigation, and is version-bumped with
+  the old cache deleted on activate. It is registered by `renderer/services/registerPwa.ts`, which skips
+  Electron and non-secure origins. V2-05's work is the *surface*, not this machinery; `desktop/tests/
+  unit/pwa-install.test.ts` now pins the contract so it cannot quietly rot.
+- **What the phone already reaches:** the web-host serves the same renderer (SPA fallback to index.html)
+  with the engine behind `/kel/` (session-gated, bearer kept server-side). Routes that exist today:
+  `/login`, `/guid`, `/conversation/:id`, `/work` (the Kel work center, which already renders attention
+  rows), `/scheduled`, `/activity`, `/transcription`, `/providers`, `/connections`, `/team`, `/settings/*`.
+- **So the real V2-05 increment is:** a mobile-first pass over those journeys (viewport and safe-area
+  insets, touch targets, no desktop-only affordances), making the home screen's running/recent/failed work
+  and Needs Your Attention usable one-handed with answer/approve/deny/grant/review/resume/stop, and voice
+  through Muse from the phone on the existing transcription path. Verification is synthetic (a desktop
+  browser at a phone viewport over the gateway) plus the installed-app tether check; real iOS Safari
+  behaviour can only be confirmed by Nick — recorded in `KNOWN_LIMITATIONS.md`.
 
 ## V2-04 build notes (historical — the phase is closed)
 

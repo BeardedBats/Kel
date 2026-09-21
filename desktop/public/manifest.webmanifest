@@ -1,7 +1,7 @@
 {
   "name": "Kel",
   "short_name": "Kel",
-  "description": "Kel WebUI for mobile and desktop browsers.",
+  "description": "Kel on your phone: your work, what needs you, and the conversations you are in the middle of.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
