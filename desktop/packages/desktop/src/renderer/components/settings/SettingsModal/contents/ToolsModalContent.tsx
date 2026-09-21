@@ -186,7 +186,7 @@ const ModalMcpManagementSection: React.FC<{
   return (
     <div className='flex flex-col gap-16px min-h-0'>
       <div className='flex gap-8px items-center justify-between'>
-        <div className='text-14px text-t-primary'>{t('settings.mcpSettings')}</div>
+        <h2 className='kel-h2'>{t('settings.mcpSettings')}</h2>
         <div>{renderAddButton()}</div>
       </div>
 
@@ -488,7 +488,7 @@ const ToolsModalContent: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
           {/* MCP 工具配置 */}
-          <div className='px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px flex flex-col min-h-0 border border-border-2'>
+          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px flex flex-col min-h-0 border border-border-2'>
             <div className='flex-1 min-h-0'>
               <AionScrollArea
                 className={classNames('h-full', isPageMode && 'overflow-visible')}
@@ -506,7 +506,7 @@ const ToolsModalContent: React.FC = () => {
             </div>
           </div>
           {/* 图像生成 */}
-          <div className='px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
+          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
             <div className='flex items-center justify-between mb-16px'>
               <span className='text-14px text-t-primary'>{t('settings.imageGeneration')}</span>
               <Switch

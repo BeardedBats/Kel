@@ -15,7 +15,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 
-import SettingsPageHeader from '../components/SettingsPageHeader';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
 import { resolveConversationLeadingMark } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
 
@@ -458,9 +457,8 @@ const ArchivedSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper>
-      <SettingsPageHeader
-        title={t('settings.archived.navLabel')}
-        actions={
+      <div className='kel-shell-archive-actions'>
+        {
           total > 0 ? (
             <div className='flex min-w-0 items-center justify-end gap-10px'>
               {selectionMode ? (
@@ -503,14 +501,14 @@ const ArchivedSettings: React.FC = () => {
             </div>
           ) : null
         }
-      />
+      </div>
 
       {isLoading ? (
         <div className='flex items-center justify-center py-64px'>
           <Spin />
         </div>
       ) : total === 0 ? (
-        <div className='flex items-center justify-center py-64px'>
+        <div className='kel-card'>
           <Empty description={t('settings.archived.empty')} />
         </div>
       ) : (

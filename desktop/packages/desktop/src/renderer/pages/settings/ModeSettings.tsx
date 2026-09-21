@@ -11,9 +11,9 @@ import SettingsPageWrapper from './components/SettingsPageWrapper';
 
 const ModeSettings: React.FC = () => {
   return (
-    <SettingsPageWrapper contentClassName='max-w-1100px'>
-      <div className='flex flex-col gap-20px'>
-        <KelDefaultModelCard />
+    <SettingsPageWrapper contentClassName='max-w-920px'>
+      <div className='kel-shell-model-settings flex flex-col gap-12px'>
+        <KelDefaultModelCard compact />
         <ModelModalContent />
       </div>
     </SettingsPageWrapper>

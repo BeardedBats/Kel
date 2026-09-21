@@ -128,7 +128,7 @@ export const KelDataCard: React.FC = () => {
   }, [restoreSource]);
 
   return (
-    <div className='kel-card'>
+    <div className='kel-card kel-shell-data-card'>
       <div className='text-14px text-t-primary leading-22px font-500'>Data & backup</div>
       <div className='text-14px text-t-secondary leading-20px mt-2px'>
         Where Kel keeps your chats, projects, transcripts and settings on this computer — plus simple backup and

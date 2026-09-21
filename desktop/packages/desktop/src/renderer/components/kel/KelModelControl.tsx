@@ -10,17 +10,14 @@ import { Down } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KelCard } from './KelPrimitives';
+import { kelRequest } from './kelApi';
 
 type Choice = { provider: string | null; model: string | null };
 type ModelOption = { id: string; label: string; available: boolean };
 type ProviderRow = { id: string; label: string; available: boolean; options: ModelOption[] };
 type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
 
-const request = <T,>(body: Record<string, unknown>): Promise<T> => {
-  const api = (window as unknown as { kelAPI?: { request: (route: string, body?: unknown) => Promise<unknown> } }).kelAPI;
-  if (!api) return Promise.reject(new Error('Kel connection is unavailable'));
-  return api.request('/api/model', body) as Promise<T>;
-};
+const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
 const choiceLabel = (state: ModelState | null, choice: Choice | null): string => {
   if (!choice || !choice.provider) return 'Automatic';
@@ -250,18 +247,18 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   );
 };
 
-export const KelDefaultModelCard: React.FC = () => {
+export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { state, setDefault } = useKelModelState();
   // Defensive: a payload without the provider listing must not take the page down with it.
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title='Default Kel model' data-testid='kel-default-model-card'>
-      <p className='text-14px text-t-secondary m-0 mb-10px'>
+    <KelCard title={compact ? 'Available now' : 'Default Kel model'} data-testid='kel-default-model-card'>
+      {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
         routing across every available provider.
-      </p>
+      </p>}
       {!state ? (
         <p className='text-14px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
       ) : (

@@ -558,7 +558,7 @@ const WebuiModalContent: React.FC = () => {
       <div className='flex flex-col h-full w-full'>
         <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
           <div className='space-y-16px'>
-            <h2 className='text-20px font-500 text-t-primary m-0'>{t('settings.channels', 'Channels')}</h2>
+
             <Suspense fallback={<div className='text-13px text-t-secondary'>{t('common.loading')}</div>}>
               <ChannelModalContentLazy />
             </Suspense>
@@ -610,7 +610,7 @@ const WebuiModalContent: React.FC = () => {
         */}
 
         {/* WebUI 服务卡片 / WebUI Service Card */}
-        <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           {/* WebUI 引导提示 / WebUI hint */}
           <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
             <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
@@ -663,7 +663,7 @@ const WebuiModalContent: React.FC = () => {
         </div>
 
         {/* 登录信息卡片 / Login Info Card */}
-        <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           <div className='text-14px font-500 mb-8px text-t-primary'>{t('settings.webui.loginInfo')}</div>
 
           {/* 账号 / Account */}

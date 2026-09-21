@@ -48,7 +48,7 @@
   background: transparent !important;
 }
 .kel-v2-shell .layout-sider { border: 0 !important; box-shadow: none; }
-.kel-v2-shell .layout-sider-header { padding: 16px 12px 14px; gap: 8px; height: 61px; }
+.kel-v2-shell .layout-sider-header { padding: 16px 12px 14px; gap: 8px; height: 63px; }
 .kel-v2-shell .layout-sider-header .size-32px { width: 30px; height: 31px; border-radius: 0; }
 .kel-v2-shell .layout-sider-header .font-semibold { font: 600 22px/28px var(--kel-shell-heading); }
 .kel-v2-shell .layout-sider-content { padding: 0 8px; }
@@ -433,7 +433,7 @@ html[data-theme='dark'] body .arco-modal.kel-shell-model-modal { box-sizing: bor
 .kel-shell-model-modal :is(.arco-input-wrapper,.arco-input,.arco-select-view) { border-radius: 8px !important; }
 html[data-theme='dark'] .kel-shell-model-modal :is(.arco-input-wrapper,.arco-select-view) { background: rgba(47,107,224,.1) !important; border: 1px solid rgba(127,160,255,.28) !important; }
 html[data-theme='dark'] .kel-shell-model-modal .arco-input { background: transparent !important; }
-@media(min-width:1024px) { .arco-modal-wrapper:has(.kel-shell-model-modal) { padding-left: 256px; } }
+@media(min-width:1024px) { .arco-modal-wrapper:has(.kel-shell-model-modal) { box-sizing: border-box; padding-left: 256px; } }
 
 /* Typography authority: DS v2 Foundations / Type v2, confirmed by the user. */
 .kel-v2-shell { font: 400 16px/25px var(--kel-shell-body); }
@@ -446,3 +446,22 @@ html[data-theme='dark'] .kel-shell-model-modal .arco-input { background: transpa
 .kel-v2-shell .kel-shell-ramble [data-testid='record-button'] { font-weight: 600; color: var(--kel-figma-color-danger-text); }
 .kel-v2-shell .kel-shell-ramble [data-testid='transcript-text'] { font: 400 15px/26px var(--kel-shell-body); }
 .kel-v2-shell .kel-shell-composer .sendbox-model-btn { font: 600 14px/20px var(--kel-shell-heading); color: var(--kel-figma-color-text-accent); }
+
+/* The model dialog is portalled outside the shell; carry the same source roles into it. */
+html[data-theme='dark'] body .kel-shell-model-modal .arco-modal-content { background: transparent !important; border: 0 !important; }
+.kel-shell-model-modal .aionui-modal-std-header h2 { font: 600 18px/24px var(--kel-shell-heading); }
+.kel-shell-model-modal :is(.arco-form-label-item, .arco-select-view, .arco-input, .arco-btn) { font: 500 14px/20px var(--kel-shell-heading); }
+.kel-shell-model-modal .arco-form-item-extra { font: 400 12px/16px var(--kel-shell-body); }
+.kel-shell-model-modal .arco-btn { border: 1px solid var(--kel-figma-color-glass-button-edge); border-radius: 8px; background: rgba(15,45,100,.34); color: var(--kel-figma-color-text-button); }
+.kel-shell-model-modal .arco-btn-primary { background: linear-gradient(135deg,#153973,#365693); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.kel-shell-model-modal .arco-btn:disabled { opacity: .4; }
+
+.kel-shell-model-settings { position: relative; }
+.kel-shell-model-description { margin: -8px 0 20px; font: 400 14px/18px var(--kel-shell-body); color: var(--kel-text-2); }
+.kel-shell-model-actions { display: flex; gap: 8px; margin-left: auto; }
+@media(min-width:768px) { .kel-shell-model-actions { position: absolute; right: 0; top: -94px; } }
+.kel-shell-custom-models .py-40px { min-height: 160px; padding-block: 24px; }
+
+/* Record uses the DS danger variant, above the generic Arco button mapping. */
+.kel-v2-shell .kel-shell-ramble .arco-btn[data-testid='record-button'] { background: linear-gradient(var(--kel-figma-color-danger-top),var(--kel-figma-color-danger-bottom)) !important; color: var(--kel-figma-color-danger-text) !important; font: 600 14px/20px var(--kel-shell-heading); }
+@media(min-width:981px) { .kel-v2-shell .kel-shell-ramble > main { padding-top: 44px; } }

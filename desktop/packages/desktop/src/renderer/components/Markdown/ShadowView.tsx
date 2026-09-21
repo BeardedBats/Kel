@@ -29,8 +29,8 @@ export const createInitStyle = (
         .join('\n    ')
     : '';
 
-  const lineHeight = isMobile ? '19.6px' : '24px';
-  const fontSize = isMobile ? 'var(--chat-font-size, 14px)' : 'var(--chat-font-size, 16px)';
+  const lineHeight = 'calc(var(--chat-font-size, 16px) * 1.5625)';
+  const fontSize = 'var(--chat-font-size, 16px)';
   // Desktop paragraph spacing trimmed from 16px to 12px (~0.85em) for a more
   // compact reply; mobile spacing is left untouched (tuned separately).
   const paragraphMargin = isMobile ? '16px' : '12px';
@@ -190,8 +190,9 @@ export const createInitStyle = (
     font-weight: var(--font-mono-weight);
   }
   blockquote {
-    border-left: 3px solid var(--bg-3);
-    padding-left: 12px;
+    border: 1px solid var(--bg-3);
+    border-radius: 8px;
+    padding: 12px;
     color: var(--text-primary);
     margin: 16px 0;
   }

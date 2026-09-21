@@ -1,19 +1,18 @@
+import { KelCard } from '@renderer/components/kel/KelPrimitives';
+import { useNavigate } from 'react-router-dom';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Divider, Typography, Button, Switch, Message } from '@arco-design/web-react';
-import { Github, Right } from '@icon-park/react';
+import { Button, Switch, Message } from '@arco-design/web-react';
+import { Right } from '@icon-park/react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import classNames from 'classnames';
-import { useSettingsViewMode } from '../settingsViewContext';
 import { isElectronDesktop, openExternalUrl } from '@/renderer/utils/platform';
 import FeedbackReportModal from './FeedbackReportModal';
 import { ipcBridge } from '@/common';
-import brandMark from '@renderer/assets/logos/brand/app.png';
 import { getIncludePrerelease, runUpdateCheck } from '@/renderer/components/settings/checkForUpdatesShared';
 import { UPDATE_AVAILABLE_EVENT } from '@/renderer/components/settings/useUpdateNotificationController';
 import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
@@ -37,8 +36,7 @@ type LinkItem =
 
 const AboutModalContent: React.FC = () => {
   const { t } = useTranslation();
-  const viewMode = useSettingsViewMode();
-  const isPageMode = viewMode === 'page';
+  const navigate = useNavigate();
   const isElectron = isElectronDesktop();
 
   const [includePrerelease, setIncludePrerelease] = useState(false);
@@ -124,100 +122,27 @@ const AboutModalContent: React.FC = () => {
   ];
 
   return (
-    <div className='flex flex-col h-full w-full'>
-      {/* Content Area */}
-      <div
-        className={classNames(
-          'flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-24px',
-          isPageMode && 'px-0 overflow-visible'
-        )}
-      >
-        <div className='flex flex-col max-w-500px mx-auto'>
-          {/* App Info Section */}
-          <div className='flex flex-col items-center pb-24px'>
-            <img
-              src={brandMark}
-              alt=''
-              aria-hidden='true'
-              className='w-64px h-64px object-contain mb-12px'
-              data-testid='kel-about-logo'
-            />
-            <Typography.Title heading={3} className='text-24px font-bold text-t-primary mb-8px'>
-              Kel
-            </Typography.Title>
-            <Typography.Text className='text-14px text-t-secondary mb-12px text-center'>
-              {t('settings.appDescription')}
-            </Typography.Text>
-            <div className='flex items-center justify-center gap-8px mb-16px'>
-              <span className='px-10px py-4px rd-6px text-13px bg-fill-2 text-t-primary font-500'>
-                v{__APP_VERSION__}
-              </span>
-              <div
-                className='text-t-primary cursor-pointer hover:text-t-secondary transition-colors p-4px'
-                onClick={() =>
-                  openLink('https://github.com/BeardedBats/Kel').catch((error) =>
-                    console.error('Failed to open link:', error)
-                  )
-                }
-              >
-                <Github theme='outline' size='20' />
-              </div>
-            </div>
-
-            {/* Check Update Section */}
-            {isElectron && (
-              <div className='flex flex-col items-center gap-12px w-full max-w-300px bg-fill-2 p-16px rounded-lg'>
-                <Button
-                  type='primary'
-                  long
-                  loading={checking || updateReadyState.preparing}
-                  disabled={updateReadyState.preparing}
-                  onClick={() => void checkUpdate()}
-                >
-                  {updateReadyState.preparing
-                    ? t('update.preparingInstall')
-                    : updateReadyState.ready
-                      ? t('settings.updateReadyInstall', { version: updateReadyState.version })
-                      : checking
-                        ? t('settings.checkingForUpdates')
-                        : t('settings.checkForUpdates')}
-                </Button>
-                <div className='flex items-center justify-between w-full'>
-                  <Typography.Text className='text-12px text-t-secondary'>
-                    {t('settings.includePrereleaseUpdates')}
-                  </Typography.Text>
-                  <Switch size='small' checked={includePrerelease} onChange={handlePrereleaseChange} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Divider */}
-          <Divider className='my-16px' />
-
-          {/* Links Section */}
-          <div className='flex flex-col gap-4px pt-8px'>
-            {linkItems.map((item, index) => (
-              <div
-                key={index}
-                className='flex items-center justify-between px-16px py-12px rd-8px hover:bg-fill-2 transition-all cursor-pointer group'
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if ('url' in item) {
-                    openLink(item.url).catch((error) => console.error('Failed to open link:', error));
-                  } else {
-                    item.onClick();
-                  }
-                }}
-              >
-                <Typography.Text className='text-14px text-t-primary'>{item.title}</Typography.Text>
-                <div className='text-t-secondary group-hover:text-t-primary transition-colors'>{item.icon}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className='kel-shell-about'>
+      <KelCard title='Kel'>
+        <div className='kel-shell-preference-row'><span>Version</span><span>v{__APP_VERSION__}</span></div>
+        <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? 'Desktop' : 'WebUI'}</span></div>
+        <div className='kel-shell-preference-row'><span>Data folder</span><Button onClick={() => navigate('/settings/system')}>Open System</Button></div>
+        {isElectron && <>
+          <div className='kel-shell-preference-row'><span>{t('settings.includePrereleaseUpdates')}</span><Switch size='small' checked={includePrerelease} onChange={handlePrereleaseChange} /></div>
+          <Button className='kel-shell-about-update' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
+            {updateReadyState.preparing ? t('update.preparingInstall') : updateReadyState.ready ? t('settings.updateReadyInstall', { version: updateReadyState.version }) : checking ? t('settings.checkingForUpdates') : t('settings.checkForUpdates')}
+          </Button>
+        </>}
+      </KelCard>
+      <KelCard title='Licenses'>
+        <div className='kel-shell-preference-row'><span>Kel license</span><a className='kel-btn' href='./licenses/Kel-LICENSE.txt' target='_blank' rel='noreferrer'>View</a></div>
+      </KelCard>
+      <KelCard title='Support'>
+        {linkItems.map((item) => <div className='kel-shell-preference-row' key={item.title}>
+          <span>{item.title}</span><Button onClick={() => { if (item.url) void openLink(item.url); else item.onClick?.(); }}>Open</Button>
+        </div>)}
+        <div className='kel-shell-preference-row'><span>Source code</span><Button onClick={() => void openLink('https://github.com/BeardedBats/Kel')}>GitHub</Button></div>
+      </KelCard>
       <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />
     </div>
   );
