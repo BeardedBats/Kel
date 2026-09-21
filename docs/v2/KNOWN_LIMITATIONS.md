@@ -27,10 +27,24 @@ limits are appended as phases land.
 
 ## V2-specific unknowns and risks (to be resolved by their phases)
 
-- **Connections do not exist yet.** Every V2 connection (Pitcher List, Stripe, Raptive, Google Drive,
-  GitHub, ClickUp, Figma, Discord, Generic REST) starts as unbuilt; none of their credentials exist on
-  this machine except the Muse one, so early connection work will be verified with local test doubles
-  and only later against Nick's real accounts.
+- **Connections exist, but nothing can be done with one yet except check it.** V2-01 … V2-03 built the
+  model, the central surface, Test Connection and the eight services as data; V2-04's actions/tools are
+  not built, so no Kel work can use a service. None of the services' real credentials exist on this
+  machine except the Muse one, and **no real service has been contacted**: every check ran against a
+  local stand-in service on the loopback interface.
+- **The eight services are known by address and shape, not proven.** GitHub, Stripe, Figma, ClickUp,
+  Discord and Google Drive use the endpoints their own documentation publishes; Pitcher List is an
+  assumption (the standard WordPress layout) and Raptive's API address is unknown to Kel until Nick
+  pastes the one Raptive issues. Nothing here has been run against the real service.
+- **Google Drive cannot be checked beyond a pasted token.** There is no OAuth account sign-in step yet, so
+  the token has to be supplied by hand; the catalogue entry says so rather than pretending otherwise.
+- **The Connections surface has not been verified in an installed app.** It is covered in jsdom through
+  the shipped page components and the real bridge contract, and the connection credential namespace has
+  its own tests, but no installed Kel has had its Test connection button clicked, and OS-level encryption
+  of a connection credential (as opposed to the V1.4 provider credentials that store already proves) is
+  untested on a real DPAPI-backed install.
+- **The framework's retries are proven against a local stand-in only** — a scripted 503-then-200 service,
+  never a real rate limit from a real API.
 - **No mobile hardware in this environment.** iPhone PWA verification will be synthetic (the PWA driven
   in a desktop browser over the web-host gateway) plus the installed-app tether check; real-device
   behaviour (iOS Safari, add-to-home-screen, backgrounding) can only be confirmed by Nick.
