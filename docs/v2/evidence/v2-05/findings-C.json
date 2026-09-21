@@ -45,9 +45,7 @@
     "step": "post-signin-failures",
     "wsFailures": [],
     "failedResponses": [],
-    "consoleErrors": [
-      "[useCronJobsMap] Failed to fetch jobs: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js:5:2888)\n    at V (http://127.0.0.1:25809/assets/applyTheme-DM3Y9jdI.js"
-    ]
+    "consoleErrors": []
   },
   {
     "journey": "B",
@@ -129,5 +127,38 @@
       "clientWidth": 393,
       "worst": "button class=\"kel-btn kel-btn--primary\" right=901"
     }
+  },
+  {
+    "journey": "C",
+    "step": "after-action-controls",
+    "controls": [
+      "Skip to main content",
+      "Expand More",
+      "Search messages",
+      "Work",
+      "Projects",
+      "Activity",
+      "Permissions",
+      "Transcription",
+      "Work & context",
+      "Settings",
+      "Skip to main content",
+      "Reload",
+      "Set up",
+      "Set up",
+      "Manage connections",
+      "text",
+      "vision",
+      "tools",
+      "edit",
+      "shell",
+      "auto",
+      "Claude (Claude Code)",
+      "Codex",
+      "Anthropic API",
+      "DeepSeek API",
+      "Check readiness",
+      "Store credential"
+    ]
   }
 ]

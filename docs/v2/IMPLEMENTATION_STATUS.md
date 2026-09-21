@@ -158,3 +158,11 @@ session cookie. Kel's engine authorizes on `Host` + (`Origin` absent or its own)
 and every other mutating Kel route answer 403 from a browser, so a phone could read `/api/state` and
 nothing else. The gateway holds the token and is session-gated: it now reaches the engine exactly the way
 the desktop does.
+
+## V2-05 second pass — the phone can dictate
+
+`renderer/pages/guid/components/KelMicButton.tsx` no longer talks to `window.kelAPI` itself: it uses
+`kelRequest`, the shared transport that falls back to the web-host's session-gated `/kel` gateway in a
+browser. Failures are no longer swallowed — a failed `stream_start` says live typing is unavailable and
+Kel will transcribe on stop, and the final transcription reports plain sentences instead of transport
+errors. Verified against real Muse in a real browser (see `evidence/v2-05/README.md`).

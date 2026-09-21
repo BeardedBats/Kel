@@ -135,3 +135,16 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   every surface; post-sign-in console clean and no failed reads; manifest/SW/`/api/` cache contract green.
 - Reproduce (engine + `bun run package` + `bun run webui` + `KEL_DEV_PASSWORD=… bunx playwright test
   tests/e2e/kel-mobile.e2e.ts`) — exact commands in the evidence README.
+
+## V2-05 second pass — mobile voice
+
+- `desktop/tests/unit/kel-mic-button.dom.test.tsx` (new, jsdom): a phone context without `window.kelAPI`
+  still records through `/kel/api/transcription`; a failed `stream_start` is surfaced in plain words and
+  does not fake a live state; a successful stop hands the words to the composer; a dead transcription
+  path says so without transport jargon (asserted: no `/kel`, `stream_`, `quick_`, session ids).
+- Journey E (real browser, real Muse, real speech): see `evidence/v2-05/README.md` — transcript
+  `Calmuse verification green baseball 64`, no practice text, 28 transcription calls through the gateway.
+- Whole phone suite re-run green: A, B, C, D, E, G, F — 7 passed (1.4m), 0 horizontal overflow, clean
+  post-sign-in console, PWA contract intact. `bunx tsc --noEmit` clean; focused unit files 10 passed.
+- Journey G (new): the phone reaches Providers and Connections — the V2-01…V2-04 connection surfaces are
+  usable from a phone. Model selection and the positive send path are still open.

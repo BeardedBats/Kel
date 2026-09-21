@@ -17,6 +17,10 @@ const USER = process.env.KEL_DEV_USER || 'admin';
 const PASSWORD = process.env.KEL_DEV_PASSWORD || '';
 const EVIDENCE = process.env.KEL_EVIDENCE_DIR
   || path.resolve(__dirname, '..', '..', '..', 'docs', 'v2', 'evidence', 'v2-05');
+// Real speech, injected as the phone's microphone: "Mobile Kel Muse verification, green baseball
+// sixty-four." (generated with the machine's own speech engine, then matched to 24 kHz mono PCM16).
+const FAKE_AUDIO = process.env.KEL_FAKE_AUDIO
+  || 'C:/Users/Nick/KelV2Runs/prepared/devtools/audio/muse-phrase-24k.wav';
 
 fs.mkdirSync(EVIDENCE, { recursive: true });
 
@@ -33,11 +37,42 @@ interface Watch {
   wsFailures: string[];
   failedResponses: string[];
   consoleErrors: string[];
+  transcriptionCalls: string[];
+  transcriptionReplies: string[];
 }
 
 /** Watch the phone the way a person would: dead sockets, failed reads, shouted errors. */
 function watch(page: Page): Watch {
-  const state: Watch = { wsFailures: [], failedResponses: [], consoleErrors: [] };
+  const state: Watch = { wsFailures: [], failedResponses: [], consoleErrors: [], transcriptionCalls: [], transcriptionReplies: [] };
+  page.on('request', (request) => {
+    if (!request.url().includes('/api/transcription')) return;
+    let action = '';
+    try {
+      action = String((request.postDataJSON() as Record<string, unknown>)?.action ?? '');
+    } catch {
+      action = '';
+    }
+    state.transcriptionCalls.push(action || request.method());
+  });
+  // What Kel answered matters as much as what was asked: tiny ids, but the words are the transcript.
+  page.on('response', (response) => {
+    if (!response.url().includes('/api/transcription')) return;
+    void response
+      .text()
+      .then((body) => {
+        const parsed = (() => {
+          try {
+            return JSON.parse(body) as Record<string, unknown>;
+          } catch {
+            return {} as Record<string, unknown>;
+          }
+        })();
+        const action = String(parsed.action ?? '') || (/stream_finish|quick_transcribe/.test(response.url()) ? '' : '');
+        const text = String(parsed.text ?? parsed.error ?? '').replace(/\s+/g, ' ').trim();
+        if (text) state.transcriptionReplies.push(`${response.status()} ${action || 'stream'} :: ${text.slice(0, 160)}`);
+      })
+      .catch(() => undefined);
+  });
   page.on('console', (message) => {
     const line = message.text();
     if (message.type() !== 'error') return;
@@ -157,7 +192,13 @@ test.use({
   hasTouch: true,
   permissions: ['microphone'],
   launchOptions: {
-    args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
+    // The microphone Chromium gives the page is a real speech recording: the phrase the journey expects
+    // Muse to hand back. 24 kHz mono PCM16 — the same shape Kel's own capture produces.
+    args: [
+      '--use-fake-device-for-media-stream',
+      '--use-fake-ui-for-media-stream',
+      `--use-file-for-fake-audio-capture=${FAKE_AUDIO}`,
+    ],
   },
   userAgent:
     'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
@@ -289,6 +330,13 @@ test.describe('Kel on a phone (V2-05)', () => {
       const after = await text(page, 1200);
       note({ journey: 'C', step: 'after-action', path: new URL(page.url()).pathname, text: after, changed: after !== before });
       note({ journey: 'C', step: 'after-action-layout', overflow: await overflow(page) });
+      const controls = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('button, [role="button"], a[href]'))
+          .map((element) => (element.getAttribute('aria-label') || element.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40))
+          .filter(Boolean)
+          .slice(0, 40)
+      );
+      note({ journey: 'C', step: 'after-action-controls', controls });
     }
     save('findings-C.json');
   });
@@ -333,6 +381,8 @@ test.describe('Kel on a phone (V2-05)', () => {
   });
 
   test('E — voice goes through the phone microphone', async ({ page }) => {
+    // A real recording plus a real Muse round trip is longer than the default 60s budget.
+    test.setTimeout(180_000);
     const seen = watch(page);
     await signIn(page);
     await leaveFirstRun(page, 'E');
@@ -344,30 +394,121 @@ test.describe('Kel on a phone (V2-05)', () => {
       await mic
         .click({ timeout: 10_000 })
         .catch((error) => note({ journey: 'E', step: 'mic-click-failed', error: String(error).slice(0, 160) }));
-      await page.waitForTimeout(3000);
+      // The microphone is playing the spoken phrase once (its speech ends at 4.7s): record just that, the
+      // way a person dictates one sentence. Recording past the file would capture the loop's restart and
+      // start a second utterance, which is a different (and separately recorded) behaviour.
+      await page.waitForTimeout(5000);
       await page.screenshot({ path: path.join(EVIDENCE, 'E1-recording.png') });
       note({ journey: 'E', step: 'recording', text: await text(page, 700) });
+
       const stop = page.locator('[data-testid="kel-mic-stop"]').first();
       note({ journey: 'E', step: 'stop-control', count: await stop.count() });
       await stop
         .click({ timeout: 10_000 })
         .catch((error) => note({ journey: 'E', step: 'stop-click-failed', error: String(error).slice(0, 160) }));
-      // Give the real transcription path time to answer: a transcript arrives, or Kel says why not.
-      await page.waitForTimeout(12_000);
-      await page.screenshot({ path: path.join(EVIDENCE, 'E2-after-stop.png') });
-      const composer = await page.evaluate(() => {
-        const element = document.querySelector('textarea, [contenteditable="true"]') as HTMLTextAreaElement | HTMLElement | null;
-        return element ? ((element as HTMLTextAreaElement).value || element.innerText || '').slice(0, 300) : '';
-      });
+
+      // Wait for the whole real round trip: phone → gateway → engine → Muse → words in the composer. The
+      // live stream fills the composer while the person is still speaking, so the journey waits for the
+      // finished text (the spoken tail) rather than grabbing the first partial line.
+      const composerText = async (): Promise<string> =>
+        page.evaluate(() => {
+          const element = document.querySelector('textarea, [contenteditable="true"]') as HTMLTextAreaElement | HTMLElement | null;
+          return element ? ((element as HTMLTextAreaElement).value || element.innerText || '').trim() : '';
+        });
+      let transcript = '';
+      let firstText = '';
+      for (let waited = 0; waited < 30; waited += 1) {
+        await page.waitForTimeout(2000);
+        transcript = await composerText();
+        if (transcript && !firstText) firstText = transcript;
+        if (/baseball/i.test(transcript)) break;
+      }
+      await page.screenshot({ path: path.join(EVIDENCE, 'E2-transcript.png') });
       note({
         journey: 'E',
-        step: 'after-stop',
-        text: await text(page, 900),
-        composer,
+        step: 'transcript',
+        firstText,
+        transcript,
+        transcriptionCalls: seen.transcriptionCalls.length,
+        transcriptionReplies: seen.transcriptionReplies.slice(-6),
         consoleErrors: [...new Set(seen.consoleErrors)].slice(0, 6),
       });
+
+      expect(seen.transcriptionCalls.length, 'the phone asked Kel to transcribe').toBeGreaterThan(0);
+      expect(transcript, 'Muse returned the words that were spoken').toMatch(/baseball/i);
+      expect(transcript, 'Muse returned the words that were spoken').toMatch(/64|sixty/i);
+      // FixtureProvider signs its work. Practice text must never reach a person's composer.
+      expect(transcript, 'no practice text ever reaches the composer').not.toMatch(/practice transcript/i);
     }
     save('findings-E.json');
+  });
+
+  test('G — connecting a model from the phone, then sending', async ({ page }) => {
+    test.setTimeout(180_000);
+    await signIn(page);
+    await leaveFirstRun(page, 'G');
+    await page.waitForTimeout(1500);
+
+    const openProviders = page.getByRole('button', { name: /^Open Providers$/ }).first();
+    note({ journey: 'G', step: 'open-providers', count: await openProviders.count() });
+    if (await openProviders.count()) {
+      await openProviders.click({ timeout: 8000 }).catch(() => undefined);
+      await page.waitForTimeout(2500);
+    }
+    await page.screenshot({ path: path.join(EVIDENCE, 'G1-providers.png') });
+    note({ journey: 'G', step: 'providers', text: await text(page, 1500) });
+
+    // Kel's own providers surface, explored the way a thumb would: every control that looks like "set this
+    // one up", then what the page says afterwards.
+    for (const label of ['Set up', 'Manage connections', 'Use', 'Connect']) {
+      const control = page.getByRole('button', { name: new RegExp(`^${label}`) }).filter({ visible: true }).first();
+      if (!(await control.count())) continue;
+      const name = (await control.textContent().catch(() => '')) || label;
+      note({ journey: 'G', step: `control-${label}`, count: await control.count(), name: name.slice(0, 40) });
+      await control.click({ timeout: 8000 }).catch((error) => note({ journey: 'G', step: `control-${label}-failed`, error: String(error).slice(0, 140) }));
+      await page.waitForTimeout(2500);
+      await page.screenshot({ path: path.join(EVIDENCE, `G2-after-${label.replace(/\s+/g, '-')}.png`) });
+      const after = await text(page, 900);
+      note({ journey: 'G', step: `after-${label}`, text: after });
+    }
+    // Selecting a model, the way the phone offers it: tapping the provider itself.
+    for (const label of ['Codex', 'Claude (Claude Code)']) {
+      const control = page.getByRole('button', { name: new RegExp(`^${label}$`) }).filter({ visible: true }).first();
+      if (!(await control.count())) continue;
+      note({ journey: 'G', step: `select-${label}`, count: await control.count() });
+      await control.click({ timeout: 8000 }).catch((error) => note({ journey: 'G', step: `select-${label}-failed`, error: String(error).slice(0, 140) }));
+      await page.waitForTimeout(2500);
+      await page.screenshot({ path: path.join(EVIDENCE, `G3-selected-${label.replace(/[^A-Za-z]+/g, '-')}.png`) });
+      note({ journey: 'G', step: `after-select-${label}`, text: await text(page, 600) });
+    }
+
+    // Back to the composer: can the phone send now? The providers surface has to be left first, so this
+    // only reports what it can see — a composer it cannot reach is itself the answer.
+    const composer = page.locator('textarea, [contenteditable="true"]').first();
+    const composerReachable = await composer.isVisible().catch(() => false);
+    note({ journey: 'G', step: 'composer-after-providers', reachable: composerReachable });
+    if (composerReachable) {
+      await composer.click({ timeout: 5000 }).catch(() => undefined);
+      await page.keyboard.insertText('Phone send check: reply with one short sentence, change no files.');
+      await page.waitForTimeout(600);
+      const send = page.locator('button.send-button-custom').first();
+      const sendable = !(await send.isDisabled().catch(() => true));
+      note({ journey: 'G', step: 'send-possible', sendable, composer: (await composer.inputValue().catch(() => '')).slice(0, 80) });
+      if (sendable) {
+        await send.click({ timeout: 8000 }).catch((error) => note({ journey: 'G', step: 'send-failed', error: String(error).slice(0, 140) }));
+        await page.waitForTimeout(25_000);
+        await page.screenshot({ path: path.join(EVIDENCE, 'G4-after-send.png') });
+        const afterSend = await text(page, 1200);
+        note({
+          journey: 'G',
+          step: 'after-send',
+          text: afterSend,
+          composerEmpty: (await composer.inputValue().catch(() => 'x')) === '',
+          replyVisible: /phone send check/i.test(afterSend),
+        });
+      }
+    }
+    save('findings-G.json');
   });
 
   test('F — the PWA contract holds on the phone', async ({ page }) => {

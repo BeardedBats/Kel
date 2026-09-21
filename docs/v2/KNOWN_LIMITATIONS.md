@@ -85,3 +85,15 @@ for that route is the thing to connect — the engine and the gateway were both 
 Required by V2-05 itself: when the microphone path cannot reach transcription, the phone must say so
 truthfully instead of silently recording. Next run: find the browser transport for `/api/transcription`,
 fix or wire it, replace the silent catch with a plain sentence, then verify against Muse.
+
+### V2-05 voice — fixed (desktop bridge requirement removed)
+
+The browser voice path now uses the shared Kel transport, so a phone reaches Muse through the gateway.
+Verified end to end in a real browser: `stream_start` → 27 `stream_chunk` → `stream_finish`, Muse's
+transcript in the composer, no practice text. The engine's 24 kHz mono PCM16 expectation is now recorded
+in the evidence README (a fixture at any other rate is refused by Muse itself).
+
+Still open after this pass, in `RESUME.md` order: send with a connected model (the phone can reach
+Providers and Connections but no model was selected), conversation history from the phone's drawer,
+job-driven attention actions, conversational project routing, and multi-utterance dictation (the
+first utterance's partial is lost when Muse never marks it final).
