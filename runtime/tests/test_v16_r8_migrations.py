@@ -19,7 +19,7 @@ MODULES = ('memory', 'projectmap', 'continuation', 'recipes', 'solution', 'team'
            'autonomy', 'diagnostics', 'authorize', 'vetting', 'transcription', 'model_prefs',
            'capabilities', 'workforce', 'delegation', 'parallel', 'chat_approvals', 'assignment',
            'dogfood', 'connections')
-EXPECTED_MAX = 26
+EXPECTED_MAX = 27
 
 
 def run_all(store):
@@ -54,7 +54,7 @@ class MigrationSetTests(unittest.TestCase):
         self.assertEqual(len(versions), len(set(versions)), 'duplicate migration markers: %r' % versions)
         self.assertEqual(max(versions), EXPECTED_MAX)
         names = {row['version']: row['name'] for row in rows}
-        self.assertEqual(names[EXPECTED_MAX], 'v20-connection-actions')
+        self.assertEqual(names[EXPECTED_MAX], 'v20-connection-sources')
         self.assertEqual(names[25], 'v20-connection-prefix')
         self.assertEqual(names[24], 'v20-connection-tests')
         self.assertEqual(names[23], 'v20-connections')

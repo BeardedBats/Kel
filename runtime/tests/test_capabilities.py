@@ -95,11 +95,11 @@ class AvailabilityTests(CapabilityBase):
             self.assertTrue(decision['reason'])
 
     def test_removed_capabilities_are_not_offered_or_settable(self):
-        # CAP-01 / V1.6: Google Drive and Connected apps have no production effect path in this
-        # release, so they are not offered as switches that could not be kept; a stale caller is
-        # refused plainly and their chat aliases are ordinary text again.
+        # CAP-01 / V1.6, amended by V2-04a: 'drive' and 'apps' were never production ids and stay
+        # refused; Connected apps came back as the real 'connections' capability once the assistant
+        # bridge could genuinely honour it (kel.connection_tools).
         ids = [row['id'] for row in snapshot(self.store, 'chat-a')]
-        self.assertEqual(ids, ['web', 'files', 'terminal', 'github'])
+        self.assertEqual(ids, ['web', 'files', 'terminal', 'github', 'connections'])
         from kel.core import PolicyError
         for removed in ('drive', 'apps'):
             with self.assertRaises(PolicyError):

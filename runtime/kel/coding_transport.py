@@ -126,6 +126,11 @@ def serve(store,run_id):
         with contextlib.closing(store.connect()) as db:
             run=db.execute('SELECT * FROM runs WHERE id=?',(run_id,)).fetchone()
         native_host=store.get(run['job_id'])['contract'].get('runtime')=='native-host'
+        # V2-04a: the runtime's shell commands may use the Connections bridge (kel.conn). Give the whole
+        # child tree this run's identity; KEL_DATA_DIR names the engine root the helper reads.
+        os.environ['KEL_DATA_DIR']=str(store.root)
+        os.environ['KEL_JOB_ID']=str(run['job_id'])
+        os.environ['KEL_RUN_ID']=str(run_id)
         if native_host:
             if os.name=='nt':
                 from .windows_job import contain_current_process

@@ -74,7 +74,7 @@ describe('connection credential custody (V2-01)', () => {
 
   it('records a connection credential as the connection store, never as a model provider', async () => {
     await handlerAt('kel:credential-set')(legitEvent(), 'connection:stripe', 'api_key', 'sk_live_x');
-    expect(deps.sync).toHaveBeenCalledTimes(1);
+    expect(deps.sync).toHaveBeenCalledTimes(2);
     const [route, body] = deps.sync.mock.calls[0] as unknown as [string, Record<string, unknown>];
     expect(route).toBe('/api/connections');
     expect(body).toEqual({
@@ -83,8 +83,14 @@ describe('connection credential custody (V2-01)', () => {
       fields: ['api_key'],
       credential_ref: 'kel:connection:stripe',
     });
-    // The value is nowhere in what the engine receives.
+    // The metadata sync carries no value (the V2-01 rule, unchanged)…
     expect(JSON.stringify(body)).not.toContain('sk_live_x');
+    // …while V2-04a's custody push does — in transit only, into the engine's memory, so the
+    // assistant runtime's calls can use a value the runtime itself never receives.
+    expect(deps.sync.mock.calls[1]).toEqual([
+      '/api/connections',
+      { action: 'supply', id: 'stripe', credentials: { api_key: 'the-stored-value' } },
+    ]);
   });
 
   it('leaves a model provider credential on the provider store', async () => {
@@ -105,6 +111,11 @@ describe('connection credential custody (V2-01)', () => {
     expect(deps.sync.mock.calls[0]).toEqual([
       '/api/connections',
       { action: 'delete_credential', id: 'stripe' },
+    ]);
+    // V2-04a: the engine's in-memory custody is cleared at the same moment.
+    expect(deps.sync.mock.calls[1]).toEqual([
+      '/api/connections',
+      { action: 'supply', id: 'stripe', clear: true },
     ]);
     deps.sync.mockClear();
     await handlerAt('kel:credential-delete')(legitEvent(), 'deepseek');

@@ -121,6 +121,9 @@ def plain_summary(action, limit=160):
     if 'permission' in method.lower():
         return 'use extra permissions for this step'
     kind = action.get('kind') or (action.get('action') or {}).get('type') or 'permission'
+    if kind == 'connection':
+        return 'use "%s" on %s' % (str(action.get('action_name') or 'that action')[:80],
+                                   str(action.get('connection_name') or 'a connected service')[:80])
     if kind == 'command':
         return 'run a command'
     if kind == 'permissions':

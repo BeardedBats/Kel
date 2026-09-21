@@ -35,6 +35,7 @@ MIGRATIONS = (
     (24, 'v20-connection-tests', 'Connections: what the last check found'),
     (25, 'v20-connection-prefix', 'Connections: how a service wants its credential presented'),
     (26, 'v20-connection-actions', 'Connections: what Kel has asked a service to do'),
+    (27, 'v20-connection-sources', 'Connections: who asked — a click or the assistant runtime'),
 )
 MIGRATION_VERSION = MIGRATIONS[-1][0]
 MIGRATION_NAME = MIGRATIONS[-1][1]
@@ -94,6 +95,9 @@ TEST_COLUMNS = ('last_test_at REAL', 'last_test_state TEXT', 'last_test_status I
 # Migration 25 (V2-03): the word a service wants in front of the credential. NULL means Kel works it out
 # (the old behaviour); '' means the value goes exactly as it is (ClickUp, Figma, Raptive).
 PREFIX_COLUMNS = ('auth_prefix TEXT',)
+# Migration 27 (V2-04a): who asked for a call — 'shell' (a click in the app) or 'runtime' (the
+# assistant, through the bridge). Additive and nullable; an older database keeps working.
+SOURCE_COLUMNS = ('source TEXT',)
 # Migration 26 (V2-04): what Kel asked a service to do, and what came back — the fact of the call, never
 # its payload. V2-14's "show contacted domains, access history" reads this.
 ACTION_DDL = """
@@ -115,12 +119,12 @@ def _create_connections(db):
     _exec(db, DDL)
 
 
-def _add_columns(db, columns):
+def _add_columns(db, columns, table='connections'):
     """Additive and safe to re-run: a database that already has a column keeps it as it is."""
-    existing = {row[1] for row in db.execute('PRAGMA table_info(connections)').fetchall()}
+    existing = {row[1] for row in db.execute('PRAGMA table_info(%s)' % table).fetchall()}
     for column in columns:
         if column.split()[0] not in existing:
-            db.execute('ALTER TABLE connections ADD COLUMN ' + column)
+            db.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
 
 
 def _add_test_columns(db):
@@ -135,10 +139,14 @@ def _add_actions_table(db):
     _exec(db, ACTION_DDL)
 
 
+def _add_source_column(db):
+    _add_columns(db, SOURCE_COLUMNS, 'connection_events')
+
+
 # Every step must be safe to run again on a database that already has it: a resumed upgrade may
 # re-apply the newest step when its marker was lost.
 STEP_BY_VERSION = {23: _create_connections, 24: _add_test_columns, 25: _add_prefix_column,
-                   26: _add_actions_table}
+                   26: _add_actions_table, 27: _add_source_column}
 
 
 def _table(db, name):
@@ -231,6 +239,38 @@ def scrub(text, credentials):
         if isinstance(value, str) and len(value) >= 4:
             cleaned = cleaned.replace(value, REDACTED)
     return cleaned
+
+
+# -- in-memory custody (V2-04a) -----------------------------------------------------------------
+# The assistant runtime can ask for a Connection action, but it must never hold the value. The shell
+# hands this process the values it needs (`supply` on /api/connections); they live in memory only —
+# never a column, never a file, never a log — and vanish with the process. A call still uses a value
+# once, in memory, exactly like the click-driven path.
+_CUSTODY = {}
+CUSTODY_MAX_FIELDS = 12
+CUSTODY_MAX_VALUE = 4096
+
+
+def supply_credentials(connection_id, credentials):
+    """Replace the in-memory custody for one connection. Returns the field names now held."""
+    clean = {}
+    for name, value in list((credentials or {}).items())[:CUSTODY_MAX_FIELDS]:
+        name = str(name)[:120]
+        if isinstance(value, str) and value:
+            clean[name] = value[:CUSTODY_MAX_VALUE]
+    _CUSTODY[str(connection_id or '')] = clean
+    return sorted(clean)
+
+
+def clear_credentials(connection_id):
+    """Drop custody for one connection (credential removed, or the connection forgotten)."""
+    _CUSTODY.pop(str(connection_id or ''), None)
+    return True
+
+
+def custody_for(connection_id):
+    """A copy of what is held for this connection right now; empty when the shell has not pushed."""
+    return dict(_CUSTODY.get(str(connection_id or ''), {}))
 
 
 def _attempt(url, headers, timeout, method='GET', read_body=False):
@@ -512,6 +552,7 @@ class Connections:
             if not row:
                 raise PolicyError('That connection was not found.')
             db.execute('DELETE FROM connections WHERE id=?', (row['id'],))
+        _CUSTODY.pop(str(row['id']), None)
         return {'id': row['id'], 'removed': True}
 
     # -- credential metadata (never values) -------------------------------------------------------
@@ -586,7 +627,8 @@ class Connections:
         return self.get(connection['id'])
 
     # -- doing something with the service (V2-04) ---------------------------------------------------
-    def run(self, connection_id, action_id, credentials=None, params=None, confirmed=False):
+    def run(self, connection_id, action_id, credentials=None, params=None, confirmed=False,
+            source='shell'):
         """Do one thing with a service, and hand back what it said.
 
         The answer goes to the caller and is never written down. What is recorded is that the action ran,
@@ -630,18 +672,18 @@ class Connections:
             state = 'error'
             note = 'The action did not finish.'
         note = scrub(note, credentials)
-        self._record(connection['id'], row['id'], target, status, state, tried, elapsed)
+        self._record(connection['id'], row['id'], target, status, state, tried, elapsed, source)
         return {'connection': connection['id'], 'action': row['id'], 'name': row['name'],
                 'state': state, 'status': status, 'attempts': tried, 'ms': elapsed,
                 'note': note, 'result': answer, 'at': time.time()}
 
-    def _record(self, connection_id, action_id, url, status, state, attempts, ms):
+    def _record(self, connection_id, action_id, url, status, state, attempts, ms, source=None):
         """Record the fact of a call. The domain, never the path or a query string, and never an answer."""
         with self.store.transaction() as db:
             db.execute('INSERT INTO connection_events(at, connection_id, action, domain, status, state,'
-                       ' attempts, ms) VALUES(?,?,?,?,?,?,?,?)',
+                       ' attempts, ms, source) VALUES(?,?,?,?,?,?,?,?,?)',
                        (time.time(), connection_id, action_id, urlparse(url).netloc, status, state,
-                        attempts, ms))
+                        attempts, ms, str(source or 'shell')))
 
     def events(self, connection_id=None, limit=20):
         """What Kel has asked for, most recent first — the access history, with no payloads in it."""
@@ -655,4 +697,5 @@ class Connections:
                                   (int(limit),)).fetchall()
         return [{'at': row['at'], 'connection': row['connection_id'], 'action': row['action'],
                  'domain': row['domain'] or '', 'status': row['status'], 'state': row['state'],
-                 'attempts': row['attempts'], 'ms': row['ms']} for row in rows]
+                 'attempts': row['attempts'], 'ms': row['ms'],
+                 'source': (row['source'] or 'shell')} for row in rows]
