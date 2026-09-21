@@ -108,3 +108,15 @@ entries — so clicking it times out and the panel never opens. Journey B record
 history, the conversation selector or the attention-first work list in this build; the phone's own
 entry point for that panel (if one exists) was not identified in this increment. This is a real V2-05
 gap, not a spec artifact: the trigger exists, resolves, and cannot be tapped.
+
+### V2-05 — why the phone's composer cannot send: no assistant is selected (found, not guessed)
+
+`useGuidSend.ts` gates the send button on `loading || !selectedAssistantId` — an *assistant* (the shell's
+agent) must be chosen, and in a fresh web profile nothing is. The assistants exist and are reachable:
+`GET /api/assistants` through the gateway answers with real entries (`bare:632f31d2` "Aion CLI", an
+`aionrs` agent, plus the CLI-backed ones), and the Providers page already reports Claude Code and Codex
+CLI as "Ready to use". What has not been done yet is choosing one **from the phone**: the assistant
+selection area is where a desktop picks it, and this increment did not establish the phone's affordance
+for it. Next run: select an assistant on the phone (or verify the shell persists a desktop pick into the
+profile the phone uses), then prove type → send → model reply → continued context, with no model turn
+spent until the send actually goes through.
