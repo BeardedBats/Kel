@@ -1,3 +1,4 @@
+import AgentModeSelector from '@renderer/components/agent/AgentModeSelector';
 // Modified for Kel: remove upstream promotion and remote-service entry points.
 /**
  * @license
@@ -19,7 +20,6 @@ import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/componen
 import AssistantSelectionArea from './components/AssistantSelectionArea';
 import GuidActionRow from './components/GuidActionRow';
 import GuidInputCard from './components/GuidInputCard';
-import KelProviderNotice from './components/KelProviderNotice';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import KelResumptionBrief from './components/KelResumptionBrief';
 import GuidModelSelector from './components/GuidModelSelector';
@@ -686,44 +686,6 @@ const GuidPage: React.FC = () => {
 
           <KelResumptionBrief />
 
-          <KelProviderNotice />
-
-          <AssistantSelectionArea
-            selectedAssistantId={agentSelection.selectedAssistantId}
-            assistants={agentSelection.assistants}
-            localeKey={localeKey}
-            onSelectAssistant={handleSelectAssistant}
-          />
-
-          {selectedAssistantPrompts.length > 0 ? (
-            <div className='mt-18px w-full animate-fade-in ps-20px'>
-              <div className={`${styles.assistantPromptHint} mb-10px text-start`}>
-                {t('guid.promptExamplesHint', { defaultValue: 'Try these example prompts:' })}
-              </div>
-              <div className='flex flex-col gap-9px'>
-                {selectedAssistantPrompts.map((prompt, index) => (
-                  <Button
-                    key={`${index}-${prompt}`}
-                    type='text'
-                    className='group !h-auto !w-full !border-none !bg-transparent !px-0 !py-6px !text-start !text-12.5px !whitespace-normal !break-words transition-colors hover:!bg-transparent hover:!text-t-primary'
-                    style={{ color: 'var(--kel-text-2, #5c6470)' }}
-                    onClick={() => {
-                      guidInput.setInput(prompt);
-                      guidInput.handleTextareaFocus();
-                    }}
-                  >
-                    <span>{prompt}</span>
-                    <ArrowRightUp
-                      theme='outline'
-                      size='13'
-                      className='ms-6px inline-flex flex-shrink-0 align-[-1px] text-t-primary opacity-0 transition-opacity group-hover:opacity-100'
-                    />
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           <GuidInputCard
             focusRequestKey={navState?.focusPrefill && navState.prefillPrompt ? location.key : undefined}
             input={guidInput.input}
@@ -743,6 +705,7 @@ const GuidPage: React.FC = () => {
             onRemoveFile={guidInput.handleRemoveFile}
             actionRow={actionRowNode}
             slashCommandMenu={slashCommandMenuNode}
+            modeSelector={<AgentModeSelector compact backend={agentSelection.selectedAssistantBackend} initialMode={agentSelection.selectedMode} dynamicModes={agentSelection.currentAgentModeOptions} onModeSelect={setGuidSelectedMode} />}
             workspaceDir={guidInput.dir}
             onSelectWorkspace={(dir) => guidInput.setDir(dir)}
             onClearWorkspace={() => guidInput.setDir('')}
