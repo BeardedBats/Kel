@@ -1112,8 +1112,12 @@ class Service:
 
 def serve(root,port=0):
     service=Service(root);token=secrets.token_urlsafe(32);assets=Path(__file__).parent/'web'
-    # V2-04a: everything spawned under this engine (runtimes, helpers) finds the session file here.
+    # V2-04a: everything spawned under this engine (runtimes, helpers) finds the session file here,
+    # and `python -m kel...` keeps working in descendant shells (the runtime's kel.conn helper).
     os.environ['KEL_DATA_DIR']=str(root)
+    _runtime_dir=str(Path(__file__).resolve().parent.parent)
+    if _runtime_dir not in (os.environ.get('PYTHONPATH') or '').split(os.pathsep):
+        os.environ['PYTHONPATH']=_runtime_dir+os.pathsep+(os.environ.get('PYTHONPATH') or '')
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
         def reply(self,status,value,kind='application/json'):
