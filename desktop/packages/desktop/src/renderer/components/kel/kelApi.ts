@@ -118,6 +118,13 @@ declare global {
         remove: (provider: string) => Promise<{ provider: string; removed: number }>;
         /** V2-02: check a connection using its stored credential. Returns the record, not a value. */
         testConnection?: (connectionId: string) => Promise<KelConnection>;
+        /** V2-04: do one thing with a connection. Returns the service's answer, never a value. */
+        runConnection?: (
+          connectionId: string,
+          actionId: string,
+          params?: Record<string, unknown>,
+          confirmed?: boolean
+        ) => Promise<KelConnectionRun>;
       };
       /**
        * Fix Capture: one screenshot of Kel's own window, written into the data root. Absent on the
@@ -406,6 +413,53 @@ export const KNOWN_SERVICE_SOURCE_LABELS: Record<KelKnownService['source'], stri
   'to-confirm': 'Kel does not know this address; the service tells you when it issues your credential.',
 };
 
+/** V2-04 — one thing Kel can do with a service. Data: the request it makes and what it gives back. */
+export interface KelConnectionAction {
+  id: string;
+  service: string;
+  name: string;
+  description: string;
+  method: string;
+  path: string;
+  params: string[];
+  returns: string;
+  /** True when running it would change something in Nick's account — Kel asks before those. */
+  mutating: boolean;
+  source: 'documented' | 'assumed';
+}
+
+/** What came back from running an action. The answer is handed over, never stored. */
+export interface KelConnectionRun {
+  connection: string;
+  action: string;
+  name: string;
+  state: string;
+  status: number | null;
+  attempts: number;
+  ms: number;
+  note: string;
+  result: unknown;
+  at: number;
+}
+
+/** One line of the access history: the fact of a call, with no payload in it. */
+export interface KelConnectionEvent {
+  at: number;
+  connection: string;
+  action: string;
+  domain: string;
+  status: number | null;
+  state: string;
+  attempts: number;
+  ms: number;
+}
+
+/** How an answer looks when it is shown: bounded, and never mistaken for a secret store. */
+export const connectionAnswerText = (result: unknown, limit = 2000): string => {
+  if (result === null || result === undefined) return '';
+  const text = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+  return text.length > limit ? `${text.slice(0, limit)}\n… (the answer was longer)` : text;
+};
 /** What a check of a connection found, in the words a person uses. */
 export const CONNECTION_CHECK_LABELS: Record<string, string> = {
   ok: 'Working',
@@ -435,6 +489,15 @@ export const kelConnections = {
   /** V2-03: the services Kel already knows how to talk to, as data. */
   knownServices: () =>
     call<{ services: KelKnownService[] }>('/api/connections', { action: 'catalogue' }),
+  /** V2-04: what Kel can do with one connection, as data. */
+  actions: (id: string) =>
+    call<{ connection: string; actions: KelConnectionAction[] }>('/api/connections', {
+      action: 'actions',
+      id,
+    }),
+  /** V2-04: what Kel has asked this connection for, most recent first. */
+  events: (id?: string, limit = 20) =>
+    call<{ events: KelConnectionEvent[] }>('/api/connections', { action: 'events', id, limit }),
   get: (id: string) => call<KelConnection>('/api/connections', { action: 'get', id }),
   save: (draft: {
     id?: string;
