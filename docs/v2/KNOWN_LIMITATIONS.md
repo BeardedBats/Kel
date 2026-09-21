@@ -27,9 +27,13 @@ limits are appended as phases land.
 
 ## V2-specific unknowns and risks (to be resolved by their phases)
 
-- **Connections exist, but nothing can be done with one yet except check it.** V2-01 … V2-03 built the
-  model, the central surface, Test Connection and the eight services as data; V2-04's actions/tools are
-  not built, so no Kel work can use a service. None of the services' real credentials exist on this
+- **The assistant cannot use a connection yet.** V2-01 … V2-04 built the
+  model, the central surface, Test Connection and the eight services as data. The framework's actions
+  (rows, `run()`, the confirmation gate and the access history) are built too, but the bridge that would
+  let a conversation call one is not — the
+  assistant's tools come from the coding runtime the desktop agent runs, so that is deliberate work, with
+  the same one-request rule and the mutating confirmation. No Connections capability switch is offered
+  until it exists. None of the services' real credentials exist on this
   machine except the Muse one, and **no real service has been contacted**: every check ran against a
   local stand-in service on the loopback interface.
 - **The eight services are known by address and shape, not proven.** GitHub, Stripe, Figma, ClickUp,

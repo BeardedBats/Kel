@@ -5,9 +5,11 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-04, continuing: actions/tools**
-   (`status: partial`). The `V2-04 notes for the next run` block says what is built and exactly what is
-   not; do not mark V2-04 done or move past it while actions/tools and the OAuth sign-in step are missing.
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — currently **V2-05, the iPhone Kel PWA V1**
+   (see `ROADMAP.md` for its exact scope, and the `V2-05 notes for the next run` block for what to carry
+   in). The Connections program (V2-01 … V2-04) is closed; two of its needs are carried as explicit
+   follow-ups in `FEATURE_LEDGER.md` (V2-04a: a tool the assistant can call an action through; V2-04b: the
+   OAuth sign-in flow) — pick one up deliberately, do not assume it was done.
 5. Per increment: understand → narrow design → implement → self-review → focused tests → commit
    atomically → update durable state (`MARATHON_STATE.md`, `FEATURE_LEDGER.md`,
    `IMPLEMENTATION_STATUS.md`, `TEST_EVIDENCE.md`, `DECISIONS.md`, and `DOGFOOD_FINDINGS.md` when real

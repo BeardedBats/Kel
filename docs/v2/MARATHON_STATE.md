@@ -10,9 +10,9 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-04                # Connection Framework — PARTIAL: standard parts built, actions/OAuth not
-next_item: V2-04            # continue V2-04: actions/tools (what Kel can DO with a connection)
-status: partial
+phase: V2-04                # Connection Framework — DONE (framework); the assistant bridge is V2-04a
+next_item: V2-05            # iPhone Kel PWA V1 (see ROADMAP.md)
+status: phase-complete
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
@@ -110,7 +110,26 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
 - **Still not verified:** no installed-app check, and no real service has been contacted — that needs
   Nick's credentials and stays V2-15's evidence.
 
-## V2-04 notes for the next run (phase is PARTIAL — do not move past it)
+## V2-04 closed, and V2-05 notes for the next run
+
+- **V2-04 is closed as the framework** — templates, one request path, data-declared actions, the
+  confirmation gate, honest errors, bounded retries, the access history, and the developer page
+  `docs/v2/CONNECTION_FRAMEWORK.md`. Two things it needs are carried as follow-ups in
+  `FEATURE_LEDGER.md` instead of being claimed: **V2-04a** (a tool the assistant could call an action
+  through — the bridge to the coding runtime the desktop agent runs; no Connections capability switch may
+  be added before it exists) and **V2-04b** (the OAuth account sign-in flow).
+- **V2-05 is the iPhone Kel PWA V1** (login, history, create/continue a conversation, text/paste, voice
+  through Muse, Project switching and routing, home showing running/recent/failed work and Needs Your
+  Attention, and answering/approving/denying/granting/reviewing/resuming/stopping — nothing else). The
+  gateway it grows already exists: the web-host serves the same renderer away from the desktop
+  (session-gated, server-side bearer), so V2-05 is about the PWA surface and its journeys, not a second
+  backend. No uploads, camera, share sheet, push, or native apps.
+- **Carry into V2-05:** the Connections work exposes `/api/connections` (list / get / save / remove /
+  set_credential / delete_credential / test / run / actions / events / catalogue). If the PWA surfaces any
+  of it, the mutating-confirmation rule and the one-request rule apply there too, and the credential stays
+  in the shell — a remote client never receives a value.
+
+## V2-04 build notes (historical — the phase is closed)
 
 - **Built:** `runtime/kel/connection_framework.py` (the three templates: labels, hints, credential field
   names, what a check does, plus the request policy's numbers) and bounded, honest retries inside
@@ -118,16 +137,17 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   the timeout and a budget; the record says how many tries). The renderer's own kind vocabulary was
   deleted — labels, hints and credential field names come with the list.
 - **Not built, and not claimed:** (a) a chat tool that lets the assistant use a connection — the engine and
-  the surface can run an action when Nick asks, but nothing in conversation can; (b) the OAuth account
-  sign-in step, which is what Google Drive needs (its catalogue note says so).
+  the surface can run an action when Nick asks, but nothing in conversation can (now carried as follow-up
+  V2-04a, and the reason no Connections capability switch exists yet); (b) the OAuth account sign-in step,
+  which is what Google Drive needs (its catalogue note says so; carried as follow-up V2-04b).
 - **Actions (built since the note above):** `runtime/kel/connection_actions.py` holds eight actions as rows
   over six services; `connections.run()` reads a row, makes the request through the single choke point,
   leaves the payload nowhere and records the fact of the call (domain, status, duration) in
   `connection_events` (migration 26); `events()` reads that history back. Every catalogue action is a read,
   and a `mutating` action is refused unless Nick confirmed. The page has a "What Kel can do" card.
-- **Where the next increment starts:** expose an action as a tool the assistant can call — with the same
+- **If follow-up V2-04a is picked up:** expose an action as a tool the assistant can call — with the same
   permission rule (mutating actions ask first) and the same one-request rule — and keep V2-14's network
-  rules inside `perform_request`.
+  rules inside `perform_request`. Add the capability switch only once that path can honour it.
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-04 blocks); engine 1126 OK; desktop 344 pass; `tsc` clean.
 - **Still not verified:** no installed-app check; no real service contacted; the retries are proven against
   a local stand-in only.
