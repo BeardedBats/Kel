@@ -142,3 +142,33 @@ aionrs → any aionrs → first enabled), so the open question is only whether t
 at phone width. Next run: type into the composer, open the action sheet (the composer's overflow control),
 confirm the assistant entries appear there, choose one, and then prove type → send → model reply →
 continued context. No model turn spent so far.
+
+### V2-05 send — fixed (the profile had no assistant; the standalone host now seeds it)
+
+The `kel` assistant is seeded by the Electron main process, so the standalone `bun run webui` profile the
+phone uses had none — the guid page's catalog (filtered to `kel` by the shell) was empty, and no model
+turn could start from the phone. `bun run webui` now performs the same integration the desktop does
+(register the Kel ACP agent in module form, create the single `kel` assistant, leave exactly it enabled),
+and Journey H proves the live round trip including a second turn. The desktop's source-mode agent spec
+got the same module-form fix; its packed engine never hit the script-path failure.
+
+Still open after this pass, in `RESUME.md` order: conversation history from the phone (the drawer and a
+blank-body deep link — below), job-driven attention actions, conversational project routing.
+
+### V2-05 — measured notes for the history increment (do not re-derive)
+
+- **A `/conversation/<id>` deep load renders a blank body on the phone** (one authed probe, 9s wait;
+  `body.innerText` length 0). The shell's own comment says a full-page load of a Kel route "lands back
+  on the home"; measured, this route lands on nothing. Verify with the drawer/history work and fix or
+  document per outcome.
+- **Tapping the home's recent entry text ("Phone send check…") timed out once** (8s, actionability) —
+  likely a tap-target/selector detail; try the drawer path first in the history increment.
+- **Assistant replies render inside a shadow root** (`ShadowView` portals the markdown); `innerText`
+  cannot see them. Journeys must read `.markdown-shadow-body` text explicitly — a reply bubble reading
+  as empty text is a detector problem, not a reply problem.
+- **The conversation's send control can read as `disabled` while it still accepts the next send**
+  (measured: `sendEnabled false` immediately before a second turn that landed). Treat its disabled state
+  as advisory; the click's own actionability is the gate.
+- **`bun run resetpass`'s fast path 401s when the webui is running** (its reset goes through the
+  session-gated proxy). Workarounds: direct loopback POST to `/api/webui/reset-password` on the backend
+  port, or stop the webui and use the documented slow path. Operator note, not a phone defect.

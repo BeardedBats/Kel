@@ -24,7 +24,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-04 | Connection Framework + templates | **BUILT** (the framework) | `connection_framework.py` (three templates + request policy), `connection_actions.py` (actions as data), `connections.run()`/`events()` (migration 26) + 16 engine tests; "What Kel can do" on the page + 5 desktop tests; the developer page `CONNECTION_FRAMEWORK.md`. Not part of the framework, and carried below: the assistant bridge and the OAuth sign-in flow |
 | V2-04a | **Follow-up (not a roadmap phase): a tool the assistant can call for a connection action** | **NOT BUILT** | Needs a deliberate bridge to the coding runtime the desktop agent runs, with the same one-request rule and mutating confirmation; no Connections capability switch may be added until it exists (`capabilities.py` rule, DECISIONS 36) |
 | V2-04b | **Follow-up (not a roadmap phase): the OAuth account sign-in flow** | **NOT BUILT** | The template exists and says so; Google Drive needs a pasted token meanwhile |
-| V2-05 | iPhone Kel PWA V1 | **PARTIAL** — installability already exists (donor) and is now pinned; the phone surface itself is not done | Manifest + icons + a service worker that never caches `/api/` or engine data (`desktop/public/`, `renderer/services/registerPwa.ts`); installability pinned by 5 new desktop tests. Reconnaissance recorded in `MARATHON_STATE.md` — do not rebuild the PWA machinery |
+| V2-05 | iPhone Kel PWA V1 | **PARTIAL** — voice (real Muse) and the send round trip (real model, continued) are proved in a real browser at phone width; conversation history / job attention / project routing remain | Journeys A–H in `desktop/tests/e2e/kel-mobile.e2e.ts` + `docs/v2/evidence/v2-05/`; the webui now seeds the Kel assistant (`packages/web-host/src/kel-integration.ts`, 4 unit tests); installability pinned by 5 desktop tests |
 | V2-06 | Needs Your Attention 2.0 | queued | — |
 | V2-07 | Recipes 2.0 | queued | — |
 | V2-08 | Activity 2.0 | queued | — |
@@ -44,12 +44,14 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 Removed from the intended V2 connection list by the directive: **Gmail** and **Slack** (they are not
 V2 scope; do not re-add them without a recorded decision).
 
-## V2-05 — iPhone Kel PWA V1: PARTIAL (phone journeys proved; voice/send/job-attention open)
+## V2-05 — iPhone Kel PWA V1: PARTIAL (voice and send proved; history/attention/routing open)
 
 Done and evidenced: the phone answers "what is happening with Kel?" (running context, "2 need you",
 honest holds), the attention action it offers works from the phone (→ Providers, real provider state),
-paste into the composer works, the PWA contract holds in the built app (Kel manifest, SW registered and
-controlling, 0 cached `/api/`, 0 horizontal overflow, clean console), and the gateway blocker that made
-all of it impossible is fixed. Still open, in `RESUME.md` order: browser voice → Muse, send with a model
-connected, job-driven attention actions, conversation history from the phone. V2-04a and V2-04b remain
-untouched and unclaimed.
+paste into the composer works, **voice reaches Muse** (real transcript in the composer), **the phone
+chooses Kel and sends for real** (one `kel` pill → send → real reply → second turn → "still here"), the
+PWA contract holds in the built app (Kel manifest, SW registered and controlling, 0 cached `/api/`, 0
+horizontal overflow, clean console), and the gateway blocker that made all of it impossible is fixed.
+Still open, in `RESUME.md` order: conversation history from the phone (deep link measured blank once),
+job-driven attention actions, conversational project routing. V2-04a and V2-04b remain untouched and
+unclaimed — they are the next deliberate program items.

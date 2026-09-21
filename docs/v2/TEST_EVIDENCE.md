@@ -148,3 +148,22 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   post-sign-in console, PWA contract intact. `bunx tsc --noEmit` clean; focused unit files 10 passed.
 - Journey G (new): the phone reaches Providers and Connections — the V2-01…V2-04 connection surfaces are
   usable from a phone. Model selection and the positive send path are still open.
+
+## V2-05 third pass — the phone sends for real
+
+- `desktop/packages/web-host/src/kel-integration.unit.test.ts` (new, 4 tests): a fresh profile gets the
+  agent + `kel` assistant with the exact module-form spec and only `kel` enabled; a second run is
+  idempotent and refreshes the agent spec; a disabled-`kel`/extra-enabled profile is repaired; a backend
+  refusal fails loudly instead of claiming success.
+- `desktop/tests/unit/kel-remote-bridge.test.ts` — the D11 pin updated: the shared `KEL_DATA_DIR` also
+  seeds the browser profile's Kel assistant.
+- Journey H (real browser 393x852 → gateway → aioncore → Kel engine (ACP) → CLI model), 17.8s:
+  `assistant-pills ["kel"]` → `send-possible true` → user turn lands → `reply-one "Phone send check
+  received."` → settled → second turn lands → `reply-two "still here"`; post-auth watch: 0 failed reads,
+  0 WS failures, 0 console errors; overflow OK. Evidence: `findings-H.json`, `H1–H3` PNGs.
+- Measured write-ups: assistant replies live in a shadow root (`innerText` cannot see them — read
+  `.markdown-shadow-body`); the conversation send control can read as disabled while it still accepts the
+  next send (recorded, not gated on).
+- Broader: whole desktop suite `bunx vitest run` — 43 files, 358 passed; `bunx tsc --noEmit` clean.
+- One authed probe: a full-page load of `/conversation/<id>` on the phone rendered a blank body; the
+  drawer/history increment must verify or fix it. (Single observation, not a claim.)
