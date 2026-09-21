@@ -8,7 +8,7 @@ program: kel-v2.0
 line: v2                    # development line created by this setup commit
 branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
-setup_commit: <filled by the setup commit>
+setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-00                # completed by the setup commit (durable state + developer line)
 next_item: V2-01            # Connections model + central management (see ROADMAP.md)
