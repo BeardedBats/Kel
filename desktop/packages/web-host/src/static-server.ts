@@ -213,11 +213,20 @@ async function readKelEngine(kelDataDir: string): Promise<{ url: string; token: 
  * D11 — forward a browser request to the Kel engine with the process-held bearer token. The
  * browser's own session cookie is dropped: the engine authenticates on the bearer alone and never
  * sees aionui session material.
+ *
+ * The browser's `Origin`/`Referer` are dropped for the same reason. The engine accepts a request only
+ * when `Host` is its own and `Origin` is absent or its own origin (`runtime/kel/service.py`), which is
+ * how the desktop — a local client holding the token — reaches it. A phone browser always sends the
+ * gateway's origin, so forwarding it verbatim made every mutating Kel route answer 403 and the shell
+ * could only report "Kel is not answering right now". The gateway already stands in for the desktop
+ * here: it holds the token, it is session-gated, and it must present itself as that local client.
  */
 function forwardToKel(req: IncomingMessage, res: ServerResponse, engine: { url: string; token: string }): void {
   const target = new URL(engine.url);
   const headers: http.OutgoingHttpHeaders = { ...req.headers, host: target.host, authorization: `Bearer ${engine.token}` };
   delete headers.cookie;
+  delete headers.origin;
+  delete headers.referer;
   const options: http.RequestOptions = {
     hostname: target.hostname,
     port: target.port,
