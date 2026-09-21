@@ -260,5 +260,66 @@ class DogfoodCase(unittest.TestCase):
         self.assertEqual(rows[0]['name'], 'v20-fix-capture')
 
 
+class PracticeTextGuardCase(unittest.TestCase):
+    """Canned practice text is never stored as Nick's feedback unless practice mode was asked for.
+
+    Production logic: explicit fixture requested → FixtureProvider; otherwise a real key → Muse;
+    otherwise an honest error. The store enforces the same rule from the other side, so a debug build
+    that leaves practice mode on by accident still cannot file canned text as a real finding.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
+        self.dogfood = Dogfood(self.store)
+        self._previous = {name: os.environ.get(name) for name in ('KEL_TRANSCRIPTION_PROVIDER', 'KEL_TRANSCRIPTION_MODE')}
+        self.addCleanup(self._restore_env)
+        for name in self._previous:
+            os.environ.pop(name, None)  # production default: practice mode is off unless asked for
+
+    def _restore_env(self):
+        for name, value in self._previous.items():
+            os.environ.pop(name, None)
+            if value is not None:
+                os.environ[name] = value
+
+    def practice_sentence(self):
+        from kel.transcription import FIXTURE_SENTENCES
+
+        return FIXTURE_SENTENCES[0]
+
+    def test_production_refuses_the_archived_practice_text(self):
+        with self.assertRaises(PolicyError) as ctx:
+            self.dogfood.save(self.practice_sentence())
+        self.assertIn('practice text', str(ctx.exception))
+        self.assertEqual(self.dogfood.list()['counts']['OPEN'], 0)
+
+    def test_production_refuses_practice_text_hidden_inside_longer_feedback(self):
+        hidden = 'Right, so — ' + self.practice_sentence() + ' — and that is what keeps happening.'
+        with self.assertRaises(PolicyError):
+            self.dogfood.save(hidden)
+        self.assertEqual(self.dogfood.list()['counts']['OPEN'], 0)
+
+    def test_a_real_transcript_saves_even_when_it_mentions_practice(self):
+        item = self.dogfood.save('The practice screen shows a stale banner after I change the key.')
+        self.assertEqual(item['status'], 'OPEN')
+        self.assertIn('stale banner', item['transcript'])
+
+    def test_explicit_practice_mode_still_saves_so_automation_can_exercise_the_flow(self):
+        os.environ['KEL_TRANSCRIPTION_PROVIDER'] = 'fixture'
+        item = self.dogfood.save(self.practice_sentence())
+        self.assertEqual(item['status'], 'OPEN')
+        self.assertTrue(item['transcript'])
+
+    def test_the_practice_setting_also_allows_it(self):
+        # The engine-side practice switch (used by development builds) behaves like the env var.
+        from kel.transcription import Transcription
+
+        Transcription(self.store)._set_setting('transcription_mode', 'fixture')
+        item = self.dogfood.save(self.practice_sentence())
+        self.assertEqual(item['status'], 'OPEN')
+
+
 if __name__ == '__main__':
     unittest.main()
