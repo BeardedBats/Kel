@@ -96,6 +96,17 @@ def _loads(raw):
         return None
 
 
+def _is_practice_text(value):
+    """True when this text is the archived local practice copy (never a person's own words)."""
+    from .transcription import FIXTURE_SENTENCES
+    probe = ' '.join(str(value or '').split())[:120]
+    for sentence in FIXTURE_SENTENCES:
+        head = ' '.join(sentence.split())[:40]
+        if head and head in probe:
+            return True
+    return False
+
+
 class Dogfood:
     """The fix store. Every path it touches is resolved inside the engine data root."""
 
@@ -198,6 +209,11 @@ class Dogfood:
         text = str(transcript or '').strip()
         if not text:
             raise PolicyError('Record or type what went wrong first.')
+        # A fix is Nick's own words. Practice/demo text is never saved as if it were his feedback —
+        # not even when a debug build leaves practice mode switched on by accident.
+        from .transcription import Transcription
+        if not Transcription(self.store).practice_mode() and _is_practice_text(text):
+            raise PolicyError("That is Kel's practice text, not your words — record again.")
         if len(text) > MAX_TRANSCRIPT:
             text = text[:MAX_TRANSCRIPT]
         now = time.time()

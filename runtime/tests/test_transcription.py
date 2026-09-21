@@ -38,14 +38,39 @@ def b64(data):
     return base64.b64encode(data).decode('ascii')
 
 
+def practice_mode_test_environment():
+    """Opt this test run into practice mode and detach it from the machine's stored Muse key.
+
+    Practice text is explicit-only in the product, so tests ask for it by name; and no test may depend
+    on whether this computer happens to hold a real Muse credential. Returns (restore, real_reader).
+    """
+    from kel import transcription as transcription_module
+
+    previous = os.environ.get('KEL_TRANSCRIPTION_PROVIDER')
+    os.environ['KEL_TRANSCRIPTION_PROVIDER'] = 'fixture'
+    real_reader = transcription_module._windows_credential_secret
+    transcription_module._windows_credential_secret = lambda target: ''
+
+    def restore():
+        transcription_module._windows_credential_secret = real_reader
+        if previous is None:
+            os.environ.pop('KEL_TRANSCRIPTION_PROVIDER', None)
+        else:
+            os.environ['KEL_TRANSCRIPTION_PROVIDER'] = previous
+
+    return restore, real_reader
+
+
 class TranscriptionBase(unittest.TestCase):
     def setUp(self):
         sys.stdout.reconfigure(errors='replace') if hasattr(sys.stdout, 'reconfigure') else None
+        self._restore_practice, self._real_reader = practice_mode_test_environment()
         self.tmp = tempfile.TemporaryDirectory()
         self.store = Store(Path(self.tmp.name) / 'kel.sqlite3')
         self.t = Transcription(self.store)
 
     def tearDown(self):
+        self._restore_practice()
         self.tmp.cleanup()
 
 
@@ -252,17 +277,76 @@ class StreamLifecycleTests(TranscriptionBase):
 
 
 class ProviderModeTests(TranscriptionBase):
-    def test_mode_is_fixture_without_a_key_and_switches_when_set(self):
+    """Practice text is explicit-only; a real key is shared with the copied Transcriptions app."""
+
+    def clear_practice(self):
+        os.environ.pop('KEL_TRANSCRIPTION_PROVIDER', None)
+        os.environ.pop('KEL_TRANSCRIPTION_MODE', None)
+
+    def test_practice_mode_answers_with_practice_text_when_asked_for(self):
         status = self.t.status()
         self.assertEqual(status['mode'], 'fixture')
-        self.assertFalse(status['has_key'])
         self.assertIn('Practice', status['label'])
+        self.assertEqual(self.t.provider().name, 'fixture')
+
+    def test_without_a_key_transcription_refuses_instead_of_inventing_words(self):
+        self.clear_practice()
+        status = self.t.status()
+        self.assertEqual(status['mode'], 'unavailable')
+        self.assertFalse(status['has_key'])
+        self.assertIn('Muse', status['label'])
+        with self.assertRaises(PolicyError) as ctx:
+            self.t.provider()
+        self.assertIn('Meta Model key is not available', str(ctx.exception))
+        # The Fix Capture route (one-shot transcription) says the same thing instead of canned text.
+        with self.assertRaises(PolicyError) as quick:
+            self.t.quick_transcribe('fix-capture.wav', b64(wav_bytes(1.0)))
+        self.assertIn('cannot transcribe', str(quick.exception))
+
+    def test_a_key_switches_to_muse_and_the_setting_can_switch_back(self):
+        self.clear_practice()
         self.t.set_key('test-key-not-used')
-        switched = self.t.status()
-        self.assertEqual(switched['mode'], 'muse')
-        self.assertTrue(switched['has_key'])
-        self.t.clear_key()
+        status = self.t.status()
+        self.assertEqual(status['mode'], 'muse')
+        self.assertTrue(status['has_key'])
+        self.assertEqual(self.t.key_source(), 'kel')
+        self.assertEqual(self.t.provider().name, 'muse')
+        self.t._set_setting('transcription_mode', 'fixture')
         self.assertEqual(self.t.status()['mode'], 'fixture')
+        self.assertEqual(self.t.provider().name, 'fixture')
+
+    def test_the_copied_transcriptions_apps_stored_key_is_reused(self):
+        """The key the copied app stored on this computer is read (never printed) and used as-is."""
+        self.clear_practice()
+        import json
+
+        import kel.transcription as module
+
+        original = module._windows_credential_secret
+        seen = []
+
+        def fake(target):
+            seen.append(target)
+            return 'stored-meta-key-value' if target == 'Meta Model API.Muse Transcriptions' else ''
+
+        module._windows_credential_secret = fake
+        try:
+            self.assertEqual(self.t.api_key(), 'stored-meta-key-value')
+            self.assertEqual(self.t.key_source(), 'transcriptions-app')
+            status = self.t.status()
+            self.assertEqual(status['mode'], 'muse')
+            self.assertTrue(status['has_key'])
+            self.assertIn('Transcriptions app', status['detail'])
+            self.assertNotIn('stored-meta-key-value', json.dumps(status))
+            self.assertEqual(self.t.provider().name, 'muse')
+            self.assertIn('Meta Model API.Muse Transcriptions', seen)
+        finally:
+            module._windows_credential_secret = original
+
+    def test_the_credential_reader_is_scoped_to_the_transcription_targets(self):
+        # The real reader stays read-only and narrow: an unrelated target never yields anything.
+        self.assertEqual(self._real_reader('Some Unrelated App Credential'), '')
+        self.assertEqual(self._real_reader('Meta Model API.Muse Transcriptions') != '', True)
 
     def test_title_and_buckets_helpers(self):
         # Donor-faithful: only leading filler words are stripped, then title-casing is applied.
@@ -366,6 +450,9 @@ class TranscriptionServiceRouteTests(unittest.TestCase):
     """The action family the renderer calls; same object graph as production."""
 
     def setUp(self):
+        # Same deterministic practice-mode opt-in as the other transcription tests: this class must
+        # never discover the real Muse credential this machine happens to hold.
+        self._restore_practice, _ = practice_mode_test_environment()
         self.tmp = tempfile.TemporaryDirectory()
         self.service = Service(self.tmp.name)
         self.conversation = self.service.action('/api/conversation', {'project': 'default'})['id']
@@ -373,6 +460,7 @@ class TranscriptionServiceRouteTests(unittest.TestCase):
 
     def tearDown(self):
         self.service.shutdown()
+        self._restore_practice()
         self.tmp.cleanup()
 
     def test_status_quick_transcribe_and_stream_routes(self):

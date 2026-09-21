@@ -35,6 +35,70 @@ from .core import PolicyError, uid
 # action, so the registry must not live on the instance.
 _STREAMS = {}
 
+# The copied Transcriptions app stores its Meta key as a generic Windows credential (its Rust
+# `keyring` crate writes "<account>.<service>"). Kel reuses that exact entry — the key that is
+# already configured on this computer — instead of asking for it a second time.
+MUSE_CREDENTIAL_TARGETS = (
+    'Meta Model API.Muse Transcriptions',
+    'Muse Transcriptions:Meta Model API',
+)
+# Practice text is only ever produced when someone asks for it by name (tests, demos, practice mode).
+PRACTICE_MODE_ENV = ('KEL_TRANSCRIPTION_PROVIDER', 'KEL_TRANSCRIPTION_MODE')
+MUSE_UNAVAILABLE = ('Kel cannot transcribe this recording right now — the Meta Model key is not '
+                    'available on this computer.')
+
+
+def _windows_credential_secret(target):
+    """One generic Windows Credential Manager entry, read-only (never prompts, never writes)."""
+    if os.name != 'nt':
+        return ''
+    import ctypes
+    import ctypes.wintypes as wintypes
+
+    class Credential(ctypes.Structure):
+        _fields_ = [('Flags', wintypes.DWORD), ('Type', wintypes.DWORD),
+                    ('TargetName', wintypes.LPWSTR), ('Comment', wintypes.LPWSTR),
+                    ('LastWritten', wintypes.FILETIME), ('CredentialBlobSize', wintypes.DWORD),
+                    ('CredentialBlob', ctypes.POINTER(ctypes.c_byte)), ('Persist', wintypes.DWORD),
+                    ('AttributeCount', wintypes.DWORD), ('Attributes', ctypes.c_void_p),
+                    ('TargetAlias', wintypes.LPWSTR), ('UserName', wintypes.LPWSTR)]
+
+    pointer = ctypes.POINTER(Credential)()
+    if not ctypes.windll.advapi32.CredReadW(target, 1, 0, ctypes.byref(pointer)):
+        return ''
+    try:
+        blob = ctypes.string_at(pointer.contents.CredentialBlob, pointer.contents.CredentialBlobSize)
+    finally:
+        ctypes.windll.advapi32.CredFree(pointer)
+    for encoding in ('utf-16-le', 'utf-8'):
+        try:
+            value = blob.decode(encoding).strip('\x00').strip()
+        except UnicodeDecodeError:
+            continue
+        if value:
+            return value
+    return ''
+
+
+def shared_muse_key():
+    """The Meta key the copied Transcriptions app already stored on this computer, or ''."""
+    for target in MUSE_CREDENTIAL_TARGETS:
+        try:
+            value = _windows_credential_secret(target)
+        except Exception:
+            value = ''
+        if value:
+            return value
+    return ''
+
+
+def practice_mode_requested():
+    """True only when practice/demo text was asked for explicitly (never a silent fallback)."""
+    for name in PRACTICE_MODE_ENV:
+        if (os.environ.get(name) or '').strip().lower() == 'fixture':
+            return True
+    return False
+
 MIGRATION_VERSION = 12
 MIGRATION_NAME = 'v15-transcription'
 
@@ -575,7 +639,21 @@ class Transcription:
 
     def api_key(self):
         key = os.environ.get('META_API_KEY') or os.environ.get('MUSE_API_KEY') or ''
-        return key.strip() or self._setting('meta_api_key')
+        return key.strip() or self._setting('meta_api_key') or shared_muse_key()
+
+    def practice_mode(self):
+        """Practice text is only used when a person or a test asks for it by name."""
+        if practice_mode_requested():
+            return True
+        return (self._setting('transcription_mode') or '').strip().lower() == 'fixture'
+
+    def key_source(self):
+        """Where the key came from, for honest status copy (never the key itself)."""
+        if (os.environ.get('META_API_KEY') or os.environ.get('MUSE_API_KEY') or '').strip():
+            return 'environment'
+        if (self._setting('meta_api_key') or '').strip():
+            return 'kel'
+        return 'transcriptions-app' if shared_muse_key() else ''
 
     def set_key(self, key):
         key = (key or '').strip()
@@ -589,32 +667,35 @@ class Transcription:
         return {'has_key': False}
 
     def provider(self):
-        override = (os.environ.get('KEL_TRANSCRIPTION_PROVIDER') or '').strip().lower()
-        if override == 'fixture':
+        if self.practice_mode():
             return FixtureProvider()
-        if override == 'muse':
-            key = self.api_key()
-            if not key:
-                raise PolicyError('Add a Meta API key first, then try again.')
-            return MuseProvider(key)
-        if self.api_key():
-            return MuseProvider(self.api_key())
-        return FixtureProvider()
+        key = self.api_key()
+        if not key:
+            # Never substitute practice text for someone's words: say what is missing instead.
+            raise PolicyError(MUSE_UNAVAILABLE)
+        return MuseProvider(key)
 
     def status(self):
-        mode = 'fixture'
         has_key = bool(self.api_key())
-        if (os.environ.get('KEL_TRANSCRIPTION_PROVIDER') or '').strip().lower() == 'muse' or has_key:
-            mode = 'muse'
+        if self.practice_mode():
+            return {'mode': 'fixture', 'has_key': has_key, 'live_capable': True,
+                    'label': 'Practice mode',
+                    'detail': 'Practice mode transcribes locally with clear, repeatable text, and is '
+                              'only used when it is asked for by name.'}
+        if not has_key:
+            return {'mode': 'unavailable', 'has_key': False, 'live_capable': False,
+                    'label': 'Muse is not set up on this computer',
+                    'detail': 'Kel transcribes speech with Meta Muse, and no Meta Model key is '
+                              'available here yet.'}
         try:
-            live = MuseProvider('x').supports_stream() if mode == 'muse' else True
+            live = MuseProvider('x').supports_stream()
         except Exception:
             live = False
-        return {'mode': mode, 'has_key': has_key, 'live_capable': live,
-                'label': 'Muse' if mode == 'muse' else 'Practice mode',
-                'detail': ('Muse transcribes your audio.' if mode == 'muse'
-                           else 'Practice mode transcribes locally with clear, repeatable text — '
-                                'add a Meta API key in Settings to use Muse.')}
+        source = self.key_source()
+        return {'mode': 'muse', 'has_key': True, 'live_capable': live, 'label': 'Muse',
+                'detail': ('Muse transcribes your audio.' if source != 'transcriptions-app'
+                           else 'Muse transcribes your audio, using the key the Transcriptions app '
+                                'already stored on this computer.')}
 
     # -- library ----------------------------------------------------------------------------------
 
