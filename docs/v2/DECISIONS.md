@@ -145,3 +145,27 @@ what it forbids so a later run cannot quietly undo it.
     what it cannot do is test them without his keys, so live checks against the real services are V2-03/V2-15
     evidence that does not exist yet and is not claimed anywhere. *Forbids:* describing a service as
     "working" because it is listed.
+
+## V2-04 (Connection Framework — standard parts, partial)
+
+28. **One place holds the standard parts.** `runtime/kel/connection_framework.py` holds the three credential
+    templates and re-presents the request policy whose numbers live in `connections.py`; every service gets
+    the same treatment, and the module knows no service by name (a test pins that). *Forbids:* a per-service
+    framework, per-service auth code, or a second request path.
+
+29. **Retries are bounded and honest.** A GET is tried again only when the service is busy (429 or a 5xx) or
+    the connection dropped — never when the service answered, because a 401 or a 404 is information and
+    asking again risks a lockout. Every attempt is bounded by the timeout, the whole request by a budget,
+    and the record says how many times Kel tried. *Forbids:* retrying a refusal, retrying without a limit,
+    and hiding a retry from Nick.
+
+30. **The renderer keeps no kind vocabulary.** Labels, hints and the credential field name come from the
+    framework with the list, so the engine's words and the engine's behaviour cannot drift apart (the
+    renderer's own copy was deleted, and a test fails if one grows back). *Forbids:* a second source of
+    truth for what a kind of credential means.
+
+31. **V2-04 is partial, and says so.** Built: the three templates, the request policy with retries, one
+    choke point, one honest result. Not built: what Kel can *do* with a service (actions/tools) and the
+    OAuth account sign-in step. Google Drive therefore stays uncheckable beyond a pasted token, and the
+    ledger, the state and this entry all say PARTIAL rather than claiming the framework is done.
+    *Forbids:* marking V2-04 built, moving `next_item` past it, or implying Kel can act on a service.

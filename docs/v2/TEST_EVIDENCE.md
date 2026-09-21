@@ -33,6 +33,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 | V2-01 | Connections model + central management | engine `1085 tests OK`; `tests.test_v2_connections` **25 OK**; desktop `40 files / 334 tests pass`; `tsc --noEmit` clean; `tests/unit/connections-page.dom.test.tsx` **11 pass**; `tests/unit/connections-surface.test.ts` **12 pass** (details below) |
 | V2-02 | Generic REST Connection + Test Connection | engine `1101 tests OK`; `tests.test_v2_connections` **41 OK**; desktop `40 files / 338 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **13 pass** (details below) |
 | V2-03 | Personal Connections | engine `1110 tests OK`; `tests.test_v2_connections` **50 OK**; desktop `40 files / 340 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **15 pass** (details below) |
+| V2-04 | Connection Framework (standard parts) | engine `1117 tests OK`; `tests.test_v2_connections` **57 OK**; desktop `40 files / 341 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **16 pass**, `connections-surface.test.ts` **13 pass** (details below) |
 
 ### V2-01 — what each command actually proves
 
@@ -74,6 +75,20 @@ row names the command and the result, so a resume run can re-run it instead of t
 | Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **15 pass** — everything above plus: "Set up GitHub" fills the form in (name, address, header, and "Kel adds a word in front" with `Bearer `) and saving posts exactly those fields, and the page states what Nick has to fetch and how sure Kel is about the address (including that Raptive's address is not known) |
 
 **Not verified for V2-03:** no real service was contacted — Kel knows the eight services' addresses and shapes, but testing them needs Nick's credentials, so nothing here says a service works. No installed-app check either.
+
+### V2-04 — what each command actually proves
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Engine (full, regression) | `cd runtime && python -m unittest discover -s tests` | **1117 tests OK** |
+| Engine — framework policy | `python -m unittest tests.test_v2_connections` | **57 OK** — everything above plus: a busy service (503 then 200) is asked again and the record says Kel tried twice; a 401, 403 or 404 is never retried (each service saw exactly one request, and the pauses list stayed empty); Kel stops after the policy's three attempts and never collects the fourth answer; a dropped connection is retried and then reported; the policy's numbers are the ones the engine uses; the three templates cover the three kinds with real words and a check sentence; and the framework module cannot learn a service name |
+| Engine — migration inventory | `python -m unittest tests.test_v16_r8_migrations` | **4 OK** |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **40 files / 341 tests pass** |
+| Desktop — Connections page (jsdom) | `bunx vitest run --project dom tests/unit/connections-page.dom.test.tsx` | **16 pass** — everything above plus: the kind list a person picks from is the engine's templates, word for word (label — hint), so the renderer has no vocabulary of its own |
+| Desktop — surface pins | `bunx vitest run tests/unit/connections-surface.test.ts` | **13 pass** — including the pin that the renderer's API module no longer carries a kind vocabulary, and that the credential field name comes from the framework's template |
+
+**Not verified for V2-04, and not claimed:** what Kel can *do* with a service (actions/tools) is not built, the OAuth sign-in step is not built, and no real service has been contacted. The framework's retries are proven against a local stand-in service only.
 
 ## Standing rules for this file
 

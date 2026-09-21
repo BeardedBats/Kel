@@ -10,9 +10,9 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-03                # known services + how each wants its credential
-next_item: V2-04            # Connection Framework + templates (see ROADMAP.md)
-status: phase-complete
+phase: V2-04                # Connection Framework — PARTIAL: standard parts built, actions/OAuth not
+next_item: V2-04            # continue V2-04: actions/tools (what Kel can DO with a connection)
+status: partial
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
@@ -30,7 +30,7 @@ phases:
   V2-01: done        # Connections model + central management (migration 23, /connections surface)
   V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
-  V2-04: queued      # Connection Framework + templates/docs/testing
+  V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
   V2-05: queued      # iPhone Kel PWA V1
   V2-06: queued      # Needs Your Attention 2.0
   V2-07: queued      # Recipes 2.0
@@ -109,6 +109,24 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-03 block); engine 1110 OK; desktop 340 pass; `tsc` clean.
 - **Still not verified:** no installed-app check, and no real service has been contacted — that needs
   Nick's credentials and stays V2-15's evidence.
+
+## V2-04 notes for the next run (phase is PARTIAL — do not move past it)
+
+- **Built:** `runtime/kel/connection_framework.py` (the three templates: labels, hints, credential field
+  names, what a check does, plus the request policy's numbers) and bounded, honest retries inside
+  `connections.perform_request` (retry a 429/5xx or a dropped connection; never a 401/403/404; bounded by
+  the timeout and a budget; the record says how many tries). The renderer's own kind vocabulary was
+  deleted — labels, hints and credential field names come with the list.
+- **Not built, and not claimed:** (a) what Kel can *do* with a connection — actions/tools; today the only
+  thing a Connection can do is be checked; (b) the OAuth account sign-in step, which is what Google Drive
+  needs (its catalogue note says so). Until (a) exists, nothing in Kel uses a service.
+- **Where the next increment starts:** actions/tools. Keep the shape the directive demands: an action is
+  declared as data (name, the request it makes, what it returns) with permissions and an audit trail, and
+  it goes through `perform_request` so V2-14's network rules stay in one place. Do not add per-service code
+  paths; Pitcher List's and GitHub's actions must be rows, not branches.
+- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-04 block); engine 1117 OK; desktop 341 pass; `tsc` clean.
+- **Still not verified:** no installed-app check; no real service contacted; the retries are proven against
+  a local stand-in only.
 
 ## Model preferences recorded at setup
 
