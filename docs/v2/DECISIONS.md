@@ -193,3 +193,26 @@ what it forbids so a later run cannot quietly undo it.
     surface can do these things when Nick asks; nothing in chat can, because no tool exposes an action.
     V2-14 owns the network rules, and they belong inside `perform_request` — not in a second client.
     *Forbids:* claiming V2-04 is finished while that link is missing from the phase record.
+
+## V2-04 (framework scope, and the developer page it needed)
+
+36. **A tool the assistant can call is not part of the framework, and V2-04 does not claim it.** The
+    assistant's tools come from the coding runtime the desktop agent runs, not from the engine: exposing a
+    connection action to it means a deliberate bridge (with the same one-request rule, the credential path
+    through the main process, and the mutating confirmation) rather than one more row. `capabilities.py`
+    already states the rule this follows — a switch is offered only when a production path can honour it —
+    so **no Connections capability switch is added** until that bridge exists, and the item is carried in
+    the ledger as an explicit follow-up rather than dropped. *Forbids:* adding a capability toggle that
+    would do nothing, and reading "framework built" as "the assistant can use a connection".
+37. **The framework ships with the page a developer reads.** `docs/v2/CONNECTION_FRAMEWORK.md` states the
+    four words, the rules and what enforces each of them, how to add a service and an action as data, and
+    what is deliberately not in the framework. *Reason:* §8 asks for a developer-facing framework, and the
+    rules in this program are the part most likely to be broken by the next change; each one names the test
+    that catches it. *Forbids:* a rule that exists only in a commit message.
+
+## V2-04 (closed)
+
+V2-04 is the framework, not the consumer: templates, one request path, data-declared actions, the
+confirmation gate, honest errors, bounded retries, the access history, and the developer page. What it
+deliberately leaves open is named in `FEATURE_LEDGER.md` (the assistant bridge) and in
+`KNOWN_LIMITATIONS.md` (no real service contacted, no OAuth sign-in flow, no write action shipped).

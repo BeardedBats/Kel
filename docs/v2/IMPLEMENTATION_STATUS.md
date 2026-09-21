@@ -106,9 +106,11 @@ per-service code anywhere.
   against the real services, which needs Nick's credentials. Nothing here claims a service works because
   it is listed.
 
-## V2-04 — Connection Framework (PARTIAL)
+## V2-04 — Connection Framework (BUILT)
 
-The standard parts of a Connection, in one place: the three credential templates and the request policy.
+The standard parts of a Connection, in one place: the three credential templates, the request policy, and
+what a developer reads before adding the next service or action (`docs/v2/CONNECTION_FRAMEWORK.md`, which
+states each rule beside the test that enforces it).
 
 - **`runtime/kel/connection_framework.py`**: the three templates (API key, Account authorization, Bot or
   webhook) with their labels, hints, credential field names and a plain sentence about what a check does;
@@ -120,9 +122,11 @@ The standard parts of a Connection, in one place: the three credential templates
 - **One vocabulary**: the kind labels, hints and credential field names travel with the list, and the
   renderer's own copy was deleted — a test fails if one grows back, so the engine's words and the engine's
   behaviour cannot drift apart.
-- **Not built in this phase, and not claimed**: what Kel can *do* with a service (actions/tools) and the
-  OAuth account sign-in step. Google Drive stays uncheckable beyond a pasted token because of the second
-  one, and no connection can be used for anything but Test connection because of the first.
+- **Carried forward instead of claimed**: two things this framework needs are named as follow-ups in
+  `FEATURE_LEDGER.md` (V2-04a and V2-04b) rather than being quietly treated as done — a tool the
+  assistant could call an action through, and the OAuth account sign-in step (which is why Google Drive
+  stays uncheckable beyond a pasted token). No Connections capability switch is offered until the first
+  exists, because `capabilities.py` forbids offering a switch a path could not honour.
 
 ### V2-04 continued — actions (what Kel can do with a service)
 
@@ -141,5 +145,7 @@ The standard parts of a Connection, in one place: the three credential templates
   the service's answer shown once where it arrived, and a question first for anything that would change
   something in Nick's account. The new `kel:connection-run` channel runs the shared sender guard and hands
   the engine only the fields the shell holds.
-- **Still not built**: no chat tool exposes an action, so the assistant cannot use a connection yet — that
-  is the next increment of this phase, and the reason V2-04 still reads PARTIAL.
+- **What this does not yet reach**: no conversation can call an action, so the assistant cannot use a
+  connection — the assistant's tools come from the coding runtime the desktop agent runs, and that bridge
+  is carried as follow-up V2-04a in `FEATURE_LEDGER.md`. V2-04's own scope (the framework) is complete;
+  that bridge is a deliberate product step, not a missing row.
