@@ -34,9 +34,9 @@ vi.mock('electron', () => ({
 
 import { registerKelCredentialIpc } from '@process/services/kel/kelCredentialIpc';
 import {
-  CONNECTION_KIND_LABELS,
   connectionCredentialField,
   connectionCustodyKey,
+  connectionTemplate,
   kelConnections,
 } from '@renderer/components/kel/kelApi';
 
@@ -132,19 +132,32 @@ describe('connection credential custody (V2-01)', () => {
   });
 });
 
-describe('connection vocabulary and custody keys (V2-01)', () => {
-  it('names the three templates in the words a person uses', () => {
-    expect(CONNECTION_KIND_LABELS.map((entry) => entry.id)).toEqual(['api_key', 'oauth', 'bot']);
-    for (const entry of CONNECTION_KIND_LABELS) {
-      expect(entry.label).not.toMatch(/_|api_key|oauth/);
-      expect(entry.hint.length).toBeGreaterThan(0);
-    }
+describe('connection vocabulary and custody keys (V2-01 / V2-04)', () => {
+  const TEMPLATES = [
+    { id: 'api_key', label: 'API key', hint: 'a key Kel sends with its requests',
+      credential_field: 'api_key', credential_label: 'API key', check: 'One authenticated GET.' },
+    { id: 'oauth', label: 'Account authorization', hint: 'you sign in and Kel keeps the token',
+      credential_field: 'access_token', credential_label: 'Access token', check: 'One authenticated GET.' },
+    { id: 'bot', label: 'Bot or webhook', hint: 'a bot token or a webhook address',
+      credential_field: 'token', credential_label: 'Bot token', check: 'One authenticated GET.' },
+  ] as never;
+
+  it('takes the words from the framework rather than keeping its own copy', () => {
+    // V2-04: the renderer has no kind vocabulary. If it grew one back, the engine's words and the
+    // engine's credential fields would drift apart silently.
+    const api = read('desktop/packages/desktop/src/renderer/components/kel/kelApi.ts');
+    expect(api).not.toContain('CONNECTION_KIND_LABELS');
+    expect(api).not.toContain("'Account authorization'");
+    expect(connectionTemplate({ templates: TEMPLATES }, 'oauth')?.credential_field).toBe('access_token');
+    expect(connectionTemplate({ templates: TEMPLATES }, 'nope' as never)).toBeUndefined();
   });
 
-  it('asks for the field name that fits the kind of service', () => {
-    expect(connectionCredentialField('api_key')).toBe('api_key');
-    expect(connectionCredentialField('oauth')).toBe('access_token');
-    expect(connectionCredentialField('bot')).toBe('token');
+  it('asks for the field name the framework gives the kind of service', () => {
+    expect(connectionCredentialField({ templates: TEMPLATES }, 'api_key')).toBe('api_key');
+    expect(connectionCredentialField({ templates: TEMPLATES }, 'oauth')).toBe('access_token');
+    expect(connectionCredentialField({ templates: TEMPLATES }, 'bot')).toBe('token');
+    // With no list (the engine did not answer), it falls back rather than inventing a field name.
+    expect(connectionCredentialField(null, 'oauth')).toBe('api_key');
   });
 
   it('keeps a connection credential in its own custody namespace', () => {

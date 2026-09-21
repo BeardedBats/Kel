@@ -318,18 +318,35 @@ export interface KelConnectionList {
   counts: Record<'ready' | 'needs_credentials', number>;
   states: string[];
   kinds: Array<KelConnection['kind']>;
+  /** V2-04: the three kinds of credential in the engine's own words — the only place they live. */
+  templates: KelConnectionTemplate[];
 }
 
-/** The kinds a person picks between, in the words a person uses. */
-export const CONNECTION_KIND_LABELS: Array<{ id: KelConnection['kind']; label: string; hint: string }> = [
-  { id: 'api_key', label: 'API key', hint: 'a key Kel sends with its requests' },
-  { id: 'oauth', label: 'Account authorization', hint: 'you sign in and Kel keeps the token' },
-  { id: 'bot', label: 'Bot or webhook', hint: 'a bot token or a webhook address' },
-];
+/** A template: what a kind of credential means and what Kel will do with it. */
+export interface KelConnectionTemplate {
+  id: KelConnection['kind'];
+  label: string;
+  hint: string;
+  credential_field: string;
+  credential_label: string;
+  check: string;
+}
 
-/** The credential field name a service of this kind normally uses. */
-export const connectionCredentialField = (kind: KelConnection['kind']): string =>
-  kind === 'bot' ? 'token' : kind === 'oauth' ? 'access_token' : 'api_key';
+/**
+ * The template for one kind, from the list the engine sent. The renderer keeps no kind vocabulary of its
+ * own: the words a person reads come from the framework, so there is only one place to change them.
+ */
+export const connectionTemplate = (
+  list: Pick<KelConnectionList, 'templates'> | null,
+  kind: KelConnection['kind']
+): KelConnectionTemplate | undefined => list?.templates?.find((item) => item.id === kind);
+
+/** The credential field a kind normally uses, as the framework defines it. */
+export const connectionCredentialField = (
+  list: Pick<KelConnectionList, 'templates'> | null,
+  kind: KelConnection['kind'],
+  fallback = 'api_key'
+): string => connectionTemplate(list, kind)?.credential_field || fallback;
 
 /** The custody namespace the shell stores a connection's credential under. */
 export const connectionCustodyKey = (id: string): string => `connection:${id}`;

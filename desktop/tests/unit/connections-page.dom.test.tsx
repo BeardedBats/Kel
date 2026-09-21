@@ -79,6 +79,34 @@ let calls: Call[] = [];
 let stored: string[] = [];
 let syncFails = false;
 
+/** The framework's three templates, as the engine sends them (V2-04). */
+const TEMPLATES = [
+  {
+    id: 'api_key',
+    label: 'API key',
+    hint: 'a key Kel sends with its requests',
+    credential_field: 'api_key',
+    credential_label: 'API key',
+    check: 'One authenticated GET.',
+  },
+  {
+    id: 'oauth',
+    label: 'Account authorization',
+    hint: 'you sign in and Kel keeps the token',
+    credential_field: 'access_token',
+    credential_label: 'Access token',
+    check: 'One authenticated GET.',
+  },
+  {
+    id: 'bot',
+    label: 'Bot or webhook',
+    hint: 'a bot token or a webhook address',
+    credential_field: 'token',
+    credential_label: 'Bot token',
+    check: 'One authenticated GET.',
+  },
+];
+
 /** Two known services: one Kel is sure about, one whose address Nick has to paste in. */
 const KNOWN = [
   {
@@ -124,6 +152,7 @@ const answer = (body: Record<string, unknown>): unknown => {
         },
         states: ['ready', 'needs_credentials'],
         kinds: ['api_key', 'oauth', 'bot'],
+        templates: TEMPLATES,
       };
     case 'get':
       return rows.find((item) => item.id === body.id);
@@ -415,6 +444,20 @@ describe('Connections — the central management surface', () => {
     renderPage();
     expect(await screen.findByText('Stripe')).toBeTruthy();
     expect(screen.queryByText('Test connection')).toBeNull();
+  });
+
+  it('asks for the credential field the framework names for that kind', async () => {
+    rows = [row('figma', 'Figma', { kind: 'oauth', has_credentials: false })];
+    renderPage();
+    fireEvent.click(await screen.findByText('Add a service'));
+    // The kind a person picks, and the words for it, come from the engine's templates rather than from a
+    // copy kept in the renderer — so the two cannot drift apart.
+    const select = screen.getByLabelText('How Kel signs in') as HTMLSelectElement;
+    expect(Array.from(select.options).map((option) => option.textContent)).toEqual([
+      'API key — a key Kel sends with its requests',
+      'Account authorization — you sign in and Kel keeps the token',
+      'Bot or webhook — a bot token or a webhook address',
+    ]);
   });
 
   it('sets up a known service in one step', async () => {
