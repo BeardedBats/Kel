@@ -1165,8 +1165,33 @@ class Service:
             return service.delete_credential(self._required(data,'id','Pick a connection first.'))
         if action=='test':
             # The shell passes the credential for this one request; the engine records only the result.
-            return service.test(self._required(data,'id','Pick a connection first.'),
-                                data.get('credentials') or {})
+            target=self._required(data,'id','Pick a connection first.')
+            return service.test(target,data.get('credentials') or {},
+                                context={'tool':'%s.test'%target})
+        if action=='network':
+            # V2-14: the network rules themselves — modes, per-scope lists, pending asks, history.
+            from . import network_policy
+            op=data.get('op') or 'get'
+            if op=='get':
+                return network_policy.get_policy(self.store)
+            if op=='set_mode':
+                return network_policy.set_mode(self.store,data.get('mode'),
+                                               scope=data.get('scope') or 'default',
+                                               domains=data.get('domains'))
+            if op=='set_tool':
+                return network_policy.set_tool_rule(self.store,data.get('tool'),data.get('mode'),
+                                                    domains=data.get('domains'))
+            if op=='clear_tool':
+                return network_policy.clear_tool_rule(self.store,data.get('tool'))
+            if op=='requests':
+                return network_policy.requests(self.store,state=data.get('state') or 'pending')
+            if op=='resolve':
+                return network_policy.resolve_request(
+                    self.store,self._required(data,'id','Which request?'),
+                    bool(data.get('allow')))
+            if op=='history':
+                return network_policy.history(self.store,limit=data.get('limit') or 50)
+            raise PolicyError('Unknown network action.')
         if action=='actions':
             # V2-04: what Kel can do with this connection, as data.
             from .connection_actions import actions, actions_for
@@ -1177,9 +1202,12 @@ class Service:
         if action=='run':
             # The shell passes the credential for this one request; the answer goes back to the caller
             # and only the fact of the call is written down.
-            return service.run(self._required(data,'id','Pick a connection first.'),
-                               data.get('action_id'),data.get('credentials') or {},
-                               data.get('params') or {},bool(data.get('confirmed')))
+            target=self._required(data,'id','Pick a connection first.')
+            action_id=data.get('action_id')
+            return service.run(target,action_id,data.get('credentials') or {},
+                               data.get('params') or {},bool(data.get('confirmed')),
+                               context={'tool':'%s.%s'%(target,action_id),
+                                        'project':data.get('project')})
         if action=='supply':
             # V2-04a: the shell hands the engine the values the assistant runtime needs. They stay in
             # this process's memory only (kel.connections custody); the runtime never receives one.

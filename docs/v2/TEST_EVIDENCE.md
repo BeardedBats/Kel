@@ -346,3 +346,25 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   **11 OK** (6 s). The apply suite exercises the module where the destination guard now sits.
 - No live process was killed and no scratch root was needed for this increment: the checks are pure
   rules plus one argv pin, exercised in-process.
+
+### V2-14 — network permissions (2026-09-21)
+
+- `tests/test_v2_network.py` (new, 14 tests) — default `full` changes nothing; `none` blocks with the
+  sentence and records it; `approved` matches exact and parent domains; an unlisted host **asks**
+  (one pending request + the plain sentence); approving adds the exact host and the next decision
+  allows it (subdomains included); denying keeps it blocked; per-Project scopes beat the default and
+  per-tool rules beat the project; a tool-scope approval updates the tool rule; `perform_request`
+  refuses **before any network I/O**; bind/unbind never leaks a store; history and requests list
+  newest-first; a one-argument hook keeps working (arity fallback).
+- Bounded group on the final code (one stack at a time): `test_v2_network test_v2_connections
+  test_v2_oauth test_v2_connection_bridge test_capabilities test_v16_r8_migrations` → **155 OK**
+  (101 s). Two existing hardening pins failed on the first run because `bind()` initially overrode a
+  deliberately patched hook; the fix (an explicit rule source wins) is recorded, and the seam's own
+  pins hold again.
+- Live loop (engine restarted on this code, `C:\Users\Nick\KelV2Runs\prepared\engine`, driven only
+  through `/api/connections`): `policy get → default mode=full`; a probe connection saved with an
+  unroutable base (`http://203.0.113.9/`); mode `none` → “You set Kel to no internet for default, so
+  nothing is sent.”; mode `approved` + `['example.com']` → “203.0.113.9 is not on the approved list
+  for default. Approve it in Connections, or change that scope to full internet, then ask again.”
+  with `pending asks → 1`; `history` → `[('203.0.113.9','ask'), ('203.0.113.9','blocked')]`; mode
+  restored to `full`; the engine was stopped by its own pid and its port shows only TIME_WAIT.
