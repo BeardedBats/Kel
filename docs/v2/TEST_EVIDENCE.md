@@ -284,3 +284,23 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   `disable_learning` → default 0 / `include_disabled` 1 with `enabled=False`; `enable_learning` →
   default 1. `RESULT live_loop=ok`. The probe engine was then stopped by PID after checking the
   listener owner.
+
+### V2-11 — long-running work 2.0 (2026-09-21)
+
+- `tests/test_v2_longrun.py` (new, 11 tests) — an expired run with no broker is fenced and never
+  re-armed (and fencing is idempotent); a broker-backed run is left for adoption; a fresh lease and an
+  in-process active run are never fenced (the `exclude` the engine passes); one `engine.tick()` fences
+  an abandoned run; continuing a fenced job re-arms it and the next claim is a fresh attempt;
+  `recover_expired` still fences every expired lease (the deliberate CLI difference); and the briefs:
+  fenced → “Say *continue*…”, route-blocked → “retries automatically” (not the person), running/queued
+  → nothing needed, verified-closed → done; plus the Work surface (`_work()['work']`): `needs_you`
+  counts only person-action jobs, the needs-you job sorts first, and the surface says the exact next
+  step.
+- Bounded group on the final code: `test_v2_longrun test_v16_r6_liveness test_v13_continuation
+  test_v13_continuation_service test_core test_review_recovery test_failure_surfacing
+  test_v15_reliability test_service_routing` → **119 OK** (43 s; one stack at a time).
+- Live observations (engine restarted on this code, `C:\Users\Nick\KelV2Runs\prepared\engine`):
+  pre-start live runs `[]`; seven broker-backed runs were adopted and **none** was fenced (states
+  `RESULT_RECORDED`/`EXITED`, `orphaned` total 0) — the conservative rule held against real state; the
+  Work surface answered `needs_you=0 jobs=1` with the settled probe job reading “Settled: uncertain.”
+  The probe engine was stopped by its own pid after checking the listener owner.

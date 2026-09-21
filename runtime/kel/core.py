@@ -729,6 +729,46 @@ class Store:
                 recovered.append(run['id'])
         return recovered
 
+    def recover_abandoned(self, now=None, exclude=()):
+        """Fence runs nothing durable can carry any more (V2-11).
+
+        `recover_expired` fences every expired lease — the right tool when a person runs it
+        deliberately. Runtime recovery must be narrower: a run a durable broker still owns is
+        adopted and monitored across restarts, so at runtime only expired runs **without** a broker
+        row (and not active in this process, per `exclude`) are fenced. Fencing keeps the V1.6
+        liveness truths: the run becomes ORPHANED with a fresh epoch, its milestone becomes
+        UNCERTAIN with the reconciliation sentence, and it is never re-armed or replayed on its
+        own — continuing is the person's decision.
+        """
+        now = time.time() if now is None else now
+        skip = set(exclude or ())
+        try:
+            with contextlib.closing(self.connect()) as db:
+                has_brokers = db.execute("SELECT 1 FROM sqlite_master WHERE type='table'"
+                                         " AND name='brokers'").fetchone()
+                brokers = {row[0] for row in db.execute('SELECT run_id FROM brokers')} \
+                    if has_brokers else set()
+        except sqlite3.OperationalError:
+            return []  # never fence on an unreadable recovery question: stay conservative
+        fenced = []
+        with self.transaction() as db:
+            for run in db.execute("SELECT * FROM runs WHERE state IN"
+                                  " ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED') AND expires<?",
+                                  (now,)).fetchall():
+                if run['id'] in skip or run['id'] in brokers:
+                    continue
+                job = self._get(db, run['job_id'])
+                db.execute("UPDATE runs SET state='ORPHANED',epoch=? WHERE id=?",
+                           (uid(), run['id']))
+                job['reserved'] -= run['reservation']
+                job['spent'] += 1
+                job['milestones'][run['milestone_id']].update(
+                    state='UNCERTAIN', error='Expired run; native state requires reconciliation')
+                job.update(state='WAITING_RESOURCE', verdict='UNCERTAIN')
+                self._save(db, job, 'run.orphaned', {'run_id': run['id'], 'recovery': 'runtime'})
+                fenced.append(run['id'])
+        return fenced
+
     def request_approval(self, job_id, run_id, action, seconds=60):
         approval_id = uid()
         with self.transaction() as db:

@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: long-running work (Priority 5) # V2-10 learning is BUILT (2026-09-21; D-39; evidence/v2-10/README.md): evidence-thresholded suggestions through the existing proposal queue, off/on without deletion (disabled never reaches context), explain with source/evidence/effect, and the authority fence. Next safe backend item: Priority 5 of the run directive — Long-running work 2.0 (continuation, dependency/provider recovery, stalled-work detection, progress summaries, resume briefs, completion recognition), implemented on the existing engine/job/continuation paths; then staffing (6), isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
+next_item: adaptive staffing (Priority 6) # V2-11 long-running work is BUILT (2026-09-21; D-40; evidence/v2-11/README.md): runtime recovery fences only runs nothing durable can carry (broker-backed runs are adopted, never fenced), and the Work brief reports shipped/open/why/next with needs_you true only when no automatic step can move the job. Next safe backend item: Priority 6 of the run directive — Adaptive staffing 2.0 (outcome-informed staffing, capped spawning), implemented on the existing team/roles/assignment/assurance paths; then isolation (7), network permissions (8), Kibble Build Update (9), migration reliability (10)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -38,7 +38,7 @@ phases:
   V2-08: queued      # Activity 2.0
   V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
   V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
-  V2-11: queued      # Long-running work 2.0
+  V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
   V2-12: queued      # Adaptive staffing 2.0
   V2-13: queued      # Local execution isolation
   V2-14: queued      # Network permissions

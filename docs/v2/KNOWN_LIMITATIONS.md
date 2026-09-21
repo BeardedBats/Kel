@@ -242,3 +242,19 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   nothing on their own, and a suggestion still needs an accept to become a belief.
 - **Nothing suggests authority at all**: there is no learning type for permissions, spending, file
   access or irreversible actions, and the fence refuses the text even before a type is chosen.
+
+## V2-11 — long-running work 2.0: the honest edges (2026-09-21)
+
+- **Runtime recovery needs the engine running.** The fence runs on `Engine.tick`; a killed engine's
+  abandoned runs are fenced on the next tick after a restart (or by the deliberate CLI
+  `python -m kel recover`, which still fences every expired lease).
+- **The lease is the clock.** A run is "abandoned" when its lease expired — 190 s for conversational
+  work, 420 s for coding. A run executing in this engine is excluded even if the lease lapsed
+  mid-run, so long work is never fenced out from under itself.
+- **An expired *approval* is not yet its own state.** A pending approval past its TTL stays
+  `AWAITING_USER` until it is resolved; the Work brief reports it as waiting on the request card. A
+  dedicated "approval expired" transition is not built.
+- **The Work brief is per conversation/project** — `_work(cid)` reads the jobs of that conversation,
+  with closed jobs shown only for the last 24 h (at most three).
+- **No progress percentages.** The brief reports facts (milestones accepted, open states, the fence
+  error, the last event time), never an invented completion estimate.

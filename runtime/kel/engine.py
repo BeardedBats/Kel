@@ -176,6 +176,9 @@ class Engine:
                     future.result()  # Do not hide worker-to-engine persistence failures.
                     del self.active[run_id]
             self.store.consume()
+            # V2-11: runtime recovery — fence runs nothing durable can carry (no broker, expired
+            # lease, not active here). Truth-preserving: ORPHANED + reconcile, never auto-retried.
+            self.store.recover_abandoned(exclude=tuple(self.active))
             for key,future in list(self.reviews.items()):
                 if future.done():
                     future.result()

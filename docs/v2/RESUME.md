@@ -5,14 +5,14 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Long-running work 2.0**
-   (run-directive Priority 5): continuation, dependency/provider recovery, stalled-work detection,
-   progress summaries, resume briefs, completion recognition and escalation — implemented on the
-   existing engine/job/continuation paths (no second task database). Read `ROADMAP.md`'s V2-11 section
-   before designing; do not build Astra-owned presentation, and keep the OAuth controls and contracts
-   intact for the Shell. Then staffing (6), isolation (7), network permissions (8), Kibble Build
-   Update (9), migration reliability (10). **V2-10 learning, V2-09 routing, V2-04b and the V2-04
-   execution hardening are BUILT** (D-34…D-39; `docs/v2/evidence/v2-10/README.md`,
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Adaptive staffing 2.0**
+   (run-directive Priority 6): outcome-informed staffing with capped spawning, implemented on the
+   existing team/roles/assignment/assurance paths (no second staffing, task or approval system). Read
+   `ROADMAP.md`'s V2-12 section before designing; do not build Astra-owned presentation, and keep the
+   OAuth controls and contracts intact for the Shell. Then isolation (7), network permissions (8),
+   Kibble Build Update (9), migration reliability (10). **V2-11 long-running work, V2-10 learning,
+   V2-09 routing, V2-04b and the V2-04 execution hardening are BUILT** (D-34…D-40;
+   `docs/v2/evidence/v2-11/README.md`, `docs/v2/evidence/v2-10/README.md`,
    `docs/v2/evidence/v2-09/README.md`, `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them.
    **V2-05-history is temporarily DEFERRED
    FOR SHELL INTEGRATION** — Astra owns the
