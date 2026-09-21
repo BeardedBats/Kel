@@ -64,12 +64,11 @@ describe('transcription page policy (D4)', () => {
     expect(page).not.toMatch(/action:\s*'search'/);
   });
 
-  it('exposes the human download/copy/share affordances', () => {
+  it('exposes the source download/copy/record affordances', () => {
     for (const needle of [
       "data-testid='download-txt'",
       "data-testid='download-audio'",
       "data-testid='copy-transcript'",
-      "data-testid='send-to-chat'",
       "data-testid='record-button'",
       "data-testid='upload-button'",
       "data-testid='stop-button'",

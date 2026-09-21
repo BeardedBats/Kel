@@ -866,7 +866,7 @@ const statusCopy =
             )}
             {selected && (
               <>
-                <div className={styles.documentHeader}>
+                <div className={`${styles.documentHeader} kel-shell-transcript-header`}>
                   {renaming ? (
                     <Input
                       value={nameDraft}
@@ -878,7 +878,7 @@ const statusCopy =
                       data-testid='transcript-rename'
                     />
                   ) : (
-                    <h2 className={styles.documentTitle} data-testid='transcript-name'>
+                    <h2 className={styles.documentTitle} data-testid='transcript-name' onDoubleClick={() => { setRenaming(true); setNameDraft(selected.name); }}>
                       {selected.name}
                     </h2>
                   )}
@@ -887,39 +887,7 @@ const statusCopy =
                     {statusCopy}
                   </span>
                   <span className={styles.grow} />
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => {
-                      setRenaming(true);
-                      setNameDraft(selected.name);
-                    }}
-                    data-testid='rename-button'
-                  >
-                    Rename
-                  </button>
                 </div>
-                <div className={styles.rowMeta}>
-                  {selected.source_type === 'recording' ? 'Recording' : `Upload: ${selected.source_filename || 'audio'}`}
-                  {' · '}
-                  {formatDuration(selected.duration_ms)}
-                  {' · '}
-                  {formatWhen(selected.created)}
-                  {selected.folder_id
-                    ? ` · ${library.folders.find((folder) => folder.id === selected.folder_id)?.name || 'Folder'}`
-                    : ''}
-                </div>
-                <Select
-                  size='small'
-                  value={selected.folder_id || ''}
-                  onChange={(value) => void assignTo((value as string) || null)}
-                  style={{ maxWidth: 260 }}
-                  options={[
-                    { value: '', label: 'Recent Transcriptions (unfiled)' },
-                    ...library.folders.map((folder) => ({ value: folder.id, label: folder.name })),
-                  ]}
-                  data-testid='move-select'
-                />
                 <p className={styles.transcriptText} data-testid='transcript-text'>
                   {(selected.text || '').trim() || '(No speech was recognized.)'}
                 </p>
@@ -946,35 +914,7 @@ const statusCopy =
                     Combine
                   </Button>
                 </div>
-                <div className={styles.secondaryActions}>
-                  <button type='button' className={styles.secondaryAction} onClick={sendToChat} data-testid='send-to-chat'>
-                    Send to chat
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => void openReview('answers')}
-                    data-testid='use-vetting'
-                  >
-                    Use as vetting answers
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => void openReview('freethink')}
-                    data-testid='think-out-loud'
-                  >
-                    Think out loud
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.dangerAction}
-                    onClick={() => removeTranscript(selected)}
-                    data-testid='delete-transcript'
-                  >
-                    Delete
-                  </button>
-                </div>
+
               </>
             )}
           </div>

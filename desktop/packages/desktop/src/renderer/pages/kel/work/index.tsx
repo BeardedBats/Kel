@@ -180,19 +180,13 @@ const WorkCenter: React.FC = () => {
         <div className="kel-page__head">
           <div>
             <ShellWorkspaceLink /><h1 className="kel-h1">Work</h1>
-            <p className="kel-sub">
-              {jobs === null
-                ? 'Loading jobs…'
-                : `${jobs.length} active · ${continuation.length} waiting to continue · ${waiting} need you`}
-            </p>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()}>
-            Reload
+          <KelButton variant="secondary" disabled={!activeJob || busy} onClick={() => activeJob && void act('Recipe draft', async () => { setRecipeDraft(await kelRecipePropose(activeJob.id)); })}>
+            Save as a recipe
           </KelButton>
         </div>
 
-        <NeedsAttention />
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && jobs === null && <KelLoading rows={4} />}
@@ -371,7 +365,7 @@ const WorkCenter: React.FC = () => {
         <KelCard title="Waiting to continue">
           {continuation.length === 0 ? (
             <KelEmpty
-              title="Nothing waiting to continue."
+              title="Nothing."
               why="When a job pauses, is interrupted, or waits on you, it appears here with the exact reason."
             />
           ) : (

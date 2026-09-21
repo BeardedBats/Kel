@@ -146,7 +146,7 @@ const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onC
           Reset
         </Button>
       ) : null}
-      {saved ? <span className='text-11px text-t-secondary'>changed</span> : null}
+      {saved ? <span className='text-11px text-t-secondary'>Changed</span> : null}
     </div>
   );
 };
@@ -190,7 +190,7 @@ export const ThemeColorsSection: React.FC = () => {
     <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-16px' data-testid='theme-colors-section'>
       <div className='flex items-center justify-between mb-4px'>
         <h2 className='kel-h2'>Theme colors</h2>
-        {changed > 0 ? (
+        {(
           <Button
             size='small'
             status='danger'
@@ -205,11 +205,7 @@ export const ThemeColorsSection: React.FC = () => {
           >
             Restore all colors
           </Button>
-        ) : null}
-      </div>
-      <div className='text-12px text-t-secondary mb-10px'>
-        Adjust the foundation colors of the selected theme ({activeThemeName()}). Changes apply immediately and are saved to
-        this theme only — other themes stay as they are.
+        )}
       </div>
       {warnings.length > 0 ? (
         <div className='mb-8px rd-8px bg-1 px-12px py-8px text-12px text-t-primary' data-testid='theme-color-warnings'>

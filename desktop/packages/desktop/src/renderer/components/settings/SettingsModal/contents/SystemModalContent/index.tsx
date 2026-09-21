@@ -1,3 +1,5 @@
+import { KelKeepAwakeCard } from '@renderer/components/kel/KelKeepAwakeCard';
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -502,102 +504,18 @@ const SystemModalContent: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
           <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
-            <h2 className='kel-h2'>General</h2>
+            <ShellSourceCardHeader title='General' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
-              {preferenceItems.map((item) => (
-                <PreferenceRow key={item.key} label={item.label} description={item.description}>
+              {preferenceItems.filter(item => item.key !== 'saveUploadToWorkspace').map((item) => (
+                <React.Fragment key={item.key}><PreferenceRow label={item.label}>
                   {item.component}
-                </PreferenceRow>
+                </PreferenceRow>{item.key === 'language' && <KelKeepAwakeCard compact />}</React.Fragment>
               ))}
             </div>
-            {/* Notification settings with collapsible sub-options */}
-            <Collapse
-              bordered={false}
-              activeKey={notificationEnabled ? ['notification'] : []}
-              onChange={(_, keys) => {
-                const shouldExpand = (keys as string[]).includes('notification');
-                if (shouldExpand && !notificationEnabled) {
-                  handleNotificationEnabledChange(true);
-                } else if (!shouldExpand && notificationEnabled) {
-                  handleNotificationEnabledChange(false);
-                }
-              }}
-              className='[&_.arco-collapse-item]:!border-none [&_.arco-collapse-item-header]:!px-0 [&_.arco-collapse-item-header-title]:!flex-1 [&_.arco-collapse-item-content-box]:!px-0 [&_.arco-collapse-item-content-box]:!pb-0'
-            >
-              <Collapse.Item
-                name='notification'
-                showExpandIcon={false}
-                header={
-                  <div className='flex flex-1 items-center justify-between w-full'>
-                    <span className='text-14px text-2 ms-12px'>{t('settings.notification')}</span>
-                    <Switch
-                      checked={notificationEnabled}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={handleNotificationEnabledChange}
-                    />
-                  </div>
-                }
-              >
-                {isDesktop ? (
-                  <div className='ps-12px'>
-                    <PreferenceRow label={t('settings.cronNotificationEnabled')}>
-                      <Switch
-                        checked={cronNotificationEnabled}
-                        disabled={!notificationEnabled}
-                        onChange={handleCronNotificationEnabledChange}
-                      />
-                    </PreferenceRow>
-                  </div>
-                ) : (
-                  <BrowserNotificationGrant />
-                )}
-              </Collapse.Item>
-            </Collapse>
+
           </div>
 
-          {/* Working-folder overrides live behind an explicit disclosure: the physical path includes
-              a donor-era subfolder name that should not be primary vocabulary for normal users, but
-              the exact paths stay available (and editable) here for the people who need them. */}
-          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-8px'>
-            <div className='flex items-center justify-between w-full gap-12px'>
-              <div className='flex flex-col'>
-                <span className='text-14px text-1'>Advanced — folders</span>
-                <span className='text-14px text-3'>
-                  Where Kel keeps working files and logs. Changing these moves real data and restarts Kel.
-                </span>
-              </div>
-              <Button size='small' onClick={() => setFoldersOpen((value) => !value)}>
-                {foldersOpen ? 'Hide' : 'Show'}
-              </Button>
-            </div>
-            <div className={foldersOpen ? 'block mt-12px' : 'hidden'}>
-              <Form form={form} layout='vertical' className='space-y-16px' onValuesChange={handleValuesChange}>
-                <DirInputItem label={t('settings.workDir')} field='workDir' />
-                <DirInputItem label={t('settings.logDir')} field='logDir' />
-                {error && (
-                  <Alert
-                    className='mt-16px'
-                    type='error'
-                    content={
-                      <span>
-                        {typeof error === 'string' ? error : JSON.stringify(error)}
-                        <FeedbackButton module='system-settings' className='ms-6px' />
-                      </span>
-                    }
-                  />
-                )}
-              </Form>
-            </div>
-          </div>
 
-          {/* Voice input (speech-to-text) settings */}
-          <VoiceInputSection />
-
-          {/* In-app browser: sign-in state and cache */}
-          <BrowserDataSection />
-
-          {/* Developer settings: DevTools + CDP (only visible in dev mode) */}
-          <DevSettings />
         </div>
       </AionScrollArea>
     </div>

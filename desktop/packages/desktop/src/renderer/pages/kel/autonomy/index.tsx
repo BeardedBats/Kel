@@ -111,43 +111,9 @@ export default function KelAutonomyPage() {
         <div className="kel-page__head">
           <div>
             <ShellWorkspaceLink /><h1 className="kel-h1">Permissions</h1>
-            <p className="kel-sub">
-              {leases === null
-                ? 'Loading…'
-                : `${active.length === 1 ? '1 active permission' : `${active.length} active permissions`} · ${pending.length} waiting on you`}
-            </p>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
-            Reload
-          </KelButton>
-          {!stopArmed ? (
-            <KelButton
-              variant="secondary"
-              disabled={busy || active.length === 0}
-              onClick={() => setStopArmed(true)}
-            >
-              Emergency stop
-            </KelButton>
-          ) : (
-            <>
-              <KelButton
-                variant="primary"
-                disabled={busy}
-                onClick={() =>
-                  void act('Emergency stop', async () => {
-                    await kelAutonomy.emergencyStop();
-                    setStopArmed(false);
-                  })
-                }
-              >
-                Yes — stop everything
-              </KelButton>
-              <KelButton variant="quiet" disabled={busy} onClick={() => setStopArmed(false)}>
-                Keep going
-              </KelButton>
-            </>
-          )}
+          <KelButton onClick={() => setAdvanced(value => !value)}>Run check</KelButton>
         </div>
 
         {stopArmed && (
@@ -265,17 +231,40 @@ export default function KelAutonomyPage() {
 
         <KelCard title="Permission check">
           <p className="kel-sub">Locked guardrails · digest {digest ? digest.slice(0, 12) : 'loading…'}</p>
-          <p className="kel-meta">Rules that are always on are locked and checked on every run.</p>
         </KelCard>
-
-        <div className="kel-row">
-          <KelButton variant="quiet" onClick={() => setAdvanced((value) => !value)}>
-            {advanced ? 'Hide advanced details' : 'Advanced details'}
-          </KelButton>
-        </div>
 
         {advanced && (
           <>
+          <div className="kel-row">          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
+            Reload
+          </KelButton>
+          {!stopArmed ? (
+            <KelButton
+              variant="secondary"
+              disabled={busy || active.length === 0}
+              onClick={() => setStopArmed(true)}
+            >
+              Emergency stop
+            </KelButton>
+          ) : (
+            <>
+              <KelButton
+                variant="primary"
+                disabled={busy}
+                onClick={() =>
+                  void act('Emergency stop', async () => {
+                    await kelAutonomy.emergencyStop();
+                    setStopArmed(false);
+                  })
+                }
+              >
+                Yes — stop everything
+              </KelButton>
+              <KelButton variant="quiet" disabled={busy} onClick={() => setStopArmed(false)}>
+                Keep going
+              </KelButton>
+            </>
+          )}</div>
         <p className="kel-meta">
           Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
           at its next safe check. It does not undo work that already finished.

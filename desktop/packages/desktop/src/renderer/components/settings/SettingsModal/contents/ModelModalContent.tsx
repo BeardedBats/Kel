@@ -1,3 +1,4 @@
+import ShellSourceCardHeader, { sourceCard } from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -338,9 +339,9 @@ const ModelModalContent: React.FC = () => {
 
   const headerActions = (
     <>
-      <Button type='text' size='small' onClick={clearAllHealthData} className='!text-t-secondary hover:!text-t-primary'>
+      {!isPageMode && <Button type='text' size='small' onClick={clearAllHealthData} className='!text-t-secondary hover:!text-t-primary'>
         {t('settings.clearStatus')}
-      </Button>
+      </Button>}
       <Button type='primary' size='small' onClick={() => addPlatformModalCtrl.open()}>
         {t('settings.addModel')}
       </Button>
@@ -374,7 +375,7 @@ const ModelModalContent: React.FC = () => {
       {addModelModalContext}
 
       {isPageMode ? (
-        <div className='kel-row'><h2 className='kel-h2'>Custom models</h2><div className='kel-shell-model-actions'>{headerActions}</div></div>
+        <><ShellSourceCardHeader title='Custom models' description={sourceCard('Custom models')?.description} /><div className='kel-shell-model-actions'>{headerActions}</div></>
       ) : (
         /* Modal mode keeps its compact self-contained header. */
         <div className='flex-shrink-0 border-b border-[var(--color-border-2)] pb-12px mb-14px flex flex-col gap-10px'>
@@ -390,13 +391,9 @@ const ModelModalContent: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0' disableOverflow={isPageMode}>
         {!data || data.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-40px'>
-            <Info theme='outline' size='48' className='text-t-secondary mb-16px' />
+            {!isPageMode && <Info theme='outline' size='48' className='text-t-secondary mb-16px' />}
             <h3 className='text-16px font-500 text-t-primary mb-8px'>{t('settings.noConfiguredModels')}</h3>
-            {isPageMode && (
-              <p className='m-0 text-14px text-t-secondary'>
-                Add an API-backed model of your own — or keep using the built-in models listed above.
-              </p>
-            )}
+
           </div>
         ) : (
           <div className='space-y-16px'>

@@ -1,3 +1,4 @@
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -186,7 +187,7 @@ const ModalMcpManagementSection: React.FC<{
   return (
     <div className='flex flex-col gap-16px min-h-0'>
       <div className='flex gap-8px items-center justify-between'>
-        <h2 className='kel-h2'>{t('settings.mcpSettings')}</h2>
+        <ShellSourceCardHeader title='MCP Tools Configuration' />
         <div>{renderAddButton()}</div>
       </div>
 
@@ -507,8 +508,9 @@ const ToolsModalContent: React.FC = () => {
           </div>
           {/* 图像生成 */}
           <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
+            <ShellSourceCardHeader title='Image Generation' />
             <div className='flex items-center justify-between mb-16px'>
-              <span className='text-14px text-t-primary'>{t('settings.imageGeneration')}</span>
+              <div><span className='text-14px text-t-primary'>Image Generation</span></div>
               <Switch
                 disabled={
                   isUpdatingImageGeneration ||
@@ -526,7 +528,7 @@ const ToolsModalContent: React.FC = () => {
 
             <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
               <Form.Item
-                label={t('settings.imageGenerationModel')}
+                label='Image Model'
                 tooltip={
                   <div className='space-y-4px'>
                     <div>{t('settings.imageGenSupportedTooltipTitle')}</div>

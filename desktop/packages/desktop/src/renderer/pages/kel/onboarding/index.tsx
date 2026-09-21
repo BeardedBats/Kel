@@ -103,13 +103,7 @@ export default function KelOnboardingPage() {
             <h1 className='kel-h1'>Set up Kel</h1>
           </div>
           <span className='kel-grow' />
-          <KelButton variant='quiet' onClick={() => void finish(true)}>
-            Skip setup
-          </KelButton>
-        </div>
-
-        <div className='kel-shell-setup-progress' role='progressbar' aria-label='Setup progress' aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={index + 1}>
-          {STEPS.map((item, i) => <span key={item} data-state={i < index ? 'complete' : i === index ? 'current' : 'pending'} />)}
+          <KelButton onClick={() => navigate('/settings/model')}>Add Model</KelButton>
         </div>
 
         <p className='kel-meta kel-shell-setup-label'>{`Step ${index + 1} of ${STEPS.length} · ${step}`}</p>
@@ -121,10 +115,9 @@ export default function KelOnboardingPage() {
         )}
 
         <KelCard title='Kel runs on this machine'>
-          <p className='kel-meta'>Nothing leaves your computer unless you connect a provider.</p>
           <div className='kel-row'>
-            <span>Local runtime</span><span className='kel-meta'>{engine ? `Kel ${engine}` : 'Checking runtime…'}</span>
-            <span className='kel-grow' /><KelStatusChip status={engine ? 'verified' : 'queued'} />
+            <span>Local runtime</span><span className='kel-meta'>{engine ? 'Detected · ready' : 'Checking runtime…'}</span>
+            <span className='kel-grow' /><span className='kel-chip kel-chip--ok'>{engine ? 'Ready' : 'Checking'}</span>
           </div>
         </KelCard>
 
@@ -138,46 +131,22 @@ export default function KelOnboardingPage() {
         </KelCard>
 
         <KelCard title='Where work happens'>
-          <p className='kel-meta'>Choose the folder Kel treats as your workspace.</p>
           <div className='kel-row'>
-            <div><div>Workspace</div><div className='kel-meta'>{project === 'default' ? 'General' : project || 'Loading…'}</div></div>
+            <div><div>Workspace folder</div><div className='kel-meta'>{project === 'default' ? 'General' : project || 'Loading…'}</div></div>
             <span className='kel-grow' /><KelButton onClick={() => navigate('/projects')}>Change</KelButton>
           </div>
         </KelCard>
 
         <KelCard title='How much Kel does on its own'>
-          <div className='kel-row'><span>Permissions and approval rules</span><span className='kel-grow' />
-            <KelButton onClick={() => navigate('/autonomy')}>Open Permissions</KelButton>
+          <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />
+            <KelButton onClick={() => navigate('/autonomy')}>Ask before edits</KelButton>
           </div>
-          <details><summary className='kel-meta'>Rules that are always on</summary>
-            <p className='kel-meta'>Kel asks before work reaches outside the approved plan. Allow once, allow for this project, or deny.</p>
-            <ul>{rules.map(rule => <li key={rule.rule} className='kel-meta'>{`${rule.rule} — ${rule.text}`}</li>)}</ul>
-            {digest && <p className='kel-meta'>{digest}</p>}
-          </details>
         </KelCard>
 
-        <KelCard title="You're set" actions={<KelButton onClick={() => void finish(false)}>Start using Kel</KelButton>}>
-          <p className='kel-meta'>You can change any of this later in Settings.</p>
-          {!providers.some(item => item.status === 'healthy' || item.status === 'quota') && <p className='kel-meta'>Connect a model before asking Kel to answer or run work.</p>}
+        <KelCard title="You're set">
+          <div className='kel-row'><KelButton onClick={() => void finish(false)}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
         </KelCard>
 
-        <div className='kel-row' style={{ marginTop: 16 }}>
-          {index > 0 && (
-            <KelButton variant='secondary' onClick={back}>
-              Back
-            </KelButton>
-          )}
-          <span className='kel-grow' />
-          {step === 'Ready' ? (
-            <KelButton variant='primary' onClick={() => void finish(false)}>
-              Start using Kel
-            </KelButton>
-          ) : (
-            <KelButton variant='primary' onClick={next}>
-              Next
-            </KelButton>
-          )}
-        </div>
       </main>
     </div>
   );

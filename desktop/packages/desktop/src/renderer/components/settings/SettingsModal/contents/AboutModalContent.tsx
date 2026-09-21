@@ -39,6 +39,12 @@ const AboutModalContent: React.FC = () => {
   const navigate = useNavigate();
   const isElectron = isElectronDesktop();
 
+  const [dataPath, setDataPath] = useState<{ root: string; database: string } | null>(null);
+  useEffect(() => {
+    const bridge = (window as unknown as { kelAPI?: { request: (route: string, payload: unknown) => Promise<{ root: string; database: string }> } }).kelAPI;
+    void bridge?.request('/api/data-path', {}).then(setDataPath).catch(() => {});
+  }, []);
+
   const [includePrerelease, setIncludePrerelease] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [updateReadyState, setLocalUpdateReadyState] = useState<UpdateReadyState>(() => getUpdateReadyState());
@@ -125,23 +131,13 @@ const AboutModalContent: React.FC = () => {
     <div className='kel-shell-about'>
       <KelCard title='Kel'>
         <div className='kel-shell-preference-row'><span>Version</span><span>v{__APP_VERSION__}</span></div>
-        <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? 'Desktop' : 'WebUI'}</span></div>
-        <div className='kel-shell-preference-row'><span>Data folder</span><Button onClick={() => navigate('/settings/system')}>Open System</Button></div>
+        <div className='kel-shell-preference-row'><span>Runtime</span><span>{`${isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'} · React ${React.version.split('.')[0]} · Arco Design`}</span></div>
+        <div className='kel-shell-preference-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
         {isElectron && <>
-          <div className='kel-shell-preference-row'><span>{t('settings.includePrereleaseUpdates')}</span><Switch size='small' checked={includePrerelease} onChange={handlePrereleaseChange} /></div>
           <Button className='kel-shell-about-update' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
             {updateReadyState.preparing ? t('update.preparingInstall') : updateReadyState.ready ? t('settings.updateReadyInstall', { version: updateReadyState.version }) : checking ? t('settings.checkingForUpdates') : t('settings.checkForUpdates')}
           </Button>
         </>}
-      </KelCard>
-      <KelCard title='Licenses'>
-        <div className='kel-shell-preference-row'><span>Kel license</span><a className='kel-btn' href='./licenses/Kel-LICENSE.txt' target='_blank' rel='noreferrer'>View</a></div>
-      </KelCard>
-      <KelCard title='Support'>
-        {linkItems.map((item) => <div className='kel-shell-preference-row' key={item.title}>
-          <span>{item.title}</span><Button onClick={() => { if (item.url) void openLink(item.url); else item.onClick?.(); }}>Open</Button>
-        </div>)}
-        <div className='kel-shell-preference-row'><span>Source code</span><Button onClick={() => void openLink('https://github.com/BeardedBats/Kel')}>GitHub</Button></div>
       </KelCard>
       <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />
     </div>
