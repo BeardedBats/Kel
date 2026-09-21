@@ -240,3 +240,24 @@ command-shaped or connected-service request out of the conversational branch, so
 work turn. Live probe on this code: the measured phone turn created a real job (`codex`, chain
 `[codex, claude]`), “Why this model?” answered plainly, and the chat control created no job. D-37,
 D-38.
+
+## V2-10 — Learning 2.0 (BUILT, 2026-09-21)
+
+The learning layer already rode the V1.3 memory store (learnings are memory records with the trust
+ladder, decay and corrections) and the proposal queue already refused to propose decisions or
+preferences. V2-10 adds the person's side, the floor and the fence. **Floor:** `suggest_learnings`
+proposes only from measured evidence — ≥3 decided runs (model-by-task, from the V2-09
+`routing_outcomes` store), ≥3 repeated user corrections, or ≥3 Connection uses in 30 days — and every
+suggestion is a proposal in the existing queue (accept/reject/defer, dedupe-by-evidence preserved), so
+the learner never applies anything. **Person's side:** a learning switches off without being deleted
+(a superseding equal-trust record carries `enabled`; the chain keeps every step), a disabled learning
+never reaches model context (`Memory.select`), stays inspectable via `include_disabled`, and comes
+back with one call; `/api/memory` gained `learnings` / `learning` (explain) / `disable_learning` /
+`enable_learning` / `suggest_learnings`; `explain_learning` reports source, trust, decayed confidence,
+evidence, provenance, the full chain, queued promotions and a plain `effect` sentence. **Fence:** any
+non-user source whose insight asserts a permission grant, spending authority, filesystem access or
+irreversible authority is refused outright — not stored, not even suggested; the person's own
+statement passes. Live `/api/memory` loop on this code: empty evidence → 0 suggestions; 3 decided
+runs → 1 pending proposal; accept → learning `model.coding.codex`; explain carried the evidence and
+the boundary sentence; disable → out of the default list (still inspectable, `enabled=False`); enable
+→ back. D-39.

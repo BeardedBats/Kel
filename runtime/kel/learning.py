@@ -56,6 +56,33 @@ KEY_RE = re.compile(r'^[a-z0-9][a-z0-9._-]{1,159}$')
 LEARNING_SCHEMA = 'learning.v1'
 RETRO_SCHEMA = 'retro.v1'
 
+# V2-10: nothing is *suggested* from fewer than this many independent observations. The threshold
+# applies to suggestions (reviewable proposals), never to a single explicit observation.
+SUGGEST_MIN_EVIDENCE = 3
+SUGGEST_WINDOW_DAYS = 30
+
+# V2-10: the authority fence (roadmap: never silently learn permission grants, spending authority,
+# filesystem access or irreversible authority). A non-user source that asserts any of those is
+# refused outright — not stored, not even proposed. The person's own statement is theirs to make.
+AUTHORITY_RE = re.compile(
+    r'\b(?:grant|give|allow|permit|authorize)\b[^.\n]{0,80}\b(?:kel|you|it|me|yourself)\b'
+    r'|\b(?:kel|you)\s+(?:may|can|is allowed to|are allowed to|has permission to)\s+'
+    r'(?:spend|pay|purchase|buy|delete|remove|install|publish|send|write|modify)\b'
+    r'|\b(?:spend|spending|budget|payment|purchase)\b[^.\n]{0,60}'
+    r'\b(?:authority|limit|without asking|automatically|up to)\b'
+    r'|\b(?:filesystem|file system|disk|drive|folder|directory)\b[^.\n]{0,60}'
+    r'\b(?:access|write access|read access|full access|permission)\b'
+    r'|\b(?:irreversible|without (?:asking|confirmation|approval)|no (?:approval|confirmation) needed)\b',
+    re.IGNORECASE)
+
+
+def authority_refusal(insight):
+    """None when the text is fine; a plain sentence when it tries to learn authority."""
+    if AUTHORITY_RE.search(str(insight or '')):
+        return ('Kel never records authority that way: permissions, spending, file access and '
+                'irreversible actions are yours to decide, every time.')
+    return None
+
 
 def _off(reason='workforce.learning.shadow is off', snapshot=None):
     return {'applied': False, 'recorded': False, 'reason': reason,
@@ -129,6 +156,9 @@ def record_learning(store, *, project_id, key, type, insight, confidence, source
     if len(evidence) > 24:
         raise PolicyError('At most 24 evidence references per learning')
     assert_safe({'key': key, 'insight': insight, 'evidence': list(evidence)}, path='learning')
+    refusal = authority_refusal(insight)
+    if refusal and source != 'user-stated':
+        raise PolicyError(refusal)
     if type == 'preference':
         if source != 'user-stated' or confirmed_by != 'user':
             raise PolicyError('Preferences are recorded only from explicit user confirmation '
@@ -169,7 +199,7 @@ def record_learning(store, *, project_id, key, type, insight, confidence, source
             'seq': event.get('seq')}
 
 
-def learnings_view(store, *, project_id, include_stale=False, now=None):
+def learnings_view(store, *, project_id, include_stale=False, include_disabled=False, now=None):
     """The learnings view (doc 11 §2): latest non-superseded record per key, with decay.
 
     Decay is computed, never written: observed/inferred/cross-model learnings lose one point
@@ -212,8 +242,14 @@ def learnings_view(store, *, project_id, include_stale=False, now=None):
         stale = effective < 1
         if stale and not include_stale:
             continue
+        # V2-10: a learning the person switched off leaves context and default views but stays
+        # inspectable, and it is never deleted — `include_disabled` is what the inspect surface asks for.
+        enabled = value.get('enabled') is not False
+        if not enabled and not include_disabled:
+            continue
         items.append({'key': key, 'type': value.get('type'), 'insight': value.get('insight'),
                       'confidence': confidence, 'effective_confidence': effective,
+                      'enabled': enabled,
                       'stale': stale, 'source': source, 'evidence': value.get('evidence') or [],
                       'mission_id': value.get('mission_id'), 'task_id': value.get('task_id'),
                       'memory_id': row['id'], 'status': row['status'],
@@ -252,6 +288,185 @@ def correct_learning(store, memory_id, *, insight=None, confidence=None, actor='
     updated['source'] = 'user-stated'
     new_id = memory.correct(memory_id, value=updated, summary=updated['insight'], actor=actor)
     return {'corrected': True, 'memory_id': new_id, 'supersedes': memory_id}
+
+
+# ---- V2-10: the person's side of learning — off/on, explain, and evidence-thresholded suggestions --
+
+def set_enabled(store, memory_id, enabled, *, actor='user'):
+    """Turn one learning off (or back on) without deleting it (V2-10).
+
+    The record is superseded by an equal-trust copy carrying `enabled`, so the append-only chain and
+    the trust of the original content are preserved: switching a learning off is the person's action,
+    not a new belief about the world. A disabled learning leaves model context and default views; it
+    stays inspectable and one call brings it back. Records that are not current learnings are refused
+    in plain words.
+    """
+    if not isinstance(enabled, bool):
+        raise PolicyError('enabled is true or false')
+    with contextlib.closing(store.connect()) as db:
+        row = db.execute('SELECT * FROM memories WHERE id=?', (memory_id,)).fetchone()
+    if row is None or row['status'] not in ('active', 'stale'):
+        raise PolicyError('That learning is not current any more')
+    try:
+        value = json.loads(row['value'])
+    except (TypeError, ValueError):
+        value = None
+    if not isinstance(value, dict) or value.get('schema') != LEARNING_SCHEMA:
+        raise PolicyError('That record is not a learning')
+    updated = dict(value)
+    updated['enabled'] = bool(enabled)
+    confidence = None
+    if row['trust'] == 6:
+        confidence = (int(value.get('confidence') or AUTO_CONFIDENCE_CAP)) / 10.0
+    memory = Memory(store)
+    new_id = memory.record(row['project_id'], row['type'], row['topic'], updated, row['summary'],
+                           source_type=row['source_type'], source_ref=row['source_ref'],
+                           actor=actor, trust=row['trust'], confidence=confidence,
+                           user_confirmed=row['user_confirmed'])
+    return {'enabled': bool(enabled), 'memory_id': new_id, 'supersedes': memory_id}
+
+
+def explain_learning(store, memory_id, *, now=None):
+    """Everything Kel knows about one learning: what it says, where it came from, what it changes.
+
+    `effect` states the boundary in plain words: a learning is advisory only — it never grants
+    permission, spending, file access or any irreversible authority (roadmap V2-10).
+    """
+    with contextlib.closing(store.connect()) as db:
+        row = db.execute('SELECT * FROM memories WHERE id=?', (memory_id,)).fetchone()
+    if row is None:
+        raise PolicyError('Unknown learning record: %s' % memory_id)
+    try:
+        value = json.loads(row['value'])
+    except (TypeError, ValueError):
+        value = None
+    if not isinstance(value, dict) or value.get('schema') != LEARNING_SCHEMA:
+        raise PolicyError('That record is not a learning')
+    view = {item['memory_id']: item for item in
+            learnings_view(store, project_id=row['project_id'], include_stale=True,
+                           include_disabled=True, now=now)}
+    item = view.get(memory_id)
+    queued = [entry for entry in promotion_queue(store, project_id=row['project_id'])
+              if entry.get('subject') == value.get('key')]
+    enabled = value.get('enabled') is not False
+    effect = ('Advisory only. A learning never grants permission, spending, file access or any '
+              'irreversible authority — those stay your decision every time.')
+    if not enabled:
+        effect += ' It is switched off, so it never reaches Kel\'s context.'
+    elif item and item.get('stale'):
+        effect += ' It has decayed out of context until it is observed again.'
+    return {'memory_id': memory_id, 'key': value.get('key'), 'type': value.get('type'),
+            'insight': value.get('insight'), 'source': value.get('source'),
+            'trust': row['trust'],
+            'confidence': (item or {}).get('confidence', value.get('confidence')),
+            'effective_confidence': (item or {}).get('effective_confidence'),
+            'stale': (item or {}).get('stale'), 'enabled': enabled,
+            'evidence': value.get('evidence') or [],
+            'provenance': {'mission_id': value.get('mission_id'), 'task_id': value.get('task_id'),
+                           'source_ref': row['source_ref'], 'recorded': row['created']},
+            'supersedes': row['supersedes'], 'superseded_by': row['superseded_by'],
+            'history': Memory(store).history(memory_id),
+            'promotions_queued': queued, 'effect': effect}
+
+
+def suggest_learnings(store, *, project_id, now=None, minimum=None):
+    """Evidence-thresholded suggestions from what actually happened (V2-10). Never applied.
+
+    Three bounded sources, each needing `minimum` independent observations before anything is
+    suggested: decided runs (model-by-task, read from the V2-09 evidence store), repeated user
+    corrections (the wording the person keeps fixing), and repeated Connection use. Every suggestion
+    goes through the existing memory proposal queue, so accept/reject/defer, dedupe-by-evidence and
+    review behave exactly as V1.6 built them — a rejected suggestion never re-appears until its
+    evidence changes. Nothing here is ever applied, and nothing here is authority: the fence above
+    refuses authority-shaped text outright, and the proposal types below are never decisions or
+    preferences (those come only from the person).
+    """
+    minimum = SUGGEST_MIN_EVIDENCE if minimum is None else require_integer(minimum, 'minimum',
+                                                                          lo=2, hi=24)
+    moment = time.time() if now is None else now
+    floor = moment - SUGGEST_WINDOW_DAYS * 86400
+    memory = Memory(store)
+    considered = {'runs': 0, 'corrections': 0, 'connections': 0}
+    created = []
+
+    def offer(kind, type, topic, key, insight, evidence, why):
+        refusal = authority_refusal(insight)
+        if refusal:
+            created.append({'key': key, 'topic': topic, 'state': 'refused', 'id': None,
+                            'suppressed': False, 'reason': refusal})
+            return
+        value = {'schema': LEARNING_SCHEMA, 'key': key, 'type': type, 'insight': insight,
+                 'confidence': 5, 'requested_confidence': 5, 'source': 'observed',
+                 'evidence': list(evidence.get('refs') or []), 'scope': 'project'}
+        result = memory.propose_change(project_id, kind=kind, type=TYPE_TO_MEMORY[type],
+                                       topic=topic, value=value, summary=insight, why=why,
+                                       evidence=evidence, source_ref='v2-10:suggest')
+        created.append({'key': key, 'topic': topic, 'state': result.get('state'),
+                        'id': result.get('id'), 'suppressed': bool(result.get('suppressed'))})
+
+    # 1. Model-by-task: decided runs (routing_outcomes — the V2-09 evidence store).
+    rows = _rows(store, 'SELECT * FROM routing_outcomes WHERE at>=? AND job_kind IS NOT NULL',
+                 (floor,))
+    stats = {}
+    for row in rows:
+        if row['verdict'] not in ('VERIFIED', 'FAILED'):
+            continue
+        slot = stats.setdefault((row['job_kind'], row['provider']), {'n': 0, 'ok': 0})
+        slot['n'] += 1
+        slot['ok'] += 1 if row['verdict'] == 'VERIFIED' else 0
+    for (job_kind, provider), slot in sorted(stats.items()):
+        considered['runs'] += slot['n']
+        if slot['n'] < minimum or slot['ok'] / slot['n'] < 0.75:
+            continue
+        key = 'model.%s.%s' % (_slug(job_kind), _slug(provider))
+        insight = ('%s completes %s work reliably here (verified in %d of %d recent runs, %d days).'
+                   % (provider, job_kind, slot['ok'], slot['n'], SUGGEST_WINDOW_DAYS))
+        offer('user_change', 'pattern', 'model for %s work' % job_kind, key, insight,
+              {'source': 'routing', 'job_kind': job_kind, 'provider': provider,
+               'runs': slot['n'], 'verified': slot['ok'],
+               'share_pct': round(100 * slot['ok'] / slot['n']),
+               'window_days': SUGGEST_WINDOW_DAYS,
+               'sig': 'routing|%s|%s|%d|%d' % (job_kind, provider, slot['n'], slot['ok']),
+               'refs': ['routing_outcomes:%s:%s' % (job_kind, provider)]},
+              'Recent measured runs favour this; review it before Kel treats it as the way here.')
+
+    # 2. Repeated user corrections: the wording the person keeps fixing.
+    for topic, slot in sorted(_correction_evidence(store, project_id).items()):
+        considered['corrections'] += slot['count']
+        if slot['count'] < minimum:
+            continue
+        key = 'correction.%s' % _slug(topic)
+        insight = ('You have corrected "%s" %d times; keep your latest wording as the convention.'
+                   % (topic, slot['count']))
+        offer('user_change', 'pattern', topic, key, insight,
+              {'source': 'corrections', 'topic': topic, 'corrections': slot['count'],
+               'memory_ids': slot['ids'][-6:],
+               'sig': 'corrections|%s|%d' % (topic, slot['count']),
+               'refs': ['memory_event:%s' % mid for mid in slot['ids'][-6:]]},
+              'You corrected this repeatedly; a convention would stop the repetition.')
+
+    # 3. Frequent Connection use: the tools this work actually leans on.
+    for row in _rows(store, 'SELECT connection_id, action, COUNT(*) AS n FROM connection_events'
+                            ' WHERE at>=? GROUP BY connection_id, action ORDER BY n DESC LIMIT 3',
+                     (floor,)):
+        considered['connections'] += row['n']
+        if row['n'] < minimum:
+            continue
+        key = 'connection.%s.%s' % (_slug(row['connection_id']), _slug(row['action']))
+        insight = ('You use "%s" for %s often (%d calls in %d days); it is part of how work gets '
+                   'done here.' % (row['connection_id'], row['action'], row['n'],
+                                   SUGGEST_WINDOW_DAYS))
+        offer('user_change', 'tool', 'connection %s' % row['connection_id'], key, insight,
+              {'source': 'connections', 'connection_id': row['connection_id'],
+               'action': row['action'], 'calls': row['n'],
+               'window_days': SUGGEST_WINDOW_DAYS, 'scope': 'engine',
+               'sig': 'connections|%s|%s|%d' % (row['connection_id'], row['action'], row['n']),
+               'refs': ['connection_events:%s:%s' % (row['connection_id'], row['action'])]},
+              'A frequently used connection; a note keeps it in reach.')
+
+    return {'minimum': minimum, 'window_days': SUGGEST_WINDOW_DAYS, 'considered': considered,
+            'suggested': created,
+            'note': 'Nothing is applied. Accept or reject each suggestion in the review queue.'}
 
 
 # ---- the promotion queue (doc 11 §4.5): recorded, never applied -----------------------------

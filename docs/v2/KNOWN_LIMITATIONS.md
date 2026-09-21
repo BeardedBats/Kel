@@ -229,3 +229,16 @@ blank-body deep link — below), job-driven attention actions, conversational pr
 - **The phone still needs the Shell’s Work route** to *show* a job it created: this increment makes the
   tool-shaped turn become real work at the engine, and the plain-probe proof above is the engine’s;
   the presentation of that work on the phone is the Shell lane’s.
+
+## V2-10 — learning 2.0: the honest edges (2026-09-21)
+
+- **A correction suggestion carries the count, not the wording.** “You corrected this N times” is
+  proposed as a new convention record the person accepts; it never rewrites the memory it counted.
+- **Connection usage is engine-wide.** `connection_events` carry no project link, so a connection
+  suggestion appears in whichever project is reviewing — its evidence says `scope: engine`.
+- **Thresholds are constants** (`SUGGEST_MIN_EVIDENCE = 3`, 30-day window), not per-project settings.
+- **The shadow flag still gates automatic workforce writes** (`workforce.learning.shadow`, default
+  off). The person-side actions (list / explain / off / on / suggest) are never gated — they write
+  nothing on their own, and a suggestion still needs an accept to become a belief.
+- **Nothing suggests authority at all**: there is no learning type for permissions, spending, file
+  access or irreversible actions, and the fence refuses the text even before a type is chosen.

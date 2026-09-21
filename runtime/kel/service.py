@@ -447,6 +447,25 @@ class Service:
             return {'ok':True,'id':memory.defer_proposal(memory_id,note=data.get('note',''))}
         if action=='history':
             return {'entries':memory.history_view(project_id,limit=data.get('limit') or 50)}
+        if action=='learnings':
+            # V2-10: what Kel learned, on the person's own surface. Switched-off and stale learnings
+            # stay inspectable when asked for; only enabled ones ever reach context.
+            from .learning import learnings_view
+            return {'learnings':learnings_view(self.store,project_id=project_id,
+                                               include_stale=bool(data.get('include_stale')),
+                                               include_disabled=bool(data.get('include_disabled')))}
+        if action=='learning':
+            from .learning import explain_learning
+            self._owned_memory(project_id,memory_id)
+            return explain_learning(self.store,memory_id)
+        if action in ('disable_learning','enable_learning'):
+            from .learning import set_enabled
+            self._owned_memory(project_id,memory_id)
+            return set_enabled(self.store,memory_id,action=='enable_learning')
+        if action=='suggest_learnings':
+            # Evidence-thresholded suggestions; nothing is applied — they land in the review queue.
+            from .learning import suggest_learnings
+            return suggest_learnings(self.store,project_id=project_id,minimum=data.get('minimum'))
         raise PolicyError('Unknown memory action')
 
     def _map_action(self,data):

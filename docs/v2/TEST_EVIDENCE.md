@@ -258,3 +258,29 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   healthy and capable here.” and carried `chain/demoted/evidence/excluded/job/provider/selected/why`;
   the chat control created **no** job (delta 0). The probe stack was stopped afterwards (ownership
   checked by PID; nothing of Astra’s was touched).
+
+### V2-10 — learning 2.0 (2026-09-21)
+
+- `tests/test_v2_learning.py` (new, 19 tests) — the required behaviours, pinned: a switched-off
+  learning never reaches context and leaves the default view while staying inspectable
+  (`include_disabled`, `enabled=False`) with the whole chain intact; switching it back on restores it
+  from the same chain; removal takes it out of every view; explain reports source, evidence, history
+  and the boundary `effect`; the authority fence refuses permission/spending/file-access/
+  irreversible assertions from **every** non-user source and lets a user’s own statement through;
+  suggestions need the evidence threshold before anything exists, a run mix below the share floor is
+  not suggested, a rejected suggestion never returns until its evidence signature changes, accepting
+  one writes it as the person’s own (`user_confirmation`), repeated corrections and repeated
+  Connection use each suggest after 3, suggestions never use `decision`/`preference` types, disabled
+  state survives a reopen, and the service surface exercises all five new actions.
+- Bounded group on the final code: `test_v2_learning test_workforce_learning test_v13_memory
+  test_v16_proposals test_v15_memory_packets test_v16_r5_persistence test_service_routing
+  test_v14_diagnostics` → **112 OK** (25–32 s; one stack at a time, no monolithic run).
+- Live loop (engine restarted on this code with `KEL_WORKFORCE_LEARNING_SHADOW=1`,
+  `C:\Users\Nick\KelV2Runs\prepared\engine`), driven only through `/api/memory`: empty evidence →
+  `suggested=0`; three decided runs → `suggested=1 states=['pending']`; `accept_proposal` →
+  `{"kind": "user_change", "state": "accepted"}`; `learnings` → `[('model.coding.codex',
+  'observed')]`; `learning` (explain) → evidence `["routing_outcomes:coding:codex"]` and the effect
+  sentence (“…never grants permission, spending, file access or any irreversible authority…”);
+  `disable_learning` → default 0 / `include_disabled` 1 with `enabled=False`; `enable_learning` →
+  default 1. `RESULT live_loop=ok`. The probe engine was then stopped by PID after checking the
+  listener owner.
