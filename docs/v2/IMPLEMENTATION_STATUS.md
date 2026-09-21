@@ -166,3 +166,16 @@ the desktop does.
 browser. Failures are no longer swallowed — a failed `stream_start` says live typing is unavailable and
 Kel will transcribe on stop, and the final transcription reports plain sentences instead of transport
 errors. Verified against real Muse in a real browser (see `evidence/v2-05/README.md`).
+
+## V2-05 third pass — the phone chooses Kel and sends for real
+
+The measured blocker is closed at its root: the `kel` assistant is seeded by the desktop's main process
+(`initializeKel`), and the standalone `bun run webui` host never ran that path — so a browser profile had
+no assistant to select and `useGuidSend`'s gate could never open. The webui now performs the same
+integration after the backend is healthy (`packages/web-host/src/kel-integration.ts`: register the Kel
+ACP agent — **module form**, `python -m kel.acp_host`; the script-path form cannot resolve the ACP host's
+relative imports during `initialize`, measured — create the single `kel` assistant, leave exactly it
+enabled), and the desktop's source branch spawns the same module form. Journey H drives the whole
+positive path live: pills `["kel"]` → send enabled → turn lands → real reply → settle → second turn →
+second reply ("still here"), post-auth watch clean. Assistant markdown renders inside a shadow root, so
+the journey reads `.markdown-shadow-body` explicitly.

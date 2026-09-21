@@ -227,3 +227,24 @@ only thing standing between a local web page and the engine) and we do **not** r
 engine's own (that would assert something false). The gateway is already the trusted local client — it
 holds the bearer, it is session-gated, and it already strips the browser's session cookie — so it strips
 `origin`/`referer` too and presents itself exactly as the desktop does.
+
+## D-30 — the standalone webui performs the same Kel assistant bootstrap as the desktop
+
+The browser profile a phone uses is hosted by `bun run webui`, which never runs Electron main — so
+`initializeKel`'s assistant seeding never happened there: no `kel` assistant existed, the guid page's
+catalog (filtered to `kel`) was empty, and the composer's send could never enable (measured: zero pills
+while `/api/assistants` answered with donor entries). We do not add a renderer fallback (that would be a
+second product rule about which assistant exists) and we do not leave it to operators. The standalone
+host does the same integration the desktop does — register the Kel ACP agent, create the single `kel`
+assistant, leave exactly it enabled — right after the backend is healthy
+(`web-host/src/kel-integration.ts`). *Forbids:* seeding "some assistant" when `kel` is missing, and any
+second definition of the assistant catalog.
+
+## D-31 — the Kel ACP agent spawns in module form (`python -m kel.acp_host`)
+
+Measured: the script-path form (`python <source>/kel/acp_host.py --data <root>`) answers ACP
+`initialize` with "attempted relative import with no known parent package" — the host's initialize
+handler imports `from .service` — while the module form initializes cleanly from any cwd with
+`PYTHONPATH` set. The packed engine (`--acp`) never hit this; the desktop's source branch did, and the
+new webui bootstrap would have. Both now register the module form. *Forbids:* registering the
+script-path form as the agent command again.

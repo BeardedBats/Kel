@@ -10,8 +10,8 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: phone journeys green incl. real Muse dictation; send is blocked because the phone shows no assistant to choose (measured), and drawer history / job attention / project routing remain
-next_item: V2-05-send       # mobile voice is done; next is sending with a connected model, then the phone drawer/history, job-driven attention, project routing (see RESUME.md)
+phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain
+next_item: V2-05-history    # the phone chooses Kel and sends for real now; next is conversation history from the phone (a /conversation/<id> deep link rendered blank once — measured), then job-driven attention actions, then conversational project routing (see RESUME.md)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -32,7 +32,7 @@ phases:
   V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
-  V2-05: partial     # iPhone Kel PWA V1 — phone journeys green incl. real Muse dictation (docs/v2/evidence/v2-05/README.md); send-with-model, drawer history, job attention, project routing open
+  V2-05: partial     # iPhone Kel PWA V1 — voice (real Muse) and the send round trip (real model, continued) proved on the phone; drawer history, job attention, project routing open
   V2-06: queued      # Needs Your Attention 2.0
   V2-07: queued      # Recipes 2.0
   V2-08: queued      # Activity 2.0
@@ -157,6 +157,31 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   resume/stop, and voice through Muse from the phone — and verifying them in a real browser at a phone
   viewport against the built app (which needs a build + the gateway, so it is its own increment, not a
   quick check).
+
+## V2-05 send — closed; the phone sends for real (next: history, attention, routing)
+
+- **The measured blocker is gone and the round trip is proved.** The phone profile had no assistant to
+  choose because the `kel` assistant is seeded by the Electron main process (`initializeKel`) and the
+  standalone `bun run webui` host never ran that path. The webui now performs the same integration at
+  start-up (register the Kel ACP agent in **module form** — `python -m kel.acp_host`; the script-path form
+  cannot resolve the ACP host's relative imports during `initialize` — create the single `kel` assistant,
+  leave exactly it enabled). The desktop's source branch got the same module-form fix; its packed engine
+  never hit this.
+- **Journey H now proves the positive path** (real browser 393x852 → gateway → aioncore → Kel engine
+  (ACP) → CLI model): one `kel` pill (auto-selected) → send enables → turn lands → real reply ("Phone
+  send check received.") → settle → second thumb-typed turn → second reply ("still here"); post-auth
+  watch clean (no failed reads, no dead sockets, no console errors). Evidence:
+  `docs/v2/evidence/v2-05/` (findings-H.json, H1-H3 PNGs).
+- **Write-ups a next run needs:** assistant replies render markdown inside a shadow root (`ShadowView`),
+  so `innerText` cannot see them — read `.markdown-shadow-body` text explicitly; the conversation's send
+  control read as disabled even when it accepted the next send (recorded, not gated on); a full-page load
+  of `/conversation/<id>` on the phone rendered a blank body in one authed probe; tapping the home's
+  recent entry text timed out once (try the drawer path first).
+- **V2-05 remains open as:** (c) job-driven attention actions (real job state, no fixtures), (d)
+  conversation history / the drawer from the phone above all, and conversational project routing.
+  V2-04a/V2-04b remain the next deliberate program items per the directive priorities.
+- **Evidence:** `TEST_EVIDENCE.md` (V2-05 third pass); desktop 358 pass (43 files); `tsc` clean; 4 new unit
+  tests (`kel-integration.unit.test.ts`).
 
 ## V2-04 build notes (historical — the phase is closed)
 
