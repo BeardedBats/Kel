@@ -329,3 +329,20 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   the V2-11 live probe (seven broker-backed runs adopted across a restart, `orphaned` total 0):
   brokered = adopted and never fenced; unbrokered = fenced and never replayed. The scratch root was
   removed after the probe and the engine stopped by its own pid.
+
+### V2-13 — local execution isolation (2026-09-21)
+
+- `tests/test_v2_isolation.py` (new, 10 tests) — a Windows system folder is refused with its label; a
+  user credential folder is refused; an environment-protected app folder (`KEL_PROTECTED_PATHS`) is
+  refused (including an inner path); Kel's own data root is refused while a plain temp project is
+  allowed; `coding.snapshot` refuses a sensitive source before any git call; `scrub_secrets` drops
+  every secret-shaped name and keeps the named credential plus `KEL_*`; `child_env` keeps only its own
+  provider credential and nothing else secret-shaped; the session directory becomes the child's
+  TMP/TEMP/TMPDIR and survives cleanup as “removed”; the read-only leaf argv is pinned (`-s`,
+  `read-only`, `sandbox_mode="read-only"`, `--disable`).
+- Bounded groups on the final code (one stack at a time): `test_v2_isolation test_coding_boundaries
+  test_coding_recovery test_coding_transport test_isolated_recovery test_broker_recovery
+  test_v15_credentials test_core` → **108 OK** (15 s); `test_apply_changes test_v16_r7_credentials` →
+  **11 OK** (6 s). The apply suite exercises the module where the destination guard now sits.
+- No live process was killed and no scratch root was needed for this increment: the checks are pure
+  rules plus one argv pin, exercised in-process.

@@ -5,16 +5,17 @@
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
-4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Local execution isolation**
-   (run-directive Priority 7): filesystem path restrictions, sensitive-folder protection, read-only
-   execution, a temporary writable workspace; child-process restrictions, full process-tree kill,
-   restricted environment and disposable sessions — implemented on the existing runner/workspace
-   paths, and explicitly **not** a VM platform or a Rust sandbox rewrite (MARATHON_DIRECTIVE §18).
-   Read the directive's §18 and `ROADMAP.md`'s V2-13 line before designing; do not build Astra-owned
-   presentation, and keep the OAuth controls and contracts intact for the Shell. Then network
-   permissions (8), Kibble Build Update (9), migration reliability (10). **V2-12 staffing, V2-11
-   long-running work, V2-10 learning, V2-09 routing, V2-04b and the V2-04 execution hardening are
-   BUILT** (D-34…D-41; `docs/v2/evidence/v2-12/README.md`, `docs/v2/evidence/v2-11/README.md`,
+4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **Network permissions**
+   (run-directive Priority 8): the three modes (NO INTERNET / APPROVED DOMAINS / FULL INTERNET),
+   per-tool and per-Project rules, show contacted domains, block unexpected domains, ask before a new
+   domain, and access history — implemented on the **existing V2-14 seam** (`NETWORK_RULES` in
+   `kel.connections`, already wired into `perform_request` and tested refuse-before-send and
+   fail-closed), not as a new subsystem. Read the directive's §19 and `ROADMAP.md`'s V2-14 line before
+   designing; do not build Astra-owned presentation, and keep the OAuth controls and contracts intact
+   for the Shell. Then Kibble Build Update (9) and migration reliability (10). **V2-13 isolation,
+   V2-12 staffing, V2-11 long-running work, V2-10 learning, V2-09 routing, V2-04b and the V2-04
+   execution hardening are BUILT** (D-34…D-42; `docs/v2/evidence/v2-13/README.md`,
+   `docs/v2/evidence/v2-12/README.md`, `docs/v2/evidence/v2-11/README.md`,
    `docs/v2/evidence/v2-10/README.md`, `docs/v2/evidence/v2-09/README.md`,
    `docs/v2/evidence/v2-04b/README.md`) — do not rebuild them.
    **V2-05-history is temporarily DEFERRED

@@ -68,6 +68,8 @@ def file_manifest(root):
 
 def snapshot(source,target):
     """Copy the actual tracked and untracked source state, never alter its checkout."""
+    from .containment import assert_usable_root
+    assert_usable_root(source,purpose='a coding snapshot')
     source=Path(source).resolve(strict=True);target=Path(target).resolve()
     if target.exists():raise PolicyError('Snapshot target already exists')
     file_manifest(source)
@@ -181,6 +183,11 @@ class CodingAdapter:
                         'capability':tool_capability,
                         'recommendation':recommendation(tool_capability,{'allowed':False,
                             'rule':decision.get('rule'),'reason':decision.get('reason')})}
+        # V2-13: never snapshot a sensitive source — system folders, credential folders, Kel's own
+        # data folder or an environment-protected app folder. Checked on every execute, not just
+        # the first, so a project root that moves under one later is refused too.
+        from .containment import assert_usable_root
+        assert_usable_root(contract['root'],purpose='a coding snapshot',store=self.store)
         if row:
             workspace=Path(row['path']);base=row['base'];baseline=json.loads(row['manifest'])
         else:
