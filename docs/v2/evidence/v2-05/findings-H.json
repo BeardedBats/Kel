@@ -2,21 +2,78 @@
   {
     "journey": "H",
     "step": "assistant-pills",
-    "count": 0
+    "count": 1,
+    "ids": [
+      "kel"
+    ]
   },
   {
     "journey": "H",
-    "step": "assistant-more",
-    "count": 0
+    "step": "assistant-selected",
+    "selectedBefore": "true",
+    "selectedAfter": "true"
   },
   {
     "journey": "H",
-    "step": "assistant-more-failed",
-    "error": "TimeoutError: locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"assistant-more-btn\"]').first()\u001b[22m\n"
+    "step": "send-possible",
+    "sendable": true
   },
   {
     "journey": "H",
-    "step": "assistant-pills-after-more",
-    "count": 0
+    "step": "user-turn",
+    "userOneLanded": true,
+    "path": "/",
+    "rows": [
+      "Phone send check: reply with one short sentence. Change no files."
+    ]
+  },
+  {
+    "journey": "H",
+    "step": "reply-one",
+    "reply": "Phone send check received.",
+    "rows": [
+      "Phone send check: reply with one short sentence. Change no files.",
+      "Phone send check received."
+    ]
+  },
+  {
+    "journey": "H",
+    "step": "turn-one-settled",
+    "settled": true,
+    "sendEnabled": false
+  },
+  {
+    "journey": "H",
+    "step": "sendbox",
+    "inputVisible": true
+  },
+  {
+    "journey": "H",
+    "step": "user-turn-two",
+    "userTwoLanded": true
+  },
+  {
+    "journey": "H",
+    "step": "reply-two",
+    "reply": "still here",
+    "rows": [
+      "Phone send check: reply with one short sentence. Change no files.",
+      "Phone send check received.",
+      "Phone continuity check: reply with the words: still here. Change no files.",
+      "still here"
+    ]
+  },
+  {
+    "journey": "H",
+    "step": "end",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"!bg-1 relative\" right=728"
+    },
+    "wsFailures": [],
+    "failedResponses": [],
+    "consoleErrors": []
   }
 ]
