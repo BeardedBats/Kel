@@ -1,0 +1,98 @@
+const imgEllipse = "https://www.figma.com/api/mcp/asset/063ac1f3-1a7c-4bbb-b3fe-56429efa7a05.svg";
+const imgEllipse1 = "https://www.figma.com/api/mcp/asset/b2818581-ea85-4cc8-82e5-f9bc8c30939a.svg";
+const imgEllipse2 = "https://www.figma.com/api/mcp/asset/63d0b866-b6f6-4a2b-87e0-6f2831b0064f.svg";
+
+export default function AttentionPaneV2({ className }: { className?: string }) {
+  return (
+    <div className={className || "border border-[rgba(221,233,255,0.5)] border-solid content-stretch drop-shadow-[0px_10px_15px_rgba(0,0,0,0.3)] flex flex-col items-start pb-[6px] pt-[14px] px-[20px] relative rounded-[16px] w-[920px]"} data-node-id="138:58" data-name="Attention pane v2">
+      <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[16px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(221, 233, 255, 0.02) 0%, rgba(221, 233, 255, 0) 30%, rgba(221, 233, 255, 0) 100%), linear-gradient(90deg, rgba(47, 107, 224, 0.12) 0%, rgba(47, 107, 224, 0.12) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.3) 0%, rgba(15, 45, 100, 0.3) 100%)" }} />
+      <div className="content-stretch flex items-center overflow-clip pb-[6px] relative shrink-0 w-full" data-node-id="138:59" data-name="Head">
+        <p className="[word-break:break-word] font-['Instrument_Sans:Bold'] font-bold leading-[20px] relative shrink-0 text-[#ffc481] text-[15px] whitespace-nowrap" data-node-id="138:60" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Needs you
+        </p>
+        <div className="flex-[1_0_0] h-[10px] min-w-px relative" data-node-id="138:61" data-name="Frame" />
+        <div className="bg-[rgba(252,172,81,0.14)] border border-[rgba(252,172,81,0.35)] border-solid content-stretch flex h-[20px] items-center px-[8px] relative rounded-[6px] shrink-0" data-node-id="138:63" data-name="Tag">
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#fcac51] text-[11px] whitespace-nowrap" data-node-id="I138:63;39:30">
+            1 needs you
+          </p>
+        </div>
+      </div>
+      <div className="border-[rgba(191,216,255,0.08)] border-solid border-t content-stretch flex gap-[14px] items-center overflow-clip py-[12px] relative shrink-0 w-full" data-node-id="138:65" data-name="Row">
+        <div className="relative shrink-0 size-[8px]" data-node-id="138:66" data-name="Ellipse">
+          <div className="absolute inset-[-75%]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Regular'] font-normal leading-[20px] min-w-px not-italic relative text-[#edf2fa] text-[14px]" data-node-id="138:67">
+          DeepSeek API needs setup so Kel can keep it available.
+        </p>
+        <div className="border border-[rgba(140,150,167,0.5)] border-solid content-stretch drop-shadow-[0px_4px_6px_rgba(0,0,0,0.25)] flex gap-[8px] h-[34px] items-center px-[14px] relative rounded-[8px] shrink-0" data-node-id="138:68" data-name="Button v2">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[8px]" style={{ backgroundImage: "linear-gradient(90deg, rgba(71, 122, 233, 0.1) 0%, rgba(71, 122, 233, 0.1) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.34) 0%, rgba(15, 45, 100, 0.34) 100%)" }} />
+          <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#e4dccf] text-[14px] whitespace-nowrap" data-node-id="I138:68;136:11" style={{ fontVariationSettings: '"wdth" 100' }}>
+            Set it up
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+        </div>
+      </div>
+      <div className="border-[rgba(191,216,255,0.08)] border-solid border-t content-stretch flex gap-[14px] items-center overflow-clip py-[12px] relative shrink-0 w-full" data-node-id="138:73" data-name="Row">
+        <div className="relative shrink-0 size-[8px]" data-node-id="138:74" data-name="Ellipse">
+          <div className="absolute inset-[-75%]">
+            <img alt="" className="block max-w-none size-full" src={imgEllipse1} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Regular'] font-normal leading-[20px] min-w-px not-italic relative text-[#edf2fa] text-[14px]" data-node-id="138:75">
+          Homepage refresh — Kel finished the step 1 questions.
+        </p>
+        <div className="border border-[rgba(140,150,167,0.5)] border-solid content-stretch drop-shadow-[0px_4px_6px_rgba(0,0,0,0.25)] flex gap-[8px] h-[34px] items-center px-[14px] relative rounded-[8px] shrink-0" data-node-id="138:76" data-name="Button v2">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[8px]" style={{ backgroundImage: "linear-gradient(90deg, rgba(71, 122, 233, 0.1) 0%, rgba(71, 122, 233, 0.1) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.34) 0%, rgba(15, 45, 100, 0.34) 100%)" }} />
+          <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#e4dccf] text-[14px] whitespace-nowrap" data-node-id="I138:76;136:11" style={{ fontVariationSettings: '"wdth" 100' }}>
+            Open
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+        </div>
+      </div>
+      <div className="border-[rgba(191,216,255,0.08)] border-solid border-t content-stretch flex gap-[14px] items-center overflow-clip py-[12px] relative shrink-0 w-full" data-node-id="138:80" data-name="Row">
+        <div className="relative shrink-0 size-[8px]" data-node-id="138:81" data-name="Ellipse">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse2} />
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Regular'] font-normal leading-[20px] min-w-px not-italic relative text-[#8fa9d6] text-[14px]" data-node-id="138:82">
+          Weekly rankings refresh ran at 6:00 PM and succeeded.
+        </p>
+        <div className="border border-[rgba(140,150,167,0.5)] border-solid content-stretch drop-shadow-[0px_4px_6px_rgba(0,0,0,0.25)] flex gap-[8px] h-[34px] items-center px-[14px] relative rounded-[8px] shrink-0" data-node-id="138:83" data-name="Button v2">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[8px]" style={{ backgroundImage: "linear-gradient(90deg, rgba(71, 122, 233, 0.1) 0%, rgba(71, 122, 233, 0.1) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.34) 0%, rgba(15, 45, 100, 0.34) 100%)" }} />
+          <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#e4dccf] text-[14px] whitespace-nowrap" data-node-id="I138:83;136:11" style={{ fontVariationSettings: '"wdth" 100' }}>
+            View
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+        </div>
+      </div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.06)]" />
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+These styles are contained in the design: v2/Card title: Font(family: "Instrument Sans", style: Bold, size: 15, weight: 700, lineHeight: 20, letterSpacing: 0), v2/Button: Font(family: "Instrument Sans", style: Medium, size: 14, weight: 500, lineHeight: 20, letterSpacing: 0), v2/Glass/Button edge: , v2/Glass/Button: Effect(type: INNER_SHADOW, color: #FFFFFF1A, offset: (0, 1), radius: 0, spread: 0); Effect(type: DROP_SHADOW, color: #00000040, offset: (0, 4), radius: 12, spread: -2), v2/Glass/Card: Effect(type: INNER_SHADOW, color: #FFFFFF0F, offset: (0, 1), radius: 0, spread: 0); Effect(type: DROP_SHADOW, color: #0000004D, offset: (0, 10), radius: 30, spread: -6), v2/Glass/Card edge: .
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Attention pane v2
+**Node ID:** 138:58
+
+Home: replaces the thread when there is no conversation. Rows carry the sidebar status meanings (amber working, blue unread, dim done).
+
+## Button v2
+**Node ID:** 136:28
+
+Secondary / Danger / Link × Default / Hover / Pressed / Disabled. Link is for actions inside a sentence or hint; Secondary for any boxed action; Danger once per page.
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.

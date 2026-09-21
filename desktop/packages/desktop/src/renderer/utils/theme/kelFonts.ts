@@ -49,5 +49,11 @@ export function loadKelFonts(root: Document = document): void {
     }
   };
   register(DISPLAY_FAMILY, DISPLAY_FILES);
+  register('Instrument Sans', [
+    ['instrument-sans/InstrumentSans.ttf', 400],
+    ['instrument-sans/InstrumentSans.ttf', 500],
+    ['instrument-sans/InstrumentSans.ttf', 600],
+    ['instrument-sans/InstrumentSans.ttf', 700],
+  ]);
   register(TEXT_FAMILY, TEXT_FILES);
 }
