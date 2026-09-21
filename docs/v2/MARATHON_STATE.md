@@ -10,8 +10,8 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-02                # Test Connection through the single choke point
-next_item: V2-03            # personal Connections (see ROADMAP.md)
+phase: V2-03                # known services + how each wants its credential
+next_item: V2-04            # Connection Framework + templates (see ROADMAP.md)
 status: phase-complete
 
 paths:
@@ -29,7 +29,7 @@ phases:
   V2-00: done        # developer line + durable program state (this setup commit)
   V2-01: done        # Connections model + central management (migration 23, /connections surface)
   V2-02: done        # Generic REST Connection + Test Connection (migration 24, perform_request choke point)
-  V2-03: queued      # personal Connections (Pitcher List, Stripe, Raptive, Google Drive, GitHub, ClickUp, Figma, Discord)
+  V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: queued      # Connection Framework + templates/docs/testing
   V2-05: queued      # iPhone Kel PWA V1
   V2-06: queued      # Needs Your Attention 2.0
@@ -90,6 +90,25 @@ temporary_worktrees: []     # disk-hygiene note: none exist right now; record an
   that possible.
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-02 block); engine 1101 OK; desktop 338 pass; `tsc` clean.
 - **No candidate was installed** for V2-02 either, and no real service has been contacted by a test yet.
+
+## V2-03 notes for the next run
+
+- **What exists now:** `runtime/kel/connection_services.py` (the eight services as rows: address, header,
+  how the credential is presented, docs, test endpoint, what to fetch, and how sure Kel is), `auth_prefix`
+  on a connection (migration 25: `null` = Kel works it out, `''` = exactly as it is, a word = added in
+  front), the `catalogue` action on `/api/connections`, and "Set up <service>" rows on the page that fill
+  the form in.
+- **The rule to keep:** a service is data. No module, table, worker or workflow per service, no branching
+  on a service id, and `connections.py` must stay free of service names (a test pins that). Anything Kel
+  *does* with a service is a tool — V2-04.
+- **V2-04 starts from:** the Connection Framework and its three templates (API Key, OAuth, Bot/webhook),
+  standardising credentials, authenticated requests, actions/tools, permissions, Test Connection, errors,
+  retries and tests. The OAuth template is what Google Drive needs — its entry knows the address, but the
+  account sign-in step does not exist yet, and its note says so. V2-14's network rules belong inside
+  `perform_request` in `connections.py`.
+- **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-03 block); engine 1110 OK; desktop 340 pass; `tsc` clean.
+- **Still not verified:** no installed-app check, and no real service has been contacted — that needs
+  Nick's credentials and stays V2-15's evidence.
 
 ## Model preferences recorded at setup
 
