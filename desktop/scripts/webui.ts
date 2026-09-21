@@ -24,7 +24,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { startWebHost } from '@aionui/web-host';
+import { ensureKelIntegration, startWebHost } from '@aionui/web-host';
 import { openBrowserUrl, shouldAutoOpenBrowser } from '../packages/web-cli/src/browser.js';
 
 // Aligned with packages/desktop/src/common/config/constants.ts WEBUI_DEFAULT_PORT.
@@ -217,6 +217,10 @@ async function main(): Promise<void> {
   const staticDir = resolveStaticDir();
   const backendBin = resolveBackendBinary();
   const logDir = process.env.AIONUI_LOG_DIR ?? path.join(workDir, 'logs');
+  // D11 — when a Kel engine is running on this machine (KEL_DATA_DIR points at its data root),
+  // expose its state to the remote browser through the session-gated /kel gateway. The same root
+  // is where the browser profile gets its Kel assistant from (see the bootstrap below).
+  const kelDataDir = process.env.KEL_DATA_DIR?.trim() || undefined;
 
   console.log('[webui] work dir   :', workDir);
   console.log('[webui] static dir :', staticDir);
@@ -236,9 +240,7 @@ async function main(): Promise<void> {
     requireAuth: true,
     dataDir: workDir,
     logDir,
-    // D11 — when a Kel engine is running on this machine (KEL_DATA_DIR points at its data root),
-    // expose its state to the remote browser through the session-gated /kel gateway.
-    kelDataDir: process.env.KEL_DATA_DIR?.trim() || undefined,
+    kelDataDir,
     // Surface the same work dir on /api/system/info so the browser UI shows
     // where standalone webui is actually persisting data. Without this the
     // backend inherits process.env and may report the parent shell's cwd.
@@ -257,6 +259,29 @@ async function main(): Promise<void> {
   console.log('AionUi WebUI is ready');
   console.log(`  Local  : ${handle.localUrl}`);
   if (handle.networkUrl) console.log(`  Network: ${handle.networkUrl}`);
+
+  // Kel assistant bootstrap. The desktop app performs the same integration in its Electron main
+  // process; this standalone host otherwise has no assistant the shell can select — the guid page
+  // filters the catalog to `kel`, finds nothing, and the composer's send can never enable (V2-05).
+  // Runs only when a Kel engine data root is configured: without one there is nothing to point the
+  // agent at, and the profile keeps its donor assistant catalog.
+  if (kelDataDir) {
+    try {
+      const kel = await ensureKelIntegration({
+        backendPort: handle.backendPort,
+        dataRoot: kelDataDir,
+        sourceRoot: process.env.KEL_SOURCE_ROOT?.trim() || path.resolve(repoRoot, '..', 'runtime'),
+        python: process.env.KEL_PYTHON?.trim() || 'python',
+      });
+      console.log(
+        `[KEL-BOOT] kel-integration: ready (agent ${kel.agent}, assistant ${kel.assistant}, ${kel.enablementPatches} enablement change(s))`
+      );
+    } catch (err) {
+      console.error('[KEL-BOOT] kel-integration failed:', err instanceof Error ? err.message : err);
+    }
+  } else {
+    console.log('[KEL-BOOT] kel-integration skipped: no KEL_DATA_DIR');
+  }
 
   // If SQLite has no admin yet (fresh install), seed one via backend and print
   // the plaintext credentials. Mirrors webuiBridge.ts:maybeSeedInitialPassword

@@ -43,7 +43,9 @@ describe('remote Kel bridge (D11)', () => {
 
   it('both launchers hand the gateway the engine data root', () => {
     expect(webuiConfig).toContain('kelDataDir: kelEngineDataRoot()');
-    expect(webui).toContain('kelDataDir: process.env.KEL_DATA_DIR?.trim() || undefined');
+    expect(webui).toContain('const kelDataDir = process.env.KEL_DATA_DIR?.trim() || undefined');
+    // The same root seeds the browser profile's Kel assistant — the phone's send gate (V2-05).
+    expect(webui).toContain('dataRoot: kelDataDir,');
   });
 });
 

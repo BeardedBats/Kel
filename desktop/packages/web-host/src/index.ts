@@ -2,6 +2,8 @@ import type { WebHostOptions, WebHostHandle } from './types.js';
 
 export type { AppMetadata, BackendBinaryResolver, WebHostOptions, WebHostHandle } from './types.js';
 export { startStaticServer, stopStaticServer } from './static-server.js';
+export { ensureKelIntegration } from './kel-integration.js';
+export type { KelIntegrationOptions, KelIntegrationResult } from './kel-integration.js';
 export type { StaticServerOptions, StaticServerHandle } from './static-server.js';
 
 // Backend launcher exports (M4)
