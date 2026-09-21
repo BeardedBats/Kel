@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Diagnostics — health, measured performance, process ownership, maintenance, and a
  * sanitized export that never leaves the machine.
@@ -101,6 +102,7 @@ const Diagnostics: React.FC = () => {
       <main className='kel-page' id='kel-diagnostics-main' tabIndex={-1}>
         <div className='kel-page__head'>
           <div>
+            <ShellWorkspaceLink />
             <h1 className='kel-h1'>Diagnostics</h1>
             <p className='kel-sub'>
               {snapshot

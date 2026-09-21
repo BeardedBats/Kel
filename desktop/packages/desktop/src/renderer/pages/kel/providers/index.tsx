@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Providers — one card per provider with the engine's real state, the readiness preflight,
  * and credential METADATA only (values never reach the engine).
@@ -23,7 +24,7 @@ import {
   type KelCredentialMetadata,
   type KelProviderStatus,
 } from '@renderer/components/kel/kelApi';
-import { presentProvider, toneChipClass, usableNow } from '@renderer/components/kel/providerStatus';
+import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
 
 const Providers: React.FC = () => {
   const navigate = useNavigate();
@@ -155,16 +156,12 @@ const Providers: React.FC = () => {
       <main className="kel-page" id="kel-providers-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Providers</h1>
-            <p className="kel-sub">
-              {providers === null
-                ? 'Reading provider state…'
-                : `${providers.length} providers · ${providers.filter(usableNow).length} usable right now`}
-            </p>
+            <ShellWorkspaceLink /><h1 className="kel-h1">Providers</h1>
+
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
-            Reload
+          <KelButton variant="secondary" onClick={() => void runReadiness()} disabled={busy}>
+            {busy ? "Checking…" : "Run preflight"}
           </KelButton>
         </div>
 
@@ -172,14 +169,16 @@ const Providers: React.FC = () => {
         {!error && providers === null && <KelLoading rows={4} />}
         {note && <p className="kel-meta">{note}</p>}
 
+        <KelCard title="Integrations">
         {!error &&
           (providers ?? []).map((provider) => {
             const view = presentProvider(provider);
             const needsSetup = view.label === 'Needs setup';
             const hasStored = credentialRows.some((row) => row.provider === provider.provider);
             return (
+            <details className="kel-shell-provider" key={provider.provider}>
+              <summary><span>{provider.label}</span><span className="kel-meta">{(provider.models ?? []).map(model => model.id).join(' · ')}</span><span className="kel-grow" /><span className={toneChipClass(view.tone)}>{view.label}</span></summary>
             <KelCard
-              key={provider.provider}
               title={provider.label}
               chip={<span className={toneChipClass(view.tone)}>{view.label}</span>}
               actions={
@@ -264,11 +263,98 @@ const Providers: React.FC = () => {
                 ])}
               />
             </KelCard>
+            </details>
             );
           })}
 
+        </KelCard>
+
+        <KelCard title="Readiness preflight">
+          {!readiness && <p className="kel-meta">Run preflight to check which provider can handle this work.</p>}
+          <details><summary className="kel-meta">Check options</summary>
+          <p className="kel-sub">
+            What Kel would use for a capability right now, and why — the engine records the fallback
+            reason instead of guessing.
+          </p>
+          <div className="kel-row">
+            {['text', 'vision', 'tools', 'edit', 'shell'].map((name) => (
+              <KelButton
+                key={name}
+                variant={name === capability ? 'primary' : 'quiet'}
+                onClick={() => setCapability(name)}
+              >
+                {name}
+              </KelButton>
+            ))}
+            <span className="kel-meta">prefer</span>
+            {['', 'claude-code', 'codex', 'internal', 'deepseek'].map((name) => (
+              <KelButton
+                key={name || 'auto'}
+                variant={name === prefer ? 'primary' : 'quiet'}
+                onClick={() => setPrefer(name)}
+              >
+                {name ? nameOf(name) : 'auto'}
+              </KelButton>
+            ))}
+            <KelButton variant="primary" disabled={busy} onClick={() => void runReadiness()}>
+              Check readiness
+            </KelButton>
+          </div>
+          </details>
+          {readiness && (
+            <>
+              <p className="kel-strong">
+                {readiness.chosen
+                  ? `Chosen: ${readiness.chosen.label} · ${readiness.chosen.model}`
+                  : 'No provider can take this capability right now'}
+              </p>
+              <p className="kel-meta">{readiness.reason}</p>
+              {readiness.reasons.length > 0 && (
+                <ul>
+                  {readiness.reasons.map((reason) => (
+                    <li className="kel-meta" key={reason}>
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="kel-meta">
+                Chain: {readiness.chain.map((id) => nameOf(id)).join(' → ') || 'none'}
+              </p>
+            </>
+          )}
+        </KelCard>
+
+        <KelCard title="Credential metadata">
+          <p className="kel-meta">Values are never stored here.</p>
+          {credentialRows.length === 0 ? (
+            <KelEmpty
+              title="No Kel-owned credential metadata yet."
+              why="The engine stores the provider, the field names, and a reference — the value itself lives in the OS-backed store."
+            />
+          ) : (
+            <KelTable
+              head={['Provider', 'Fields', 'Reference', 'Updated']}
+              rows={credentialRows.map((row) => [
+                <span className="kel-strong" key={`${row.provider}-p`}>
+                  {row.provider}
+                </span>,
+                <span className="kel-meta" key={`${row.provider}-f`}>
+                  {(row.fields ?? []).join(', ')}
+                </span>,
+                <span className="kel-code" key={`${row.provider}-r`}>
+                  {row.credential_ref}
+                </span>,
+                <span className="kel-meta" key={`${row.provider}-u`}>
+                  {formatWhen(row.updated ?? null)}
+                </span>,
+              ])}
+            />
+          )}
+        </KelCard>
+        <details className="kel-shell-extra-settings"><summary>Provider tools and credential settings</summary>
         <KelCard
-          title="Integrations"
+          title="Tools available to Kel"
           chip={
             <span className="kel-meta">
               {capabilities === null
@@ -314,59 +400,6 @@ const Providers: React.FC = () => {
               Manage connections
             </KelButton>
           </div>
-        </KelCard>
-
-        <KelCard title="Readiness preflight">
-          <p className="kel-sub">
-            What Kel would use for a capability right now, and why — the engine records the fallback
-            reason instead of guessing.
-          </p>
-          <div className="kel-row">
-            {['text', 'vision', 'tools', 'edit', 'shell'].map((name) => (
-              <KelButton
-                key={name}
-                variant={name === capability ? 'primary' : 'quiet'}
-                onClick={() => setCapability(name)}
-              >
-                {name}
-              </KelButton>
-            ))}
-            <span className="kel-meta">prefer</span>
-            {['', 'claude-code', 'codex', 'internal', 'deepseek'].map((name) => (
-              <KelButton
-                key={name || 'auto'}
-                variant={name === prefer ? 'primary' : 'quiet'}
-                onClick={() => setPrefer(name)}
-              >
-                {name ? nameOf(name) : 'auto'}
-              </KelButton>
-            ))}
-            <KelButton variant="primary" disabled={busy} onClick={() => void runReadiness()}>
-              Check readiness
-            </KelButton>
-          </div>
-          {readiness && (
-            <>
-              <p className="kel-strong">
-                {readiness.chosen
-                  ? `Chosen: ${readiness.chosen.label} · ${readiness.chosen.model}`
-                  : 'No provider can take this capability right now'}
-              </p>
-              <p className="kel-meta">{readiness.reason}</p>
-              {readiness.reasons.length > 0 && (
-                <ul>
-                  {readiness.reasons.map((reason) => (
-                    <li className="kel-meta" key={reason}>
-                      {reason}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="kel-meta">
-                Chain: {readiness.chain.map((id) => nameOf(id)).join(' → ') || 'none'}
-              </p>
-            </>
-          )}
         </KelCard>
 
         <KelSection title="Store a provider credential (OS-backed)">
@@ -447,32 +480,7 @@ const Providers: React.FC = () => {
           </p>
         </KelSection>
 
-        <KelSection title="Credential metadata (values are never stored here)">
-          {credentialRows.length === 0 ? (
-            <KelEmpty
-              title="No Kel-owned credential metadata yet."
-              why="The engine stores the provider, the field names, and a reference — the value itself lives in the OS-backed store."
-            />
-          ) : (
-            <KelTable
-              head={['Provider', 'Fields', 'Reference', 'Updated']}
-              rows={credentialRows.map((row) => [
-                <span className="kel-strong" key={`${row.provider}-p`}>
-                  {row.provider}
-                </span>,
-                <span className="kel-meta" key={`${row.provider}-f`}>
-                  {(row.fields ?? []).join(', ')}
-                </span>,
-                <span className="kel-code" key={`${row.provider}-r`}>
-                  {row.credential_ref}
-                </span>,
-                <span className="kel-meta" key={`${row.provider}-u`}>
-                  {formatWhen(row.updated ?? null)}
-                </span>,
-              ])}
-            />
-          )}
-        </KelSection>
+        </details>
       </main>
     </div>
   );
