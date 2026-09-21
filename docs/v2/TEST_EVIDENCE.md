@@ -304,3 +304,28 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   `RESULT_RECORDED`/`EXITED`, `orphaned` total 0) — the conservative rule held against real state; the
   Work surface answered `needs_you=0 jobs=1` with the settled probe job reading “Settled: uncertain.”
   The probe engine was stopped by its own pid after checking the listener owner.
+
+### V2-12 — adaptive staffing 2.0 + the two acceptance checks (2026-09-21)
+
+- `tests/test_v2_staffing.py` (new, 13 tests) — thin history changes nothing (and says “minimum 3”);
+  two settled missions are below the floor; blocker history asks for one more step (applied); clean
+  history asks for one fewer specialist (applied); a hard-rule floor holds against a lower (security
+  flag → held at D2, reason names the rule); mixed history is not evidence; a raise never breaks the
+  rule table (R1 / low-decomposition holds D2, `applied False`, reason names the gate); `resolve`
+  applies the legal step and equals `decide` with no history; graceful when the workforce tables are
+  absent; the D1 path applies a step down to solo; the D1 path records a raise without smuggling it;
+  the D2 path refuses with its explicit “use run_d1” sentence when history steps down.
+- Bounded group on the final code: `test_v2_staffing test_workforce_d1 test_workforce_d2
+  test_workforce_parallel test_workforce_assignment test_workforce_assurance test_workforce_learning
+  test_v14_team test_v15_roles` → **269 OK** (106 s; one stack at a time).
+- **Acceptance check — learning removal:** `test_v2_learning` (now **20 OK**) gained
+  `test_removing_a_learning_through_the_surface_purges_it`: a learning recorded through the real
+  service disappears from both the default and `include_disabled` views after the existing guarded
+  `forget` action. Removal was already satisfied by that path; no new removal code was written.
+- **Acceptance check — unbrokered abrupt stop, proved live:** scratch data root with a running
+  engine; a run claimed with a 5 s lease, **zero broker rows**, not active in that engine; after
+  expiry the **live engine's own tick** fenced it — run `ORPHANED`, event detail
+  `{'recovery': 'runtime'}`, job `WAITING_RESOURCE`, milestone `UNCERTAIN`. This is the counterpart to
+  the V2-11 live probe (seven broker-backed runs adopted across a restart, `orphaned` total 0):
+  brokered = adopted and never fenced; unbrokered = fenced and never replayed. The scratch root was
+  removed after the probe and the engine stopped by its own pid.

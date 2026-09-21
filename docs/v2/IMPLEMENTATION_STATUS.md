@@ -277,3 +277,19 @@ WAITING_RESOURCE) and never re-arms anything. **Person:** `Continuation.resume_b
 attempt waits for the person's “continue”; a pending approval waits on the request card). Live on the
 real data root: 7 broker-backed runs survived startup untouched (`orphaned` total 0) and the Work
 brief rendered a settled job in plain words. D-40.
+
+## V2-12 — Adaptive staffing 2.0 (BUILT, 2026-09-21)
+
+The staffing rule table, the D1 delegation path and the D2 pod path already existed (with builder≠
+verifier independence, family-diversity preference, frozen contracts, budget reservations and
+failure states written on worker failure). V2-12 adds the directive's remaining clause — learn from
+outcome history. `staffing.outcome_advice` reads settled missions at the same decided tier and offers
+exactly one bounded step: ≥3 with blocker-class findings → one up; ≥3 all clean → one down; mixed or
+thin → nothing, with the counts in the reasons. It can never cross R1/R3–R6 floors, `tier_max` or the
+caps; `staffing.resolve` applies it within those floors; `delegation.delegate` applies a step down to
+solo and records (never smuggles) a step up; `pods.run_d2` applies a step down and then refuses with
+its explicit “use run_d1” sentence; every `staffing.decided` event carries the advice beside the
+decision. Two acceptance checks closed this turn: _learning removal_ is satisfied by the existing
+guarded memory `forget` path (new surface pin), and _unbrokered abrupt-stop recovery_ was proved live
+— a 5 s unbrokered lease was fenced by the running engine's own tick (`recovery: runtime`), distinct
+from the V2-11 probe where seven broker-backed runs were adopted and never fenced. D-41.

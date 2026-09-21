@@ -117,6 +117,16 @@ def run_d2(store, job_id, milestone_id, request, builder_worker, verifier_worker
         raise PolicyError('Staffing features are required (doc 05 feature vector)')
     decision = decide(features, flags=tuple(mission_flags), tier_max=tier_max,
                       budget_class=budget_class)
+    # V2-12: the recorded outcome history may argue for one step down (or up); a step down below
+    # D2 leaves this path with its own explicit refusal, so the caller routes to the right one.
+    from .staffing import outcome_advice
+    advice = outcome_advice(store, features, flags=tuple(mission_flags), tier_max=tier_max,
+                            budget_class=budget_class)
+    decision['advice'] = advice
+    if advice['applied'] and advice['advised_tier'] in ('D0', 'D1'):
+        decision['tier'] = advice['advised_tier']
+        decision['reasons'] = list(decision['reasons']) + ['history advice applied: %s'
+                                                           % advice['advised_tier']]
     if decision['tier'] != 'D2':
         raise PolicyError('run_d2 needs a D2 staffing decision (got %s); D0/D1 use run_d1 and '
                           'D3+ arrives with 5.5' % decision['tier'])
@@ -191,13 +201,15 @@ def run_d2(store, job_id, milestone_id, request, builder_worker, verifier_worker
                           'score': decision['score'],
                           'rules': [item['id'] for item in decision['rules_fired']],
                           'reasons': decision['reasons'],
-                          'budget_class': decision['budget_class'], 'pod': 'd2'})
+                          'budget_class': decision['budget_class'], 'pod': 'd2',
+                          'advice': decision.get('advice')})
     team.record_activity(verifier_aid, 'staffing.decided',
                          {'staffing_id': staffing_id, 'tier': decision['tier'],
                           'score': decision['score'],
                           'rules': [item['id'] for item in decision['rules_fired']],
                           'reasons': decision['reasons'],
                           'budget_class': decision['budget_class'], 'pod': 'd2',
+                          'advice': decision.get('advice'),
                           'family_diversity': diversity})
     team.record_activity(builder_aid, 'contract.issued',
                          {'contract_id': builder_cid, 'task_id': builder_task,

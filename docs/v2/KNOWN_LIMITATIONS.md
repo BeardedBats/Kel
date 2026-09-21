@@ -258,3 +258,17 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   with closed jobs shown only for the last 24 h (at most three).
 - **No progress percentages.** The brief reports facts (milestones accepted, open states, the fence
   error, the last event time), never an invented completion estimate.
+
+## V2-12 — adaptive staffing: the honest edges (2026-09-21)
+
+- **History is tier-level, not feature-level.** Comparability means “same decided tier” — the stored
+  record keeps the decision, not the full feature vector, so the advice reads missions like the one
+  in front of it only at that granularity.
+- **One step, never a ladder.** The advice moves at most one tier and never more; D3/D4 remain
+  returned-but-unsupported by the existing D1/D2 paths (they are recorded, not routed).
+- **No automatic escalation into pods.** A raise is recorded as advice on the staffing event; no path
+  auto-switches from `run_d1` to `run_d2` on advice alone.
+- **The advice horizon is the whole recorded stream** (settled missions with a decided tier), with no
+  decay window — unlike routing (V2-09), which decays. Counts are reported so the reader can judge.
+- **Caps and budgets unchanged**: R8 caps (≤6 workers, depth ≤2, ≤4 children per agent, ≤10
+  grandchildren per mission) and budget reservations are untouched by the advice.
