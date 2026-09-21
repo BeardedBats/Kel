@@ -1,3 +1,4 @@
+import { Modal } from '@arco-design/web-react';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Diagnostics — health, measured performance, process ownership, maintenance, and a
@@ -42,6 +43,7 @@ const bytes = (value: number | undefined): string => {
 };
 
 const Diagnostics: React.FC = () => {
+  const [exportOpen, setExportOpen] = useState(false);
   const [snapshot, setSnapshot] = useState<KelDiagnosticsSnapshot | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -96,218 +98,30 @@ const Diagnostics: React.FC = () => {
 
   return (
     <div className='kel-scope'>
-      <a className='kel-skip' href='#kel-diagnostics-main'>
-        Skip to main content
-      </a>
       <main className='kel-page' id='kel-diagnostics-main' tabIndex={-1}>
         <div className='kel-page__head'>
-          <div>
-            <ShellWorkspaceLink />
-            <h1 className='kel-h1'>Diagnostics</h1>
-            <p className='kel-sub'>
-              {snapshot
-                ? `Engine ${snapshot.engine_version} · ${snapshot.counts.jobs} jobs · ${snapshot.counts.runs} runs · database integrity ${snapshot.database.integrity}`
-                : 'Reading engine health…'}
-            </p>
-          </div>
-          <span className='kel-grow' />
-          <KelButton variant='secondary' onClick={() => void load()}>
-            Reload
-          </KelButton>
-          <KelButton
-            variant='primary'
-            disabled={busy !== null}
-            onClick={() => void run('Observe now', () => kelDiagnostics.observe())}
-          >
-            Observe now
-          </KelButton>
+          <div><ShellWorkspaceLink /><h1 className='kel-h1'>Diagnostics</h1></div>
+          <span className='kel-grow' /><KelButton onClick={() => setExportOpen(true)}>Export and issue report</KelButton>
         </div>
-
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
-        {!error && !snapshot && <KelLoading rows={4} />}
-        {message && <p className='kel-meta'>{message}</p>}
-
-        {snapshot && (
-          <>
-            <KelCard title='Health'>
-              <KelTable
-                head={['Measure', 'Value', 'Note']}
-                rows={[
-                  ['Database integrity', snapshot.database.integrity, 'PRAGMA integrity_check'],
-                  ['Database size', bytes(snapshot.database.size_bytes), 'main file'],
-                  ['Write-ahead log', bytes(snapshot.database.wal_bytes), 'wal sidecar'],
-                  [
-                    'Free pages',
-                    `${snapshot.database.freelist_pages} of ${snapshot.database.page_count}`,
-                    `${snapshot.database.fragmentation_percent}% fragmented`,
-                  ],
-                  [
-                    'Runs past their fence',
-                    String(snapshot.runs.expired_unfenced),
-                    snapshot.runs.expired_unfenced > 0
-                      ? 'the engine will fence these on its next sweep'
-                      : 'none waiting',
-                  ],
-                  [
-                    'Authorization policy',
-                    snapshot.policy?.version ?? 'not migrated yet',
-                    snapshot.policy
-                      ? Object.entries(snapshot.policy.by_decision)
-                          .map(([decision, count]) => `${decision} ${count}`)
-                          .join(' · ') || 'no decisions recorded yet'
-                      : 'this database predates the V1.5 policy',
-                  ],
-                  [
-                    'Capability leases',
-                    Object.entries(snapshot.leases ?? {})
-                      .map(([state, count]) => `${state} ${count}`)
-                      .join(' · ') || 'none issued yet',
-                    'capability_leases by state',
-                  ],
-                  [
-                    'Schema history',
-                    String(snapshot.migrations?.length ?? 0),
-                    snapshot.migrations?.length
-                      ? `latest: ${snapshot.migrations[snapshot.migrations.length - 1].name}`
-                      : 'no migrations recorded',
-                  ],
-                ]}
-              />
-              {snapshot.database.problems.length > 0 && (
-                <p className='kel-meta'>
-                  Problems: {snapshot.database.problems.join(' · ')} — database health is reported, not
-                  guessed.
-                </p>
-              )}
-            </KelCard>
-
-            <KelCard title='Measured performance'>
-              {spans.length === 0 ? (
-                <KelEmpty
-                  title='No startup span recorded yet.'
-                  why='The engine records the cost of its own start on every launch; this install has none in the window.'
-                />
-              ) : (
-                <KelTable
-                  head={['Phase', 'Duration', 'Engine', 'When']}
-                  rows={spans.map((span, index) => [
-                    <span className='kel-strong' key={`s${index}`}>
-                      {span.phase}
-                    </span>,
-                    `${span.duration_ms} ms`,
-                    span.engine_version,
-                    formatWhen(span.at),
-                  ])}
-                />
-              )}
-              {measurements.length > 0 && (
-                <KelSection title='Measurements'>
-                  <KelTable
-                    head={['Name', 'Value', 'Basis', 'When']}
-                    rows={measurements.map((row, index) => [
-                      row.name,
-                      `${row.value} ${row.unit}`,
-                      row.basis,
-                      formatWhen(row.at),
-                    ])}
-                  />
-                </KelSection>
-              )}
-              <p className='kel-meta'>{basis}</p>
-            </KelCard>
-
-            <KelCard title='Providers'>
-              {Object.keys(snapshot.providers).length === 0 ? (
-                <KelEmpty
-                  title='No provider has reported state yet.'
-                  why='Provider health, quota and latency appear here once the engine has talked to one.'
-                />
-              ) : (
-                <KelTable
-                  head={['Provider', 'Failures', 'Circuit until', 'Quota', 'Observed']}
-                  rows={Object.entries(snapshot.providers).map(([provider, state]) => [
-                    <span className='kel-strong' key={`${provider}-n`}>
-                      {provider}
-                    </span>,
-                    String((state as Record<string, unknown>).failures ?? 0),
-                    (state as Record<string, unknown>).circuit_until
-                      ? formatWhen(Number((state as Record<string, unknown>).circuit_until))
-                      : 'closed',
-                    (state as Record<string, unknown>).quota === undefined ||
-                    (state as Record<string, unknown>).quota === null
-                      ? 'Not reported'
-                      : `${(state as Record<string, unknown>).quota}% left`,
-                    (state as Record<string, unknown>).quota_observed_at
-                      ? formatWhen(Number((state as Record<string, unknown>).quota_observed_at))
-                      : '—',
-                  ])}
-                />
-              )}
-            </KelCard>
-
-            <KelCard title='Process ownership'>
-              {snapshot.processes.length === 0 ? (
-                <p className='kel-meta'>
-                  No worker process is recorded — Kel owns nothing right now.
-                </p>
-              ) : (
-                <KelTable
-                  head={['Run', 'PID', 'Alive', 'Deadline', 'Identity']}
-                  rows={snapshot.processes.map((row) => [
-                    <span className='kel-code' key={`${row.run_id}-r`}>
-                      {row.run_id.slice(0, 12)}
-                    </span>,
-                    String(row.pid),
-                    row.alive
-                      ? 'yes'
-                      : row.past_deadline
-                        ? 'no — orphan candidate'
-                        : 'no — not running',
-                    row.past_deadline ? 'past deadline' : formatWhen(row.deadline),
-                    <span className='kel-meta' key={`${row.run_id}-i`}>
-                      {row.identity}
-                    </span>,
-                  ])}
-                />
-              )}
-            </KelCard>
-
-            <KelCard
-              title='Maintenance'
-              actions={
-                <span className='kel-row'>
-                  <KelButton
-                    variant='secondary'
-                    disabled={busy !== null}
-                    onClick={() => void run('Purge expired observations', () => kelDiagnostics.purge())}
-                  >
-                    Purge expired observations
-                  </KelButton>
-                  <KelButton
-                    variant='secondary'
-                    disabled={busy !== null}
-                    onClick={() => void run('Compact database', () => kelDiagnostics.compact())}
-                  >
-                    Compact database
-                  </KelButton>
-                </span>
-              }
-            >
-              <KelTable
-                head={['Retention', 'Days kept', 'What it applies to']}
-                rows={Object.entries(retention).map(([key, days]) => [
-                  <span className='kel-strong' key={`${key}-k`}>
-                    {key}
-                  </span>,
-                  String(days),
-                  'observations only — jobs, memories and approvals are never purged',
-                ])}
-              />
-              <p className='kel-meta'>
-                Compaction writes a backup first, then vacuums; the receipt names both sizes.
-              </p>
-            </KelCard>
-
+        {!error && !snapshot && <KelLoading rows={3} />}
+        {snapshot && <>
+          <KelCard title='Health'>
+            <div className='kel-shell-diagnostic-row'><span>Runtime</span><span className='kel-meta'>{snapshot.engine_version}</span><span className='kel-chip'>{snapshot.database.integrity === 'ok' ? 'Healthy' : 'Needs attention'}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>Providers</span><span className='kel-meta'>{Object.keys(snapshot.providers).length} reported</span><span className='kel-chip'>{Object.keys(snapshot.providers).length ? 'Available' : 'Needs setup'}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>Process ownership</span><span className='kel-meta'>Kel owns {snapshot.processes.length} child processes</span><span className='kel-chip kel-chip--ok'>OK</span></div>
+          </KelCard>
+          <KelCard title='Measured performance'>
+            <div className='kel-shell-diagnostic-row'><span>Startup</span><span className='kel-meta'>{spans.length ? `${(spans[0].duration_ms / 1000).toFixed(1)} s` : '—'}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>First model reply</span><span className='kel-meta'>{(() => { const m = measurements.find(item => /first.*reply/i.test(item.name)); return m ? `${m.value} ${m.unit}` : '—'; })()}</span></div>
+            {!spans.length && <p className='kel-meta'>No startup span recorded yet for this session.</p>}
+          </KelCard>
+          <KelCard title='Maintenance'>
+            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p></div><button className='kel-btn' type='button' disabled title='This source control has no matching runtime operation yet.'>Clear</button></div>
+            <div className='kel-shell-preference-row'><div><div>Restart runtime</div><p className='kel-meta'>Restarts the local runtime without closing Kel.</p></div><button className='kel-btn' type='button' disabled title='This source control has no matching runtime operation yet.'>Restart</button></div>
+          </KelCard>
+        </>}
+        <Modal title='Export and issue report' visible={exportOpen} onCancel={() => setExportOpen(false)} footer={null}>
             <KelCard
               title='Export and issue report'
               actions={
@@ -371,8 +185,7 @@ const Diagnostics: React.FC = () => {
                 </p>
               )}
             </KelCard>
-          </>
-        )}
+        </Modal>
       </main>
     </div>
   );

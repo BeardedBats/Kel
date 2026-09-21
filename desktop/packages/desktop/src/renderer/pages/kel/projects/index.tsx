@@ -86,15 +86,10 @@ export default function KelProjectsPage() {
         <div className="kel-page__head">
           <div>
             <ShellWorkspaceLink /><h1 className="kel-h1">Projects</h1>
-            <p className="kel-sub">
-              {work
-                ? `${work.project_id === 'default' ? 'General' : work.project_id} · ${records.length} knowledge records · map ${work.map ? 'v' + work.map.version : '—'} · ${entries.length} recipes`
-                : 'Loading project context…'}
-            </p>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()}>
-            Reload
+          <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
+            Kel suggests
           </KelButton>
         </div>
 
@@ -166,7 +161,7 @@ export default function KelProjectsPage() {
             </KelCard>
             {proposals.length > 0 && (
               <KelCard
-                title="Kel suggests"
+                id="project-suggestions" title="Kel suggests"
                 chip={
                   <span className="kel-meta">
                     {proposals.length === 1

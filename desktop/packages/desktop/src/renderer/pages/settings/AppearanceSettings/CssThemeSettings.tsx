@@ -271,6 +271,13 @@ const CssThemeSettings: React.FC = () => {
     setModalVisible(true);
   }, []);
 
+
+  useEffect(() => {
+    const open = () => { setEditingTheme(null); setModalVisible(true); };
+    window.addEventListener('kel:add-theme', open);
+    if (new URLSearchParams(location.hash.split('?')[1] || '').get('addTheme') === '1') open();
+    return () => window.removeEventListener('kel:add-theme', open);
+  }, []);
   /**
    * 打开编辑主题弹窗 / Open edit theme modal
    */

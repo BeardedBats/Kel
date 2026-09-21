@@ -1,3 +1,4 @@
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -457,7 +458,9 @@ const ArchivedSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper>
+      <p className='kel-shell-model-description'>Conversations and teams you archived.</p>
       <div className='kel-shell-archive-actions'>
+        {total === 0 && <Button disabled>Delete all</Button>}
         {
           total > 0 ? (
             <div className='flex min-w-0 items-center justify-end gap-10px'>
@@ -509,7 +512,8 @@ const ArchivedSettings: React.FC = () => {
         </div>
       ) : total === 0 ? (
         <div className='kel-card'>
-          <Empty description={t('settings.archived.empty')} />
+          <ShellSourceCardHeader title='Archived' />
+          <p className='kel-meta'>No archived items</p>
         </div>
       ) : (
         <div className='mt-18px flex flex-col gap-12px'>

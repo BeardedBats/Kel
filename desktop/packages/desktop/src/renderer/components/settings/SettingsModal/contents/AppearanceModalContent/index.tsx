@@ -1,3 +1,4 @@
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -38,8 +39,8 @@ const PreferenceRow: React.FC<{
   /** 控件元素 / Control element */
   children: React.ReactNode;
 }> = ({ label, children }) => (
-  <div className='flex flex-col items-stretch gap-10px py-12px md:flex-row md:items-center md:justify-between md:gap-24px'>
-    <div className='text-14px text-t-primary leading-22px'>{label}</div>
+  <div className='kel-shell-font-row flex flex-col items-stretch gap-10px py-12px md:flex-row md:items-center md:justify-between md:gap-24px'>
+    <div><div className='text-14px text-t-primary leading-22px'>{label}</div></div>
     <div className='w-full flex md:flex-1 md:justify-end'>{children}</div>
   </div>
 );
@@ -71,7 +72,7 @@ const AppearanceModalContent: React.FC = () => {
         <div className='space-y-16px kel-shell-appearance'>
           {/* 主题画廊 / Theme Gallery */}
           <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
-            <div className='text-14px text-t-primary leading-22px mb-12px'>{t('settings.theme')}</div>
+            <ShellSourceCardHeader title='Theme' />
             <CssThemeSettings />
           </div>
 
@@ -80,16 +81,11 @@ const AppearanceModalContent: React.FC = () => {
 
           {/* 字体（字族 + 字号）/ Fonts (family + size) */}
           <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
-            <div className='text-14px text-t-primary leading-22px mb-12px'>{t('settings.fonts')}</div>
+            <ShellSourceCardHeader title='Fonts' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {FONT_SIZE_KEYS.map((key) => (
-                <PreferenceRow key={key} label={t(FONT_REGION_LABEL_KEY[key])}>
+                <PreferenceRow key={key} label={key === 'app' ? 'Global' : t(FONT_REGION_LABEL_KEY[key])}>
                   <div className='flex items-center gap-12px flex-wrap justify-end'>
-                    <FontFamilySelect
-                      value={fontFamilies[key]}
-                      onChange={(family) => void setFontFamily(key, family)}
-                    />
-                    <FontWeightSelect value={fontWeights[key]} onChange={(weight) => void setFontWeight(key, weight)} />
                     <FontSizeStepper
                       value={fontSizes[key]}
                       min={FONT_SIZE_SPECS[key].min}
@@ -108,9 +104,7 @@ const AppearanceModalContent: React.FC = () => {
           {/* 缩放控制 / Scale Control */}
           <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
             <div className='w-full flex flex-col divide-y divide-border-2'>
-              <PreferenceRow label={t('settings.scale')}>
-                <ScaleControl />
-              </PreferenceRow>
+              <ShellSourceCardHeader title='Scale' /><ScaleControl />
             </div>
           </div>
         </div>

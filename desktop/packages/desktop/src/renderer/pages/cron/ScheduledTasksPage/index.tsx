@@ -1,270 +1,48 @@
-import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
-/**
- * @license
- * Copyright 2025 AionUi (aionui.com)
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import classNames from 'classnames';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Empty, Message, Spin, Switch, Tooltip } from '@arco-design/web-react';
-import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
-import { useAllCronJobs } from '@renderer/pages/cron/useCronJobs';
+import { Spin, Switch } from '@arco-design/web-react';
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
+import { useAllCronJobs, useCronJobConversations } from '@renderer/pages/cron/useCronJobs';
 import { formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
-import { type ICronJob } from '@/common/adapter/ipcBridge';
-import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
-import CronStatusTag from './CronStatusTag';
 import CreateTaskDialog from './CreateTaskDialog';
-import { getJobAgentMeta } from './jobAgentMeta';
-import { useAgentLogos } from '@renderer/utils/model/agentLogo';
-import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
-import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
-import { AionSearchInput } from '@/renderer/components/base';
-import SettingsPageHeader from '@/renderer/pages/settings/components/SettingsPageHeader';
-import { Attention, Robot } from '@icon-park/react';
 
-const ScheduledTasksPage: React.FC = () => {
-  const layout = useLayoutContext();
-  const isMobile = layout?.isMobile ?? false;
+/** The list and selected task share the existing scheduler store. */
+export default function ScheduledTasksPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { jobs, loading, pauseJob, resumeJob } = useAllCronJobs();
-  const { presetAssistants } = useConversationAssistants();
-  const logos = useAgentLogos();
-  const [createDialogVisible, setCreateDialogVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // The keep-awake switch is a Kel system setting (Settings · System) - one control, one home - so
-  // this page only states the fact in its banner.
-
-  const handleGoToDetail = useCallback(
-    (job: ICronJob) => {
-      navigate(`/scheduled/${job.id}`);
-    },
-    [navigate]
-  );
-
-  // "Create via chat": jump to the home page with the default cron prompt
-  // pre-filled. The assistant selection is left to the home page's existing
-  // logic (it restores the user's last-used assistant).
-  const handleCreateViaChat = useCallback(() => {
-    navigate('/guid', { state: { prefillPrompt: t('cron.status.defaultPrompt') } });
-  }, [navigate, t]);
-
-  const handleCreateManually = useCallback(() => {
-    setCreateDialogVisible(true);
-  }, []);
-
-  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-  const filteredJobs = useMemo(() => {
-    if (!normalizedSearchQuery) return jobs;
-    return jobs.filter((job) => {
-      const agentMeta = getJobAgentMeta(job, presetAssistants, logos);
-      const executionModeLabel =
-        job.target.execution_mode === 'new_conversation'
-          ? t('cron.page.form.newConversation')
-          : t('cron.page.form.existingConversation');
-      const searchableText = [
-        job.name,
-        job.description,
-        job.target.payload.text,
-        job.metadata.conversation_title,
-        job.metadata.agent_type,
-        job.metadata.agent_config?.name,
-        job.metadata.agent_config?.workspace,
-        agentMeta.name,
-        executionModeLabel,
-        formatSchedule(job, t),
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return searchableText.includes(normalizedSearchQuery);
-    });
-  }, [jobs, logos, normalizedSearchQuery, presetAssistants, t]);
-
-  const handleToggleEnabled = useCallback(
-    async (job: ICronJob) => {
-      try {
-        if (job.enabled) {
-          await pauseJob(job.id);
-          Message.success(t('cron.pauseSuccess'));
-        } else {
-          await resumeJob(job.id);
-          Message.success(t('cron.resumeSuccess'));
-        }
-      } catch (err) {
-        Message.error(String(err));
-      }
-    },
-    [pauseJob, resumeJob, t]
-  );
-
-  return (
-    <div className='kel-shell-scheduled w-full h-full min-h-0 box-border bg-1 flex flex-col overflow-hidden'>
-      <div
-        className={classNames(
-          'shrink-0 bg-1',
-          isMobile ? 'px-16px pt-14px pb-14px' : 'px-12px pt-14px pb-14px md:px-40px md:pt-32px md:pb-16px'
-        )}
-      >
-        <div className='mx-auto w-full max-w-920px box-border'>
-          <ShellWorkspaceLink />
-          <SettingsPageHeader
-            sticky={false}
-            data-testid='scheduled-tasks-header'
-            title={t('cron.scheduledTasks')}
-            description={t('cron.page.description')}
-            actions={
-              <>
-                {!isMobile && (
-                  <AionSearchInput
-                    className='shrink-0 w-[200px] hidden md:flex'
-                    data-testid='input-search-scheduled-tasks'
-                    placeholder={t('cron.page.searchPlaceholder', { defaultValue: 'Search tasks...' })}
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                  />
-                )}
-                <SettingsCreateMenu
-                  label={t('cron.page.newTask')}
-                  onChat={handleCreateViaChat}
-                  chatLabel={t('cron.page.createViaChat')}
-                  onManual={handleCreateManually}
-                  manualLabel={t('cron.page.createManually')}
-                />
-              </>
-            }
-          />
-        </div>
-      </div>
-
-      <div
-        className={classNames(
-          'min-h-0 flex-1 overflow-y-auto overscroll-contain',
-          isMobile ? 'px-16px pb-14px' : 'px-12px pb-24px md:px-40px md:pb-32px'
-        )}
-      >
-        <div
-          className={classNames(
-            'mx-auto flex w-full max-w-920px box-border flex-col',
-            isMobile ? 'gap-14px' : 'gap-16px'
-          )}
-        >
-          <div className='grid w-full box-border grid-cols-[minmax(0,1fr)] items-center gap-x-12px gap-y-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px sm:rounded-14px sm:px-16px max-[520px]:grid-cols-1'>
-            <span
-              className={classNames(
-                'min-w-0 text-t-primary',
-                isMobile ? 'text-12px leading-18px' : 'text-13px leading-20px'
-              )}
-            >
-              {t('cron.page.awakeBanner')}
-            </span>
-          </div>
-
-          {loading ? (
-            <div className='flex min-h-220px items-center justify-center rounded-16px border border-dashed border-border-2 bg-fill-1'>
-              <Spin />
-            </div>
-          ) : jobs.length === 0 ? (
-            <div className='flex min-h-220px items-center justify-center rounded-16px border border-dashed border-border-2 bg-fill-1'>
-              <Empty description={t('cron.noTasks')} />
-            </div>
-          ) : filteredJobs.length === 0 ? (
-            <div className='flex min-h-220px items-center justify-center rounded-16px border border-dashed border-border-2 bg-fill-1'>
-              <Empty description={t('cron.page.noSearchResults', { defaultValue: 'No matching scheduled tasks.' })} />
-            </div>
-          ) : (
-            <div className='w-full'>
-              {filteredJobs.map((job, index) => {
-                const agentMeta = getJobAgentMeta(job, presetAssistants, logos);
-                const isManualOnly = job.schedule.kind === 'cron' && !job.schedule.expr;
-                const hasError = job.state.last_status === 'error' || job.state.last_status === 'missed';
-                const executionModeLabel =
-                  job.target.execution_mode === 'new_conversation'
-                    ? t('cron.page.form.newConversation')
-                    : t('cron.page.form.existingConversation');
-                const nextRun = job.state.next_run_at_ms ? formatNextRun(job.state.next_run_at_ms, i18n.language) : '-';
-                const errorHint = job.state.last_error
-                  ? t('cron.lastErrorWithDetail', { error: job.state.last_error })
-                  : t('cron.status.error');
-
-                return (
-                  <div
-                    key={job.id}
-                    className={classNames(
-                      'group flex cursor-pointer items-center justify-between gap-12px rounded-12px border border-solid border-transparent bg-transparent px-12px py-6px transition-colors duration-180 hover:bg-fill-2',
-                      isMobile ? '' : 'min-h-48px'
-                    )}
-                    style={{ marginBottom: index === filteredJobs.length - 1 ? 0 : 12 }}
-                    onClick={() => handleGoToDetail(job)}
-                  >
-                    <div className='flex min-w-0 flex-1 items-center gap-8px'>
-                      <Tooltip content={agentMeta.name}>
-                        <div className='flex h-24px w-24px shrink-0 items-center justify-center overflow-hidden rounded-50% bg-fill-2 text-11px text-t-secondary'>
-                          {agentMeta.logo ? (
-                            <ThemedLogo
-                              src={agentMeta.logo}
-                              alt={agentMeta.name}
-                              className='object-cover'
-                              style={{ width: 24, height: 24 }}
-                            />
-                          ) : agentMeta.emoji ? (
-                            agentMeta.emoji
-                          ) : (
-                            <Robot size='16' className='shrink-0 text-t-secondary' />
-                          )}
-                        </div>
-                      </Tooltip>
-                      <div className='min-w-0 flex-1'>
-                        <div className='flex min-w-0 items-center gap-8px'>
-                          <span className='min-w-0 truncate text-14px leading-19px font-medium text-t-primary'>
-                            {job.name}
-                          </span>
-                          <span className='shrink-0 rounded-4px bg-fill-2 px-5px py-1px text-11px leading-15px text-t-secondary'>
-                            {executionModeLabel}
-                          </span>
-                        </div>
-                        <div
-                          className='mt-1px min-w-0 truncate text-12px leading-16px text-t-secondary'
-                          title={`${formatSchedule(job, t)} · ${t('cron.nextRun')}：${nextRun}`}
-                        >
-                          {formatSchedule(job, t)}
-                          <span className='mx-6px text-t-secondary opacity-60'>·</span>
-                          {t('cron.nextRun')}：{nextRun}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className='flex shrink-0 items-center gap-6px' onClick={(event) => event.stopPropagation()}>
-                      {!isManualOnly && <CronStatusTag job={job} />}
-                      {hasError && (
-                        <Tooltip content={errorHint}>
-                          <Attention
-                            theme='outline'
-                            size={16}
-                            className='shrink-0 text-danger-6'
-                            aria-label={errorHint}
-                          />
-                        </Tooltip>
-                      )}
-                      {!isManualOnly && (
-                        <Switch size='small' checked={job.enabled} onChange={() => handleToggleEnabled(job)} />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <CreateTaskDialog visible={createDialogVisible} onClose={() => setCreateDialogVisible(false)} />
+  const { jobs, loading } = useAllCronJobs();
+  const [selectedId, setSelectedId] = useState<string>();
+  const [createOpen, setCreateOpen] = useState(false);
+  const selected = jobs.find(job => job.id === selectedId) ?? jobs[0];
+  const { conversations } = useCronJobConversations(selected?.id);
+  const conversationId = conversations[0]?.id || selected?.metadata.conversation_id;
+  return <div className='kel-scope'><main className='kel-page kel-shell-scheduled'>
+    <div className='kel-page__head'>
+      <div><ShellWorkspaceLink /><h1 className='kel-h1'>Scheduled tasks</h1></div>
+      <span className='kel-grow' /><button type='button' className='kel-btn' onClick={() => setCreateOpen(true)}>New task</button>
     </div>
-  );
-};
-
-export default ScheduledTasksPage;
+    <section className='kel-card' aria-label='Scheduled tasks'>
+      <ShellSourceCardHeader title='Scheduled tasks' description={`${jobs.length} ${jobs.length === 1 ? 'task' : 'tasks'}`} />
+      {loading ? <Spin /> : jobs.length === 0 ? <p className='kel-meta'>No scheduled tasks</p> : <div>
+        {jobs.map(job => <button key={job.id} type='button' className='kel-shell-task-row' aria-pressed={selected?.id === job.id} onClick={() => setSelectedId(job.id)}>
+          <span>{job.name}</span><span className='kel-meta'>{formatSchedule(job, t)}{job.enabled && job.state.next_run_at_ms ? ` · next ${formatNextRun(job.state.next_run_at_ms, i18n.language)}` : !job.enabled ? ' · paused' : ''}</span>
+          <span className={`kel-chip ${job.enabled ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{job.enabled ? 'Active' : 'Paused'}</span>
+        </button>)}
+      </div>}
+    </section>
+    {selected && <section className='kel-card kel-shell-task-detail' aria-label={selected.name}>
+      <ShellSourceCardHeader title={selected.name} description={formatSchedule(selected, t)} />
+      <div className='kel-shell-task-field'><span>Instructions</span><p>{selected.target.payload.text}</p></div>
+      <div className='kel-shell-task-field'><span>Assistant</span><span>Kel</span></div>
+      <div className='kel-shell-task-field'><span>Model</span><span>{selected.metadata.agent_config?.model_id || selected.metadata.agent_config?.model?.model || 'Automatic'}</span></div>
+      <div className='kel-shell-task-field'><span>Execution mode</span><span>{selected.target.execution_mode === 'new_conversation' ? 'New conversation' : 'Existing conversation'}</span></div>
+      <div className='kel-shell-task-field'><span>Queue</span><Switch checked={selected.state.queue_enabled} disabled aria-label='Queue' /></div>
+      <div className='kel-shell-preference-row'><div><div>History</div><p className='kel-meta'>{selected.state.last_run_at_ms ? `Last run ${formatNextRun(selected.state.last_run_at_ms, i18n.language)} · ${selected.state.last_status === 'ok' ? 'succeeded' : selected.state.last_status || 'unknown'}` : 'No runs yet'}</p></div>
+        <button type='button' className='kel-btn' disabled={!conversationId} onClick={() => conversationId && navigate(`/conversation/${conversationId}`)}>Go to conversation</button>
+      </div>
+    </section>}
+    <CreateTaskDialog visible={createOpen} onClose={() => setCreateOpen(false)} />
+  </main></div>;
+}
