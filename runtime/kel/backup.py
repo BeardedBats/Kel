@@ -68,10 +68,47 @@ def _summary(db_path):
         out['messages'] = count('messages')
         out['transcripts'] = count('transcripts')
         out['vetting_sessions'] = count('vetting_sessions')
+        # V2-17: the V2 surfaces a person would miss most, visible in the backup description too.
+        out['connections'] = count('connections')
+        out['memories'] = count('memories')
+        out['projects'] = count('projects')
+        out['jobs'] = count('jobs')
         con.close()
     except Exception:
         pass
     return {key: value for key, value in out.items() if value is not None}
+
+
+def table_inventory(db_path):
+    """Every real table with its row count, plus the migration ledger (V2-17).
+
+    The manual-upgrade before/after: a developer can compare this against the same call on a
+    restored copy or on a fresh upgrade and see that no table lost rows. Read-only.
+    """
+    out = {'tables': {}, 'migrations': []}
+    try:
+        con = sqlite3.connect(str(db_path))
+        try:
+            names = [row[0] for row in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+                if not row[0].startswith('sqlite_')]
+            for name in names:
+                try:
+                    out['tables'][name] = con.execute(
+                        'SELECT COUNT(*) FROM "%s"' % name).fetchone()[0]
+                except Exception:
+                    out['tables'][name] = None
+            try:
+                out['migrations'] = [
+                    {'version': row[0], 'name': row[1]} for row in
+                    con.execute('SELECT version, name FROM schema_migrations ORDER BY version')]
+            except Exception:
+                out['migrations'] = []
+        finally:
+            con.close()
+    except Exception:
+        raise PolicyError('Kel could not read the database inventory.') from None
+    return out
 
 
 def _hot_copy_database(source, destination):

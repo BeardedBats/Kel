@@ -324,3 +324,20 @@ wins**. The `/api/connections {action:'network'}` surface carries get/set_mode/s
 requests/resolve/history. Live: mode none refused with “You set Kel to no internet for default, so
 nothing is sent.”; approved refused an unlisted host with the ask sentence and one pending request;
 history showed `[ask, blocked]`; mode restored to full. D-43.
+
+## V2-17 — Manual upgrade reliability / migration validation (BUILT, 2026-09-21)
+
+§22 done practically. What already existed and was reused: the identity-proofed 0.2.1→V2 legacy
+migration (idle-checked, backed up first), the hot-copy backup that **never** carries provider
+credentials (`kel-credentials.json` in `NEVER_BACKUP`; secret rows stripped from the copy), the staged
+restore with its marker + `restart_required`, `apply_pending_restore` at engine start (merge, never
+delete; `…pre-restore-<timestamp>` rollback copy; databases written through SQLite), and the v13→v14 /
+v15 / ledger suites. V2-17 adds the missing **proof and tooling**: `backup.table_inventory` (every
+table with counts + the migration ledger) surfaced as `/api/backup {action:'inventory'}` — the manual
+upgrade's before/after — and a richer backup summary (connections, memories, projects, jobs). Pins:
+the inventory covers the V2 tables; a backup carries every V2 row and never the credentials file; a
+restore brings every table and the ledger back **exactly** and drops post-backup mutations; a staged
+restore touches nothing live until applied and the second apply is a no-op; the live credentials file
+survives the restore; and re-opening with every V2 module ensuring its schema changes no count and no
+ledger row. Live on the real V2 root: 107 tables, ledger = 24 migrations, and the backup copy's V2
+counts matched the live inventory exactly. No updater infrastructure (by directive). D-45.

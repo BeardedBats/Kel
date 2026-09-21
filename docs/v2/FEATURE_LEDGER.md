@@ -36,7 +36,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-14 | Network permissions | **BUILT** (2026-09-21) | `kel/network_policy.py` as the `NETWORK_RULES` source: modes none/approved/full per scope (`default`, `project:<id>`) + exact per-tool rules; ask-before-a-new-domain (one pending request, a one-sentence refusal, approve/deny); access history (`network_events` + the existing `connection_events`); tool/project context through `perform_request`; per-store binding that never overrides an explicit hook; `/api/connections {action:'network'}` surface. 14 new tests; 155 tests green in one bounded group; live loop on the real engine (none → refusal sentence; approved → ask + pending request; history newest-first; restored to full). D-43; `docs/v2/evidence/v2-14/README.md` |
 | V2-15 | Real dogfood integration pass | queued | — |
 | V2-16 | Performance + UX polish | queued | — |
-| V2-17 | Manual upgrade reliability | queued | — |
+| V2-17 | Manual upgrade reliability | **BUILT** (2026-09-21) | `backup.table_inventory` + `/api/backup {action:'inventory'}` (every table's row count plus the migration ledger — the manual upgrade's before/after) and a richer backup summary; pins that a backup→restore returns every table and the ledger **exactly**, staged restores touch nothing live until applied, the second apply is a no-op, the live credentials file survives, and a re-open with every V2 schema changes no count. 6 new tests; 18 tests green in one bounded group; live: 107 tables, ledger = 24, the backup copy's V2 counts matched exactly. D-45; `docs/v2/evidence/v2-17/README.md` |
 | V2-18 | Synthetic V2 acceptance journeys | queued | — |
 | V2-19 | Full V2 regression | queued | — |
 | V2-20 | V2 release candidate | queued | — |

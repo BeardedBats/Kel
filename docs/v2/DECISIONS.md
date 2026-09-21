@@ -441,3 +441,18 @@ project-scoped, newest-first, with honest notes (“recorded, never applied”),
 same way V2-05-history is deferred for Shell integration — the requirement stays in MARATHON_STATE and
 RESUME, and nothing here marks the item complete. *Forbids:* inventing the Kibble concept; a second
 promotion system; a read door with side effects.
+
+## D-45 — the manual upgrade gets a before/after, and V2 state is proved to survive it (V2-17)
+
+§22 forbids updater infrastructure and asks for a safe manual upgrade, safe migrations, failure
+without data loss and a developer rollback — all of which the existing machinery already provides
+(identity-proofed legacy migration, hot-copy backups that **never** carry credentials, staged restore
+with a marker and `apply_pending_restore` at start, a `…pre-restore-<timestamp>` rollback copy). What
+was missing was the proof that the **new V2 state** survives and a way to see it: `table_inventory`
+(every table's row count plus the migration ledger) surfaced as `/api/backup {action:'inventory'}`, a
+richer backup summary, and pins that a backup→restore cycle returns every table and the ledger
+**exactly** (post-backup mutations gone), that a staged restore touches nothing live until applied,
+the second apply is a no-op, the live credentials file survives, and re-opening with every V2 module
+ensuring its schema changes no count and no ledger row. *Forbids:* an updater, an update server or
+background update checks; a backup that carries credentials; a restore that deletes the live
+credentials file; claiming survival from a count of one table (the inventory is all of them).
