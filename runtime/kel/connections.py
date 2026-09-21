@@ -52,6 +52,11 @@ CREDENTIAL_REF_PREFIX = 'kel:connection:'
 # credential was accepted; everything else says exactly which part of the request did not work.
 TEST_STATES = ('ok', 'refused', 'not_found', 'busy', 'error', 'unreachable', 'timeout')
 TEST_TIMEOUT = 10
+# V2-04 framework policy: how hard Kel tries, and when trying again cannot help.
+REQUEST_ATTEMPTS = 3
+RETRY_BACKOFF = 0.4
+REQUEST_BUDGET = 30.0
+RETRY_STATUSES = (429, 500, 502, 503, 504)
 REDACTED = '[redacted]'
 
 ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,59}$')
@@ -212,26 +217,53 @@ def scrub(text, credentials):
     return cleaned
 
 
-def perform_request(url, headers, timeout=TEST_TIMEOUT):
+def _attempt(url, headers, timeout):
+    """One GET. A refusal is a result: 401 is an answer, not an error."""
+    request = urllib.request.Request(url, method='GET', headers=dict(headers or {}))
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return int(getattr(response, 'status', None) or 200), response.geturl()
+    except urllib.error.HTTPError as error:
+        status = int(error.code)
+        final = getattr(error, 'url', url)
+        error.close()
+        return status, final
+
+
+def perform_request(url, headers, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS,
+                    sleep=None, budget=REQUEST_BUDGET):
     """The one place a Connection's request leaves this computer.
 
     Every future network rule (V2-14: no internet / approved domains / ask before a new domain) has a
     single place to live because of this function. Kel reads the status and nothing else — the body is
     never kept, so a service's data cannot end up in Kel's records by accident.
 
-    Returns (status, final_url, elapsed_ms). A refusal is a result: 401 is an answer, not an error.
+    V2-04 gives it the framework's retry policy: a GET is tried again when the service is busy (429 or a
+    5xx) or the connection dropped, never when the service answered with a real answer (a 401 or a 404 is
+    information, not a hiccup). Every attempt is bounded by the timeout, and the whole request by the
+    budget, so a click never turns into an indefinite wait.
+
+    Returns (status, final_url, attempts, elapsed_ms).
     """
-    request = urllib.request.Request(url, method='GET', headers=dict(headers or {}))
-    started = time.monotonic()
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            status = int(getattr(response, 'status', None) or 200)
-            final = response.geturl()
-    except urllib.error.HTTPError as error:
-        status = int(error.code)
-        final = getattr(error, 'url', url)
-        error.close()
-    return status, final, int((time.monotonic() - started) * 1000)
+    stated = time.monotonic()
+    pause = sleep or time.sleep
+    tried = 0
+    while True:
+        tried += 1
+        try:
+            status, final = _attempt(url, headers, timeout)
+        except urllib.error.URLError:
+            if tried >= attempts or time.monotonic() - stated >= budget:
+                raise
+            pause(RETRY_BACKOFF * tried)
+            continue
+        if status in RETRY_STATUSES and tried < attempts:
+            if time.monotonic() - stated >= budget:
+                break
+            pause(RETRY_BACKOFF * tried)
+            continue
+        break
+    return status, final, tried, int((time.monotonic() - stated) * 1000)
 
 
 def auth_for(connection, credentials):
@@ -271,11 +303,13 @@ def auth_for(connection, credentials):
     return {name: value}, None, None
 
 
-def classify(status, connection, final_url):
+def classify(status, connection, final_url, attempts=1):
     """The honest meaning of a status code, in one sentence, with no service data in it."""
     host = urlparse(final_url or '').netloc
     asked = urlparse(connection['test_endpoint'] or connection['base_url'] or '').netloc
     redirect = ' It answered from %s instead.' % host if host and host != asked else ''
+    if attempts > 1:
+        redirect += ' Kel tried %d times.' % attempts
     if 200 <= status < 300:
         return 'ok', 'The service answered %d.%s' % (status, redirect)
     if status in (401, 403):
@@ -293,9 +327,11 @@ def classify(status, connection, final_url):
 class Connections:
     """The connection store. Rows carry metadata only; values live in the OS-backed store."""
 
-    def __init__(self, store, timeout=TEST_TIMEOUT):
+    def __init__(self, store, timeout=TEST_TIMEOUT, attempts=REQUEST_ATTEMPTS, sleep=None):
         self.store = store
         self.timeout = timeout
+        self.attempts = attempts
+        self.sleep = sleep
         ensure_schema(store)
 
     # -- reads ------------------------------------------------------------------------------------
@@ -474,8 +510,10 @@ class Connections:
             url = urlunparse(parsed._replace(query=urlencode(pairs)))
         state, status, elapsed, note = 'error', None, 0, 'The check did not finish.'
         try:
-            status, final, elapsed = perform_request(url, headers, timeout=self.timeout)
-            state, note = classify(status, connection, final)
+            status, final, tried, elapsed = perform_request(url, headers, timeout=self.timeout,
+                                                             attempts=self.attempts,
+                                                             sleep=self.sleep)
+            state, note = classify(status, connection, final, tried)
         except (TimeoutError, socket.timeout):
             state = 'timeout'
             seconds = int(self.timeout) if float(self.timeout).is_integer() else self.timeout
