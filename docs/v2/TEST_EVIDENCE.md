@@ -34,6 +34,7 @@ row names the command and the result, so a resume run can re-run it instead of t
 | V2-02 | Generic REST Connection + Test Connection | engine `1101 tests OK`; `tests.test_v2_connections` **41 OK**; desktop `40 files / 338 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **13 pass** (details below) |
 | V2-03 | Personal Connections | engine `1110 tests OK`; `tests.test_v2_connections` **50 OK**; desktop `40 files / 340 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **15 pass** (details below) |
 | V2-04 | Connection Framework (standard parts, then actions) | engine `1126 tests OK`; `tests.test_v2_connections` **66 OK**; desktop `40 files / 344 tests pass`; `tsc --noEmit` clean; `connections-page.dom.test.tsx` **18 pass**, `ipc-sender-channels.test.ts` **21 pass** (both increments below) |
+| V2-05 | iPhone Kel PWA V1 (installability) | desktop `41 files / 349 tests pass`; `tsc --noEmit` clean; `tests/unit/pwa-install.test.ts` **5 pass** (below). No engine change |
 
 ### V2-01 — what each command actually proves
 
@@ -103,6 +104,16 @@ row names the command and the result, so a resume run can re-run it instead of t
 | Desktop — sender guards | `bunx vitest run tests/unit/ipc-sender-channels.test.ts` | **21 pass** — `kel:connection-run` refuses spoofed senders before reading anything, and hands the engine only the fields the shell holds plus the confirmation |
 
 **Not verified for V2-04 actions:** no real service was contacted — every action ran against the local stand-in service; the assistant cannot use an action yet (no chat tool); and nothing Kel can do changes anything, because every catalogue action is a read.
+
+### V2-05 — installability (the donor's PWA machinery, now pinned)
+
+| Suite | Command | Result |
+| --- | --- | --- |
+| Desktop tests (full) | `cd desktop && bunx vitest run` | **41 files / 349 tests pass** |
+| Desktop types | `cd desktop && bunx tsc --noEmit` | **clean** |
+| Installability contract | `bunx vitest run tests/unit/pwa-install.test.ts` | **5 pass** — the manifest keeps the fields a home-screen install needs and names Kel in its own words (the donor line's "Kel WebUI for mobile and desktop browsers" is gone); the 192 and 512 icons it promises are on disk, as is the iOS touch icon; the shell the phone loads links the manifest and carries the iOS tags and `viewport-fit=cover`; and the service worker still never caches `/api/` and is only registered from a browser origin (never inside the desktop shell) |
+
+**Not verified for V2-05, and not claimed:** the phone *surface* is not built (the mobile-first pass, one-handed attention actions, voice from the phone); no real iOS Safari behaviour can be confirmed here — that needs Nick's device, and no installed-app check was run for this increment. The installability that exists is the donor's, verified by reading and by these pins, not by installing it on a phone.
 
 ## Standing rules for this file
 

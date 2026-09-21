@@ -24,7 +24,7 @@ describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidenc
 | V2-04 | Connection Framework + templates | **BUILT** (the framework) | `connection_framework.py` (three templates + request policy), `connection_actions.py` (actions as data), `connections.run()`/`events()` (migration 26) + 16 engine tests; "What Kel can do" on the page + 5 desktop tests; the developer page `CONNECTION_FRAMEWORK.md`. Not part of the framework, and carried below: the assistant bridge and the OAuth sign-in flow |
 | V2-04a | **Follow-up (not a roadmap phase): a tool the assistant can call for a connection action** | **NOT BUILT** | Needs a deliberate bridge to the coding runtime the desktop agent runs, with the same one-request rule and mutating confirmation; no Connections capability switch may be added until it exists (`capabilities.py` rule, DECISIONS 36) |
 | V2-04b | **Follow-up (not a roadmap phase): the OAuth account sign-in flow** | **NOT BUILT** | The template exists and says so; Google Drive needs a pasted token meanwhile |
-| V2-05 | iPhone Kel PWA V1 | queued | — |
+| V2-05 | iPhone Kel PWA V1 | **PARTIAL** — installability already exists (donor) and is now pinned; the phone surface itself is not done | Manifest + icons + a service worker that never caches `/api/` or engine data (`desktop/public/`, `renderer/services/registerPwa.ts`); installability pinned by 5 new desktop tests. Reconnaissance recorded in `MARATHON_STATE.md` — do not rebuild the PWA machinery |
 | V2-06 | Needs Your Attention 2.0 | queued | — |
 | V2-07 | Recipes 2.0 | queued | — |
 | V2-08 | Activity 2.0 | queued | — |
