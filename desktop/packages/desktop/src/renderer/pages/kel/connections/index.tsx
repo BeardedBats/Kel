@@ -24,11 +24,11 @@ import {
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
-  CONNECTION_KIND_LABELS,
   KNOWN_SERVICE_SOURCE_LABELS,
   connectionCheckSentence,
   connectionCredentialField,
   connectionCustodyKey,
+  connectionTemplate,
   kelConnections,
   knownServiceDraft,
   type KelConnection,
@@ -116,7 +116,7 @@ const Connections: React.FC = () => {
       setList(listed);
       setError(null);
     } catch (err) {
-      setList({ connections: [], counts: { ready: 0, needs_credentials: 0 }, states: [], kinds: [] });
+      setList({ connections: [], counts: { ready: 0, needs_credentials: 0 }, states: [], kinds: [], templates: [] });
       setError(err);
     }
     // The shell's own view of what it holds. Best effort: without it the page still shows the
@@ -317,7 +317,7 @@ const Connections: React.FC = () => {
             <div className="kel-attention__text">
               <strong>{service.name}</strong>
               <span className="kel-meta">
-                {[CONNECTION_KIND_LABELS.find((item) => item.id === service.kind)?.label,
+                {[connectionTemplate(list, service.kind)?.label,
                   service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
               </span>
               <span className="kel-meta">Kel needs {service.credential}.</span>
@@ -395,7 +395,7 @@ const Connections: React.FC = () => {
                       name: connection.name,
                       field:
                         connection.credential_fields[0] ??
-                        connectionCredentialField(connection.kind),
+                        connectionCredentialField(list, connection.kind),
                       value: '',
                     })
                   }
@@ -511,7 +511,7 @@ const Connections: React.FC = () => {
                 setDraft({ ...draft, kind: event.target.value as KelConnection['kind'] })
               }
             >
-              {CONNECTION_KIND_LABELS.map((option) => (
+              {(list?.templates ?? []).map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label} — {option.hint}
                 </option>
