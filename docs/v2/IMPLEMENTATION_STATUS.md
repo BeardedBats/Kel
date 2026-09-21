@@ -123,3 +123,23 @@ The standard parts of a Connection, in one place: the three credential templates
 - **Not built in this phase, and not claimed**: what Kel can *do* with a service (actions/tools) and the
   OAuth account sign-in step. Google Drive stays uncheckable beyond a pasted token because of the second
   one, and no connection can be used for anything but Test connection because of the first.
+
+### V2-04 continued — actions (what Kel can do with a service)
+
+- **`runtime/kel/connection_actions.py`**: eight actions as rows over six of the eight services (GitHub
+  whoami + notifications, Stripe account + customers, Figma, ClickUp and Discord whoami, Pitcher List's
+  newest posts). No row exists where Kel does not know the address (Raptive) or where the service needs a
+  sign-in step that is not built (Google Drive). Nothing branches on a service id.
+- **`connections.run()`** (migration 26, `v20-connection-actions`): reads the row, builds the address from
+  the connection's API address, applies the credential by the service's declared method, makes the request
+  through the same choke point, and hands back the answer — parsed when it is JSON, bounded, and scrubbed
+  of the credential. A `mutating` action is refused unless Nick confirmed it.
+- **The access history** (`events()`): the fact of each call — connection, action, domain (never the path
+  or a query string), status, attempts, duration. This is the trail V2-14's "show contacted domains,
+  access history" will read, and it contains no service data at all.
+- **Desktop**: a "What Kel can do" card on the Connections page listing each action with a plain "Do it",
+  the service's answer shown once where it arrived, and a question first for anything that would change
+  something in Nick's account. The new `kel:connection-run` channel runs the shared sender guard and hands
+  the engine only the fields the shell holds.
+- **Still not built**: no chat tool exposes an action, so the assistant cannot use a connection yet — that
+  is the next increment of this phase, and the reason V2-04 still reads PARTIAL.
