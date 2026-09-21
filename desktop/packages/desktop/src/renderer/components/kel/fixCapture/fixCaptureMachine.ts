@@ -38,6 +38,8 @@ export interface FixCaptureState {
   seconds: number;
   /** One honest sentence for the person, when there is something to say. */
   note: string | null;
+  /** True while the recording is still held so transcription can be retried (never re-recorded). */
+  retryable: boolean;
   savedId: string | null;
   route: string | null;
   pageTitle: string | null;
@@ -52,6 +54,7 @@ export const initialFixCaptureState: FixCaptureState = {
   draft: '',
   seconds: 0,
   note: null,
+  retryable: false,
   savedId: null,
   route: null,
   pageTitle: null,
@@ -67,7 +70,10 @@ export type FixCaptureEvent =
   | { type: 'tick' }
   | { type: 'live'; text: string }
   | { type: 'stop' }
-  | { type: 'stopped'; text: string; note?: string }
+  | { type: 'stopped'; text: string; note?: string; retryable?: boolean }
+  /** A retry produced real words: fill the review and drop the failure state. */
+  | { type: 'transcribed'; text: string }
+  | { type: 'note'; note: string | null }
   | { type: 'edit'; text: string }
   | { type: 'again' }
   | { type: 'save' }
@@ -104,7 +110,7 @@ export function fixCaptureReducer(state: FixCaptureState, event: FixCaptureEvent
     case 'mic-failed':
       // No microphone: the words can still be typed, so the capture continues instead of dying.
       if (state.phase !== 'preparing' && state.phase !== 'recording') return state;
-      return { ...state, phase: 'review', note: event.note, seconds: 0, live: '' };
+      return { ...state, phase: 'review', note: event.note, seconds: 0, live: '', retryable: false };
     case 'tick':
       if (state.phase !== 'recording') return state;
       return { ...state, seconds: state.seconds + 1 };
@@ -116,14 +122,28 @@ export function fixCaptureReducer(state: FixCaptureState, event: FixCaptureEvent
       return { ...state, phase: 'stopping' };
     case 'stopped':
       if (state.phase !== 'stopping' && state.phase !== 'recording') return state;
-      return { ...state, phase: 'review', draft: event.text, live: '', note: event.note ?? null };
+      return {
+        ...state,
+        phase: 'review',
+        draft: event.text,
+        live: '',
+        note: event.note ?? null,
+        retryable: event.retryable ?? false,
+      };
+    case 'transcribed':
+      if (state.phase !== 'review') return state;
+      return { ...state, draft: event.text, note: null, retryable: false };
+    case 'note':
+      if (state.phase !== 'review' && state.phase !== 'stopping') return state;
+      return { ...state, note: event.note };
     case 'edit':
       if (state.phase !== 'review') return state;
       return { ...state, draft: event.text };
     case 'again':
-      // Record Again keeps who/what/where and drops the words: the previous attempt is not saved.
+      // Record Again keeps who/what/where, drops the words AND the failed recording: the previous
+      // attempt is neither saved nor kept around.
       if (state.phase !== 'review' && state.phase !== 'stopping') return state;
-      return { ...state, phase: 'recording', draft: '', live: '', seconds: 0, note: null };
+      return { ...state, phase: 'recording', draft: '', live: '', seconds: 0, note: null, retryable: false };
     case 'save':
       if (state.phase !== 'review') return state;
       return { ...state, phase: 'saving', note: null };
