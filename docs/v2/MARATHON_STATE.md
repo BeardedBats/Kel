@@ -10,7 +10,7 @@ branch: dev/v2
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: phone journeys run in a real browser; the gateway 403 blocker is fixed; voice, model-gated send and job-driven attention are open
+phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: phone journeys green incl. real Muse dictation; send is blocked because the phone shows no assistant to choose (measured), and drawer history / job attention / project routing remain
 next_item: V2-05-send       # mobile voice is done; next is sending with a connected model, then the phone drawer/history, job-driven attention, project routing (see RESUME.md)
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
