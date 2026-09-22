@@ -7,7 +7,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { KelButton } from '@renderer/components/kel/KelPrimitives';
+import statusCheck from '@renderer/assets/figma/status-check.svg';
 import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 import { buildResumptionBrief, type ResumptionBrief } from '@renderer/components/kel/resumptionBrief';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
@@ -53,28 +53,25 @@ const KelResumptionBrief: React.FC = () => {
   if (!brief || brief.quiet) return null;
 
   return (
-    <section className='kel-card' style={{ marginBottom: 12 }} data-testid='resumption-brief' aria-label='While you were away'>
-      <div className='kel-row' style={{ alignItems: 'baseline', gap: 12 }}>
-        <h2 className='kel-h2' style={{ margin: 0 }}>
-          {brief.headline}
-        </h2>
-        <span className='kel-grow' />
-        <span className='kel-meta'>{brief.summary}</span>
-      </div>
-      <div className='kel-divider' />
-      {brief.lines.map((line) => (
-        <div className='kel-attention__row' key={line.id}>
-          <div className='kel-attention__text'>
-            <strong>{line.title}</strong>
-            <span className='kel-meta'>{line.detail}</span>
-          </div>
-          {line.action && (
-            <KelButton variant='quiet' onClick={() => navigate(resolveConversationRoute(line.action!.to))}>
-              {line.action.label}
-            </KelButton>
-          )}
-        </div>
-      ))}
+    <section className='kel-card kel-shell-needs-you' data-testid='resumption-brief' aria-label='Needs you'>
+      <h2 className='kel-shell-needs-you-title'>Needs you</h2>
+      {brief.lines.map((line) => {
+        const success = line.kind === 'finished' || (line.kind === 'restore' && line.id === 'restore-ok');
+        const tone = success ? 'success' : line.kind === 'active' ? 'unread' : 'attention';
+        const text = line.id.startsWith('brief-connection-')
+          ? line.detail.replace(/ — finish setting it up/, ' needs setup')
+          : line.kind === 'finished'
+            ? `${line.title.replace(/^Finished: /, '')} — ${line.detail}`
+            : `${line.title}${line.detail ? ` — ${line.detail}` : ''}`;
+        const content = <>
+          {success ? <img className='kel-shell-status-check' src={statusCheck} width={16} height={16} alt='' /> : <span className='kel-shell-status-dot' aria-hidden='true' />}
+          <span>{text}</span>
+        </>;
+        return line.action ? (
+          <button type='button' className='kel-shell-attention-line' data-tone={tone} key={line.id}
+            title={line.action.label} onClick={() => navigate(resolveConversationRoute(line.action!.to))}>{content}</button>
+        ) : <div className='kel-shell-attention-line' data-tone={tone} key={line.id}>{content}</div>;
+      })}
     </section>
   );
 };

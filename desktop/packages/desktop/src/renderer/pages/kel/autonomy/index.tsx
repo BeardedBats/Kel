@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Autonomy — capability leases, boundary decisions, and the locked guardrail block.
  * Everything is read from `/api/autonomy`; only the user resolves a boundary request, and the
@@ -109,50 +110,12 @@ export default function KelAutonomyPage() {
       <main className="kel-page" id="kel-autonomy-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Permissions</h1>
-            <p className="kel-sub">
-              {leases === null
-                ? 'Loading…'
-                : `${active.length === 1 ? '1 active permission' : `${active.length} active permissions`} · ${pending.length} waiting on you`}
-            </p>
+            <ShellWorkspaceLink /><h1 className="kel-h1">Permissions</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
-            Reload
-          </KelButton>
-          {!stopArmed ? (
-            <KelButton
-              variant="secondary"
-              disabled={busy || active.length === 0}
-              onClick={() => setStopArmed(true)}
-            >
-              Emergency stop
-            </KelButton>
-          ) : (
-            <>
-              <KelButton
-                variant="primary"
-                disabled={busy}
-                onClick={() =>
-                  void act('Emergency stop', async () => {
-                    await kelAutonomy.emergencyStop();
-                    setStopArmed(false);
-                  })
-                }
-              >
-                Yes — stop everything
-              </KelButton>
-              <KelButton variant="quiet" disabled={busy} onClick={() => setStopArmed(false)}>
-                Keep going
-              </KelButton>
-            </>
-          )}
+          <KelButton onClick={() => setAdvanced(value => !value)}>Run check</KelButton>
         </div>
 
-        <p className="kel-meta">
-          Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
-          at its next safe check. It does not undo work that already finished.
-        </p>
         {stopArmed && (
           <p className="kel-meta kel-strong">
             This will revoke every active permission and pause all active or queued work now. Finished
@@ -166,14 +129,10 @@ export default function KelAutonomyPage() {
 
         {!error && leases !== null && (
           <KelCard title="Active permissions">
-            <p className="kel-meta">
-              Changes apply immediately — revoking a permission stops the next step, even while work is
-              running, and nothing widens on its own: extra access only follows an access request you approve.
-            </p>
             {leases.length === 0 ? (
               <KelEmpty
                 title="No permissions yet in this project."
-                why="Kel only gains permissions when you approve a reviewed plan — that approval records exactly what it may do. Kel enforces those limits while it works; anything outside them comes back to you as one access request."
+                why=""
               />
             ) : (
               <KelTable
@@ -217,7 +176,7 @@ export default function KelAutonomyPage() {
             {pending.length === 0 ? (
               <KelEmpty
                 title="Nothing is waiting for extra access."
-                why="Kel asks here when work needs to go beyond what you already approved — once per scope, never per command."
+                why=""
               />
             ) : (
               pending.map((request) => (
@@ -270,15 +229,51 @@ export default function KelAutonomyPage() {
           </KelCard>
         )}
 
-        <div className="kel-row">
-          <KelButton variant="quiet" onClick={() => setAdvanced((value) => !value)}>
-            {advanced ? 'Hide advanced details' : 'Advanced details'}
-          </KelButton>
-        </div>
+        <KelCard title="Permission check">
+          <p className="kel-sub">Locked guardrails · digest {digest ? digest.slice(0, 12) : 'loading…'}</p>
+        </KelCard>
 
         {advanced && (
           <>
-            <KelCard title="Permission check">
+          <div className="kel-row">          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
+            Reload
+          </KelButton>
+          {!stopArmed ? (
+            <KelButton
+              variant="secondary"
+              disabled={busy || active.length === 0}
+              onClick={() => setStopArmed(true)}
+            >
+              Emergency stop
+            </KelButton>
+          ) : (
+            <>
+              <KelButton
+                variant="primary"
+                disabled={busy}
+                onClick={() =>
+                  void act('Emergency stop', async () => {
+                    await kelAutonomy.emergencyStop();
+                    setStopArmed(false);
+                  })
+                }
+              >
+                Yes — stop everything
+              </KelButton>
+              <KelButton variant="quiet" disabled={busy} onClick={() => setStopArmed(false)}>
+                Keep going
+              </KelButton>
+            </>
+          )}</div>
+        <p className="kel-meta">
+          Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
+          at its next safe check. It does not undo work that already finished.
+        </p>
+            <p className="kel-meta">
+              Changes apply immediately — revoking a permission stops the next step, even while work is
+              running, and nothing widens on its own: extra access only follows an access request you approve.
+            </p>
+            <KelCard title="Check a scope">
           <p className="kel-sub">
             Test what Kel's permission checker would decide for a scope before any work runs. It refuses
             anything outside what you approved, work on locked or frozen targets, and anything it cannot

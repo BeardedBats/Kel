@@ -37,6 +37,7 @@ import {
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
+import sendIcon from '@renderer/assets/figma/send.svg';
 
 /**
  * Shared shell for the skills / MCP submenu popups: an optional pinned search
@@ -563,8 +564,8 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
   );
 
   return (
-    <div className={styles.actionRow}>
-      <div className={styles.actionTools}>
+    <div className={`${styles.actionRow} kel-shell-composer-actions`}>
+      <div className={`${styles.actionTools} kel-shell-composer-attach`}>
         <div className={styles.actionEntry}>
           {isMobile ? (
             // Mobile: the "+" opens the bottom action sheet holding every control.
@@ -576,6 +577,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 loading={uploading}
                 disabled={uploading}
                 data-testid='file-upload-btn'
+                aria-label='Attach files and tools'
                 onClick={() => setIsSheetOpen(true)}
               />
               {files.length > 0 && (
@@ -588,7 +590,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
               )}
             </span>
           ) : (
-            <Dropdown trigger='hover' onVisibleChange={handlePlusDropdownVisibleChange} droplist={menuContent}>
+            <Dropdown trigger='click' onVisibleChange={handlePlusDropdownVisibleChange} droplist={menuContent}>
               <span className='flex items-center gap-4px cursor-pointer lh-[1]'>
                 <Button
                   type='secondary'
@@ -598,6 +600,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                   loading={uploading}
                   disabled={uploading}
                   data-testid='file-upload-btn'
+                aria-label='Attach files and tools'
                 />
                 {files.length > 0 && (
                   <Tooltip
@@ -629,23 +632,13 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
           entries={sheetEntries}
         />
       )}
-      <div className={styles.actionSubmit}>
+      <div className={`${styles.actionSubmit} kel-shell-composer-submit`}>
         {/* Desktop keeps the inline model/permission selectors; on mobile they move into the sheet. */}
         {!isMobile && configOptionCount > 0 && (
           <div className={styles.actionConfigGroup} data-mobile={isMobile ? 'true' : undefined}>
             {modelSelectorNode}
 
-            {showModeSwitch && (
-              <AgentModeSelector
-                backend={modeBackend}
-                compact
-                initialMode={selectedMode}
-                onModeSelect={onModeSelect}
-                dynamicModes={dynamicModes}
-                compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
-                modeLabelFormatter={getModeDisplayLabel}
-              />
-            )}
+
           </div>
         )}
 
@@ -660,7 +653,8 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
             backgroundColor: isButtonDisabled ? undefined : '#000000',
             borderColor: isButtonDisabled ? undefined : '#000000',
           }}
-          icon={<ArrowUp theme='filled' size='14' fill='white' strokeWidth={5} />}
+          aria-label='Send message'
+          icon={<img src={sendIcon} alt='' width={22} height={22} />}
           onClick={onSend}
           data-testid='guid-send-btn'
         />

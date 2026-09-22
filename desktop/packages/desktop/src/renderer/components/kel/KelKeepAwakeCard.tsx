@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ipcBridge } from '@/common';
 import { KelCard } from './KelPrimitives';
 
-export const KelKeepAwakeCard: React.FC = () => {
+export const KelKeepAwakeCard: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const [enabled, setEnabled] = useState(false);
   const [active, setActive] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -50,6 +50,11 @@ export const KelKeepAwakeCard: React.FC = () => {
     [refresh]
   );
 
+  if (compact) return <div className='kel-shell-preference-row' data-testid='kel-keep-awake-card'>
+    <div><div>Keep computer awake</div></div>
+    <span data-testid='kel-keep-awake-switch'><Switch aria-label='Keep computer awake' size='small' checked={enabled} disabled={busy} onChange={value => void change(value)} /></span>
+  </div>;
+
   return (
     <KelCard
       title='Keep this computer awake'
@@ -62,15 +67,16 @@ export const KelKeepAwakeCard: React.FC = () => {
     >
       <p className='text-14px text-t-secondary m-0'>
         Long jobs and scheduled work keep running instead of waiting for the computer to wake up. Kel prevents sleep
-        only — your screen can still dim. This applies to this computer, and it stops when Kel closes.
+        only — your screen can still dim.
       </p>
       <p
         className='text-14px text-t-secondary m-0 mt-8px'
         data-testid='kel-keep-awake-state'
         data-active={active ? 'true' : 'false'}
       >
-        {active ? 'Active — this computer will not sleep while Kel is open.' : 'Off — the computer sleeps normally.'}
+        {active ? 'Active — this computer will not sleep while Kel is open.' : 'Off — the computer sleeps normally'}
       </p>
+
     </KelCard>
   );
 };

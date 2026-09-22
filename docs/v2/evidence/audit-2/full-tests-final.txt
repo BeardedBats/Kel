@@ -1,0 +1,84 @@
+
+ RUN  v4.1.0 C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > records through the shared Kel transport even though the desktop bridge is absent
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > says live typing is unavailable instead of swallowing a failed stream_start
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > transcribes on stop and hands the words to the composer
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > transcribes on stop and hands the words to the composer
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > tells the user in plain words when the transcription path is dead — no jargon, no ids
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-mic-button.dom.test.tsx > mobile voice transport (V2-05) > tells the user in plain words when the transcription path is dead — no jargon, no ids
+An update to KelMicButton inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | tests/unit/kel-shell-composer.dom.test.tsx > Figma composer preserves production input behavior > hands draft changes and paste to the owner, and blocks Enter during IME composition
+`NaN` is an invalid value for the `height` css style property.
+
+························································································································································································································································································
+
+ Test Files  41 passed (41)
+      Tests  280 passed (280)
+   Start at  17:33:51
+   Duration  41.18s (transform 4.31s, setup 554ms, import 135.20s, tests 4.10s, environment 102.25s)

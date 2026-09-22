@@ -14,7 +14,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ToolsModalContent from '@/renderer/components/settings/SettingsModal/contents/ToolsModalContent';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
-import SettingsPageHeader from '../components/SettingsPageHeader';
 
 const ToolsSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -22,13 +21,7 @@ const ToolsSettings: React.FC = () => {
   return (
     <SettingsPageWrapper contentClassName='max-w-1200px'>
       <div className='flex flex-col gap-16px'>
-        <SettingsPageHeader
-          data-testid='tools-header'
-          title={t('settings.tools', { defaultValue: 'Tools' })}
-          description={t('settings.toolsDescription', {
-            defaultValue: 'Configure MCP servers and built-in tools such as image generation.',
-          })}
-        />
+        <p className='kel-meta' data-testid='tools-header'>{t('settings.toolsDescription', { defaultValue: 'Configure MCP servers and built-in tools such as image generation.' })}</p>
         <ToolsModalContent />
       </div>
     </SettingsPageWrapper>

@@ -1,8 +1,7 @@
 /**
- * Kel: local UI fonts — Söhne for headers, SF Pro Text for body.
+ * Kel: DS v2 Instrument Sans display and SF Pro Text body; existing Söhne remains selectable.
  *
- * The font files live in `desktop/public/fonts/` and are intentionally NOT
- * committed (licensed fonts; see `desktop/public/fonts/README.md`). They are
+ * The font files live in `desktop/public/fonts/` (see its README for ownership). They are
  * registered here with the FontFace API at runtime so a checkout without the
  * files still builds and runs — the CSS fallback stack simply applies.
  *
@@ -49,5 +48,11 @@ export function loadKelFonts(root: Document = document): void {
     }
   };
   register(DISPLAY_FAMILY, DISPLAY_FILES);
+  register('Instrument Sans', [
+    ['instrument-sans/InstrumentSans.ttf', 400],
+    ['instrument-sans/InstrumentSans.ttf', 500],
+    ['instrument-sans/InstrumentSans.ttf', 600],
+    ['instrument-sans/InstrumentSans.ttf', 700],
+  ]);
   register(TEXT_FAMILY, TEXT_FILES);
 }

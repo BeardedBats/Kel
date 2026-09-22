@@ -33,6 +33,7 @@ export const KelDataCard: React.FC = () => {
   const [backupTarget, setBackupTarget] = useState('');
   const [restoreSource, setRestoreSource] = useState('');
   const [busy, setBusy] = useState(false);
+  const [folderDialog, setFolderDialog] = useState<'backup' | 'restore' | null>(null);
 
   const [pathError, setPathError] = useState(false);
   const loadPath = useCallback(() => {
@@ -127,75 +128,16 @@ export const KelDataCard: React.FC = () => {
     }
   }, [restoreSource]);
 
-  return (
-    <div className='kel-card'>
-      <div className='text-14px text-t-primary leading-22px font-500'>Data & backup</div>
-      <div className='text-14px text-t-secondary leading-20px mt-2px'>
-        Where Kel keeps your chats, projects, transcripts and settings on this computer — plus simple backup and
-        restore. Credentials are never included in backups.
-      </div>
-
-      <div className='kel-divider' />
-
-      <div className='flex flex-col gap-8px'>
-        <div className='text-14px text-t-primary font-500'>Data folder</div>
-        <div className='flex items-center gap-8px flex-wrap'>
-          <code className='text-12px text-t-secondary break-all' data-testid='data-folder-path'>
-            {dataPath ? dataPath.root : pathError ? 'Kel could not read the data folder path.' : 'Loading…'}
-          </code>
-          {pathError && (
-            <Button size='small' onClick={() => loadPath()} data-testid='retry-data-path'>
-              Try again
-            </Button>
-          )}
-          <Button size='small' onClick={() => void copyPath()} disabled={!dataPath} data-testid='copy-data-path'>
-            Copy path
-          </Button>
-          <Button size='small' onClick={() => void openFolder()} disabled={!dataPath} data-testid='open-data-folder'>
-            Show in folder
-          </Button>
-        </div>
-      </div>
-
-      <div className='kel-divider' />
-
-      <div className='flex flex-col gap-8px'>
-        <div className='text-14px text-t-primary font-500'>Backup</div>
-        <div className='text-14px text-t-secondary'>Saves a copy of everything above to a folder you choose.</div>
-        <div className='flex items-center gap-8px flex-wrap'>
-          <Input
-            value={backupTarget}
-            onChange={setBackupTarget}
-            placeholder='Folder to save the backup in (for example D:\Kel backups)'
-            data-testid='backup-target'
-            style={{ maxWidth: 420 }}
-          />
-          <Button type='primary' size='small' disabled={!backupTarget.trim() || busy} onClick={() => void createBackup()} data-testid='backup-now'>
-            Back up now
-          </Button>
-        </div>
-      </div>
-
-      <div className='kel-divider' />
-
-      <div className='flex flex-col gap-8px'>
-        <div className='text-14px text-t-primary font-500'>Restore</div>
-        <div className='text-14px text-t-secondary'>Brings back a backup folder. Your current data is kept and Kel restarts to finish.</div>
-        <div className='flex items-center gap-8px flex-wrap'>
-          <Input
-            value={restoreSource}
-            onChange={setRestoreSource}
-            placeholder='Backup folder to restore from'
-            data-testid='restore-source'
-            style={{ maxWidth: 420 }}
-          />
-          <Button size='small' disabled={!restoreSource.trim() || busy} onClick={() => void restoreBackup()} data-testid='restore-inspect'>
-            Restore from this backup
-          </Button>
-        </div>
-      </div>
+  return <div className='kel-card kel-shell-data-card'>
+    <div className='kel-h2'>Data &amp; backup</div>
+    <div className='kel-shell-preference-row'><div><div>Data folder</div><p className='kel-meta' data-testid='data-folder-path'>{dataPath ? dataPath.root : pathError ? 'Kel could not read the data folder path.' : 'Loading…'}</p></div>
+      {pathError ? <Button onClick={loadPath}>Try again</Button> : <Button onClick={() => void openFolder()} disabled={!dataPath} data-testid='open-data-folder'>Show in folder</Button>}
     </div>
-  );
+    <div className='kel-shell-preference-row'><div><div>Backup</div><p className='kel-meta'>Saves a copy of everything above to a folder you choose.</p></div><Button onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
+    <div className='kel-shell-preference-row'><div><div>Restore</div><p className='kel-meta'>Brings back a backup folder. Your current data is kept and Kel restarts to finish.</p></div><Button onClick={() => setFolderDialog('restore')} data-testid='restore-inspect'>Restore from this backup</Button></div>
+    <Modal title={folderDialog === 'backup' ? 'Back up now' : 'Restore from this backup'} visible={folderDialog !== null} onCancel={() => setFolderDialog(null)} okText={folderDialog === 'backup' ? 'Back up now' : 'Inspect backup'} confirmLoading={busy} okButtonProps={{ disabled: !(folderDialog === 'backup' ? backupTarget : restoreSource).trim() }} onOk={() => folderDialog === 'backup' ? createBackup() : restoreBackup()}>
+      <Input aria-label={folderDialog === 'backup' ? 'Backup folder' : 'Restore folder'} value={folderDialog === 'backup' ? backupTarget : restoreSource} onChange={folderDialog === 'backup' ? setBackupTarget : setRestoreSource} placeholder='Folder path' />
+    </Modal>
+  </div>;
 };
-
 export default KelDataCard;

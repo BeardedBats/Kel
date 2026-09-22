@@ -10,17 +10,14 @@ import { Down } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KelCard } from './KelPrimitives';
+import { kelRequest } from './kelApi';
 
 type Choice = { provider: string | null; model: string | null };
 type ModelOption = { id: string; label: string; available: boolean };
 type ProviderRow = { id: string; label: string; available: boolean; options: ModelOption[] };
 type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
 
-const request = <T,>(body: Record<string, unknown>): Promise<T> => {
-  const api = (window as unknown as { kelAPI?: { request: (route: string, body?: unknown) => Promise<unknown> } }).kelAPI;
-  if (!api) return Promise.reject(new Error('Kel connection is unavailable'));
-  return api.request('/api/model', body) as Promise<T>;
-};
+const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
 const choiceLabel = (state: ModelState | null, choice: Choice | null): string => {
   if (!choice || !choice.provider) return 'Automatic';
@@ -118,14 +115,8 @@ export const useKelModelState = (conversationId?: string) => {
   return { state, cid, effectiveLabel, refresh, setDefault, setConversation };
 };
 
-const availableChip = (available: boolean) => (
-  <span
-    className='ms-auto text-12px px-6px rounded-8px'
-    style={{
-      color: available ? 'var(--kel-ok-fg)' : 'var(--kel-text-3)',
-      background: available ? 'var(--kel-ok-bg)' : 'var(--kel-surface-2)',
-    }}
-  >
+const availabilityLabel = (available: boolean) => (
+  <span className={`ms-auto kel-chip ${available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>
     {available ? 'Available' : 'Needs setup'}
   </span>
 );
@@ -180,7 +171,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                   {state.conversation?.provider === provider.id && state.conversation?.model === option.id ? (
                     <span className='ms-auto text-12px'>Current</span>
                   ) : (
-                    availableChip(option.available)
+                    availabilityLabel(option.available)
                   )}
                 </span>
               </Menu.Item>
@@ -217,7 +208,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                 {state.default?.provider === provider.id && state.default?.model === option.id ? (
                   <span className='ms-auto text-12px'>Current</span>
                 ) : (
-                  availableChip(option.available)
+                  availabilityLabel(option.available)
                 )}
               </span>
             </Menu.Item>
@@ -250,18 +241,18 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   );
 };
 
-export const KelDefaultModelCard: React.FC = () => {
+export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { state, setDefault } = useKelModelState();
   // Defensive: a payload without the provider listing must not take the page down with it.
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title='Default Kel model' data-testid='kel-default-model-card'>
-      <p className='text-14px text-t-secondary m-0 mb-10px'>
+    <KelCard title={compact ? 'Available now' : 'Default Kel model'} data-testid='kel-default-model-card'>
+      {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
         routing across every available provider.
-      </p>
+      </p>}
       {!state ? (
         <p className='text-14px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
       ) : (
@@ -290,14 +281,13 @@ export const KelDefaultModelCard: React.FC = () => {
                   style={{
                     background: current ? 'var(--kel-surface-2)' : 'transparent',
                     border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
-                    opacity: option.available ? 1 : 0.6,
                   }}
                 >
-                  <span className='text-14px'>
+                  <span className='text-14px' style={{ opacity: option.available ? 1 : 0.6 }}>
                     {option.label}
                     <span className='ms-6px text-12px text-t-secondary'>{provider.label}</span>
                   </span>
-                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availableChip(option.available)}
+                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availabilityLabel(option.available)}
                 </button>
               );
             })

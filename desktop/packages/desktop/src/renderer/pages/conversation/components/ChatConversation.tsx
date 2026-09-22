@@ -33,7 +33,6 @@ import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conve
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import GoogleModelSelector from '../platforms/gemini/GoogleModelSelector';
 import AionrsChat from '../platforms/aionrs/AionrsChat';
-import AionrsModelSelector from '../platforms/aionrs/AionrsModelSelector';
 import { useAionrsModelSelection } from '../platforms/aionrs/useAionrsModelSelection';
 import { useConversationRuntimeView } from '../runtime/useConversationRuntimeView';
 import { isLegacyReadOnlyConversationType } from '../utils/conversationRuntime';
@@ -182,29 +181,6 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
   const cronJobId = resolveCronJobId(conversation.extra);
   const { info: presetAssistantInfo } = usePresetAssistantInfo(conversation);
   const aionrsAssistantId = presetAssistantInfo?.assistantId;
-  const layout = useLayoutContext();
-  // Mobile: model selection moved into the sendbox `+` action sheet to free up
-  // header space; the dropdown stays available on desktop and tablets ≥768px.
-  const isMobile = Boolean(layout?.isMobile);
-  const { t } = useTranslation();
-  const runtimeConfig = useAcpConfigOptions({
-    conversation_id: conversation.id,
-    enabled: !isMobile,
-  });
-  const handleThoughtLevelSetOption = useCallback(
-    async (optionId: string, value: string) => {
-      try {
-        const result = await runtimeConfig.setConfigOption(optionId, value);
-        Message.success(t('agent.thoughtLevel.switchSuccess'));
-        return result;
-      } catch (error) {
-        Message.error(t(configErrorMessageKey(error)));
-        throw error;
-      }
-    },
-    [runtimeConfig, t]
-  );
-
   const chatLayoutProps = {
     title: conversation.name,
     siderTitle: sliderTitle,
@@ -212,14 +188,6 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
     headerExtra: (
       <div className='flex items-center gap-8px'>
         <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />
-        {!isMobile && (
-          <AionrsModelSelector
-            selection={modelSelection}
-            thoughtLevel={runtimeConfig.thoughtLevel}
-            setStatus={runtimeConfig.setStatus}
-            onSetThoughtLevel={handleThoughtLevelSetOption}
-          />
-        )}
       </div>
     ),
     workspaceEnabled,

@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V2.0 — Connections: the one place to see and manage the services Kel can use.
  *
@@ -388,11 +389,11 @@ const Connections: React.FC = () => {
   return (
     <div className="kel-page">
       <div className="kel-page__head">
-        <h1 className="kel-h1">Connections</h1>
+        <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1>
         <p className="kel-sub">
           The services Kel can use. You keep the credential — it is stored encrypted on this computer,
           and Kel only ever records that it exists.
-        </p>
+        </p></div>
       </div>
 
       {note && <p className="kel-meta">{note}</p>}

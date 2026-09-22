@@ -158,30 +158,18 @@ async function leaveFirstRun(page: Page, journey: string): Promise<void> {
  * sixty-second hang.
  */
 async function openFromDrawer(page: Page, name: string, journey: string): Promise<void> {
-  const visible = (label: string) =>
-    page.getByRole('button', { name: new RegExp(`^${label}$`) }).filter({ visible: true });
-  const onScreen = async (locator: ReturnType<typeof visible>): Promise<boolean> => {
-    const box = await locator.first().boundingBox().catch(() => null);
-    const viewport = page.viewportSize();
-    if (!box || !viewport) return false;
-    return box.x >= 0 && box.y >= 0 && box.x + box.width <= viewport.width + 1 && box.y < viewport.height;
-  };
-  // A drawer entry that is merely "visible" may sit off-canvas: the phone opens the drawer first.
-  if (!(await onScreen(visible(name)))) {
-    const toggle = page.getByRole('button', { name: /Work & context/ }).filter({ visible: true }).first();
-    note({ journey, step: 'drawer-toggle', count: await toggle.count() });
-    await toggle
-      .click({ timeout: 8000 })
-      .catch((error) => note({ journey, step: 'drawer-toggle-failed', error: String(error).slice(0, 160) }));
-    await page.waitForTimeout(900);
-    await page.screenshot({ path: path.join(EVIDENCE, `${journey}-drawer.png`) });
-  }
-  const target = visible(name).first();
-  note({ journey, step: `drawer-${name}`, count: await visible(name).count(), onScreen: await onScreen(visible(name)) });
-  await target
-    .click({ timeout: 10_000 })
-    .catch((error) => note({ journey, step: `drawer-${name}-failed`, error: String(error).slice(0, 160) }));
-  await page.waitForTimeout(2500);
+  // Wait for the phone layout to settle before opening its drawer.
+  const toggle = page.getByRole('button', { name: 'Expand More', exact: true });
+  await expect(toggle).toBeVisible();
+  await page.waitForTimeout(500);
+  await toggle.click();
+  const target = page.locator('.layout-sider').getByRole('button', { name, exact: true });
+  await expect(target).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE, `${journey}-drawer.png`) });
+  await target.click();
+  await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
+  await expect(page.locator('.layout-sider')).not.toBeVisible();
+  await page.waitForTimeout(500);
 }
 
 // The phone fixture is top-level: `launchOptions` also has to be, because it forces a worker.
@@ -284,12 +272,14 @@ test.describe('Kel on a phone (V2-05)', () => {
 
     // The panel the phone calls "Work & context" — conversation history, attention and work. Its trigger
     // is a text button in the rail's footer (class `kel-work-context-btn`), not a named button.
+    await page.getByRole('button', { name: 'Expand More', exact: true }).click();
     const drawerToggle = page.locator('.kel-work-context-btn').first();
     note({ journey: 'B', step: 'drawer', count: await drawerToggle.count(), box: await drawerToggle.boundingBox().catch(() => null) });
     if (await drawerToggle.count()) {
       await drawerToggle.click({ timeout: 8000 }).catch((error) => note({ journey: 'B', step: 'drawer-failed', error: String(error).slice(0, 160) }));
       await page.waitForTimeout(1800);
       await page.screenshot({ path: path.join(EVIDENCE, 'B3-drawer.png') });
+      await expect(page.getByText('Error: Kel connection is unavailable', { exact: true })).toHaveCount(0);
       const drawerText = await text(page, 1200);
       note({
         journey: 'B',
@@ -308,7 +298,8 @@ test.describe('Kel on a phone (V2-05)', () => {
         await page.waitForTimeout(900);
         const option = page.getByText(/Phone journey seed/i).last();
         note({ journey: 'B', step: 'conversation-option', count: await option.count() });
-        await option.click({ timeout: 6000 }).catch((error) => note({ journey: 'B', step: 'conversation-option-failed', error: String(error).slice(0, 160) }));
+        if (await option.count()) await option.click();
+        else note({ journey: 'B', step: 'conversation-unverified', reason: 'No Phone journey seed in this isolated data root.' });
         await page.waitForTimeout(2500);
         await page.screenshot({ path: path.join(EVIDENCE, 'B4-conversation.png') });
         note({ journey: 'B', step: 'conversation', text: await text(page, 1200) });

@@ -544,7 +544,7 @@ const DingTalkConfigForm: React.FC<DingTalkConfigFormProps> = ({ pluginStatus, m
             title={t('settings.dingtalk.connectionStatus', 'Connection Status')}
             action={
               <span
-                className={`text-12px px-8px py-2px rd-4px ${pluginStatus?.connected ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : pluginStatus?.error ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'}`}
+                className={`kel-chip ${pluginStatus?.connected ? 'kel-chip--ok' : pluginStatus?.error ? 'kel-chip--failed' : 'kel-chip--wait'}`}
               >
                 {pluginStatus?.connected
                   ? t('settings.dingtalk.statusConnected', 'Connected')

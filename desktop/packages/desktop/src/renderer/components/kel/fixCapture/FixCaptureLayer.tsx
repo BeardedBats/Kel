@@ -172,7 +172,7 @@ const FixCaptureLayer: React.FC = () => {
             className={styles.panel}
             style={{ top: placement.top, left: placement.left }}
             role='dialog'
-            aria-label='Fix Capture'
+            aria-label='Kibble'
             data-testid='fix-capture-panel'
             data-phase={phase}
           >
@@ -218,7 +218,7 @@ const FixCaptureLayer: React.FC = () => {
                       navigate('/dogfood');
                     }}
                   >
-                    Open Dogfood Fixes
+                    Open Kibble
                   </button>
                 </div>
               </>

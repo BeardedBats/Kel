@@ -1,3 +1,4 @@
+import ShellComposerMetrics from '@renderer/components/kel/ShellComposerMetrics';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -42,6 +43,7 @@ type GuidInputCardProps = {
   slashCommandMenu?: React.ReactNode;
 
   // Workspace
+  modeSelector?: React.ReactNode;
   workspaceDir: string;
   onSelectWorkspace: (dir: string) => void;
   onClearWorkspace: () => void;
@@ -66,6 +68,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   onRemoveFile,
   actionRow,
   slashCommandMenu,
+  modeSelector,
   workspaceDir,
   onSelectWorkspace,
   onClearWorkspace,
@@ -74,7 +77,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   const isMobile = layout?.isMobile ?? false;
   const { compositionHandlers, isComposing } = useCompositionInput();
   const inputRef = useRef<RefTextAreaType | null>(null);
-  const textareaAutoSize = isMobile ? { minRows: 2, maxRows: 8 } : { minRows: 2, maxRows: 20 };
+  const textareaAutoSize = isMobile ? { minRows: 2, maxRows: 8 } : { minRows: 1, maxRows: 20 };
 
   useEffect(() => {
     if (!focusRequestKey || isMobile) return;
@@ -116,7 +119,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
     >
       {/* inner white card — narrower than outer wrap */}
       <div
-        className={`${styles.guidInputInner} relative p-12px flex flex-col bg-dialog-fill-0`}
+        className={`${styles.guidInputInner} kel-shell-composer relative p-12px flex flex-col bg-dialog-fill-0`}
         style={{
           transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
           borderColor: isFileDragging ? 'rgb(var(--primary-3))' : borderColor,
@@ -138,7 +141,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
           onKeyDown={handleKeyDown}
           data-testid='guid-input'
         />
-        <div style={{ height: 12, flexShrink: 0 }} aria-hidden='true' />
+        <div className='kel-shell-composer-spacer' aria-hidden='true' />
         {files.length > 0 && (
           <div className='flex flex-wrap items-center gap-8px mt-12px mb-12px'>
             {files.map((path) => (
@@ -150,11 +153,11 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
         {actionRow}
         {slashCommandMenu && <div className='absolute start-0 end-0 top-[calc(100%+4px)] z-70'>{slashCommandMenu}</div>}
       </div>
-      <GuidWorkspaceFootnote
+      <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote
         workspaceDir={workspaceDir}
         onSelectWorkspace={onSelectWorkspace}
         onClearWorkspace={onClearWorkspace}
-      />
+      />{modeSelector}<ShellComposerMetrics /></div>
     </div>
   );
 };

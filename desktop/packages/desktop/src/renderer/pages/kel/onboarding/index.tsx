@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 first-run onboarding (docs/v1.4/KEL_V1.4_UX_SPEC.md §3).
  *
@@ -10,7 +11,6 @@ import { configService } from '@/common/config/configService';
 import {
   KelButton,
   KelCard,
-  KelSection,
   KelStatusChip,
 } from '@renderer/components/kel/KelPrimitives';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
@@ -96,19 +96,17 @@ export default function KelOnboardingPage() {
       <a className='kel-skip' href='#kel-onboarding-main'>
         Skip to main content
       </a>
-      <main className='kel-page' id='kel-onboarding-main' tabIndex={-1}>
+      <main className='kel-page kel-shell-onboarding' id='kel-onboarding-main' tabIndex={-1}>
         <div className='kel-page__head'>
           <div>
+            <ShellWorkspaceLink />
             <h1 className='kel-h1'>Set up Kel</h1>
-            <p className='kel-sub'>
-              {`Step ${index + 1} of ${STEPS.length} · ${step}`}
-            </p>
           </div>
           <span className='kel-grow' />
-          <KelButton variant='quiet' onClick={() => void finish(true)}>
-            Skip setup
-          </KelButton>
+          <KelButton onClick={() => navigate('/settings/model')}>Add Model</KelButton>
         </div>
+
+        <p className='kel-meta kel-shell-setup-label'>{`Step ${index + 1} of ${STEPS.length} · ${step}`}</p>
 
         {error && (
           <p className='kel-meta'>
@@ -116,122 +114,39 @@ export default function KelOnboardingPage() {
           </p>
         )}
 
-        {step === 'Welcome' && (
-          <KelCard title='Kel runs on this machine'>
-            <p className='kel-sub'>
-              Kel is your assistant on this machine. What it learns about your projects, and every
-              receipt for work it does, stays in your folders and in Kel's own data directory.
-            </p>
-            <ul>
-              <li className='kel-meta'>Nothing leaves this machine except the model you connect.</li>
-              <li className='kel-meta'>Kel works only inside the project you point it at.</li>
-              <li className='kel-meta'>Every finished job leaves evidence you can inspect.</li>
-            </ul>
-          </KelCard>
-        )}
+        <KelCard title='Kel runs on this machine'>
+          <div className='kel-row'>
+            <span>Local runtime</span><span className='kel-meta'>{engine ? 'Detected · ready' : 'Checking runtime…'}</span>
+            <span className='kel-grow' /><span className={`kel-chip ${engine ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{engine ? 'Ready' : 'Checking'}</span>
+          </div>
+        </KelCard>
 
-        {step === 'Providers' && (
-          <KelCard
-            title='Connect a model'
-            actions={
-              <KelButton variant='secondary' onClick={() => navigate('/providers')}>
-                Open Providers
-              </KelButton>
-            }
-          >
-            {providers.length === 0 ? (
-              <p className='kel-sub'>No model is connected yet.</p>
-            ) : (
-              <ul>
-                {providers.map((item) => (
-                  <li key={item.provider} className='kel-meta'>
-                    <span className='kel-strong'>{item.label}</span>{' '}
-                    <KelStatusChip status={STATUS_CHIP[item.status] ?? 'queued'} />{' '}
-                    {`· ${STATUS_LABEL[item.status] ?? item.status.replace(/_/g, ' ')}`}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p className='kel-sub'>
-              Kel can be explored without one, but answering and running jobs need a model: a CLI
-              subscription, or an API key kept in Windows' protected store.
-            </p>
-          </KelCard>
-        )}
+        <KelCard title='Connect a model' actions={<KelButton onClick={() => navigate('/providers')}>Open Providers</KelButton>}>
+          {providers.length === 0 ? <p className='kel-meta'>No model is connected yet.</p> : providers.map(item => (
+            <div className='kel-row' key={item.provider}>
+              <span>{item.label}</span><span className='kel-meta'>{STATUS_LABEL[item.status] ?? item.status.replace(/_/g, ' ')}</span>
+              <span className='kel-grow' /><KelStatusChip status={STATUS_CHIP[item.status] ?? 'queued'} />
+            </div>
+          ))}
+        </KelCard>
 
-        {step === 'Project' && (
-          <KelCard title='Where work happens'>
-            <p className='kel-sub'>
-              {`Kel is pointed at ${project === 'default' ? 'General' : project}. Nothing outside it is read or written unless you say yes when Kel asks.`}
-            </p>
-            <p className='kel-meta'>
-              Projects are records, not copies — Files stay where you keep them.
-            </p>
-          </KelCard>
-        )}
+        <KelCard title='Where work happens'>
+          <div className='kel-row'>
+            <div><div>Workspace folder</div><div className='kel-meta'>{project === 'default' ? 'General' : project || 'Loading…'}</div></div>
+            <span className='kel-grow' /><KelButton onClick={() => navigate('/projects')}>Change</KelButton>
+          </div>
+        </KelCard>
 
-        {step === 'Autonomy' && (
-          <>
-            <KelCard title='How much Kel does on its own'>
-              <p className='kel-sub'>
-                Kel works on its own after you approve a plan, and asks you first when work needs to
-                reach outside what that plan covered. Three answers are always available: allow once,
-                allow for this project, or deny.
-              </p>
-              <p className='kel-meta'>
-                Some things are never automatic, and cannot be unlocked by Kel, by a role, or by
-                anything written in a repository.
-              </p>
-            </KelCard>
-            {rules.length > 0 && (
-              <KelSection title='Rules that are always on'>
-                <ul>
-                  {rules.map((rule) => (
-                    <li key={rule.rule} className='kel-meta'>
-                      {`${rule.rule} — ${rule.text}`}
-                    </li>
-                  ))}
-                </ul>
-              </KelSection>
-            )}
-          </>
-        )}
+        <KelCard title='How much Kel does on its own'>
+          <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />
+            <KelButton onClick={() => navigate('/autonomy')}>Ask before edits</KelButton>
+          </div>
+        </KelCard>
 
-        {step === 'Ready' && (
-          <KelCard title="You're set">
-            <ul>
-              <li className='kel-meta'>{`Kel ${engine || ''}`.trim()}</li>
-              <li className='kel-meta'>
-                {providers.some((item) => item.status === 'healthy' || item.status === 'quota')
-                  ? 'A model is connected.'
-                  : 'No model is connected yet — you can add one anytime in Settings › Providers.'}
-              </li>
-              <li className='kel-meta'>Safety rules: on</li>
-            </ul>
-            <p className='kel-sub'>
-              Start in chat. Kel will turn your request into a plan, and you approve it before work
-              begins.
-            </p>
-          </KelCard>
-        )}
+        <KelCard title="You're set">
+          <div className='kel-row'><KelButton onClick={() => void finish(false)}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
+        </KelCard>
 
-        <div className='kel-row' style={{ marginTop: 16 }}>
-          {index > 0 && (
-            <KelButton variant='secondary' onClick={back}>
-              Back
-            </KelButton>
-          )}
-          <span className='kel-grow' />
-          {step === 'Ready' ? (
-            <KelButton variant='primary' onClick={() => void finish(false)}>
-              Start using Kel
-            </KelButton>
-          ) : (
-            <KelButton variant='primary' onClick={next}>
-              Next
-            </KelButton>
-          )}
-        </div>
       </main>
     </div>
   );

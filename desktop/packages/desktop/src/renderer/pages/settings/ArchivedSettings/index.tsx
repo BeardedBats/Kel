@@ -1,3 +1,4 @@
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -15,7 +16,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 
-import SettingsPageHeader from '../components/SettingsPageHeader';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
 import { resolveConversationLeadingMark } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
 
@@ -458,9 +458,10 @@ const ArchivedSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper>
-      <SettingsPageHeader
-        title={t('settings.archived.navLabel')}
-        actions={
+      <p className='kel-shell-model-description'>Conversations and teams you archived.</p>
+      <div className='kel-shell-archive-actions'>
+        {total === 0 && <Button disabled>Delete all</Button>}
+        {
           total > 0 ? (
             <div className='flex min-w-0 items-center justify-end gap-10px'>
               {selectionMode ? (
@@ -503,15 +504,16 @@ const ArchivedSettings: React.FC = () => {
             </div>
           ) : null
         }
-      />
+      </div>
 
       {isLoading ? (
         <div className='flex items-center justify-center py-64px'>
           <Spin />
         </div>
       ) : total === 0 ? (
-        <div className='flex items-center justify-center py-64px'>
-          <Empty description={t('settings.archived.empty')} />
+        <div className='kel-card'>
+          <ShellSourceCardHeader title='Archived' />
+          <p className='kel-meta'>No archived items</p>
         </div>
       ) : (
         <div className='mt-18px flex flex-col gap-12px'>

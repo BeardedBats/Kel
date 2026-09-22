@@ -25,18 +25,16 @@ describe('integrations overview (D17)', () => {
     expect(service).toContain('return snapshot(self.store,conversation)');
   });
 
-  it('states connected / needs setup / unavailable in plain words with the reason', () => {
-    expect(providersPage).toContain('<KelCard');
+  it('shows the provider label and reason from live state', () => {
     expect(providersPage).toContain('title="Integrations"');
-    expect(providersPage).toContain("'all available'");
-    expect(providersPage).toContain("'some need setup'");
-    expect(providersPage).toContain("? 'Connected'");
-    expect(providersPage).toContain('`Needs setup — ');
-    expect(providersPage).toContain('`Unavailable — ');
+    expect(providersPage).toContain('{view.label}');
+    expect(providersPage).toContain('{view.reason}');
+    expect(providersPage).not.toContain('Provider tools and credential settings');
   });
 
-  it('points at the setup surface and never fakes an action on unavailable rows', () => {
-    expect(providersPage).toContain("onClick={() => navigate('/settings/tools')}");
-    expect(providersPage).toContain("row.availability === 'needs_setup' && (");
+  it('keeps real credential setup and disables save without a key', () => {
+    expect(providersPage).toContain('Save + Verify');
+    expect(providersPage).toContain('disabled={busy || !keyDraft.value || !secure?.available}');
+    expect(providersPage).toContain('void saveKey(provider.provider)');
   });
 });

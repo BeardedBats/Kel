@@ -145,80 +145,9 @@ const extractThemePreviewPalette = (css: string, mode: 'light' | 'dark'): ThemeP
   };
 };
 
-const ThemeLayoutPreview: React.FC<{ palette: ThemePreviewPalette }> = ({ palette }) => {
-  return (
-    <div className='absolute inset-0 pointer-events-none'>
-      <div className='absolute inset-0' style={{ background: palette.appBg }} />
-      <div
-        className='absolute start-8px end-8px top-8px bottom-8px rounded-8px overflow-hidden border border-solid'
-        style={{ borderColor: palette.border, background: palette.mainBg }}
-      >
-        <div
-          className='h-14px border-b border-solid flex items-center px-6px gap-4px'
-          style={{ borderColor: palette.border, background: palette.headerBg }}
-        >
-          <span className='block w-5px h-5px rounded-full' style={{ background: palette.accent, opacity: 0.9 }}></span>
-          <span
-            className='block w-18px h-4px rounded-full'
-            style={{ background: palette.border, opacity: 0.45 }}
-          ></span>
-          <span
-            className='block w-12px h-4px rounded-full ms-auto'
-            style={{ background: palette.border, opacity: 0.45 }}
-          ></span>
-        </div>
-        <div style={{ height: 'calc(100% - 14px)', display: 'flex' }}>
-          <div
-            className='border-e border-solid px-3px py-3px flex flex-col gap-3px'
-            style={{ width: '23%', borderColor: palette.border, background: palette.sideBg }}
-          >
-            <span className='block h-3px rounded-full' style={{ background: palette.textMuted, opacity: 0.4 }}></span>
-            <span
-              className='block h-3px rounded-full w-4/5'
-              style={{ background: palette.textMuted, opacity: 0.33 }}
-            ></span>
-            <span
-              className='block h-3px rounded-full w-3/5'
-              style={{ background: palette.textMuted, opacity: 0.28 }}
-            ></span>
-          </div>
-          <div
-            className='border-e border-solid px-4px py-4px flex flex-col gap-4px'
-            style={{ width: '54%', borderColor: palette.border, background: palette.mainBg }}
-          >
-            <span
-              className='block h-6px rounded-[6px] w-4/5'
-              style={{ background: palette.aiBubble, opacity: 0.9 }}
-            ></span>
-            <span
-              className='block h-6px rounded-[6px] w-3/5 self-end'
-              style={{ background: palette.userBubble, opacity: 0.95 }}
-            ></span>
-            <span
-              className='block h-6px rounded-[6px] w-2/3'
-              style={{ background: palette.aiBubble, opacity: 0.82 }}
-            ></span>
-          </div>
-          <div className='px-3px py-3px flex flex-col gap-3px' style={{ width: '23%', background: palette.sideBg }}>
-            <span className='block h-3px rounded-full' style={{ background: palette.textMuted, opacity: 0.36 }}></span>
-            <span
-              className='block h-3px rounded-full w-5/6'
-              style={{ background: palette.textMuted, opacity: 0.3 }}
-            ></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/** Diagonal split preview for the "Follow System" card: light top-left, dark bottom-right. */
-const SystemThemePreview: React.FC = () => (
-  <div className='absolute inset-0 pointer-events-none'>
-    <ThemeLayoutPreview palette={fallbackThemePreviewPaletteByMode.light} />
-    <div className='absolute inset-0' style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}>
-      <ThemeLayoutPreview palette={fallbackThemePreviewPaletteByMode.dark} />
-    </div>
+const ThemeLayoutPreview: React.FC<{ palette: ThemePreviewPalette; mode?: string }> = ({ palette, mode }) => (
+  <div className='kel-shell-theme-preview' data-mode={mode} style={{ '--preview-side': palette.sideBg, '--preview-main': palette.mainBg, '--preview-line': palette.textMuted } as React.CSSProperties} aria-hidden='true'>
+    <div /><div><i /><i /><i /></div>
   </div>
 );
 
@@ -245,7 +174,6 @@ const CssThemeSettings: React.FC = () => {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
-  const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
 
   const activeThemeId = activeId ?? activeTheme?.id ?? DEFAULT_THEME_ID;
 
@@ -343,6 +271,13 @@ const CssThemeSettings: React.FC = () => {
     setModalVisible(true);
   }, []);
 
+
+  useEffect(() => {
+    const open = () => { setEditingTheme(null); setModalVisible(true); };
+    window.addEventListener('kel:add-theme', open);
+    if (new URLSearchParams(location.hash.split('?')[1] || '').get('addTheme') === '1') open();
+    return () => window.removeEventListener('kel:add-theme', open);
+  }, []);
   /**
    * 打开编辑主题弹窗 / Open edit theme modal
    */
@@ -440,9 +375,9 @@ const CssThemeSettings: React.FC = () => {
   );
 
   return (
-    <div className='space-y-12px'>
+    <div className='space-y-12px kel-shell-theme-gallery'>
       {/* 标题栏 / Header */}
-      <div className='flex items-start md:items-center justify-between gap-8px flex-wrap'>
+      <div className='kel-shell-theme-gallery-actions flex items-start md:items-center justify-between gap-8px flex-wrap'>
         <span className='text-14px text-t-secondary leading-22px'>{t('settings.cssTheme.selectOrCustomize')}</span>
         <Button type='primary' size='small' className='!h-32px !rounded-8px !px-14px !m-0' onClick={handleAddTheme}>
           {t('settings.cssTheme.addManually')}
@@ -473,35 +408,36 @@ const CssThemeSettings: React.FC = () => {
               key={theme.id}
               data-testid={`theme-card-${theme.id}`}
               data-active={activeThemeId === theme.id}
+              role='button' tabIndex={0} aria-label={theme.name} aria-pressed={activeThemeId === theme.id}
+              onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleSelectTheme(theme); } }}
               className={`relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px w-200px flex-shrink-0 ${activeThemeId === theme.id ? 'border-[var(--color-primary)]' : 'border-transparent hover:border-border-2'}`}
               style={cardStyle}
               onClick={() => handleSelectTheme(theme)}
-              onMouseEnter={() => setHoveredThemeId(theme.id)}
-              onMouseLeave={() => setHoveredThemeId(null)}
             >
               {theme.id === SYSTEM_THEME_ID ? (
-                <SystemThemePreview />
+                <ThemeLayoutPreview palette={previewPalette} mode='system' />
               ) : (
-                !theme.cover && <ThemeLayoutPreview palette={previewPalette} />
+                !theme.cover && <ThemeLayoutPreview palette={previewPalette} mode={theme.id} />
               )}
 
               {/* 底部渐变遮罩与名称、编辑按钮 / Bottom gradient overlay with name and edit button */}
               <div className='absolute bottom-0 start-0 end-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-8px'>
                 <span className='text-13px text-white truncate flex-1'>{theme.name}</span>
                 {/* 编辑按钮（仅用户主题） / Edit button (user themes only) */}
-                {hoveredThemeId === theme.id && !theme.builtin && (
-                  <div
+                {!theme.builtin && (
+                  <button
+                    type='button' aria-label={`Edit ${theme.name}`}
                     className='p-4px rounded-6px bg-white/20 cursor-pointer hover:bg-white/40 transition-colors ms-8px'
                     onClick={(e) => handleEditTheme(theme, e)}
                   >
                     <EditTwo theme='outline' size='16' fill='#fff' />
-                  </div>
+                  </button>
                 )}
               </div>
 
               {/* 选中标记 / Selected indicator */}
               {activeThemeId === theme.id && (
-                <div className='absolute top-8px end-8px'>
+                <div className='absolute bottom-8px end-8px'>
                   <CheckOne theme='filled' size='20' fill='var(--color-primary)' />
                 </div>
               )}

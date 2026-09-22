@@ -6,6 +6,8 @@
  * behind the engine's `/api/transcription` action family, and transcripts can be sent to chat or
  * routed into a live Vetting Session through the existing ingestion service.
  */
+import { kelRequest as request } from '@renderer/components/kel/kelApi';
+import rambleBrand from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +16,7 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
 import styles from './index.module.css';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 /**
  * Batch 6 (TR-02 residual): every failure toast goes through the classifier, so transport and
@@ -48,12 +51,6 @@ type ReviewPayload = {
   buckets?: { requirements: string[]; concerns: string[]; unresolved: string[] };
 };
 
-async function request<T>(route: string, body?: unknown): Promise<T> {
-  const api = window.kelAPI;
-  if (!api) throw new Error('Kel is not connected');
-  return (await api.request(route, body)) as T;
-}
-
 const transcription = <T,>(body: Record<string, unknown>) => request<T>('/api/transcription', body);
 
 function formatWhen(seconds: number): string {
@@ -84,6 +81,11 @@ function downloadBlob(name: string, data: BlobPart, mime: string): void {
 
 const TranscriptionPage: React.FC = () => {
   const navigate = useNavigate();
+  const layout = useLayoutContext();
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const folderCreatePending = useRef(false);
+  const folderRenamePending = useRef(false);
+  const cancelFolderRename = useRef(false);
   const [status, setStatus] = useState<ProviderStatus>();
   const [library, setLibrary] = useState<Library>({ folders: [], transcripts: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -348,30 +350,43 @@ const TranscriptionPage: React.FC = () => {
   );
 
   const createFolder = useCallback(async () => {
-    const name = folderDraft.trim();
-    if (!name) return;
+    if (folderCreatePending.current) return;
+    folderCreatePending.current = true;
+    setCreatingFolder(true);
     try {
-      const folder = await transcription<Folder>({ action: 'folder_create', name });
-      setFolderDraft('');
+      const folder = await transcription<Folder>({ action: 'folder_create', name: 'New Folder' });
+      setLibrary((current) => ({ ...current, folders: [...current.folders, folder] }));
       setExpanded((current) => new Set(current).add(folder.id));
-      await refresh();
+      setFolderDraft(folder.name);
+      setFolderEditing(folder.id);
     } catch (error) {
       Message.error(failMessage(error));
+    } finally {
+      folderCreatePending.current = false;
+      setCreatingFolder(false);
     }
-  }, [folderDraft, refresh]);
+  }, []);
 
   const renameFolder = useCallback(
     async (id: string, name: string) => {
-      setFolderEditing(null);
-      if (!name.trim()) return;
+      if (folderRenamePending.current) return;
+      const trimmed = name.trim();
+      if (!trimmed || library.folders.find((folder) => folder.id === id)?.name === trimmed) {
+        setFolderEditing(null);
+        return;
+      }
+      folderRenamePending.current = true;
       try {
-        await transcription({ action: 'folder_rename', id, name: name.trim() });
-        await refresh();
+        await transcription({ action: 'folder_rename', id, name: trimmed });
+        setLibrary((current) => ({ ...current, folders: current.folders.map((folder) => folder.id === id ? { ...folder, name: trimmed } : folder) }));
+        setFolderEditing((current) => current === id ? null : current);
       } catch (error) {
         Message.error(failMessage(error));
+      } finally {
+        folderRenamePending.current = false;
       }
     },
-    [refresh]
+    [library.folders]
   );
 
   const deleteFolder = useCallback(
@@ -621,7 +636,7 @@ const statusCopy =
   return (
     <div className='relative h-full'>
       <div
-        className={styles.shell}
+        className={`${styles.shell} kel-shell-ramble`}
         data-testid='transcription-page'
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes('Files')) {
@@ -633,22 +648,25 @@ const statusCopy =
         onDrop={onDrop}
       >
         <aside className={styles.sidebar} aria-label='Transcript library'>
-          {/* Authoritative standalone IA (finding 6): the column keeps the donor's own title and a
-              plain-text API Key entry — not a gear — because that is where a user looks for the
-              transcription credential. */}
-          <div className={styles.sidebarHeader}>
-            <h1 className={styles.sidebarTitle}>Transcriptions</h1>
-            <button
-              type='button'
-              className={styles.apiKeyAction}
-              onClick={() => setSettingsOpen(true)}
-              data-testid='transcription-settings'
-            >
-              API Key
-            </button>
+          <div className={styles.brandRow}>
+            <div className='kel-shell-tool-brand'><img src={rambleBrand} alt='' width={30} height={31} /><span>Kel</span></div>
+            <div className={styles.navigation} ref={layout?.setTitlebarMenuHost} data-testid='ramble-navigation' />
           </div>
-          <div className={styles.sectionTitle}>Folders</div>
-          <div className={styles.scrollArea}>
+          <button type='button' className='kel-shell-back' onClick={() => navigate('/guid')}>← Back to Kel</button>
+          <input
+            type='search'
+            className={styles.searchInput}
+            aria-label='Search transcripts'
+            placeholder='Search transcripts'
+            value={recentSearch}
+            onChange={(event) => setRecentSearch(event.target.value)}
+            data-testid='transcript-search'
+          />
+          <div className={styles.foldersHeader}>
+            <h2 className={styles.sectionTitle}>Folders</h2>
+            <button type='button' className={styles.addFolder} aria-label='New folder' title='New folder' disabled={creatingFolder} onClick={() => void createFolder()} data-testid='folder-create'>+</button>
+          </div>
+          <div className={`${styles.scrollArea} kel-shell-ramble-folders`}>
             {library.folders.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px 6px' }}>
                 Group recordings into folders — drag a transcript onto one.
@@ -680,12 +698,22 @@ const statusCopy =
                       {open ? '▾' : '▸'}
                     </button>
                     {folderEditing === folder.id ? (
-                      <Input
-                        size='small'
+                      <input
+                        className={styles.renameInput}
+                        aria-label='Folder name'
                         value={folderDraft}
-                        onChange={setFolderDraft}
-                        onBlur={() => void renameFolder(folder.id, folderDraft)}
-                        onPressEnter={() => void renameFolder(folder.id, folderDraft)}
+                        onChange={(event) => setFolderDraft(event.target.value)}
+                        onFocus={(event) => { cancelFolderRename.current = false; event.target.select(); }}
+                        onBlur={() => {
+                          if (!cancelFolderRename.current) void renameFolder(folder.id, folderDraft);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') event.currentTarget.blur();
+                          if (event.key === 'Escape') {
+                            cancelFolderRename.current = true;
+                            setFolderEditing(null);
+                          }
+                        }}
                         autoFocus
                         data-testid='folder-rename'
                       />
@@ -735,24 +763,9 @@ const statusCopy =
                 </div>
               );
             })}
-            <div style={{ display: 'flex', gap: 6, padding: '4px 2px 6px' }}>
-              <Input size='small' value={folderDraft} onChange={setFolderDraft} placeholder='New folder' data-testid='folder-name' />
-              <Button size='small' onClick={() => void createFolder()} data-testid='folder-create'>
-                Add
-              </Button>
-            </div>
           </div>
           <div className={styles.divider} />
           <div className={styles.sectionTitle}>Recent</div>
-          <Input
-            size='small'
-            allowClear
-            placeholder='Search transcripts'
-            value={recentSearch}
-            onChange={setRecentSearch}
-            style={{ margin: '0 8px 6px', width: 'calc(100% - 16px)' }}
-            data-testid='transcript-search'
-          />
           <div className={styles.scrollArea} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
@@ -783,55 +796,53 @@ const statusCopy =
               </button>
             ))}
           </div>
-          {/* The connection state stays one quiet line; the entry point moved to the column header. */}
-          <div className={styles.sidebarFooterNote} data-testid='transcription-mode'>
-            {status?.label || 'Checking…'}
-          </div>
+
         </aside>
 
         <main className={styles.workspace}>
           {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
-          {/* Authoritative IA: actions sit top-right in the donor's order — Upload Audio · Record More ·
-              Record — with Record last and primary. Record More is always present (disabled when there is
-              nothing to append to) instead of appearing conditionally. */}
-          <div className={styles.actionRow}>
-            {recState === 'idle' && (
-              <>
-                <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
-                  Upload Audio
-                </Button>
-                <Button
-                  disabled={selected?.source_type !== 'recording'}
-                  onClick={() => {
-                    if (selected) void beginRecording(selected.id);
-                  }}
-                  data-testid='record-more'
-                >
-                  Record More
-                </Button>
-                <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
-                  Record
-                </Button>
-              </>
-            )}
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='.mp3,.mp4,.wav,audio/*,video/mp4'
-              style={{ display: 'none' }}
-              data-testid='upload-input'
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void uploadFile(file);
-                event.target.value = '';
-              }}
-            />
-            {progress && (
-              <span className={styles.rowMeta} data-testid='progress-label' role='status'>
-                {progress}
-              </span>
-            )}
-          </div>
+          <header className={styles.pageHeader}>
+            <h1 className='kel-h1'>Ramble</h1>
+            <div className={styles.actionRow}>
+              <Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>
+              {recState === 'idle' && (
+                <>
+                  <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
+                    Upload Audio
+                  </Button>
+                  <Button
+                    disabled={selected?.source_type !== 'recording'}
+                    onClick={() => {
+                      if (selected) void beginRecording(selected.id);
+                    }}
+                    data-testid='record-more'
+                  >
+                    Record More
+                  </Button>
+                  <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
+                    Record
+                  </Button>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='.mp3,.mp4,.wav,audio/*,video/mp4'
+                style={{ display: 'none' }}
+                data-testid='upload-input'
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void uploadFile(file);
+                  event.target.value = '';
+                }}
+              />
+              {progress && (
+                <span className={styles.rowMeta} data-testid='progress-label' role='status'>
+                  {progress}
+                </span>
+              )}
+            </div>
+          </header>
 
           {recState !== 'idle' && (
             <div className={styles.recordBar} data-testid='recording-bar' role='status' aria-live='polite'>
@@ -868,7 +879,7 @@ const statusCopy =
             )}
             {selected && (
               <>
-                <div className={styles.documentHeader}>
+                <div className={`${styles.documentHeader} kel-shell-transcript-header`}>
                   {renaming ? (
                     <Input
                       value={nameDraft}
@@ -880,7 +891,7 @@ const statusCopy =
                       data-testid='transcript-rename'
                     />
                   ) : (
-                    <h2 className={styles.documentTitle} data-testid='transcript-name'>
+                    <h2 className={styles.documentTitle} data-testid='transcript-name' onDoubleClick={() => { setRenaming(true); setNameDraft(selected.name); }}>
                       {selected.name}
                     </h2>
                   )}
@@ -889,39 +900,7 @@ const statusCopy =
                     {statusCopy}
                   </span>
                   <span className={styles.grow} />
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => {
-                      setRenaming(true);
-                      setNameDraft(selected.name);
-                    }}
-                    data-testid='rename-button'
-                  >
-                    Rename
-                  </button>
                 </div>
-                <div className={styles.rowMeta}>
-                  {selected.source_type === 'recording' ? 'Recording' : `Upload: ${selected.source_filename || 'audio'}`}
-                  {' · '}
-                  {formatDuration(selected.duration_ms)}
-                  {' · '}
-                  {formatWhen(selected.created)}
-                  {selected.folder_id
-                    ? ` · ${library.folders.find((folder) => folder.id === selected.folder_id)?.name || 'Folder'}`
-                    : ''}
-                </div>
-                <Select
-                  size='small'
-                  value={selected.folder_id || ''}
-                  onChange={(value) => void assignTo((value as string) || null)}
-                  style={{ maxWidth: 260 }}
-                  options={[
-                    { value: '', label: 'Recent Transcriptions (unfiled)' },
-                    ...library.folders.map((folder) => ({ value: folder.id, label: folder.name })),
-                  ]}
-                  data-testid='move-select'
-                />
                 <p className={styles.transcriptText} data-testid='transcript-text'>
                   {(selected.text || '').trim() || '(No speech was recognized.)'}
                 </p>
@@ -948,35 +927,7 @@ const statusCopy =
                     Combine
                   </Button>
                 </div>
-                <div className={styles.secondaryActions}>
-                  <button type='button' className={styles.secondaryAction} onClick={sendToChat} data-testid='send-to-chat'>
-                    Send to chat
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => void openReview('answers')}
-                    data-testid='use-vetting'
-                  >
-                    Use as vetting answers
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.secondaryAction}
-                    onClick={() => void openReview('freethink')}
-                    data-testid='think-out-loud'
-                  >
-                    Think out loud
-                  </button>
-                  <button
-                    type='button'
-                    className={styles.dangerAction}
-                    onClick={() => removeTranscript(selected)}
-                    data-testid='delete-transcript'
-                  >
-                    Delete
-                  </button>
-                </div>
+
               </>
             )}
           </div>

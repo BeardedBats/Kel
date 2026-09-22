@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import kelMark from '@renderer/assets/figma/kel-mark.png';
 import { ipcBridge } from '@/common';
 import { AgentLogoIcon } from '@/renderer/components/agent/AgentBadge';
 import { usePresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
@@ -30,13 +31,13 @@ const MobileConversationBrand: React.FC<MobileConversationBrandProps> = ({ conve
   return (
     <span className='app-titlebar__brand-mobile'>
       {showLogo && (
-        <AgentLogoIcon
+        presetAssistant ? <AgentLogoIcon
           backend={backend}
           agent_name={title}
           agentLogo={presetAssistant?.logo}
           agentLogoIsEmoji={presetAssistant?.isEmoji}
           agentLogoIsFallback={presetAssistant?.isFallback}
-        />
+        /> : <img src={kelMark} alt="" width={22} height={22} />
       )}
       <span className='app-titlebar__brand-text'>{title}</span>
     </span>

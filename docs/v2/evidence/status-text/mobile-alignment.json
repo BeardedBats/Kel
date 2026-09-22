@@ -1,0 +1,14 @@
+{
+  "viewport": 393,
+  "aligned": [
+    {
+      "rowRight": 360,
+      "statusRight": 360
+    },
+    {
+      "rowRight": 360,
+      "statusRight": 360
+    }
+  ],
+  "noPageOverflow": true
+}

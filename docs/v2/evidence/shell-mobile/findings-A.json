@@ -1,0 +1,41 @@
+[
+  {
+    "journey": "A",
+    "step": "home",
+    "path": "/",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\n⋯\nSettings\nNo chat history\nWork & context\nWorkspace\nNew chat\nNeeds your attention\n1 needs you\nA connection needs setupDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nNone of your connected models is available right now, so Kel will wait instead of guessing.\nOpen Providers\nWork in a project"
+  },
+  {
+    "journey": "A",
+    "step": "home-answer",
+    "needsAttention": true,
+    "status": false,
+    "honestHold": true
+  },
+  {
+    "journey": "A",
+    "step": "work",
+    "overflow": {
+      "ok": true,
+      "scrollWidth": 393,
+      "clientWidth": 393,
+      "worst": "div class=\"\" right=393"
+    },
+    "text": "Skip to main content\nKel\n⋯\nSettings\nNo chat history\nWork & context\nSkip to main content\nWorkspace\nWork\n\n0 active · 0 waiting to continue · 0 need you\n\nReload\nNeeds your attention\n1\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up\nJobs\nNo unfinished work in this project.\nKel keeps unfinished jobs here so you can pick them up.\nWaiting to continue\nNothing waiting to continue.\nWhen a job pauses, is interrupted, or waits on you, it appears here with the exact reason.\nTeam assignments\nNo specialist has been assigned yet.\nKel assigns a specialist only when a milestone actually runs — there are never decorative specialists."
+  },
+  {
+    "journey": "A",
+    "step": "post-signin-failures",
+    "wsFailures": [],
+    "failedResponses": [],
+    "consoleErrors": [
+      "[WorkspaceGroupedHistory] Failed to load conversations: TypeError: Failed to fetch\n    at Pt (http://127.0.0.1:25819/assets/applyTheme-QrZ2aQZr.js:5:2888)\n    at V (http://127.0.0.1:25819/assets/apply"
+    ]
+  }
+]

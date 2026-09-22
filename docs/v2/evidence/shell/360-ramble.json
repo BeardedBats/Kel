@@ -1,0 +1,39 @@
+{
+  "width": 360,
+  "height": 852,
+  "scrollWidth": 360,
+  "clientWidth": 360,
+  "boxes": {
+    ".layout-sider": {
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 852,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "0px"
+    },
+    ".kel-shell-home-header": null,
+    ".chat-layout-header": null,
+    ".sendbox-panel": null,
+    ".kel-shell-composer": null,
+    ".kel-page": null,
+    ".settings-page-content": null,
+    ".kel-shell-model-modal": null,
+    ".kel-shell-ramble > aside": {
+      "x": 0,
+      "y": 49,
+      "width": 360,
+      "height": 280,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "0px"
+    },
+    ".kel-shell-ramble > main": {
+      "x": 0,
+      "y": 329,
+      "width": 360,
+      "height": 523,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "0px"
+    }
+  }
+}

@@ -403,11 +403,13 @@ const AddPlatformModal = ModalHOC<{
 
   return (
     <AionModal
+      className='kel-shell-model-modal'
+      contentStyle={{ background: 'transparent' }}
       variant='standard'
       visible={modalProps.visible}
       onCancel={modalCtrl.close}
       header={{ title: t('settings.addModel'), showClose: true }}
-      style={{ maxWidth: '92vw' }}
+      style={{ width: 520, maxWidth: 'calc(100vw - 32px)' }}
       onOk={handleSubmit}
       confirmLoading={modalProps.confirmLoading}
       okText={t('common.confirm')}
@@ -507,7 +509,7 @@ const AddPlatformModal = ModalHOC<{
             intercept clicks on its lower rim (see ELECTRON-1K4).
           */}
           {(isCustom || isNewApi) && !isBedrock && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, marginBottom: 12 }}>
+            <div hidden style={{ display: 'none' }}>
               <Switch size='small' checked={isFullUrl} onChange={setIsFullUrl} />
               <span className='text-12px text-t-secondary'>{t('settings.fullUrlMode', '完整 URL')}</span>
               <span className='text-11px text-t-tertiary'>
@@ -527,7 +529,7 @@ const AddPlatformModal = ModalHOC<{
             field={'api_key'}
             extra={
               <div className='space-y-2px'>
-                <div className='text-11px text-t-secondary mt-2 leading-4'>{t('settings.multiApiKeyTip')}</div>
+
                 {/* 协议检测状态 / Protocol detection status */}
                 {shouldShowDetectionResult && (
                   <ProtocolDetectionStatus
@@ -726,7 +728,7 @@ const AddPlatformModal = ModalHOC<{
             </Form.Item>
           )}
 
-          <Form.Item
+          <Form.Item hidden
             label={
               <span className='inline-flex items-center gap-5px'>
                 <PreviewOpen theme='outline' size='14' />
@@ -747,7 +749,7 @@ const AddPlatformModal = ModalHOC<{
           </Form.Item>
 
           {showOpenAiApiMode && (
-            <Form.Item label={t('settings.openAiApiMode')} extra={t('settings.openAiApiModeTip')}>
+            <Form.Item hidden label={t('settings.openAiApiMode')} extra={t('settings.openAiApiModeTip')}>
               <Select
                 value={openAiApiMode}
                 onChange={(value) => setOpenAiApiMode(value as ModelOpenAiApiModeChoice)}
