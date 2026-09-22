@@ -1,0 +1,9 @@
+Packaged WebUI, #/work, signed in (OCR of packaged-webui-work-failure-card.png):
+  Kel couldn't complete that
+  Cannot read properties of null (reading 'jobs')
+  Try again / Copy diagnostics / Technical details
+  (sidebar still showed the conversation list)
+
+Cause measured the same minute, from the page: GET /kel/api/state -> HTTP 200 with the SPA HTML,
+GET /kel/api/work?conversation=main -> HTTP 200 with the SPA HTML (the /kel gateway did not reach an
+engine for that root; no Kel engine process existed for it at that moment).
