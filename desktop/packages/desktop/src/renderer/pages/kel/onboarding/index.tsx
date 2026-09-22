@@ -117,7 +117,7 @@ export default function KelOnboardingPage() {
         <KelCard title='Kel runs on this machine'>
           <div className='kel-row'>
             <span>Local runtime</span><span className='kel-meta'>{engine ? 'Detected · ready' : 'Checking runtime…'}</span>
-            <span className='kel-grow' /><span className='kel-chip kel-chip--ok'>{engine ? 'Ready' : 'Checking'}</span>
+            <span className='kel-grow' /><span className={`kel-chip ${engine ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{engine ? 'Ready' : 'Checking'}</span>
           </div>
         </KelCard>
 

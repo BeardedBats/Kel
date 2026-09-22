@@ -1,5 +1,7 @@
 # Kel V2 shell implementation — audit 2
 
+September 22 amendment: [plain status text](STATUS_TEXT_POLISH.md) replaces chip containers, following the user's latest reference.
+
 Base dev/v2: `772b2c357943cf9793639bbf660171c49d809c38`.
 Branch: `ux/v2-shell`. Worktree: `C:/Users/Nick/Desktop/Kel/kel-v2-shell`.
 

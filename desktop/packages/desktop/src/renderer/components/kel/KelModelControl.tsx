@@ -115,14 +115,8 @@ export const useKelModelState = (conversationId?: string) => {
   return { state, cid, effectiveLabel, refresh, setDefault, setConversation };
 };
 
-const availableChip = (available: boolean) => (
-  <span
-    className='ms-auto text-12px px-6px rounded-8px'
-    style={{
-      color: available ? 'var(--kel-ok-fg)' : 'var(--kel-text-3)',
-      background: available ? 'var(--kel-ok-bg)' : 'var(--kel-surface-2)',
-    }}
-  >
+const availabilityLabel = (available: boolean) => (
+  <span className={`ms-auto kel-chip ${available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>
     {available ? 'Available' : 'Needs setup'}
   </span>
 );
@@ -177,7 +171,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                   {state.conversation?.provider === provider.id && state.conversation?.model === option.id ? (
                     <span className='ms-auto text-12px'>Current</span>
                   ) : (
-                    availableChip(option.available)
+                    availabilityLabel(option.available)
                   )}
                 </span>
               </Menu.Item>
@@ -214,7 +208,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                 {state.default?.provider === provider.id && state.default?.model === option.id ? (
                   <span className='ms-auto text-12px'>Current</span>
                 ) : (
-                  availableChip(option.available)
+                  availabilityLabel(option.available)
                 )}
               </span>
             </Menu.Item>
@@ -287,14 +281,13 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
                   style={{
                     background: current ? 'var(--kel-surface-2)' : 'transparent',
                     border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
-                    opacity: option.available ? 1 : 0.6,
                   }}
                 >
-                  <span className='text-14px'>
+                  <span className='text-14px' style={{ opacity: option.available ? 1 : 0.6 }}>
                     {option.label}
                     <span className='ms-6px text-12px text-t-secondary'>{provider.label}</span>
                   </span>
-                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availableChip(option.available)}
+                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availabilityLabel(option.available)}
                 </button>
               );
             })

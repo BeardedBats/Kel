@@ -107,8 +107,8 @@ const Diagnostics: React.FC = () => {
         {!error && !snapshot && <KelLoading rows={3} />}
         {snapshot && <>
           <KelCard title='Health'>
-            <div className='kel-shell-diagnostic-row'><span>Runtime</span><span className='kel-meta'>{snapshot.engine_version}</span><span className='kel-chip'>{snapshot.database.integrity === 'ok' ? 'Healthy' : 'Needs attention'}</span></div>
-            <div className='kel-shell-diagnostic-row'><span>Providers</span><span className='kel-meta'>{Object.keys(snapshot.providers).length} reported</span><span className='kel-chip'>{Object.keys(snapshot.providers).length ? 'Available' : 'Needs setup'}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>Runtime</span><span className='kel-meta'>{snapshot.engine_version}</span><span className={`kel-chip ${snapshot.database.integrity === 'ok' ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{snapshot.database.integrity === 'ok' ? 'Healthy' : 'Needs attention'}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>Providers</span><span className='kel-meta'>{Object.keys(snapshot.providers).length} reported</span><span className={`kel-chip ${Object.keys(snapshot.providers).length ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{Object.keys(snapshot.providers).length ? 'Available' : 'Needs setup'}</span></div>
             <div className='kel-shell-diagnostic-row'><span>Process ownership</span><span className='kel-meta'>Kel owns {snapshot.processes.length} child processes</span><span className='kel-chip kel-chip--ok'>OK</span></div>
           </KelCard>
           <KelCard title='Measured performance'>
