@@ -186,3 +186,10 @@ Honest, current list (grows/shrinks as phases complete):
   the Permissions page). It now reads `KEL_INSTALL_DIR`, `KEL_BATTERY_DATA` and `KEL_BATTERY_OUT` and
   checks those two conditions data-driven, so it verifies any installed build without overwriting
   previously recorded evidence.
+- A `KelEngine.exe` for the currently installed candidate's data root was already running when the battery
+  was re-run on 2026-09-21 (PID 26544 at the time of writing, created 2026-09-20 22:23,
+  `--data C:/Users/Nick/KelDogfoodRuns/prepared/engine`), with no `Kel.exe` app process alongside it — a
+  leftover from the earlier lane's own engine-side run, not from the battery (which cleans up after its own
+  launch). It was left in place on purpose: stopping it is a machine-state change, and it is the
+  candidate's own engine for the candidate's own data root. It does not change the battery verdict, which
+  cross-checks that data root through the engine's own database.
