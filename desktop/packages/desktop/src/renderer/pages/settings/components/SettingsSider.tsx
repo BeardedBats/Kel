@@ -14,6 +14,7 @@ import {
   Info,
   LinkCloud,
   Puzzle,
+  Robot,
   System,
   Toolkit,
 } from '@icon-park/react';
@@ -33,10 +34,10 @@ import { getSiderTooltipProps } from '@/renderer/utils/ui/siderTooltip';
  * here plus its page route, and the sider filter below hides desktop-only tabs in browser mode.
  */
 export const BUILTIN_TAB_IDS = [
-  // Human-visual repair (HV-12): 'agent' (Agents) and 'skills' (Team roles) were removed — their
-  // only destination was the internal Team/roster surface, which is hidden from ordinary users.
   'model',
+  'assistants',
   'tools',
+  'skills',
   'appearance',
   'webui',
   'pet',
@@ -90,12 +91,14 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     // Build builtin items
     const builtinMap: Record<string, SiderItem> = {
       model: { id: 'model', label: t('settings.model'), icon: <LinkCloud />, path: 'model' },
+      assistants: { id: 'assistants', label: t('settings.assistants', { defaultValue: 'Assistants' }), icon: <Robot />, path: 'assistants' },
       tools: {
         id: 'tools',
         label: t('settings.tools', { defaultValue: 'Tools' }),
         icon: <Toolkit />,
         path: 'tools',
       },
+      skills: { id: 'skills', label: t('settings.skills', { defaultValue: 'Skills' }), icon: <Puzzle />, path: 'skills' },
       appearance: { id: 'appearance', label: t('settings.appearancePanel'), icon: <Computer />, path: 'appearance' },
       webui: {
         id: 'webui',

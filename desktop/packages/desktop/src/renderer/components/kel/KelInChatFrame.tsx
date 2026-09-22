@@ -35,7 +35,9 @@ const projectGroups: Group[] = [
 const settingsGroups: Group[] = [
   { label: 'Kel', items: [
     { label: 'Model', path: '/settings/model', icon: 'model' },
+    { label: 'Assistants', path: '/settings/assistants', icon: 'assistants' },
     { label: 'Tools', path: '/settings/tools', icon: 'tools' },
+    { label: 'Skills', path: '/settings/skills', icon: 'skills' },
   ] },
   { label: 'Application', items: [
     { label: 'Appearance', path: '/settings/appearance', icon: 'appearance' },
