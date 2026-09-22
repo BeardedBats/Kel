@@ -6,8 +6,15 @@ Branch `integration/v2` @ `fe5e6b7`, worktree `C:\Users\Nick\Desktop\Kel\kel-v2-
 ## What was merged
 
 - `dev/v2` @ `7b18618` (this turn's backend work: V2-06/07/08 + the web-host deep-link fix)
-- `ux/v2-shell` @ `681e005` (Astra's committed Shell baseline: status text/chips replaced with plain
-  coloured text, plus her web-host socket-listener fix)
+- `ux/v2-shell` @ **`0052075`** (Astra's committed Shell baseline at merge time: status text/chips
+  replaced with plain coloured text, her web-host socket-listener fix, and the Ramble sidebar header
+  with inline folder creation)
+
+**Correction, recorded from evidence rather than assumption:** the merge commit's own message says
+`681e005`, which was her tip when the integration worktree was created. She committed `0052075` while
+this turn was running, and the merge actually took *that* — verified with
+`git log --oneline -1 fe5e6b7^2` → `0052075` and `git merge-base --is-ancestor 0052075 fe5e6b7` → true.
+A pushed merge is never rewritten; this file is the accurate record.
 
 **Exactly one conflict**, in `desktop/packages/web-host/src/static-server.unit.test.ts`: Astra's line
 added a socket-reset regression pin and kept the older *“SPA fallback: /chat/123 returns index.html”*
@@ -17,9 +24,9 @@ copy of the superseded expectation dropped, the deep-link assertions kept, and t
 the test itself. Everything else auto-merged, including her `static-server.ts` change (the splice path
 keeps its error listener through rejection/close) and the Connections page.
 
-Astra's worktree had **uncommitted** work in progress (ramble sidebar polish, transcription page,
-`RAMBLE_SIDEBAR_POLISH.md`, `evidence/ramble-sidebar/`). Per the ownership rule, only her *committed*
-baseline was integrated; her in-progress work stays hers and is recorded as a dependency.
+Astra's worktree was **clean** at the end of this turn — her ramble-sidebar work is committed as
+`0052075`, which is why the integration line already carries it. Her lane keeps moving; re-merge her
+committed baseline before packaging the candidate and record the new tip here.
 
 ## Verification
 
