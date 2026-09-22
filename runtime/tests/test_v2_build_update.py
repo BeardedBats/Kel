@@ -112,8 +112,10 @@ class MissionTests(Base):
         self.assertIn('will not use', str(raised.exception))
         plain = Path(self.tmp.name) / 'plain'
         plain.mkdir()
-        with self.assertRaises(PolicyError):
+        with self.assertRaises(PolicyError) as raised:
             self.builder.start([self.fix_a], source_root=plain, tests=TESTS)
+        # Kel's own sentence, not a raw git message (V2-18 measured the leak).
+        self.assertIn('not a Git repository', str(raised.exception))
         (self.repo / 'app.py').write_text('VALUE = 2\n', encoding='utf-8')
         with self.assertRaises(PolicyError) as raised:
             self.builder.start([self.fix_a], source_root=self.repo, tests=TESTS)

@@ -187,8 +187,13 @@ class BuildUpdate:
         assert_usable_root(root, purpose='a development mission', store=self.store)
         try:
             top = git(root, 'rev-parse', '--show-toplevel').decode().strip()
-        except PolicyError:
-            raise
+        except PolicyError as exc:
+            # Measured in the V2-18 acceptance journey: a raw git message reached the person
+            # ("fatal: not a git repository…") instead of one of Kel's own sentences. Kel says what
+            # it needs and keeps the underlying detail in parentheses.
+            detail = ' '.join(str(exc).split())[:200]
+            raise PolicyError('That folder is not a Git repository, so Kel cannot verify a baseline.'
+                              + (' (%s)' % detail if detail else '')) from None
         except Exception:
             raise PolicyError('That folder is not a Git repository, so Kel cannot verify a baseline.'
                               ) from None

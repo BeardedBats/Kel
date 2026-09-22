@@ -1,0 +1,108 @@
+{
+  "journeys": [
+    {
+      "id": "J-FIX",
+      "name": "Fix Capture round trip",
+      "shell_required": false,
+      "requirements": [
+        "Fix Capture: real friction capture"
+      ],
+      "detail": {
+        "fix": "FIX-0011",
+        "captured_status": "OPEN",
+        "read_back_route": "/guid",
+        "status_after_set": "BATCHED",
+        "listed_batched": [
+          "FIX-0011",
+          "FIX-0009",
+          "FIX-0007",
+          "FIX-0005",
+          "FIX-0003"
+        ],
+        "counts": {
+          "BATCHED": 5,
+          "DISMISSED": 0,
+          "FIXED": 0,
+          "OPEN": 6
+        },
+        "fixture": "synthetic transcript; the real Fix Capture store and routes"
+      },
+      "status": "PASSED",
+      "seconds": 0.1
+    },
+    {
+      "id": "J-UPGRADE",
+      "name": "Durable state inventory",
+      "shell_required": false,
+      "requirements": [
+        "Upgrade: preserve durable user state"
+      ],
+      "detail": {
+        "tables": 110,
+        "migrations": 26,
+        "missing": [],
+        "v2_counts": {
+          "connections": 3,
+          "oauth_flows": 1,
+          "connection_events": 1,
+          "routing_outcomes": 3,
+          "model_prefs": 0,
+          "network_policy": 1,
+          "network_events": 2,
+          "memories": 3,
+          "projects": 2,
+          "conversations": 12,
+          "dogfood_fixes": 11,
+          "build_missions": 1,
+          "build_candidates": 0,
+          "schema_migrations": 26
+        }
+      },
+      "status": "PASSED",
+      "seconds": 0.0
+    },
+    {
+      "id": "J-SEC",
+      "name": "Execution boundaries refuse protected sources",
+      "shell_required": false,
+      "requirements": [
+        "Security: execution boundaries",
+        "Security: authority narrowing"
+      ],
+      "detail": {
+        "finding": "FIX-0012",
+        "sensitive_root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine",
+        "sensitive_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Kel will not use C:\\Users\\Nick\\KelV2Runs\\prepared\\engine for a development mission: it is Kel's own data folder."
+        },
+        "protected_root": "C:\\Users\\Nick\\KelDogfoodCandidate",
+        "protected_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Kel will not use C:\\Users\\Nick\\KelDogfoodCandidate for a development mission: it is a protected app folder."
+        },
+        "non_repository_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> That folder is not a Git repository, so Kel cannot verify a baseline. (fatal: not a git repository (or any of the parent directories): .git)"
+        },
+        "fixture": "a real folder that is not a repository (synthetic content)"
+      },
+      "status": "PASSED",
+      "seconds": 0.2
+    }
+  ],
+  "identity": {
+    "pid": 8144,
+    "port": 49304,
+    "url": "http://127.0.0.1:49304",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 8144,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 09:05:31",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
