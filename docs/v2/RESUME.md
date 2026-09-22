@@ -23,7 +23,8 @@
    Shell/phone ones.** The web-host deep-link cause is fixed and pinned
    (`packages/web-host/src/static-server.unit.test.ts`, 15 tests on the merged line). The integration
    line `integration/v2` @ `fe5e6b7` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` merges Astra's
-   committed Shell baseline `ux/v2-shell` @ `681e005`; its renderer suites (`desktop/tests/**`, `tsc`)
+   committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the merge's second parent; the rest
+   of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
    and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
    needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
    **NEXT ACTION, in order:** (1) the three remaining backend journeys on a fresh owned engine;
