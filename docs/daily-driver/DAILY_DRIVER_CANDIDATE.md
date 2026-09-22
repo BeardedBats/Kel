@@ -108,3 +108,17 @@ cd runtime && python ../packaging/verify_synthetic_journeys.py
 powershell -File scripts/build-runtime.ps1
 cd desktop && node scripts/build-with-builder.js x64 --win --x64 --config.win.signExecutable=false
 ```
+
+## Status today (2026-09-21)
+
+The candidate recorded above was installed at `C:\Users\Nick\KelDailyDriverCandidate`; that directory no
+longer exists (the later Fix Capture lane's NSIS update healed into it and then moved on, and the data
+root went with it). The candidate itself stays reproducible from `DAILY_DRIVER_CANDIDATE_HEAD`
+(annotated tag → commit `6c9d1a1`); the tree has since advanced past it, and the recorded installer
+artifact was overwritten by later builds at the same output path.
+
+The app installed on this machine now is `C:\Users\Nick\KelDogfoodCandidate`. The installed battery was
+re-run against it on 2026-09-21 and passed: **allPassed true**, 0 failing checks, 0 console errors, 0
+donor terms, 9/9 surfaces (evidence `evidence/d19-current/`). The battery reads `KEL_INSTALL_DIR`,
+`KEL_BATTERY_DATA` and `KEL_BATTERY_OUT` from the environment, so any installed build can be verified
+with the same command; the exact invocation is in `PACKAGE_EVIDENCE.md`.

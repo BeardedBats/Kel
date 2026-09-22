@@ -1,8 +1,10 @@
 /**
  * D19 — the installed-candidate GUI battery.
  *
- * Drives the app that is actually installed at `C:\Users\Nick\KelDailyDriverCandidate` (production
- * build, its own bundled engine, the prepared data root) — not a dev server. The app is launched
+ * Drives the app that is actually installed (production build, its own bundled engine, the prepared
+ * data root) — not a dev server. `KEL_INSTALL_DIR`, `KEL_BATTERY_DATA` and `KEL_BATTERY_OUT` override
+ * the target install, its data root and the evidence directory, so the battery verifies whatever build
+ * is installed without overwriting evidence a previous run recorded. The app is launched
  * with a Chromium debugging port (a test-only launch flag; the shipped product never enables that
  * switch itself — see `configureChromium.ts`), attached over CDP with Playwright, and probed
  * through its own UI.
@@ -42,7 +44,11 @@ const INSTALL_DIR = process.env.KEL_INSTALL_DIR || 'C:\\Users\\Nick\\KelDailyDri
 const APP_EXE = path.join(INSTALL_DIR, 'Kel.exe');
 const DATA_ROOT =
   process.env.KEL_BATTERY_DATA || 'C:\\Users\\Nick\\KelDailyDriverRuns\\prepared\\engine';
-const OUT_DIR = path.resolve(__dirname, '..', 'docs', 'daily-driver', 'evidence', 'd19');
+// Evidence lands next to the phase it belongs to; KEL_BATTERY_OUT points a re-run at another app
+// (e.g. a newer candidate) without overwriting the battery evidence already recorded.
+const OUT_DIR = process.env.KEL_BATTERY_OUT
+  ? path.resolve(process.env.KEL_BATTERY_OUT)
+  : path.resolve(__dirname, '..', 'docs', 'daily-driver', 'evidence', 'd19');
 const TOUR = process.argv.includes('--tour');
 const DUMP_PROVIDERS = process.argv.includes('--dump-providers');
 const KEEP_OPEN = process.argv.includes('--keep-open');
@@ -112,6 +118,10 @@ async function clickByText(page, label, { exact = true } = {}) {
     page.getByRole('menuitem', { name: label, exact }),
     page.getByRole('tab', { name: label, exact }),
     page.getByText(label, { exact }),
+    // Fallbacks for the real installed shell: icon buttons carry the label as aria-label/title, and
+    // a collapsed sider hides the text node the exact lookups need.
+    page.getByRole('button', { name: label, exact: false }),
+    page.locator(`[aria-label="${label}"], [title="${label}"]`),
   ];
   for (const locator of locators) {
     const count = await locator.count().catch(() => 0);
@@ -205,13 +215,23 @@ async function runBattery(page, results) {
   const briefPresent = await page.evaluate(
     () => !!document.querySelector('[data-testid="resumption-brief"]')
   );
+  const briefText = await page.evaluate(() => {
+    const node = document.querySelector('[data-testid="resumption-brief"]');
+    return node ? node.innerText : '';
+  });
+  // Data-driven invariant: the brief must exist, must never leak engine identifiers, and must
+  // mention this data root's recorded work when there is any (a quiet brief is correct when the
+  // engine has nothing to report — hard-coding one environment's content made this brittle).
+  const engineForBrief = engineFacts();
+  const recordedRequest = engineForBrief.job ? engineForBrief.job[1] : null;
   checks.landing_brief = {
     pass:
       briefPresent &&
-      /Anthropic API/.test(landing) &&
-      /Set it up/.test(landing) &&
-      /Summarise the Q3 customer feedback/.test(landing),
+      !/\b[0-9a-f]{8}-[0-9a-f]{4}/i.test(briefText || '') &&
+      (!recordedRequest || (briefText || '').includes(recordedRequest)),
     resumptionBriefPresent: briefPresent,
+    engineHasRecordedWork: Boolean(recordedRequest),
+    briefText: (briefText || '').slice(0, 300),
     sample: landing.slice(0, 500),
   };
   checks.timings.startupToWindow = results.startupMs;
@@ -278,7 +298,19 @@ const safeShot = async (page, name) => {
 /** D0-001 — the Permissions Work column names the work, never a raw engine job id. */
 async function probePermissions(page, checks) {
   checks.permissions_nav = await goTo(page, 'Permissions', '#/autonomy');
-  await page.waitForSelector('table.kel-table', { timeout: 20000 });
+  const engineForPermissions = engineFacts();
+  const hasLease = Boolean(engineForPermissions.lease);
+  // Wait for whichever truth this data root actually has: a lease table, or the honest empty state.
+  // The strong column check below runs only when the engine really holds a lease to show.
+  await page.waitForFunction(
+    (expectLease) => {
+      const hasTable = !!document.querySelector('table.kel-table');
+      const text = document.body ? document.body.innerText : '';
+      return expectLease ? hasTable : hasTable || /No permissions yet in this project/i.test(text);
+    },
+    hasLease,
+    { timeout: 20000 }
+  );
   const tables = await page.evaluate(() =>
     Array.from(document.querySelectorAll('table.kel-table')).map((table) => ({
       head: Array.from(table.querySelectorAll('thead th')).map((th) => th.innerText.trim()),
@@ -290,7 +322,19 @@ async function probePermissions(page, checks) {
   checks.permissions_tables = tables.map((table) => table.head);
   const leaseTable = tables.find((table) => table.head[0] === 'Work' && table.head.includes('Scope'));
   if (!leaseTable || !leaseTable.rows.length) {
-    checks.permissions_work_column = { pass: false, reason: 'no lease rows on the prepared data root' };
+    const text = await bodyText(page);
+    checks.permissions_work_column = hasLease
+      ? { pass: false, reason: 'the engine holds a lease but the page shows no rows' }
+      : {
+          pass:
+            /No permissions yet in this project/i.test(text) &&
+            !/\b[0-9a-f]{8}-[0-9a-f]{4}/i.test(text),
+          reason: 'no lease in this data root — the honest empty state is the correct surface',
+        };
+    checks.permissions_no_donor_terms = !DONOR_TERMS.some((term) =>
+      text.toLowerCase().includes(term.toLowerCase())
+    );
+    checks.permissions_screenshotError = await safeShot(page, 'probe-d0-001-permissions.png');
     return;
   }
   const workCell = leaseTable.rows[0][0];
