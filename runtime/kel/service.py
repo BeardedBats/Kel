@@ -410,6 +410,7 @@ class Service:
                 closed_shown+=1
             milestones=job.get('milestones') or {}
             brief=cont.resume_brief(job['id'])
+            created=job.get('created') or now
             entry={'job_id':job['id'],'title':brief['title'],'state':job['state'],
                    'verdict':job.get('verdict'),
                    'accepted':len(brief['shipped']),'total':len(milestones),
@@ -424,11 +425,60 @@ class Service:
                              why=('Done and verified.' if job.get('verdict')=='VERIFIED'
                                   else 'Settled: '+str(job.get('verdict') or 'unresolved').lower()+'.'),
                              next='Nothing needed — ask for a new change for more work.')
+            # V2-06: a row says what it is, why it is here, how old it is, how urgent it is, what
+            # belongs with it, and the one action the person can take right now. All of it is
+            # derived from authoritative state — nothing here resolves, snoozes or re-runs anything.
+            if entry['needs_you']:
+                priority='now'
+            elif job['state'] in ('BLOCKED','CANCELLING','PAUSING'):
+                priority='soon'
+            elif active:
+                priority='running'
+            elif job.get('verdict') not in ('VERIFIED',None):
+                priority='soon'
+            else:
+                priority='later'
+            approval_count=pending.get(job['id']) or 0
+            if approval_count:
+                direct={'action':'answer','route':'/api/approval',
+                        'hint':'Answer the request in this conversation.'}
+            elif entry['fenced']:
+                # A fenced run resumes as a conversation continuation, not as a job control call.
+                direct={'action':'resume','route':'/api/send',
+                        'hint':'Say "continue" in this conversation.'}
+            elif job['state'] in ('PAUSED','BLOCKED'):
+                direct={'action':'resume','route':'/api/control',
+                        'hint':'Resume when you are ready.'}
+            elif active:
+                direct={'action':'stop','route':'/api/control','hint':'Stop this work.'}
+            elif job.get('verdict') not in ('VERIFIED',None):
+                direct={'action':'retry','route':'/api/retry',
+                        'hint':'Try this work again from its saved request.'}
+            else:
+                direct=None
+            entry.update(priority=priority,age_seconds=int(max(0,now-created)),
+                         reason=entry['why'],
+                         related={'project_id':project_id,'conversation':cid,
+                                  'approvals':approval_count,'milestones':len(milestones)},
+                         direct=direct)
             if entry['needs_you']:
                 needs+=1
             jobs.append(entry)
-        jobs.sort(key=lambda item:(not item['needs_you'],-(item['last_at'] or 0)))
-        data['work']={'generated':now,'needs_you':needs,'jobs':jobs}
+        order={'now':0,'soon':1,'running':2,'later':3}
+        jobs.sort(key=lambda item:(order.get(item['priority'],9),-(item['last_at'] or 0)))
+        groups={}
+        for entry in jobs:
+            groups.setdefault(entry['related']['project_id'],[]).append(entry['job_id'])
+        data['work']={'generated':now,'needs_you':needs,'jobs':jobs,
+                      'grouping':'project',
+                      'groups':[{'project_id':key,'job_ids':groups[key]} for key in groups],
+                      'filters':{'needs_you':sum(1 for item in jobs if item['needs_you']),
+                                 'running':sum(1 for item in jobs if item['priority']=='running'),
+                                 'failed':sum(1 for item in jobs
+                                              if item.get('verdict') not in ('VERIFIED',None)),
+                                 'settled':sum(1 for item in jobs
+                                               if item['state'] in ('CLOSED','CANCELLED'))},
+                      'sorting':['priority','age']}
         return data
 
     def _owned_memory(self,project_id,memory_id):
@@ -534,8 +584,29 @@ class Service:
             return {'entries':library.entries(project_id=project_id)}
         if action=='get':
             info=library.get(data.get('recipe_id',''),project_id=project_id)
+            library.mark(project_id,info['recipe']['recipe_id'],opened=True)
             return {'recipe':info['recipe'],'scope':info['scope'],'version':info['version'],
                     'digest':info['digest']}
+        # V2-07: the library's own surfaces — search, favourites, recent, categories, duplicate,
+        # run history and the last result. All read what the engine already keeps.
+        if action=='search':
+            return {'entries':library.search(project_id,data.get('query'))}
+        if action=='categories':
+            return {'categories':library.categories(project_id)}
+        if action=='favourites':
+            if data.get('recipe_id'):
+                return library.mark(project_id,str(data['recipe_id']),
+                                     favourite=bool(data.get('favourite')))
+            return {'favourites':library.favourites(project_id)}
+        if action=='recent':
+            return {'recent':library.recent(project_id,limit=data.get('limit'))}
+        if action=='duplicate':
+            return library.duplicate(data.get('recipe_id',''),project_id)
+        if action=='history':
+            return {'history':library.history(project_id,data.get('recipe_id',''),
+                                              limit=data.get('limit'))}
+        if action=='last_result':
+            return library.last_result(project_id,data.get('recipe_id',''))
         if action=='preview':
             info=library.get(data.get('recipe_id',''),project_id=project_id)
             recipe=info['recipe']
@@ -564,6 +635,7 @@ class Service:
                     'budget':contract['budget'],'recipe':contract['recipe']}
         if action=='run':
             info=library.get(data.get('recipe_id',''),project_id=project_id)
+            library.mark(project_id,info['recipe']['recipe_id'],run=True)
             sid=self.submit({'text':'Run recipe '+info['recipe']['name'],'conversation':cid,
                              'kind':'recipe',
                              'recipe':{'recipe_id':data.get('recipe_id'),
@@ -689,6 +761,17 @@ class Service:
         if path=='/api/memory':return self._memory_action(data)
         if path=='/api/map':return self._map_action(data)
         if path=='/api/recipes':return self._recipes_action(data)
+        if path=='/api/activity':
+            # V2-08: the historical timeline. Read-only, project-scoped by default, and it can be
+            # asked for every project explicitly.
+            from .activity import timeline
+            scope=data.get('project_id')
+            if scope is None and not data.get('all_projects'):
+                scope=self._project_of(data.get('conversation','main'))
+            return timeline(self.store,project_id=scope,since=data.get('since'),
+                            until=data.get('until'),kind=data.get('kind'),
+                            failures_only=bool(data.get('failures')),query=data.get('query'),
+                            limit=data.get('limit'))
         if path=='/api/retry':
             with self.store.transaction() as db:
                 row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(self._required(data,'id','Pick a request to retry first.'),)).fetchone()
@@ -1329,6 +1412,16 @@ def serve(root,port=0):
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/dogfood':self.reply(200,service._dogfood_list(query.get('status',[None])[0]));return
+                    if parsed.path=='/api/activity':
+                        from .activity import timeline
+                        def _first(name):
+                            return (query.get(name) or [None])[0]
+                        self.reply(200,timeline(service.store,
+                                                project_id=_first('project'),
+                                                since=_first('since'),until=_first('until'),
+                                                kind=_first('kind'),
+                                                failures_only=_first('failures') in ('1','true','yes'),
+                                                query=_first('query'),limit=_first('limit')));return
                     if parsed.path=='/api/connections':self.reply(200,service._connections_list());return
                     if parsed.path=='/api/artifact':
                         if 'lineage' in query:

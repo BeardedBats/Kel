@@ -21,6 +21,7 @@ Design rules this runner holds to:
   the phone) is recorded as a labelled fixture or as pending — never as a pass.
 """
 import argparse
+import base64
 import json
 import shutil
 import subprocess
@@ -572,9 +573,365 @@ def journey_kibble_negatives(client, ctx, dispatch=False, wait=900, poll=10):
     return journey
 
 
+def _state(client, conversation):
+    return client.call('/api/state?conversation=' + urllib.parse.quote(conversation))
+
+
+def _wait_for_job(client, conversation, wait, poll):
+    """Wait until the conversation has a settled job; return (job, state_seen)."""
+    deadline = time.time() + wait
+    job = None
+    state = {}
+    while time.time() < deadline:
+        state = _state(client, conversation)
+        jobs = state.get('jobs') or []
+        if jobs:
+            job = sorted(jobs, key=lambda item: item.get('created') or 0)[-1]
+            if job.get('state') in ('CLOSED', 'CANCELLED'):
+                break
+        time.sleep(poll)
+    return job, state
+
+
+def journey_model(client, ctx, wait=600, poll=10):
+    """§27 Models — a real turn, and the stored route read back rather than recomputed."""
+    journey = {'id': 'J-MODEL', 'name': 'Routing read-back and fallback chain',
+               'shell_required': False,
+               'requirements': ['Models: routing, fallback, transparency'], 'detail': {}}
+    project = client.call('/api/project', {'name': 'acceptance-model-%d' % int(time.time()),
+                                           'context': 'V2-18 routing read-back'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    client.call('/api/send', {'text': 'Write a short note titled Acceptance Tuesday about what makes '
+                                       'a good landing page headline.',
+                              'conversation': conversation})
+    job, state = _wait_for_job(client, conversation, wait, poll)
+    why = client.call('/api/model', {'action': 'why', 'conversation': conversation})
+    journey['detail'] = {'conversation': conversation,
+                         'job': (job or {}).get('id'), 'job_state': (job or {}).get('state'),
+                         'why': why}
+    selected = str(why.get('selected') or '')
+    chain = why.get('chain') or []
+    ok = (bool(selected) and selected == str(why.get('provider') or '')
+          and str(why.get('job') or '') == str((job or {}).get('id') or '')
+          and len(chain) >= 1 and chain[0] == selected
+          and 'Kel is using' in str(why.get('answer') or ''))
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = ('the read-back did not match the stored route: selected=%r provider=%r '
+                              'job=%r chain=%r' % (selected, why.get('provider'), why.get('job'), chain))
+    return journey
+
+
+def journey_conversation(client, ctx, wait=420, poll=6):
+    """§27 Conversation — two real turns in one thread, answered in context and persisted."""
+    journey = {'id': 'J-CONV', 'name': 'Conversation, continuation and persistence',
+               'shell_required': False,
+               'requirements': ['Conversation: discussion and continuation'], 'detail': {}}
+    project = client.call('/api/project', {'name': 'acceptance-conv-%d' % int(time.time()),
+                                           'context': 'V2-18 conversation journey'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    client.call('/api/send', {'text': 'In one short sentence: which day follows Tuesday?',
+                              'conversation': conversation})
+    first = None
+    deadline = time.time() + wait
+    while time.time() < deadline:
+        state = _state(client, conversation)
+        messages = state.get('messages') or []
+        if len(messages) >= 2:
+            first = messages[-1].get('text')
+            break
+        time.sleep(poll)
+    client.call('/api/send', {'text': 'And in one short sentence: which day comes before it?',
+                              'conversation': conversation})
+    second = None
+    deadline = time.time() + wait
+    while time.time() < deadline:
+        state = _state(client, conversation)
+        messages = state.get('messages') or []
+        if len(messages) >= 4:
+            second = messages[-1].get('text')
+            break
+        time.sleep(poll)
+    state = _state(client, conversation)
+    messages = state.get('messages') or []
+    roles = [m.get('role') for m in messages]
+    listed = [c.get('id') for c in (state.get('conversations') or [])]
+    journey['detail'] = {'conversation': conversation, 'messages': len(messages), 'roles': roles,
+                         'first_reply': (first or '')[:200], 'second_reply': (second or '')[:200],
+                         'conversation_listed': conversation in listed}
+    ok = (len(messages) >= 4 and roles[:4] == ['user', 'assistant', 'user', 'assistant']
+          and first and second and first.strip() != second.strip()
+          and conversation in listed)
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = 'the second turn did not land in the same persisted thread'
+    return journey
+
+
+def journey_projects(client, ctx):
+    """§27 Projects — two real contexts, and no contamination between them."""
+    journey = {'id': 'J-PROJ', 'name': 'Two projects, no contamination', 'shell_required': False,
+               'requirements': ['Projects: multiple real contexts'], 'detail': {}}
+    stamp = int(time.time())
+    alpha = client.call('/api/project', {'id': 'acceptance-alpha-%d' % stamp,
+                                         'name': 'acceptance-alpha-%d' % stamp,
+                                         'context': 'V2-18 synthetic project alpha'})['id']
+    beta = client.call('/api/project', {'id': 'acceptance-beta-%d' % stamp,
+                                        'name': 'acceptance-beta-%d' % stamp,
+                                        'context': 'V2-18 synthetic project beta'})['id']
+    again = client.call('/api/project', {'id': 'acceptance-alpha-%d' % stamp,
+                                         'name': 'acceptance-alpha-%d' % stamp,
+                                         'context': 'V2-18 synthetic project alpha'})['id']
+    conv_alpha = client.call('/api/conversation', {'project': alpha})['id']
+    conv_beta = client.call('/api/conversation', {'project': beta})['id']
+    payload = base64.b64encode(b'V2-18 acceptance attachment').decode()
+    attached = client.call('/api/attach', {'conversation': conv_alpha,
+                                           'name': 'acceptance-alpha.txt',
+                                           'content': payload, 'mime': 'text/plain'})
+    work_alpha = client.call('/api/work?conversation=' + urllib.parse.quote(conv_alpha))
+    work_beta = client.call('/api/work?conversation=' + urllib.parse.quote(conv_beta))
+    state_alpha = _state(client, conv_alpha)
+    state_beta = _state(client, conv_beta)
+    journey['detail'] = {'alpha': alpha, 'beta': beta, 'project_idempotent': alpha == again,
+                         'attached': attached,
+                         'conversations_differ': conv_alpha != conv_beta,
+                         'alpha_project_in_work': work_alpha.get('project_id'),
+                         'beta_project_in_work': work_beta.get('project_id'),
+                         'alpha_attachments': [f.get('name') for f in
+                                               (state_alpha.get('attachments') or [])],
+                         'beta_attachments': [f.get('name') for f in
+                                              (state_beta.get('attachments') or [])]}
+    ok = (alpha == again and conv_alpha != conv_beta
+          and work_alpha.get('project_id') == alpha and work_beta.get('project_id') == beta
+          and [f.get('name') for f in (state_alpha.get('attachments') or [])]
+          == ['acceptance-alpha.txt']
+          and not (state_beta.get('attachments') or []))
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = 'the two projects are not isolated on the real store'
+    return journey
+
+
+def journey_memory(client, ctx):
+    """§27 Memory — the person's own surfaces: what Kel learned, its history, its suggestions."""
+    journey = {'id': 'J-MEM', 'name': 'Memory and learning surfaces', 'shell_required': False,
+               'requirements': ['Memory: useful recall, controlled learning'], 'detail': {}}
+    learnings = client.call('/api/memory', {'action': 'learnings', 'conversation': 'main',
+                                            'include_disabled': True, 'include_stale': True})
+    history = client.call('/api/memory', {'action': 'history', 'conversation': 'main'})
+    suggestions = client.call('/api/memory', {'action': 'suggest_learnings', 'conversation': 'main'})
+    work = client.call('/api/work?conversation=main')
+    records = ((work.get('memory') or {}).get('records')) or []
+    items = learnings.get('learnings') or []
+    fields = sorted(items[0].keys()) if items else []
+    journey['detail'] = {'learnings': len(items), 'learning_fields': fields,
+                         'history_entries': len(history.get('entries') or []),
+                         'suggestions': len(suggestions.get('proposals') or suggestions.get('created') or []),
+                         'project_memories': len(records),
+                         'sample': (items[:1] or records[:1])}
+    ok = (isinstance(items, list) and isinstance(history.get('entries'), list)
+          and len(history.get('entries') or []) > 0)
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = 'the memory surfaces did not answer with the real audit trail'
+    return journey
+
+
+RECIPE_SCOPE = ('library', 'search', 'favourites', 'recent', 'categories', 'create', 'edit',
+                'duplicate', 'project attachment', 'run', 'run again', 'history', 'last result',
+                'suggestions')
+
+
+def _op_exists(client, payload):
+    """Does this engine action exist? A content refusal still proves the op; “Unknown action” does not."""
+    try:
+        answer = client.call('/api/recipes', payload)
+        return {'supported': True, 'keys': sorted(answer.keys())[:10]}
+    except PolicyRefusal as exc:
+        sentence = exc.sentence or ''
+        return {'supported': 'Unknown recipe action' not in sentence, 'sentence': sentence[:140]}
+
+
+def journey_recipes(client, ctx):
+    """§27 Recipes — the library works; V2-07's own scope is measured item by item."""
+    journey = {'id': 'J-RECIPE', 'name': 'Recipe library and the V2-07 scope', 'shell_required': False,
+               'requirements': ['Recipes: repeated workflows'], 'detail': {}}
+    listed = client.call('/api/recipes', {'action': 'list', 'conversation': 'main'})
+    entries = listed.get('entries') or []
+    first = next((e for e in entries if e.get('recipe_id') != 'continue-work'), entries[0] if entries else None)
+    detail = {'entries': len(entries)}
+    if first:
+        got = client.call('/api/recipes', {'action': 'get', 'conversation': 'main',
+                                           'recipe_id': first['recipe_id']})
+        preview = client.call('/api/recipes', {'action': 'preview', 'conversation': 'main',
+                                               'recipe_id': first['recipe_id'], 'inputs': {}})
+        detail['recipe_id'] = first['recipe_id']
+        detail['entry_fields'] = sorted(first.keys())
+        detail['get_ok'] = bool(got.get('recipe'))
+        detail['preview_keys'] = sorted(preview.keys())
+    # The V2-07 scope, probed against the live surface instead of assumed: an op that answers
+    # “Unknown recipe action” is missing; any other answer (success or a content refusal) proves the
+    # op exists.
+    probes = {'search': {'query': 'audit'},
+              'favourites': {'favourite': True},
+              'recent': {},
+              'categories': {},
+              'history': {'recipe_id': (first or {}).get('recipe_id')},
+              'last_result': {'recipe_id': (first or {}).get('recipe_id')},
+              'duplicate': {'recipe_id': (first or {}).get('recipe_id')}}
+    detail['ops'] = {}
+    for op, payload in probes.items():
+        detail['ops'][op] = _op_exists(client, dict(payload, action=op, conversation='main'))
+    for op, payload in (('save', {}), ('run', {'recipe_id': 'no-such-recipe'}),
+                        ('propose_from_job', {'job_id': 'no-such-job'})):
+        detail['ops'][op] = _op_exists(client, dict(payload, action=op, conversation='main'))
+    supported = {'library': bool(entries),
+                 'create': detail['ops']['save']['supported'],
+                 'edit': detail['ops']['save']['supported'],
+                 'run': detail['ops']['run']['supported'],
+                 'project attachment': bool(detail['ops']['save']['supported']),
+                 'suggestions': (detail['ops']['propose_from_job']['supported']),
+                 'search': detail['ops']['search']['supported'],
+                 'favourites': detail['ops']['favourites']['supported'],
+                 'recent': detail['ops']['recent']['supported'],
+                 'categories': detail['ops']['categories']['supported'],
+                 'history': detail['ops']['history']['supported'],
+                 'last result': detail['ops']['last_result']['supported'],
+                 'duplicate': detail['ops']['duplicate']['supported']}
+    supported['run again'] = supported['history'] and supported['last result']
+    detail['supported'] = supported
+    detail['missing'] = [name for name in RECIPE_SCOPE if not supported.get(name)]
+    journey['detail'] = detail
+    journey['status'] = 'PASSED' if (entries and not detail['missing']) else 'FAILED'
+    if not entries:
+        journey['problem'] = 'the recipe library answered with nothing'
+    elif detail['missing']:
+        journey['problem'] = 'V2-07 scope still missing: %s' % ', '.join(detail['missing'])
+    return journey
+
+
+def journey_network(client, ctx):
+    """§27 Security — a real outbound call is refused by a scoped rule, and it is recorded."""
+    journey = {'id': 'J-NET', 'name': 'Network rules refuse a real call', 'shell_required': False,
+               'requirements': ['Security: network restrictions'], 'detail': {}}
+    connections = client.call('/api/connections', {'action': 'list'}) or {}
+    items = connections.get('connections') or connections.get('entries') or []
+    before = client.call('/api/connections', {'action': 'network', 'op': 'get'})
+    journey['detail'] = {'connections': len(items), 'policy_before': before}
+    if not items:
+        journey['status'] = 'PENDING'
+        journey['problem'] = 'no connection exists on this root, so no real call can be refused'
+        return journey
+    target = items[0].get('id')
+    tool = '%s.test' % target
+    client.call('/api/connections', {'action': 'network', 'op': 'set_tool', 'tool': tool,
+                                     'mode': 'none'})
+    try:
+        refusal = client.refusal('/api/connections', {'action': 'test', 'id': target})
+        history = client.call('/api/connections', {'action': 'network', 'op': 'history'})
+    finally:
+        client.call('/api/connections', {'action': 'network', 'op': 'clear_tool', 'tool': tool})
+    after = client.call('/api/connections', {'action': 'network', 'op': 'get'})
+    sentence = (refusal.get('sentence') or '')
+    events = history.get('events') or history.get('history') or []
+    journey['detail'].update({'connection': target,
+                              'refusal': refusal, 'history': len(events),
+                              'policy_after': after})
+    explicit = (refusal.get('refused')
+                and any(word in sentence.lower() for word in ('internet', 'network', 'not allowed',
+                                                              'refuse', 'blocked')))
+    restored = before.get('modes') == after.get('modes') and before.get('tools') == after.get('tools')
+    journey['status'] = 'PASSED' if explicit else 'FAILED'
+    if not explicit:
+        journey['problem'] = ('the call was not refused by the network rule (sentence: %s)'
+                              % sentence[:160])
+    journey['detail']['policy_restored'] = restored
+    return journey
+
+
+def journey_connections(client, ctx):
+    """§27 Connections — the real choke point, history, and honest labelling of the service."""
+    journey = {'id': 'J-CONN', 'name': 'Connection test through the one choke point',
+               'shell_required': False,
+               'requirements': ['Connections: real personal APIs'], 'detail': {}}
+    listed = client.call('/api/connections', {'action': 'list'}) or {}
+    items = listed.get('connections') or listed.get('entries') or []
+    if not items:
+        journey['status'] = 'PENDING'
+        journey['problem'] = ('no connection exists on this root; a labelled fixture cannot claim a '
+                             'live service')
+        return journey
+    target = items[0]
+    result = client.refusal('/api/connections', {'action': 'test', 'id': target.get('id')})
+    after = client.call('/api/connections', {'action': 'get', 'id': target.get('id')})
+    journey['detail'] = {'connection': target.get('id'), 'kind': target.get('kind'),
+                         'service': target.get('service'), 'answer': result,
+                         'base_url': target.get('base_url'),
+                         'recorded_state': {k: after.get(k) for k in
+                                            ('last_test_state', 'last_test_status', 'last_test_ms',
+                                             'last_test_note', 'auth_state')}}
+    recorded = any(after.get(k) not in (None, '') for k in ('last_test_state', 'last_test_status'))
+    journey['status'] = 'PASSED' if recorded else 'FAILED'
+    journey['detail']['labelled'] = ('the call went through the real choke point; the service answer is '
+                                     'recorded verbatim and is not claimed as success')
+    if not recorded:
+        journey['problem'] = 'the test did not leave a recorded result on the connection'
+    return journey
+
+
+def journey_activity(client, ctx):
+    """V2-08 — the real activity timeline, its filters, and its plain sentences."""
+    journey = {'id': 'J-ACTIVITY', 'name': 'Activity timeline and filters', 'shell_required': False,
+               'requirements': ['Activity: timeline, filters, search, results'], 'detail': {}}
+    everything = client.call('/api/activity', {'all_projects': True, 'limit': 200})
+    entries = everything.get('entries') or []
+    work = client.call('/api/activity', {'all_projects': True, 'kind': 'work'})
+    failures = client.call('/api/activity', {'all_projects': True, 'failures': True})
+    searched = client.call('/api/activity', {'all_projects': True, 'query': 'work'})
+    empty = client.call('/api/activity', {'all_projects': True, 'query': 'zzz-no-match-at-all'})
+    journey['detail'] = {'entries': len(entries), 'total': everything.get('total'),
+                         'counts': everything.get('counts'), 'kinds': everything.get('kinds'),
+                         'projects': everything.get('projects'),
+                         'work_rows': len(work.get('entries') or []),
+                         'failure_rows': len(failures.get('entries') or []),
+                         'search_rows': len(searched.get('entries') or []),
+                         'sample': entries[:2]}
+    ok = (bool(entries) and all(row.get('what') for row in entries)
+          and all(row['kind'] == 'work' for row in (work.get('entries') or []))
+          and all(row['failed'] for row in (failures.get('entries') or []))
+          and not (empty.get('entries') or [])
+          and isinstance(everything.get('counts'), dict)
+          and everything.get('kinds'))
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = 'the timeline or one of its filters did not answer as promised'
+    return journey
+
+
+def journey_transcription(client, ctx):
+    """§27 Transcription — the engine path is real; audio capture needs a microphone (labelled)."""
+    journey = {'id': 'J-TRANS', 'name': 'Transcription path (labelled fixture)',
+               'shell_required': True,
+               'requirements': ['Transcription: real Muse recording'], 'detail': {}}
+    status = client.call('/api/transcription', {'action': 'status'})
+    library = client.call('/api/transcription', {'action': 'library'})
+    journey['detail'] = {'status': status, 'library_keys': sorted((library or {}).keys()),
+                         'recordings': len(library.get('recordings') or library.get('items') or []),
+                         'labelled': 'no audio device and no Muse credential use here: the engine '
+                                     'path is exercised, real recording is not claimed'}
+    ok = bool(status) and bool(library)
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    journey['pending'] = 'real Muse recording (microphone), and the phone surface — Shell/Astra'
+    return journey
+
+
 JOURNEYS = {'J-FIX': journey_fix_capture, 'J-UPGRADE': journey_upgrade,
             'J-SEC': journey_security, 'J-KBU': journey_kibble,
-            'J-KBU-NEG': journey_kibble_negatives}
+            'J-KBU-NEG': journey_kibble_negatives, 'J-MODEL': journey_model,
+            'J-CONV': journey_conversation, 'J-PROJ': journey_projects,
+            'J-MEM': journey_memory, 'J-RECIPE': journey_recipes,
+            'J-NET': journey_network, 'J-CONN': journey_connections,
+            'J-TRANS': journey_transcription, 'J-ACTIVITY': journey_activity}
 
 
 # ----------------------------------------------------------------------------------------------- runner
@@ -619,6 +976,10 @@ def main(argv=None):
             elif name == 'J-KBU-NEG':
                 result = journey_kibble_negatives(client, ctx, dispatch=args.runtime_negatives,
                                                   wait=args.wait, poll=args.poll)
+            elif name == 'J-MODEL':
+                result = journey_model(client, ctx, wait=args.wait, poll=args.poll)
+            elif name == 'J-CONV':
+                result = journey_conversation(client, ctx, wait=args.wait, poll=args.poll)
             else:
                 result = JOURNEYS[name](client, ctx)
         except (PolicyRefusal, IdentityError) as exc:

@@ -1,0 +1,331 @@
+{
+  "journeys": [
+    {
+      "id": "J-PROJ",
+      "name": "Two projects, no contamination",
+      "shell_required": false,
+      "requirements": [
+        "Projects: multiple real contexts"
+      ],
+      "detail": {
+        "alpha": "acceptance-alpha-1790084820",
+        "beta": "acceptance-beta-1790084820",
+        "project_idempotent": true,
+        "attached": {
+          "id": "23ac4566-aeae-4708-8f61-ae303eb2692b"
+        },
+        "conversations_differ": true,
+        "alpha_project_in_work": "acceptance-alpha-1790084820",
+        "beta_project_in_work": "acceptance-beta-1790084820",
+        "alpha_attachments": [
+          "acceptance-alpha.txt"
+        ],
+        "beta_attachments": []
+      },
+      "status": "PASSED",
+      "seconds": 0.3
+    },
+    {
+      "id": "J-MEM",
+      "name": "Memory and learning surfaces",
+      "shell_required": false,
+      "requirements": [
+        "Memory: useful recall, controlled learning"
+      ],
+      "detail": {
+        "learnings": 1,
+        "learning_fields": [
+          "confidence",
+          "effective_confidence",
+          "enabled",
+          "evidence",
+          "insight",
+          "key",
+          "memory_id",
+          "mission_id",
+          "source",
+          "stale",
+          "status",
+          "task_id",
+          "type",
+          "updated"
+        ],
+        "history_entries": 6,
+        "suggestions": 0,
+        "project_memories": 3,
+        "sample": [
+          {
+            "confidence": 5,
+            "effective_confidence": 5,
+            "enabled": true,
+            "evidence": [
+              "routing_outcomes:coding:codex"
+            ],
+            "insight": "codex completes coding work reliably here (verified in 3 of 3 recent runs, 30 days).",
+            "key": "model.coding.codex",
+            "memory_id": "5d930c88-63b7-42f3-8cdd-dea8038233f3",
+            "mission_id": null,
+            "source": "observed",
+            "stale": false,
+            "status": "active",
+            "task_id": null,
+            "type": "pattern",
+            "updated": 1790019958.6781237
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.2
+    },
+    {
+      "id": "J-RECIPE",
+      "name": "Recipe library and the V2-07 scope",
+      "shell_required": false,
+      "requirements": [
+        "Recipes: repeated workflows"
+      ],
+      "detail": {
+        "entries": 5,
+        "recipe_id": "audit-and-repair",
+        "entry_fields": [
+          "digest",
+          "kind",
+          "name",
+          "recipe_id",
+          "scope",
+          "source",
+          "version"
+        ],
+        "get_ok": true,
+        "preview_keys": [
+          "message",
+          "needs_project"
+        ],
+        "ops": {
+          "search": {
+            "supported": false,
+            "sentence": "/api/recipes search -> Unknown recipe action"
+          },
+          "favourites": {
+            "supported": false,
+            "sentence": "/api/recipes favourites -> Unknown recipe action"
+          },
+          "recent": {
+            "supported": false,
+            "sentence": "/api/recipes recent -> Unknown recipe action"
+          },
+          "categories": {
+            "supported": false,
+            "sentence": "/api/recipes categories -> Unknown recipe action"
+          },
+          "history": {
+            "supported": false,
+            "sentence": "/api/recipes history -> Unknown recipe action"
+          },
+          "last_result": {
+            "supported": false,
+            "sentence": "/api/recipes last_result -> Unknown recipe action"
+          },
+          "duplicate": {
+            "supported": false,
+            "sentence": "/api/recipes duplicate -> Unknown recipe action"
+          },
+          "save": {
+            "supported": true,
+            "sentence": "/api/recipes save -> A recipe object is required"
+          },
+          "run": {
+            "supported": true,
+            "sentence": "/api/recipes run -> Unknown recipe: no-such-recipe"
+          },
+          "propose_from_job": {
+            "supported": true,
+            "sentence": "/api/recipes propose_from_job -> Job missing"
+          }
+        },
+        "supported": {
+          "library": true,
+          "create": true,
+          "edit": true,
+          "run": true,
+          "project attachment": false,
+          "suggestions": true,
+          "run again": false,
+          "search": false,
+          "favourites": false,
+          "recent": false,
+          "categories": false,
+          "history": false,
+          "last_result": false,
+          "duplicate": false
+        },
+        "missing": [
+          "search",
+          "favourites",
+          "recent",
+          "categories",
+          "duplicate",
+          "project attachment",
+          "run again",
+          "history",
+          "last result"
+        ]
+      },
+      "status": "FAILED",
+      "problem": "V2-07 scope still missing: search, favourites, recent, categories, duplicate, project attachment, run again, history, last result",
+      "seconds": 0.3
+    },
+    {
+      "id": "J-NET",
+      "name": "Network rules refuse a real call",
+      "shell_required": false,
+      "requirements": [
+        "Security: network restrictions"
+      ],
+      "detail": {
+        "connections": 3,
+        "policy_before": {
+          "default": {
+            "domains": [],
+            "mode": "full",
+            "scope": "default",
+            "updated": 1790022362.672012
+          },
+          "projects": [],
+          "tools": []
+        },
+        "connection": "github",
+        "refusal": {
+          "refused": true,
+          "sentence": "/api/connections test -> You set Kel to no internet for tool:github.test, so nothing is sent."
+        },
+        "history": 5,
+        "policy_after": {
+          "default": {
+            "domains": [],
+            "mode": "full",
+            "scope": "default",
+            "updated": 1790022362.672012
+          },
+          "projects": [],
+          "tools": []
+        },
+        "policy_restored": true
+      },
+      "status": "PASSED",
+      "seconds": 0.4
+    },
+    {
+      "id": "J-CONN",
+      "name": "Connection test through the one choke point",
+      "shell_required": false,
+      "requirements": [
+        "Connections: real personal APIs"
+      ],
+      "detail": {
+        "connection": "github",
+        "kind": "api_key",
+        "service": null,
+        "answer": {
+          "refused": false,
+          "answer": {
+            "auth_expires": null,
+            "auth_header": "",
+            "auth_method": "bearer",
+            "auth_prefix": null,
+            "auth_scopes": [],
+            "auth_state": "",
+            "base_url": "http://127.0.0.1:41999",
+            "can_test": true,
+            "created": 1790011452.4030483,
+            "credential_fields": [
+              "api_key"
+            ],
+            "credential_ref": "kel:connection:github",
+            "docs_url": "",
+            "has_credentials": true,
+            "id": "github",
+            "kind": "api_key",
+            "kind_label": "API key",
+            "last_test_at": 1790084829.5023215,
+            "last_test_ms": 0,
+            "last_test_note": "Kel could not reach that address.",
+            "last_test_state": "unreachable",
+            "last_test_status": null,
+            "name": "GitHub",
+            "notes": "",
+            "oauth_provider": "",
+            "state": "ready",
+            "test_endpoint": "",
+            "updated": 1790011452.456118
+          }
+        },
+        "base_url": "http://127.0.0.1:41999",
+        "recorded_state": {
+          "last_test_state": "unreachable",
+          "last_test_status": null,
+          "last_test_ms": 0,
+          "last_test_note": "Kel could not reach that address.",
+          "auth_state": ""
+        },
+        "labelled": "the call went through the real choke point; the service answer is recorded verbatim and is not claimed as success"
+      },
+      "status": "PASSED",
+      "seconds": 7.5
+    },
+    {
+      "id": "J-TRANS",
+      "name": "Transcription path (labelled fixture)",
+      "shell_required": true,
+      "requirements": [
+        "Transcription: real Muse recording"
+      ],
+      "detail": {
+        "status": {
+          "detail": "Muse transcribes your audio, using the key the Transcriptions app already stored on this computer.",
+          "has_key": true,
+          "label": "Muse",
+          "live_capable": true,
+          "mode": "muse"
+        },
+        "library_keys": [
+          "folders",
+          "transcripts"
+        ],
+        "recordings": 0,
+        "labelled": "no audio device and no Muse credential use here: the engine path is exercised, real recording is not claimed"
+      },
+      "status": "PASSED",
+      "pending": "real Muse recording (microphone), and the phone surface \u2014 Shell/Astra",
+      "seconds": 0.0
+    },
+    {
+      "id": "J-MODEL",
+      "name": "J-MODEL",
+      "status": "FAILED",
+      "problem": "/api/send None -> Conversation missing",
+      "seconds": 0.0
+    },
+    {
+      "id": "J-CONV",
+      "name": "J-CONV",
+      "status": "FAILED",
+      "problem": "/api/send None -> Conversation missing",
+      "seconds": 0.0
+    }
+  ],
+  "identity": {
+    "pid": 22320,
+    "port": 63010,
+    "url": "http://127.0.0.1:63010",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 22320,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 09:47:09",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
