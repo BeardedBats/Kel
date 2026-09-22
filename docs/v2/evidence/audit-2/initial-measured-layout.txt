@@ -1,0 +1,344 @@
+settings/appearance [
+  {
+    s: 'kel-card kel-shell-needs-you',
+    t: 'Needs youDeepSeek API needs setup so Kel can ',
+    x: 388,
+    y: 109,
+    h: 92,
+    css: [
+      '14px 20px 6px',
+      '0px',
+      '0px',
+      '16px / 25px "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    ]
+  }
+]
+settings/model [
+  {
+    s: 'kel-shell-back kel-shell-settings-back',
+    t: '← Back to Kel',
+    x: 8,
+    y: 107,
+    h: 40,
+    css: [
+      '8px 14px',
+      '4px 0px 12px',
+      'normal',
+      '600 15px / 20px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px !bg-fill-3',
+    t: 'Model',
+    x: 8,
+    y: 159,
+    h: 28,
+    css: [
+      '1px 10px',
+      '0px 0px 2px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'Tools',
+    x: 8,
+    y: 193,
+    h: 28,
+    css: [
+      '1px 10px',
+      '2px 0px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__group-header px-12px mt-8px h-28px flex items-center text-14px font-[500] text-t-tertiary select-none',
+    t: 'Application',
+    x: 8,
+    y: 235,
+    h: 24,
+    css: [
+      '0px 12px 0px 6px',
+      '10px 0px 0px',
+      'normal',
+      '500 12px / 16px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'Appearance',
+    x: 8,
+    y: 261,
+    h: 28,
+    css: [
+      '1px 10px',
+      '0px 0px 2px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'Remote',
+    x: 8,
+    y: 295,
+    h: 28,
+    css: [
+      '1px 10px',
+      '2px 0px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'System',
+    x: 8,
+    y: 329,
+    h: 28,
+    css: [
+      '1px 10px',
+      '2px 0px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__group-header px-12px mt-8px h-28px flex items-center text-14px font-[500] text-t-tertiary select-none',
+    t: 'Archived',
+    x: 8,
+    y: 371,
+    h: 24,
+    css: [
+      '0px 12px 0px 6px',
+      '10px 0px 0px',
+      'normal',
+      '500 12px / 16px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'Archived conversations',
+    x: 8,
+    y: 397,
+    h: 28,
+    css: [
+      '1px 10px',
+      '0px 0px 2px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__group-header px-12px mt-8px h-28px flex items-center text-14px font-[500] text-t-tertiary select-none',
+    t: 'Other',
+    x: 8,
+    y: 439,
+    h: 24,
+    css: [
+      '0px 12px 0px 6px',
+      '10px 0px 0px',
+      'normal',
+      '500 12px / 16px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'settings-sider__item h-34px rd-8px flex items-center gap-8px group cursor-pointer relative overflow-hidden shrink-0 conversation-item [&.conversation-item+&.conversation-item]:mt-2px transition-colors justify-start px-10px hover:bg-fill-3',
+    t: 'About',
+    x: 8,
+    y: 465,
+    h: 28,
+    css: [
+      '1px 10px',
+      '0px 0px 2px',
+      '8px',
+      '13.3333px / 15.3333px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-card',
+    t: 'Available nowAdjust the foundation colors of ',
+    x: 388,
+    y: 154,
+    h: 349.078125,
+    css: [
+      '16px 20px',
+      '0px 0px 12px',
+      '10px',
+      '16px / 25px "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-shell-source-card-head',
+    t: 'Available nowAdjust the foundation colors of ',
+    x: 409,
+    y: 171,
+    h: 42,
+    css: [
+      '0px',
+      '0px',
+      '6px',
+      '16px / 25px "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-h2',
+    t: 'Available now',
+    x: 409,
+    y: 171,
+    h: 20,
+    css: [
+      '0px',
+      '0px',
+      'normal',
+      '700 15px / 20px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-card kel-shell-custom-models flex flex-col gap-16px',
+    t: 'Custom modelsClear statusAdd ModelNo custom m',
+    x: 388,
+    y: 527.078125,
+    h: 272,
+    css: [
+      '16px 20px',
+      '0px 0px 12px',
+      '10px',
+      '16px / 25px "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    ]
+  }
+]
+work [
+  {
+    s: 'kel-page__head',
+    t: 'WorkspaceWorkReload',
+    x: 388,
+    y: 22,
+    h: 78,
+    css: [
+      '0px',
+      '0px 0px 19px',
+      '8px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-card',
+    t: 'JobsSelect or customize a themeNo unfinished ',
+    x: 388,
+    y: 131,
+    h: 106,
+    css: [
+      '16px 20px',
+      '0px',
+      '10px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-shell-source-card-head',
+    t: 'JobsSelect or customize a theme',
+    x: 409,
+    y: 148,
+    h: 42,
+    css: [
+      '0px',
+      '0px',
+      '6px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-h2',
+    t: 'Jobs',
+    x: 409,
+    y: 148,
+    h: 20,
+    css: [
+      '0px',
+      '0px',
+      'normal',
+      '700 15px / 20px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-card',
+    t: 'Waiting to continueSelect or customize a them',
+    x: 388,
+    y: 249,
+    h: 106,
+    css: [
+      '16px 20px',
+      '0px',
+      '10px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-shell-source-card-head',
+    t: 'Waiting to continueSelect or customize a them',
+    x: 409,
+    y: 266,
+    h: 42,
+    css: [
+      '0px 144px 0px 0px',
+      '0px',
+      '6px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-h2',
+    t: 'Waiting to continue',
+    x: 409,
+    y: 266,
+    h: 20,
+    css: [
+      '0px',
+      '0px',
+      'normal',
+      '700 15px / 20px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  },
+  {
+    s: 'kel-card',
+    t: 'Team assignmentsSelect or customize a themeAd',
+    x: 388,
+    y: 367,
+    h: 106,
+    css: [
+      '16px 20px',
+      '0px',
+      '10px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-shell-source-card-head',
+    t: 'Team assignmentsSelect or customize a themeAd',
+    x: 409,
+    y: 384,
+    h: 42,
+    css: [
+      '0px 144px 0px 0px',
+      '0px',
+      '6px',
+      '16px / 24px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif'
+    ]
+  },
+  {
+    s: 'kel-h2',
+    t: 'Team assignments',
+    x: 409,
+    y: 384,
+    h: 20,
+    css: [
+      '0px',
+      '0px',
+      'normal',
+      '700 15px / 20px "Instrument Sans", "Segoe UI", sans-serif'
+    ]
+  }
+]

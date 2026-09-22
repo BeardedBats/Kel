@@ -1,0 +1,11 @@
+$ vitest run
+
+ RUN  v4.1.0 C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop
+
+(node:3676) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  47 passed (47)
+      Tests  367 passed (367)
+   Start at  17:21:06
+   Duration  31.95s (transform 3.53s, setup 648ms, import 16.98s, tests 81.21s, environment 10.47s)

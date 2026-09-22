@@ -1,0 +1,64 @@
+const imgIcon = "https://www.figma.com/api/mcp/asset/0fc2ba83-6045-498b-bb7d-dab75462ca4d.svg";
+const imgIcon1 = "https://www.figma.com/api/mcp/asset/61c0e919-fc3e-4ba7-8e01-91a29d50e3bc.svg";
+const imgIcon2 = "https://www.figma.com/api/mcp/asset/fb174920-c1fe-4f08-bcbd-e77fc6cf2789.svg";
+
+export default function ContextMenuV2({ className }: { className?: string }) {
+  return (
+    <div className={className || "border border-[rgba(191,216,255,0.14)] border-solid content-stretch drop-shadow-[0px_20px_24px_rgba(0,0,0,0.35)] flex flex-col gap-[2px] items-start p-[6px] relative rounded-[10px] w-[200px]"} data-node-id="146:81" data-name="Context menu v2">
+      <div aria-hidden className="absolute backdrop-blur-[24px] inset-0 pointer-events-none rounded-[10px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(191, 216, 255, 0.08) 0%, rgba(191, 216, 255, 0) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.4) 0%, rgba(15, 45, 100, 0.4) 100%)" }} />
+      <div className="content-stretch flex gap-[10px] h-[32px] items-center px-[10px] relative rounded-[6px] shrink-0 w-full" data-node-id="157:179" data-name="Menu item v2">
+        <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="I157:179;146:38" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Copy
+        </p>
+        <div className="relative shrink-0 size-[14px]" data-node-id="I157:179;146:36" data-name="Icon">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon} />
+        </div>
+      </div>
+      <div className="bg-[rgba(47,107,224,0.22)] content-stretch flex gap-[10px] h-[32px] items-center px-[10px] relative rounded-[6px] shrink-0 w-full" data-node-id="157:185" data-name="Menu item v2">
+        <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="I157:185;146:42" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Retry
+        </p>
+        <div className="relative shrink-0 size-[14px]" data-node-id="I157:185;146:40" data-name="Icon">
+          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon1} />
+        </div>
+      </div>
+      <div className="content-stretch flex gap-[10px] h-[32px] items-center px-[10px] relative rounded-[6px] shrink-0 w-full" data-node-id="157:190" data-name="Menu item v2">
+        <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="I157:190;146:38" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Edit
+        </p>
+        <div className="relative shrink-0 size-[14px]" data-node-id="I157:190;146:36" data-name="Icon">
+          <div className="absolute inset-[-0.6%]">
+            <img alt="" className="block max-w-none size-full" src={imgIcon2} />
+          </div>
+        </div>
+      </div>
+      <div className="content-stretch flex gap-[10px] h-[32px] items-center px-[10px] relative rounded-[6px] shrink-0 w-full" data-node-id="157:196" data-name="Menu item v2">
+        <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[20px] relative shrink-0 text-[#f9a3a3] text-[14px] whitespace-nowrap" data-node-id="I157:196;146:50" style={{ fontVariationSettings: '"wdth" 100' }}>
+          Delete
+        </p>
+      </div>
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(191,216,255,0.18)]" />
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+These styles are contained in the design: v2/Row label: Font(family: "Instrument Sans", style: Medium, size: 14, weight: 500, lineHeight: 20, letterSpacing: 0), v2/Modal: Effect(type: BACKGROUND_BLUR, radius: 48); Effect(type: INNER_SHADOW, color: #BFD8FF2E, offset: (0, 1), radius: 0, spread: 0); Effect(type: DROP_SHADOW, color: #00000059, offset: (0, 20), radius: 48, spread: -16).
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Context menu v2
+**Node ID:** 146:81
+
+Opens from the ⋯ under an assistant turn: Copy / Retry / Edit / Delete.
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.

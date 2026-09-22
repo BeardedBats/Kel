@@ -1,3 +1,4 @@
+import shellSendIcon from '@renderer/assets/figma/send.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -83,13 +84,6 @@ const MENTION_HIGHLIGHT_COLOR = 'var(--primary)';
 // Max items shown in the `@` dropdown (both data sources); the result panel skin
 // is unbounded (streaming append) — this caps only the inline mention menu.
 const AT_FILE_MENTION_LIMIT = 8;
-
-const SendArrowIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox='0 0 24 24' fill='none' stroke='currentColor' aria-hidden='true'>
-    <path d='M12 19V5' strokeWidth='2.7' strokeLinecap='round' />
-    <path d='M6.5 10.5 12 5l5.5 5.5' strokeWidth='2.7' strokeLinecap='round' strokeLinejoin='round' />
-  </svg>
-);
 
 const DraftBoxActionIcon: React.FC<{ size?: number; color?: string; strokeWidth?: number }> = ({
   size = 16,
@@ -1727,7 +1721,7 @@ const SendBox: React.FC<{
             isSendActionDisabled ? 'send-button-custom--disabled' : 'send-button-custom--enabled'
           }`}
           style={sendButtonShapeStyle}
-          icon={<SendArrowIcon size={16} />}
+          icon={<img src={shellSendIcon} alt='' width={22} height={22} />}
           onClick={handlePrimaryAction}
           data-testid='sendbox-send-btn'
           aria-label={typeof sendActionTooltip === 'string' ? sendActionTooltip : sendNowLabel}
@@ -2157,10 +2151,11 @@ const SendBox: React.FC<{
                 isMobileCompact
                   ? (placeholder ?? (bottomHint as string | undefined) ?? sendboxHint)
                   : placeholder
-                    ? `${placeholder}  ${bottomHint ?? sendboxHint}`
+                    ? placeholder
                     : ((bottomHint as string | undefined) ?? sendboxHint)
               }
               className={`${shouldUseHighlightOverlay ? 'sendbox-highlight-textarea ' : ''}ps-0 pe-0 !b-none focus:shadow-none m-0 !bg-transparent !focus:bg-transparent !hover:bg-transparent lh-[20px] !resize-none text-14px ${isMobile ? 'sendbox-input--mobile' : ''}`}
+              title={(bottomHint as string | undefined) ?? sendboxHint}
               data-testid='sendbox-input'
               style={{
                 width: '100%',
@@ -2210,6 +2205,7 @@ const SendBox: React.FC<{
           </div>
           {isSingleLine && (
             <div className='flex items-center gap-1'>
+              {!isMobileCompact && renderedRightTools}
               {renderedSpeechButton}
               {sendButtonPrefix}
               {renderActionButtons()}

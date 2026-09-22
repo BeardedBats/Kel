@@ -952,7 +952,7 @@ const ChannelModalContent: React.FC = () => {
 
   return (
     <AionScrollArea className={isPageMode ? 'h-full' : ''}>
-      <div className='px-[12px] md:px-[28px]'>
+      <div className='kel-shell-channels px-[12px] md:px-[28px]'>
         <h2 className='text-20px font-500 text-t-primary m-0'>{t('settings.channels.title', 'Channels')}</h2>
         <div className='space-y-8px mt-10px'>
           <div className='text-13px text-t-secondary leading-relaxed'>{channelGuideText}</div>

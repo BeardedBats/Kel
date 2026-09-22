@@ -1,0 +1,607 @@
+const imgKnob = "https://www.figma.com/api/mcp/asset/521a8f10-a78e-4fc2-9bd6-e567771a885b.svg";
+const imgIconCheck = "https://www.figma.com/api/mcp/asset/0f7349a8-0b2f-4f12-b4e0-b8ebbb971c63.svg";
+const imgBrandKelMark = "https://www.figma.com/api/mcp/asset/08a8e0e1-7d67-4cd8-82ff-8145188428e0.png";
+const imgHeaderAction = "https://www.figma.com/api/mcp/asset/74e9a6d4-fb5a-4455-a254-7156f2b4cf07.png";
+const imgPanelTheme = "https://www.figma.com/api/mcp/asset/48467ca0-71bd-4588-9546-42d25eae0bc4.png";
+const imgPanelThemeColors = "https://www.figma.com/api/mcp/asset/fd52fac9-5c33-4ebf-8a4b-2c5ed5139016.png";
+const imgReset = "https://www.figma.com/api/mcp/asset/8294f5a2-eed9-40f1-a726-a1bf04347700.png";
+const imgPanelFonts = "https://www.figma.com/api/mcp/asset/1a63cd4d-4174-4aad-95ca-b26069944954.png";
+const imgPanelScale = "https://www.figma.com/api/mcp/asset/d2e9655d-fe06-46a1-92d9-954d1b94407e.png";
+const imgKelSettingsAppearancePlpdBg2 = "https://www.figma.com/api/mcp/asset/2d172717-fe03-442d-841b-2979c1bc99dd.svg";
+const imgIcon = "https://www.figma.com/api/mcp/asset/ba5b67b9-91e3-47b3-9d97-1d9cfb32315c.svg";
+const imgIconArrowLeft = "https://www.figma.com/api/mcp/asset/6df82fd9-7330-49db-a4db-61135754ea51.svg";
+const imgIcon1 = "https://www.figma.com/api/mcp/asset/95ed9b2c-0cf5-4507-9f18-d7b1c9db6179.svg";
+const imgIcon2 = "https://www.figma.com/api/mcp/asset/7c741db8-2c8d-488d-9163-a8eff865d41f.svg";
+const imgIcon3 = "https://www.figma.com/api/mcp/asset/1fd3b829-83b5-41ef-9857-a46fe83c981f.svg";
+const imgIcon4 = "https://www.figma.com/api/mcp/asset/a18c9fb7-0787-40c3-82c6-d86a89f3a20a.svg";
+const imgIcon5 = "https://www.figma.com/api/mcp/asset/ea36e0dd-8284-4e02-ad14-058cd552a381.svg";
+const imgIcon6 = "https://www.figma.com/api/mcp/asset/584acff8-fa38-412a-a1b3-c6c8e62c94d5.svg";
+const imgIcon7 = "https://www.figma.com/api/mcp/asset/4448421e-f99b-4df4-b4c5-78ad38818191.svg";
+const imgIcon8 = "https://www.figma.com/api/mcp/asset/a671a7b6-ed7e-4fb1-8d9f-eb75e7925a03.svg";
+
+type SliderProps = {
+  className?: string;
+  value?: string;
+};
+
+function Slider({ className, value = "95%" }: SliderProps) {
+  return (
+    <div className={className || "content-stretch flex gap-[10px] h-[24px] items-center relative w-[440px]"} data-node-id="40:29" data-name="Slider">
+      <div className="border border-[rgba(127,160,255,0.28)] border-solid content-stretch flex items-center justify-center overflow-clip relative rounded-[12px] shrink-0 size-[24px]" data-node-id="40:30" data-name="Step −">
+        <div aria-hidden className="absolute bg-[rgba(47,107,224,0.1)] inset-0 pointer-events-none rounded-[12px]" />
+        <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#c4d4e8] text-[14px] whitespace-nowrap" data-node-id="40:31">
+          −
+        </p>
+        <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+      </div>
+      <div className="bg-[rgba(191,216,255,0.14)] flex-[1_0_0] h-[4px] min-w-px relative rounded-[2px]" data-node-id="40:32" data-name="Track">
+        <div className="absolute bg-[#7fa0ff] h-[4px] left-0 rounded-[2px] top-0 w-[120px]" data-node-id="40:33" data-name="Fill" />
+        <div className="absolute left-[113px] size-[14px] top-[-5px]" data-node-id="40:34" data-name="Knob">
+          <div className="absolute inset-[-57.14%]">
+            <img alt="" className="block max-w-none size-full" src={imgKnob} />
+          </div>
+        </div>
+      </div>
+      <div className="border border-[rgba(127,160,255,0.28)] border-solid content-stretch flex items-center justify-center overflow-clip relative rounded-[12px] shrink-0 size-[24px]" data-node-id="40:35" data-name="Step +">
+        <div aria-hidden className="absolute bg-[rgba(47,107,224,0.1)] inset-0 pointer-events-none rounded-[12px]" />
+        <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#c4d4e8] text-[14px] whitespace-nowrap" data-node-id="40:36">
+          +
+        </p>
+        <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+      </div>
+      <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="40:37">
+        {value}
+      </p>
+      <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[normal] not-italic relative shrink-0 text-[#6f86ad] text-[13px] whitespace-nowrap" data-node-id="40:38">
+        Reset zoom
+      </p>
+    </div>
+  );
+}
+
+type StepperProps = {
+  className?: string;
+  showReset?: boolean;
+  value?: string;
+};
+
+function Stepper({ className, showReset = true, value = "14" }: StepperProps) {
+  return (
+    <div className={className || "content-stretch flex gap-[6px] h-[100px] items-center relative"} data-node-id="40:22" data-name="Stepper">
+      <div className="border border-[rgba(127,160,255,0.28)] border-solid content-stretch flex items-center justify-center overflow-clip relative rounded-[12px] shrink-0 size-[24px]" data-node-id="40:23" data-name="Step −">
+        <div aria-hidden className="absolute bg-[rgba(47,107,224,0.1)] inset-0 pointer-events-none rounded-[12px]" />
+        <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#c4d4e8] text-[14px] whitespace-nowrap" data-node-id="40:24">
+          −
+        </p>
+        <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+      </div>
+      <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] text-center w-[28px]" data-node-id="40:25">
+        {value}
+      </p>
+      <div className="border border-[rgba(127,160,255,0.28)] border-solid content-stretch flex items-center justify-center overflow-clip relative rounded-[12px] shrink-0 size-[24px]" data-node-id="40:26" data-name="Step +">
+        <div aria-hidden className="absolute bg-[rgba(47,107,224,0.1)] inset-0 pointer-events-none rounded-[12px]" />
+        <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#c4d4e8] text-[14px] whitespace-nowrap" data-node-id="40:27">
+          +
+        </p>
+        <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+      </div>
+      {showReset && (
+        <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[normal] not-italic relative shrink-0 text-[#6f86ad] text-[13px] whitespace-nowrap" data-node-id="40:28">
+          Reset
+        </p>
+      )}
+    </div>
+  );
+}
+
+type LinkProps = {
+  className?: string;
+  label?: string;
+};
+
+function Link({ className, label = "Go to configure" }: LinkProps) {
+  return (
+    <div className={className || "content-stretch flex items-start relative"} data-node-id="40:46" data-name="Link">
+      <p className="[text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Regular'] font-normal leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[14px] underline whitespace-nowrap" data-node-id="40:47">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+type TagProps = {
+  className?: string;
+  kind?: "Changed";
+};
+
+function Tag({ className, kind = "Changed" }: TagProps) {
+  return (
+    <div className={className || "bg-[rgba(255,194,96,0.14)] border border-[rgba(255,194,96,0.35)] border-solid content-stretch flex h-[20px] items-center px-[8px] relative rounded-[6px]"} data-node-id="39:27">
+      <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#ffc260] text-[11px] whitespace-nowrap" data-node-id="39:28">
+        Changed
+      </p>
+    </div>
+  );
+}
+
+type ThemeCardProps = {
+  className?: string;
+  state?: boolean;
+  theme?: "Light" | "Dark" | "System";
+};
+
+function ThemeCard({ className, state = false, theme = "Light" }: ThemeCardProps) {
+  const isDarkAndState = theme === "Dark" && state;
+  const isSystemAndNotState = theme === "System" && !state;
+  return (
+    <div className={className || `border-solid content-stretch flex flex-col gap-[8px] h-[116px] items-start overflow-clip pb-[8px] pt-[10px] px-[10px] relative rounded-[10px] w-[200px] ${isSystemAndNotState ? "bg-[#0b1a36] border border-[rgba(191,216,255,0.2)]" : isDarkAndState ? "bg-[#0b1a36] border-[1.5px] border-[rgba(127,160,255,0.9)] shadow-[0px_0px_12px_0px_rgba(47,107,224,0.4)]" : "bg-[#eef2f8] border border-[rgba(191,216,255,0.2)]"}`} id={isSystemAndNotState ? "node-42_815" : isDarkAndState ? "node-42_779" : "node-42_769"}>
+      <div className="content-stretch flex flex-[1_0_0] gap-[4px] items-start min-h-px overflow-clip relative w-full" id={isSystemAndNotState ? "node-42_816" : isDarkAndState ? "node-42_780" : "node-42_770"} data-name="Mini">
+        <div className={`h-full relative rounded-[3px] shrink-0 w-[40px] ${isSystemAndNotState ? "bg-[rgba(238,242,248,0.5)]" : isDarkAndState ? "bg-[#122a55]" : "bg-white"}`} id={isSystemAndNotState ? "node-42_817" : isDarkAndState ? "node-42_781" : "node-42_771"} data-name="Mini sidebar" />
+        <div className={`content-stretch flex flex-[1_0_0] flex-col gap-[4px] h-full items-start min-w-px overflow-clip pl-[6px] pt-[6px] relative rounded-[3px] ${isSystemAndNotState ? "bg-[rgba(238,242,248,0.35)]" : isDarkAndState ? "bg-[rgba(18,42,85,0.35)]" : "bg-[rgba(255,255,255,0.35)]"}`} id={isSystemAndNotState ? "node-42_818" : isDarkAndState ? "node-42_782" : "node-42_772"} data-name="Mini main">
+          <div className={`h-[3px] relative rounded-[1.5px] shrink-0 w-[70px] ${isDarkAndState || isSystemAndNotState ? "bg-[#1b3568]" : "bg-[#dde4ef]"}`} id={isSystemAndNotState ? "node-42_819" : isDarkAndState ? "node-42_783" : "node-42_773"} data-name="Rectangle" />
+          <div className={`h-[3px] relative rounded-[1.5px] shrink-0 w-[44px] ${isDarkAndState || isSystemAndNotState ? "bg-[#1b3568]" : "bg-[#dde4ef]"}`} id={isSystemAndNotState ? "node-42_820" : isDarkAndState ? "node-42_784" : "node-42_774"} data-name="Rectangle" />
+          <div className={`h-[3px] relative rounded-[1.5px] shrink-0 w-[58px] ${isDarkAndState || isSystemAndNotState ? "bg-[#1b3568]" : "bg-[#dde4ef]"}`} id={isSystemAndNotState ? "node-42_821" : isDarkAndState ? "node-42_785" : "node-42_775"} data-name="Rectangle" />
+        </div>
+      </div>
+      <div className="content-stretch flex items-center overflow-clip relative shrink-0 w-full" id={isSystemAndNotState ? "node-42_822" : isDarkAndState ? "node-42_786" : "node-42_776"} data-name="Foot">
+        <p className={`[word-break:break-word] font-["Inter:Medium"] font-medium leading-[normal] not-italic relative shrink-0 text-[12px] whitespace-nowrap ${isDarkAndState || isSystemAndNotState ? "text-[#edf2fa]" : "text-[#1b2a44]"}`} id={isSystemAndNotState ? "node-42_823" : isDarkAndState ? "node-42_787" : "node-42_777"}>
+          {isSystemAndNotState ? "Follow System" : isDarkAndState ? "Dark" : "Light"}
+        </p>
+        <div className="flex-[1_0_0] h-[10px] min-w-px relative" id={isSystemAndNotState ? "node-42_824" : isDarkAndState ? "node-42_788" : "node-42_778"} data-name="Frame" />
+        {isDarkAndState && (
+          <div className="bg-[#7fa0ff] content-stretch flex items-center justify-center overflow-clip relative rounded-[8px] shrink-0 size-[16px]" data-node-id="42:789" data-name="Check">
+            <div className="relative shrink-0 size-[10px]" data-node-id="42:790" data-name="Icon/check">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconCheck} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BrandKelMark({ className }: { className?: string }) {
+  return (
+    <div className={className || "h-[33px] relative w-[32px]"} data-node-id="10:2" data-name="Brand/Kel mark">
+      <img alt="" className="absolute inset-0 max-w-none object-contain pointer-events-none size-full" src={imgBrandKelMark} />
+    </div>
+  );
+}
+
+export default function KelSettingsAppearancePlpdBg2() {
+  return (
+    <div className="content-stretch flex items-start overflow-clip relative rounded-[12px] size-full" data-node-id="76:3154" data-name="Kel / Settings — Appearance — PLPD bg 2">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgKelSettingsAppearancePlpdBg2} />
+      <div className="absolute bg-[rgba(30,75,176,0.1)] inset-0" data-node-id="76:3163" data-name="Canvas / Blue wash" />
+      <div className="absolute bg-gradient-to-b from-[rgba(10,31,69,0.7)] h-[168px] left-0 right-0 to-[rgba(10,31,69,0)] top-0" data-node-id="76:3164" data-name="Header fade" />
+      <div className="content-stretch flex flex-col gap-[2px] h-full items-start pb-[13px] pt-[16px] px-[8px] relative shrink-0 w-[256px]" data-node-id="76:3165" data-name="Settings nav v2">
+        <div className="content-stretch flex gap-[8px] items-center overflow-clip pb-[14px] pl-[4px] relative shrink-0" data-node-id="I76:3165;99:90" data-name="Logo">
+          <BrandKelMark className="h-[31px] relative shrink-0 w-[30px]" />
+          <p className="[word-break:break-word] font-['Instrument_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#edf2fa] text-[22px] whitespace-nowrap" data-node-id="I76:3165;99:92" style={{ fontVariationSettings: '"wdth" 100' }}>
+            Kel
+          </p>
+        </div>
+        <div className="border border-[rgba(46,92,176,0.18)] border-solid content-stretch drop-shadow-[0px_2px_7px_rgba(47,95,204,0.28)] flex gap-[12px] h-[40px] items-center px-[14px] relative rounded-[10px] shrink-0 w-full" data-node-id="I76:3165;99:93" data-name="Button">
+          <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[10px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(62, 107, 192, 0.45) 0%, rgba(62, 107, 192, 0) 12%, rgba(62, 107, 192, 0) 100%), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 240 40' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(5.28 0 0 4.8 0 20)'><stop stop-color='rgba(42,95,181,0.5)' offset='0'/><stop stop-color='rgba(42,95,181,0)' offset='1'/></radialGradient></defs></svg>\"), url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 240 40' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(14.88 0 0 6 235.2 42)'><stop stop-color='rgba(154,178,234,0.9)' offset='0'/><stop stop-color='rgba(114,142,210,0.725)' offset='0.175'/><stop stop-color='rgba(74,106,186,0.55)' offset='0.35'/><stop stop-color='rgba(30,63,134,0.22)' offset='0.7'/><stop stop-color='rgba(30,63,134,0)' offset='1'/></radialGradient></defs></svg>\"), linear-gradient(90deg, rgb(15, 45, 100) 0%, rgb(15, 45, 100) 100%)" }} />
+          <div className="relative shrink-0 size-[22px]" data-node-id="I76:3165;99:93;6:3" data-name="Icon">
+            <div className="absolute inset-[-27.8%]">
+              <img alt="" className="block max-w-none size-full" src={imgIcon} />
+            </div>
+          </div>
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[20px] not-italic relative shrink-0 text-[#edf2fa] text-[15px] whitespace-nowrap" data-node-id="I76:3165;99:93;6:5">
+            New Chat
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_-1px_-1px_6px_0px_rgba(154,178,234,0.5)]" />
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[32px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-full" data-node-id="I76:3165;99:94" data-name="Back to Kel">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:116" data-name="Icon/arrow-left">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIconArrowLeft} />
+          </div>
+          <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[normal] not-italic relative shrink-0 text-[#c4d4e8] text-[14px] whitespace-nowrap" data-node-id="I76:3165;99:118">
+            Back to Kel
+          </p>
+        </div>
+        <div className="relative shrink-0 size-[10px]" data-node-id="I76:3165;99:97" data-name="gap" />
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:98" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:98;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon1} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:98;6:33">
+            Model
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:99" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:99;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon2} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:99;6:33">
+            Tools
+          </p>
+        </div>
+        <div className="content-stretch flex items-start overflow-clip pb-[4px] pl-[6px] pt-[12px] relative shrink-0" data-node-id="I76:3165;99:100" data-name="Section/Application">
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[12px] whitespace-nowrap" data-node-id="I76:3165;99:101">
+            Application
+          </p>
+        </div>
+        <div className="border border-[rgba(127,160,255,0.45)] border-solid content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:102" data-name="Nav Item">
+          <div aria-hidden className="absolute backdrop-blur-[10px] bg-[rgba(47,107,224,0.28)] inset-0 pointer-events-none rounded-[var(--kel-radius-md,8px)]" />
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:102;6:39" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon3} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-primary,#edf2fa)]" data-node-id="I76:3165;99:102;6:41">
+            Appearance
+          </p>
+          <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(191,216,255,0.14)]" />
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:103" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:103;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon4} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:103;6:33">
+            Remote
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:104" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:104;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon5} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:104;6:33">
+            Desktop Pet
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:105" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:105;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon6} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:105;6:33">
+            System
+          </p>
+        </div>
+        <div className="content-stretch flex items-start overflow-clip pb-[4px] pl-[6px] pt-[12px] relative shrink-0" data-node-id="I76:3165;99:106" data-name="Section/Archived">
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[12px] whitespace-nowrap" data-node-id="I76:3165;99:107">
+            Archived
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:108" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:108;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon7} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:108;6:33">
+            Archived conversations
+          </p>
+        </div>
+        <div className="content-stretch flex items-start overflow-clip pb-[4px] pl-[6px] pt-[12px] relative shrink-0" data-node-id="I76:3165;99:109" data-name="Section/Other">
+          <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[12px] whitespace-nowrap" data-node-id="I76:3165;99:110">
+            Other
+          </p>
+        </div>
+        <div className="content-stretch flex gap-[10px] h-[28px] items-center px-[10px] relative rounded-[var(--kel-radius-md,8px)] shrink-0 w-full" data-node-id="I76:3165;99:111" data-name="Nav Item">
+          <div className="relative shrink-0 size-[16px]" data-node-id="I76:3165;99:111;6:31" data-name="Icon">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIcon8} />
+          </div>
+          <p className="[word-break:break-word] flex-[1_0_0] font-['Inter:Medium'] font-medium leading-[20px] min-w-px not-italic relative text-[14px] text-[color:var(--kel-color-text-secondary,#c4d4e8)]" data-node-id="I76:3165;99:111;6:33">
+            About
+          </p>
+        </div>
+      </div>
+      <div className="content-stretch flex flex-[1_0_0] flex-col h-full items-start min-w-px overflow-clip relative" data-node-id="76:3166" data-name="Main">
+        <div className="flex-[1_0_0] min-h-px overflow-clip relative w-full" data-node-id="76:3167" data-name="Content (masked)">
+          <div className="absolute content-stretch flex flex-col gap-[12px] items-start left-0 overflow-clip pt-[28px] px-[132px] right-0 top-0" data-node-id="76:3169" data-name="Content">
+            <div className="content-stretch flex flex-col gap-[6px] items-start overflow-clip pb-[8px] relative shrink-0 w-full" data-node-id="76:3170" data-name="Header">
+              <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#9fc3ff] text-[13px] whitespace-nowrap" data-node-id="76:3171">
+                Application
+              </p>
+              <div className="content-stretch flex gap-[16px] items-center overflow-clip relative shrink-0 w-full" data-node-id="78:2483" data-name="Title row">
+                <p className="[word-break:break-word] font-['Instrument_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#edf2fa] text-[26px] whitespace-nowrap" data-node-id="76:3172" style={{ fontVariationSettings: '"wdth" 100' }}>
+                  Appearance
+                </p>
+                <div className="flex-[1_0_0] h-[10px] min-w-px relative" data-node-id="78:2484" data-name="spacer" />
+                <div className="border border-[rgba(140,150,167,0.5)] border-solid content-stretch drop-shadow-[0px_4px_6px_rgba(0,0,0,0.25)] flex gap-[var(--kel-spacing-sm,8px)] h-[34px] items-center justify-center px-[var(--kel-spacing-lg,16px)] relative rounded-[8px] shrink-0" data-node-id="113:3007" data-name="Header action">
+                  <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[8px]">
+                    <img alt="" className="absolute max-w-none object-bottom rounded-[8px] size-full" src={imgHeaderAction} />
+                    <div className="absolute inset-0 rounded-[8px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(71, 122, 233, 0.06) 0%, rgba(121, 164, 255, 0) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.22) 0%, rgba(15, 45, 100, 0.22) 100%)" }} />
+                  </div>
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[20px] not-italic relative shrink-0 text-[#e4dccf] text-[14px] whitespace-nowrap" data-node-id="113:3009">
+                    Add Theme
+                  </p>
+                  <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+                </div>
+              </div>
+            </div>
+            <div className="border border-[rgba(221,233,255,0.5)] border-solid content-stretch drop-shadow-[0px_10px_15px_rgba(0,0,0,0.3)] flex flex-col gap-[10px] items-start px-[20px] py-[16px] relative rounded-[16px] shrink-0 w-full" data-node-id="76:3173" data-name="Panel / Theme">
+              <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[16px]">
+                <img alt="" className="absolute max-w-none object-bottom rounded-[16px] size-full" src={imgPanelTheme} />
+                <div className="absolute inset-0 rounded-[16px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(221, 233, 255, 0.02) 0%, rgba(221, 233, 255, 0) 30%, rgba(221, 233, 255, 0) 100%), linear-gradient(90deg, rgba(159, 195, 255, 0.05) 0%, rgba(159, 195, 255, 0.05) 100%)" }} />
+              </div>
+              <div className="content-stretch flex items-center overflow-clip relative shrink-0 w-full" data-node-id="76:3174" data-name="Panel header">
+                <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px overflow-clip relative" data-node-id="76:3175" data-name="Titles">
+                  <p className="[word-break:break-word] font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#ffc481] text-[15px] whitespace-nowrap" data-node-id="76:3176" style={{ fontVariationSettings: '"wdth" 100' }}>
+                    Theme
+                  </p>
+                </div>
+              </div>
+              <div className="content-stretch flex flex-col items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3179" data-name="Content">
+                <div className="content-stretch flex gap-[14px] items-start overflow-clip relative shrink-0" data-node-id="76:3180" data-name="Themes">
+                  <div className="bg-[#eef2f8] border border-[rgba(191,216,255,0.2)] border-solid content-stretch flex flex-col gap-[8px] h-[116px] items-start overflow-clip pb-[8px] pt-[10px] px-[10px] relative rounded-[10px] shrink-0 w-[200px]" data-node-id="76:3181" data-name="Theme card">
+                    <div className="content-stretch flex flex-[1_0_0] gap-[4px] items-start min-h-px overflow-clip relative w-full" data-node-id="I76:3181;42:770" data-name="Mini">
+                      <div className="bg-white h-full relative rounded-[3px] shrink-0 w-[40px]" data-node-id="I76:3181;42:771" data-name="Mini sidebar" />
+                      <div className="bg-[rgba(255,255,255,0.35)] content-stretch flex flex-[1_0_0] flex-col gap-[4px] h-full items-start min-w-px overflow-clip pl-[6px] pt-[6px] relative rounded-[3px]" data-node-id="I76:3181;42:772" data-name="Mini main">
+                        <div className="bg-[#dde4ef] h-[3px] relative rounded-[1.5px] shrink-0 w-[70px]" data-node-id="I76:3181;42:773" data-name="Rectangle" />
+                        <div className="bg-[#dde4ef] h-[3px] relative rounded-[1.5px] shrink-0 w-[44px]" data-node-id="I76:3181;42:774" data-name="Rectangle" />
+                        <div className="bg-[#dde4ef] h-[3px] relative rounded-[1.5px] shrink-0 w-[58px]" data-node-id="I76:3181;42:775" data-name="Rectangle" />
+                      </div>
+                    </div>
+                    <div className="content-stretch flex items-center overflow-clip relative shrink-0 w-full" data-node-id="I76:3181;42:776" data-name="Foot">
+                      <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="I76:3181;42:777">
+                        Light
+                      </p>
+                      <div className="flex-[1_0_0] h-[10px] min-w-px relative" data-node-id="I76:3181;42:778" data-name="Frame" />
+                    </div>
+                  </div>
+                  <ThemeCard className="bg-[#0b1a36] border-[1.5px] border-[rgba(127,160,255,0.9)] border-solid content-stretch flex flex-col gap-[8px] h-[116px] items-start overflow-clip pb-[8px] pt-[10px] px-[10px] relative rounded-[10px] shadow-[0px_0px_12px_0px_rgba(47,107,224,0.4)] shrink-0 w-[200px]" state theme="Dark" />
+                  <ThemeCard className="bg-[#0b1a36] border border-[rgba(191,216,255,0.2)] border-solid content-stretch flex flex-col gap-[8px] h-[116px] items-start overflow-clip pb-[8px] pt-[10px] px-[10px] relative rounded-[10px] shrink-0 w-[200px]" theme="System" />
+                </div>
+              </div>
+              <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.06)]" />
+            </div>
+            <div className="border border-[rgba(221,233,255,0.5)] border-solid content-stretch drop-shadow-[0px_10px_15px_rgba(0,0,0,0.3)] flex flex-col gap-[10px] items-start px-[20px] py-[16px] relative rounded-[16px] shrink-0 w-full" data-node-id="76:3184" data-name="Panel / Theme colors">
+              <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[16px]">
+                <img alt="" className="absolute max-w-none object-bottom rounded-[16px] size-full" src={imgPanelThemeColors} />
+                <div className="absolute inset-0 rounded-[16px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(221, 233, 255, 0.02) 0%, rgba(221, 233, 255, 0) 30%, rgba(221, 233, 255, 0) 100%), linear-gradient(90deg, rgba(159, 195, 255, 0.05) 0%, rgba(159, 195, 255, 0.05) 100%)" }} />
+              </div>
+              <div className="content-stretch flex gap-[16px] items-center overflow-clip relative shrink-0 w-full" data-node-id="76:3185" data-name="Panel header">
+                <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px overflow-clip relative" data-node-id="76:3186" data-name="Titles">
+                  <p className="[word-break:break-word] font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#ffc481] text-[15px] whitespace-nowrap" data-node-id="76:3187" style={{ fontVariationSettings: '"wdth" 100' }}>
+                    Theme colors
+                  </p>
+                </div>
+                <div className="content-stretch flex gap-[var(--kel-spacing-sm,8px)] h-[34px] items-center justify-center px-[4px] relative rounded-[var(--kel-radius-md,8px)] shrink-0" data-node-id="76:3189" data-name="Action">
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[20px] not-italic relative shrink-0 text-[#9fc3ff] text-[14px] whitespace-nowrap" data-node-id="I76:3189;40:733">
+                    Restore all colors
+                  </p>
+                </div>
+              </div>
+              <div className="content-stretch flex flex-col items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3190" data-name="Content">
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="113:2997" data-name="Color row">
+                  <div className="bg-[#0a1e42] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="113:2998" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="113:2999">
+                    App background
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="113:3000" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="113:3001">
+                      #0a1e42
+                    </p>
+                  </div>
+                  <div className="border border-[rgba(140,150,167,0.5)] border-solid content-stretch drop-shadow-[0px_4px_6px_rgba(0,0,0,0.25)] flex gap-[var(--kel-spacing-sm,8px)] h-[28px] items-center justify-center px-[var(--kel-spacing-lg,16px)] relative rounded-[8px] shrink-0" data-node-id="113:3010" data-name="Reset">
+                    <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[8px]">
+                      <img alt="" className="absolute max-w-none object-bottom rounded-[8px] size-full" src={imgReset} />
+                      <div className="absolute inset-0 rounded-[8px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(71, 122, 233, 0.06) 0%, rgba(121, 164, 255, 0) 100%), linear-gradient(90deg, rgba(15, 45, 100, 0.22) 0%, rgba(15, 45, 100, 0.22) 100%)" }} />
+                    </div>
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[20px] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="113:3012">
+                      Reset
+                    </p>
+                    <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.1)]" />
+                  </div>
+                  <Tag className="bg-[rgba(255,194,96,0.14)] border border-[rgba(255,194,96,0.35)] border-solid content-stretch flex h-[20px] items-center px-[8px] relative rounded-[6px] shrink-0" />
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3192" data-name="Color row">
+                  <div className="bg-[#0f2d64] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3192;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3192;42:24">
+                    Panels
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3192;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3192;42:26">
+                      #0f2d64
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3193" data-name="Color row">
+                  <div className="bg-[#1b3568] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3193;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3193;42:24">
+                    Elevated surfaces
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3193;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3193;42:26">
+                      #1b3568
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3194" data-name="Color row">
+                  <div className="bg-[#edf2fa] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3194;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3194;42:24">
+                    Primary text
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3194;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3194;42:26">
+                      #edf2fa
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3195" data-name="Color row">
+                  <div className="bg-[#c4d4e8] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3195;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3195;42:24">
+                    Secondary text
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3195;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3195;42:26">
+                      #c4d4e8
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3196" data-name="Color row">
+                  <div className="bg-[#2a4478] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3196;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3196;42:24">
+                    Borders
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3196;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3196;42:26">
+                      #2a4478
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3197" data-name="Color row">
+                  <div className="bg-[#7fa0ff] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3197;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3197;42:24">
+                    Accent
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3197;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3197;42:26">
+                      #7fa0ff
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3198" data-name="Color row">
+                  <div className="bg-[#7ee0a8] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3198;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3198;42:24">
+                    Success
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3198;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3198;42:26">
+                      #7ee0a8
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3199" data-name="Color row">
+                  <div className="bg-[#fcac51] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3199;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3199;42:24">
+                    Warning
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3199;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3199;42:26">
+                      #fcac51
+                    </p>
+                  </div>
+                </div>
+                <div className="content-stretch flex gap-[14px] h-[36px] items-center relative shrink-0 w-full" data-node-id="76:3200" data-name="Color row">
+                  <div className="bg-[#f27d7d] border border-[rgba(191,216,255,0.3)] border-solid h-[18px] relative rounded-[4px] shrink-0 w-[28px]" data-node-id="I76:3200;42:23" data-name="Swatch" />
+                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] w-[160px]" data-node-id="I76:3200;42:24">
+                    Error
+                  </p>
+                  <div className="bg-[rgba(191,216,255,0.07)] border border-[rgba(191,216,255,0.16)] border-solid content-stretch flex h-[30px] items-center overflow-clip px-[10px] relative rounded-[8px] shrink-0 w-[120px]" data-node-id="I76:3200;42:25" data-name="Hex">
+                    <p className="[word-break:break-word] font-['JetBrains_Mono:Regular'] font-normal leading-[normal] relative shrink-0 text-[#edf2fa] text-[13px] whitespace-nowrap" data-node-id="I76:3200;42:26">
+                      #f27d7d
+                    </p>
+                  </div>
+                </div>
+                <Link className="content-stretch flex items-start relative shrink-0" label="More colors (20)" />
+              </div>
+              <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.06)]" />
+            </div>
+            <div className="border border-[rgba(221,233,255,0.5)] border-solid content-stretch drop-shadow-[0px_10px_15px_rgba(0,0,0,0.3)] flex flex-col gap-[10px] items-start px-[20px] py-[16px] relative rounded-[16px] shrink-0 w-full" data-node-id="76:3202" data-name="Panel / Fonts">
+              <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[16px]">
+                <img alt="" className="absolute max-w-none object-bottom rounded-[16px] size-full" src={imgPanelFonts} />
+                <div className="absolute inset-0 rounded-[16px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(221, 233, 255, 0.02) 0%, rgba(221, 233, 255, 0) 30%, rgba(221, 233, 255, 0) 100%), linear-gradient(90deg, rgba(159, 195, 255, 0.05) 0%, rgba(159, 195, 255, 0.05) 100%)" }} />
+              </div>
+              <div className="content-stretch flex gap-[16px] items-center overflow-clip relative shrink-0 w-full" data-node-id="76:3203" data-name="Panel header">
+                <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px overflow-clip relative" data-node-id="76:3204" data-name="Titles">
+                  <p className="[word-break:break-word] font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#ffc481] text-[15px] whitespace-nowrap" data-node-id="76:3205" style={{ fontVariationSettings: '"wdth" 100' }}>
+                    Fonts
+                  </p>
+                </div>
+              </div>
+              <div className="content-stretch flex flex-col items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3208" data-name="Content">
+                <div className="border-[rgba(191,216,255,0.08)] border-b border-solid content-stretch flex gap-[24px] items-center py-[14px] relative shrink-0 w-full" data-node-id="125:1967" data-name="Setting row">
+                  <div className="content-stretch flex flex-[1_0_0] flex-col gap-[4px] items-start min-w-px overflow-clip relative" data-node-id="125:1968" data-name="Text">
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="125:1969">
+                      Global
+                    </p>
+                  </div>
+                  <Stepper className="content-stretch flex gap-[6px] h-[100px] items-center relative shrink-0" />
+                </div>
+                <div className="border-[rgba(191,216,255,0.08)] border-b border-solid content-stretch flex gap-[24px] items-center py-[14px] relative shrink-0 w-full" data-node-id="125:1972" data-name="Setting row">
+                  <div className="content-stretch flex flex-[1_0_0] flex-col gap-[4px] items-start min-w-px overflow-clip relative" data-node-id="125:1973" data-name="Text">
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="125:1974">
+                      Chat
+                    </p>
+                  </div>
+                  <Stepper className="content-stretch flex gap-[6px] h-[100px] items-center relative shrink-0" />
+                </div>
+                <div className="border-[rgba(191,216,255,0.08)] border-b border-solid content-stretch flex gap-[24px] items-center py-[14px] relative shrink-0 w-full" data-node-id="125:1977" data-name="Setting row">
+                  <div className="content-stretch flex flex-[1_0_0] flex-col gap-[4px] items-start min-w-px overflow-clip relative" data-node-id="125:1978" data-name="Text">
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="125:1979">
+                      Markdown
+                    </p>
+                  </div>
+                  <Stepper className="content-stretch flex gap-[6px] h-[100px] items-center relative shrink-0" value="16" />
+                </div>
+                <div className="border-[rgba(191,216,255,0.08)] border-b border-solid content-stretch flex gap-[24px] items-center py-[14px] relative shrink-0 w-full" data-node-id="125:1982" data-name="Setting row">
+                  <div className="content-stretch flex flex-[1_0_0] flex-col gap-[4px] items-start min-w-px overflow-clip relative" data-node-id="125:1983" data-name="Text">
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[normal] not-italic relative shrink-0 text-[#edf2fa] text-[14px] whitespace-nowrap" data-node-id="125:1984">
+                      Code
+                    </p>
+                  </div>
+                  <Stepper className="content-stretch flex gap-[6px] h-[100px] items-center relative shrink-0" />
+                </div>
+              </div>
+              <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.06)]" />
+            </div>
+            <div className="border border-[rgba(221,233,255,0.5)] border-solid content-stretch drop-shadow-[0px_10px_15px_rgba(0,0,0,0.3)] flex flex-col gap-[10px] items-start px-[20px] py-[16px] relative rounded-[16px] shrink-0 w-full" data-node-id="76:3213" data-name="Panel / Scale">
+              <div aria-hidden className="absolute inset-0 pointer-events-none rounded-[16px]">
+                <img alt="" className="absolute max-w-none object-bottom rounded-[16px] size-full" src={imgPanelScale} />
+                <div className="absolute inset-0 rounded-[16px]" style={{ backgroundImage: "linear-gradient(180deg, rgba(221, 233, 255, 0.02) 0%, rgba(221, 233, 255, 0) 30%, rgba(221, 233, 255, 0) 100%), linear-gradient(90deg, rgba(159, 195, 255, 0.05) 0%, rgba(159, 195, 255, 0.05) 100%)" }} />
+              </div>
+              <div className="content-stretch flex gap-[16px] items-center overflow-clip relative shrink-0 w-full" data-node-id="76:3214" data-name="Panel header">
+                <div className="content-stretch flex flex-[1_0_0] flex-col gap-[6px] items-start min-w-px overflow-clip relative" data-node-id="76:3215" data-name="Titles">
+                  <p className="[word-break:break-word] font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#ffc481] text-[15px] whitespace-nowrap" data-node-id="76:3216" style={{ fontVariationSettings: '"wdth" 100' }}>
+                    Scale
+                  </p>
+                </div>
+              </div>
+              <div className="content-stretch flex flex-col items-start overflow-clip relative shrink-0 w-full" data-node-id="76:3219" data-name="Content">
+                <Slider className="content-stretch flex gap-[10px] h-[24px] items-center relative shrink-0 w-full" />
+              </div>
+              <div className="absolute inset-0 pointer-events-none rounded-[inherit] shadow-[inset_0px_1px_0px_0px_rgba(255,255,255,0.06)]" />
+            </div>
+          </div>
+        </div>
+        <div className="absolute bg-gradient-to-b bottom-0 from-[rgba(10,20,48,0)] h-[180px] left-[11.15%] right-[11.15%] to-[rgba(10,20,48,0.85)] via-[45%] via-[rgba(10,20,48,0.35)]" data-node-id="76:3221" data-name="Bottom fade" />
+      </div>
+    </div>
+  );
+}
+
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+
+These styles are contained in the design: Glass/Lit: Effect(type: INNER_SHADOW, color: #9AB2EA80, offset: (-1, -1), radius: 6, spread: 0); Effect(type: DROP_SHADOW, color: #2F5FCC47, offset: (0, 2), radius: 14, spread: 0), Glass/Rim: , Label/M: Font(family: "Inter", style: Medium, size: 14, weight: 500, lineHeight: 20, letterSpacing: 0).
+
+Component descriptions: The following components have usage descriptions or documentation links defined in Figma. These descriptions provide important context about the intended usage, best practices, and any constraints for each component. Follow these guidelines when implementing or using these components.
+
+## Settings nav v2
+**Node ID:** 99:89
+
+Settings sidebar, quiet back row: New Chat, then "← Back to Kel" as a regular nav row (arrow in ice, regular weight), then the sections.
+
+## Brand/Kel mark
+**Node ID:** 10:2
+
+Kel K mark — raster crop from the root mock. Replace fill with the SVG when available.
+
+## Button
+**Node ID:** 6:26
+
+Primary = the one accent action per view. Secondary = quiet glass control. Ghost = inline. Danger = destructive (Clear, Restore). Link = text action (Reset, Go to configure).
+
+## Nav Item
+**Node ID:** 6:42
+
+Sidebar row for nav links, pinned chats, projects and recents. Swap Icon per section (chat/folder/projects…). Active = current view only; Hover = pointer.
+
+## Theme card
+**Node ID:** 42:825
+
+Theme picker tile. Light / Dark / Follow System × Selected. Selected shows the accent ring and check.
+
+## Color row
+**Node ID:** 42:22
+
+Theme color editor row. Swatch fill is set per instance. Changed = shows Reset + tag.
+
+Images and SVGs will be stored as constants, e.g. const image = 'https://www.figma.com/api/mcp/asset/550e8400-e29b-41d4-a716-446655440000.png'. These constants will be used in the code as the source for the image, ex: <img src={image} />. Image assets are stored on a remote server for 7 days and can be fetched using the provided URLs until they expire.

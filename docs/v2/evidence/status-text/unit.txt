@@ -1,0 +1,9 @@
+
+ RUN  v4.1.0 C:/Users/Nick/Desktop/Kel/kel-v2-shell/desktop
+
+·············
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  09:06:24
+   Duration  46.37s (transform 279ms, setup 39ms, import 35.76s, tests 57ms, environment 20.32s)

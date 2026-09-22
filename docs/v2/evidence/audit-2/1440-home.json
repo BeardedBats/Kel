@@ -1,0 +1,44 @@
+{
+  "width": 1440,
+  "height": 900,
+  "scrollWidth": 1440,
+  "clientWidth": 1440,
+  "boxes": {
+    ".layout-sider": {
+      "x": 0,
+      "y": 0,
+      "width": 256,
+      "height": 900,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "0px"
+    },
+    ".kel-shell-home-header": {
+      "x": 388,
+      "y": 22,
+      "width": 920,
+      "height": 56,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "0px"
+    },
+    ".chat-layout-header": null,
+    ".sendbox-panel": null,
+    ".kel-shell-composer": {
+      "x": 388,
+      "y": 786,
+      "width": 920,
+      "height": 60,
+      "font": "16px / 25px \"SF Pro Text\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "borderRadius": "12px"
+    },
+    ".kel-page": null,
+    ".settings-page-content": null,
+    ".kel-shell-model-modal": null,
+    ".kel-shell-ramble > aside": null,
+    ".kel-shell-ramble > main": null,
+    ".kel-shell-appearance > div": null,
+    "[data-testid=theme-colors-section]": null,
+    ".kel-shell-source-card-head": null,
+    "[data-settings-id=model]": null,
+    "[data-settings-id=appearance]": null
+  }
+}

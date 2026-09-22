@@ -56,7 +56,7 @@ const GuidModelSelector: React.FC<GuidModelSelectorProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const defaultModelLabel = t('common.defaultModel');
+  const defaultModelLabel = 'Automatic';
 
   // 过滤掉被禁用的 provider
   const enabledModelList = React.useMemo(() => {

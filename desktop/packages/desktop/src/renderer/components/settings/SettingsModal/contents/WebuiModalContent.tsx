@@ -1,3 +1,4 @@
+import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -35,7 +36,7 @@ const PreferenceRow: React.FC<{
   extra?: React.ReactNode;
   children: React.ReactNode;
 }> = ({ label, description, extra, children }) => (
-  <div className='flex items-center justify-between gap-12px py-12px'>
+  <div className='kel-shell-webui-row flex items-center justify-between gap-12px py-12px'>
     <div className='min-w-0 flex-1'>
       <div className='flex items-center gap-8px'>
         <span className='text-14px text-t-primary'>{label}</span>
@@ -558,7 +559,7 @@ const WebuiModalContent: React.FC = () => {
       <div className='flex flex-col h-full w-full'>
         <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
           <div className='space-y-16px'>
-            <h2 className='text-20px font-500 text-t-primary m-0'>{t('settings.channels', 'Channels')}</h2>
+
             <Suspense fallback={<div className='text-13px text-t-secondary'>{t('common.loading')}</div>}>
               <ChannelModalContentLazy />
             </Suspense>
@@ -570,28 +571,14 @@ const WebuiModalContent: React.FC = () => {
 
   const webuiPanel = (
     <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
-      <div className='space-y-12px px-[12px] md:px-[28px]'>
+      <div className={isPageMode ? 'kel-shell-webui-panel' : 'space-y-12px px-[12px] md:px-[28px]'}>
         {/* 标题 / Title */}
-        <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>
+        {!isPageMode && <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>}
 
         {/* 描述说明 / Description */}
-        <div className='space-y-6px'>
-          <p className='m-0 text-13px text-t-secondary leading-relaxed'>{t('settings.webui.description')}</p>
-          <div className='flex flex-wrap gap-x-12px gap-y-6px'>
-            {[
-              t('settings.webui.enable', { defaultValue: 'Enable WebUI' }),
-              t('settings.webui.accessUrl', { defaultValue: 'Access URL' }),
-              t('settings.webui.allowRemote', { defaultValue: 'Allow Remote Access' }),
-            ].map((stepLabel, idx) => (
-              <div key={stepLabel} className='inline-flex items-center gap-6px'>
-                <span className='inline-flex items-center justify-center w-16px h-16px rd-50% text-10px font-600 bg-[rgba(var(--primary-6),0.12)] text-[rgb(var(--primary-6))]'>
-                  {idx + 1}
-                </span>
-                <CheckOne theme='outline' size='12' className='text-[rgb(var(--primary-6))]' />
-                <span className='text-12px text-t-secondary'>{stepLabel}</span>
-              </div>
-            ))}
-          </div>
+        <div className='kel-shell-webui-intro space-y-6px'>
+          <p className='m-0 text-13px text-t-secondary leading-relaxed'>Use Kel as your "24/7 Remote Assistant" — arrange tasks from any remote device, anytime, anywhere.</p>
+          <div className='kel-shell-source-step'><span>{`Step ${!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3} of 3`}</span><span>·</span><strong>{!webuiEnabled ? 'Enable WebUI' : !allowRemotePreference ? 'Access URL' : 'Allow Remote Access'}</strong></div>
         </div>
 
         {/* Messaging 强引导入口 / Messaging primary entry — disabled, kept for future use
@@ -610,7 +597,8 @@ const WebuiModalContent: React.FC = () => {
         */}
 
         {/* WebUI 服务卡片 / WebUI Service Card */}
-        <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+          <ShellSourceCardHeader title='WebUI' />
           {/* WebUI 引导提示 / WebUI hint */}
           <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
             <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
@@ -656,60 +644,22 @@ const WebuiModalContent: React.FC = () => {
           {/* 允许局域网访问 / Allow LAN Access */}
           <PreferenceRow
             label={t('settings.webui.allowRemote')}
-            description={<span className='text-t-secondary'>{t('settings.webui.allowRemoteDesc')}</span>}
           >
             <Switch checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
           </PreferenceRow>
         </div>
 
         {/* 登录信息卡片 / Login Info Card */}
-        <div className='px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
-          <div className='text-14px font-500 mb-8px text-t-primary'>{t('settings.webui.loginInfo')}</div>
+        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
+          <ShellSourceCardHeader title='Login Info' />
 
-          {/* 账号 / Account */}
-          <div className='flex items-center justify-between gap-12px py-12px'>
-            <span className='text-14px text-t-secondary shrink-0'>{t('settings.webui.username')}:</span>
-            <div className='inline-flex items-center gap-8px rd-100px border border-line bg-fill-1 px-10px py-4px min-w-0'>
-              <span className='text-14px text-t-primary truncate'>{displayUsername}</span>
-              <Tooltip content={t('common.copy')}>
-                <Button
-                  type='text'
-                  size='mini'
-                  className='rd-100px !px-6px inline-flex items-center !h-24px'
-                  onClick={() => handleCopy(displayUsername)}
-                >
-                  <Copy size={14} />
-                </Button>
-              </Tooltip>
-              <Tooltip content={t('settings.webui.editUsernameTooltip')}>
-                <Button
-                  type='text'
-                  size='mini'
-                  className='rd-100px !px-6px inline-flex items-center !h-24px'
-                  onClick={handleResetUsername}
-                >
-                  <EditTwo size={14} />
-                </Button>
-              </Tooltip>
-            </div>
+          <div className='kel-shell-webui-row kel-shell-preference-row'>
+            <div><div>Username:</div></div>
+            <button type='button' className='kel-shell-credential-field' onClick={handleResetUsername} aria-label='Edit username'>{displayUsername}</button>
           </div>
-
-          {/* 密码 / Password */}
-          <div className='flex items-center justify-between gap-12px py-12px'>
-            <span className='text-14px text-t-secondary shrink-0'>{t('settings.webui.initialPassword')}:</span>
-            <div className='inline-flex items-center gap-8px rd-100px border border-line bg-fill-1 px-10px py-4px min-w-0'>
-              <span className='text-14px text-t-primary truncate'>{displayPassword}</span>
-              <Tooltip content={t('settings.webui.resetPasswordTooltip')}>
-                <Button
-                  type='text'
-                  size='mini'
-                  className='rd-100px !px-6px inline-flex items-center !h-24px'
-                  onClick={handleResetPassword}
-                >
-                  <EditTwo size={14} />
-                </Button>
-              </Tooltip>
-            </div>
+          <div className='kel-shell-webui-row kel-shell-preference-row'>
+            <div><div>Initial Password:</div></div>
+            <button type='button' className='kel-shell-credential-field' onClick={handleResetPassword} aria-label='Change password'>••••••</button>
           </div>
 
           {/* 二维码登录（仅服务器运行且允许远程访问时显示）/ QR Code Login (only when server running and remote access allowed) */}

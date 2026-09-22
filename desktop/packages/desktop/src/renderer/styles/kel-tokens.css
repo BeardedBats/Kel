@@ -255,48 +255,25 @@
   margin: var(--kel-space-2) 0;
 }
 
+/* Status labels follow the user's Figma reference: colored text without a container. */
 .kel-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border-radius: var(--kel-radius-chip);
-  padding: 2px 10px;
-  font-size: var(--kel-type-label);
-  font-weight: 600;
+  padding: 0;
+  min-height: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 600 14px/20px var(--kel-shell-heading, 'Instrument Sans', sans-serif);
+  color: var(--kel-text-2);
   white-space: nowrap;
 }
-.kel-chip__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.kel-chip--run {
-  background: var(--kel-run-bg);
-  color: var(--kel-run-fg);
-}
-.kel-chip--wait {
-  background: var(--kel-wait-bg);
-  color: var(--kel-wait-fg);
-}
-.kel-chip--ok {
-  background: var(--kel-ok-bg);
-  color: var(--kel-ok-fg);
-}
-.kel-chip--uncertain {
-  background: var(--kel-uncertain-bg);
-  color: var(--kel-uncertain-fg);
-  border: 1px dashed var(--kel-uncertain-border);
-}
-.kel-chip--failed {
-  background: var(--kel-failed-bg);
-  color: var(--kel-failed-fg);
-}
-.kel-chip--blocked {
-  background: var(--kel-blocked-bg);
-  color: var(--kel-blocked-fg);
-  border: 1px solid var(--kel-blocked-border);
-}
+.kel-chip__dot { display: none; }
+.kel-chip--run, .kel-chip--wait, .kel-chip--uncertain { color: var(--kel-status-attention-text, var(--kel-wait-fg)); }
+.kel-chip--ok { color: var(--kel-status-positive-text, var(--kel-ok-fg)); }
+.kel-chip--failed { color: var(--kel-failed-fg); }
+.kel-chip--blocked { color: var(--kel-blocked-fg); }
 
 .kel-btn {
   border-radius: var(--kel-radius-control);

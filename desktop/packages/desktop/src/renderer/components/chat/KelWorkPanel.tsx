@@ -1,5 +1,6 @@
 /** Kel work controls, using AionUI's Arco components and theme tokens. */
 import React, { useEffect, useState } from 'react';
+import { kelRequest as request } from '@/renderer/components/kel/kelApi';
 import { Badge, Button, Drawer, Modal, Popconfirm, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -89,12 +90,6 @@ type State = {
   approvals: { id: string; job_id: string; action: string }[];
   continuation?: ContinuationEntry[];
 };
-// The window.kelAPI shape is declared once, next to the client that uses it
-// (`components/kel/kelApi.ts`); this module deliberately does not declare it again.
-async function request<T>(route: string, body?: unknown): Promise<T> {
-  if (!window.kelAPI) throw Error('Kel connection is unavailable');
-  return (await window.kelAPI.request(route, body)) as T;
-}
 function previewText(result: Record<string, unknown>): string {
   if (result.continuation) return 'Continuation flow: ' + ((result.stages as string[]) || []).join(' → ');
   if (result.needs_project) return String(result.message || 'This recipe needs a project with a test command.');

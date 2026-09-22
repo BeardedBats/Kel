@@ -3,6 +3,7 @@
  * Class names come from renderer/styles/kel-tokens.css — components never carry ad-hoc values.
  */
 import React from 'react';
+import ShellSourceCardHeader, { sourceCard } from './ShellSourceCardHeader';
 import '@renderer/styles/kel-tokens.css';
 
 export type KelStatus =
@@ -102,10 +103,10 @@ export const KelTabs: React.FC<{
 );
 
 export const KelCard: React.FC<
-  React.PropsWithChildren<{ title?: string; chip?: React.ReactNode; actions?: React.ReactNode; className?: string }>
+  React.PropsWithChildren<{ id?: string; title?: string; chip?: React.ReactNode; actions?: React.ReactNode; className?: string }>
 > = ({ title, chip, actions, className, children, ...rest }) => (
-  <section className={`kel-card${className ? ` ${className}` : ''}`} {...(rest as Record<string, unknown>)}>
-    {(title || chip || actions) && (
+  <section className={`kel-card${sourceCard(title) ? ' kel-card--source' : ''}${className ? ` ${className}` : ''}`} {...(rest as Record<string, unknown>)}>
+    {sourceCard(title) ? <ShellSourceCardHeader title={title!} {...sourceCard(title)!} /> : (title || chip || actions) && (
       <div className="kel-row">
         {title && <h2 className="kel-h2">{title}</h2>}
         {chip}
@@ -147,7 +148,7 @@ export const KelEmpty: React.FC<{ title: string; why: string; actionLabel?: stri
 }) => (
   <div className="kel-empty">
     <strong>{title}</strong>
-    {why}
+    <span className='kel-empty-description'>{why}</span>
     {actionLabel && onAction && (
       <div className="kel-row" style={{ marginTop: 12 }}>
         <KelButton variant="primary" onClick={onAction}>

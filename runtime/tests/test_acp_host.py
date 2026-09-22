@@ -317,6 +317,17 @@ class ACPHostTests(unittest.TestCase):
             self.host.dispatch('session/new', {'cwd': str(self.root)})
         self.assertEqual([path for path, _ in self.requests], ['/api/conversation'])
 
+    def test_standalone_cli_initializes_without_a_package_context(self):
+        script = Path(__file__).parents[1] / 'kel' / 'acp_host.py'
+        request = json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {}}) + '\n'
+        result = subprocess.run([sys.executable, str(script), '--data', str(self.root)],
+                                input=request, text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        reply = json.loads(result.stdout)
+        self.assertNotIn('error', reply)
+        self.assertEqual(reply['result']['protocolVersion'], 1)
+        self.assertEqual(reply['result']['agentInfo']['name'], 'kel')
+
     def test_cli_uses_utf8_even_with_windows_legacy_encoding(self):
         self.state['messages'] = [{'seq': 1, 'role': 'assistant', 'text': 'Saved — café 日本語'}]
         request = json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': 'session/load',

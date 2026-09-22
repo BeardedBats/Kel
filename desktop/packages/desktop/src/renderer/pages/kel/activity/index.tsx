@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel D14 — Activity: an optional, high-level view of what Kel is doing, built entirely from state
  * other surfaces already expose. Permission grants, internal counters, worker identifiers, routing
@@ -59,7 +60,7 @@ const KelActivityPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className='kel-page'>
+      <div className='kel-page kel-shell-activity'>
         <KelFailureCard error={error} onRetry={() => void load()} />
       </div>
     );
@@ -73,17 +74,13 @@ const KelActivityPage: React.FC = () => {
   const waiting = continuation.slice(0, 3);
 
   return (
-    <div className='kel-page'>
+    <div className='kel-page kel-shell-activity'>
       <div className='kel-page__head'>
-        <h1 className='kel-title'>Activity</h1>
-        <p className='kel-sub'>
-          {providers.length === 1 ? '1 provider connected' : `${providers.length} providers connected`}
-        </p>
+        <div><ShellWorkspaceLink /><h1 className='kel-h1'>Activity</h1></div>
       </div>
 
       <KelCard
         title='Happening now'
-        chip={<span className='kel-meta'>{active.length === 1 ? 'one piece of work' : `${active.length} pieces of work`}</span>}
       >
         {active.length === 0 ? (
           <KelEmpty
@@ -103,11 +100,10 @@ const KelActivityPage: React.FC = () => {
 
       <KelCard
         title='Waiting on you'
-        chip={<span className='kel-meta'>{waiting.length === 0 ? 'nothing waiting' : `${waiting.length} waiting`}</span>}
       >
         {waiting.length === 0 ? (
           <KelEmpty
-            title='Nothing needs you right now.'
+            title='All clear.'
             why='Approvals and offers to continue land here when they genuinely need a person.'
           />
         ) : (
@@ -128,10 +124,9 @@ const KelActivityPage: React.FC = () => {
 
       <KelCard
         title='Recently finished'
-        chip={<span className='kel-meta'>{finished.length === 0 ? 'none yet' : `last ${finished.length}`}</span>}
       >
         {finished.length === 0 ? (
-          <KelEmpty title='Nothing has finished yet.' why='Completed work shows up here with its outcome.' />
+          <KelEmpty title='All clear.' why='Completed work shows up here with its outcome.' />
         ) : (
           finished.map((job) => (
             <Row

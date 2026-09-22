@@ -206,7 +206,7 @@ class ACPHost:
 
     def dispatch(self, method, params):
         if method == 'initialize':
-            from .service import ENGINE_VERSION
+            from kel.service import ENGINE_VERSION
             return {'protocolVersion': 1, 'agentInfo': {'name': 'kel', 'title': 'Kel', 'version': ENGINE_VERSION},
                     'agentCapabilities': {'loadSession': True, 'promptCapabilities': {'image': True, 'embeddedContext': True}},
                     'authMethods': []}

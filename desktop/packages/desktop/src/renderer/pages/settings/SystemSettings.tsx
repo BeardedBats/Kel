@@ -23,7 +23,6 @@ const SystemSettings: React.FC = () => {
       ) : (
         <>
           <KelDataCard />
-          <KelKeepAwakeCard />
           <SystemModalContent />
         </>
       )}

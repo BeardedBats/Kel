@@ -1,9 +1,10 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Projects workspace — Knowledge (memory) · Map · Recipes.
  * Reads `/api/work`; actions go through `/api/memory` and `/api/map`.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   KelButton,
   KelCard,
@@ -11,7 +12,6 @@ import {
   KelLoading,
   KelSection,
   KelTable,
-  KelTabs,
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
@@ -28,12 +28,6 @@ const viewFromPath = (path: string): View => {
 
 export default function KelProjectsPage() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const [view, setView] = useState<View>(viewFromPath(pathname));
-  useEffect(() => {
-    setView(viewFromPath(pathname));
-  }, [pathname]);
-
   const [work, setWork] = useState<KelWork | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -73,6 +67,10 @@ export default function KelProjectsPage() {
     [load]
   );
 
+  useEffect(() => {
+    if (work && ['/projects/map', '/projects/recipes'].includes(pathname)) document.getElementById(`project-${viewFromPath(pathname)}`)?.scrollIntoView({ block: 'start' });
+  }, [pathname, work]);
+
   const records = work?.memory.records ?? [];
   const proposals = work?.memory.proposals ?? [];
   const conflicts = work?.memory.conflicts ?? [];
@@ -87,39 +85,21 @@ export default function KelProjectsPage() {
       <main className="kel-page" id="kel-projects-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Projects</h1>
-            <p className="kel-sub">
-              {work
-                ? `${work.project_id === 'default' ? 'General' : work.project_id} · ${records.length} knowledge records · map ${work.map ? 'v' + work.map.version : '—'} · ${entries.length} recipes`
-                : 'Loading project context…'}
-            </p>
+            <ShellWorkspaceLink /><h1 className="kel-h1">Projects</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()}>
-            Reload
+          <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
+            Kel suggests
           </KelButton>
         </div>
-
-        <KelTabs
-          tabs={[
-            { id: 'knowledge', label: 'Knowledge' },
-            { id: 'map', label: 'Map' },
-            { id: 'recipes', label: 'Recipes' },
-          ]}
-          active={view}
-          onSelect={(id) => {
-            setView(id as View);
-            navigate('/projects/' + id);
-          }}
-        />
 
         {note && <p className="kel-meta">{note}</p>}
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !work && <KelLoading rows={4} />}
 
-        {!error && work && view === 'knowledge' && (
+        {!error && work && (
           <>
-            <KelCard title="Knowledge">
+            <KelCard id="project-knowledge" title="Knowledge">
               {records.length === 0 ? (
                 <KelEmpty
                   title="No saved knowledge in this project yet."
@@ -181,7 +161,7 @@ export default function KelProjectsPage() {
             </KelCard>
             {proposals.length > 0 && (
               <KelCard
-                title="Kel suggests"
+                id="project-suggestions" title="Kel suggests"
                 chip={
                   <span className="kel-meta">
                     {proposals.length === 1
@@ -240,18 +220,19 @@ export default function KelProjectsPage() {
                 )}
               </KelCard>
             )}
-            <KelSection title="Conflicts">
+            {conflicts.length > 0 && <KelSection title="Conflicts">
               {conflicts.length === 0 ? (
                 <p className="kel-meta">No conflicting knowledge for this project.</p>
               ) : (
                 <pre className="kel-code">{JSON.stringify(conflicts.slice(0, 4), null, 2)}</pre>
               )}
-            </KelSection>
+            </KelSection>}
           </>
         )}
 
-        {!error && work && view === 'map' && (
+        {!error && work && (
           <KelCard
+            id="project-map"
             title={`Project map${work.map ? ` · v${work.map.version}` : ''}`}
             actions={
               work.map ? (
@@ -289,8 +270,8 @@ export default function KelProjectsPage() {
           </KelCard>
         )}
 
-        {!error && work && view === 'recipes' && (
-          <KelCard title="Recipes">
+        {!error && work && (
+          <KelCard id="project-recipes" title="Recipes">
             {entries.length === 0 ? (
               <KelEmpty
                 title="No recipes in this project yet."

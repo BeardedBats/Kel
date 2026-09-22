@@ -1,3 +1,4 @@
+import ShellSettingsIcon from '@renderer/components/kel/ShellSettingsIcon';
 // Modified for Kel: keep appearance and archived conversations in scope.
 import FlexFullContainer from '@/renderer/components/layout/FlexFullContainer';
 import { isElectronDesktop, resolveExtensionAssetUrl } from '@/renderer/utils/platform';
@@ -114,7 +115,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
     };
 
     // Start with ordered builtin IDs, hiding desktop-only tabs in browser mode
-    const result: SiderItem[] = BUILTIN_TAB_IDS.filter((id) => isDesktop || String(id) !== 'pet').map(
+    const result: SiderItem[] = BUILTIN_TAB_IDS.map(
       (id) => builtinMap[id]
     );
 
@@ -212,7 +213,9 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
           <React.Fragment key={item.id}>
             {groupHeader}
             <Tooltip {...siderTooltipProps} content={item.label} position='right'>
-              <div
+              <button
+                type="button"
+                aria-current={isSelected ? "page" : undefined}
                 data-settings-id={item.id}
                 data-settings-path={item.path}
                 className={classNames(
@@ -231,7 +234,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
               >
                 {/* Leading icon — 22px slot to align with main sider rows */}
                 <span className='size-22px flex items-center justify-center shrink-0 line-height-0'>
-                  {item.isImageIcon ? (
+                  {BUILTIN_TAB_IDS.includes(item.id as typeof BUILTIN_TAB_IDS[number]) ? <ShellSettingsIcon name={item.id} /> : item.isImageIcon ? (
                     <span className='w-16px h-16px flex items-center justify-center'>{item.icon}</span>
                   ) : (
                     React.cloneElement(
@@ -255,7 +258,7 @@ const SettingsSider: React.FC<{ collapsed?: boolean; tooltipEnabled?: boolean }>
                     {item.label}
                   </div>
                 </FlexFullContainer>
-              </div>
+              </button>
             </Tooltip>
           </React.Fragment>
         );

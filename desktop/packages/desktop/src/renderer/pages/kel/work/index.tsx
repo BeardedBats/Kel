@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Work Center — every job, its real state, its wait reason, and its budget.
  * Read-only over `/api/state` (jobs) and `/api/team` (assignments); the engine owns all state.
@@ -178,29 +179,23 @@ const WorkCenter: React.FC = () => {
       <main className="kel-page" id="kel-work-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Work</h1>
-            <p className="kel-sub">
-              {jobs === null
-                ? 'Loading jobs…'
-                : `${jobs.length} active · ${continuation.length} waiting to continue · ${waiting} need you`}
-            </p>
+            <ShellWorkspaceLink /><h1 className="kel-h1">Work</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()}>
-            Reload
+          <KelButton variant="secondary" disabled={!activeJob || busy} onClick={() => activeJob && void act('Recipe draft', async () => { setRecipeDraft(await kelRecipePropose(activeJob.id)); })}>
+            Save as a recipe
           </KelButton>
         </div>
 
-        <NeedsAttention />
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && jobs === null && <KelLoading rows={4} />}
 
         {!error && jobs !== null && jobs.length === 0 && continuation.length === 0 && (
-          <KelEmpty
+          <KelCard title="Jobs"><KelEmpty
             title="No unfinished work in this project."
-            why="Jobs appear here as soon as Kel accepts a task, and they stay until they are verified or cancelled."
-          />
+            why="Kel keeps unfinished jobs here so you can pick them up."
+          /></KelCard>
         )}
 
         {!error && jobs !== null && jobs.length > 0 && (
@@ -370,7 +365,7 @@ const WorkCenter: React.FC = () => {
         <KelCard title="Waiting to continue">
           {continuation.length === 0 ? (
             <KelEmpty
-              title="Nothing waiting to continue."
+              title="Nothing."
               why="When a job pauses, is interrupted, or waits on you, it appears here with the exact reason."
             />
           ) : (

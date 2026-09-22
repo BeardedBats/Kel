@@ -34,7 +34,7 @@ describe('Activity surface (D14)', () => {
     expect(activityPage).toContain('Happening now');
     expect(activityPage).toContain('Waiting on you');
     expect(activityPage).toContain('Recently finished');
-    expect(activityPage).toContain('providers connected');
+    expect(activityPage).not.toContain('providers connected');
     expect(activityPage).toContain('workLabelFor(job.id, all)');
     expect(activityPage).toContain('jobStateText(job.state)');
     expect(activityPage).toContain('routeSentence(routes[job.id])');

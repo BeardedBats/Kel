@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import type { AddressInfo } from 'node:net';
+import net, { type AddressInfo } from 'node:net';
 import { startStaticServer, type StaticServerHandle } from './static-server.js';
 
 async function mkRendererFixture(): Promise<string> {
@@ -57,10 +57,38 @@ describe('static-server', () => {
     expect(text).toContain('<title>root</title>');
   });
 
+  it('keeps serving after anonymous upgrade clients reset their sockets', async () => {
+    const backend = await startMockBackend((_req, res) => res.writeHead(401).end());
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0, requireAuth: true });
+    const port = Number(new URL(handle.localUrl).port);
+    for (let i = 0; i < 10; i += 1) {
+      await new Promise<void>((resolve, reject) => {
+        const client = net.connect({ host: '127.0.0.1', port }, () => {
+          client.write('GET /ws HTTP/1.1\r\nHost: localhost\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n');
+        });
+        client.on('data', bytes => {
+          expect(bytes.toString()).toContain('401 Unauthorized');
+          client.resetAndDestroy();
+        });
+        client.on('error', reject);
+        client.on('close', () => resolve());
+      });
+    }
+    const response = await fetch(`${handle.localUrl}/`);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain('<title>root</title>');
+  });
+
   it('SPA fallback: a path-style deep link is sent to the hash route it names', async () => {
     // Measured cause: the renderer is hash-routed, so /chat/123 could never reach a route — the
     // fallback answered index.html and the catch-all sent the visitor to /guid or /login with the
     // path (and any conversation id) gone. The fallback now translates it.
+    //
+    // Integration note: this test supersedes the earlier "SPA fallback: /chat/123 returns
+    // index.html" expectation from `ux/v2-shell` — a hash-routed SPA cannot serve that path itself,
+    // so the old expectation is exactly the defect the deep-link fix removes. The Shell's sibling
+    // socket-reset pin above is kept unchanged.
     const backend = await startMockBackend((_req, res) => res.end('nope'));
     stopBackend = backend.close;
     handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });

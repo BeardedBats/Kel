@@ -1,3 +1,4 @@
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 Providers — one card per provider with the engine's real state, the readiness preflight,
  * and credential METADATA only (values never reach the engine).
@@ -23,7 +24,7 @@ import {
   type KelCredentialMetadata,
   type KelProviderStatus,
 } from '@renderer/components/kel/kelApi';
-import { presentProvider, toneChipClass, usableNow } from '@renderer/components/kel/providerStatus';
+import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
 
 const Providers: React.FC = () => {
   const navigate = useNavigate();
@@ -155,16 +156,12 @@ const Providers: React.FC = () => {
       <main className="kel-page" id="kel-providers-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <h1 className="kel-h1">Providers</h1>
-            <p className="kel-sub">
-              {providers === null
-                ? 'Reading provider state…'
-                : `${providers.length} providers · ${providers.filter(usableNow).length} usable right now`}
-            </p>
+            <ShellWorkspaceLink /><h1 className="kel-h1">Providers</h1>
+
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void load()} disabled={busy}>
-            Reload
+          <KelButton variant="secondary" onClick={() => void runReadiness()} disabled={busy}>
+            {busy ? "Checking…" : "Run preflight"}
           </KelButton>
         </div>
 
@@ -172,14 +169,16 @@ const Providers: React.FC = () => {
         {!error && providers === null && <KelLoading rows={4} />}
         {note && <p className="kel-meta">{note}</p>}
 
+        <KelCard title="Integrations">
         {!error &&
           (providers ?? []).map((provider) => {
             const view = presentProvider(provider);
             const needsSetup = view.label === 'Needs setup';
             const hasStored = credentialRows.some((row) => row.provider === provider.provider);
             return (
+            <details className="kel-shell-provider" key={provider.provider}>
+              <summary><span>{provider.label}</span><span className="kel-meta">{(provider.models ?? []).map(model => model.id).join(' · ')}</span><span className="kel-grow" /><span className={toneChipClass(view.tone)}>{view.label}</span></summary>
             <KelCard
-              key={provider.provider}
               title={provider.label}
               chip={<span className={toneChipClass(view.tone)}>{view.label}</span>}
               actions={
@@ -264,59 +263,15 @@ const Providers: React.FC = () => {
                 ])}
               />
             </KelCard>
+            </details>
             );
           })}
 
-        <KelCard
-          title="Integrations"
-          chip={
-            <span className="kel-meta">
-              {capabilities === null
-                ? 'checking'
-                : capabilities.every((row) => row.availability === 'available')
-                  ? 'all available'
-                  : 'some need setup'}
-            </span>
-          }
-        >
-          <p className="kel-sub">
-            The tools Kel can use in this app, straight from the engine — connected, needing setup, or
-            unavailable, with the reason. Per-chat control lives beside the message box (the tools pill).
-          </p>
-          {(capabilities ?? []).map((row) => (
-            <div className="kel-row" key={row.id}>
-              <div className="kel-attention__text">
-                <strong>{row.label}</strong>
-                <span className="kel-meta">
-                  {row.availability === 'available'
-                    ? 'Connected'
-                    : row.availability === 'needs_setup'
-                      ? `Needs setup — ${row.availability_reason || 'a key or setting is missing'}`
-                      : `Unavailable — ${row.availability_reason || 'not on this machine'}`}
-                  {row.effective === 'on' ? ' · In use' : ' · Off'}
-                </span>
-              </div>
-              <span className="kel-grow" />
-              {row.availability === 'needs_setup' && (
-                <KelButton variant="quiet" onClick={() => navigate('/settings/tools')}>
-                  Set up
-                </KelButton>
-              )}
-            </div>
-          ))}
-          <div className="kel-row">
-            <span className="kel-meta">
-              These are the tools inside Kel. The services outside it — where Kel needs your own
-              credentials — live in Connections.
-            </span>
-            <span className="kel-grow" />
-            <KelButton variant="quiet" onClick={() => navigate('/connections')}>
-              Manage connections
-            </KelButton>
-          </div>
         </KelCard>
 
         <KelCard title="Readiness preflight">
+          {!readiness && <p className="kel-meta">Run preflight to check which provider can handle this work.</p>}
+          <details><summary className="kel-meta">Check options</summary>
           <p className="kel-sub">
             What Kel would use for a capability right now, and why — the engine records the fallback
             reason instead of guessing.
@@ -345,6 +300,7 @@ const Providers: React.FC = () => {
               Check readiness
             </KelButton>
           </div>
+          </details>
           {readiness && (
             <>
               <p className="kel-strong">
@@ -369,85 +325,7 @@ const Providers: React.FC = () => {
           )}
         </KelCard>
 
-        <KelSection title="Store a provider credential (OS-backed)">
-          <p className="kel-sub">
-            The value is encrypted by the desktop main process with Windows DPAPI (Electron
-            <span className="kel-code"> safeStorage </span>) and never reaches the engine's database,
-            which keeps only the field names and a reference. No IPC returns the value to this window.
-            Stored values are injected into provider runs from OS-backed storage at engine start —
-            never into logs, exports, or the engine database. New values apply the next time Kel
-            starts its engine.
-          </p>
-          <div className="kel-row">
-            <select
-              className="kel-input"
-              aria-label="Provider"
-              value={storeDraft.provider}
-              onChange={(event) => setStoreDraft({ ...storeDraft, provider: event.target.value })}
-            >
-              {(providers ?? []).map((item) => (
-                <option key={item.provider} value={item.provider}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-            <input
-              className="kel-input"
-              aria-label="Field name"
-              value={storeDraft.field}
-              onChange={(event) => setStoreDraft({ ...storeDraft, field: event.target.value })}
-            />
-            <input
-              className="kel-input"
-              type="password"
-              aria-label="Credential value"
-              placeholder="paste the key — the engine never stores it"
-              value={storeDraft.value}
-              onChange={(event) => setStoreDraft({ ...storeDraft, value: event.target.value })}
-            />
-            <KelButton
-              variant="primary"
-              disabled={busy || !storeDraft.value || !secure?.available}
-              onClick={() => {
-                void (async () => {
-                  setBusy(true);
-                  setNote(null);
-                  try {
-                    await window.kelAPI?.credentials?.set(
-                      storeDraft.provider,
-                      storeDraft.field || 'api_key',
-                      storeDraft.value
-                    );
-                    setStoreDraft((draft) => ({ ...draft, value: '' }));
-                    const status = await window.kelAPI?.credentials?.status();
-                    if (status) setSecure(status);
-                    setNote(`Stored ${storeDraft.field || 'api_key'} for ${storeDraft.provider}.`);
-                    await load();
-                  } catch (err) {
-                    setNote(
-                      `Couldn't store the credential. ${failureSentence(err, 'The engine did not answer — try again.')}`
-                    );
-                  } finally {
-                    setBusy(false);
-                  }
-                })();
-              }}
-            >
-              Store credential
-            </KelButton>
-          </div>
-          <p className="kel-meta">
-            {secure?.available
-              ? `OS-backed storage available · stored: ${
-                  Object.entries(secure.providers)
-                    .map(([provider, fields]) => `${provider} (${fields.join(', ')})`)
-                    .join(' · ') || 'nothing yet'
-                }`
-              : 'OS-backed storage is unavailable on this system — Kel keeps metadata only.'}
-          </p>
-        </KelSection>
-
-        <KelSection title="Credential metadata (values are never stored here)">
+        <KelCard title="Credential metadata">
           {credentialRows.length === 0 ? (
             <KelEmpty
               title="No Kel-owned credential metadata yet."
@@ -472,7 +350,8 @@ const Providers: React.FC = () => {
               ])}
             />
           )}
-        </KelSection>
+        </KelCard>
+
       </main>
     </div>
   );

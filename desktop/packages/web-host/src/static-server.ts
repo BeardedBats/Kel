@@ -450,7 +450,8 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
       if (settled) return;
       settled = true;
       client.removeListener('data', onData);
-      client.removeListener('error', onEarlyError);
+      // Keep the error listener through rejection/close: a browser can reset
+      // after a denied upgrade, when no splice owns this socket.
       client.removeListener('end', onEarlyEnd);
     };
     const onData = (chunk: Buffer): void => {
