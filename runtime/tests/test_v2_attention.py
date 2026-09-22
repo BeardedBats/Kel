@@ -117,6 +117,20 @@ class SurfaceTests(unittest.TestCase):
         self.assertFalse(entry['needs_you'])
         self.assertEqual(work['filters']['settled'], 1)
 
+    def test_a_cancelled_job_offers_no_action_it_cannot_honour(self):
+        # Measured mismatch this pins: the row used to offer retry -> /api/retry for a cancelled job,
+        # and the endpoint refused it ("This request is not ready for retry") because retry accepts a
+        # submission whose own state is FAILED/INTERRUPTED. The row must say what is true instead.
+        job_id = self.store.create(contract(), conversation='main')
+        self.store.control(job_id, 'cancel')
+        work, rows = self._rows()
+        entry = rows[job_id]
+        self.assertEqual(entry['state'], 'CANCELLED')
+        self.assertIsNone(entry['direct'], 'a stopped job must not promise an action it cannot honour')
+        self.assertIn('stopped', entry['why'].lower())
+        self.assertIn('kept', entry['next'].lower())
+        self.assertFalse(entry['needs_you'])
+
     def test_the_surface_offers_no_snooze_that_state_cannot_keep(self):
         self._fenced_job()
         work, _rows = self._rows()

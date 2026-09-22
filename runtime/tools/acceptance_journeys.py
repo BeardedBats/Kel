@@ -930,7 +930,12 @@ def journey_transcription(client, ctx):
 
 
 def journey_work(client, ctx, wait=600, poll=10):
-    """§27 Work — a real turn runs to a settled job, and the row says what a stopped one needs."""
+    """§27 Work — a real turn runs to a settled job, and the row says what a stopped one needs.
+
+    A deliberately stopped job proves what cancellation does; it does **not** prove abandoned-run
+    recovery, which is V2-11 evidence (`recover_abandoned` fences a run no broker can carry). The
+    note on the result keeps those two claims apart.
+    """
     journey = {'id': 'J-WORK', 'name': 'Real execution, and what a stopped job shows',
                'shell_required': False,
                'requirements': ['Work: real autonomous execution', 'Work: recovery'], 'detail': {}}
@@ -978,10 +983,18 @@ def journey_work(client, ctx, wait=600, poll=10):
                          'stopped_job': stopped_id, 'stopped_row': stopped_row}
     ok = (bool(job_id) and (job or {}).get('state') == 'CLOSED' and assistant and row
           and row.get('state') == 'CLOSED' and row.get('priority') == 'later'
-          and bool(row.get('next')) and bool(stopped_row)
+          and bool(row.get('next')) and bool(row.get('why'))
+          and row.get('needs_you') is False
+          and bool(stopped_row)
           and stopped_row.get('state') in ('CANCELLED', 'CANCELLING')
-          and (stopped_row.get('direct') or {}).get('action') == 'retry')
+          # A stopped job must not promise an action the product cannot honour (measured: the row
+          # used to offer retry while /api/retry refused it) — its saved request is what is kept.
+          and stopped_row.get('direct') is None
+          and 'stopped' in str(stopped_row.get('next') or '').lower())
     journey['status'] = 'PASSED' if ok else 'FAILED'
+    journey['note'] = ('The abandoned-run fence itself is V2-11 evidence (a run no broker can carry is '
+                       'fenced, never replayed); this journey demonstrates real execution and what a '
+                       'deliberately stopped run shows.')
     if not ok:
         journey['problem'] = ('real execution or the stopped job\'s row did not match: state=%r '
                               'row=%r stopped=%r'
@@ -990,7 +1003,12 @@ def journey_work(client, ctx, wait=600, poll=10):
 
 
 def journey_recovery(client, ctx, wait=300, poll=5):
-    """§27 Recovery — a stopped job keeps its work, says so, and is never silently re-run."""
+    """§27 Recovery — a stopped job keeps its work, says so, and is never silently re-run.
+
+    Honest label: a *cancelled* job is not a retryable failure. This journey asserts the preserved
+    work, the accurate row (no action it cannot honour) and the guarded endpoint; it does not claim a
+    successful retry.
+    """
     journey = {'id': 'J-RECOV', 'name': 'Failures keep their work; retry is guarded',
                'shell_required': False,
                'requirements': ['Recovery: failures without lost work'], 'detail': {}}
@@ -1039,9 +1057,14 @@ def journey_recovery(client, ctx, wait=300, poll=5):
                          'request_kept': kept_request, 'submissions': len(submissions),
                          'retry_answer': retry, 'row': row}
     ok = ((settled or {}).get('state') in ('CANCELLED', 'CANCELLING') and kept_request
-          and row is not None and (row.get('direct') or {}).get('action') == 'retry'
+          and row is not None and row.get('direct') is None
+          and 'stopped' in str(row.get('why') or '').lower()
           and retry.get('refused') is True)
     journey['status'] = 'PASSED' if ok else 'FAILED'
+    journey['note'] = ('A stopped job keeps its work and is never silently re-run; the retry endpoint\'s '
+                       'refusal proves non-execution, not recovery. A genuinely retryable FAILED '
+                       'submission going through /api/retry is pinned by the engine suite, not claimed '
+                       'here.')
     if not ok:
         journey['problem'] = ('the stopped job lost something, or retry was not guarded: kept=%r '
                               'refused=%r' % (kept_request, retry.get('refused')))

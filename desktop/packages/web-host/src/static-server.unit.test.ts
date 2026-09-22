@@ -77,6 +77,43 @@ describe('static-server', () => {
     await fs.rm(staticDir, { recursive: true, force: true });
   });
 
+  it('local recovery is decided on the true peer address, never on a header', async () => {
+    const mod = await import('./static-server.js');
+    // The path gate is deliberately one route.
+    expect(mod.isLocalRecoveryPath('/api/webui/reset-password')).toBe(true);
+    expect(mod.isLocalRecoveryPath('/api/webui/reset-password?x=1')).toBe(true);
+    expect(mod.isLocalRecoveryPath('/api/connections')).toBe(false);
+    expect(mod.isLocalRecoveryPath('/api/webui/reset-password-any')).toBe(false);
+    // The peer gate takes the socket address and nothing else. A remote address — including an
+    // IPv4-mapped one — is never local recovery, and no header value is consulted anywhere.
+    for (const local of ['127.0.0.1', '::1', '::ffff:127.0.0.1', '127.0.0.1 ']) {
+      expect(mod.isLoopbackAddress(local)).toBe(true);
+    }
+    for (const remote of ['192.168.1.50', '10.0.0.7', '::ffff:192.168.1.50', '203.0.113.9',
+                          'localhost', '', null, undefined]) {
+      expect(mod.isLoopbackAddress(remote)).toBe(false);
+    }
+    // Honest limit: a *remote* peer cannot be produced inside this suite, so the outer listener's
+    // 403 branch is pinned by the predicate above and reviewed in the code; the loopback path it
+    // must keep working is exercised in the next test.
+  });
+
+  it('a loopback recovery request still reaches the backend, and a forged header changes nothing', async () => {
+    const backend = await startMockBackend((req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ path: req.url }));
+    });
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0, requireAuth: true });
+    const r = await fetch(`${handle.localUrl}/api/webui/reset-password`, {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '203.0.113.9' },
+    });
+    expect(r.status).toBe(200);
+    const json = (await r.json()) as { path: string };
+    expect(json.path).toBe('/api/webui/reset-password');
+  });
+
   it('serves static index.html at /', async () => {
     const backend = await startMockBackend((_req, res) => res.end('nope'));
     stopBackend = backend.close;
