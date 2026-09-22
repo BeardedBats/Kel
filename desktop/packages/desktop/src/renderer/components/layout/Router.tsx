@@ -4,6 +4,7 @@ import AppLoader from '@renderer/components/layout/AppLoader';
 import DocumentTitle from '@renderer/components/layout/DocumentTitle';
 import { useCrossSessionRateLimitNotice } from '@/renderer/hooks/system/useCrossSessionRateLimitNotice';
 import { useAuth } from '@renderer/hooks/context/AuthContext';
+import { clearLoginReturnTo, pendingLoginReturnTo, rememberLoginReturnTo } from '@renderer/utils/loginReturnTo';
 import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 const Conversation = React.lazy(() => import('@renderer/pages/conversation'));
 const Guid = React.lazy(() => import('@renderer/pages/guid'));
@@ -77,16 +78,28 @@ const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) =
   // the user even when they are looking at a THIRD conversation, which is the
   // whole reason it is a broadcast rather than an in-conversation banner.
   useCrossSessionRateLimitNotice(user?.id);
+  const from = location.pathname + location.search;
+
+  // V2-05 deep links reach the real routes through this guard, so THIS is where the destination
+  // must be remembered — a catch-all never sees an unauthenticated /work or /conversation/<id>.
+  // It is written to sessionStorage as well as handed to the sign-in route: the history entry that
+  // carries `from` can be replaced while the session check is still in flight (measured on the
+  // packaged build), and a reload would drop it entirely.
+  React.useEffect(() => {
+    if (status === 'authenticated') {
+      clearLoginReturnTo();
+      return;
+    }
+    if (status !== 'checking') rememberLoginReturnTo(from);
+  }, [from, status]);
 
   if (status === 'checking') {
     return <AppLoader />;
   }
 
   if (status !== 'authenticated') {
-    // V2-05 deep links reach the real routes through this guard, so THIS is where the destination
-    // must be remembered — a catch-all never sees an unauthenticated /work or /conversation/<id>.
     return (
-      <Navigate to='/login' state={{ from: location.pathname + location.search }} replace />
+      <Navigate to='/login' state={{ from }} replace />
     );
   }
 
@@ -101,7 +114,7 @@ type FromState = { from?: string } | null | undefined;
 const SignInGate: React.FC = () => {
   const location = useLocation();
   const { status } = useAuth();
-  const from = (location.state as FromState)?.from;
+  const from = (location.state as FromState)?.from ?? pendingLoginReturnTo();
   if (status === 'authenticated') return <Navigate to={from || '/guid'} replace />;
   return withRouteFallback(LoginPage);
 };
@@ -110,6 +123,9 @@ const CatchAllRedirect: React.FC = () => {
   const location = useLocation();
   const { status } = useAuth();
   const from = location.pathname + location.search;
+  React.useEffect(() => {
+    if (status !== 'authenticated') rememberLoginReturnTo(from);
+  }, [from, status]);
   return (
     <Navigate to={status === 'authenticated' ? '/guid' : '/login'} state={{ from }} replace />
   );
