@@ -651,7 +651,7 @@ export const kelRecipeSearch = (query: string, conversation = 'main') =>
   call<{ entries: KelRecipeEntry[] }>('/api/recipes', { action: 'search', query, conversation });
 
 export const kelRecipeCategories = (conversation = 'main') =>
-  call<{ categories: string[] }>('/api/recipes', { action: 'categories', conversation });
+  call<{ categories: Array<{ name: string; count: number }> }>('/api/recipes', { action: 'categories', conversation });
 
 export const kelRecipeRecent = (limit = 5, conversation = 'main') =>
   call<{ recent: KelRecipeEntry[] }>('/api/recipes', { action: 'recent', limit, conversation });

@@ -17,6 +17,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import brandMark from '@renderer/assets/figma/kel-mark.png';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
+import KelInChatFrame from '@renderer/components/kel/KelInChatFrame';
 import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
@@ -140,6 +141,7 @@ const Layout: React.FC<{
   useKelAttentionNotification();
   const navigate = useNavigate();
   const location = useLocation();
+  const inChatSection = /^\/(settings|connections|work|activity|autonomy|projects|scheduled|providers|diagnostics|onboarding)(\/|$)/.test(location.pathname) || location.pathname === '/transcription/library';
 
   // Kel V1.4 first-run: a genuinely fresh install (no completion flag and no conversations) is offered
   // onboarding once. An install that already holds conversations is never interrupted, so migrated
@@ -534,7 +536,7 @@ const Layout: React.FC<{
                 }
               >
                 <KelEngineNotice />
-                <Outlet />
+                {inChatSection ? <KelInChatFrame><Outlet /></KelInChatFrame> : <Outlet />}
                 <PwaPullToRefresh />
                 <Suspense fallback={null}>
                   <UpdateModal />
