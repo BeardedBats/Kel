@@ -174,3 +174,15 @@ Honest, current list (grows/shrinks as phases complete):
   launch, so Muse would refuse honestly without touching the stored credential. The stored credential
   was never read, moved or modified, and the practice-text guard was checked by calling the engine's
   `/api/dogfood` save with the archived practice sentence (refused, HTTP 400).
+- The Daily Driver candidate's own install directory (`C:\Users\Nick\KelDailyDriverCandidate`) and data
+  root (`C:\Users\Nick\KelDailyDriverRuns`) no longer exist on this machine: later work (the Fix Capture
+  lane) ran an NSIS update that heals to the registered directory, and that path now belongs to a newer
+  candidate. The candidate stays reproducible from its head tag (`DAILY_DRIVER_CANDIDATE_HEAD` →
+  `6c9d1a1`), but re-installing it would need a fresh build, because the recorded installer artifact was
+  overwritten by later builds at the same output path (`dist/package-r12/Kel-1.7.0-dev-win-x64.exe` is now
+  `007eaaa5…`, not the recorded `0add7bc4…`).
+- The installed battery used to hard-wire the candidate's install dir, data root and evidence path, and it
+  used to assert that one data root's content (a provider notice and a seeded request, plus a lease for
+  the Permissions page). It now reads `KEL_INSTALL_DIR`, `KEL_BATTERY_DATA` and `KEL_BATTERY_OUT` and
+  checks those two conditions data-driven, so it verifies any installed build without overwriting
+  previously recorded evidence.
