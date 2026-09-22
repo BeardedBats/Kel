@@ -72,9 +72,18 @@ const LOCAL_RECOVERY_ROUTES = new Set(['/api/webui/reset-password']);
 
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 
+/** Is this a real loopback peer? Never derived from a header — a proxy can forward anything. */
+export function isLoopbackAddress(address: unknown): boolean {
+  return LOOPBACK_ADDRESSES.has(String(address || '').trim().toLowerCase());
+}
+
+/** Is this path the local password-recovery route? */
+export function isLocalRecoveryPath(pathname: unknown): boolean {
+  return LOCAL_RECOVERY_ROUTES.has(String(pathname || '').split('?')[0]);
+}
+
 export function isLocalRecoveryRequest(req: Pick<IncomingMessage, 'url' | 'socket'>): boolean {
-  const pathname = String(req.url || '').split('?')[0];
-  if (!LOCAL_RECOVERY_ROUTES.has(pathname)) return false;
+  if (!isLocalRecoveryPath(req.url)) return false;
   const address = String((req.socket && req.socket.remoteAddress) || '').toLowerCase();
   return LOOPBACK_ADDRESSES.has(address);
 }
@@ -473,6 +482,19 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
     const onData = (chunk: Buffer): void => {
       peeked = Buffer.concat([peeked, chunk]);
       if (upgradePending) return; // keep collecting while the session check runs
+      // Local recovery: the decision belongs HERE, at the real network boundary, because the inner
+      // HTTP server is only ever reached through this process's own local re-dispatch — it sees
+      // every client as loopback and cannot tell a remote visitor from the person at this machine.
+      // A remote client in `allowRemote` mode (or any forged X-Forwarded-For header) therefore
+      // cannot reach the route; the person at the machine still can. The inner check stays as
+      // defence in depth, not as the boundary.
+      const requestLine = peeked.toString('latin1').split('\r\n', 1)[0];
+      const requested = /^[A-Z]+\s+([^\s?]+)/.exec(requestLine);
+      if (requested && isLocalRecoveryPath(requested[1]) && !isLoopbackAddress(client.remoteAddress)) {
+        cleanup();
+        client.end('HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n');
+        return;
+      }
       const decision = peekWsRoute(peeked);
       if (decision === null && peeked.length < PEEK_LIMIT_BYTES) return;
       if (decision === true && validateSession) {

@@ -421,10 +421,14 @@ class Service:
                 entry.update(needs_you=True,why='Waiting for your decision on a gated step.',
                              next='Decide on the request card in the conversation — or in Work context.')
             if not active:
+                stopped=job['state'] in ('CANCELLED','CANCELLING')
                 entry.update(needs_you=False,
-                             why=('Done and verified.' if job.get('verdict')=='VERIFIED'
-                                  else 'Settled: '+str(job.get('verdict') or 'unresolved').lower()+'.'),
-                             next='Nothing needed — ask for a new change for more work.')
+                             why=('You stopped this work.' if stopped else
+                                  ('Done and verified.' if job.get('verdict')=='VERIFIED'
+                                   else 'Settled: '+str(job.get('verdict') or 'unresolved').lower()+'.')),
+                             next=('This work was stopped. Its saved request is kept in this '
+                                   'conversation.' if stopped else
+                                   'Nothing needed — ask for a new change for more work.'))
             # V2-06: a row says what it is, why it is here, how old it is, how urgent it is, what
             # belongs with it, and the one action the person can take right now. All of it is
             # derived from authoritative state — nothing here resolves, snoozes or re-runs anything.
@@ -451,7 +455,11 @@ class Service:
                         'hint':'Resume when you are ready.'}
             elif active:
                 direct={'action':'stop','route':'/api/control','hint':'Stop this work.'}
-            elif job.get('verdict') not in ('VERIFIED',None):
+            elif job['state']=='CLOSED' and job.get('verdict') not in ('VERIFIED',None):
+                # Only a settled failure can be retried: /api/retry accepts a submission whose own
+                # state is FAILED/INTERRUPTED. Measured before this fix: a cancelled row offered
+                # retry and the endpoint refused it in plain words — a row must not promise an
+                # action the product cannot honour.
                 direct={'action':'retry','route':'/api/retry',
                         'hint':'Try this work again from its saved request.'}
             else:
