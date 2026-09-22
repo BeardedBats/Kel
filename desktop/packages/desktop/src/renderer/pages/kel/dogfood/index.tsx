@@ -10,7 +10,7 @@ import { Message } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
 import { KelButton, KelCard, KelEmpty, KelLoading, KelTabs, formatWhen } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
-import { kelDogfood, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
+import { kelDogfood, type KelBuildCandidate, type KelBuildMission, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
 import styles from './index.module.css';
 
 const STATUS_COPY: Record<KelFixStatus, string> = {
@@ -33,6 +33,22 @@ const DogfoodFixes: React.FC = () => {
   const [note, setNote] = useState<string | null>(null);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [prompt, setPrompt] = useState<{ text: string; path: string; ids: string[] } | null>(null);
+  // Kibble Build Update (D-46/D-47): the selected findings become a development mission whose
+  // candidate is reviewed on this page. None of it changes a Fix Capture status, and installing is
+  // deliberately not offered here.
+  const [sourceRoot, setSourceRoot] = useState('');
+  const [mission, setMission] = useState<string | null>(null);
+  const [buildState, setBuildState] = useState<{
+    mission: KelBuildMission;
+    job: {
+      id: string;
+      state?: string;
+      verdict?: string;
+      milestones?: Record<string, { state?: string; attempts?: number }>;
+    } | null;
+    candidate: KelBuildCandidate | null;
+  } | null>(null);
+  const [reviewNote, setReviewNote] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -148,6 +164,66 @@ const DogfoodFixes: React.FC = () => {
     );
   }
 
+  const refreshBuild = useCallback(async (missionId: string) => {
+    try {
+      const state = await kelDogfood.buildUpdate.status(missionId);
+      let candidate = state.candidate;
+      if ((state.job?.state ?? '') === 'CLOSED') {
+        const assembled = await kelDogfood.buildUpdate.candidate(missionId);
+        candidate = assembled.candidate ?? candidate;
+      }
+      setBuildState({ mission: state.mission, job: state.job, candidate });
+    } catch (err) {
+      setError(err);
+    }
+  }, []);
+
+  const startBuildUpdate = useCallback(async () => {
+    if (!included.length || !sourceRoot.trim()) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const started = await kelDogfood.buildUpdate.start(
+        included.map((fix) => fix.id),
+        sourceRoot.trim()
+      );
+      setMission(started.mission.id);
+      setBuildState({ mission: started.mission, job: { id: started.job }, candidate: null });
+      setNote(
+        `Development mission started for ${included.length} finding(s). Fix Capture statuses were not changed.`
+      );
+    } catch (err) {
+      Message.error('Kel could not start a development mission just now. Try again.');
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  }, [included, sourceRoot]);
+
+  const reviewCandidate = useCallback(
+    async (decision: 'approve' | 'reject') => {
+      const candidateId = buildState?.candidate?.id;
+      if (!candidateId) return;
+      setBusy(true);
+      setNote(null);
+      try {
+        const reviewed = await kelDogfood.buildUpdate.review(candidateId, decision, reviewNote);
+        setBuildState((previous) => (previous ? { ...previous, candidate: reviewed } : previous));
+        setNote(
+          decision === 'approve'
+            ? 'Candidate approved. Nothing was installed.'
+            : 'Candidate rejected. Nothing was installed.'
+        );
+      } catch (err) {
+        Message.error('Kel could not record that review just now. Try again.');
+        setError(err);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [buildState?.candidate?.id, reviewNote]
+  );
+
   return (
     <div className='kel-scope'>
       <a className='kel-skip' href='#kel-dogfood-main'>
@@ -205,6 +281,121 @@ const DogfoodFixes: React.FC = () => {
                   ))}
                 </ul>
               )}
+            </KelCard>
+
+            <KelCard
+              title='Build Update'
+              actions={
+                <>
+                  <KelButton
+                    variant='primary'
+                    disabled={busy || !included.length || !sourceRoot.trim()}
+                    onClick={() => void startBuildUpdate()}
+                  >
+                    {`Start update (${included.length})`}
+                  </KelButton>
+                  {mission && (
+                    <KelButton variant='quiet' disabled={busy} onClick={() => void refreshBuild(mission)}>
+                      Refresh
+                    </KelButton>
+                  )}
+                </>
+              }
+            >
+              <p className='kel-sub'>
+                Kel fixes the selected findings in a copy of this repository and offers the result for
+                review. Fix Capture statuses stay exactly as they are, and nothing is installed.
+              </p>
+              <label className='kel-meta' htmlFor='kel-build-source'>
+                Repository folder
+              </label>
+              <input
+                id='kel-build-source'
+                className='kel-input'
+                value={sourceRoot}
+                onChange={(event) => setSourceRoot(event.target.value)}
+                placeholder='C:\\path\\to\\the\\repository'
+                data-testid='build-source-root'
+              />
+              {!buildState && (
+                <p className='kel-meta'>Pick the findings above, name the repository folder, then start.</p>
+              )}
+              {buildState && (
+                <div className={styles.buildState}>
+                  <p className='kel-strong'>{`Mission ${buildState.mission.id.slice(0, 8)} · ${buildState.mission.state ?? 'OPEN'}`}</p>
+                  {buildState.job && (
+                    <p className='kel-meta'>{`Job ${buildState.job.id.slice(0, 8)} · ${buildState.job.state ?? 'queued'}${buildState.job.verdict ? ` · ${buildState.job.verdict}` : ''}`}</p>
+                  )}
+                  {buildState.job?.milestones && (
+                    <ul className={styles.buildList}>
+                      {Object.entries(buildState.job.milestones).map(([milestoneId, milestone]) => (
+                        <li key={milestoneId} className='kel-meta'>
+                          {`${milestoneId}: ${milestone?.state ?? 'queued'}${milestone?.attempts ? ` · ${milestone.attempts} attempt(s)` : ''}`}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {buildState.candidate ? (
+                    <>
+                      <p className='kel-strong'>{`Candidate ${buildState.candidate.id.slice(0, 8)} · ${buildState.candidate.review_state ?? 'BUILDING'}`}</p>
+                      <p className='kel-meta'>
+                        {`verified: ${buildState.candidate.verified === true || buildState.candidate.verified === 1 ? 'yes' : 'no'} · revision ${String(buildState.candidate.revision ?? '—').slice(0, 12)}`}
+                      </p>
+                      {buildState.candidate.artifact && (
+                        <p className='kel-meta'>{`evidence: ${buildState.candidate.artifact}`}</p>
+                      )}
+                      {Boolean(buildState.candidate.fixed_findings?.length) && (
+                        <p className='kel-meta'>{`fixed: ${(buildState.candidate.fixed_findings ?? []).join(', ')}`}</p>
+                      )}
+                      {Boolean(buildState.candidate.unresolved_findings?.length) && (
+                        <p className='kel-meta'>{`unresolved: ${(buildState.candidate.unresolved_findings ?? []).join(', ')}`}</p>
+                      )}
+                      {Boolean(buildState.candidate.limitations?.length) && (
+                        <ul className={styles.buildList}>
+                          {(buildState.candidate.limitations ?? []).map((line, index) => (
+                            <li key={`${index}-${line}`} className='kel-meta'>
+                              {line}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(buildState.candidate.review_state ?? '') === 'BUILDING' ? (
+                        <p className='kel-meta'>Still building — review it when it is ready.</p>
+                      ) : buildState.candidate.review_state === 'APPROVED' ||
+                        buildState.candidate.review_state === 'REJECTED' ? (
+                        <p className='kel-meta'>{`Reviewed: ${buildState.candidate.review_state.toLowerCase()}.`}</p>
+                      ) : (
+                        <>
+                          <input
+                            className='kel-input'
+                            value={reviewNote}
+                            onChange={(event) => setReviewNote(event.target.value)}
+                            placeholder='A note for this review (optional)'
+                            data-testid='build-review-note'
+                          />
+                          <KelButton
+                            variant='primary'
+                            disabled={busy}
+                            onClick={() => void reviewCandidate('approve')}
+                          >
+                            Approve candidate
+                          </KelButton>
+                          <KelButton
+                            variant='quiet'
+                            disabled={busy}
+                            onClick={() => void reviewCandidate('reject')}
+                          >
+                            Reject
+                          </KelButton>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <p className='kel-meta'>No candidate yet — one appears when the mission settles.</p>
+                  )}
+                </div>
+              )}
+              {note && <p className='kel-meta' role='status'>{note}</p>}
             </KelCard>
 
             {prompt && (

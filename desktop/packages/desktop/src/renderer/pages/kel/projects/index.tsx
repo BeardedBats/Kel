@@ -4,7 +4,7 @@ import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
  * Reads `/api/work`; actions go through `/api/memory` and `/api/map`.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   KelButton,
   KelCard,
@@ -16,7 +16,17 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { kelMapAction, kelMemoryAction, kelRecipePreview, kelRecipeRun, kelWork, type KelWork } from '@renderer/components/kel/kelApi';
+import {
+  kelMapAction,
+  kelMemoryAction,
+  kelRecipeHistory,
+  kelRecipeLastResult,
+  kelRecipePreview,
+  kelRecipeRun,
+  kelWork,
+  type KelRecipeRun,
+  type KelWork,
+} from '@renderer/components/kel/kelApi';
 
 type View = 'knowledge' | 'map' | 'recipes';
 
@@ -32,6 +42,8 @@ export default function KelProjectsPage() {
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [runs, setRuns] = useState<{ recipe: string; sentence: string; items: KelRecipeRun[] } | null>(null);
+  const navigate = useNavigate();
   const [preview, setPreview] = useState<{ recipe: string; payload: Record<string, unknown> } | null>(
     null
   );
@@ -45,6 +57,30 @@ export default function KelProjectsPage() {
       setError(err);
     }
   }, []);
+
+  // V2-07 follow-through: a run is only useful if its result can be reopened. The engine already
+  // keeps every run as a job; this reads them back (history + the one-line last result) and offers
+  // the run's own page. Toggle: opening the same recipe again closes the panel.
+  const openRuns = useCallback(
+    async (recipeId: string) => {
+      if (runs?.recipe === recipeId) {
+        setRuns(null);
+        return;
+      }
+      setRuns({ recipe: recipeId, sentence: '', items: [] });
+      try {
+        const history = await kelRecipeHistory(recipeId);
+        const last = await kelRecipeLastResult(recipeId).catch((): null => null);
+        setRuns({ recipe: recipeId, sentence: last?.sentence ?? '', items: history.history ?? [] });
+      } catch (err) {
+        setRuns(null);
+        setNote(
+          `Could not read that recipe's runs. ${failureSentence(err, 'The engine did not answer — try again.')}`
+        );
+      }
+    },
+    [runs?.recipe]
+  );
 
   useEffect(() => {
     void load();
@@ -334,9 +370,37 @@ export default function KelProjectsPage() {
                     >
                       Run
                     </KelButton>,
+                    <KelButton
+                      key={`${recipeId}-runs`}
+                      variant="quiet"
+                      disabled={!recipeId}
+                      onClick={() => void openRuns(recipeId)}
+                    >
+                      {runs?.recipe === recipeId ? 'Hide runs' : 'Runs'}
+                    </KelButton>,
                   ];
                 })}
               />
+            )}
+            {runs && (
+              <KelSection title={`Runs — ${runs.recipe}`}>
+                {runs.sentence && <p className="kel-sub">{runs.sentence}</p>}
+                {runs.items.length === 0 ? (
+                  <p className="kel-meta">This recipe has not run in this project yet.</p>
+                ) : (
+                  <ul className="kel-meta">
+                    {runs.items.map((run) => (
+                      <li key={run.job_id}>
+                        <span className="kel-strong">{run.job_id.slice(0, 8)}</span>{' '}
+                        {`${run.state ?? 'queued'}${run.verdict ? ` · ${run.verdict}` : ''}`}{' '}
+                        <KelButton variant="quiet" onClick={() => navigate('/work')}>
+                          Open on Work
+                        </KelButton>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </KelSection>
             )}
             {preview && (
               <KelSection title={`Dry run — ${preview.recipe}`}>

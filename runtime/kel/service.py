@@ -395,6 +395,13 @@ class Service:
         with contextlib.closing(self.store.connect()) as db:
             pending={row['job_id']:row['n'] for row in db.execute(
                 "SELECT job_id,COUNT(*) AS n FROM approvals WHERE status='PENDING' GROUP BY job_id")}
+            # V2-06 follow-through: a row's one action has to be dispatchable, so the row carries the id
+            # the route needs — the pending approval to answer, or the saved request a retry would
+            # resubmit. Nothing else in the row has to guess it.
+            pending_ids={row['job_id']:row['id'] for row in db.execute(
+                "SELECT job_id,id FROM approvals WHERE status='PENDING'")}
+            submission_of={row['job_id']:row['id'] for row in db.execute(
+                "SELECT job_id,id FROM submissions WHERE job_id IS NOT NULL")}
             last={row['aggregate_id']:row['at'] for row in db.execute(
                 "SELECT aggregate_id,MAX(at) AS at FROM events GROUP BY aggregate_id")}
         jobs=[]
@@ -444,7 +451,7 @@ class Service:
                 priority='later'
             approval_count=pending.get(job['id']) or 0
             if approval_count:
-                direct={'action':'answer','route':'/api/approval',
+                direct={'action':'answer','route':'/api/approval','id':pending_ids.get(job['id']),
                         'hint':'Answer the request in this conversation.'}
             elif entry['fenced']:
                 # A fenced run resumes as a conversation continuation, not as a job control call.
@@ -460,7 +467,7 @@ class Service:
                 # state is FAILED/INTERRUPTED. Measured before this fix: a cancelled row offered
                 # retry and the endpoint refused it in plain words — a row must not promise an
                 # action the product cannot honour.
-                direct={'action':'retry','route':'/api/retry',
+                direct={'action':'retry','route':'/api/retry','id':submission_of.get(job['id']),
                         'hint':'Try this work again from its saved request.'}
             else:
                 direct=None

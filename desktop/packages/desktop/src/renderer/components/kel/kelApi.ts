@@ -618,6 +618,32 @@ export const kelRecipeSave = (recipe: Record<string, unknown>, conversation = 'm
     { action: 'save', recipe, confirm: true, conversation }
   );
 
+/** One run of a recipe — the engine reads these from the jobs it already keeps. */
+export interface KelRecipeRun {
+  job_id: string;
+  state?: string;
+  verdict?: string;
+  created?: number;
+  request?: string;
+  artifact?: string | null;
+  artifact_sha256?: string | null;
+}
+
+/** This recipe's runs, newest first: what the person reopens after a run. */
+export const kelRecipeHistory = (recipeId: string, conversation = 'main') =>
+  call<{ history: KelRecipeRun[] }>('/api/recipes', {
+    action: 'history',
+    recipe_id: recipeId,
+    conversation,
+  });
+
+/** The one-line answer to "what happened last time I ran this?" */
+export const kelRecipeLastResult = (recipeId: string, conversation = 'main') =>
+  call<{ recipe_id: string; state: string; sentence: string } & Record<string, unknown>>(
+    '/api/recipes',
+    { action: 'last_result', recipe_id: recipeId, conversation }
+  );
+
 export interface KelProviderStatus {
   provider: string;
   label: string;
@@ -805,7 +831,68 @@ export const kelDogfood = {
       return null;
     }
   },
+  /**
+   * Kibble Build Update (D-46/D-47): turn selected findings into a development mission and a
+   * reviewable candidate. Fix Capture statuses are never touched by any of it, and `promote` is
+   * exposed so the surface can show the engine's own refusal — installing is a separate decision.
+   */
+  buildUpdate: {
+    start: (findings: string[], sourceRoot: string, tests: string[] = []) =>
+      call<{ mission: KelBuildMission; job: string; contract: Record<string, unknown> }>(
+        '/api/dogfood',
+        { action: 'build_update', op: 'start', findings, source_root: sourceRoot, tests }
+      ),
+    status: (mission: string) =>
+      call<{
+        mission: KelBuildMission;
+        job: { id: string; state?: string; verdict?: string; milestones?: Record<string, { state?: string; attempts?: number }> } | null;
+        candidate: KelBuildCandidate | null;
+      }>('/api/dogfood', { action: 'build_update', op: 'status', mission }),
+    candidate: (mission: string) =>
+      call<{ state: string; candidate: KelBuildCandidate | null; job_state?: string }>(
+        '/api/dogfood',
+        { action: 'build_update', op: 'candidate', mission }
+      ),
+    review: (candidate: string, decision: 'approve' | 'reject', note = '') =>
+      call<KelBuildCandidate>('/api/dogfood', {
+        action: 'build_update',
+        op: 'review',
+        candidate,
+        decision,
+        note,
+      }),
+    promote: (candidate: string) =>
+      call<Record<string, unknown>>('/api/dogfood', {
+        action: 'build_update',
+        op: 'promote',
+        candidate,
+      }),
+  },
 };
+
+export interface KelBuildMission {
+  id: string;
+  job_id?: string | null;
+  state?: string;
+  source_root?: string;
+  baseline_revision?: string | null;
+  findings?: string[];
+}
+
+export interface KelBuildCandidate {
+  id: string;
+  mission_id?: string;
+  review_state?: string;
+  revision?: string | null;
+  artifact?: string | null;
+  artifact_sha256?: string | null;
+  verified?: number | boolean | null;
+  evidence?: Record<string, unknown>;
+  fixed_findings?: string[];
+  unresolved_findings?: string[];
+  limitations?: string[];
+  note?: string | null;
+}
 
 export const kelAutonomy = {
   leases: (jobId?: string) =>
@@ -972,6 +1059,37 @@ export const kelArtifact = (job: string, milestone: string) =>
 
 export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =>
   call<{ ok: boolean }>('/api/control', { job, action });
+
+/** Answer the permission request a Work row is waiting on. */
+export const kelApproval = (id: string, allow: boolean, conversation?: string) =>
+  call<{ ok?: boolean } & Record<string, unknown>>('/api/approval', {
+    id,
+    allow,
+    ...(conversation ? { conversation } : {}),
+  });
+
+/** A fenced run resumes as a normal conversation continuation, never as a silent replay. */
+export const kelSend = (conversation: string, text: string) =>
+  call<{ id: string }>('/api/send', { conversation, text });
+
+/** Retry a saved request that failed. The engine refuses anything that is not FAILED/INTERRUPTED. */
+export const kelRetry = (id: string) => call<{ id: string }>('/api/retry', { id });
+
+/** One row of the V2-06 attention surface: what it is, why, and the one action it offers. */
+export interface KelWorkRow {
+  job_id: string;
+  needs_you?: boolean;
+  priority?: 'now' | 'soon' | 'running' | 'later';
+  reason?: string;
+  next?: string;
+  direct?: { action: string; route: string; hint?: string; id?: string | null } | null;
+  related?: { project_id?: string; conversation?: string; approvals?: number; milestones?: number };
+}
+
+/** The rows themselves — the same authoritative surface the chat's Work panel reads. */
+export const kelWorkRows = (conversation = 'main') =>
+  call<{ work?: { jobs?: KelWorkRow[] } }>(`/api/work?conversation=${encodeURIComponent(conversation)}`)
+    .then((payload) => payload.work?.jobs ?? []);
 
 export const kelBriefs = {
   list: (projectId = 'default') =>

@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { PREVIEW_SCOPE_KEY_PREFIX } from '@/renderer/pages/conversation/Preview/context/previewScope';
 import { refreshSession } from '@/common/adapter/sessionRefresh';
+import { onSessionExpired } from '@/common/adapter/httpBridge';
 // M6: CSRF removed with legacy webserver — stub functions for compatibility, re-implement in M7
 const withCsrfToken = <T extends Record<string, unknown>>(data: T): T => data;
 const hasValidCsrfToken = (): boolean => true;
@@ -164,6 +165,23 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       abortRef.current?.abort();
     };
   }, [refresh]);
+
+  // A protected call that survives the silent refresh attempt means the session is gone. Turn that
+  // into "signed out" so the router's sign-in gate takes over (it remembers where the person was)
+  // instead of leaving them on a protected route whose every call fails. Idempotent: several 401s
+  // in flight all land on the same state, and the gate reads the destination once.
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        // Desktop sessions are local and auth is disabled there: a 401 in that runtime is not a
+        // sign-in problem, and flipping to "signed out" would show a sign-in page Kel never needs.
+        if (isDesktopRuntime) return;
+        setUser(null);
+        setStatus('unauthenticated');
+        setReady(true);
+      }),
+    []
+  );
 
   const login = useCallback(async ({ username, password, remember }: LoginParams): Promise<LoginResult> => {
     try {
