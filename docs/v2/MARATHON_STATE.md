@@ -60,8 +60,21 @@ invariants:
   - "desktop Kel may stay on; cloud Kel is V2.5 and does not start here"
   - "disk hygiene: no indefinite temporary worktrees, no obsolete node_modules/build copies, no duplicate installers, no accumulating data roots"
 
-temporary_worktrees: []     # disk-hygiene note: none exist right now; record any created here
+temporary_worktrees: [C:\Users\Nick\Desktop\Kel\kel-v2-integration]  # branch integration/v2 — the candidate build line (see the section below); remove once the candidate is packaged and reviewed, or once Astra's line absorbs the merge
 ```
+
+## Integration line (2026-09-22) — created this turn, kept on purpose
+
+`C:\Users\Nick\Desktop\Kel\kel-v2-integration` on branch `integration/v2` @ `fe5e6b7` merges
+`dev/v2` @ `7b18618` with Astra's committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the
+merge's own second parent; the merge commit's own message still says `681e005`, which was her tip
+earlier in the turn — a pushed merge is never rewritten, so this section is the accurate record). One
+conflict was resolved in the web-host unit suite; see `docs/v2/evidence/integration/README.md`. The
+worktree exists because the packaged candidate must be built from the union, not from either line
+alone. Its `desktop/node_modules` is a junction to `dev/v2`'s (bun cannot resolve nested packages
+through it, so a real `bun install` is needed before any build there). Remove this worktree once the
+candidate is packaged and reviewed, or once Astra's line absorbs the merge — whichever comes first,
+and record it here when it goes.
 
 ## V2-01 notes for the next run
 
