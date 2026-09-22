@@ -1,0 +1,132 @@
+{
+  "journeys": [
+    {
+      "id": "J-WORK",
+      "name": "Real execution, and what a stopped job shows",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery"
+      ],
+      "detail": {
+        "conversation": "216b8da5-ccb0-4968-b6d8-0aa339bb67a9",
+        "job": "7f61a315-9def-4bac-b183-ce54851b1393",
+        "job_state": "CLOSED",
+        "verdict": "VERIFIED",
+        "assistant_replies": 1,
+        "row": {
+          "accepted": 1,
+          "age_seconds": 13,
+          "direct": null,
+          "fenced": false,
+          "job_id": "7f61a315-9def-4bac-b183-ce54851b1393",
+          "last_at": 1790099560.6976027,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "later",
+          "reason": "Done and verified.",
+          "related": {
+            "approvals": 0,
+            "conversation": "216b8da5-ccb0-4968-b6d8-0aa339bb67a9",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790099542"
+          },
+          "state": "CLOSED",
+          "title": "Write a short note titled Finished Work about what a settled job looks like from the outside.",
+          "total": 1,
+          "verdict": "VERIFIED",
+          "why": "Done and verified."
+        },
+        "stopped_job": "d4bc0804-97d2-4fbb-905f-4714a3370dfc",
+        "stopped_row": {
+          "accepted": 0,
+          "age_seconds": 1,
+          "direct": null,
+          "fenced": false,
+          "job_id": "d4bc0804-97d2-4fbb-905f-4714a3370dfc",
+          "last_at": 1790099569.3247607,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "216b8da5-ccb0-4968-b6d8-0aa339bb67a9",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790099542"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Stopped Work that will be stopped before it finishes.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "The abandoned-run fence itself is V2-11 evidence (a run no broker can carry is fenced, never replayed); this journey demonstrates real execution and what a deliberately stopped run shows.",
+      "seconds": 27.8
+    },
+    {
+      "id": "J-RECOV",
+      "name": "Failures keep their work; retry is guarded",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work"
+      ],
+      "detail": {
+        "conversation": "cec81de7-9fd7-4fba-a1f9-5b3d4b342490",
+        "job": "a9e59cde-422a-43be-8053-640039cf1b56",
+        "job_state": "CANCELLED",
+        "request_kept": true,
+        "submissions": 1,
+        "retry_answer": {
+          "refused": true,
+          "sentence": "/api/retry None -> This request is not ready for retry"
+        },
+        "row": {
+          "accepted": 0,
+          "age_seconds": 1,
+          "direct": null,
+          "fenced": false,
+          "job_id": "a9e59cde-422a-43be-8053-640039cf1b56",
+          "last_at": 1790099576.402539,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "cec81de7-9fd7-4fba-a1f9-5b3d4b342490",
+            "milestones": 1,
+            "project_id": "acceptance-recovery-1790099570"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Recovery Acceptance about what happens to saved work when a run is stopped.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "A stopped job keeps its work and is never silently re-run; the retry endpoint's refusal proves non-execution, not recovery. A genuinely retryable FAILED submission going through /api/retry is pinned by the engine suite, not claimed here.",
+      "seconds": 7.6
+    }
+  ],
+  "identity": {
+    "pid": 15116,
+    "port": 60979,
+    "url": "http://127.0.0.1:60979",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 15116,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 13:52:57",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

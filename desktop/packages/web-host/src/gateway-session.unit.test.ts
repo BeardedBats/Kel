@@ -125,11 +125,31 @@ describe('D3 gateway session enforcement', () => {
     expect(backend.requests).toHaveLength(0);
   });
 
-  it('refuses anonymous password reset (the shipped takeover) without touching the backend', async () => {
+  it('keeps password reset for the person at this machine and for nobody else', async () => {
+    // V2 decision: local recovery (`bun run resetpass` POSTs this route) is a supported path for the
+    // person sitting at the machine, and the boundary is the real peer address — a loopback client
+    // is let through to the backend, and `static-server.unit.test.ts` pins that a non-loopback peer
+    // is refused before the splice with no header ever consulted. What must never happen is an
+    // anonymous BUSINESS route reaching the backend, which the previous test still proves.
     const server = await start();
     const response = await fetch(`${server.localUrl}/api/webui/reset-password`, { method: 'POST' });
-    expect(response.status).toBe(401);
-    expect(backend.requests).toHaveLength(0);
+    expect(response.status).toBe(200); // the backend's own answer, forwarded for a loopback caller
+    expect(backend.requests.map((r) => r.url.split('?')[0])).toEqual(['/api/webui/reset-password']);
+  });
+
+  it('refuses an anonymous reset that a proxy forwards as a foreign peer', async () => {
+    // The reset route is the one exemption; everything else stays closed even when it carries the
+    // headers a proxy would add. A non-loopback peer cannot be produced in this process, so the peer
+    // predicate is asserted directly here as well.
+    const server = await start();
+    const forwarded = await fetch(`${server.localUrl}/api/conversations?page_size=1`, {
+      headers: { 'x-forwarded-for': '203.0.113.9', 'x-real-ip': '203.0.113.9' },
+    });
+    expect(forwarded.status).toBe(401);
+    const mod = await import('./static-server.js');
+    expect(mod.isLoopbackAddress('203.0.113.9')).toBe(false);
+    expect(mod.isLocalRecoveryPath('/api/webui/reset-password')).toBe(true);
+    expect(mod.isLocalRecoveryPath('/api/conversations')).toBe(false);
   });
 
   it('keeps the SPA boot flow anonymous: /api/auth/user, /login, /qr-login', async () => {

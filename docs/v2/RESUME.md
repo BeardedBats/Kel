@@ -1,5 +1,47 @@
 # RESUME — exact continuation
 
+## CURRENT CHECKPOINT (2026-09-22, evening) — read this first; it supersedes the stale lines below
+
+**Where the work is:** `C:\Users\Nick\Desktop\Kel\kel-v2-integration` on `integration/v2`. The commit
+that carries this block is the checkpoint (the one before it is `8cdefd0`).
+
+**The candidate exists and launches.** `C:\Users\Nick\KelV2Candidate` holds the complete unpacked
+runtime; `Run-Kel-V2-Candidate.cmd` in that folder starts it on the isolated data root
+`C:\Users\Nick\KelV2Runs\prepared\candidate` (it exports `KEL_DATA_DIR`, then `Start-Process`es
+`Kel.exe`; it never touches the stable install or the stable data root). Verified on the packaged app:
+window titled **Kel**, its own engine
+(`…\KelV2Candidate\resources\kel-engine\KelEngine.exe --data C:/Users/Nick/KelV2Runs/prepared/candidate`),
+its own `aioncore`, its own `kel.sqlite3`, shutdown and relaunch intact.
+
+**Measured and repaired this checkpoint** (evidence: `docs/v2/evidence/V2_05_DEEPLINK_RETENTION.md`,
+`ASAR_PACK_DEFECT.md`):
+- deep-link destination retention through sign-in (link → sign-in → that conversation → refresh) —
+  the destination is now remembered in `sessionStorage` because the history entry that carried it was
+  replaced during the session check;
+- a deep link to an unknown conversation now says so on the route (Arco `Result` + the id) instead of
+  toasting and silently replacing the route with home;
+- the loopback-only local password recovery and the remote-refusal boundary (30 web-host tests);
+- `J-WORK` and `J-RECOV` PASS with the corrected action semantics, plus a new pin that a FAILED
+  request recovers through `/api/retry` once with no duplicate work
+  (`tests/test_v2_attention.py`, 18 tests with the long-run fencing suite).
+
+**Before copying any future pack:** run `python C:\tmp\verify_asar.py` (minimum archive check:
+manifest parses, renderer bundles present, `out/main/index.js` + `out/renderer/index.html` byte-identical
+to the build). The pack produced a corrupt archive twice today (`ASAR_PACK_DEFECT.md`); never extract
+archive entries into a source checkout — use `C:\tmp\…`.
+
+**Open, in this order:** (1) when the SPA believes it is signed in while the session is gone, protected
+calls 401 and the app can land on home instead of the sign-in gate (the gate itself now remembers the
+destination) — the trigger is the stale session state; (2) the browser/phone flows that were not yet
+exercised on the packaged build (recipe run + reopen its result, attention resolution, Build Update
+progress in the UI); (3) the V2-19 bounded regression groups and the remaining V2-16 numbers on the
+integration branch; (4) a physical iPhone pass stays separately pending.
+
+**Processes:** the stable engine (`KelDogfoodCandidate`, pid 26544) must keep running untouched; the V2
+dev engine and the candidate app are stopped unless the checkpoint that follows says otherwise.
+
+---
+
 1. Work in `C:\Users\Nick\Desktop\Kel\kel-v2` on branch `dev/v2` (shared object database lives in
    `Kel-Repo\.git`; never clone, never touch `main`).
 2. Read `docs/v2/MARATHON_DIRECTIVE.md`, then `docs/v2/MARATHON_STATE.md`, then this file.

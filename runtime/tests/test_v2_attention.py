@@ -140,6 +140,62 @@ class SurfaceTests(unittest.TestCase):
         self.assertNotIn('snooze', str(work).lower(),
                          'nothing offers a snooze the authoritative state cannot honour')
 
+    def _submission(self, submission_id):
+        with self.store.transaction() as db:
+            return dict(db.execute('SELECT * FROM submissions WHERE id=?', (submission_id,)).fetchone())
+
+    def test_a_failed_request_recovers_through_retry_once_and_keeps_its_words(self):
+        """A genuinely retryable failure recovers: /api/retry accepts it, resubmits the SAME request
+        once, clears the error and leaves no second copy. A stopped request is refused instead — a
+        refusal proves non-execution, so cancellation and recovery are never conflated (D-49).
+        """
+        from kel.service import PolicyError
+
+        recorded = []
+
+        class Recorder:
+            def submit(self, *args, **kwargs):
+                recorded.append((args, kwargs))
+
+        original = self.service.requests
+        self.service.requests = Recorder()
+        self.addCleanup(lambda: setattr(self.service, 'requests', original))
+        text = 'Write the note with enough text to pass.'
+
+        def make(submission_id, state):
+            with self.store.transaction() as db:
+                db.execute('INSERT INTO submissions(id,conversation_id,text,state,error,job_id,created)'
+                           ' VALUES(?,?,?,?,?,?,?)',
+                           (submission_id, 'main', text, state,
+                            'The provider stopped responding.' if state == 'FAILED' else None,
+                            None, time.time()))
+                db.execute('INSERT INTO submission_packets(id,packet,kind) VALUES(?,?,?)',
+                           (submission_id, '{}', 'work'))
+
+        make('sub-failed', 'FAILED')
+        make('sub-stopped', 'CANCELLED')
+
+        with self.assertRaises(PolicyError) as refused:
+            self.service.action('/api/retry', {'id': 'sub-stopped'})
+        self.assertIn('not ready for retry', str(refused.exception))
+        self.assertEqual(recorded, [], 'a refused retry must not resubmit anything')
+        self.assertEqual(self._submission('sub-stopped')['state'], 'CANCELLED',
+                         'the refused request keeps exactly the state it had')
+
+        answer = self.service.action('/api/retry', {'id': 'sub-failed'})
+        self.assertEqual(answer['id'], 'sub-failed')
+        self.assertEqual(len(recorded), 1, 'one acceptance, one resubmission — no duplicate work')
+        handed = recorded[0][0]
+        self.assertIn('sub-failed', handed)
+        self.assertIn(text, str(handed), 'the saved words are handed back unchanged')
+        row = self._submission('sub-failed')
+        self.assertEqual(row['state'], 'PLANNING')
+        self.assertIsNone(row['error'])
+        with self.store.transaction() as db:
+            count = db.execute('SELECT COUNT(*) FROM submissions WHERE id=?',
+                               ('sub-failed',)).fetchone()[0]
+        self.assertEqual(count, 1, 'recovery reuses the request rather than copying it')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,7 @@ import { changeLanguage } from '@/renderer/services/i18n';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppLoader from '@renderer/components/layout/AppLoader';
 import { useAuth } from '../../hooks/context/AuthContext';
+import { pendingLoginReturnTo } from '@renderer/utils/loginReturnTo';
 import './LoginPage.css';
 
 type MessageState = {
@@ -35,8 +36,11 @@ const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  // V2-05: a deep link that landed here keeps its destination through sign-in.
-  const destination = ((location.state as { from?: string } | null)?.from) || '/guid';
+  // V2-05: a deep link that landed here keeps its destination through sign-in. The guard in
+  // layout/Router.tsx also writes it to sessionStorage, so it survives the redirect chain and a
+  // reload; history state is still honoured first when it is present.
+  const destination =
+    ((location.state as { from?: string } | null)?.from) || pendingLoginReturnTo() || '/guid';
   const { status, login } = useAuth();
 
   const [username, setUsername] = useState('');
