@@ -2,7 +2,7 @@ import loginLogo from '@renderer/assets/logos/brand/app.png';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/renderer/services/i18n';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AppLoader from '@renderer/components/layout/AppLoader';
 import { useAuth } from '../../hooks/context/AuthContext';
 import './LoginPage.css';
@@ -34,6 +34,9 @@ const deobfuscate = (text: string): string => {
 const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  // V2-05: a deep link that landed here keeps its destination through sign-in.
+  const destination = ((location.state as { from?: string } | null)?.from) || '/guid';
   const { status, login } = useAuth();
 
   const [username, setUsername] = useState('');
@@ -83,9 +86,9 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      void navigate('/guid', { replace: true });
+      void navigate(destination, { replace: true });
     }
-  }, [navigate, status]);
+  }, [destination, navigate, status]);
 
   const clearMessageLater = useCallback(() => {
     if (messageTimer.current) {
@@ -160,7 +163,7 @@ const LoginPage: React.FC = () => {
         showMessage({ type: 'success', text: successText });
 
         window.setTimeout(() => {
-          void navigate('/guid', { replace: true });
+          void navigate(destination, { replace: true });
         }, 600);
       } else {
         const errorText = (() => {

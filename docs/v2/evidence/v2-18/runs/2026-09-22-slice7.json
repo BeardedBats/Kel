@@ -1,0 +1,61 @@
+{
+  "journeys": [
+    {
+      "id": "J-ATTN",
+      "name": "An interruption appears, is answered and clears",
+      "shell_required": false,
+      "requirements": [
+        "Needs Your Attention: human interruptions"
+      ],
+      "detail": {
+        "conversation": "3ff9c079-ce0b-4e49-a3fa-6f2dd28dc178",
+        "job": "b05aea20-16eb-4eab-96bc-c3814942d89f",
+        "approval": "10f05be2-d97f-4eab-b4ef-635d3bf90474",
+        "appeared_pending": true,
+        "row_before": {
+          "needs_you": true,
+          "priority": "now",
+          "direct": {
+            "action": "answer",
+            "hint": "Answer the request in this conversation.",
+            "route": "/api/approval"
+          },
+          "related": {
+            "approvals": 1,
+            "conversation": "3ff9c079-ce0b-4e49-a3fa-6f2dd28dc178",
+            "milestones": 1,
+            "project_id": "acceptance-attn-1790089660"
+          }
+        },
+        "answer": {
+          "status": "APPROVED"
+        },
+        "row_after": {
+          "needs_you": false,
+          "direct": {
+            "action": "stop",
+            "hint": "Stop this work.",
+            "route": "/api/control"
+          }
+        },
+        "still_pending": 0
+      },
+      "status": "PASSED",
+      "seconds": 0.5
+    }
+  ],
+  "identity": {
+    "pid": 22592,
+    "port": 55649,
+    "url": "http://127.0.0.1:55649",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 22592,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 11:07:41",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

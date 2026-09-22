@@ -63,6 +63,22 @@ const ANONYMOUS_ROUTES = new Set([
   '/api/auth/refresh',
 ]);
 
+// The documented local recovery path — `bun run resetpass` POSTs /api/webui/reset-password — is a
+// loopback-only operation: the person at this machine can recover a forgotten password, a remote
+// visitor never can. Measured before this change: the fast path 401'd against a running WebUI, so
+// the documented recovery could not work at all (recorded in the V2-05 evidence). This allowlist
+// entry is deliberately narrow: one route, loopback only, never a session bypass for anything else.
+const LOCAL_RECOVERY_ROUTES = new Set(['/api/webui/reset-password']);
+
+const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+
+export function isLocalRecoveryRequest(req: Pick<IncomingMessage, 'url' | 'socket'>): boolean {
+  const pathname = String(req.url || '').split('?')[0];
+  if (!LOCAL_RECOVERY_ROUTES.has(pathname)) return false;
+  const address = String((req.socket && req.socket.remoteAddress) || '').toLowerCase();
+  return LOOPBACK_ADDRESSES.has(address);
+}
+
 const isProxyRoute = (url: string): boolean =>
   url.startsWith('/api/') ||
   url.startsWith('/api?') ||
@@ -361,7 +377,7 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
           if (pathname === '/logout' && req.method === 'POST') {
             // Drop the cached verdict so a logged-out cookie is re-checked on its next use.
             validateSession.invalidate(req.headers.cookie);
-          } else if (!ANONYMOUS_ROUTES.has(pathname)) {
+          } else if (!ANONYMOUS_ROUTES.has(pathname) && !isLocalRecoveryRequest(req)) {
             const allowed = await validateSession.validate(req.headers.cookie);
             if (!allowed) {
               replyJson(res, 401, { success: false, error: 'Authentication required', code: 'UNAUTHORIZED' });

@@ -72,6 +72,7 @@ const HIDE_WORKFORCE_SURFACES = true;
 
 const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
   const { status, user } = useAuth();
+  const location = useLocation();
   // Mounted once for every authenticated route: the loop warning has to reach
   // the user even when they are looking at a THIRD conversation, which is the
   // whole reason it is a broadcast rather than an in-conversation banner.
@@ -82,10 +83,36 @@ const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) =
   }
 
   if (status !== 'authenticated') {
-    return <Navigate to='/login' replace />;
+    // V2-05 deep links reach the real routes through this guard, so THIS is where the destination
+    // must be remembered — a catch-all never sees an unauthenticated /work or /conversation/<id>.
+    return (
+      <Navigate to='/login' state={{ from: location.pathname + location.search }} replace />
+    );
   }
 
   return React.cloneElement(layout);
+};
+
+// V2-05 deep links: an unauthenticated visitor asked for a specific route (/conversation/<id>,
+// /work, …). The gateway already turns a path-style link into its hash form; these two small gates
+// keep the destination through sign-in instead of dropping the visitor on the default page.
+type FromState = { from?: string } | null | undefined;
+
+const SignInGate: React.FC = () => {
+  const location = useLocation();
+  const { status } = useAuth();
+  const from = (location.state as FromState)?.from;
+  if (status === 'authenticated') return <Navigate to={from || '/guid'} replace />;
+  return withRouteFallback(LoginPage);
+};
+
+const CatchAllRedirect: React.FC = () => {
+  const location = useLocation();
+  const { status } = useAuth();
+  const from = location.pathname + location.search;
+  return (
+    <Navigate to={status === 'authenticated' ? '/guid' : '/login'} state={{ from }} replace />
+  );
 };
 
 const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
@@ -95,10 +122,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
     <HashRouter>
       <DocumentTitle />
       <Routes>
-        <Route
-          path='/login'
-          element={status === 'authenticated' ? <Navigate to='/guid' replace /> : withRouteFallback(LoginPage)}
-        />
+        <Route path='/login' element={<SignInGate />} />
         <Route element={<ProtectedLayout layout={layout} />}>
           <Route index element={<Navigate to='/guid' replace />} />
           <Route path='/guid' element={withRouteFallback(Guid)} />
@@ -194,7 +218,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
               configuration surface, so it sits with the other ones rather than in the primary nav. */}
           <Route path='/connections' element={withRouteFallback(KelConnections)} />
         </Route>
-        <Route path='*' element={<Navigate to={status === 'authenticated' ? '/guid' : '/login'} replace />} />
+        <Route path='*' element={<CatchAllRedirect />} />
       </Routes>
     </HashRouter>
   );

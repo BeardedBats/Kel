@@ -4,7 +4,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import net, { type AddressInfo } from 'node:net';
-import { startStaticServer, type StaticServerHandle } from './static-server.js';
+import { isLocalRecoveryRequest, startStaticServer, type StaticServerHandle } from './static-server.js';
 
 async function mkRendererFixture(): Promise<string> {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ws-static-'));
@@ -27,6 +27,36 @@ async function startMockBackend(
 }
 
 describe('static-server', () => {
+  it('local recovery is loopback-only, and only for its own route', () => {
+    const request = (url: string, remoteAddress: string) =>
+      ({ url, socket: { remoteAddress } }) as never as Parameters<typeof isLocalRecoveryRequest>[0];
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password', '127.0.0.1'))).toBe(true);
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password', '::1'))).toBe(true);
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password', '::ffff:127.0.0.1'))).toBe(true);
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password?x=1', '127.0.0.1'))).toBe(true);
+    // A person on another machine can never reset the password, and nothing else is exempt.
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password', '192.168.1.50'))).toBe(false);
+    expect(isLocalRecoveryRequest(request('/api/webui/reset-password', ''))).toBe(false);
+    expect(isLocalRecoveryRequest(request('/api/connections', '127.0.0.1'))).toBe(false);
+    expect(isLocalRecoveryRequest(request('/api/auth/refresh', '127.0.0.1'))).toBe(false);
+  });
+
+  it('a loopback reset reaches the backend even with the session gate on', async () => {
+    const backend = await startMockBackend((req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ proxied: true, path: req.url }));
+    });
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0,
+                                       requireAuth: true });
+    const r = await fetch(`${handle.localUrl}/api/webui/reset-password`, { method: 'POST' });
+    expect(r.status).toBe(200);
+    const json = (await r.json()) as { proxied?: boolean };
+    expect(json.proxied).toBe(true);
+    // Everything else still needs a session.
+    const gated = await fetch(`${handle.localUrl}/api/connections`);
+    expect(gated.status).toBe(401);
+  });
   let handle: StaticServerHandle | null = null;
   let stopBackend: (() => Promise<void>) | null = null;
   let staticDir = '';
