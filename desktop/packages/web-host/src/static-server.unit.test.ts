@@ -57,13 +57,30 @@ describe('static-server', () => {
     expect(text).toContain('<title>root</title>');
   });
 
-  it('SPA fallback: /chat/123 returns index.html', async () => {
+  it('SPA fallback: a path-style deep link is sent to the hash route it names', async () => {
+    // Measured cause: the renderer is hash-routed, so /chat/123 could never reach a route — the
+    // fallback answered index.html and the catch-all sent the visitor to /guid or /login with the
+    // path (and any conversation id) gone. The fallback now translates it.
     const backend = await startMockBackend((_req, res) => res.end('nope'));
     stopBackend = backend.close;
     handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
-    const r = await fetch(`${handle.localUrl}/chat/123`);
-    expect(r.status).toBe(200);
-    expect(await r.text()).toContain('<title>root</title>');
+    const r = await fetch(`${handle.localUrl}/chat/123`, { redirect: 'manual' });
+    expect(r.status).toBe(302);
+    expect(r.headers.get('location')).toBe('/#/chat/123');
+  });
+
+  it('/conversation/<id> keeps the id in the hash, query and all', async () => {
+    const backend = await startMockBackend((_req, res) => res.end('nope'));
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
+    const r = await fetch(`${handle.localUrl}/conversation/abc-123?from=phone`, {
+      redirect: 'manual',
+    });
+    expect(r.status).toBe(302);
+    expect(r.headers.get('location')).toBe('/#/conversation/abc-123?from=phone');
+    const root = await fetch(`${handle.localUrl}/`);
+    expect(root.status).toBe(200);
+    expect(await root.text()).toContain('<title>root</title>');
   });
 
   it('static asset /assets/main.js served', async () => {
