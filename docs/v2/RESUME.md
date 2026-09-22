@@ -14,6 +14,23 @@
    `KEL_PROTECTED_PATHS='C:\Users\Nick\KelDogfoodCandidate;C:\Users\Nick\KelDogfoodRuns\prepared'
    python -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine` (from `runtime/`), then
    `python tools/acceptance_journeys.py --root <root> --journeys <ids> --out <evidence json>`.
+   **State at this checkpoint (2026-09-22, `dev/v2` @ `492b9a0` + `7b18618`):** V2-06, V2-07 and
+   V2-08 are BUILT (D-50) — attention rows, the recipe library's own surfaces (migration 30
+   `v2-recipe-library`) and `/api/activity` — and the journeys J-FIX, J-UPGRADE, J-SEC, J-KBU
+   (C1–C4 + negatives), J-PROJ, J-MEM, J-NET, J-CONN, J-TRANS, J-CONV, J-MODEL, J-RECIPE and
+   J-ACTIVITY have all PASSED on the real root (evidence under `docs/v2/evidence/v2-18/runs/`).
+   **Remaining unchecked journeys: J-WORK, J-RECOV, J-ATTN (backend) and J-REMOTE (gateway), then the
+   Shell/phone ones.** The web-host deep-link cause is fixed and pinned
+   (`packages/web-host/src/static-server.unit.test.ts`, 15 tests on the merged line). The integration
+   line `integration/v2` @ `fe5e6b7` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` merges Astra's
+   committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the merge's second parent; the rest
+   of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
+   and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
+   needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
+   **NEXT ACTION, in order:** (1) the three remaining backend journeys on a fresh owned engine;
+   (2) `bun install` in the integration worktree, then its bounded renderer suites; (3) package a
+   candidate at `C:\Users\Nick\KelV2Candidate` — the path does not exist yet, so nothing has to be
+   preserved or rolled back, and installation stays behind Nick's explicit decision.
    **PASSED (2026-09-22):** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real codex-code
    repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has the
    baseline as an ancestor), and the negatives (a cancelled mission claims nothing; a mission whose
