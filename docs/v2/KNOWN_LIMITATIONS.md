@@ -323,3 +323,18 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   reconnected (the backup's own notes say so) — a restore never resurrects secrets.
 - **No updater infrastructure** (by directive): upgrades are manual — stop, back up, replace, start;
   the inventory is the check before and after.
+
+## Kibble Build Update: the honest edges (2026-09-21)
+
+- **The candidate is a record, not an installer.** Nothing in Build Update installs, promotes or
+  touches the running app; `promote()` refuses by design and installation remains future work behind
+  an explicit human decision.
+- **Fixed findings are candidate claims.** Even verified evidence does not rewrite Fix Capture's own
+  statuses; the person's review and their Fix Capture decisions stay separate.
+- **The mission needs a clean, verifiable baseline** (git toplevel == the chosen root, no uncommitted
+  changes). A dirty tree is refused in plain words rather than worked around — observed live while
+  this increment was itself uncommitted.
+- **The runtime repair is the existing coding machinery** — its own limits (provider availability,
+  quota) apply to Build Update unchanged.
+- **One candidate per mission**; re-assembly refreshes a BUILDING/READY candidate but never overwrites
+  an APPROVED/REJECTED review.

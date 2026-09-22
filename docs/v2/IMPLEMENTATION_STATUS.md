@@ -341,3 +341,23 @@ restore touches nothing live until applied and the second apply is a no-op; the 
 survives the restore; and re-opening with every V2 module ensuring its schema changes no count and no
 ledger row. Live on the real V2 root: 107 tables, ledger = 24 migrations, and the backup copy's V2
 counts matched the live inventory exactly. No updater infrastructure (by directive). D-45.
+
+## Kibble Build Update — the backend contract (BUILT, 2026-09-21)
+
+Definition first (D-46): Kibble is the user-facing name for Fix Capture / Dogfood behavior; the
+workflow is capture → select findings → Build Update → isolated development mission → a coding runtime
+repairs Kel's source → bounded tests/verification → a separate candidate build → Nick reviews;
+promotion/installation needs explicit human approval. `kel/build_update.py` (migration 29
+`v21-build-update`) implements the contract on the existing machinery: `start()` records the selected
+findings with their screenshot/route/transcript/version context, verifies the repository identity and
+a clean baseline (refusing otherwise), and creates an ordinary `compile_coding` job the engine claims
+and dispatches into the existing isolated `repositories/<job_id>` copy; `candidate()` reports
+`BUILDING` before settle, then assembles a SEPARATE candidate under `candidates/<id>/` (revision,
+verbatim bounded test evidence with a `verified` flag, fixed and unresolved findings as candidate
+claims only, limitations, a `build-report.json`, an explicit review state); `review()` moves
+READY_FOR_REVIEW to APPROVED/REJECTED only for the person; `promote()` always refuses — installation
+is not part of Build Update and no code path installs. Surface:
+`/api/dogfood {action:'build_update', op:…}`. The future UI contract is in
+`PARALLEL_SHELL_TOUCHES.md`. Live on the real engine: a mission was created (baseline = pushed HEAD),
+the BUILDING gate held, `promote` refused, the job cancelled cleanly, and the source checkout stayed
+byte-clean throughout.

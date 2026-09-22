@@ -402,3 +402,35 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   description with the V2 counts (`connections 3, conversations 12, jobs 3, memories 3, messages 26,
   projects 2`); `inspect` matched; the copied database's counts matched the live inventory exactly;
   the probe folder was removed and the engine stopped by its own pid.
+
+### Kibble Build Update — the backend contract (2026-09-21)
+
+- Definition correction first (D-46): Kibble is the user-facing name for Fix Capture / Dogfood
+  behavior (the definition lived in Nick's handoff, not the repo); the workflow and the measured
+  reuse map are recorded in `docs/v2/evidence/kibble-build-update/README.md`.
+- `tests/test_v2_build_update.py` (new, 10 tests) — `start()` builds a mission on the existing work
+  machinery (findings' context recorded; verified repo identity; baseline revision; the coding
+  contract's kind/root/test_command) and REFUSES unknown/closed findings, non-repo sources, sensitive
+  roots (containment) and a dirty baseline; `candidate()` reports BUILDING and creates nothing before
+  the mission settles; after settle it assembles a candidate under the engine's own `candidates/<id>/`
+  (a `build-report.json` on disk; the artifact location is outside the source root); unverified/
+  failed evidence is recorded verbatim and still yields only a REVIEWABLE candidate; unresolved
+  findings are listed and Fix Capture statuses are never rewritten; `review()` refuses any actor but
+  the person and refuses a second review; `promote()` refuses in plain words for every state; and the
+  no-promotion proof is structural (no install path exists).
+- Migration ledger: build_update is migration 29 (`v21-build-update`); the ledger suite's pins
+  (MODULES, EXPECTED_MAX, the owning name) were updated deliberately and re-pass.
+- Bounded group on the final code: `test_v2_build_update test_v16_r8_migrations test_v2_upgrade
+  test_coding_boundaries test_v2_kibble_gate test_dogfood` → **59 OK** (16 s).
+- Live (engine restarted on the real V2 root, driven through `/api/dogfood {action:'build_update'}`):
+  a finding was captured (`FIX-0001`), `start` created mission `kbm_e7b488ec` with job `8759bedd`,
+  baseline `eb265757` (the pushed HEAD) and scope `['runtime']`; `status` showed the job `READY` with
+  stage `OPEN`; `candidate` before settle answered `BUILDING` with no candidate; `promote` refused
+  with “Installing a candidate is not part of Build Update…” (HTTP 400); the job was cancelled
+  cleanly (`CANCELLED`); and the source checkout's `git status --porcelain` was **empty before and
+  after** — the mission never touched it. The first live attempt had been refused by the
+  clean-baseline guard while this very increment was still uncommitted: recorded as the guard working.
+- Re-verified in the recovery run (2026-09-22, `dev/v2` @ `eb26575`): the same bounded group was re-run
+  from `runtime/` — `python -m unittest tests.test_v2_build_update tests.test_v16_r8_migrations
+  tests.test_v2_upgrade tests.test_coding_boundaries tests.test_v2_kibble_gate tests.test_dogfood`
+  → **59 tests, OK** (15.3 s). That confirms the committed code, not the working copy.

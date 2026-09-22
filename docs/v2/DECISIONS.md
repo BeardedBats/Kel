@@ -477,3 +477,30 @@ state. Team `promotions`/`shadow` views are **not** candidate approval — their
 proved, never assumed. *Forbids:* editing installed files in place; automatic promotion or a
 consumer update platform; a second workflow, task or permission system; concluding a feature is
 absent because its product name is not in the repository.
+
+## D-47 — Build Update was built on the existing machinery; a candidate is a record, and nothing installs
+
+D-46 named the contract; this decision records how it was built and what is deliberately absent. The
+mission is **not a new subsystem**: `start()` records the selected findings (route, version, page
+title, the screenshot fact and a bounded transcript excerpt), then proves its ground before anything
+is created — the folder must be the Git top level itself, `containment.assert_usable_root` must accept
+it, the baseline must be **clean** (a dirty tree is refused in plain words; that refusal was observed
+live while this very increment was uncommitted), and the revision is recorded. What it creates is an
+ordinary `compile_coding` contract (`kind='coding'`, root, test command, the `manual_review`
+milestone) through the existing `Store.create`, so the engine claims and dispatches it and the coding
+machinery works in the existing isolated `repositories/<job_id>` copy; the source checkout is never
+edited and the running app is never touched. The candidate is a **separate record** (migration 29
+`v21-build-update`, table `build_candidates`) whose artifact lives under the engine data root's
+`candidates/<id>/` with its revision, verbatim bounded test/verification evidence and a `verified`
+flag, fixed and unresolved findings as **candidate claims only** (Fix Capture's own statuses are never
+rewritten), limitations, a `build-report.json`, and an explicit review state. `candidate()` answers
+`BUILDING` and creates nothing until the job is `CLOSED`, and re-assembly never overwrites an
+`APPROVED`/`REJECTED` review; `review()` moves the state only for `actor='user'`; `promote()`
+**always** raises, and the no-promotion proof is structural (no install path exists) rather than a
+promise. D-46's caution is realized rather than assumed: Team `promotions`/`shadow` are not candidate
+approval, and the tests pin that mapping. Surface: `/api/dogfood {action:'build_update',
+op:start|status|candidate|review|promote}`; the future UI contract is in `PARALLEL_SHELL_TOUCHES.md`.
+*Forbids:* a second workflow, task or permission system for Build Update; a mission that edits the
+source checkout or any installed path; installing, promoting or updating anything from this backend; a
+candidate that overwrites an existing human review; treating Team `promotions`/`shadow` as candidate
+approval; starting a mission on a dirty, unverified or sensitive baseline.

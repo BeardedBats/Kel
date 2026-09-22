@@ -38,3 +38,31 @@ the capability and the source fact deliberately when it lands.
 - The engine serves exactly one public route, `/oauth/callback`; a sign-in started on a remote
   surface (the phone) finishes only where the engine's own loopback is reachable. The Shell work may
   decide later whether the phone should start sign-ins; no renderer change is needed for that today.
+
+## Kibble Build Update — the future UI contract (2026-09-21, `dev/v2` @ the Build Update commit)
+
+Kibble is the user-facing name for Fix Capture / Dogfood; the backend contract is BUILT (D-46).
+Nothing here asks the Shell to change today — it is the contract a Build Update surface will read and
+write when the Ramble/Kibble presentation lands.
+
+- **Findings** come from the existing dogfood surface unchanged (`/api/dogfood` list/get/save/
+  set_status; statuses OPEN / BATCHED / FIXED / DISMISSED). Selection is simply a list of fix ids.
+- **One action family, five ops** — `/api/dogfood {action:'build_update', op:…}`:
+  - `start` — `{findings:[ids], source_root, tests:[argv], scope?, conversation?, project_id?}`.
+    Refusals arrive as ordinary plain sentences (non-repo source, dirty baseline, closed finding,
+    sensitive root). Success returns `{mission, job, contract}`.
+  - `status` — `{mission}` → the mission record (findings' context incl. route/version/has_screenshot,
+    source_root, baseline_revision, scope, stage) + `{job:{state, verdict, milestones}}` +
+    `{candidate}` when one exists. A pure read.
+  - `candidate` — `{mission}` → `{state:'BUILDING'}` before the mission settles (nothing is created),
+    then `{state:'READY_FOR_REVIEW'|'APPROVED'|'REJECTED', candidate:{…}}`.
+  - `review` — `{candidate, decision:'approve'|'reject', note?}`; the state only moves for the person.
+  - `promote` — **always refuses** in plain words; a surface should never present it as an action.
+- **A candidate carries**: revision, `artifact_location` (under the engine data root's
+  `candidates/<id>/` — never the source checkout, never an installation), verbatim bounded test/
+  verification evidence with a `verified` flag, fixed and unresolved findings (candidate claims only —
+  Fix Capture statuses are untouched), limitations, and the review state. A `build-report.json` sits
+  in that folder for a file-level review.
+- **Copy discipline for the surface**: “Build Update” creates and verifies a candidate; it never
+  installs and never changes the running app. Installation/promotion is a separate future step behind
+  an explicit human decision and is not part of this contract.
