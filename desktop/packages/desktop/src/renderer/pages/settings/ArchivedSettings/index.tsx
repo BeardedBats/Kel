@@ -1,4 +1,5 @@
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
+import archivedIcon from '@renderer/assets/figma/refresh/scheduled.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -458,9 +459,8 @@ const ArchivedSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper>
-      <p className='kel-shell-model-description'>Conversations and teams you archived.</p>
+      <p className='kel-shell-model-description kel-shell-archive-description'>Conversations and teams you archived.</p>
       <div className='kel-shell-archive-actions'>
-        {total === 0 && <Button disabled>Delete all</Button>}
         {
           total > 0 ? (
             <div className='flex min-w-0 items-center justify-end gap-10px'>
@@ -511,9 +511,12 @@ const ArchivedSettings: React.FC = () => {
           <Spin />
         </div>
       ) : total === 0 ? (
-        <div className='kel-card'>
+        <div className='kel-card kel-shell-archived-empty'>
           <ShellSourceCardHeader title='Archived' />
-          <p className='kel-meta'>No archived items</p>
+          <div className='kel-shell-archived-empty-content'>
+            <span className='kel-shell-archived-empty-icon' aria-hidden='true'><img src={archivedIcon} alt='' /></span>
+            <p className='kel-meta'>No archived items</p>
+          </div>
         </div>
       ) : (
         <div className='mt-18px flex flex-col gap-12px'>

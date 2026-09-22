@@ -710,6 +710,21 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header p { display: none; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header h1 { font: 600 20px/26px var(--kel-shell-heading); }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-btn { box-shadow: none; backdrop-filter: contrast(1.55) saturate(1.25); }
+.kel-v2-shell .kel-in-chat-frame__pane :is(.kel-shell-model-description, [data-testid='tools-header']) { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] { gap: 0; margin-bottom: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > .kel-shell-source-card-head { margin-bottom: 10px; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > p:last-child { margin: 0 !important; font: 400 12px/16px var(--kel-shell-body); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models { position: relative; min-height: 215px; margin-bottom: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .kel-shell-model-actions { position: absolute; right: 20px; top: 10px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px { min-height: 150px; padding: 0; align-items: center; justify-content: center; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px h3 { font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-shell-model-empty-icon, .kel-v2-shell .kel-shell-archived-empty-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 10px; border: 1px solid rgba(191,216,255,.45); border-radius: 50%; color: var(--kel-text-2); }
+.kel-v2-shell .kel-shell-archived-empty-icon img { width: 20px; height: 20px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archive-actions:empty { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty { min-height: 215px; }
+.kel-v2-shell .kel-shell-archived-empty-content { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; }
+.kel-v2-shell .kel-shell-archived-empty-content .kel-meta { margin: 0; font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-about .kel-shell-preference-row { min-height: 58px; }
 
 .kel-v2-shell .kel-shell-ramble > aside { box-sizing: border-box; width: 256px; min-width: 256px; padding: 0 8px; }
 .kel-v2-shell .kel-shell-ramble > main { padding: 22px max(24px, calc((100vw - 1176px) / 2)) 24px; }
