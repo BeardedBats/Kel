@@ -1,0 +1,119 @@
+{
+  "journeys": [
+    {
+      "id": "J-WORK",
+      "name": "Real execution, and what a stopped job shows",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery"
+      ],
+      "detail": {
+        "conversation": "72cc142f-b621-4615-bae5-ea0074bea590",
+        "job": "7a19a304-760c-4e9d-95aa-2df2dc6831b1",
+        "job_state": "CLOSED",
+        "verdict": "VERIFIED",
+        "assistant_replies": 1,
+        "row": {
+          "accepted": 1,
+          "age_seconds": 13,
+          "direct": null,
+          "fenced": false,
+          "job_id": "7a19a304-760c-4e9d-95aa-2df2dc6831b1",
+          "last_at": 1790089221.019029,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "later",
+          "reason": "Done and verified.",
+          "related": {
+            "approvals": 0,
+            "conversation": "72cc142f-b621-4615-bae5-ea0074bea590",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790089204"
+          },
+          "state": "CLOSED",
+          "title": "Write a short note titled Finished Work about what a settled job looks like from the outside.",
+          "total": 1,
+          "verdict": "VERIFIED",
+          "why": "Done and verified."
+        },
+        "stopped_job": "5061bbd9-5a9e-46d6-984d-6548e962ad17",
+        "stopped_row": null
+      },
+      "status": "FAILED",
+      "problem": "real execution or the stopped job's row did not match: state='CLOSED' row=True stopped=False",
+      "seconds": 26.5
+    },
+    {
+      "id": "J-RECOV",
+      "name": "Failures keep their work; retry is guarded",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work"
+      ],
+      "detail": {
+        "conversation": "564f4d87-0730-4850-a786-4cd635fe7c6b",
+        "job": "d7a11fba-a7f4-4aaa-aa4b-b4e53a9f8902",
+        "job_state": "CANCELLED",
+        "request_kept": true,
+        "submissions": 1,
+        "retry_answer": {
+          "refused": true,
+          "sentence": "/api/retry None -> This request is not ready for retry"
+        },
+        "row": {
+          "accepted": 0,
+          "age_seconds": 1,
+          "direct": {
+            "action": "retry",
+            "hint": "Try this work again from its saved request.",
+            "route": "/api/retry"
+          },
+          "fenced": false,
+          "job_id": "d7a11fba-a7f4-4aaa-aa4b-b4e53a9f8902",
+          "last_at": 1790089236.9249294,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 1,
+          "priority": "soon",
+          "reason": "Settled: uncertain.",
+          "related": {
+            "approvals": 0,
+            "conversation": "564f4d87-0730-4850-a786-4cd635fe7c6b",
+            "milestones": 1,
+            "project_id": "acceptance-recovery-1790089230"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Recovery Acceptance about what happens to saved work when a run is stopped.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "Settled: uncertain."
+        }
+      },
+      "status": "PASSED",
+      "seconds": 7.4
+    },
+    {
+      "id": "J-ATTN",
+      "name": "J-ATTN",
+      "status": "FAILED",
+      "problem": "ProgrammingError: Error binding parameter 1: type 'dict' is not supported",
+      "seconds": 0.1
+    }
+  ],
+  "identity": {
+    "pid": 32844,
+    "port": 51634,
+    "url": "http://127.0.0.1:51634",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 32844,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 11:00:38",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "journeys": [
+    {
+      "id": "J-WORK",
+      "name": "Real execution, and what a stopped job shows",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery"
+      ],
+      "detail": {
+        "conversation": "e84725b5-37d4-41ee-80ad-cd5c8a5019fa",
+        "job": "208c4a9e-cf07-43d9-af05-f0d865272e9b",
+        "job_state": "CLOSED",
+        "verdict": "VERIFIED",
+        "assistant_replies": 1,
+        "row": {
+          "accepted": 1,
+          "age_seconds": 14,
+          "direct": null,
+          "fenced": false,
+          "job_id": "208c4a9e-cf07-43d9-af05-f0d865272e9b",
+          "last_at": 1790089313.6031098,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "later",
+          "reason": "Done and verified.",
+          "related": {
+            "approvals": 0,
+            "conversation": "e84725b5-37d4-41ee-80ad-cd5c8a5019fa",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790089295"
+          },
+          "state": "CLOSED",
+          "title": "Write a short note titled Finished Work about what a settled job looks like from the outside.",
+          "total": 1,
+          "verdict": "VERIFIED",
+          "why": "Done and verified."
+        },
+        "stopped_job": "c67abd1c-5491-4674-94aa-3d29a8da2ea9",
+        "stopped_row": {
+          "accepted": 0,
+          "age_seconds": 2,
+          "direct": {
+            "action": "retry",
+            "hint": "Try this work again from its saved request.",
+            "route": "/api/retry"
+          },
+          "fenced": false,
+          "job_id": "c67abd1c-5491-4674-94aa-3d29a8da2ea9",
+          "last_at": 1790089324.4756796,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "Settled: uncertain.",
+          "related": {
+            "approvals": 0,
+            "conversation": "e84725b5-37d4-41ee-80ad-cd5c8a5019fa",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790089295"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Stopped Work that will be stopped before it finishes.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "Settled: uncertain."
+        }
+      },
+      "status": "PASSED",
+      "seconds": 29.7
+    },
+    {
+      "id": "J-ATTN",
+      "name": "J-ATTN",
+      "status": "FAILED",
+      "problem": "/api/work?conversation=acceptance-attn-1790089325  -> Conversation missing",
+      "seconds": 0.1
+    }
+  ],
+  "identity": {
+    "pid": 32844,
+    "port": 51634,
+    "url": "http://127.0.0.1:51634",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 32844,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 11:02:05",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

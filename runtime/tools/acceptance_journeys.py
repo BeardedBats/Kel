@@ -33,6 +33,10 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    # The journey runner lives in runtime/tools/; the engine's own package must be importable for the
+    # journeys that create a real interruption through the product's store APIs (J-ATTN).
+    sys.path.insert(0, str(ROOT))
 DEFAULT_ROOT = r'C:\Users\Nick\KelV2Runs\prepared\engine'
 DEFAULT_FIXTURES = r'C:\Users\Nick\KelV2Runs\prepared\acceptance'
 PROTECTED_APP = r'C:\Users\Nick\KelDogfoodCandidate'
@@ -925,13 +929,212 @@ def journey_transcription(client, ctx):
     return journey
 
 
+def journey_work(client, ctx, wait=600, poll=10):
+    """§27 Work — a real turn runs to a settled job, and the row says what a stopped one needs."""
+    journey = {'id': 'J-WORK', 'name': 'Real execution, and what a stopped job shows',
+               'shell_required': False,
+               'requirements': ['Work: real autonomous execution', 'Work: recovery'], 'detail': {}}
+    stamp = int(time.time())
+    project = client.call('/api/project', {'id': 'acceptance-work-%d' % stamp,
+                                           'name': 'acceptance-work-%d' % stamp,
+                                           'context': 'V2-18 work journey'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    client.call('/api/send', {'text': 'Write a short note titled Finished Work about what a settled job '
+                                      'looks like from the outside.',
+                              'conversation': conversation})
+    job, state = _wait_for_job(client, conversation, wait, poll)
+    job_id = (job or {}).get('id')
+    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
+    row = next((item for item in work.get('jobs') or [] if item['job_id'] == job_id), None)
+    assistant = [m for m in (state.get('messages') or []) if m.get('role') == 'assistant']
+    # A second turn, stopped while it runs: the row must say what happened and offer the recovery.
+    client.call('/api/send', {'text': 'Write a short note titled Stopped Work that will be stopped '
+                                      'before it finishes.',
+                              'conversation': conversation})
+    stopped_row = None
+    stopped_id = None
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        state_now = _state(client, conversation)
+        open_jobs = [item for item in (state_now.get('jobs') or [])
+                     if item.get('state') not in ('CLOSED', 'CANCELLED') and item['id'] != job_id]
+        if open_jobs:
+            stopped_id = sorted(open_jobs, key=lambda item: item.get('created') or 0)[-1]['id']
+            break
+        time.sleep(2)
+    if stopped_id:
+        client.call('/api/control', {'action': 'cancel', 'job': stopped_id})
+        for _ in range(30):
+            time.sleep(1)
+            rows = (client.call('/api/work?conversation=' + urllib.parse.quote(conversation))
+                    .get('work') or {}).get('jobs') or []
+            stopped_row = next((item for item in rows if item['job_id'] == stopped_id), None)
+            if stopped_row and stopped_row.get('state') in ('CANCELLED', 'CANCELLING'):
+                break
+    journey['detail'] = {'conversation': conversation, 'job': job_id,
+                         'job_state': (job or {}).get('state'),
+                         'verdict': (job or {}).get('verdict'),
+                         'assistant_replies': len(assistant), 'row': row,
+                         'stopped_job': stopped_id, 'stopped_row': stopped_row}
+    ok = (bool(job_id) and (job or {}).get('state') == 'CLOSED' and assistant and row
+          and row.get('state') == 'CLOSED' and row.get('priority') == 'later'
+          and bool(row.get('next')) and bool(stopped_row)
+          and stopped_row.get('state') in ('CANCELLED', 'CANCELLING')
+          and (stopped_row.get('direct') or {}).get('action') == 'retry')
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = ('real execution or the stopped job\'s row did not match: state=%r '
+                              'row=%r stopped=%r'
+                              % ((job or {}).get('state'), bool(row), bool(stopped_row)))
+    return journey
+
+
+def journey_recovery(client, ctx, wait=300, poll=5):
+    """§27 Recovery — a stopped job keeps its work, says so, and is never silently re-run."""
+    journey = {'id': 'J-RECOV', 'name': 'Failures keep their work; retry is guarded',
+               'shell_required': False,
+               'requirements': ['Recovery: failures without lost work'], 'detail': {}}
+    stamp = int(time.time())
+    project = client.call('/api/project', {'id': 'acceptance-recovery-%d' % stamp,
+                                           'name': 'acceptance-recovery-%d' % stamp,
+                                           'context': 'V2-18 recovery journey'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    request_text = ('Write a short note titled Recovery Acceptance about what happens to saved work '
+                    'when a run is stopped.')
+    client.call('/api/send', {'text': request_text, 'conversation': conversation})
+    running = None
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        state = _state(client, conversation)
+        open_jobs = [item for item in (state.get('jobs') or [])
+                     if item.get('state') not in ('CLOSED', 'CANCELLED')]
+        if open_jobs:
+            running = sorted(open_jobs, key=lambda item: item.get('created') or 0)[-1]
+            break
+        time.sleep(2)
+    if running is None:
+        journey['status'] = 'PENDING'
+        journey['problem'] = 'the turn did not leave a running job to stop'
+        journey['detail'] = {'jobs': state.get('jobs')}
+        return journey
+    target = running
+    client.call('/api/control', {'action': 'cancel', 'job': target['id']})
+    settled = None
+    for _ in range(30):
+        time.sleep(1)
+        settled = next((item for item in (_state(client, conversation).get('jobs') or [])
+                        if item['id'] == target['id']), None)
+        if settled and settled.get('state') in ('CANCELLED', 'CANCELLING'):
+            break
+    after = _state(client, conversation)
+    kept_request = any(m.get('role') == 'user' and request_text[:40] in str(m.get('text'))
+                       for m in (after.get('messages') or []))
+    submissions = [s for s in (after.get('submissions') or [])]
+    retry = client.refusal('/api/retry', {'id': submissions[-1]['id']}) if submissions else \
+        {'refused': False, 'answer': 'no submission recorded'}
+    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
+    row = next((item for item in work.get('jobs') or [] if item['job_id'] == target['id']), None)
+    journey['detail'] = {'conversation': conversation, 'job': target['id'],
+                         'job_state': (settled or {}).get('state'),
+                         'request_kept': kept_request, 'submissions': len(submissions),
+                         'retry_answer': retry, 'row': row}
+    ok = ((settled or {}).get('state') in ('CANCELLED', 'CANCELLING') and kept_request
+          and row is not None and (row.get('direct') or {}).get('action') == 'retry'
+          and retry.get('refused') is True)
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = ('the stopped job lost something, or retry was not guarded: kept=%r '
+                              'refused=%r' % (kept_request, retry.get('refused')))
+    return journey
+
+
+def journey_attention(client, ctx):
+    """§27 Needs Your Attention — a real interruption appears, is answered, and clears."""
+    journey = {'id': 'J-ATTN', 'name': 'An interruption appears, is answered and clears',
+               'shell_required': False,
+               'requirements': ['Needs Your Attention: human interruptions'], 'detail': {}}
+    from kel.core import Store
+    from kel.engine import compile_document
+    store = Store(Path(ctx['root']))
+    stamp = int(time.time())
+    project = client.call('/api/project', {'id': 'acceptance-attn-%d' % stamp,
+                                           'name': 'acceptance-attn-%d' % stamp,
+                                           'context': 'V2-18 attention journey'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    contract = compile_document('Write the attention note with enough text to pass.', required=[])
+    created = store.create(contract, conversation=conversation)
+    job_id = created['id'] if isinstance(created, dict) else created
+    milestone = next(iter(store.get(job_id)['milestones']))
+    claimed = None
+    deadline = time.time() + 90
+    while time.time() < deadline:
+        try:
+            claimed = store.claim(job_id, milestone, provider='codex', model='codex', timeout=120)
+            break
+        except Exception as exc:
+            # The engine allows only a couple of live workers; a busy engine is a wait, not a
+            # failure of the interruption itself.
+            last = str(exc)
+            time.sleep(3)
+    if claimed is None:
+        journey['status'] = 'PENDING'
+        journey['problem'] = 'no worker slot became free: %s' % last
+        journey['detail'] = {'job': job_id}
+        return journey
+    run_id = claimed['id'] if isinstance(claimed, dict) else claimed
+    # The exact sequence the coding adapter uses to raise a real interruption (kel/coding.py):
+    # the approval row, its action payload, then the conversation's decision card.
+    from kel.chat_approvals import announce_approval
+    from kel.core import encode
+    action = {'tool': 'repository_edit', 'reason': 'V2-18 acceptance interruption'}
+    approval_id = store.request_approval(job_id, run_id, action, seconds=300)
+    with store.transaction() as db:
+        db.execute('INSERT INTO approval_actions VALUES(?,?)', (approval_id, encode(action)))
+    announce_approval(store, approval_id, store.get(job_id), action)
+    state = _state(client, conversation)
+    pending = [a for a in (state.get('approvals') or []) if a.get('id') == approval_id]
+    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
+    row = next((item for item in work.get('jobs') or [] if item['job_id'] == job_id), None)
+    answer = client.call('/api/approval', {'id': approval_id, 'allow': True,
+                                           'conversation': conversation})
+    after = _state(client, conversation)
+    still_pending = [a for a in (after.get('approvals') or []) if a.get('id') == approval_id]
+    work_after = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
+    row_after = next((item for item in work_after.get('jobs') or [] if item['job_id'] == job_id), None)
+    client.call('/api/control', {'action': 'cancel', 'job': job_id})
+    journey['detail'] = {'conversation': conversation, 'job': job_id, 'approval': approval_id,
+                         'appeared_pending': bool(pending),
+                         'row_before': {'needs_you': (row or {}).get('needs_you'),
+                                        'priority': (row or {}).get('priority'),
+                                        'direct': (row or {}).get('direct'),
+                                        'related': (row or {}).get('related')},
+                         'answer': answer,
+                         'row_after': {'needs_you': (row_after or {}).get('needs_you'),
+                                       'direct': (row_after or {}).get('direct')},
+                         'still_pending': len(still_pending)}
+    ok = (bool(pending) and (row or {}).get('needs_you') is True
+          and (row or {}).get('priority') == 'now'
+          and ((row or {}).get('direct') or {}).get('action') == 'answer'
+          and ((row or {}).get('direct') or {}).get('route') == '/api/approval'
+          and (row or {}).get('related', {}).get('approvals') == 1
+          and answer.get('status') == 'APPROVED' and not still_pending
+          and (row_after or {}).get('needs_you') is False)
+    journey['status'] = 'PASSED' if ok else 'FAILED'
+    if not ok:
+        journey['problem'] = ('the interruption did not appear, resolve or clear as promised: '
+                              'pending=%r answer=%r' % (bool(pending), answer))
+    return journey
+
+
 JOURNEYS = {'J-FIX': journey_fix_capture, 'J-UPGRADE': journey_upgrade,
             'J-SEC': journey_security, 'J-KBU': journey_kibble,
             'J-KBU-NEG': journey_kibble_negatives, 'J-MODEL': journey_model,
             'J-CONV': journey_conversation, 'J-PROJ': journey_projects,
             'J-MEM': journey_memory, 'J-RECIPE': journey_recipes,
             'J-NET': journey_network, 'J-CONN': journey_connections,
-            'J-TRANS': journey_transcription, 'J-ACTIVITY': journey_activity}
+            'J-TRANS': journey_transcription, 'J-ACTIVITY': journey_activity,
+            'J-WORK': journey_work, 'J-RECOV': journey_recovery,
+            'J-ATTN': journey_attention}
 
 
 # ----------------------------------------------------------------------------------------------- runner
@@ -976,6 +1179,8 @@ def main(argv=None):
             elif name == 'J-KBU-NEG':
                 result = journey_kibble_negatives(client, ctx, dispatch=args.runtime_negatives,
                                                   wait=args.wait, poll=args.poll)
+            elif name == 'J-WORK':
+                result = journey_work(client, ctx, wait=args.wait, poll=args.poll)
             elif name == 'J-MODEL':
                 result = journey_model(client, ctx, wait=args.wait, poll=args.poll)
             elif name == 'J-CONV':

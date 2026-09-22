@@ -30,10 +30,35 @@ committed baseline before packaging the candidate and record the new tip here.
 
 ## Verification
 
-- No conflict markers remain (only binary font/PNG files contain the byte sequence).
-- The merged web-host content was executed where the dependencies resolve:
-  `bunx vitest run packages/web-host/src/static-server.unit.test.ts` → **15 passed** (Astra's
-  socket-reset pin + the deep-link assertions + the rest of the suite).
+- `bun install --frozen-lockfile` **was** run in this worktree this turn (1591 packages, 46 s, exit 0)
+  and `bun run package` (the production renderer build) completed here: `out/renderer`, `out/main`,
+  `out/preload` — results are from *this* checkout, not a sibling.
+- **Backend journeys on this line's engine** (`runtime/tools/acceptance_journeys.py` against an engine
+  started from *this* worktree's `runtime/`, data root `C:\Users\Nick\KelV2Runs\prepared\engine`):
+  **J-WORK PASSED** (a real turn settled `CLOSED`/`VERIFIED` with its assistant reply and a Work row;
+  a second turn stopped while running appeared as `CANCELLED` with the retry action),
+  **J-RECOV PASSED** (a stopped job kept its request, offered `retry` → `/api/retry`, and `/api/retry`
+  refused it in plain words — nothing is silently re-run), **J-ATTN PASSED** (a real interruption
+  raised through the coding adapter's own sequence appeared as `needs_you`, `priority: now`,
+  `direct: answer → /api/approval`, `related.approvals: 1`; answering it returned `APPROVED` and the
+  row cleared). Evidence: `docs/v2/evidence/v2-18/runs/2026-09-22-slice5.json`, `-slice6.json`,
+  `-slice7.json`.
+- **Web-host recovery fix, pinned:** `bunx vitest run packages/web-host/src/static-server.unit.test.ts`
+  → **17 passed** (the 15 above plus: local recovery is loopback-only and only for its own route, and
+  a loopback reset reaches the backend while `/api/connections` still gets 401).
+- **Gateway (real `bun run webui` on :33100, renderer from this build) — browser-verified:**
+  - `GET /conversation/abc-123` → **302 → `/#/conversation/abc-123`** (the deep-link fix, live);
+  - an unauthenticated visitor gets `#/login` (title “Kel - Sign In”);
+  - signing in with the minted local password loads the shell (`#/guid`, nav rendered);
+  - **refresh keeps the session** (reload stays authenticated);
+  - **destination retention: NOT yet retained** — after sign-in the app went to `#/guid`, and the
+    router's history state carried no `from`. Root cause found and fixed: the *protected layout's own
+    guard* (`ProtectedLayout`) redirected to `/login` without the attempted location — the catch-all
+    never sees a real unauthenticated route. The fix is in this tree
+    (`packages/desktop/src/renderer/components/layout/Router.tsx`, `packages/desktop/src/renderer/
+    pages/login/index.tsx`) and **needs one renderer rebuild + browser re-check**;
+  - the login route's local recovery path now works: `bun run resetpass` against the running WebUI
+    returned **200** with a fresh password (before the fix: 401, the defect recorded since V2-05).
 - **Not verified in the integration worktree itself:** `bun install` was not run there (a Windows
   junction to `dev/v2`'s `node_modules` does not resolve nested packages for bun). The renderer
   suites (`desktop/tests/**`, `tsc`) and the packaged app were **not** run on this line — that is the
