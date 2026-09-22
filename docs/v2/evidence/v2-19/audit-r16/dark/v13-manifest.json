@@ -1,0 +1,327 @@
+{
+  "schema": 1,
+  "tag": "v13",
+  "appDir": "C:\\Users\\Nick\\KelV2Candidate",
+  "dataDir": "C:\\Users\\Nick\\KelV2Runs\\prepared\\audit-capture",
+  "startedAt": "2026-09-22T21:13:27.085Z",
+  "entries": [
+    {
+      "view": "01-boot-chat",
+      "file": "v13-01-01-boot-chat.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949348,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-open",
+      "file": "v13-02-09-settings-open.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-appearance",
+      "file": "v13-03-09-settings-appearance.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-system",
+      "file": "v13-04-09-settings-system.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-pet",
+      "file": "v13-05-09-settings-pet.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-webui",
+      "file": "v13-06-09-settings-webui.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-archived",
+      "file": "v13-07-09-settings-archived.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-about",
+      "file": "v13-08-09-settings-about.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-model",
+      "file": "v13-09-09-settings-model.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-agent",
+      "file": "v13-10-09-settings-agent.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-skills",
+      "file": "v13-11-09-settings-skills.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "09-settings-tools",
+      "file": "v13-12-09-settings-tools.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "12-home",
+      "file": "v13-13-12-home.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "12-work",
+      "file": "v13-14-12-work.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "12-recipes",
+      "file": "v13-15-12-recipes.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "12-activity",
+      "file": "v13-16-12-activity.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "12-kibble",
+      "file": "v13-17-12-kibble.png",
+      "inner": [
+        1440,
+        900
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 949289,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel New Chat Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code)"
+    },
+    {
+      "view": "13-home-at-390x844",
+      "file": "v13-18-13-home-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    },
+    {
+      "view": "13-work-at-390x844",
+      "file": "v13-19-13-work-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    },
+    {
+      "view": "13-recipes-at-390x844",
+      "file": "v13-20-13-recipes-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    },
+    {
+      "view": "13-activity-at-390x844",
+      "file": "v13-21-13-activity-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    },
+    {
+      "view": "13-kibble-at-390x844",
+      "file": "v13-22-13-kibble-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    },
+    {
+      "view": "10-boot-chat-at-390x844",
+      "file": "v13-23-10-boot-chat-at-390x844.png",
+      "inner": [
+        400,
+        844
+      ],
+      "hash": "#/onboarding",
+      "title": "Kel",
+      "bytes": 362005,
+      "blankSuspect": false,
+      "textSample": "Skip to main content Kel Settings No chat history New Chat Skip to main content Workspace Set up Kel Add Model Step 1 of 5 · Welcome Kel runs on this machine Nothing leaves your computer unless you connect a provider. Local runtime Detected · ready Ready Connect a model Claude (Claude Code) ready, u"
+    }
+  ],
+  "errors": [],
+  "shutdown": {
+    "engineStopped": true,
+    "engineKilled": false,
+    "appExitCode": 0
+  },
+  "launchMode": "packaged",
+  "launchedAt": "2026-09-22T21:13:28.023Z",
+  "engine": {
+    "pid": 19404,
+    "version": "1.7.0-dev"
+  },
+  "themeSwitch": {
+    "dataTheme": "light",
+    "arcoTheme": "light",
+    "injectedTokens": false
+  },
+  "finishedAt": "2026-09-22T21:15:38.374Z",
+  "closeOutcome": "closed"
+}
