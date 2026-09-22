@@ -434,3 +434,29 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   from `runtime/` — `python -m unittest tests.test_v2_build_update tests.test_v16_r8_migrations
   tests.test_v2_upgrade tests.test_coding_boundaries tests.test_v2_kibble_gate tests.test_dogfood`
   → **59 tests, OK** (15.3 s). That confirms the committed code, not the working copy.
+
+### V2-18 — synthetic acceptance journeys (2026-09-22)
+
+- **Slice 1** on the real V2 root (`docs/v2/evidence/v2-18/runs/2026-09-22-slice1.json`, engine pid
+  8144 then 61660): J-FIX (Fix Capture round trip), J-UPGRADE (110 tables, 26-row ledger, every V2
+  table present), J-SEC (the engine's own data folder, the protected `KelDogfoodCandidate` app folder
+  and a non-repository folder each refused with their own sentence) — all PASSED.
+- **The Kibble Build Update journey** (`runs/2026-09-22-kbu.json`, then `-r2`/`-r3` on the final code):
+  a real codex-code 0.142.5 dispatch repaired a labelled fixture repository inside the isolated
+  `repositories/<job_id>` copy, `python -m unittest -v` ran green, `check_evidence == VERIFIED`, the
+  candidate carried the workspace revision with the baseline as an ancestor, `review approve` moved it
+  to `APPROVED`, a second review was refused, `promote` refused before **and** after approval, Fix
+  Capture statuses stayed `OPEN`, and the source checkout was clean before and after. Claims C1–C4 in
+  `ACCEPTANCE_MATRIX.md` are shown one by one.
+- **Negatives** (`runs/2026-09-22-kbu-negatives.json`): a cancelled mission claims nothing (job
+  `CANCELLED`, no candidate record, `evidence: null`).
+- **Three defects found and fixed here** (each pinned by a test): a non-repository source was refused
+  with a leaked raw git message; a verified candidate still carried `note: "the mission produced no
+  artifact"`; and — found by the negatives journey — a mission that closed **FAILED** (its test command
+  always failed; the runtime had added a `sitecustomize.py` monkeypatching `sys.exit`, and the
+  reviewer's own finding said so) still had its candidate claim `verified: true` and the finding as
+  fixed, because one run's evidence was read as the mission's verdict. `_assemble` now requires the
+  mission's own `verdict == 'VERIFIED'` **and** milestone `ACCEPTED` before any verified claim; the
+  measured example is recorded in `DECISIONS.md` (D-49).
+- Bounded group after the fixes: `python -m unittest tests.test_v2_build_update
+  tests.test_v16_r8_migrations` → **17 OK** (15.7 s).

@@ -509,7 +509,7 @@ def journey_kibble_negatives(client, ctx, dispatch=False, wait=900, poll=10):
                                            'tests': ['python', '-m', 'unittest', '-v'],
                                            'scope': ['calc.py']})
     mission, job_id = started['mission'], started['job']
-    client.call('/api/control', {'action': 'cancel', 'id': job_id})
+    client.call('/api/control', {'action': 'cancel', 'job': job_id})
     settled = None
     deadline = time.time() + 120
     while time.time() < deadline:

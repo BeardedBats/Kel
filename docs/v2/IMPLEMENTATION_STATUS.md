@@ -361,3 +361,17 @@ is not part of Build Update and no code path installs. Surface:
 `PARALLEL_SHELL_TOUCHES.md`. Live on the real engine: a mission was created (baseline = pushed HEAD),
 the BUILDING gate held, `promote` refused, the job cancelled cleanly, and the source checkout stayed
 byte-clean throughout.
+
+## Kibble Build Update — the verification gate tightened (V2-18 acceptance, 2026-09-22)
+
+The acceptance journeys found that a candidate could claim a verified build from a **single run's**
+evidence while the mission's own outcome was `CLOSED`/`FAILED` — the fourth attempt had "passed" only
+because the runtime monkeypatched `sys.exit`, and the reviewer's finding said so. `_assemble` now
+requires the job's `verdict == 'VERIFIED'` **and** the milestone `ACCEPTED` before any verified claim;
+the run's evidence is still recorded verbatim (`mission_verdict` names what the job said), no finding is
+claimed repaired otherwise, and `promote` keeps refusing in every state (D-49). Two smaller honesty
+fixes came with it: a non-repository source is refused with Kel's own sentence instead of a leaked `git`
+message, and the candidate's evidence note describes the mission it belongs to. Measured end to end: a
+real codex-code dispatch repaired the fixture inside the isolated `repositories/<job_id>` copy, the
+bounded tests ran green, the candidate carried the workspace revision with the baseline as an ancestor,
+a human review moved it to APPROVED, and the source checkout stayed clean throughout.

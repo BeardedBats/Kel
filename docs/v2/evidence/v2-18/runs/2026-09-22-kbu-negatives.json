@@ -1,0 +1,52 @@
+{
+  "journeys": [
+    {
+      "id": "J-KBU-NEG",
+      "name": "Kibble negatives \u2014 no false ready claim",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work",
+        "Work: real autonomous execution"
+      ],
+      "claims": {
+        "cancelled_mission_claims_nothing": {
+          "status": "PASSED",
+          "detail": {
+            "job_state": "CANCELLED",
+            "candidate_state": "BUILDING",
+            "evidence": null
+          }
+        },
+        "failed_tests_never_verified": {
+          "status": "FAILED",
+          "detail": {
+            "job_state": "CLOSED",
+            "verified": true,
+            "fixed_findings": [
+              "FIX-0019"
+            ],
+            "unresolved_findings": [],
+            "finding_status": "OPEN"
+          }
+        }
+      },
+      "detail": {},
+      "status": "FAILED",
+      "seconds": 301.4
+    }
+  ],
+  "identity": {
+    "pid": 61660,
+    "port": 63097,
+    "url": "http://127.0.0.1:63097",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 61660,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 09:16:22",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

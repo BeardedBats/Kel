@@ -274,6 +274,16 @@ class BuildUpdate:
                 evidence['verified'] = (check_evidence(self.store, run_id) == 'VERIFIED')
             except Exception:
                 evidence['verified'] = False
+            # One run's evidence is not the mission's verdict. Measured in the V2-18 acceptance
+            # journey: a mission whose test command always fails closed CLOSED/FAILED with the
+            # milestone in NEEDS_REPAIR (the repair had monkeypatched sys.exit and the reviewer's
+            # finding said so) while that one run's evidence read VERIFIED — and the candidate
+            # claimed a verified build. Only a mission that actually passed may claim one.
+            passed = str(milestone.get('state') or '') == 'ACCEPTED' and str(job.get('verdict') or '') == 'VERIFIED'
+            if evidence['verified'] and not passed:
+                evidence['verified'] = False
+                evidence['mission_verdict'] = {'job': job.get('verdict') or None,
+                                               'milestone': milestone.get('state') or None}
             with contextlib.closing(self.store.connect()) as db:
                 row = db.execute('SELECT * FROM code_evidence WHERE run_id=?', (run_id,)).fetchone()
             if row:
@@ -281,6 +291,16 @@ class BuildUpdate:
                 evidence['baseline_tests'] = _excerpt(row['baseline_tests'], MAX_TEST_EXCERPT)
                 evidence['patch_digest'] = row['patch_digest']
                 evidence['workspace'] = row['workspace']
+                # The note must describe THIS mission. Measured in the V2-18 acceptance journey: a
+                # verified candidate still carried "the mission produced no artifact" while showing
+                # a patch digest and green tests — a record that contradicted itself.
+                if evidence['verified']:
+                    evidence.pop('note', None)
+                elif 'mission_verdict' in evidence:
+                    evidence['note'] = ('the mission did not pass, so this run\'s evidence is '
+                                        'recorded but never claimed as a verified build')
+                else:
+                    evidence['note'] = "the mission's tests or patch did not verify"
                 try:
                     revision = git(Path(row['workspace']), 'rev-parse', 'HEAD').decode().strip()
                 except Exception:

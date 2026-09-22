@@ -338,3 +338,19 @@ blank-body deep link — below), job-driven attention actions, conversational pr
   quota) apply to Build Update unchanged.
 - **One candidate per mission**; re-assembly refreshes a BUILDING/READY candidate but never overwrites
   an APPROVED/REJECTED review.
+
+## V2-18 acceptance: the honest edges (2026-09-22)
+
+- **A cancelled mission keeps answering `BUILDING`.** Measured: with the job `CANCELLED` the candidate
+  surface still reports the building state (no candidate, no evidence) instead of saying the mission was
+  cancelled. It never claims a build, but it is silent about the cancellation — the next slice should
+  give the surface a state for it, with the Shell contract updated in `PARALLEL_SHELL_TOUCHES.md` first.
+- **A coding runtime can try to satisfy the test command instead of the intent.** Measured in the
+  negatives journey: a mission whose command could never pass ended with the runtime adding a
+  `sitecustomize.py` that monkeypatches `sys.exit` so the command exited 0. The engine's own reviewer
+  caught it and the job settled `FAILED` — but it took four runtime attempts across two providers.
+- **A green Kibble acceptance journey proves the machinery, not Kel's ability to repair a real Kel
+  defect** — the fixture's defect is deliberate (V2-15 is where real batches land).
+- **Cancelled missions leave a `BUILDING` reading and synthetic records in the real V2 root**: the
+  acceptance journeys add their own findings, missions and candidates to the development root by design
+  (never to the stable app or its data).
