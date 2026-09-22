@@ -161,6 +161,56 @@ class CandidateTests(Base):
         self.assertTrue(any('did not reach verified evidence' in line
                             for line in candidate['limitations']))
 
+    def test_the_evidence_note_describes_this_mission(self):
+        mission_id, job_id = self.start()
+        self.settle(job_id)
+        candidate = self.builder.candidate(mission_id)['candidate']
+        self.assertIn('no artifact', candidate['evidence']['note'])
+        mission_id, job_id = self.start()
+        self.seed_evidence('run-y')
+        self.settle(job_id, artifact={'run_id': 'run-y', 'path': 'changes.md', 'sha256': 'y',
+                                      'filename': 'changes.md'})
+        candidate = self.builder.candidate(mission_id)['candidate']
+        self.assertFalse(candidate['evidence']['verified'])
+        self.assertNotIn('no artifact', candidate['evidence']['note'],
+                         'a mission that did produce evidence never says otherwise')
+        self.assertIn('did not verify', candidate['evidence']['note'])
+
+    def _set_milestone(self, job_id, state):
+        with self.store.transaction() as db:
+            job = self.store._get(db, job_id)
+            job['milestones']['code']['state'] = state
+            self.store._save(db, job, 'test.milestone')
+
+    def test_a_failed_mission_cannot_claim_a_verified_build(self):
+        mission_id, job_id = self.start()
+        self.seed_evidence('run-z')
+        self._set_milestone(job_id, 'NEEDS_REPAIR')
+        self.settle(job_id, verdict='FAILED',
+                    artifact={'run_id': 'run-z', 'path': 'changes.md', 'sha256': 'z',
+                              'filename': 'changes.md'})
+        with patch('kel.coding.check_evidence', return_value='VERIFIED'):
+            candidate = self.builder.candidate(mission_id)['candidate']
+        self.assertFalse(candidate['evidence']['verified'],
+                         "one run's evidence is not the mission's verdict")
+        self.assertEqual(candidate['evidence']['mission_verdict'],
+                         {'job': 'FAILED', 'milestone': 'NEEDS_REPAIR'})
+        self.assertEqual(candidate['fixed_findings'], [])
+        self.assertEqual(sorted(candidate['unresolved_findings']), sorted([self.fix_a, self.fix_b]))
+
+    def test_a_passed_mission_claims_its_verified_build(self):
+        mission_id, job_id = self.start()
+        self.seed_evidence('run-z')
+        self._set_milestone(job_id, 'ACCEPTED')
+        self.settle(job_id, verdict='VERIFIED',
+                    artifact={'run_id': 'run-z', 'path': 'changes.md', 'sha256': 'z',
+                              'filename': 'changes.md'})
+        with patch('kel.coding.check_evidence', return_value='VERIFIED'):
+            candidate = self.builder.candidate(mission_id)['candidate']
+        self.assertTrue(candidate['evidence']['verified'])
+        self.assertNotIn('note', candidate['evidence'])
+        self.assertEqual(sorted(candidate['fixed_findings']), sorted([self.fix_a, self.fix_b]))
+
     def test_readings_leave_fix_capture_as_built(self):
         mission_id, job_id = self.start()
         self.settle(job_id)

@@ -6,17 +6,31 @@
 3. Reconcile git (`git status`, `git log --oneline -3`, `git worktree list`); preserve any coherent
    uncommitted work you find — do not reset, discard, stash or restart it.
 4. Continue the exact `next_item` from `MARATHON_STATE.md` — now **V2-18 synthetic V2 acceptance
-   journeys** (backend-safe): synthetic journeys over the V2 backend surfaces on the real paths (the
-   engine at `C:\Users\Nick\KelV2Runs\prepared\engine`, no fixtures where a real path exists),
-   bounded and grouped so they run one stack at a time. Read `ROADMAP.md`'s V2-18 line and the
-   directive before designing; do not build Astra-owned presentation. **Kibble Build Update is BUILT**
-   (D-46 corrected D-44; `docs/v2/evidence/kibble-build-update/README.md`): the mission and candidate
-   contract on the existing machinery, `promote()` always refusing, the UI contract recorded in
-   `PARALLEL_SHELL_TOUCHES.md`. **V2-17 upgrade reliability, V2-14 network permissions, V2-13
+   journeys, IN PROGRESS**: the checklist is `docs/v2/evidence/v2-18/ACCEPTANCE_MATRIX.md` and the
+   executable journeys are `runtime/tools/acceptance_journeys.py` (it attaches to an engine only after
+   proving the recorded pid is alive, its command line names the data root, and the recorded port is
+   owned by that pid — `desktop-session.json` is a file, not a fact). Start one owned engine with the
+   desktop's protection set:
+   `KEL_PROTECTED_PATHS='C:\Users\Nick\KelDogfoodCandidate;C:\Users\Nick\KelDogfoodRuns\prepared'
+   python -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine` (from `runtime/`), then
+   `python tools/acceptance_journeys.py --root <root> --journeys <ids> --out <evidence json>`.
+   **PASSED (2026-09-22):** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real codex-code
+   repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has the
+   baseline as an ancestor), and the negatives (a cancelled mission claims nothing; a mission whose
+   tests can never pass never claims a verified build — D-49). **THE NEXT UNCHECKED JOURNEY IS
+   J-MODEL** (drive one real turn, then read the stored route back through `/api/model {action:'why'}`
+   and assert the sentence matches the stored decision), then in order J-WORK, J-MEM, J-RECIPE,
+   J-ATTN, J-RECOV, J-NET, then the labelled fixtures J-CONN and J-TRANS. Phone/renderer journeys stay
+   PENDING for Shell integration. Read `ROADMAP.md`'s V2-18 line and the directive before designing;
+   do not build Astra-owned presentation. **Kibble Build Update is BUILT**
+   (D-46 corrected D-44; D-47; `docs/v2/evidence/kibble-build-update/README.md`): the mission and
+   candidate contract on the existing machinery, `promote()` always refusing, the UI contract recorded
+   in `PARALLEL_SHELL_TOUCHES.md`. **V2-17 upgrade reliability, V2-14 network permissions, V2-13
    isolation, V2-12 staffing, V2-11 long-running work, V2-10 learning, V2-09 routing, V2-04b and the
-   V2-04 execution hardening are BUILT** (D-34…D-47; evidence under `docs/v2/evidence/`) — do not
-   rebuild them. V2-15 needs Nick's real dogfood batches; V2-16 is largely renderer/Shell; V2-19/V2-20
-   are whole-system phases whose promotion gate is Nick's.
+   V2-04 execution hardening are BUILT** (D-34…D-49; evidence under `docs/v2/evidence/`) — do not
+   rebuild them. V2-15 needs Nick's real dogfood batches (his Kibble feedback arrives only after
+   integrated V2 testing — never block synthetic acceptance on it); V2-16 is largely renderer/Shell;
+   V2-19/V2-20 are whole-system phases whose promotion gate is Nick's.
    **V2-05-history is temporarily DEFERRED
    FOR SHELL INTEGRATION** — Astra owns the
    phone drawer/history presentation on `ux/v2-shell`, and implementing it now would overlap; V2-05

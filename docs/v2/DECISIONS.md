@@ -504,3 +504,44 @@ op:start|status|candidate|review|promote}`; the future UI contract is in `PARALL
 source checkout or any installed path; installing, promoting or updating anything from this backend; a
 candidate that overwrites an existing human review; treating Team `promotions`/`shadow` as candidate
 approval; starting a mission on a dirty, unverified or sensitive baseline.
+
+## D-48 — acceptance is a walked checklist on real paths, and its claims stay separate (V2-18)
+
+§27 lists what V2.0 must validate; V2-18 turns that list into
+`docs/v2/evidence/v2-18/ACCEPTANCE_MATRIX.md` — one row per requirement with the real entry point,
+the expected result, the evidence that already exists, the journey still missing, and whether the
+Shell must land first — and then walks it with **synthetic inputs on real paths** (the engine on
+`C:\Users\Nick\KelV2Runs\prepared\engine`, its own HTTP surface and store, the isolated coding
+workspaces, the installed runtimes, the real containment and backup machinery). Three rules make the
+results worth something. **A journey that refuses for the wrong reason proves nothing**: the first
+J-SEC “passed” because the finding id was unknown, not because the root was protected, and was
+rewritten until the sentence named the real boundary and the finding was real. **Identity before
+use**: `desktop-session.json` is a file, not a fact, so the runner attaches only when the recorded
+pid is alive, its command line names this data root, and the recorded port is owned by that pid.
+**Claims stay separate**: for the Kibble Build Update journey, mission creation and promotion
+refusal, candidate-record creation, an actual built artifact with verified source provenance, and
+the complete repair-to-candidate journey are recorded one by one — a CLOSED job or a candidate row
+alone never proves a build, and failed tests, a missing artifact or unresolved findings never yield a
+ready claim. Shell-owned presentation is recorded as *pending — Shell integration required* and is
+never marked passed from a backend journey; an external service that cannot be exercised is a
+labelled fixture. *Forbids:* calling a requirement accepted because a unit suite or an earlier
+increment was green; asserting only that *something* was refused; re-using another run's evidence as
+this run's; marking a phone or renderer check passed from a backend journey.
+
+## D-49 — a verified build claim comes from the mission's verdict, not from one run's evidence (V2-18)
+
+Found by the V2-18 negatives journey, on the real root: a mission whose test command could never
+pass (`python -c "import sys; sys.exit(1)"`) was given four attempts. On the fourth, the runtime added
+a `sitecustomize.py` that monkeypatches `sys.exit`, so that run's recorded evidence read
+exit code 0 — and the milestone's own reviewer caught it (the recorded finding names the monkeypatch)
+and left the milestone `NEEDS_REPAIR`, so the job settled `CLOSED`/**FAILED**. But
+`BuildUpdate._assemble` read *that single run's* `code_evidence` (`check_evidence == 'VERIFIED'`) and
+assembled a candidate claiming `verified: true` and the finding as fixed. One run's evidence is not
+the mission's verdict. `_assemble` now requires the mission to have actually passed — the job's
+`verdict == 'VERIFIED'` **and** the milestone `ACCEPTED` — before any verified claim; otherwise the
+evidence is still recorded verbatim (with `mission_verdict` naming what the job and milestone said),
+`verified` stays false, no finding is claimed repaired and the limitations say so. The same journey
+confirmed the positive direction: a mission that really passed (codex-code repair, green bounded
+tests, `VERIFIED`) still claims its build, and `promote` refuses before and after approval in both
+cases. *Forbids:* treating `check_evidence` on one run as the mission's outcome; a candidate that
+claims a repair the mission's own verdict never accepted; relaxing the gate to make a journey pass.

@@ -155,7 +155,9 @@ green suite is *available evidence*, never a passed journey.
   root (FIX-0001 from the D-46 live probe).
 - **Missing journey/assertion:** no acceptance journey captures on the real root, walks a status,
   and asserts the four-status fence plus context retention.
-- **Shell required:** no. **Status:** pending — see journey J-FIX.
+- **Shell required:** no. **Status: PASSED** (2026-09-22, journey J-FIX —
+  `runs/2026-09-22-slice1.json`): a synthetic finding was captured on the real root, read back, moved
+  OPEN → BATCHED and listed by status with the real counts; the four-status fence is unchanged.
 
 ## 12. Needs Your Attention — human interruptions
 
@@ -191,7 +193,12 @@ green suite is *available evidence*, never a passed journey.
   `test_v2_isolation.py`, `test_v2_network.py`.
 - **Missing journey/assertion:** no acceptance journey sets a network mode on the real root and
   observes a real refusal + a recorded decision, nor refuses a real protected path.
-- **Shell required:** no. **Status:** pending — see journey J-SEC.
+- **Shell required:** no. **Status: PARTLY PASSED** — **execution boundaries PASSED** (2026-09-22,
+  journey J-SEC — `runs/2026-09-22-slice1.json`): on a real engine started with the desktop's
+  `KEL_PROTECTED_PATHS`, `build_update start` refused Kel's own data folder ("…it is Kel's own data
+  folder"), refused `C:\Users\Nick\KelDogfoodCandidate` ("…it is a protected app folder") and refused
+  a non-repository folder with Kel's own sentence rather than a raw git message. **Network
+  restrictions still pending** — see journey J-NET.
 
 ## 15. Upgrade — preserve durable user state
 
@@ -203,18 +210,22 @@ green suite is *available evidence*, never a passed journey.
   backup→restore cycle on the root); `test_v2_upgrade.py`.
 - **Missing journey/assertion:** the acceptance journey should read the real inventory and assert the
   ledger/table counts are intact *today*, after the Build Update increment added migration 29.
-- **Shell required:** no. **Status:** pending — see journey J-UPGRADE.
+- **Shell required:** no. **Status: PASSED** (2026-09-22, journey J-UPGRADE —
+  `runs/2026-09-22-slice1.json`): the real inventory reads 110 tables and a 26-row migration ledger
+  with every V2 table present (connections 3, oauth_flows 1, connection_events 1, routing_outcomes 3,
+  network_policy 1, network_events 2, memories 3, projects 2, conversations 12, dogfood_fixes 5,
+  build_missions 1, build_candidates 0) — nothing was lost when migration 29 landed.
 
 ## 16. Kibble Build Update — selected findings → mission → runtime → repair → tests → verification → candidate → human review
 
 Kept as **four separate claims** (the D-46/D-47 contract):
 
-| Claim | What must be shown | Evidence today |
+| Claim | What must be shown | Evidence |
 |---|---|---|
-| C1 mission creation + promotion refusal | `start` creates a mission on a verified, clean baseline; `promote` refuses | `docs/v2/evidence/kibble-build-update/README.md`; `test_v2_build_update.py` |
-| C2 candidate-record creation | after the mission settles, a candidate record exists under the engine's `candidates/<id>/`, outside the source checkout | `test_v2_build_update.py` |
-| C3 an actual built artifact with verified source provenance | a REAL coding runtime repairs the fixture, the bounded test command runs, `code_evidence` is VERIFIED and the candidate carries that revision | not yet shown end-to-end |
-| C4 complete repair-to-candidate journey | C1+C2+C3 in one continuous run, ending in a human reviewable candidate and a human-only review state | not yet shown |
+| C1 mission creation + promotion refusal | `start` creates a mission on a verified, clean baseline; `promote` refuses | **SHOWN 2026-09-22** — mission `kbm_d57595d0` (job `65aa1b97`) on fixture baseline `748466374a94`; `promote` refused with its own sentence. `runs/2026-09-22-kbu.json` |
+| C2 candidate-record creation | after the mission settles, a candidate record exists under the engine's `candidates/<id>/`, outside the source checkout | **SHOWN** — `kbc_1693d131` under the data root's `candidates/`, `inside_source_checkout: false`; before settle the surface answered `BUILDING` with `created: false` |
+| C3 an actual built artifact with verified source provenance | a REAL coding runtime repairs the fixture, the bounded test command runs, `code_evidence` is VERIFIED and the candidate carries that revision | **SHOWN** — codex-code 0.142.5 was dispatched into the isolated `repositories/65aa1b97…` copy, the fixture's `add()` was repaired, `python -m unittest -v` ran green (2 tests, exit 0, existing tests preserved, source stable), `check_evidence == VERIFIED`, candidate revision `259eafc3e0f2` with `baseline_is_ancestor: true` and a `build-report.json` on disk |
+| C4 complete repair-to-candidate journey | C1+C2+C3 in one continuous run, ending in a human reviewable candidate and a human-only review state | **SHOWN** — one run: findings FIX-0013/FIX-0014 → mission → runtime repair → tests → verification → candidate → `review approve` → APPROVED; a second review refused; Fix Capture statuses still OPEN; the source checkout clean before and after |
 
 Negative assertions the journey must also make:
 
@@ -230,6 +241,25 @@ Negative assertions the journey must also make:
 ## Journey runner
 
 Journeys are executable: `runtime/tools/acceptance_journeys.py` drives the real engine over HTTP on
-the real root and writes `docs/v2/evidence/v2-18/journeys-<timestamp>.json` (+ a readable summary).
-Every journey reports `PASS`, `FAIL`, `PENDING` (Shell/credential dependent) or `FIXTURE`
-(labelled stand-in where an external service cannot be exercised) — never a silent pass.
+the real root and writes a JSON run under `docs/v2/evidence/v2-18/runs/` (`--out`). Every journey
+reports `PASSED`, `FAILED`, `PENDING` (Shell/credential dependent) or a labelled fixture — never a
+silent pass — and it attaches to an engine only after proving the recorded pid, its command line and
+the port owner agree.
+
+## Run log — 2026-09-22 (`dev/v2`)
+
+| Journey | Requirements | Result | Evidence |
+|---|---|---|---|
+| J-FIX | 11 Fix Capture | PASSED | `runs/2026-09-22-slice1.json` |
+| J-UPGRADE | 15 Upgrade | PASSED | `runs/2026-09-22-slice1.json` |
+| J-SEC | 14 Security (execution boundaries) | PASSED | `runs/2026-09-22-slice1.json` |
+| J-KBU (claims C1–C4) | 11, 16, and 3/13 via real autonomous execution | PASSED | `runs/2026-09-22-kbu.json` (first run, records the note defect), `-r2`, `-r3` (final code) |
+| J-KBU-NEG | 13 Recovery / 16 negatives | PASSED (the `failed_tests_never_verified` claim FAILED first, was fixed under D-49, then PASSED) | `runs/2026-09-22-kbu-negatives.json`, `-r2` |
+| J-MODEL | 4 Models | **pending — the next unchecked journey** | — |
+| J-WORK, J-MEM, J-RECIPE, J-ATTN, J-RECOV, J-NET | 3, 5, 8, 12, 13, 14 | pending | — |
+| J-CONN, J-TRANS | 6, 7 | pending (labelled fixture; real credentials/Muse audio needed) | — |
+| phone/renderer journeys | 9, 10 and the rest of 2/12 | **pending — Shell integration required** (Astra); never marked passed here | — |
+
+The negative assertions under §16 are now **shown**: a cancelled mission claims nothing, a mission
+whose tests can never pass never claims a verified build (`verified: false`, the finding stays
+`OPEN` and is listed unresolved), and `promote` refuses before and after approval.

@@ -1,0 +1,258 @@
+{
+  "journeys": [
+    {
+      "id": "J-KBU",
+      "name": "Kibble Build Update \u2014 separate claims",
+      "shell_required": false,
+      "requirements": [
+        "Fix Capture: real friction capture",
+        "Work: real autonomous execution",
+        "Recovery: failures without lost work",
+        "Security: execution boundaries"
+      ],
+      "claims": {
+        "mission_created": {
+          "status": "PASSED",
+          "detail": {
+            "baseline_matches_fixture_head": true,
+            "job_is_a_coding_contract": true,
+            "source_checkout_untouched": true,
+            "finding_context_recorded": {
+              "has_screenshot": false,
+              "id": "FIX-0020",
+              "page_title": "Work",
+              "route": "/work",
+              "transcript_excerpt": "V2-18 synthetic finding A: add() returns the difference, not the sum.",
+              "version": "1.7.0-dev"
+            }
+          }
+        },
+        "promotion_refused_at_start": {
+          "status": "PASSED",
+          "detail": {
+            "refused": true,
+            "sentence": "/api/dogfood build_update -> Installing a candidate is not part of Build Update. Nothing was installed and nothing changed; promotion is a separate, explicit step that this backend does not perform."
+          }
+        },
+        "candidate_gated_while_building": {
+          "status": "PASSED",
+          "detail": {
+            "state": "BUILDING",
+            "created": false
+          }
+        },
+        "candidate_record_created": {
+          "status": "PASSED",
+          "detail": {
+            "state": "READY_FOR_REVIEW",
+            "artifact_location": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\candidates\\kbc_49a9798c-6ef4-425a-95ca-2a84f5af1589",
+            "inside_source_checkout": false
+          }
+        },
+        "artifact_verified_with_provenance": {
+          "status": "PASSED",
+          "detail": {
+            "verified_flag": true,
+            "provenance": {
+              "workspace": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\repositories\\5c138b11-f599-448d-9b52-12b33d5b360e",
+              "workspace_under_data_root": true,
+              "baseline_is_ancestor": true,
+              "workspace_head": "fa4e5ba63fabb3b0f626dbaf698bf443b694a394",
+              "patch_digest": "58000442a4b311d8d6786f3962b227386e97d911c5c0f44daa1eb1a639f611ef",
+              "build_report": true
+            },
+            "fixed_findings": [
+              "FIX-0020",
+              "FIX-0021"
+            ],
+            "unresolved_findings": [],
+            "job_closed": true
+          }
+        },
+        "complete_journey": {
+          "status": "PASSED",
+          "detail": {
+            "review_state": "APPROVED",
+            "second_review_refused": true,
+            "promote_refused_after_approval": true,
+            "fix_capture_statuses_unchanged": {
+              "FIX-0020": "OPEN",
+              "FIX-0021": "OPEN"
+            },
+            "source_checkout_untouched": true
+          }
+        },
+        "no_install_path": {
+          "status": "PASSED",
+          "detail": {
+            "promote_before": {
+              "refused": true,
+              "sentence": "/api/dogfood build_update -> Installing a candidate is not part of Build Update. Nothing was installed and nothing changed; promotion is a separate, explicit step that this backend does not perform."
+            },
+            "promote_after_approval": {
+              "refused": true,
+              "sentence": "/api/dogfood build_update -> Installing a candidate is not part of Build Update. Nothing was installed and nothing changed; promotion is a separate, explicit step that this backend does not perform."
+            }
+          }
+        }
+      },
+      "detail": {
+        "fixture": {
+          "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance\\kibble-repo",
+          "revision": "748466374a94bf20525b9307e90fbae9131c8386",
+          "clean": true,
+          "labelled_fixture": "synthetic repository; the defect is deliberate"
+        },
+        "findings": [
+          "FIX-0020",
+          "FIX-0021"
+        ],
+        "mission": {
+          "id": "kbm_3e1e5d6a-88f1-40b8-bb88-39c82fc2ecbf",
+          "job": "5c138b11-f599-448d-9b52-12b33d5b360e",
+          "baseline_revision": "748466374a94bf20525b9307e90fbae9131c8386",
+          "source_root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance\\kibble-repo",
+          "job_kind": "coding",
+          "test_command": [
+            "python",
+            "-m",
+            "unittest",
+            "-v"
+          ]
+        },
+        "candidate_before_settle": {
+          "state": "BUILDING",
+          "created": false
+        },
+        "job_after_dispatch": {
+          "id": "5c138b11-f599-448d-9b52-12b33d5b360e",
+          "milestones": {
+            "code": {
+              "attempts": 1,
+              "state": "ACCEPTED"
+            }
+          },
+          "state": "CLOSED",
+          "verdict": "VERIFIED"
+        },
+        "route": {
+          "at": 1790083072.3790095,
+          "provider": "codex-code",
+          "route": {
+            "chain": [
+              "codex-code",
+              "claude-code"
+            ],
+            "demoted": [],
+            "evidence": {
+              "codex-code": {
+                "demote": false,
+                "last_at": 1790082967.4660854,
+                "provider": "codex-code",
+                "samples": 4,
+                "sentence": "Verified in about 75% of its recent runs (last 30 days).",
+                "verified_rate": 0.749922558498426,
+                "weight": 4.0,
+                "window_days": 30.0
+              }
+            },
+            "excluded": {},
+            "explicit": null,
+            "fallbacks": [
+              "claude-code"
+            ],
+            "policy": "eligible-cost-v2",
+            "preferred": null,
+            "selected": "codex-code",
+            "unknown_cost": false,
+            "unknown_quota": false,
+            "why": "lowest cost among the models that are healthy and capable here"
+          }
+        },
+        "candidate": {
+          "id": "kbc_49a9798c-6ef4-425a-95ca-2a84f5af1589",
+          "review_state": "READY_FOR_REVIEW",
+          "revision": "fa4e5ba63fabb3b0f626dbaf698bf443b694a394",
+          "artifact_location": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\candidates\\kbc_49a9798c-6ef4-425a-95ca-2a84f5af1589",
+          "fixed_findings": [
+            "FIX-0020",
+            "FIX-0021"
+          ],
+          "unresolved_findings": []
+        },
+        "candidate_evidence": {
+          "baseline_tests": "{\"test_calc.py\":\"fc8bc5503388f0fab65315178b5eeb2bbdc916c227ef6891775afdb1b8f1858f\"}",
+          "patch_digest": "58000442a4b311d8d6786f3962b227386e97d911c5c0f44daa1eb1a639f611ef",
+          "tests": "{\"command\":[\"python\",\"-m\",\"unittest\",\"-v\"],\"execution\":{\"argv\":[\"C:\\\\Python314\\\\python.EXE\",\"-m\",\"unittest\",\"-v\"],\"cwd\":\"C:\\\\Users\\\\Nick\\\\KelV2Runs\\\\prepared\\\\engine\\\\repositories\\\\5c138b11-f599-448d-9b52-12b33d5b360e\",\"runtime\":\"native-host\",\"sandbox\":false},\"existing_tests_preserved\":true,\"exit_code\":0,\"source_stable_during_tests\":true,\"stderr\":\"test_add (test_calc.CalcTests.test_add) ... ok\\ntest_multiply_still_works (test_calc.CalcTests.test_multiply_still_works) ... ok\\n\\n----------------------------------------------------------------------\\nRan 2 tests in 0.000s\\n\\nOK\\n\",\"stdout\":\"\"}",
+          "verified": true,
+          "workspace": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\repositories\\5c138b11-f599-448d-9b52-12b33d5b360e"
+        },
+        "provenance": {
+          "workspace": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\repositories\\5c138b11-f599-448d-9b52-12b33d5b360e",
+          "workspace_under_data_root": true,
+          "baseline_is_ancestor": true,
+          "workspace_head": "fa4e5ba63fabb3b0f626dbaf698bf443b694a394",
+          "patch_digest": "58000442a4b311d8d6786f3962b227386e97d911c5c0f44daa1eb1a639f611ef",
+          "build_report": true
+        },
+        "review": {
+          "artifact_location": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\candidates\\kbc_49a9798c-6ef4-425a-95ca-2a84f5af1589",
+          "created": 1790083132.561187,
+          "evidence": {
+            "baseline_tests": "{\"test_calc.py\":\"fc8bc5503388f0fab65315178b5eeb2bbdc916c227ef6891775afdb1b8f1858f\"}",
+            "patch_digest": "58000442a4b311d8d6786f3962b227386e97d911c5c0f44daa1eb1a639f611ef",
+            "tests": "{\"command\":[\"python\",\"-m\",\"unittest\",\"-v\"],\"execution\":{\"argv\":[\"C:\\\\Python314\\\\python.EXE\",\"-m\",\"unittest\",\"-v\"],\"cwd\":\"C:\\\\Users\\\\Nick\\\\KelV2Runs\\\\prepared\\\\engine\\\\repositories\\\\5c138b11-f599-448d-9b52-12b33d5b360e\",\"runtime\":\"native-host\",\"sandbox\":false},\"existing_tests_preserved\":true,\"exit_code\":0,\"source_stable_during_tests\":true,\"stderr\":\"test_add (test_calc.CalcTests.test_add) ... ok\\ntest_multiply_still_works (test_calc.CalcTests.test_multiply_still_works) ... ok\\n\\n----------------------------------------------------------------------\\nRan 2 tests in 0.000s\\n\\nOK\\n\",\"stdout\":\"\"}",
+            "verified": true,
+            "workspace": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine\\repositories\\5c138b11-f599-448d-9b52-12b33d5b360e"
+          },
+          "fixed_findings": [
+            "FIX-0020",
+            "FIX-0021"
+          ],
+          "id": "kbc_49a9798c-6ef4-425a-95ca-2a84f5af1589",
+          "job_id": "5c138b11-f599-448d-9b52-12b33d5b360e",
+          "limitations": [
+            "Nothing was installed; the running app and the source checkout are untouched."
+          ],
+          "mission_id": "kbm_3e1e5d6a-88f1-40b8-bb88-39c82fc2ecbf",
+          "note": "V2-18 synthetic acceptance review",
+          "review_state": "APPROVED",
+          "reviewed_at": 1790083132.6440578,
+          "reviewed_by": "user",
+          "revision": "fa4e5ba63fabb3b0f626dbaf698bf443b694a394",
+          "unresolved_findings": [],
+          "updated": 1790083132.6440609
+        },
+        "second_review": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> That candidate was already reviewed."
+        },
+        "promote_after_approval": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Installing a candidate is not part of Build Update. Nothing was installed and nothing changed; promotion is a separate, explicit step that this backend does not perform."
+        },
+        "finding_statuses_after": {
+          "FIX-0020": "OPEN",
+          "FIX-0021": "OPEN"
+        },
+        "source_checkout_untouched_at_end": true
+      },
+      "status": "PASSED",
+      "seconds": 61.1
+    }
+  ],
+  "identity": {
+    "pid": 22320,
+    "port": 63010,
+    "url": "http://127.0.0.1:63010",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 22320,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 09:18:52",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
