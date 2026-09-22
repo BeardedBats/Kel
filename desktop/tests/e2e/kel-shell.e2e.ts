@@ -89,7 +89,7 @@ for (const width of [1920, 1024, 393, 360]) {
       await open(page, '/transcription');
       await expect(page.getByRole('heading', { name: 'Ramble', exact: true })).toBeVisible();
       await expect(page.locator('.layout-sider')).not.toBeVisible();
-      const folderInput = page.getByPlaceholder('New folder', { exact: true });
+      const folderInput = page.getByRole('button', { name: 'New folder', exact: true });
       await folderInput.scrollIntoViewIfNeeded();
       await expect(folderInput).toBeVisible();
       await record(page, `${width}-ramble`);
@@ -301,4 +301,84 @@ test('scheduled source list selects a task and shows its stored instructions', a
   await expect(page.locator('.kel-shell-task-detail')).toContainText('Instructions for Weekly rankings refresh');
   await expect(page.getByRole('button', { name: 'Go to conversation' })).toBeDisabled();
   await record(page, '1440-scheduled-fixture');
+});
+
+
+test('Ramble sidebar creates and renames folders inline and keeps navigation and header actions', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, '/transcription');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const nav = page.getByTestId('ramble-navigation');
+  await expect(nav.locator('button')).toHaveCount(4);
+  const logo = await page.locator('.kel-shell-tool-brand img').boundingBox();
+  const navBox = await nav.boundingBox();
+  expect(navBox!.y).toBe(logo!.y);
+  expect(navBox!.x).toBeGreaterThan(logo!.x);
+  const search = page.getByRole('searchbox', { name: 'Search transcripts' });
+  expect((await search.boundingBox())!.y).toBeLessThan((await page.getByRole('heading', { name: 'Folders' }).boundingBox())!.y);
+  await expect(page.locator('.kel-shell-ramble main h1')).toHaveText('Ramble');
+  await expect(page.getByTestId('transcription-mode')).toHaveCount(0);
+  const api = page.getByTestId('transcription-settings');
+  expect((await api.boundingBox())!.x).toBeLessThan((await page.getByTestId('upload-button').boundingBox())!.x);
+  await record(page, '1440-ramble');
+  await page.getByTestId('folder-create').click();
+  const rename = page.getByTestId('folder-rename');
+  await expect(rename).toBeFocused();
+  await expect(rename).toHaveValue('New Folder');
+  expect(await rename.evaluate((input: HTMLInputElement) => [input.selectionStart, input.selectionEnd])).toEqual([0, 10]);
+  const folderRow = page.locator('[data-folder-id]').filter({ has: rename });
+  const folderId = await folderRow.getAttribute('data-folder-id');
+  await record(page, '1440-inline-folder');
+  const folderName = `Ramble check ${Date.now()}`;
+  await rename.fill(folderName);
+  await rename.press('Enter');
+  await expect(rename).toHaveCount(0);
+  await page.reload();
+  const savedRow = page.locator(`[data-folder-id="${folderId}"]`);
+  await expect(savedRow).toContainText(folderName);
+  await savedRow.getByRole('button', { name: `Delete ${folderName}`, exact: true }).click();
+  await page.getByRole('button', { name: 'Delete folder', exact: true }).click();
+  await expect(savedRow).toHaveCount(0);
+  await api.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByTestId('upload-button').click();
+  await chooser;
+  await page.getByRole('button', { name: 'Back to Kel', exact: false }).click();
+  await expect(page.getByTestId('guid-input')).toBeVisible();
+  await expect(page.locator('.app-titlebar > .app-titlebar__menu')).toBeVisible();
+  await page.evaluate(() => { location.hash = '/transcription'; });
+  await expect(nav.locator('button')).toHaveCount(4);
+  await nav.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page.getByTestId('guid-input')).toBeVisible();
+  await page.locator('.app-titlebar').getByRole('button', { name: 'Forward', exact: true }).click();
+  await expect(nav.locator('button')).toHaveCount(4);
+  await nav.getByRole('button', { name: 'Search messages', exact: true }).click();
+  await expect(page.getByPlaceholder('Search message content...')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.route('**/kel/api/transcription', async route => {
+    if (route.request().postDataJSON()?.action !== 'library') return route.continue();
+    await route.fulfill({ json: { folders: [], transcripts: [
+      { id: 'ramble-search-fixture', name: 'Planning notes', text: 'Keep the release focused.', created: 1, updated: 1, folder_id: null, source_type: 'upload', status: 'complete', duration_ms: null, has_audio: false },
+    ] } });
+  });
+  await page.reload();
+  await expect(page.getByTestId('transcript-row')).toHaveCount(1);
+  await search.fill('unmatched');
+  await expect(page.getByTestId('transcript-row')).toHaveCount(0);
+  await search.fill('release');
+  await expect(page.getByTestId('transcript-row')).toHaveCount(1);
+  await search.fill('');
+  for (const width of [1024, 393, 360]) {
+    await page.setViewportSize({ width, height: 852 });
+    await record(page, `${width}-ramble-updated`);
+    await expect(page.getByTestId('folder-create')).toBeVisible();
+    await expect(api).toBeVisible();
+    await expect(page.getByTestId('record-button')).toBeVisible();
+  }
+  expect(errors).toEqual([]);
 });

@@ -127,6 +127,7 @@ const Layout: React.FC<{
   onSessionClick?: () => void;
 }> = ({ sider, onSessionClick: _onSessionClick }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [titlebarMenuHost, setTitlebarMenuHost] = useState<HTMLElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState<number>(() =>
     typeof window === 'undefined' ? 390 : window.innerWidth
@@ -408,7 +409,7 @@ const Layout: React.FC<{
       };
 
   return (
-    <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed }}>
+    <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed, titlebarMenuHost, setTitlebarMenuHost }}>
       <NavigationHistoryProvider>
         <div className='app-shell kel-v2-shell flex flex-col size-full min-h-0' data-surface={location.pathname}>
           {/* Kel V1.4: the shell's first tab stop — jumps past the sider to the routed content. */}

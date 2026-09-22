@@ -7,6 +7,8 @@ import React from 'react';
 
 export interface LayoutContextValue {
   isMobile: boolean;
+  titlebarMenuHost?: HTMLElement | null;
+  setTitlebarMenuHost?: (element: HTMLElement | null) => void;
   siderCollapsed: boolean;
   setSiderCollapsed: (value: boolean) => void;
 }

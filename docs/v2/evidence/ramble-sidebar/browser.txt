@@ -1,0 +1,12 @@
+
+Running 3 tests using 1 worker
+
+(node:21208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21208) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\e2e\kel-shell.e2e.ts:79:7 › responsive shell at 393px (10.5s)
+  ok 2 tests\e2e\kel-shell.e2e.ts:79:7 › responsive shell at 360px (10.6s)
+  ok 3 tests\e2e\kel-shell.e2e.ts:307:5 › Ramble sidebar creates and renames folders inline and keeps navigation and header actions (12.7s)
+
+  3 passed (34.8s)
