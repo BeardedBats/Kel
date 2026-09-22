@@ -31,6 +31,30 @@
    (2) `bun install` in the integration worktree, then its bounded renderer suites; (3) package a
    candidate at `C:\Users\Nick\KelV2Candidate` — the path does not exist yet, so nothing has to be
    preserved or rolled back, and installation stays behind Nick's explicit decision.
+   **DONE on the integration line this turn (`integration/v2` @ `3f8e1de`):** `bun install
+   --frozen-lockfile` + the production renderer build ran *there*; **J-WORK, J-RECOV and J-ATTN all
+   PASSED** on an engine started from that worktree's `runtime/` (evidence
+   `docs/v2/evidence/v2-18/runs/2026-09-22-slice5|6|7.json`); the gateway's local password recovery
+   was repaired (loopback-only, 17 web-host tests pass) and browser-verified (deep link → 302 →
+   `#/conversation/<id>`, sign-in loads the shell, refresh keeps the session).
+   **THE EXACT CONTINUATION:**
+   (a) the candidate pack was still running when the turn ended:
+   `cd C:\Users\Nick\Desktop\Kel\kel-v2-integration\desktop` then
+   `AIONUI_BACKEND_LOCAL_BUNDLE_DIR="C:/Users/Nick/KelDogfoodCandidate/resources/bundled-aioncore/win32-x64"
+   NODE_OPTIONS="--max-old-space-size=8192" node scripts/build-with-builder.js auto --skip-native`
+   → the app lands in `kel-v2-integration\dist\package-r12\win-unpacked` (this was the second
+   attempt; `--pack-only` skips the distributable entirely — that mistake is recorded). When it
+   finishes: copy the unpacked app to `C:\Users\Nick\KelV2Candidate` (absent at the time of
+   writing; preserve anything unknown) and launch `Kel.exe` with isolated V2 data to verify the
+   packaged runtime, then record the exe path;
+   (b) rebuild the renderer (`bun run package`) and re-check the **destination retention** fix in the
+   browser (sign-in should now return to the deep link; measured NOT retained before the fix, root
+   cause = `ProtectedLayout`'s guard dropping the location);
+   (c) then the remaining verification: `desktop/tests/**`, a browser phone-viewport pass, V2-19
+   bounded regression, V2-16 timings.
+   **PROCESSES LEFT RUNNING (recorded):** the V2 engine on `C:/Users/Nick/KelV2Runs/prepared/engine`
+   (owned; identity proven) and the candidate pack (background session `9a8bpdrh`). The gateway on
+   port 33100 was stopped with its aioncore child.
    **PASSED (2026-09-22):** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real codex-code
    repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has the
    baseline as an ancestor), and the negatives (a cancelled mission claims nothing; a mission whose
