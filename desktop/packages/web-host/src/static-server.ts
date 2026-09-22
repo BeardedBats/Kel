@@ -171,6 +171,25 @@ function getLanIP(): string | null {
   return pickLanIP(networkInterfaces());
 }
 
+const ASSET_FILE = /\.[a-z0-9]{1,8}$/i;
+
+/**
+ * The hash location a path-style deep link should have been, or null when the request is not one.
+ *
+ * The renderer is hash-routed, so `/conversation/<id>` never reaches its own route: the SPA fallback
+ * answers index.html and the catch-all sends the visitor to /guid or /login with the id gone. Only
+ * real deep links are translated — assets, `/kel/` and the gated proxy routes keep their behaviour,
+ * and the query travels inside the hash so the renderer's router sees it as usual.
+ */
+export function deepLinkLocation(method: string, url: string | undefined): string | null {
+  if (method !== 'GET' && method !== 'HEAD') return null;
+  const [rawPath, query = ''] = String(url || '').split('?');
+  if (!rawPath.startsWith('/') || rawPath === '/') return null;
+  if (rawPath.startsWith('/kel/') || rawPath.startsWith('/api/')) return null;
+  if (ASSET_FILE.test(rawPath)) return null;
+  return `/#${rawPath}${query ? `?${query}` : ''}`;
+}
+
 function forwardToBackend(req: IncomingMessage, res: ServerResponse, backendPort: number): void {
   const options: http.RequestOptions = {
     hostname: '127.0.0.1',
@@ -374,6 +393,20 @@ export async function startStaticServer(opts: StaticServerOptions): Promise<Stat
           return;
         }
         forwardToKel(req, res, engine);
+        return;
+      }
+
+      // Deep links. The renderer is hash-routed (`HashRouter` in
+      // desktop/packages/desktop/src/renderer/components/layout/Router.tsx), so a path-style link —
+      // `/conversation/<id>`, `/work`, `/connections` — reaches this fallback, is answered with
+      // index.html, and is then swallowed by the catch-all route: the id is lost and an
+      // unauthenticated visitor lands on /login with no way back. Translate such a path into the
+      // hash form the renderer already understands. Files, the gated proxy routes and `/kel/` never
+      // come here.
+      const deepLink = deepLinkLocation(req.method, req.url);
+      if (deepLink) {
+        res.writeHead(302, { location: deepLink });
+        res.end();
         return;
       }
 
