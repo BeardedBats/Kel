@@ -1,0 +1,256 @@
+{
+  "journeys": [
+    {
+      "id": "J-RECIPE",
+      "name": "Recipe library and the V2-07 scope",
+      "shell_required": false,
+      "requirements": [
+        "Recipes: repeated workflows"
+      ],
+      "detail": {
+        "entries": 5,
+        "recipe_id": "audit-and-repair",
+        "entry_fields": [
+          "category",
+          "description",
+          "digest",
+          "favourite",
+          "kind",
+          "last_run_at",
+          "name",
+          "opened_at",
+          "recipe_id",
+          "runs",
+          "scope",
+          "source",
+          "version"
+        ],
+        "get_ok": true,
+        "preview_keys": [
+          "message",
+          "needs_project"
+        ],
+        "ops": {
+          "search": {
+            "supported": true,
+            "keys": [
+              "entries"
+            ]
+          },
+          "favourites": {
+            "supported": true,
+            "keys": [
+              "favourites"
+            ]
+          },
+          "recent": {
+            "supported": true,
+            "keys": [
+              "recent"
+            ]
+          },
+          "categories": {
+            "supported": true,
+            "keys": [
+              "categories"
+            ]
+          },
+          "history": {
+            "supported": true,
+            "keys": [
+              "history"
+            ]
+          },
+          "last_result": {
+            "supported": true,
+            "keys": [
+              "recipe_id",
+              "sentence",
+              "state"
+            ]
+          },
+          "duplicate": {
+            "supported": true,
+            "keys": [
+              "copied_from",
+              "note",
+              "recipe"
+            ]
+          },
+          "save": {
+            "supported": true,
+            "sentence": "/api/recipes save -> A recipe object is required"
+          },
+          "run": {
+            "supported": true,
+            "sentence": "/api/recipes run -> Unknown recipe: no-such-recipe"
+          },
+          "propose_from_job": {
+            "supported": true,
+            "sentence": "/api/recipes propose_from_job -> Job missing"
+          }
+        },
+        "supported": {
+          "library": true,
+          "create": true,
+          "edit": true,
+          "run": true,
+          "project attachment": true,
+          "suggestions": true,
+          "search": true,
+          "favourites": true,
+          "recent": true,
+          "categories": true,
+          "history": true,
+          "last result": true,
+          "duplicate": true,
+          "run again": true
+        },
+        "missing": []
+      },
+      "status": "PASSED",
+      "seconds": 0.4
+    },
+    {
+      "id": "J-MODEL",
+      "name": "Routing read-back and fallback chain",
+      "shell_required": false,
+      "requirements": [
+        "Models: routing, fallback, transparency"
+      ],
+      "detail": {
+        "conversation": "d67da419-c799-4a73-8208-0c691ab33cd3",
+        "job": "5585ce58-8202-4338-81f8-abb2ba612491",
+        "job_state": "CLOSED",
+        "why": {
+          "answer": "Kel is using Codex: the lowest cost among the models that are healthy and capable here.",
+          "chain": [
+            "codex",
+            "claude"
+          ],
+          "demoted": [],
+          "evidence": {
+            "codex": {
+              "demote": false,
+              "last_at": 1790085056.961238,
+              "provider": "codex",
+              "samples": 4,
+              "sentence": "Verified in about 100% of its recent runs (last 30 days).",
+              "verified_rate": 1.0,
+              "weight": 3.78,
+              "window_days": 30.0
+            }
+          },
+          "excluded": {},
+          "job": "5585ce58-8202-4338-81f8-abb2ba612491",
+          "provider": "codex",
+          "selected": "codex",
+          "why": "lowest cost among the models that are healthy and capable here"
+        }
+      },
+      "status": "PASSED",
+      "seconds": 20.3
+    },
+    {
+      "id": "J-ACTIVITY",
+      "name": "Activity timeline and filters",
+      "shell_required": false,
+      "requirements": [
+        "Activity: timeline, filters, search, results"
+      ],
+      "detail": {
+        "entries": 137,
+        "total": 137,
+        "counts": {
+          "attention": 0,
+          "connections": 0,
+          "learning": 8,
+          "network": 0,
+          "other": 0,
+          "recipes": 0,
+          "recovery": 0,
+          "staffing": 0,
+          "work": 129
+        },
+        "kinds": [
+          "work",
+          "attention",
+          "learning",
+          "recipes",
+          "connections",
+          "network",
+          "staffing",
+          "recovery",
+          "other"
+        ],
+        "projects": [
+          {
+            "count": 8,
+            "project_id": "aeadc422-be16-4582-913c-85ec8627e328"
+          },
+          {
+            "count": 8,
+            "project_id": "b8a7d5af-85bb-45c6-ad4c-4bc59bcdb355"
+          },
+          {
+            "count": 28,
+            "project_id": "bridge-live"
+          },
+          {
+            "count": 85,
+            "project_id": "default"
+          }
+        ],
+        "work_rows": 129,
+        "failure_rows": 93,
+        "search_rows": 38,
+        "sample": [
+          {
+            "at": 1790085268.190736,
+            "can_retry": true,
+            "evidence": "87005e0aa73c0235ed3bb1e82a0f0874900f769c77acd9c132308fb02ad58d06",
+            "failed": false,
+            "job_id": "5585ce58-8202-4338-81f8-abb2ba612491",
+            "kind": "work",
+            "project_id": "aeadc422-be16-4582-913c-85ec8627e328",
+            "result": "artifacts\\5585ce58-8202-4338-81f8-abb2ba612491\\0fef9310-7f09-4073-bd5c-04a1aa57c051\\result.md",
+            "state": "CLOSED",
+            "type": "completion.assessed",
+            "verdict": "VERIFIED",
+            "what": "The result was assessed \u2014 verified."
+          },
+          {
+            "at": 1790085268.1644058,
+            "can_retry": true,
+            "evidence": "87005e0aa73c0235ed3bb1e82a0f0874900f769c77acd9c132308fb02ad58d06",
+            "failed": false,
+            "job_id": "5585ce58-8202-4338-81f8-abb2ba612491",
+            "kind": "work",
+            "project_id": "aeadc422-be16-4582-913c-85ec8627e328",
+            "result": "artifacts\\5585ce58-8202-4338-81f8-abb2ba612491\\0fef9310-7f09-4073-bd5c-04a1aa57c051\\result.md",
+            "state": "CLOSED",
+            "type": "completion.assessed",
+            "verdict": "VERIFIED",
+            "what": "The result was assessed \u2014 verified."
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.2
+    }
+  ],
+  "identity": {
+    "pid": 61688,
+    "port": 50334,
+    "url": "http://127.0.0.1:50334",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 61688,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 09:54:29",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

@@ -13,8 +13,8 @@ import time
 from .core import PolicyError, digest, encode, uid, validate_contract
 from .memory import _backup, _is_fresh_database, _table
 
-MIGRATION_VERSION = 4
-MIGRATION_NAME = 'v13-recipes'
+MIGRATION_VERSION = 30
+MIGRATION_NAME = 'v2-recipe-library'
 
 DDL = """
 CREATE TABLE IF NOT EXISTS recipes(
@@ -28,9 +28,20 @@ CREATE TABLE IF NOT EXISTS recipes(
   created REAL NOT NULL,
   updated REAL NOT NULL,
   PRIMARY KEY(recipe_id, recipe_version, scope, project_id));
+CREATE TABLE IF NOT EXISTS recipe_marks(
+  project_id TEXT NOT NULL,
+  recipe_id TEXT NOT NULL,
+  favourite INTEGER NOT NULL DEFAULT 0,
+  opened_at REAL,
+  runs INTEGER NOT NULL DEFAULT 0,
+  last_run_at REAL,
+  last_job_id TEXT,
+  seen_at REAL,
+  PRIMARY KEY(project_id, recipe_id));
 """
 
-TOP_FIELDS = {'schema_version', 'recipe_id', 'recipe_version', 'name', 'description', 'source',
+TOP_FIELDS = {'schema_version', 'recipe_id', 'recipe_version', 'name', 'description', 'category',
+              'source',
               'kind', 'inputs', 'steps', 'permissions', 'verification', 'terminal_states',
               'budget', 'retry_policy'}
 INPUT_FIELDS = {'name', 'type', 'required', 'default', 'choices', 'max_chars', 'description'}
@@ -101,6 +112,8 @@ def validate_recipe(data):
         _fail('recipe_id', 'must be a slug like fix-bug (3-64 chars: a-z, 0-9, -)')
     _text('name', data.get('name'), 80)
     _text('description', data.get('description'), 500)
+    if data.get('category') is not None:
+        _text('category', data.get('category'), 40)
     if not isinstance(data.get('recipe_version'), str) or not VERSION_RE.match(data.get('recipe_version', '')):
         _fail('recipe_version', 'must be MAJOR.MINOR.PATCH')
     source = data.get('source')
@@ -645,13 +658,146 @@ class RecipeLibrary:
                           db.execute('SELECT DISTINCT recipe_id FROM recipes')})
         out = []
         for recipe_id in ids:
-            info = self.get(recipe_id, project_id=project_id)
+            try:
+                info = self.get(recipe_id, project_id=project_id)
+            except PolicyError:
+                # A recipe that belongs to another project is simply not in this project's library.
+                # (Measured by the V2-07 suite: one project's recipe used to make every other
+                # project's library raise.)
+                continue
             recipe = info['recipe']
             out.append({'recipe_id': recipe_id, 'name': recipe['name'],
                         'version': info['version'], 'scope': info['scope'],
                         'kind': recipe['kind'], 'digest': info['digest'],
-                        'source': info['source']})
+                        'source': info['source'], 'category': recipe.get('category') or '',
+                        'description': recipe.get('description') or ''})
+        # V2-07: the library's own memory of a person's use — favourites, what they opened, and how
+        # often a recipe ran. Additive fields on the existing entries; nothing else changes shape.
+        with contextlib.closing(self.store.connect()) as db:
+            marks = {row['recipe_id']: dict(row) for row in db.execute(
+                'SELECT * FROM recipe_marks WHERE project_id=?', (project_id,))}
+        for item in out:
+            mark = marks.get(item['recipe_id']) or {}
+            item['favourite'] = bool(mark.get('favourite'))
+            item['opened_at'] = mark.get('opened_at')
+            item['runs'] = mark.get('runs') or 0
+            item['last_run_at'] = mark.get('last_run_at')
         return out
+
+    # -- V2-07: the library's own surfaces ---------------------------------------------------------
+    def mark(self, project_id, recipe_id, *, favourite=None, opened=False, run=False, job_id=None):
+        """Record a person's use of one recipe. Read-only surfaces never call this."""
+        now = time.time()
+        with self.store.transaction() as db:
+            db.execute('INSERT OR IGNORE INTO recipe_marks(project_id,recipe_id,seen_at)'
+                       ' VALUES(?,?,?)', (project_id, recipe_id, now))
+            if favourite is not None:
+                db.execute('UPDATE recipe_marks SET favourite=? WHERE project_id=? AND recipe_id=?',
+                           (1 if favourite else 0, project_id, recipe_id))
+            if opened:
+                db.execute('UPDATE recipe_marks SET opened_at=? WHERE project_id=? AND recipe_id=?',
+                           (now, project_id, recipe_id))
+            if run:
+                db.execute('UPDATE recipe_marks SET runs=runs+1,last_run_at=?,last_job_id=?'
+                           ' WHERE project_id=? AND recipe_id=?',
+                           (now, job_id, project_id, recipe_id))
+            db.execute('UPDATE recipe_marks SET seen_at=? WHERE project_id=? AND recipe_id=?',
+                       (now, project_id, recipe_id))
+        return {'recipe_id': recipe_id, 'favourite': favourite, 'opened': opened, 'run': run}
+
+    def favourites(self, project_id):
+        return [item for item in self.entries(project_id=project_id) if item['favourite']]
+
+    def recent(self, project_id, limit=8):
+        items = [item for item in self.entries(project_id=project_id)
+                 if item.get('opened_at') or item.get('last_run_at')]
+        items.sort(key=lambda item: max(item.get('opened_at') or 0, item.get('last_run_at') or 0),
+                   reverse=True)
+        return items[:max(1, int(limit or 8))]
+
+    def categories(self, project_id):
+        counts = {}
+        for item in self.entries(project_id=project_id):
+            name = item.get('category') or 'Uncategorised'
+            counts[name] = counts.get(name, 0) + 1
+        return [{'name': name, 'count': counts[name]} for name in sorted(counts)]
+
+    def search(self, project_id, query):
+        needle = str(query or '').strip().lower()
+        if not needle:
+            raise PolicyError('Type what to search for first.')
+        out = []
+        for item in self.entries(project_id=project_id):
+            info = self.get(item['recipe_id'], project_id=project_id)
+            recipe = info['recipe']
+            haystack = ' '.join([recipe['name'], recipe.get('description') or '',
+                                 recipe.get('category') or '',
+                                 ' '.join(step.get('title') or '' for step in recipe['steps'])])
+            if needle in haystack.lower():
+                item['matches'] = (recipe.get('description') or '')[:160]
+                out.append(item)
+        return out
+
+    def duplicate(self, recipe_id, project_id):
+        """A draft copy — never saved here; the person edits and saves it through `save`."""
+        info = self.get(recipe_id, project_id=project_id)
+        source = info['recipe']
+        with contextlib.closing(self.store.connect()) as db:
+            taken = {row['recipe_id'] for row in db.execute('SELECT DISTINCT recipe_id FROM recipes')}
+        base = (recipe_id + '-copy')[:64].rstrip('-')
+        candidate = base
+        index = 2
+        while candidate in taken:
+            suffix = '-%d' % index
+            candidate = (base[:64 - len(suffix)] + suffix).rstrip('-')
+            index += 1
+        draft = dict(source)
+        draft['recipe_id'] = candidate
+        draft['name'] = (source['name'] + ' (copy)')[:80]
+        draft['source'] = 'project'
+        draft['recipe_version'] = '0.1.0'
+        validate_recipe(draft)
+        return {'recipe': draft, 'copied_from': recipe_id,
+                'note': 'A draft: save it with confirm to keep it in this project.'}
+
+    def history(self, project_id, recipe_id, limit=10):
+        """This recipe's runs — read from the jobs the engine already keeps."""
+        out = []
+        for job in self.store.list_jobs():
+            carried = (job.get('contract') or {}).get('recipe') or {}
+            if carried.get('id') != recipe_id:
+                continue
+            artifact = {}
+            for milestone in (job.get('milestones') or {}).values():
+                if (milestone or {}).get('artifact'):
+                    artifact = milestone['artifact']
+                    break
+            out.append({'job_id': job['id'], 'state': job.get('state'),
+                        'verdict': job.get('verdict'), 'created': job.get('created'),
+                        'request': (job.get('contract') or {}).get('request', '')[:160],
+                        'artifact': artifact.get('path'), 'artifact_sha256': artifact.get('sha256')})
+        out.sort(key=lambda item: item.get('created') or 0, reverse=True)
+        return out[:max(1, int(limit or 10))]
+
+    def last_result(self, project_id, recipe_id):
+        runs = self.history(project_id, recipe_id, limit=1)
+        if not runs:
+            return {'recipe_id': recipe_id, 'state': 'never_run',
+                    'sentence': 'This recipe has not run in this project yet.'}
+        latest = runs[0]
+        state = str(latest.get('state') or '').lower()
+        sentence = {'closed': 'The last run finished.',
+                    'cancelled': 'The last run was stopped.',
+                    'failed': 'The last run failed.'}.get(state,
+                                                           'The last run is still working.')
+        if latest.get('verdict') and latest['verdict'] != 'VERIFIED':
+            sentence += ' Its verdict was %s.' % str(latest['verdict']).lower()
+        if latest.get('artifact'):
+            sentence += ' Its result is attached to that run.'
+        return {'recipe_id': recipe_id, 'job_id': latest['job_id'], 'state': latest.get('state'),
+                'verdict': latest.get('verdict'), 'at': latest.get('created'),
+                'artifact': latest.get('artifact'), 'sentence': sentence,
+                'can_run_again': True}
 
     def versions(self, recipe_id, *, project_id=''):
         with contextlib.closing(self.store.connect()) as db:

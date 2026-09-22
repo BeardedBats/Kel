@@ -435,6 +435,35 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   tests.test_v2_upgrade tests.test_coding_boundaries tests.test_v2_kibble_gate tests.test_dogfood`
   → **59 tests, OK** (15.3 s). That confirms the committed code, not the working copy.
 
+### V2-06 / V2-07 / V2-08 — the missing read surfaces (2026-09-22)
+
+- `tests/test_v2_attention.py` (new, 5 tests) — a fenced run's row carries `priority='now'`, a reason,
+  its age, its project/conversation and exactly one direct action (`resume` → `/api/send`, because a
+  fenced run resumes as a conversation continuation); a pending approval offers `answer` →
+  `/api/approval` and counts in `related.approvals`; a settled-bad job is `soon` with `retry` →
+  `/api/retry`; a settled-verified job is `later` with no action; grouping/filters/sorting are reported
+  and nothing offers a snooze the authoritative state cannot honour.
+- `tests/test_v2_recipes_library.py` (new, 7 tests) — entries carry category/favourite/use; search
+  matches name, description and step titles and refuses an empty query; favourites/recent/runs follow
+  real use; categories count; `duplicate` drafts a copy (never saves one) and a saved copy stays in one
+  project while a second duplicate finds a free id; `history`/`last_result` read the engine's own jobs
+  (artifact path + digest included); a category must be short. **The suite caught a real defect:** one
+  project's recipe used to make every other project's library raise (`entries()` now skips ids that do
+  not resolve for this project).
+- `tests/test_v2_activity.py` (new, 6 tests) — plain sentences with project grouping; a row carries its
+  result/evidence/recovery hint; project/kind/failure/search/date filters; no payload, contract or run
+  id ever reaches a row; an unmapped event is reported as `other` rather than hidden.
+- Migration ledger: recipes now owns migration 30 (`v2-recipe-library`); the ledger pins (EXPECTED_MAX,
+  the owning name, the module map) were updated deliberately and re-pass.
+- Bounded group on the final code: `test_v2_attention test_v2_longrun test_v2_activity
+  test_v2_recipes_library test_v16_r8_migrations test_v13_recipes` → **48 OK** (26 s).
+- Live journeys on the real root (`docs/v2/evidence/v2-18/runs/2026-09-22-slice3.json`,
+  `-slice4.json`): **J-RECIPE PASSED** (all fourteen V2-07 scope items answered by the real surface),
+  **J-ACTIVITY PASSED** (the real timeline and its filters), **J-MODEL PASSED** (a real turn's stored
+  route read back through `/api/model why` — `selected == provider`, `chain[0] == selected`, the
+  sentence naming the model), **J-CONV PASSED** (two real turns, one persisted thread, four messages,
+  user/assistant alternating).
+
 ### V2-18 — synthetic acceptance journeys (2026-09-22)
 
 - **Slice 1** on the real V2 root (`docs/v2/evidence/v2-18/runs/2026-09-22-slice1.json`, engine pid

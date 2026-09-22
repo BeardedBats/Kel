@@ -545,3 +545,24 @@ confirmed the positive direction: a mission that really passed (codex-code repai
 tests, `VERIFIED`) still claims its build, and `promote` refuses before and after approval in both
 cases. *Forbids:* treating `check_evidence` on one run as the mission's outcome; a candidate that
 claims a repair the mission's own verdict never accepted; relaxing the gate to make a journey pass.
+
+## D-50 — Three missing surfaces ride the records the line already keeps (V2-06/V2-07/V2-08)
+
+V2-06, V2-07 and V2-08 asked for surfaces that mostly existed as *records* with no way to read them,
+so this increment adds reads, not systems. **Attention (V2-06):** every `/api/work` row now carries why
+it is here, its age, its priority (`now` / `soon` / `running` / `later`), what belongs with it (project,
+conversation, pending approvals, milestones) and the *one* action that resolves it — pointing at the
+route that already does that work (`answer` → `/api/approval`; `resume` → `/api/send` for a fenced run
+or `/api/control` for a paused job; `stop` → `/api/control`; `retry` → `/api/retry`); rows group by
+project and the surface names its filters and sort orders. **Recipes (V2-07):** migration 30
+(`v2-recipe-library`) adds `recipe_marks` (favourite, what was opened, how often it ran, the last job)
+and the library gains search, categories (with an optional `category` field on a recipe), recent,
+duplicate (a draft copy — never saved by itself), run history and last result, all read from the
+`recipes` and `jobs` tables the line already keeps. **Activity (V2-08):** `kel/activity.py` and
+`/api/activity` turn the durable `events` stream into one timeline with project/date/type/failure
+filters, search, and per-row result/evidence/recovery hints. Two rules hold across all three: a row
+may only say what authoritative state supports (no snooze the state cannot honour, no “verified” a
+mission did not earn), and nothing leaks inward plumbing — no payload, contract, run id, lease or
+worker id ever reaches a row or a sentence. *Forbids:* a second attention/recipe/activity store; a
+surface that resolves, snoozes or re-runs work itself; hiding an unmapped event instead of reporting
+it; and any row that offers an action whose route does not exist.
