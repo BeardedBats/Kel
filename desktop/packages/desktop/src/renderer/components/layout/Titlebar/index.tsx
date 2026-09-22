@@ -1,6 +1,7 @@
 // Modified for Kel: remove donor support submission from the title bar.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
+import { createPortal } from 'react-dom';
 import { ArrowCircleLeft, ArrowLeft, ArrowRight, ExpandLeft, ExpandRight, Peoples, Search } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -301,6 +302,78 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
     };
   }, [isMacRuntime, showSiderToggle, layout?.isMobile]);
 
+  const menuHost = !layout?.isMobile ? layout?.titlebarMenuHost : null;
+  const menu = (
+    <div ref={menuRef} className='app-titlebar__menu' style={menuHost ? undefined : menuStyle}>
+      {showBackToChatButton && (
+        <button
+          type='button'
+          className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}
+          onClick={handleBackToChat}
+          aria-label={backToChatTooltip}
+        >
+          <ArrowCircleLeft theme='outline' size={iconSize} fill='currentColor' />
+        </button>
+      )}
+      {showSiderToggle && (
+        <button
+          type='button'
+          className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}
+          onClick={handleSiderToggle}
+          aria-label={siderTooltip}
+        >
+          <SidebarIcon size={iconSize} strokeWidth={desktopIconStroke} />
+        </button>
+      )}
+      {showSearchButton && (
+        <ConversationSearchPopover
+          renderTrigger={({ onClick }) => (
+            <button
+              type='button'
+              className='app-titlebar__button'
+              onClick={onClick}
+              aria-label={searchTooltip}
+              title={searchTooltip}
+            >
+              <Search
+                theme='outline'
+                size={iconSize}
+                fill='currentColor'
+                strokeWidth={desktopIconStroke}
+                className='block leading-none'
+                style={{ lineHeight: 0 }}
+              />
+            </button>
+          )}
+        />
+      )}
+      {showHistoryNav && (
+        <>
+          <button
+            type='button'
+            className='app-titlebar__button app-titlebar__button--nav'
+            onClick={() => navigationHistory?.back()}
+            disabled={!navigationHistory?.canBack}
+            aria-label={historyBackTooltip}
+            title={historyBackTooltip}
+          >
+            <ArrowLeft theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
+          </button>
+          <button
+            type='button'
+            className='app-titlebar__button app-titlebar__button--nav'
+            onClick={() => navigationHistory?.forward()}
+            disabled={!navigationHistory?.canForward}
+            aria-label={historyForwardTooltip}
+            title={historyForwardTooltip}
+          >
+            <ArrowRight theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
+          </button>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div
       ref={containerRef}
@@ -312,74 +385,7 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
         'app-titlebar--mac': isMacRuntime,
       })}
     >
-      <div ref={menuRef} className='app-titlebar__menu' style={menuStyle}>
-        {showBackToChatButton && (
-          <button
-            type='button'
-            className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}
-            onClick={handleBackToChat}
-            aria-label={backToChatTooltip}
-          >
-            <ArrowCircleLeft theme='outline' size={iconSize} fill='currentColor' />
-          </button>
-        )}
-        {showSiderToggle && (
-          <button
-            type='button'
-            className={classNames('app-titlebar__button', layout?.isMobile && 'app-titlebar__button--mobile')}
-            onClick={handleSiderToggle}
-            aria-label={siderTooltip}
-          >
-            <SidebarIcon size={iconSize} strokeWidth={desktopIconStroke} />
-          </button>
-        )}
-        {showSearchButton && (
-          <ConversationSearchPopover
-            renderTrigger={({ onClick }) => (
-              <button
-                type='button'
-                className='app-titlebar__button'
-                onClick={onClick}
-                aria-label={searchTooltip}
-                title={searchTooltip}
-              >
-                <Search
-                  theme='outline'
-                  size={iconSize}
-                  fill='currentColor'
-                  strokeWidth={desktopIconStroke}
-                  className='block leading-none'
-                  style={{ lineHeight: 0 }}
-                />
-              </button>
-            )}
-          />
-        )}
-        {showHistoryNav && (
-          <>
-            <button
-              type='button'
-              className='app-titlebar__button app-titlebar__button--nav'
-              onClick={() => navigationHistory?.back()}
-              disabled={!navigationHistory?.canBack}
-              aria-label={historyBackTooltip}
-              title={historyBackTooltip}
-            >
-              <ArrowLeft theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
-            </button>
-            <button
-              type='button'
-              className='app-titlebar__button app-titlebar__button--nav'
-              onClick={() => navigationHistory?.forward()}
-              disabled={!navigationHistory?.canForward}
-              aria-label={historyForwardTooltip}
-              title={historyForwardTooltip}
-            >
-              <ArrowRight theme='outline' size={iconSize} fill='currentColor' strokeWidth={desktopIconStroke} />
-            </button>
-          </>
-        )}
-      </div>
+      {menuHost ? createPortal(menu, menuHost) : menu}
       <div
         className={classNames('app-titlebar__brand', {
           'app-titlebar__brand--centered': layout?.isMobile || !location.pathname.match(/^\/(conversation|team)\//),

@@ -31,9 +31,13 @@ test('built Electron shell keeps native settings connected', async () => {
     await page.getByTestId('theme-card-dark').click();
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(3500);
-    for (const [name, route] of Object.entries({ home: '/guid', remote: '/settings/webui', system: '/settings/system', pet: '/settings/pet', about: '/settings/about' })) {
+    for (const [name, route] of Object.entries({ home: '/guid', ramble: '/transcription', remote: '/settings/webui', system: '/settings/system', pet: '/settings/pet', about: '/settings/about' })) {
       await page.evaluate(route => { location.hash = route; }, route);
       await page.waitForTimeout(900);
+      if (name === 'ramble') {
+        await expect(page.getByTestId('ramble-navigation').locator('button')).toHaveCount(4);
+        await expect(page.locator('.kel-shell-ramble main h1')).toHaveText('Ramble');
+      }
       await page.screenshot({ path: path.join(evidence, `electron-${name}.png`) });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     }
