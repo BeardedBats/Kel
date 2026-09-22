@@ -19,11 +19,17 @@ import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelMapAction,
   kelMemoryAction,
+  kelRecipeCategories,
+  kelRecipeDuplicate,
+  kelRecipeFavourite,
   kelRecipeHistory,
   kelRecipeLastResult,
   kelRecipePreview,
+  kelRecipeRecent,
   kelRecipeRun,
+  kelRecipeSearch,
   kelWork,
+  type KelRecipeEntry,
   type KelRecipeRun,
   type KelWork,
 } from '@renderer/components/kel/kelApi';
@@ -41,6 +47,13 @@ export default function KelProjectsPage() {
   const [work, setWork] = useState<KelWork | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // V2-07 library controls: search, categories, favourites, recent and duplicate — each one goes
+  // through the engine's own recipe actions, scoped to this project.
+  const [recipeQuery, setRecipeQuery] = useState('');
+  const [found, setFound] = useState<KelRecipeEntry[] | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [recent, setRecent] = useState<KelRecipeEntry[]>([]);
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [runs, setRuns] = useState<{ recipe: string; sentence: string; items: KelRecipeRun[] } | null>(null);
   const navigate = useNavigate();
@@ -86,6 +99,34 @@ export default function KelProjectsPage() {
     void load();
   }, [load]);
 
+  // The library's shelves are read once per visit: the categories it carries and what was used
+  // recently. A failure here leaves the plain list in place rather than an error page.
+  useEffect(() => {
+    void (async () => {
+      const [cats, recents] = await Promise.all([
+        kelRecipeCategories().catch((): { categories: string[] } => ({ categories: [] })),
+        kelRecipeRecent().catch((): { recent: KelRecipeEntry[] } => ({ recent: [] })),
+      ]);
+      setCategories(cats.categories ?? []);
+      setRecent(recents.recent ?? []);
+    })();
+  }, []);
+
+  const searchRecipes = useCallback(async (value: string) => {
+    setRecipeQuery(value);
+    if (!value.trim()) {
+      setFound(null);
+      return;
+    }
+    try {
+      const result = await kelRecipeSearch(value.trim());
+      setFound(result.entries ?? []);
+    } catch (err) {
+      setFound(null);
+      setNote(`Search failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+    }
+  }, []);
+
   const act = useCallback(
     async (label: string, fn: () => Promise<unknown>) => {
       setBusy(label);
@@ -112,6 +153,7 @@ export default function KelProjectsPage() {
   const conflicts = work?.memory.conflicts ?? [];
   const sections = work?.map?.sections ?? [];
   const entries = work?.recipes.entries ?? [];
+  const listed = (found ?? entries).filter((entry) => !favouritesOnly || entry.favourite);
 
   return (
     <div className="kel-scope">
@@ -314,13 +356,71 @@ export default function KelProjectsPage() {
                 why="Recipes capture a workflow Kel finished and verified, so it can run again with your approval."
               />
             ) : (
+              <>
+                <div className="kel-row" data-testid="recipe-library-controls">
+                  <input
+                    className="kel-input"
+                    value={recipeQuery}
+                    onChange={(event) => void searchRecipes(event.target.value)}
+                    placeholder="Search recipes"
+                    aria-label="Search recipes"
+                    data-testid="recipe-search"
+                  />
+                  <KelButton
+                    variant={favouritesOnly ? 'primary' : 'quiet'}
+                    onClick={() => setFavouritesOnly((previous) => !previous)}
+                  >
+                    Favourites
+                  </KelButton>
+                  {categories.map((category) => (
+                    <KelButton
+                      key={category}
+                      variant="quiet"
+                      onClick={() => void searchRecipes(category)}
+                    >
+                      {category}
+                    </KelButton>
+                  ))}
+                </div>
+                {recent.length > 0 && (
+                  <p className="kel-meta">
+                    {`Recently used: ${recent
+                      .map((entry) => String(entry.name ?? entry.recipe_id ?? ''))
+                      .filter(Boolean)
+                      .join(', ')}`}
+                  </p>
+                )}
+                {listed.length === 0 ? (
+                  <KelEmpty
+                    title="Nothing matches that."
+                    why="Clear the search or the favourites filter to see the whole project library."
+                  />
+                ) : (
               <KelTable
                 head={['Recipe', 'Steps', 'Inputs', 'Source', 'Dry run']}
-                rows={entries.map((entry) => {
+                rows={listed.map((entry) => {
                   const recipeId = String(entry.recipe_id ?? entry.id ?? '');
                   return [
                     <span className="kel-strong" key={`${recipeId}-name`}>
-                      {entry.name ?? entry.title ?? recipeId}
+                      {entry.name ?? entry.title ?? recipeId}{' '}
+                      <KelButton
+                        variant="quiet"
+                        disabled={busy !== null || !recipeId}
+                        onClick={() =>
+                          void act(entry.favourite ? 'Unfavourite' : 'Favourite', () =>
+                            kelRecipeFavourite(recipeId, !entry.favourite)
+                          )
+                        }
+                      >
+                        {entry.favourite ? 'Favourited' : 'Favourite'}
+                      </KelButton>{' '}
+                      <KelButton
+                        variant="quiet"
+                        disabled={busy !== null || !recipeId}
+                        onClick={() => void act('Copy', () => kelRecipeDuplicate(recipeId))}
+                      >
+                        Copy
+                      </KelButton>
                     </span>,
                     <span className="kel-meta" key={`${recipeId}-steps`}>
                       {Array.isArray(entry.steps) ? entry.steps.length : '—'}
@@ -381,6 +481,8 @@ export default function KelProjectsPage() {
                   ];
                 })}
               />
+                )}
+              </>
             )}
             {runs && (
               <KelSection title={`Runs — ${runs.recipe}`}>

@@ -254,8 +254,13 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     return (
       <>
         {afterPinnedContent}
-        <div className='py-48px flex-center'>
+        <div className='py-48px flex-center flex-col gap-12px'>
           <Empty description={t('conversation.history.noHistory')} />
+          {/* V2-05: on a phone this list is the only way back into an earlier conversation, so an
+              empty one has to be a place to start from rather than a dead end. */}
+          <Button size='small' type='primary' onClick={() => void navigate('/guid')}>
+            {t('conversation.welcome.newConversation')}
+          </Button>
         </div>
       </>
     );

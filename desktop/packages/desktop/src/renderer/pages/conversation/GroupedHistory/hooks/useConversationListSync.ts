@@ -613,6 +613,18 @@ const initializeConversationListSyncStore = () => {
   refreshConversations();
 
   addEventListener('chat.history.refresh', refreshConversations);
+
+  // Phone reality: a PWA is backgrounded and foregrounded constantly. Coming back re-reads the list,
+  // so a conversation deleted somewhere else stops being offered — the same reason the desktop
+  // re-reads on `chat.history.refresh`. Opening one anyway lands on the honest "not here" state.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshConversations();
+    });
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', () => refreshConversations());
+  }
   ipcBridge.conversation.listChanged.on((event) => {
     if (event.action === 'deleted') {
       clearGenerating(event.conversation_id, 'deleted');
