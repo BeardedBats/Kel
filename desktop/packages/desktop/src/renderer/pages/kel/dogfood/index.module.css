@@ -1,6 +1,23 @@
 /**
  * Dogfood Fixes — a quiet list, not a board. Neutral full-perimeter borders, Kel tokens, compact rows.
  */
+/* Kibble Build Update: the mission/candidate read-out under the pick list. */
+.buildState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kel-space-2);
+  margin-top: var(--kel-space-3);
+}
+
+.buildList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--kel-space-1);
+}
+
 .pickList {
   list-style: none;
   margin: 0;

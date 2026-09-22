@@ -177,6 +177,32 @@ function redactForLog(value: unknown, depth = 0): unknown {
 const REFRESH_ENDPOINT = '/api/auth/refresh';
 
 /**
+ * The session is gone: a protected request answered 401 and the silent refresh that exists to
+ * rescue it did not work either. Listeners (the auth provider) turn that into "signed out", so the
+ * router's sign-in gate takes over and remembers where the person was, instead of leaving them on
+ * a protected route whose every call fails and whose page then falls back home.
+ */
+type SessionExpiredListener = () => void;
+const sessionExpiredListeners = new Set<SessionExpiredListener>();
+
+export function onSessionExpired(listener: SessionExpiredListener): () => void {
+  sessionExpiredListeners.add(listener);
+  return () => {
+    sessionExpiredListeners.delete(listener);
+  };
+}
+
+function notifySessionExpired(): void {
+  for (const listener of [...sessionExpiredListeners]) {
+    try {
+      listener();
+    } catch (error) {
+      console.error('[httpBridge] session-expired listener failed', error);
+    }
+  }
+}
+
+/**
  * Paths where a 401 is a genuine credential decision rather than an expired
  * session — refreshing and replaying them would be recursive or nonsensical.
  */
@@ -250,6 +276,10 @@ export async function httpRequest<T>(
     if (refreshed) {
       console.debug(`[httpBridge] session refreshed, replaying ${method} ${path}`);
       response = await sendHttpRequest(method, path, headers, body);
+    }
+    if (response.status === 401) {
+      // Still refused after the one rescue attempt: the session is genuinely gone.
+      notifySessionExpired();
     }
   }
 

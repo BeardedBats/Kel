@@ -24,6 +24,11 @@ import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLangua
 import {
   kelArtifact,
   kelControl,
+  kelApproval,
+  kelRetry,
+  kelSend,
+  kelWorkRows,
+  type KelWorkRow,
   kelProviders,
   kelRecipePropose,
   kelRecipeSave,
@@ -67,6 +72,13 @@ const MILESTONE_STATE_TEXT: Record<string, string> = {
   FAILED: 'Failed',
 };
 
+const DIRECT_LABEL: Record<string, string> = {
+  answer: 'Answer request',
+  resume: 'Resume',
+  stop: 'Stop',
+  retry: 'Try again',
+};
+
 const WorkCenter: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [routes, setRoutes] = useState<Record<string, KelJobRoute>>({});
@@ -82,6 +94,7 @@ const WorkCenter: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [rowActions, setRowActions] = useState<Record<string, KelWorkRow>>({});
 
   const load = useCallback(async () => {
     try {
@@ -103,6 +116,21 @@ const WorkCenter: React.FC = () => {
       );
       setContinuation(state.continuation ?? []);
       setAssignments(team.assignments ?? []);
+      // V2-06 follow-through: the rows are the same authoritative surface the chat's Work panel
+      // reads, so every job here can offer its one action with the id that action needs.
+      const conversations = Array.from(
+        new Set(
+          (state.jobs ?? [])
+            .map((job) => job.conversation)
+            .filter((id): id is string => Boolean(id))
+        )
+      ).slice(0, 4);
+      const rowLists = await Promise.all(
+        conversations.map((cid) => kelWorkRows(cid).catch((): KelWorkRow[] => []))
+      );
+      const merged: Record<string, KelWorkRow> = {};
+      for (const list of rowLists) for (const row of list) merged[row.job_id] = row;
+      setRowActions(merged);
       setError(null);
     } catch (err) {
       setJobs([]);
@@ -125,6 +153,25 @@ const WorkCenter: React.FC = () => {
       }
     },
     [load]
+  );
+
+  const actDirect = useCallback(
+    async (jobId: string, direct: NonNullable<KelWorkRow['direct']>) => {
+      await act(`Next step (${direct.action})`, async () => {
+        if (direct.action === 'answer' && direct.id) {
+          await kelApproval(direct.id, true, rowActions[jobId]?.related?.conversation);
+        } else if (direct.action === 'resume' && direct.route === '/api/send') {
+          await kelSend(rowActions[jobId]?.related?.conversation ?? 'main', 'continue');
+        } else if (direct.action === 'resume') {
+          await kelControl(jobId, 'resume');
+        } else if (direct.action === 'stop') {
+          await kelControl(jobId, 'cancel');
+        } else if (direct.action === 'retry' && direct.id) {
+          await kelRetry(direct.id);
+        }
+      });
+    },
+    [act, rowActions]
   );
 
   useEffect(() => {
@@ -201,7 +248,7 @@ const WorkCenter: React.FC = () => {
         {!error && jobs !== null && jobs.length > 0 && (
           <KelCard title="Jobs">
             <KelTable
-              head={['Job', 'State', 'Current step', 'Budget', 'Updated']}
+              head={['Job', 'State', 'Current step', 'Budget', 'Updated', 'Next']}
               rows={jobs.map((job) => [
                 <span className="kel-strong" key={`${job.id}-id`}>
                   {job.contract?.request ?? job.id}
@@ -219,6 +266,19 @@ const WorkCenter: React.FC = () => {
                 <KelMeter key={`${job.id}-budget`} used={job.spent ?? 0} total={job.budget ?? 8} />,
                 <span className="kel-meta" key={`${job.id}-when`}>
                   {formatWhen(job.updated ?? null)}
+                </span>,
+                <span key={`${job.id}-next`}>
+                  {rowActions[job.id]?.direct ? (
+                    <KelButton
+                      variant="secondary"
+                      disabled={busy}
+                      onClick={() => void actDirect(job.id, rowActions[job.id].direct as NonNullable<KelWorkRow['direct']>)}
+                    >
+                      {DIRECT_LABEL[rowActions[job.id].direct?.action ?? ''] ?? 'Continue'}
+                    </KelButton>
+                  ) : (
+                    <span className="kel-meta">{rowActions[job.id]?.next ?? '—'}</span>
+                  )}
                 </span>,
               ])}
             />
