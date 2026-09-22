@@ -84,3 +84,7 @@ The supplied [Type v2 reference](evidence/figma/type-v2-user-authority.png) is r
 | Transcript | SF Pro Text 400 | 15 / 26 | primary |
 
 Existing explicit font choices remain supported through Appearance. These values define the default shell.
+
+## Status text amendment — September 22, 2026
+
+The user's new [Active/Paused reference](evidence/status-text/user-status-reference.png) supersedes the framed tag instances. Status labels use Instrument Sans 600 at 14/20, with no fill, border, radius, or horizontal padding. Positive text is `#8FE3B4`; attention/paused text is `#FFC481`. Light mode keeps its existing darker semantic text colors. This amendment does not change the New Chat/history dots.

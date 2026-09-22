@@ -4,6 +4,8 @@
   --kel-shell-heading: var(--app-font-family, 'Instrument Sans'), 'Segoe UI', sans-serif;
   --kel-shell-body: var(--app-font-family, 'SF Pro Text'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --kel-shell-content-width: 920px;
+  --kel-status-positive-text: #14532d;
+  --kel-status-attention-text: #8a4b12;
   --kel-shell-card-fill: linear-gradient(180deg, rgba(221,233,255,.02), transparent 30%), linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), linear-gradient(var(--kel-figma-color-glass-card), var(--kel-figma-color-glass-card));
   --kel-shell-card-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 30px -6px rgba(0,0,0,.3);
   --kel-shell-button-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 4px 12px -2px rgba(0,0,0,.25);
@@ -11,6 +13,8 @@
   --kel-shell-selected: rgba(47,107,224,.28);
 }
 :root[data-theme='dark'], .dark {
+  --kel-status-positive-text: #8fe3b4;
+  --kel-status-attention-text: #ffc481;
   --kel-surface-0: var(--kel-figma-color-canvas-base);
   --kel-surface-1: rgba(15,45,100,.3);
   --kel-surface-2: rgba(47,107,224,.12);
@@ -99,7 +103,6 @@
 .kel-v2-shell .kel-btn--quiet:hover { background: transparent; text-decoration: underline; color: var(--kel-text-1); }
 .kel-v2-shell .kel-btn--quiet:active { background: transparent; box-shadow: none; color: #7fa0ff; }
 .kel-v2-shell :is(.kel-input, .kel-select) { border: 1px solid var(--kel-figma-color-control-edge); border-radius: 8px; background: var(--kel-figma-color-control-fill); color: var(--kel-text-1); min-height: 34px; font: 500 14px/20px var(--kel-shell-heading); }
-.kel-v2-shell .kel-chip { border-radius: 6px; box-shadow: none; }
 .kel-v2-shell .kel-tab { border: 1px solid transparent; border-radius: 8px; }
 .kel-v2-shell .kel-tab--on { border: 1px solid var(--kel-figma-color-control-edge); background: var(--kel-shell-selected); }
 .kel-v2-shell .kel-attention__row { border: 0; padding: 12px 0; gap: 14px; }
@@ -406,10 +409,6 @@ html[style*='--app-font-weight'] .kel-v2-shell :is(.kel-sub,.kel-meta,.kel-shell
 .kel-v2-shell .kel-shell-provider > .kel-card { background: transparent; box-shadow: none; margin-top: 8px; }
 .kel-shell-extra-settings > summary { cursor: pointer; color: var(--kel-text-2); font-size: 12px; }
 .kel-shell-extra-settings[open] > .kel-card { margin-top: 12px; }
-.kel-v2-shell .kel-chip { padding: 1px 8px; min-height: 20px; font: 400 11px/16px var(--kel-shell-body); border: 1px solid var(--kel-border-strong); border-radius: 4px; }
-.kel-v2-shell .kel-chip__dot { display: none; }
-.kel-v2-shell .kel-chip--ok { color: #7ee0a8; background: rgba(126,224,168,.14); border-color: rgba(126,224,168,.35); }
-.kel-v2-shell :is(.kel-chip--wait,.kel-chip--run) { color: #fcac51; background: rgba(252,172,81,.14); border-color: rgba(252,172,81,.35); }
 @media(max-width:767px) { .kel-shell-provider > summary { flex-wrap: wrap; min-height: 44px; } .kel-shell-provider > summary > .kel-meta { max-width: 100%; overflow-wrap: anywhere; } }
 
 .kel-v2-shell .chat-layout-header { background: transparent !important; }
@@ -612,3 +611,19 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-task-detail { gap: 0 !important; }
 
 html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-model-btn, [data-testid='aionrs-attach-folder-btn'], .send-button-custom) { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+/* Static and interactive tag content keeps its meaning and handlers; remove chip chrome. */
+.kel-v2-shell .arco-tag {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding-inline: 0 !important;
+  font: 600 14px/20px var(--kel-shell-heading) !important;
+}
+
+@media(max-width:767px) {
+  .kel-shell-task-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+  .kel-shell-task-row > .kel-meta { grid-column: 1; grid-row: 2; }
+  .kel-shell-task-row > .kel-chip { grid-column: 2; grid-row: 1 / 3; align-self: center; justify-self: end; }
+}

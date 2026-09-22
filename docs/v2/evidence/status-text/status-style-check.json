@@ -1,0 +1,86 @@
+{
+  "model": [
+    {
+      "label": "Available",
+      "color": "rgb(143, 227, 180)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    },
+    {
+      "label": "Available",
+      "color": "rgb(143, 227, 180)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    },
+    {
+      "label": "Available",
+      "color": "rgb(143, 227, 180)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    },
+    {
+      "label": "Needs setup",
+      "color": "rgb(255, 196, 129)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    },
+    {
+      "label": "Needs setup",
+      "color": "rgb(255, 196, 129)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    }
+  ],
+  "scheduled": [
+    {
+      "label": "Active",
+      "color": "rgb(143, 227, 180)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    },
+    {
+      "label": "Paused",
+      "color": "rgb(255, 196, 129)",
+      "fill": "rgba(0, 0, 0, 0)",
+      "border": "0px",
+      "padding": "0px",
+      "radius": "0px",
+      "font": "600 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif",
+      "opacity": "1",
+      "parentOpacity": "1"
+    }
+  ],
+  "errors": [],
+  "narrowWidth": 393,
+  "noPageOverflow": true
+}
