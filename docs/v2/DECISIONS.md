@@ -566,3 +566,29 @@ mission did not earn), and nothing leaks inward plumbing — no payload, contrac
 worker id ever reaches a row or a sentence. *Forbids:* a second attention/recipe/activity store; a
 surface that resolves, snoozes or re-runs work itself; hiding an unmapped event instead of reporting
 it; and any row that offers an action whose route does not exist.
+
+## D-51 — Phone conversation history rides the Shell's existing list; an empty one is a place to start
+
+**Decided 2026-09-22.** The phone's history is not a new surface: the Shell already renders the
+conversation list in its sider, that sider becomes the mobile drawer, and every row opens
+`/conversation/<id>` through the same store the desktop uses. The gaps that remained were
+behavioural, and each is fixed at its cause: (a) a PWA is backgrounded constantly, so the list now
+re-reads on `visibilitychange` and `focus` — a conversation deleted elsewhere stops being offered
+instead of leading to a dead link; (b) an *empty* history gained the one action it was missing
+(“New conversation”), which on a phone is the only way back in; (c) opening a conversation that no
+longer exists keeps the visitor on the route with the honest state added in `43a934f` rather than
+bouncing home. Path-style deep links are already translated to their hash form by the gateway
+(`deepLinkLocation`), so the phone reaches the same route the desktop does.
+*Forbids:* a second history store or a phone-only list; hiding a conversation because it failed to
+load; and any control that promises a conversation exists before the store says so.
+
+## D-52 — Multi-utterance dictation is outside V2 scope (recorded, not dropped)
+
+**Decided 2026-09-22.** The directive's mobile requirement (§10) is “voice-record prompt; Muse
+transcription; send transcript” — one recorded prompt, transcribed, sent. That path is built and
+evidenced (V2-05: a real browser's voice through the gateway to Muse, the transcript landing in the
+composer and sending). *Multi-utterance dictation* — several utterances accumulating inside one
+recording — is not required by §10, and the recorded limitation is a Muse endpointing behaviour (the
+first utterance's partial is lost when Muse never marks it final) rather than a Kel defect.
+**Decision:** keep it out of V2; keep the limitation documented in `KNOWN_LIMITATIONS.md`; revisit it
+with the V2.5 realtime work. Nothing in V2 acceptance depends on it.

@@ -552,6 +552,8 @@ export interface KelRecipeEntry {
   steps?: unknown[];
   inputs?: unknown[];
   source?: string;
+  /** The engine's own mark for a starred recipe (`entries()` carries it with the library row). */
+  favourite?: boolean;
 }
 
 export interface KelWork {
@@ -643,6 +645,33 @@ export const kelRecipeLastResult = (recipeId: string, conversation = 'main') =>
     '/api/recipes',
     { action: 'last_result', recipe_id: recipeId, conversation }
   );
+
+/** The library's own controls (V2-07): search, categories, favourites, recent, duplicate. */
+export const kelRecipeSearch = (query: string, conversation = 'main') =>
+  call<{ entries: KelRecipeEntry[] }>('/api/recipes', { action: 'search', query, conversation });
+
+export const kelRecipeCategories = (conversation = 'main') =>
+  call<{ categories: string[] }>('/api/recipes', { action: 'categories', conversation });
+
+export const kelRecipeRecent = (limit = 5, conversation = 'main') =>
+  call<{ recent: KelRecipeEntry[] }>('/api/recipes', { action: 'recent', limit, conversation });
+
+/** Star or unstar one recipe. */
+export const kelRecipeFavourite = (recipeId: string, favourite: boolean, conversation = 'main') =>
+  call<Record<string, unknown>>('/api/recipes', {
+    action: 'favourites',
+    recipe_id: recipeId,
+    favourite,
+    conversation,
+  });
+
+/** Copy a recipe inside this project (the engine keeps the copy in the project scope). */
+export const kelRecipeDuplicate = (recipeId: string, conversation = 'main') =>
+  call<{ recipe_id?: string; id?: string } & Record<string, unknown>>('/api/recipes', {
+    action: 'duplicate',
+    recipe_id: recipeId,
+    conversation,
+  });
 
 export interface KelProviderStatus {
   provider: string;
