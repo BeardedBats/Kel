@@ -203,6 +203,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
           <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
           <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
+          <Route path='/transcription/library' element={withRouteFallback(KelTranscription)} />
           <Route
             path='/team'
             element={<Navigate to={HIDE_WORKFORCE_SURFACES ? '/guid' : '/team/office'} replace />}

@@ -10,13 +10,15 @@ import { kelRequest as request } from '@renderer/components/kel/kelApi';
 import rambleBrand from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
 import styles from './index.module.css';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import KelBottomNav from '@renderer/components/kel/KelBottomNav';
+import rambleIcon from '@renderer/assets/figma/refresh/ramble_hero.svg';
 
 /**
  * Batch 6 (TR-02 residual): every failure toast goes through the classifier, so transport and
@@ -81,6 +83,7 @@ function downloadBlob(name: string, data: BlobPart, mime: string): void {
 
 const TranscriptionPage: React.FC = () => {
   const navigate = useNavigate();
+  const embedded = useLocation().pathname === '/transcription/library';
   const layout = useLayoutContext();
   const [creatingFolder, setCreatingFolder] = useState(false);
   const folderCreatePending = useRef(false);
@@ -636,7 +639,7 @@ const statusCopy =
   return (
     <div className='relative h-full'>
       <div
-        className={`${styles.shell} kel-shell-ramble`}
+        className={`${styles.shell} kel-shell-ramble${embedded ? ' kel-shell-ramble--embedded' : ''}`}
         data-testid='transcription-page'
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes('Files')) {
@@ -647,21 +650,14 @@ const statusCopy =
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
       >
-        <aside className={styles.sidebar} aria-label='Transcript library'>
+        {!embedded && <aside className={styles.sidebar} aria-label='Transcript library'>
           <div className={styles.brandRow}>
             <div className='kel-shell-tool-brand'><img src={rambleBrand} alt='' width={30} height={31} /><span>Kel</span></div>
             <div className={styles.navigation} ref={layout?.setTitlebarMenuHost} data-testid='ramble-navigation' />
           </div>
-          <button type='button' className='kel-shell-back' onClick={() => navigate('/guid')}>← Back to Kel</button>
-          <input
-            type='search'
-            className={styles.searchInput}
-            aria-label='Search transcripts'
-            placeholder='Search transcripts'
-            value={recentSearch}
-            onChange={(event) => setRecentSearch(event.target.value)}
-            data-testid='transcript-search'
-          />
+          <button type='button' className='kel-shell-new-chat kel-shell-ramble-new' onClick={() => void beginRecording()} disabled={recState !== 'idle'}>
+            <span className='kel-shell-ramble-hero-icon'><img src={rambleIcon} alt='' /></span><span>New Recording</span>
+          </button>
           <div className={styles.foldersHeader}>
             <h2 className={styles.sectionTitle}>Folders</h2>
             <button type='button' className={styles.addFolder} aria-label='New folder' title='New folder' disabled={creatingFolder} onClick={() => void createFolder()} data-testid='folder-create'>+</button>
@@ -797,14 +793,27 @@ const statusCopy =
             ))}
           </div>
 
-        </aside>
+          <div className='kel-shell-ramble-bottom'>
+            <input
+              type='search'
+              className={styles.searchInput}
+              aria-label='Search transcripts'
+              placeholder='Search Transcripts'
+              value={recentSearch}
+              onChange={(event) => setRecentSearch(event.target.value)}
+              data-testid='transcript-search'
+            />
+            <KelBottomNav />
+          </div>
+
+        </aside>}
 
         <main className={styles.workspace}>
           {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
           <header className={styles.pageHeader}>
-            <h1 className='kel-h1'>Ramble</h1>
+            <h1 className='kel-h1'>{embedded ? 'Transcriptions' : 'Ramble'}</h1>
             <div className={styles.actionRow}>
-              <Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>
+              {!embedded && <Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>}
               {recState === 'idle' && (
                 <>
                   <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
