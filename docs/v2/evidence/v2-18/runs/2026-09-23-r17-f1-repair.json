@@ -1,0 +1,433 @@
+{
+  "journeys": [
+    {
+      "id": "J-WORK",
+      "name": "Real execution, and what a stopped job shows",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery"
+      ],
+      "detail": {
+        "conversation": "9bea28ee-14cd-42be-b721-4cde34d1bf56",
+        "job": "68113165-c919-4adf-913d-196b0efb654d",
+        "job_state": "CLOSED",
+        "verdict": "VERIFIED",
+        "assistant_replies": 1,
+        "row": {
+          "accepted": 1,
+          "age_seconds": 24,
+          "direct": null,
+          "fenced": false,
+          "job_id": "68113165-c919-4adf-913d-196b0efb654d",
+          "last_at": 1790125611.6246476,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "later",
+          "reason": "Done and verified.",
+          "related": {
+            "approvals": 0,
+            "conversation": "9bea28ee-14cd-42be-b721-4cde34d1bf56",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790125594"
+          },
+          "state": "CLOSED",
+          "title": "Write a short note titled Finished Work about what a settled job looks like from the outside.",
+          "total": 1,
+          "verdict": "VERIFIED",
+          "why": "Done and verified."
+        },
+        "stopped_job": "30082a8b-8336-459f-ba85-c6b0c16ad9ed",
+        "stopped_row": {
+          "accepted": 0,
+          "age_seconds": 3,
+          "direct": null,
+          "fenced": false,
+          "job_id": "30082a8b-8336-459f-ba85-c6b0c16ad9ed",
+          "last_at": 1790125633.444996,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "9bea28ee-14cd-42be-b721-4cde34d1bf56",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790125594"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Stopped Work that will be stopped before it finishes.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "The abandoned-run fence itself is V2-11 evidence (a run no broker can carry is fenced, never replayed); this journey demonstrates real execution and what a deliberately stopped run shows.",
+      "seconds": 40.3
+    },
+    {
+      "id": "J-RECOV",
+      "name": "Failures keep their work; retry is guarded",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work"
+      ],
+      "detail": {
+        "conversation": "8095c45b-ba76-4f84-85d5-323c8775def1",
+        "job": "f56fed23-86e2-4202-85aa-363d9c3b492d",
+        "job_state": "CANCELLED",
+        "request_kept": true,
+        "submissions": 1,
+        "retry_answer": {
+          "refused": true,
+          "sentence": "/api/retry None -> This request is not ready for retry"
+        },
+        "row": {
+          "accepted": 0,
+          "age_seconds": 3,
+          "direct": null,
+          "fenced": false,
+          "job_id": "f56fed23-86e2-4202-85aa-363d9c3b492d",
+          "last_at": 1790125643.0711555,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "8095c45b-ba76-4f84-85d5-323c8775def1",
+            "milestones": 1,
+            "project_id": "acceptance-recovery-1790125634"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Recovery Acceptance about what happens to saved work when a run is stopped.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "A stopped job keeps its work and is never silently re-run; the retry endpoint's refusal proves non-execution, not recovery. A genuinely retryable FAILED submission going through /api/retry is pinned by the engine suite, not claimed here.",
+      "seconds": 9.9
+    },
+    {
+      "id": "J-ATTN",
+      "name": "An interruption appears, is answered and clears",
+      "shell_required": false,
+      "requirements": [
+        "Needs Your Attention: human interruptions"
+      ],
+      "detail": {
+        "conversation": "71b5a4d9-fc96-4a26-bf7a-f2a51d0b4bf8",
+        "job": "74ff6da3-f65f-4e0d-94b4-579e9c142175",
+        "approval": "062cfb6e-254c-4db5-ba4b-8d33657f9d43",
+        "appeared_pending": true,
+        "row_before": {
+          "needs_you": true,
+          "priority": "now",
+          "direct": {
+            "action": "answer",
+            "hint": "Answer the request in this conversation.",
+            "route": "/api/approval"
+          },
+          "related": {
+            "approvals": 1,
+            "conversation": "71b5a4d9-fc96-4a26-bf7a-f2a51d0b4bf8",
+            "milestones": 1,
+            "project_id": "acceptance-attn-1790125644"
+          }
+        },
+        "answer": {
+          "status": "APPROVED"
+        },
+        "row_after": {
+          "needs_you": false,
+          "direct": {
+            "action": "stop",
+            "hint": "Stop this work.",
+            "route": "/api/control"
+          }
+        },
+        "still_pending": 0
+      },
+      "status": "PASSED",
+      "seconds": 0.8
+    },
+    {
+      "id": "J-RECIPE",
+      "name": "Recipe library and the V2-07 scope",
+      "shell_required": false,
+      "requirements": [
+        "Recipes: repeated workflows"
+      ],
+      "detail": {
+        "entries": 5,
+        "recipe_id": "audit-and-repair",
+        "entry_fields": [
+          "category",
+          "description",
+          "digest",
+          "favourite",
+          "kind",
+          "last_run_at",
+          "name",
+          "opened_at",
+          "recipe_id",
+          "runs",
+          "scope",
+          "source",
+          "version"
+        ],
+        "get_ok": true,
+        "preview_keys": [
+          "message",
+          "needs_project"
+        ],
+        "ops": {
+          "search": {
+            "supported": true,
+            "keys": [
+              "entries"
+            ]
+          },
+          "favourites": {
+            "supported": true,
+            "keys": [
+              "favourites"
+            ]
+          },
+          "recent": {
+            "supported": true,
+            "keys": [
+              "recent"
+            ]
+          },
+          "categories": {
+            "supported": true,
+            "keys": [
+              "categories"
+            ]
+          },
+          "history": {
+            "supported": true,
+            "keys": [
+              "history"
+            ]
+          },
+          "last_result": {
+            "supported": true,
+            "keys": [
+              "recipe_id",
+              "sentence",
+              "state"
+            ]
+          },
+          "duplicate": {
+            "supported": true,
+            "keys": [
+              "copied_from",
+              "note",
+              "recipe"
+            ]
+          },
+          "save": {
+            "supported": true,
+            "sentence": "/api/recipes save -> A recipe object is required"
+          },
+          "run": {
+            "supported": true,
+            "sentence": "/api/recipes run -> Unknown recipe: no-such-recipe"
+          },
+          "propose_from_job": {
+            "supported": true,
+            "sentence": "/api/recipes propose_from_job -> Job missing"
+          }
+        },
+        "supported": {
+          "library": true,
+          "create": true,
+          "edit": true,
+          "run": true,
+          "project attachment": true,
+          "suggestions": true,
+          "search": true,
+          "favourites": true,
+          "recent": true,
+          "categories": true,
+          "history": true,
+          "last result": true,
+          "duplicate": true,
+          "run again": true
+        },
+        "missing": []
+      },
+      "status": "PASSED",
+      "seconds": 0.4
+    },
+    {
+      "id": "J-ACTIVITY",
+      "name": "Activity timeline and filters",
+      "shell_required": false,
+      "requirements": [
+        "Activity: timeline, filters, search, results"
+      ],
+      "detail": {
+        "entries": 200,
+        "total": 1594,
+        "counts": {
+          "attention": 6,
+          "connections": 0,
+          "learning": 8,
+          "network": 0,
+          "other": 9,
+          "recipes": 0,
+          "recovery": 0,
+          "staffing": 0,
+          "work": 1571
+        },
+        "kinds": [
+          "work",
+          "attention",
+          "learning",
+          "recipes",
+          "connections",
+          "network",
+          "staffing",
+          "recovery",
+          "other"
+        ],
+        "projects": [
+          {
+            "count": 625,
+            "project_id": "acceptance-attn-1790089358"
+          },
+          {
+            "count": 498,
+            "project_id": "acceptance-attn-1790089399"
+          },
+          {
+            "count": 219,
+            "project_id": "acceptance-attn-1790089521"
+          },
+          {
+            "count": 4,
+            "project_id": "acceptance-attn-1790089634"
+          },
+          {
+            "count": 6,
+            "project_id": "acceptance-attn-1790089660"
+          },
+          {
+            "count": 5,
+            "project_id": "acceptance-attn-1790125644"
+          },
+          {
+            "count": 8,
+            "project_id": "acceptance-recovery-1790089168"
+          },
+          {
+            "count": 2,
+            "project_id": "acceptance-recovery-1790089230"
+          },
+          {
+            "count": 5,
+            "project_id": "acceptance-recovery-1790099570"
+          },
+          {
+            "count": 5,
+            "project_id": "acceptance-recovery-1790125634"
+          },
+          {
+            "count": 16,
+            "project_id": "acceptance-work-1790089144"
+          },
+          {
+            "count": 16,
+            "project_id": "acceptance-work-1790089204"
+          },
+          {
+            "count": 13,
+            "project_id": "acceptance-work-1790089295"
+          },
+          {
+            "count": 13,
+            "project_id": "acceptance-work-1790099542"
+          },
+          {
+            "count": 13,
+            "project_id": "acceptance-work-1790125594"
+          },
+          {
+            "count": 8,
+            "project_id": "aeadc422-be16-4582-913c-85ec8627e328"
+          },
+          {
+            "count": 8,
+            "project_id": "b8a7d5af-85bb-45c6-ad4c-4bc59bcdb355"
+          },
+          {
+            "count": 28,
+            "project_id": "bridge-live"
+          },
+          {
+            "count": 85,
+            "project_id": "default"
+          }
+        ],
+        "work_rows": 200,
+        "failure_rows": 200,
+        "search_rows": 97,
+        "sample": [
+          {
+            "at": 1790125645.1875806,
+            "can_retry": false,
+            "evidence": null,
+            "failed": true,
+            "job_id": "74ff6da3-f65f-4e0d-94b4-579e9c142175",
+            "kind": "work",
+            "project_id": "acceptance-attn-1790125644",
+            "result": null,
+            "state": "CANCELLING",
+            "type": "job.cancel",
+            "verdict": "UNCERTAIN",
+            "what": "This work was stopped."
+          },
+          {
+            "at": 1790125645.0322263,
+            "can_retry": false,
+            "evidence": null,
+            "failed": true,
+            "job_id": "74ff6da3-f65f-4e0d-94b4-579e9c142175",
+            "kind": "attention",
+            "project_id": "acceptance-attn-1790125644",
+            "result": null,
+            "state": "CANCELLING",
+            "type": "approval.resolved",
+            "verdict": "UNCERTAIN",
+            "what": "You were asked something about this work."
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.3
+    }
+  ],
+  "identity": {
+    "pid": 15116,
+    "port": 60979,
+    "url": "http://127.0.0.1:60979",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 15116,
+    "problems": []
+  },
+  "root": "C:/Users/Nick/KelV2Runs/prepared/engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-22 21:07:25",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

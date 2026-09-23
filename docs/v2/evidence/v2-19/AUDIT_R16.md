@@ -146,3 +146,46 @@ Fixtures, phone viewports and earlier runs are **not** counted as live-service o
 3. Finish the V2-16 set (conversation open, Project switch, remote loading) in the repaired
    configuration.
 4. Then the external checks as their dependencies arrive.
+
+---
+
+## Repair record — F1 (2026-09-23)
+
+**Root cause (established from the code, not guessed).** The packaged `--webui` branch of
+`packages/desktop/src/index.ts` passed `dataDir: getDataPath()` to `startWebHost` — that is the
+**store** directory (`~/.aionui`). The Kel engine writes its `desktop-session.json` into its own
+root: `KEL_DATA_DIR || <appData>/kel-desktop/work` (`KelService.dataRoot()`). `kelDataDir` — the
+option that turns on the `/kel/*` gateway — was **never passed**, so the gateway was off by
+construction and `/kel/*` fell through to the SPA fallback (HTML with HTTP 200). Every Kel surface
+then parsed HTML as JSON, and Work rendered *“Cannot read properties of null (reading 'jobs')”*
+even with a healthy engine. This also explains why the **source** WebUI (`bun run webui`) always
+worked: its script passes the engine root.
+
+**Fix (`8117742`)**
+
+| Piece | Change |
+| --- | --- |
+| `KelService.ts` | exports `kelDataRoot()` (one resolver for the engine's root); the internal `dataRoot` is now that same function |
+| `index.ts` (webui branch) | passes `kelDataDir: kelDataRoot()` — the gateway now reads the descriptor from the directory the engine writes it to |
+| `index.ts` (store) | `const storeDir = process.env.AIONUI_DATA_DIR || getDataPath()` used for `userDataPath` and `dataDir`, so **F3** is fixed too: an isolated `KEL_DATA_DIR` + `AIONUI_DATA_DIR` pair really is isolated |
+| `/kel/api/*` failure mode | already explicit — `503 {"error":"KEL_ENGINE_UNAVAILABLE"}` when the descriptor is missing, `502` when the engine is not listening — pinned by `kel-gateway.unit.test.ts`; with `kelDataDir` now set it applies to the packaged path, so the SPA can never be served for a missing engine |
+
+**Figma refresh merged (`fe6edec`, branch commit `ea7de07`)** — dark V2 layouts, dark settings empty
+states, and the Figma **Assistants** and **Skills** settings (`/settings/assistants`,
+`/settings/skills`) that Nick confirmed belong in Settings. Astra's branch is untouched.
+
+**Verified after the fix**
+
+| Check | Result | Label |
+| --- | --- | --- |
+| Typecheck (`tsc --noEmit`) | clean | source |
+| Build (`bun run package`, main + renderer) | clean | source |
+| Gateway suites (`kel-gateway`, `gateway-session`) | **15 passed**, incl. the 503 pin | source |
+| V2-18 `J-WORK`, `J-RECOV`, `J-ATTN`, `J-RECIPE`, `J-ACTIVITY` | **all PASS** (`docs/v2/evidence/v2-18/runs/2026-09-23-r17-f1-repair.json`) | backend |
+| Packaged `--webui` re-check (engine, gateway JSON, isolated roots, surfaces, dark settings) | recorded in `docs/v2/evidence/CANDIDATE_R17.md` | packaged |
+
+**Process note (this audit's own mistake, recorded for the next runner):** an earlier pack session
+stalled without a packer process; stopping it left an orphaned `electron-builder`, and the next pack
+raced it into `ENOENT … electron.exe -> Kel.exe`. The r17 copy was therefore **not** installed from
+that pack; the candidate was restored to r16 from `C:\Users\Nick\KelV2Candidate.r16` and a clean
+single-packer build was run into a fresh output directory.
