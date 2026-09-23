@@ -10,8 +10,8 @@ branch: integration/v2       # current packaged integration line; dev/v2 remains
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-19                # bounded regression in progress on staged r26
-next_item: V2-19 packaged Projects/Knowledge/Map, Kibble, Connections, Permissions, and transcription actions on isolated r26 data; then V2-16 timings where accessible.
+phase: V2-19                # bounded regression in progress on staged r28
+next_item: V2-16 conversation-open and project-switch timings on fully loaded content where accessible; then V2-19 remaining isolated paths.
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -20,11 +20,11 @@ deferred:
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
-  source_integration: C:\Users\Nick\Desktop\Kel\kel-v2-integration  # active r26 source checkout
+  source_integration: C:\Users\Nick\Desktop\Kel\kel-v2-integration  # active r28 source checkout
   source_predecessor: C:\Users\Nick\Desktop\Kel\kel-daily-driver   # dev/daily-driver, reference only
   shared_git_dir: C:\Users\Nick\Desktop\Kel\Kel-Repo\.git         # one object database for all trees
   v2_test_data: C:\Users\Nick\KelV2Runs\prepared                  # V2 development/test data root
-  v2_candidate: C:\Users\Nick\KelV2Candidate                      # r20 live; r26 is staged separately
+  v2_candidate: C:\Users\Nick\KelV2Candidate                      # r20 live; r28 is staged separately
 
 protected_paths:            # never modify, uninstall, overwrite, reset, migrate, clean or use as V2 test data
   - C:\Users\Nick\KelDogfoodCandidate        # the stable dogfood build Nick actually uses
@@ -50,7 +50,7 @@ phases:
   V2-16: partial     # Dark Settings and setup path repaired; conversation/project/remote timings pending
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
-  V2-19: partial     # r23 setup and Dark Settings; r26 recipe/Work/attention/recovery plus five engine journeys passed; remaining groups open
+  V2-19: partial     # r23 Dark Settings; r26 Recipes/Work; r28 Projects/Knowledge/Map, Kibble, Permissions, Connections form, transcription library; live paths remain
   V2-20: queued      # V2 release candidate
 
 invariants:

@@ -1,0 +1,106 @@
+{
+  "journeys": [
+    {
+      "id": "J-SEC",
+      "name": "Execution boundaries refuse protected sources",
+      "shell_required": false,
+      "requirements": [
+        "Security: execution boundaries",
+        "Security: authority narrowing"
+      ],
+      "detail": {
+        "finding": "FIX-0001",
+        "sensitive_root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r28-ui\\engine",
+        "sensitive_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Kel will not use C:\\Users\\Nick\\KelV2Runs\\prepared\\r28-ui\\engine for a development mission: it is Kel's own data folder."
+        },
+        "protected_root": "C:\\Users\\Nick\\KelDogfoodCandidate",
+        "protected_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Kel will not use C:\\Users\\Nick\\KelDogfoodCandidate for a development mission: it is a protected app folder."
+        },
+        "non_repository_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> That folder is not a Git repository, so Kel cannot verify a baseline. (fatal: not a git repository (or any of the parent directories): .git)"
+        },
+        "fixture": "a real folder that is not a repository (synthetic content)"
+      },
+      "status": "PASSED",
+      "seconds": 0.3
+    },
+    {
+      "id": "J-MEM",
+      "name": "Memory and learning surfaces",
+      "shell_required": false,
+      "requirements": [
+        "Memory: useful recall, controlled learning"
+      ],
+      "detail": {
+        "learnings": 0,
+        "learning_fields": [],
+        "history_entries": 2,
+        "suggestions": 0,
+        "project_memories": 1,
+        "sample": [
+          {
+            "confidence": null,
+            "id": "b676aedc-98cb-477a-99d3-e33e98e1f713",
+            "source_ref": "r28-ui",
+            "source_type": "system",
+            "status": "active",
+            "summary": "Synthetic local UI record for Knowledge controls",
+            "topic": "v2.regression.fixture",
+            "trust": 2,
+            "type": "fact",
+            "updated": 1790196384.9888077,
+            "user_confirmed": 1,
+            "value": "{\"statement\": \"Synthetic local UI record\"}"
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.1
+    },
+    {
+      "id": "J-TRANS",
+      "name": "Transcription path (labelled fixture)",
+      "shell_required": true,
+      "requirements": [
+        "Transcription: real Muse recording"
+      ],
+      "detail": {
+        "status": {
+          "detail": "Muse transcribes your audio, using the key the Transcriptions app already stored on this computer.",
+          "has_key": true,
+          "label": "Muse",
+          "live_capable": true,
+          "mode": "muse"
+        },
+        "library_keys": [
+          "folders",
+          "transcripts"
+        ],
+        "recordings": 0,
+        "labelled": "no audio device and no Muse credential use here: the engine path is exercised, real recording is not claimed"
+      },
+      "status": "PASSED",
+      "pending": "real Muse recording (microphone), and the phone surface \u2014 Shell/Astra",
+      "seconds": 0.1
+    }
+  ],
+  "identity": {
+    "pid": 70788,
+    "port": 60048,
+    "url": "http://127.0.0.1:60048",
+    "command_line": "C:\\Users\\Nick\\KelV2Candidate.r28\\resources\\kel-engine\\KelEngine.exe --data C:\\Users\\Nick\\KelV2Runs\\prepared\\r28-ui\\engine",
+    "port_owner": 70788,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r28-ui\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 16:46:40",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

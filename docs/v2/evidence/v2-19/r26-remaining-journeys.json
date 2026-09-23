@@ -1,0 +1,144 @@
+{
+  "journeys": [
+    {
+      "id": "J-PROJ",
+      "name": "Two projects, no contamination",
+      "shell_required": false,
+      "requirements": [
+        "Projects: multiple real contexts"
+      ],
+      "detail": {
+        "alpha": "acceptance-alpha-1790194622",
+        "beta": "acceptance-beta-1790194622",
+        "project_idempotent": true,
+        "attached": {
+          "id": "b40c15d7-ef1f-47df-9b7f-d7b8f4a79376"
+        },
+        "conversations_differ": true,
+        "alpha_project_in_work": "acceptance-alpha-1790194622",
+        "beta_project_in_work": "acceptance-beta-1790194622",
+        "alpha_attachments": [
+          "acceptance-alpha.txt"
+        ],
+        "beta_attachments": []
+      },
+      "status": "PASSED",
+      "seconds": 0.4
+    },
+    {
+      "id": "J-MEM",
+      "name": "Memory and learning surfaces",
+      "shell_required": false,
+      "requirements": [
+        "Memory: useful recall, controlled learning"
+      ],
+      "detail": {
+        "learnings": 0,
+        "learning_fields": [],
+        "history_entries": 0,
+        "suggestions": 0,
+        "project_memories": 0,
+        "sample": []
+      },
+      "status": "FAILED",
+      "problem": "the memory surfaces did not answer with the real audit trail",
+      "seconds": 0.2
+    },
+    {
+      "id": "J-TRANS",
+      "name": "Transcription path (labelled fixture)",
+      "shell_required": true,
+      "requirements": [
+        "Transcription: real Muse recording"
+      ],
+      "detail": {
+        "status": {
+          "detail": "Muse transcribes your audio, using the key the Transcriptions app already stored on this computer.",
+          "has_key": true,
+          "label": "Muse",
+          "live_capable": true,
+          "mode": "muse"
+        },
+        "library_keys": [
+          "folders",
+          "transcripts"
+        ],
+        "recordings": 0,
+        "labelled": "no audio device and no Muse credential use here: the engine path is exercised, real recording is not claimed"
+      },
+      "status": "PASSED",
+      "pending": "real Muse recording (microphone), and the phone surface \u2014 Shell/Astra",
+      "seconds": 0.1
+    },
+    {
+      "id": "J-SEC",
+      "name": "Execution boundaries refuse protected sources",
+      "shell_required": false,
+      "requirements": [
+        "Security: execution boundaries",
+        "Security: authority narrowing"
+      ],
+      "detail": {
+        "finding": "FIX-0001",
+        "sensitive_root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine",
+        "sensitive_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> Kel will not use C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine for a development mission: it is Kel's own data folder."
+        },
+        "protected_root": "C:\\Users\\Nick\\KelDogfoodCandidate",
+        "protected_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> That folder is not a Git repository, so Kel cannot verify a baseline. (fatal: not a git repository (or any of the parent directories): .git)"
+        },
+        "non_repository_refusal": {
+          "refused": true,
+          "sentence": "/api/dogfood build_update -> That folder is not a Git repository, so Kel cannot verify a baseline. (fatal: not a git repository (or any of the parent directories): .git)"
+        },
+        "fixture": "a real folder that is not a repository (synthetic content)"
+      },
+      "status": "PENDING",
+      "problem": "the stable-app root was not refused: this engine was started without KEL_PROTECTED_PATHS (the desktop sets it at spawn)",
+      "seconds": 0.3
+    },
+    {
+      "id": "J-FIX",
+      "name": "Fix Capture round trip",
+      "shell_required": false,
+      "requirements": [
+        "Fix Capture: real friction capture"
+      ],
+      "detail": {
+        "fix": "FIX-0002",
+        "captured_status": "OPEN",
+        "read_back_route": "/guid",
+        "status_after_set": "BATCHED",
+        "listed_batched": [
+          "FIX-0002"
+        ],
+        "counts": {
+          "BATCHED": 1,
+          "DISMISSED": 0,
+          "FIXED": 0,
+          "OPEN": 1
+        },
+        "fixture": "synthetic transcript; the real Fix Capture store and routes"
+      },
+      "status": "PASSED",
+      "seconds": 0.2
+    }
+  ],
+  "identity": {
+    "pid": 10404,
+    "port": 49994,
+    "url": "http://127.0.0.1:49994",
+    "command_line": "C:\\Users\\Nick\\KelV2Candidate.r26\\resources\\kel-engine\\KelEngine.exe --data C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine",
+    "port_owner": 10404,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 16:17:03",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
