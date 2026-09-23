@@ -46,7 +46,7 @@
 }
 .kel-v2-shell { font-family: var(--kel-shell-body); color: var(--kel-text-1); }
 [data-theme='dark'] .kel-v2-shell {
-  background: var(--kel-shell-custom-canvas, linear-gradient(180deg, rgba(21,26,51,.7), rgba(21,26,51,0) 168px), linear-gradient(var(--kel-figma-color-canvas-wash), var(--kel-figma-color-canvas-wash)), url('../assets/figma/canvas.svg') center / 100% 100%);
+  background: var(--kel-shell-custom-canvas, linear-gradient(180deg, rgba(10,31,69,.7), rgba(10,31,69,0) 168px), linear-gradient(var(--kel-figma-color-canvas-wash), var(--kel-figma-color-canvas-wash)), url('../assets/figma/canvas.svg') center / 100% 100%);
 }
 .kel-v2-shell :is(.layout, .layout-content, .layout-sider, .arco-layout-content, .layout-sider-children, .bg-1, .bg-2, .app-titlebar) {
   background: transparent !important;
@@ -626,4 +626,156 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-shell-task-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
   .kel-shell-task-row > .kel-meta { grid-column: 1; grid-row: 2; }
   .kel-shell-task-row > .kel-chip { grid-column: 2; grid-row: 1 / 3; align-self: center; justify-self: end; }
+}
+
+/* Screens FINAL 185:2: one persistent sidebar and one in-chat card for work and settings. */
+.kel-v2-shell .layout-sider-content { display: flex; flex-direction: column; min-height: 0; }
+.kel-v2-shell .layout-sider-content > div { flex: 1; min-height: 0; }
+.kel-v2-shell .kel-bottom-nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 10px 0 14px; }
+.kel-v2-shell .kel-bottom-nav__item {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 28px; padding: 0 10px;
+  border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--kel-text-2);
+  text-align: left; font: 500 14px/20px var(--kel-shell-heading); cursor: pointer;
+}
+.kel-v2-shell .kel-bottom-nav__item:hover { background: rgba(191,216,255,.06); }
+.kel-v2-shell .kel-bottom-nav__item[aria-current='page'] {
+  background: rgba(47,107,224,.28); border-color: rgba(127,160,255,.45); color: var(--kel-text-1);
+}
+.kel-v2-shell .kel-bottom-nav__item[data-section='settings']:not([aria-current='page']) { color: #ffc481; }
+.kel-v2-shell .kel-bottom-nav__icon, .kel-v2-shell .kel-bottom-nav__icon img { display: block; width: 16px; height: 16px; flex: none; }
+.kel-v2-shell .kel-bottom-nav__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.kel-v2-shell .kel-in-chat-frame {
+  box-sizing: border-box; display: flex; flex-direction: column; flex: 1; min-height: 0;
+  width: 100%; padding: 0 max(24px, calc((100% - 920px) / 2)) 28px;
+}
+.kel-v2-shell .kel-in-chat-frame__header { box-sizing: border-box; flex: none; min-height: 112px; padding-top: 22px; }
+.kel-v2-shell .kel-in-chat-frame__header h1 { margin: 4px 0 0; font: 600 26px/32px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-in-chat-frame__card {
+  box-sizing: border-box; display: grid; grid-template-columns: 200px minmax(0,1fr); flex: 1; min-height: 0;
+  border: 1px solid rgba(221,233,255,.5); border-radius: 16px; overflow: hidden;
+  background: rgba(30,75,176,.055);
+  box-shadow: 0 10px 30px -6px rgba(0,0,0,.3);
+}
+.kel-v2-shell .kel-in-chat-frame__nav { box-sizing: border-box; min-height: 0; overflow-y: auto; padding: 16px 10px; border-right: 1px solid rgba(191,216,255,.1); background: rgba(6,18,46,.28); }
+.kel-v2-shell .kel-in-chat-frame__nav-group + .kel-in-chat-frame__nav-group { margin-top: 12px; }
+.kel-v2-shell .kel-in-chat-frame__nav-label { box-sizing: border-box; display: flex; align-items: center; height: 24px; padding: 0 8px; color: var(--kel-figma-color-text-section-label); font: 500 12px/16px var(--kel-shell-heading); }
+.kel-v2-shell .kel-in-chat-frame__nav-row {
+  box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; height: 28px; margin-top: 4px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--kel-text-2);
+  text-align: left; white-space: nowrap; font: 500 14px/20px var(--kel-shell-heading); cursor: pointer;
+}
+.kel-v2-shell .kel-in-chat-frame__nav-row:hover { background: rgba(191,216,255,.06); }
+.kel-v2-shell .kel-in-chat-frame__nav-row[aria-current='page'] { background: rgba(47,107,224,.28); border-color: rgba(127,160,255,.45); color: var(--kel-text-1); }
+.kel-v2-shell .kel-in-chat-frame__nav-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; }
+.kel-v2-shell .kel-in-chat-frame__nav-icon img { display: block; width: 16px; height: 16px; }
+.kel-v2-shell .kel-in-chat-frame__pane { box-sizing: border-box; min-width: 0; min-height: 0; overflow-y: auto; padding: 20px 24px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page { box-sizing: border-box; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 0 !important; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page__head { min-height: 26px; margin: 0 0 12px; align-items: center; }
+.kel-v2-shell .kel-in-chat-frame__pane :is(#kel-work-main, #kel-projects-main, #kel-autonomy-main, #kel-providers-main, #kel-diagnostics-main, .kel-shell-scheduled) .kel-page__head { margin-bottom: 6px; }
+.kel-v2-shell .kel-in-chat-frame__pane #kel-projects-main.kel-shell-recipe-library .kel-page__head { margin-bottom: 14px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-activity > .kel-card { max-width: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-activity .kel-empty-description { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane #kel-providers-main > .kel-card:first-of-type { gap: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane #kel-providers-main > .kel-card:first-of-type .kel-shell-provider > summary { border-bottom: 1px solid rgba(191,216,255,.08); }
+.kel-v2-shell .kel-in-chat-frame__pane #kel-diagnostics-main > .kel-card:first-of-type { gap: 4px; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table { display: block; width: 100%; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table tbody { display: grid; gap: 8px; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border: 1px solid rgba(191,216,255,.12); border-radius: 10px; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td { display: block; padding: 0; border: 0; background: transparent; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td:first-child { flex: 1 0 100%; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td:nth-child(2)::before { content: 'Steps: '; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td:nth-child(3)::before { content: 'Inputs: '; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td:nth-child(4)::before { content: 'Source: '; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table td:nth-child(5) { margin-left: auto; }
+.kel-v2-shell .kel-in-chat-frame__pane #project-recipes .kel-table .kel-btn { white-space: nowrap; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page__head > div:first-child { min-height: 26px; justify-content: center; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page__head .kel-shell-workspace-link { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page__head .kel-h1 { margin: 0; font: 600 20px/26px var(--kel-shell-heading); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-page__head > .kel-btn { margin: 0 0 0 auto; }
+.kel-v2-shell .kel-in-chat-frame__pane :is(.kel-card, .kel-shell-settings-card) {
+  border-color: rgba(191,216,255,.12); background: linear-gradient(rgba(47,107,224,.06),rgba(47,107,224,.06)),rgba(6,18,46,.22);
+  box-shadow: none; backdrop-filter: none;
+}
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-appearance > div {
+  border-color: rgba(191,216,255,.12);
+  background: linear-gradient(rgba(47,107,224,.06),rgba(47,107,224,.06)),rgba(6,18,46,.22) !important;
+  box-shadow: none; backdrop-filter: none;
+}
+.kel-v2-shell .kel-in-chat-frame__pane .settings-page-wrapper { box-sizing: border-box; min-height: 0; height: auto; padding: 0; overflow: visible; }
+.kel-v2-shell .kel-in-chat-frame__pane .settings-page-content { box-sizing: border-box; max-width: none; margin: 0; padding: 0 !important; }
+.kel-v2-shell .kel-in-chat-frame__pane .settings-mobile-top-nav { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header { margin: 0 0 24px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header p { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header h1 { font: 600 20px/26px var(--kel-shell-heading); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-btn { box-shadow: none; backdrop-filter: contrast(1.55) saturate(1.25); }
+.kel-v2-shell .kel-in-chat-frame__pane :is(.kel-shell-model-description, [data-testid='tools-header']) { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] { gap: 0; margin-bottom: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > .kel-shell-source-card-head { margin-bottom: 10px; }
+.kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > p:last-child { margin: 0 !important; font: 400 12px/16px var(--kel-shell-body); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models { position: relative; min-height: 215px; margin-bottom: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .kel-shell-model-actions { position: absolute; right: 20px; top: 10px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px { min-height: 150px; padding: 0; align-items: center; justify-content: center; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px h3 { font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-shell-model-empty-icon, .kel-v2-shell .kel-shell-archived-empty-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 10px; border: 1px solid rgba(191,216,255,.45); border-radius: 50%; color: var(--kel-text-2); }
+.kel-v2-shell .kel-shell-archived-empty-icon img { width: 20px; height: 20px; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archive-actions:empty { display: none; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty { min-height: 215px; }
+.kel-v2-shell .kel-shell-archived-empty-content { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; }
+.kel-v2-shell .kel-shell-archived-empty-content .kel-meta { margin: 0; font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-about .kel-shell-preference-row { min-height: 58px; }
+.kel-v2-shell .kel-shell-catalog-stack { display: flex; flex-direction: column; gap: 12px; }
+.kel-v2-shell .kel-shell-catalog-stack > .kel-card { margin-bottom: 0; }
+.kel-v2-shell .kel-shell-catalog-card { min-height: 215px; }
+.kel-v2-shell .kel-shell-catalog-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; }
+.kel-v2-shell .kel-shell-catalog-empty-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 10px; border: 1px solid rgba(191,216,255,.45); border-radius: 50%; }
+.kel-v2-shell .kel-shell-catalog-empty-icon img { width: 20px; height: 20px; }
+.kel-v2-shell .kel-shell-catalog-empty p { margin: 0; font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-shell-catalog-status { margin: auto; text-align: center; font: 400 14px/20px var(--kel-shell-body); color: var(--kel-text-2); }
+.kel-v2-shell .kel-shell-catalog-list { display: flex; flex-direction: column; }
+.kel-v2-shell .kel-shell-catalog-row { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-bottom: 1px solid rgba(191,216,255,.12); }
+.kel-v2-shell .kel-shell-catalog-row:last-child { border-bottom: 0; }
+.kel-v2-shell .kel-shell-catalog-row strong { font: 500 14px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-v2-shell .kel-shell-catalog-row span { font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
+.kel-v2-shell .kel-shell-catalog-tip { min-height: 100px; }
+.kel-v2-shell .kel-shell-catalog-tip p { margin: 0; padding: 6px 12px; border: 1px solid rgba(191,216,255,.12); border-radius: 8px; background: rgba(47,107,224,.08); font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
+
+.kel-v2-shell .kel-shell-ramble > aside { box-sizing: border-box; width: 256px; min-width: 256px; padding: 0 8px; }
+.kel-v2-shell .kel-shell-ramble > main { padding: 22px max(24px, calc((100vw - 1176px) / 2)) 24px; }
+.kel-v2-shell .kel-shell-ramble > main > :last-child {
+  gap: 18px; padding: 28px 36px 22px; border-color: rgba(191,216,255,.12);
+  background: linear-gradient(rgba(47,107,224,.06),rgba(47,107,224,.06)),rgba(6,18,46,.22);
+  box-shadow: none; backdrop-filter: none;
+}
+.kel-v2-shell .kel-shell-ramble-new { width: 100%; flex: none; }
+.kel-v2-shell .kel-shell-ramble-hero-icon { position: relative; display: block; width: 22px; height: 22px; flex: none; }
+.kel-v2-shell .kel-shell-ramble-hero-icon img { position: absolute; top: -10px; left: -6px; width: 34px; height: 42px; max-width: none; }
+.kel-v2-shell .kel-shell-ramble-new:disabled { opacity: .5; cursor: not-allowed; }
+.kel-v2-shell .kel-shell-ramble-bottom { flex: none; margin-top: auto; }
+.kel-v2-shell .kel-shell-ramble-bottom input { box-sizing: border-box; width: 100%; height: 32px; margin: 0 0 10px; }
+.kel-v2-shell .kel-shell-ramble-bottom .kel-bottom-nav { border-top: 1px solid rgba(191,216,255,.12); }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-ramble--embedded { width: 100%; height: 100%; padding: 0; }
+.kel-v2-shell .kel-in-chat-frame__pane .kel-shell-ramble--embedded > main { width: 100%; padding: 0; }
+.kel-v2-shell .kel-shell-ramble--embedded > main > header { min-height: 86px; flex-direction: column; align-items: stretch; gap: 12px; }
+.kel-v2-shell .kel-shell-ramble--embedded > main > header h1 { font: 600 20px/26px var(--kel-shell-heading); }
+.kel-v2-shell .kel-shell-ramble--embedded > main > header > div { justify-content: flex-end; }
+.kel-v2-shell .kel-bottom-nav { border-top: 1px solid rgba(191,216,255,.12); }
+[data-theme='light'] .kel-v2-shell .kel-in-chat-frame__card { background: var(--bg-1); border-color: var(--kel-border-strong); box-shadow: 0 1px 3px rgba(20,22,26,.08); }
+[data-theme='light'] .kel-v2-shell .kel-in-chat-frame__nav { background: var(--bg-2); border-color: var(--kel-border); }
+[data-theme='light'] .kel-v2-shell .kel-in-chat-frame__pane :is(.kel-card, .kel-shell-settings-card) { background: var(--bg-1) !important; border-color: var(--kel-border) !important; box-shadow: 0 1px 3px rgba(20,22,26,.08); }
+[data-theme='light'] .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-appearance > div { background: var(--bg-1) !important; border-color: var(--kel-border) !important; box-shadow: 0 1px 3px rgba(20,22,26,.08); }
+
+@media(max-width:767px) {
+  .kel-v2-shell .kel-in-chat-frame { padding: 0 12px 12px; }
+  .kel-v2-shell .kel-in-chat-frame__header { min-height: 70px; padding-top: 14px; }
+  .kel-v2-shell .kel-in-chat-frame__card { display: flex; flex-direction: column; }
+  .kel-v2-shell .kel-in-chat-frame__nav { display: flex; gap: 12px; flex: none; overflow-x: auto; overflow-y: hidden; padding: 8px; }
+  .kel-v2-shell .kel-in-chat-frame__nav-group { display: flex; align-items: center; gap: 4px; flex: none; }
+  .kel-v2-shell .kel-in-chat-frame__nav-group + .kel-in-chat-frame__nav-group { margin: 0; }
+  .kel-v2-shell .kel-in-chat-frame__nav-label { display: none; }
+  .kel-v2-shell .kel-in-chat-frame__nav-row { width: auto; margin: 0; padding-inline: 8px; }
+  .kel-v2-shell .kel-in-chat-frame__pane { padding: 16px; }
+  .kel-v2-shell .kel-shell-ramble > aside { width: 100%; min-width: 0; }
+  .kel-v2-shell .kel-shell-ramble > main { padding: 12px; }
 }

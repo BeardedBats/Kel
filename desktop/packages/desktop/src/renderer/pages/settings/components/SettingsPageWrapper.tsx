@@ -53,6 +53,12 @@ export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): 
       icon: <Toolkit theme='outline' size='16' />,
       path: 'tools',
     },
+    skills: {
+      id: 'skills',
+      label: t('settings.skills', { defaultValue: 'Skills' }),
+      icon: <Puzzle theme='outline' size='16' />,
+      path: 'skills',
+    },
     appearance: {
       id: 'appearance',
       label: t('settings.appearancePanel'),
@@ -202,7 +208,7 @@ const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, cla
           <div className={contentClass}>
             <header className='kel-shell-settings-header'>
               <p>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/about') ? 'Other' : /\/(model|tools|webui)$/.test(pathname) ? 'Settings' : pathname.endsWith('/archived') ? 'History' : 'Application'}</p>
-              <h1>{pathname.endsWith('/model') ? 'Default Kel model' : pathname.endsWith('/webui') ? 'WebUI' : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
+              <h1>{pathname.endsWith('/model') ? 'Default Kel model' : pathname.endsWith('/skills') ? 'Skills Hub' : pathname.endsWith('/webui') ? 'WebUI' : pathname.endsWith('/archived') ? 'Archived conversations' : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
             </header>
             {pathname.endsWith('/model') && <p className='kel-shell-model-description'>Kel uses this model for normal conversations. A chat can still pick its own model from the chat header, and Automatic keeps Kel's routing across every available provider.</p>}
             {children}

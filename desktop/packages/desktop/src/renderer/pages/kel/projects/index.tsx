@@ -51,7 +51,7 @@ export default function KelProjectsPage() {
   // through the engine's own recipe actions, scoped to this project.
   const [recipeQuery, setRecipeQuery] = useState('');
   const [found, setFound] = useState<KelRecipeEntry[] | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Array<{ name: string; count: number }>>([]);
   const [recent, setRecent] = useState<KelRecipeEntry[]>([]);
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -104,7 +104,7 @@ export default function KelProjectsPage() {
   useEffect(() => {
     void (async () => {
       const [cats, recents] = await Promise.all([
-        kelRecipeCategories().catch((): { categories: string[] } => ({ categories: [] })),
+        kelRecipeCategories().catch((): { categories: Array<{ name: string; count: number }> } => ({ categories: [] })),
         kelRecipeRecent().catch((): { recent: KelRecipeEntry[] } => ({ recent: [] })),
       ]);
       setCategories(cats.categories ?? []);
@@ -145,7 +145,7 @@ export default function KelProjectsPage() {
   );
 
   useEffect(() => {
-    if (work && ['/projects/map', '/projects/recipes'].includes(pathname)) document.getElementById(`project-${viewFromPath(pathname)}`)?.scrollIntoView({ block: 'start' });
+    if (work && pathname === '/projects/map') document.getElementById('project-map')?.scrollIntoView({ block: 'start' });
   }, [pathname, work]);
 
   const records = work?.memory.records ?? [];
@@ -154,28 +154,30 @@ export default function KelProjectsPage() {
   const sections = work?.map?.sections ?? [];
   const entries = work?.recipes.entries ?? [];
   const listed = (found ?? entries).filter((entry) => !favouritesOnly || entry.favourite);
+  const libraryView = viewFromPath(pathname) === 'recipes';
+  const projectRecipes = entries.filter((entry) => entry.source !== 'builtin');
 
   return (
     <div className="kel-scope">
       <a className="kel-skip" href="#kel-projects-main">
         Skip to main content
       </a>
-      <main className="kel-page" id="kel-projects-main" tabIndex={-1}>
+      <main className={`kel-page${libraryView ? ' kel-shell-recipe-library' : ''}`} id="kel-projects-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <ShellWorkspaceLink /><h1 className="kel-h1">Projects</h1>
+            <ShellWorkspaceLink /><h1 className="kel-h1">{libraryView ? 'Recipes' : 'Projects'}</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
+          {!libraryView && <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
             Kel suggests
-          </KelButton>
+          </KelButton>}
         </div>
 
         {note && <p className="kel-meta">{note}</p>}
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !work && <KelLoading rows={4} />}
 
-        {!error && work && (
+        {!error && work && !libraryView && (
           <>
             <KelCard id="project-knowledge" title="Knowledge">
               {records.length === 0 ? (
@@ -308,7 +310,7 @@ export default function KelProjectsPage() {
           </>
         )}
 
-        {!error && work && (
+        {!error && work && !libraryView && (
           <KelCard
             id="project-map"
             title={`Project map${work.map ? ` · v${work.map.version}` : ''}`}
@@ -350,7 +352,12 @@ export default function KelProjectsPage() {
 
         {!error && work && (
           <KelCard id="project-recipes" title="Recipes">
-            {entries.length === 0 ? (
+            {!libraryView ? (
+              <KelEmpty
+                title={projectRecipes.length === 0 ? 'No recipes in this project yet.' : `${projectRecipes.length} recipes in this project.`}
+                why="Open Recipes to search, preview, and run a workflow."
+              />
+            ) : entries.length === 0 ? (
               <KelEmpty
                 title="No recipes in this project yet."
                 why="Recipes capture a workflow Kel finished and verified, so it can run again with your approval."
@@ -374,11 +381,11 @@ export default function KelProjectsPage() {
                   </KelButton>
                   {categories.map((category) => (
                     <KelButton
-                      key={category}
+                      key={category.name}
                       variant="quiet"
-                      onClick={() => void searchRecipes(category)}
+                      onClick={() => void searchRecipes(category.name)}
                     >
-                      {category}
+                      {category.name}
                     </KelButton>
                   ))}
                 </div>
@@ -397,7 +404,7 @@ export default function KelProjectsPage() {
                   />
                 ) : (
               <KelTable
-                head={['Recipe', 'Steps', 'Inputs', 'Source', 'Dry run']}
+                head={['Recipe', 'Steps', 'Inputs', 'Source', 'Dry run', 'Run', 'History']}
                 rows={listed.map((entry) => {
                   const recipeId = String(entry.recipe_id ?? entry.id ?? '');
                   return [
@@ -484,7 +491,7 @@ export default function KelProjectsPage() {
                 )}
               </>
             )}
-            {runs && (
+            {libraryView && runs && (
               <KelSection title={`Runs — ${runs.recipe}`}>
                 {runs.sentence && <p className="kel-sub">{runs.sentence}</p>}
                 {runs.items.length === 0 ? (
@@ -504,7 +511,7 @@ export default function KelProjectsPage() {
                 )}
               </KelSection>
             )}
-            {preview && (
+            {libraryView && preview && (
               <KelSection title={`Dry run — ${preview.recipe}`}>
                 <p className="kel-sub">
                   Compiled without running anything: this is what the recipe would do, including the
