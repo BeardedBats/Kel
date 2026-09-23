@@ -23,7 +23,7 @@ paths:
   source_predecessor: C:\Users\Nick\Desktop\Kel\kel-daily-driver   # dev/daily-driver, reference only
   shared_git_dir: C:\Users\Nick\Desktop\Kel\Kel-Repo\.git         # one object database for all trees
   v2_test_data: C:\Users\Nick\KelV2Runs\prepared                  # V2 development/test data root
-  v2_candidate: C:\Users\Nick\KelV2Candidate                      # NOT created yet (install only when a checkpoint needs it)
+  v2_candidate: C:\Users\Nick\KelV2Candidate                      # MEASURED 2026-09-23: the folder EXISTS and holds an Electron build (Kel.exe dated 2026-09-23 09:33; the runtime payload 2026-09-22 10:57) — packaged before this run and NOT created, installed, launched or promoted by it. The candidate-creation promise stays in force: a candidate is packaged and installed only when a checkpoint genuinely needs installed-app verification, and the stable dogfood build is never the vehicle
 
 protected_paths:            # never modify, uninstall, overwrite, reset, migrate, clean or use as V2 test data
   - C:\Users\Nick\KelDogfoodCandidate        # the stable dogfood build Nick actually uses
