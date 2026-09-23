@@ -82,6 +82,8 @@ Rename-Item C:\Users\Nick\KelV2Candidate.r21 C:\Users\Nick\KelV2Candidate
 
 ## Unresolved / not claimed
 
-- Settings colour rows and command palette as **clicked** surfaces (see above).
+- ~~Settings colour rows and command palette as **clicked** surfaces~~ — done 2026-09-23 **[UI]** in
+  `UI_ACCEPTANCE_R21.md`: save path, Reset, restart persistence and both palette switches pass; found
+  D1 (typed hex saves its 3-digit prefix) and D2 (palette see-through in Dark).
 - V2-16 conversation-open and project-switch timings (still need a signed-in session).
 - Electron profile/log locations unchanged, as instructed; theme-card wrapping untouched.
