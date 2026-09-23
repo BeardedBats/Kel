@@ -96,6 +96,13 @@ const ensureCliSafeSymlink = (targetPath: string, symlinkName: string): string =
  * Release 使用 ~/.aionui，Dev 模式使用 ~/.aionui-dev。
  */
 export const getDataPath = (): string => {
+  // AIONUI_DATA_DIR isolates the whole desktop store — aioncore's database, conversations,
+  // sessions and webui.config.json — the way KEL_DATA_DIR isolates the engine's root. Without
+  // this override an "isolated" audit or candidate root still shared its UI store with every other
+  // Kel app on the machine (the engine root was isolated, the desktop store was not). Unset, the
+  // default path is exactly what it always was.
+  const override = (process.env.AIONUI_DATA_DIR || '').trim();
+  if (override) return override;
   const rootPath = getElectronPathOrFallback('userData');
   const dataPath = path.join(rootPath, 'aionui');
   return ensureCliSafeSymlink(dataPath, getEnvAwareName('.aionui'));

@@ -45,5 +45,5 @@ intent so a resume run does not have to guess.
   already pinned and stayed green.
 
 - **V2-05 voice: done.** Mobile dictation now reaches the production Muse family through the gateway
-  (real browser, real speech, real transcript). V2-05 stays partial for: send with a connected model,
+  (real browser, real speech, real transcript). V2-05 stays partial only for the physical-device pass (send with a connected model was proved; history, attention actions and conversational routing landed on the integration line):
   conversation history from the phone, job-driven attention actions, conversational project routing.

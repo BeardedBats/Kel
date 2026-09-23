@@ -189,3 +189,43 @@ stalled without a packer process; stopping it left an orphaned `electron-builder
 raced it into `ENOENT … electron.exe -> Kel.exe`. The r17 copy was therefore **not** installed from
 that pack; the candidate was restored to r16 from `C:\Users\Nick\KelV2Candidate.r16` and a clean
 single-packer build was run into a fresh output directory.
+
+---
+
+## Follow-up pass (2026-09-23, after r17)
+
+### F3 closed at the source (the desktop store now honours `AIONUI_DATA_DIR`)
+
+The seam was found by tracing the backend spawn: `index.ts` calls
+`backendManager.start(getDataPath(), …)` — the **first argument is aioncore's data directory** — and
+`getDataPath()` ignored `AIONUI_DATA_DIR`, so the desktop store (aioncore's database, conversations,
+sessions, `webui.config.json`) always landed in the shared per-user directory while only the *engine*
+root was isolated. `getDataPath()` now returns `AIONUI_DATA_DIR` when it is set (trimmed) and the
+default path otherwise, so every consumer — the backend spawn, the web-host store and the storage
+helpers — follows the same override. Default behaviour without the variable is unchanged.
+
+### Packaged-session console errors — what they are, and what is *not* established
+
+Reproduced on a fresh, unauthenticated document load of the packaged WebUI (`#/guid`):
+
+| Error | Count | Assessment |
+| --- | --- | --- |
+| `GET /api/state?conversation=main` → **403** | ~24 (a repeat) | **open** — see below |
+| `GET /favicon.ico` → **404** | 1 | cosmetic (no icon is served); no product behaviour depends on it |
+
+For the 403 the browser is asking the **application origin** for `/api/state?conversation=main` — a
+Kel route *without* the `/kel` prefix. Every in-repo Kel caller routes through the shared transport
+(`kelApi.call`, which prefixes `/kel` away from the desktop; `KelWorkPanel` imports `kelRequest`), and
+a grep for a bare `/api/state` caller in the renderer finds none. The request therefore does **not**
+come from a Kel surface in this source tree. Cause **not established** in this pass; the honest next
+step is a source-mapped trace of the initiator (DevTools “Initiator” on that request) before any fix,
+because a blind change to the Kel transport would be guessing. Severity: low for a signed-in person
+(the calls fail, nothing renders wrong, and the sign-in gate still works); the repetition is what a
+person would notice as noise in the console.
+
+### V2-16 instrumentation
+
+The measurement method is now condition-based (Playwright waits on the rendered marker, never a fixed
+sleep): home-ready, conversation-open (`textarea`/contenteditable appears), Project switch
+(`Knowledge` → `Project map` renders), plus the navigation-timing entry for the initial document.
+Numbers and their conditions are recorded in `CANDIDATE_R18.md` when that candidate is verified.
