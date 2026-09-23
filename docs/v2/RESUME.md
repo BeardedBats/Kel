@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r28) — supersedes the older checkpoints below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r29) — supersedes the older checkpoints below
+
+`integration/v2` has pushed source `41b2bf6`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r29` (archive `6ae8b552e6cf1676`). [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) records the repaired blank Recent title, packaged persistence check, five local conversation-open samples (median 112.4 ms), checks, and exact pending timing paths. r20 and stable remain protected. No promotion or rename occurred. Read r29, r28, r26, and r23 records before changing or packing.
+
+**Next action:** select two disposable folders on an isolated r29 root and measure a real project context switch after both views load. Continue bounded V2-19 packaged checks and fix reproduced failures. Remote and first response timing need account/model access. Test the second native colour-picker adjustment when the native control is available. Google sign-in, live services, fresh Muse audio, and physical iPhone checks remain pending without access or hardware. Keep faint Light-mode labels outside this Dark pass. No independent review occurred because `request_review` was unavailable.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r28) — superseded by r29
 
 `integration/v2` has pushed source `6b81ffa`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r28` (archive `f6d8620cdd33c42a`). [`CANDIDATE_R28.md`](evidence/v2-19/CANDIDATE_R28.md) records the visible map actions, narrow Connections and Projects tables, r26–r28 packaged checks, archive gate, and isolated journeys. r20 and stable remain protected. No promotion or rename occurred. Read r28, r26, and r23 records before changing or packing.
 
