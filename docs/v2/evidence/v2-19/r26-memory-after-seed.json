@@ -1,0 +1,51 @@
+{
+  "journeys": [
+    {
+      "id": "J-MEM",
+      "name": "Memory and learning surfaces",
+      "shell_required": false,
+      "requirements": [
+        "Memory: useful recall, controlled learning"
+      ],
+      "detail": {
+        "learnings": 0,
+        "learning_fields": [],
+        "history_entries": 1,
+        "suggestions": 0,
+        "project_memories": 1,
+        "sample": [
+          {
+            "confidence": null,
+            "id": "4f94f0a2-7bf5-409c-acd8-f01cba92c224",
+            "source_ref": "r26-regression-2",
+            "source_type": "system",
+            "status": "active",
+            "summary": "Synthetic local UI record for Knowledge controls",
+            "topic": "v2.regression.fixture",
+            "trust": 4,
+            "type": "fact",
+            "updated": 1790194904.4736671,
+            "user_confirmed": 0,
+            "value": "{\"statement\": \"Synthetic local UI record\"}"
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.1
+    }
+  ],
+  "identity": {
+    "pid": 10404,
+    "port": 49994,
+    "url": "http://127.0.0.1:49994",
+    "command_line": "C:\\Users\\Nick\\KelV2Candidate.r26\\resources\\kel-engine\\KelEngine.exe --data C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine",
+    "port_owner": 10404,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r26-regression-2\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 16:21:45",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

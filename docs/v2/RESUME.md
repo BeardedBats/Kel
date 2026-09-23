@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r26) — supersedes the older checkpoints below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r28) — supersedes the older checkpoints below
+
+`integration/v2` has pushed source `6b81ffa`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r28` (archive `f6d8620cdd33c42a`). [`CANDIDATE_R28.md`](evidence/v2-19/CANDIDATE_R28.md) records the visible map actions, narrow Connections and Projects tables, r26–r28 packaged checks, archive gate, and isolated journeys. r20 and stable remain protected. No promotion or rename occurred. Read r28, r26, and r23 records before changing or packing.
+
+**Next action:** measure V2-16 conversation-open and project-switch against fully loaded content where accessible, then continue bounded V2-19 on an isolated r28 root. Keep remote and live service claims pending without account access. Test a second native colour-picker adjustment when native control is available. Keep faint Light-mode labels outside this Dark pass. Fresh Muse audio and physical iPhone checks still need their inputs. No independent review occurred because `request_review` was unavailable.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r26) — superseded by r28
 
 `integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` has pushed source `c0391b6`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r26` (archive `5749e1a92cc25837`). `docs/v2/evidence/v2-19/CANDIDATE_R26.md` records the recipe and Work fixes, the refreshed frozen engine, packaged UI checks, archive gate, and five isolated journeys. Read it and `CANDIDATE_R23.md` before changing or packing anything. r23–r26 test processes are stopped. The user's r20 session and protected stable app remain running. No promotion or rename occurred.
 
