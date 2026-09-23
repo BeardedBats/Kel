@@ -19,7 +19,14 @@ import { registerKelDogfoodIpc } from './kelDogfoodIpc';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
-const dataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
+/**
+ * The Kel engine's data root — the one directory the engine writes its `desktop-session.json` into.
+ * Exported because the WebUI gateway must read the descriptor from the *same* root the engine uses;
+ * handed a different directory it answered `/kel/*` with the SPA and every Kel surface rendered its
+ * failure card while the engine was perfectly healthy.
+ */
+export const kelDataRoot = () => process.env.KEL_DATA_DIR || path.join(app.getPath('appData'), 'kel-desktop', 'work');
+const dataRoot = kelDataRoot;
 async function kelRequest(route: string, body?: unknown, timeoutMs = 30000) {
   const address = new URL(descriptor.url);
   if (address.protocol !== 'http:' || address.hostname !== '127.0.0.1') throw new Error('Invalid local Kel address');

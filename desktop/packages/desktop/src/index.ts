@@ -971,6 +971,15 @@ const handleAppReady = async (): Promise<void> => {
       const { getDataPath } = await import('./process/utils/utils');
       const { getSystemDir } = await import('./process/utils/initStorage');
       const sysDirWebUI = getSystemDir();
+      // AIONUI_DATA_DIR isolates the packaged WebUI's *own* store (conversations, sessions,
+      // webui.config.json) the way KEL_DATA_DIR isolates the engine's root: without it the store
+      // landed in the user's shared data dir no matter which root the app was pointed at, so an
+      // audit/candidate root was never truly separate. Same env the desktop IPC path honours.
+      const storeDir = process.env.AIONUI_DATA_DIR || getDataPath();
+      // The gateway reads `<dir>/desktop-session.json`, i.e. the *engine's* root. It used to be given
+      // the store dir instead, so `/kel/*` never reached the engine and every Kel surface showed its
+      // failure card (audit r16, F1) while the engine was healthy. One resolver, one root.
+      const { kelDataRoot } = await import('./process/services/kel/KelService');
       // M6: Switch to @aionui/web-host
       const handle = await startWebHost({
         app: {
@@ -981,13 +990,14 @@ const handleAppReady = async (): Promise<void> => {
           // the DB under the CLI-safe symlink path, so every password-change
           // entry point (CLI --resetpass, settings-toggle IPC, browser login)
           // reads the same file.
-          userDataPath: getDataPath(),
+          userDataPath: storeDir,
         },
         staticDir: path.join(__dirname, '../renderer'),
         port: resolvedPort,
         allowRemote,
         requireAuth: true,
-        dataDir: getDataPath(),
+        dataDir: storeDir,
+        kelDataDir: kelDataRoot(),
         logDir: sysDirWebUI.logDir,
         // Expose the same AIONUI_{CACHE,WORK,LOG}_DIR env the desktop IPC path
         // passes at line 493, so /api/system/info reports the symlink workDir
