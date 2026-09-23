@@ -372,6 +372,18 @@
   outline: 2px solid var(--kel-accent);
   outline-offset: 2px;
 }
+.kel-recipe-input {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+.kel-recipe-input .kel-input {
+  box-sizing: border-box;
+  width: min(100%, 320px);
+}
 /* The chat's Work & context trigger is an Arco text button whose own colour rules are important, so the
    Kel muted token needs the same weight to win in both themes. */
 .kel-work-context-btn {
