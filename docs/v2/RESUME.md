@@ -19,8 +19,12 @@ Assistants + Skills settings — Nick confirmed those belong in Settings). Astra
 
 **Verified this checkpoint:** the five affected V2-18 journeys all **PASS** on the V2 test root
 (`docs/v2/evidence/v2-18/runs/2026-09-23-r17-f1-repair.json`): J-WORK, J-RECOV, J-ATTN, J-RECIPE,
-J-ACTIVITY. Candidate **r16** is preserved; **r17** is built from `fe6edec` and its checks are
-recorded in `docs/v2/evidence/CANDIDATE_R17.md` and the repair record in `AUDIT_R16.md`.
+J-ACTIVITY. Candidate **r16** is preserved and verified (`88f34373…`); an **r17 pack from `fe6edec`
+was still running when this block was written** — it will be installed only after the archive gate
+passes *and* it launches on isolated data, and its hashes plus the packaged re-checks (engine,
+gateway JSON, isolated roots, Work/Projects/Recipes/Activity/Kibble, dark Settings, phone width,
+V2-16 numbers) go into `docs/v2/evidence/CANDIDATE_R17.md`. Until that file exists, **r17 is not a
+candidate** and r16 is the one to use.
 
 **Do not** promote, install over the stable app, or touch `C:\Users\Nick\KelDogfoodCandidate` /
 `C:\Users\Nick\KelDogfoodRuns\prepared`. The stable engine may stay running; stop only this line's
