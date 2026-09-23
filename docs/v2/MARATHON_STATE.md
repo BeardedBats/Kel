@@ -48,7 +48,7 @@ phases:
   V2-15: queued      # Real dogfood integration pass
   V2-16: queued      # Performance + UX polish
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
-  V2-18: partial     # Synthetic V2 acceptance journeys — the §27 matrix is written and walked on real paths: J-FIX/J-UPGRADE/J-SEC/J-KBU (+negatives) PASSED; three defects found and fixed (D-48/D-49); the remaining journeys are listed in next_item
+  V2-18: partial     # Synthetic V2 acceptance journeys — the §27 matrix is walked on real paths: J-FIX/J-UPGRADE/J-SEC/J-KBU(+negatives)/J-CONV/J-PROJ/J-MEM/J-RECIPE/J-MODEL/J-NET/J-CONN/J-TRANS/J-ACTIVITY PASSED (the FAILED runs are kept: D-48/D-49 and the V2-07 scope gaps); J-WORK/J-ATTN/J-RECOV/J-REMOTE remain (see next_item)
   V2-19: queued      # Full V2 regression
   V2-20: queued      # V2 release candidate
 

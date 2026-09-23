@@ -51,7 +51,12 @@ handoff; internal identifiers stay unchanged). The promotion-gate machinery alre
 recorded-never-applied, and is now inspectable read-only through
 `Team.apply({action:'promotions'|'shadow'})` (5 tests). The Build Update backend contract is built on
 the reuse map in `docs/v2/evidence/kibble-build-update/README.md`; Team `promotions`/`shadow` are
-**not** candidate approval, and their mapping is proved by tests rather than assumed.
+**not** candidate approval, and their mapping is proved by tests rather than assumed. Its backend
+contract is **BUILT** (D-47) and the repair-to-candidate loop is proved end to end on real paths by the
+V2-18 journey J-KBU (claims C1–C4, with its negatives — D-48/D-49): findings → mission → real runtime
+repair in an isolated copy → tests → verification → candidate record → human review, with `promote`
+refused before and after approval and the source checkout untouched. A Build Update *surface* is future
+Shell work (`PARALLEL_SHELL_TOUCHES.md`).
 
 ## V2-05 — iPhone Kel PWA V1: PARTIAL (voice and send proved; history/attention/routing open)
 
