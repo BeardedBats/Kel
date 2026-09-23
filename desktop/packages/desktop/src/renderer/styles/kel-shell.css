@@ -790,3 +790,9 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-v2-shell .kel-shell-ramble > aside { width: 100%; min-width: 0; }
   .kel-v2-shell .kel-shell-ramble > main { padding: 12px; }
 }
+
+/* Command palette: a floating overlay, not a page card. The page-card glass (`--kel-surface-1`,
+   30% alpha) let the page bleed through its rows in Dark, with or without a custom canvas.
+   Elevated surfaces (`--bg-2`, "Menus and raised cards") is opaque and still follows that row.
+   Light keeps its existing opaque card fill. */
+html:not([data-theme='light']) .kel-v2-shell .kel-palette[role='dialog'] { background: var(--bg-2, #1b3568) !important; }

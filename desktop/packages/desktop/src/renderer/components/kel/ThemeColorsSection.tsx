@@ -107,6 +107,18 @@ const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onC
   const key = `${token}:${hexValue}:${saved ?? ''}:${rev}`;
   void key;
 
+  // Typing saves only a complete six-digit code: `#7a1` is a valid shorthand, and saving it
+  // mid-word remounts the row and drops the rest of the keystrokes. Shorthand (and rgb()) is
+  // accepted when the person commits with Enter or by leaving the field.
+  const commit = () => {
+    const parsed = hex(draft);
+    if (!parsed) {
+      setDraft(hexValue);
+      return;
+    }
+    if (parsed !== hexValue) void apply(parsed);
+  };
+
   return (
     <div className='kel-shell-theme-color-row flex items-center gap-12px py-8px'>
       <input
@@ -129,9 +141,10 @@ const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onC
           data-testid={`theme-hex-${token.replace(/^--/, '')}`}
           onChange={(value) => {
             setDraft(value);
-            const parsed = hex(value);
-            if (parsed) void apply(parsed);
+            if (/^#[0-9a-fA-F]{6}$/.test(value.trim())) void apply(value.trim().toLowerCase());
           }}
+          onPressEnter={commit}
+          onBlur={commit}
           style={{ maxWidth: 120 }}
         />
       </Tooltip>

@@ -289,7 +289,7 @@ const KelCommandPalette: React.FC = () => {
         role='dialog'
         aria-modal='true'
         aria-label='Command palette'
-        className='kel-card'
+        className='kel-card kel-palette'
         style={{ width: 620, maxWidth: '92vw', padding: 12, background: 'var(--kel-surface-1)' }}
         onClick={(event) => event.stopPropagation()}
       >
