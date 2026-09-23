@@ -1,0 +1,305 @@
+{
+  "journeys": [
+    {
+      "id": "J-ATTN",
+      "name": "A real interruption, one action, consistent state",
+      "shell_required": false,
+      "requirements": [
+        "Needs Your Attention: human interruptions",
+        "Needs Your Attention: resolvable in one action"
+      ],
+      "claims": {
+        "a real ask becomes one attention row": {
+          "status": "PASSED",
+          "detail": {
+            "synthetic_input": "the job and the run are synthetic (real Store API); the ask, the card and the wait are the coding adapter's own",
+            "conversation": "97b387e7-7e43-415e-be3b-39bcaa61c5dd",
+            "project": "434e299d-85ee-489b-a53e-34adc707be2e",
+            "job": "b33db6c3-fb39-4a70-9c8d-37f86b4137bd",
+            "approval": "bf159690-1a86-4136-bb63-b90b3c1f2940",
+            "seconds_to_raise": 1.1,
+            "row": {
+              "priority": "now",
+              "needs_you": true,
+              "age_seconds": 1,
+              "reason": "Waiting for your decision on a gated step.",
+              "next": "Decide on the request card in the conversation \u2014 or in Work context.",
+              "related": {
+                "approvals": 1,
+                "conversation": "97b387e7-7e43-415e-be3b-39bcaa61c5dd",
+                "milestones": 1,
+                "project_id": "434e299d-85ee-489b-a53e-34adc707be2e"
+              },
+              "direct": {
+                "action": "answer",
+                "hint": "Answer the request in this conversation.",
+                "route": "/api/approval"
+              }
+            },
+            "grouping": "project",
+            "filters": {
+              "failed": 1,
+              "needs_you": 1,
+              "running": 0,
+              "settled": 0
+            },
+            "card": [
+              {
+                "benefit": "",
+                "created": 1790180385.3229392,
+                "fallback": "",
+                "grant_kind": null,
+                "id": "bf159690-1a86-4136-bb63-b90b3c1f2940",
+                "job_id": "b33db6c3-fb39-4a70-9c8d-37f86b4137bd",
+                "kind": "action",
+                "message_at": 1790180385.3229156,
+                "message_seq": 121,
+                "repeatable": true,
+                "resolved_at": null,
+                "seconds_left": 299,
+                "state": "pending",
+                "summary": "run ['python', '-c', 'print(1)']",
+                "target": null,
+                "title": "Kel needs your OK to continue",
+                "what": "",
+                "why": ""
+              }
+            ]
+          }
+        },
+        "one action resolves it and the work continues": {
+          "status": "PASSED",
+          "detail": {
+            "answer": {
+              "refused": false,
+              "answer": {
+                "status": "APPROVED"
+              }
+            },
+            "adapter_allowed": true,
+            "adapter_error": null,
+            "run_state_after": "RUNNING",
+            "row_after": {
+              "needs_you": false,
+              "priority": "running",
+              "related": {
+                "approvals": 0,
+                "conversation": "97b387e7-7e43-415e-be3b-39bcaa61c5dd",
+                "milestones": 1,
+                "project_id": "434e299d-85ee-489b-a53e-34adc707be2e"
+              },
+              "direct": {
+                "action": "stop",
+                "hint": "Stop this work.",
+                "route": "/api/control"
+              },
+              "state": "RUNNING"
+            }
+          }
+        },
+        "the same ask cannot be answered twice": {
+          "status": "PASSED",
+          "detail": {
+            "refused": true,
+            "sentence": "/api/approval None -> Approval does not match this action"
+          }
+        }
+      },
+      "detail": {},
+      "status": "PASSED",
+      "seconds": 1.6
+    },
+    {
+      "id": "J-RECOV",
+      "name": "A real failure keeps its work; retry is bounded",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work",
+        "Recovery: retry without duplicating effects"
+      ],
+      "claims": {
+        "a real failure keeps the request and its reason": {
+          "status": "PASSED",
+          "detail": {
+            "synthetic_input": "a coding request for the fixture repository with no test command set: a real refusal on the real path, recorded as an input, not as engine state",
+            "conversation": "c84da5c5-d49d-4975-b53a-e289c2d32c7c",
+            "project": "8f46a1e3-05e5-4d09-a923-6c631b28493f",
+            "submission": {
+              "id": "ddba0d258de9ce64eb2f5d484dabd0f2",
+              "state": "FAILED",
+              "error": "This project needs a test command. Set it in Project context before coding.",
+              "job_id": null,
+              "text": "Change add() in calc.py so it returns the sum of its arguments."
+            },
+            "states_seen": [
+              "FAILED"
+            ]
+          }
+        },
+        "retry is bounded and duplicates nothing": {
+          "status": "PASSED",
+          "detail": {
+            "first_retry": {
+              "refused": false,
+              "answer": {
+                "id": "ddba0d258de9ce64eb2f5d484dabd0f2"
+              }
+            },
+            "settled_after_retry": {
+              "state": "FAILED",
+              "error": "This project needs a test command. Set it in Project context before coding."
+            },
+            "submissions_for_this_request": 1,
+            "non_retryable_submission": {
+              "id": "1e8268e2fa4932d363b3f99831cde651",
+              "state": "DISPATCHED",
+              "text": "V2-18 recovery boundary: answer with the single word ready."
+            },
+            "boundary_refusal": {
+              "refused": true,
+              "sentence": "/api/retry None -> This request is not ready for retry"
+            }
+          }
+        }
+      },
+      "detail": {},
+      "status": "PASSED",
+      "seconds": 8.7
+    },
+    {
+      "id": "J-REMOTE",
+      "name": "The gateway gate, and no credential in the client",
+      "shell_required": false,
+      "claims": {
+        "an unauthenticated API request is refused": {
+          "status": "PASSED",
+          "detail": {
+            "url": "http://127.0.0.1:57438/",
+            "api_state_status": 401,
+            "api_state_body": "{\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}",
+            "root_status": 200,
+            "note": "/ serves the app shell so the sign-in surface can load; the gate is on the API, which refuses a request with no session"
+          }
+        },
+        "no credential reaches the client": {
+          "status": "PASSED",
+          "detail": {
+            "engine_token_in_body": false,
+            "searched": [
+              "/",
+              "api/state"
+            ]
+          }
+        }
+      },
+      "requirements": [
+        "Remote: secure browser use"
+      ],
+      "detail": {
+        "gateway": {
+          "pid": 13652,
+          "port": 57438,
+          "port_owner": 13652,
+          "url": "http://127.0.0.1:57438/",
+          "worktree": "C:/Users/Nick/Desktop/Kel/kel-v2-integration",
+          "command_line": "\"C:\\Program Files\\nodejs\\node.exe\" --require C:\\Users\\Nick\\Desktop\\Kel\\kel-v2-integration\\desktop\\node_modules\\.bun\\tsx@4.21.0\\node_modules\\tsx\\dist\\preflight.cjs --import file:///C:/Users/Nick/Desktop/Kel/kel-v2-integration/desktop/node_modules/.bun/tsx@4.21.0/node_modules/tsx/dist/loader.mjs scripts/webui.ts --no-open"
+        },
+        "labelled": "the gateway this run probed is the one listening now; its renderer is Astra's (Shell presentation is out of scope here)",
+        "api_state_body_head": "{\"success\":false,\"error\":\"Authentication required\",\"code\":\"UNAUTHORIZED\"}"
+      },
+      "status": "PASSED",
+      "seconds": 6.8
+    },
+    {
+      "id": "J-WORK",
+      "name": "Work settles; an abandoned run is fenced, never replayed",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery of abandoned runs"
+      ],
+      "claims": {
+        "real work settles autonomously": {
+          "status": "FAILED",
+          "detail": {
+            "conversation": "6e664900-70d1-4247-bd81-355099e44354",
+            "project": "44f7cde4-c58d-4831-a262-8b3cb231ed0e",
+            "job": "1cae725e-5b95-4cb1-9588-4b464ec64efc",
+            "state": "CLOSED",
+            "verdict": "UNCERTAIN",
+            "row": {
+              "priority": "soon",
+              "needs_you": false,
+              "accepted": 0,
+              "total": 1,
+              "open": 1,
+              "direct": {
+                "action": "retry",
+                "hint": "Try this work again from its saved request.",
+                "route": "/api/retry"
+              },
+              "reason": "Settled: uncertain."
+            }
+          }
+        },
+        "an abandoned run is fenced, never replayed": {
+          "status": "PASSED",
+          "detail": {
+            "synthetic_input": "a job and a claim made with the real Store API; the expired lease is the input, the fence is the engine's",
+            "job": "4d02568b-c19f-40fb-b7d2-c14156c561e1",
+            "run": "41394224-11b5-40af-bd0f-e07aa692971b",
+            "runs_after": [
+              {
+                "id": "41394224-11b5-40af-bd0f-e07aa692971b",
+                "state": "ORPHANED",
+                "epoch": "087a4cb7-62c4-4ba0-9fec-f8fb8f59d594"
+              }
+            ],
+            "fenced_by_first_recovery": [
+              "41394224-11b5-40af-bd0f-e07aa692971b",
+              "bf1db4dc-b994-46a3-8b51-dcee7db207bd"
+            ],
+            "fenced_by_second_recovery": [],
+            "milestone": {
+              "state": "UNCERTAIN",
+              "error": "Expired run; native state requires reconciliation"
+            },
+            "job_state": "WAITING_RESOURCE",
+            "job_verdict": "UNCERTAIN",
+            "row": {
+              "fenced": true,
+              "needs_you": true,
+              "priority": "now",
+              "why": "An attempt was interrupted and fenced; Kel will not replay it on its own, and the file-changing steps were not repeated.",
+              "next": "Say \"continue\" to re-arm it as a fresh attempt.",
+              "direct": {
+                "action": "resume",
+                "hint": "Say \"continue\" in this conversation.",
+                "route": "/api/send"
+              }
+            },
+            "diagnostics_expired_unfenced": 0
+          }
+        }
+      },
+      "detail": {},
+      "status": "FAILED",
+      "problem": "real work settles autonomously",
+      "seconds": 20.6
+    }
+  ],
+  "identity": {
+    "pid": 15116,
+    "port": 60979,
+    "url": "http://127.0.0.1:60979",
+    "command_line": "C:\\Python314\\python.exe -m kel.service --data C:/Users/Nick/KelV2Runs/prepared/engine",
+    "port_owner": 15116,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 12:20:22",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
