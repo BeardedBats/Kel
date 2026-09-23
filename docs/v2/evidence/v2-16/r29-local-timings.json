@@ -1,0 +1,19 @@
+{
+  "candidate": "r29",
+  "source": "41b2bf6e738952ebad6a4181ba604874d6373019",
+  "surface": "packaged Electron, 1440x900, isolated local store carried from r28",
+  "method": "from fully loaded Projects Knowledge; click persisted empty conversation row; wait for visible sendbox and title; performance.now around action and condition; five warm samples",
+  "conversationId": "e1d82bc4",
+  "conversationTitle": "Untitled conversation",
+  "conversationOpenMs": [
+    122.6,
+    112.4,
+    106.8,
+    114.2,
+    91.9
+  ],
+  "medianMs": 112.4,
+  "modelRequest": false,
+  "projectContextSwitch": "PENDING: no second workspace selected; setup Change routes to Projects and the selector opens a native directory dialog",
+  "remoteLoad": "PENDING: no signed-in remote session; r20 must remain running"
+}
