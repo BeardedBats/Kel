@@ -196,7 +196,11 @@ function getLanIP(): string | null {
   return pickLanIP(networkInterfaces());
 }
 
-const ASSET_FILE = /\.[a-z0-9]{1,8}$/i;
+// A file request never gets a deep-link redirect. The bound covers real asset extensions, including
+// the long ones: `webmanifest` is eleven characters, and at the old 1–8 bound `/manifest.webmanifest`
+// was redirected into the hash route — the browser then parsed HTML as a manifest and logged
+// "Manifest: Line: 1, column: 1, Syntax error" on every packaged load.
+const ASSET_FILE = /\.[a-z0-9]{1,12}$/i;
 
 /**
  * The hash location a path-style deep link should have been, or null when the request is not one.

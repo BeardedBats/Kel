@@ -229,3 +229,41 @@ The measurement method is now condition-based (Playwright waits on the rendered 
 sleep): home-ready, conversation-open (`textarea`/contenteditable appears), Project switch
 (`Knowledge` → `Project map` renders), plus the navigation-timing entry for the initial document.
 Numbers and their conditions are recorded in `CANDIDATE_R18.md` when that candidate is verified.
+
+---
+
+## Follow-up pass 2 (2026-09-23): the `/api/state` 403 has no producer here — and the console’s real defect is fixed
+
+**Verdict: the repeated `GET /api/state?conversation=main → 403` is not a defect in this source tree
+and does not reproduce in r18.** Evidence:
+
+- r18 launched on an **empty** isolated store (`KEL_DATA_DIR`/`AIONUI_DATA_DIR` under `C:\tmp`): the
+  chat route renders the shell, then routes to `#/login`. Playwright’s own request capture (not a page
+  shim) lists **no `/api/state` request at all**. The 43 console errors are the donor bootstrap —
+  `/api/settings/client`, `/api/auth/user`, `/api/auth/refresh`, `/api/cron/jobs`, `/api/settings`,
+  `/api/system/current-user` (all **401**), seven `ws://…/ws  HTTP Authentication failed` retries —
+  plus the manifest error below.
+- Repeating with the **data-bearing** store (`audit17-web`, conversations and jobs present): same
+  result — `#/login`, **zero** `state`/`kel` requests in nine seconds of observation.
+- Dev build (`bun run webui`, unminified) on an empty store with a trace installed before load
+  (`addInitScript`, covering `fetch` and `XMLHttpRequest.open` in every frame): **0** calls to any URL
+  containing `/api/state`.
+- Source facts: the renderer has exactly **one** Kel `fetch` (`kelApi.ts:176` → `fetch(`/kel${route}`)`),
+  and `window.kelAPI` is exposed **only** by the Electron preload (`preload/main.ts:98`), so a browser
+  tab cannot take that branch; the gateway answers `/kel/*` with **401 JSON** (never 403) when the
+  session is missing (`web-host/src/static-server.ts`, `/kel/` branch). A bare `/api/state` has no
+  producer in this source tree. The original reading was **console history from an earlier, different
+  page** at that port — the same reading carried a `favicon.ico` 404 the current build never logs.
+  **Closed: not a product defect; no fix applied for it.**
+
+**The defect the same console did reveal (fixed in this pass):** the web host answered
+
+    GET /manifest.webmanifest → 302 Location: /#/manifest.webmanifest
+
+so the browser parsed HTML as the app manifest and logged `Manifest: Line: 1, column: 1, Syntax error`
+on **every** packaged load — and the PWA (V2-05’s phone installability) had no usable manifest.
+Cause: `ASSET_FILE = /\.[a-z0-9]{1,8}$/i` only recognised extensions of 1–8 characters; `webmanifest`
+is eleven. Fix: the bound is now `{1,12}` — a file request never becomes a hash route, while real deep
+links (`/conversation/<id>`, `/work`) still do. Regression test added
+(`static-server.unit.test.ts` → “a long-extension asset is served, never redirected into the hash
+route”). Web-host suite after the fix: **100 passed, 3 todo** (9 files).
