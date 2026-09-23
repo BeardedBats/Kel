@@ -1,6 +1,34 @@
 # RESUME — exact continuation
 
-## CURRENT CHECKPOINT (2026-09-22, evening) — read this first; it supersedes the stale lines below
+## CURRENT CHECKPOINT (2026-09-23, night) — read this first; it supersedes every block below
+
+**Where:** `integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` @ **`fe6edec`**
+(pushed): `8117742` = the F1 repair, `ea7de07` = Astra's Figma refresh merged in.
+
+**F1 is fixed at the source.** The packaged `--webui` branch handed `startWebHost` the *store*
+directory while the engine writes `desktop-session.json` into its own root
+(`KEL_DATA_DIR || appData/kel-desktop/work`), so `/kel/*` never reached an engine and every Kel
+surface rendered its failure card. Now `KelService` exports the one resolver (`kelDataRoot()`) and
+the WebUI passes it as `kelDataDir`; the gateway's explicit failures (503 `KEL_ENGINE_UNAVAILABLE`
+when the descriptor is missing, 502 when the engine is not listening) are pinned by
+`kel-gateway.unit.test.ts`, so `/kel/api/*` can never answer SPA HTML. The same branch now honours
+`AIONUI_DATA_DIR` for the WebUI's own store.
+
+**Merged:** `ux/v2-figma-refresh` @ `ea7de07` (dark V2 layouts, dark settings empty states,
+Assistants + Skills settings — Nick confirmed those belong in Settings). Astra's branch is untouched.
+
+**Verified this checkpoint:** the five affected V2-18 journeys all **PASS** on the V2 test root
+(`docs/v2/evidence/v2-18/runs/2026-09-23-r17-f1-repair.json`): J-WORK, J-RECOV, J-ATTN, J-RECIPE,
+J-ACTIVITY. Candidate **r16** is preserved; **r17** is built from `fe6edec` and its checks are
+recorded in `docs/v2/evidence/CANDIDATE_R17.md` and the repair record in `AUDIT_R16.md`.
+
+**Do not** promote, install over the stable app, or touch `C:\Users\Nick\KelDogfoodCandidate` /
+`C:\Users\Nick\KelDogfoodRuns\prepared`. The stable engine may stay running; stop only this line's
+own stacks (candidate apps, V2 engines, gateways).
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-22, evening) — superseded by the block above
 
 **Where the work is:** `C:\Users\Nick\Desktop\Kel\kel-v2-integration` on `integration/v2`. The commit
 that carries this block is the checkpoint (the one before it is `8cdefd0`).
