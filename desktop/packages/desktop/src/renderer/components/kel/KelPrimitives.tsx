@@ -13,7 +13,10 @@ export type KelStatus =
   | 'uncertain'
   | 'failed'
   | 'blocked'
-  | 'queued';
+  | 'queued'
+  | 'finished'
+  | 'stopping'
+  | 'stopped';
 
 const CHIP_CLASS: Record<KelStatus, string> = {
   running: 'kel-chip--run',
@@ -23,6 +26,9 @@ const CHIP_CLASS: Record<KelStatus, string> = {
   failed: 'kel-chip--failed',
   blocked: 'kel-chip--blocked',
   queued: '',
+  finished: '',
+  stopping: 'kel-chip--wait',
+  stopped: '',
 };
 
 const CHIP_LABEL: Record<KelStatus, string> = {
@@ -33,17 +39,30 @@ const CHIP_LABEL: Record<KelStatus, string> = {
   failed: 'Failed — see cause',
   blocked: 'Blocked by guardrail',
   queued: 'Queued',
+  finished: 'Finished',
+  stopping: 'Stopping…',
+  stopped: 'Stopped',
 };
 
 /** Engine state (derived server-side) mapped to a Kel status — never authored by the UI. */
 export function statusFromDerived(state: string): KelStatus {
   switch (state) {
     case 'ACTIVE':
+    case 'RUNNING':
       return 'running';
     case 'WAITING':
+    case 'AWAITING_USER':
+    case 'PAUSED':
+    case 'WAITING_RESOURCE':
       return 'waiting';
     case 'DONE':
       return 'verified';
+    case 'CLOSED':
+      return 'finished';
+    case 'CANCELLING':
+      return 'stopping';
+    case 'CANCELLED':
+      return 'stopped';
     case 'UNCERTAIN':
       return 'uncertain';
     case 'FAILED':

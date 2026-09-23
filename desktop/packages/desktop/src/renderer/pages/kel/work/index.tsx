@@ -66,6 +66,7 @@ const waitReason = (job: KelWorkJob): string | null => {
 // (VERDICT_TEXT and the routing sentence live in workLanguage.ts, shared with the Activity view.)
 const MILESTONE_STATE_TEXT: Record<string, string> = {
   QUEUED: 'Waiting to start',
+  READY: 'Waiting to start',
   RUNNING: 'In progress',
   ACCEPTED: 'Accepted',
   BLOCKED: 'Blocked',
@@ -158,16 +159,25 @@ const WorkCenter: React.FC = () => {
   const actDirect = useCallback(
     async (jobId: string, direct: NonNullable<KelWorkRow['direct']>) => {
       await act(`Next step (${direct.action})`, async () => {
-        if (direct.action === 'answer' && direct.id) {
-          await kelApproval(direct.id, true, rowActions[jobId]?.related?.conversation);
+        const conversation = rowActions[jobId]?.related?.conversation ?? 'main';
+        if (direct.action === 'answer') {
+          const state = direct.id ? null : await kelState(conversation);
+          const approvalId = direct.id ?? state?.approvals?.find(
+            (approval) => approval.job_id === jobId && approval.status === 'PENDING'
+          )?.id;
+          if (typeof approvalId !== 'string') throw new Error('The permission request is no longer available.');
+          await kelApproval(approvalId, true, conversation);
         } else if (direct.action === 'resume' && direct.route === '/api/send') {
-          await kelSend(rowActions[jobId]?.related?.conversation ?? 'main', 'continue');
+          await kelSend(conversation, 'continue');
         } else if (direct.action === 'resume') {
           await kelControl(jobId, 'resume');
         } else if (direct.action === 'stop') {
           await kelControl(jobId, 'cancel');
-        } else if (direct.action === 'retry' && direct.id) {
+        } else if (direct.action === 'retry') {
+          if (!direct.id) throw new Error('The saved request is no longer available.');
           await kelRetry(direct.id);
+        } else {
+          throw new Error('This action is no longer available.');
         }
       });
     },
@@ -268,7 +278,11 @@ const WorkCenter: React.FC = () => {
                   {formatWhen(job.updated ?? null)}
                 </span>,
                 <span key={`${job.id}-next`}>
-                  {rowActions[job.id]?.direct ? (
+                  {job.state === 'CANCELLED' ? (
+                    <span className="kel-meta">This work was stopped. Its saved request is kept.</span>
+                  ) : job.state === 'CANCELLING' ? (
+                    <span className="kel-meta">Stopping this work.</span>
+                  ) : rowActions[job.id]?.direct ? (
                     <KelButton
                       variant="secondary"
                       disabled={busy}
@@ -309,7 +323,7 @@ const WorkCenter: React.FC = () => {
                     Resume
                   </KelButton>
                 )}
-                {!['CLOSED', 'CANCELLED'].includes(activeJob.state) && (
+                {!['CLOSED', 'CANCELLED', 'CANCELLING'].includes(activeJob.state) && (
                   <KelButton
                     variant="secondary"
                     disabled={busy}
