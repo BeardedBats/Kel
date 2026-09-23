@@ -11,7 +11,9 @@ const Guid = React.lazy(() => import('@renderer/pages/guid'));
 const AgentSettings = React.lazy(() => import('@renderer/pages/settings/AgentSettings'));
 const AgentRepairPage = React.lazy(() => import('@renderer/pages/settings/AgentSettings/AgentRepairPage'));
 const AssistantSettings = React.lazy(() => import('@renderer/pages/settings/AssistantSettings'));
+const AssistantsOverviewSettings = React.lazy(() => import('@renderer/pages/settings/AssistantsOverviewSettings'));
 const SkillsSettings = React.lazy(() => import('@renderer/pages/settings/SkillsSettings/SkillsHubSettings'));
+const SkillsOverviewSettings = React.lazy(() => import('@renderer/pages/settings/SkillsOverviewSettings'));
 const SkillDetailPage = React.lazy(() => import('@renderer/pages/settings/SkillsSettings/SkillDetailPage'));
 const ToolsSettings = React.lazy(() => import('@renderer/pages/settings/ToolsSettings'));
 const AppearanceSettings = React.lazy(() => import('@renderer/pages/settings/AppearanceSettings'));
@@ -161,7 +163,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             path='/assistants'
             element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(AssistantSettings)}
           />
-          <Route path='/settings/assistants' element={<Navigate to='/team/roster' replace />} />
+          <Route path='/settings/assistants' element={withRouteFallback(AssistantsOverviewSettings)} />
           <Route
             path='/settings/agent'
             element={<Navigate to='/team/roster' replace />}
@@ -170,10 +172,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             path='/settings/agent/:id/repair'
             element={<Navigate to='/team/roster' replace />}
           />
-          <Route
-            path='/settings/skills'
-            element={<Navigate to='/team/roster' replace />}
-          />
+          <Route path='/settings/skills' element={withRouteFallback(SkillsOverviewSettings)} />
           <Route
             path='/settings/skills/import-history'
             element={<Navigate to='/team/roster' replace />}
@@ -203,6 +202,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
           <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
           <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
+          <Route path='/transcription/library' element={withRouteFallback(KelTranscription)} />
           <Route
             path='/team'
             element={<Navigate to={HIDE_WORKFORCE_SURFACES ? '/guid' : '/team/office'} replace />}

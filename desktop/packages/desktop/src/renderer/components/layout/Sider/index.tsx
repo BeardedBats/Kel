@@ -1,19 +1,17 @@
 // Modified for Kel: single-assistant navigation.
 import classNames from 'classnames';
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview/context/PreviewContext';
 import { cleanupSiderTooltips, getSiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 import { useAuth } from '@renderer/hooks/context/AuthContext';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { blurActiveElement } from '@renderer/utils/ui/focus';
-import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { SiderToolbar, SiderSearchEntry } from './SiderNav';
-import settingsIcon from '@renderer/assets/figma/settings.svg';
+import KelBottomNav from '@renderer/components/kel/KelBottomNav';
 import siderStyles from './Sider.module.css';
 
 const WorkspaceGroupedHistory = React.lazy(() => import('@renderer/pages/conversation/GroupedHistory'));
-const SettingsSider = React.lazy(() => import('@renderer/pages/settings/components/SettingsSider'));
 
 interface SiderProps {
   onSessionClick?: () => void;
@@ -23,30 +21,12 @@ interface SiderProps {
 const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
-  const location = useLocation();
-  const { pathname, search, hash } = location;
-
   const navigate = useNavigate();
   const { closePreview, clearPreviewForScope } = usePreviewContext();
   const { logout, status } = useAuth();
-  const { theme, setTheme } = useThemeContext();
   const [isBatchMode, setIsBatchMode] = useState(false);
-  // Kel V1.6 visual fix (finding S1-1): Team is reached only through Settings entries and has no
-  // primary-nav entry of its own, so /team/* belongs to the Settings context. Without this, choosing
-  // "Agents" or "Team roles" silently replaced the Settings sidebar with the main navigation.
-  const isSettings =
-    pathname.startsWith('/settings') || pathname === '/team' || pathname.startsWith('/team/');
-  const lastNonSettingsPathRef = useRef('/guid');
   const showLogout =
     typeof window !== 'undefined' && !(window as { electronAPI?: unknown }).electronAPI && status === 'authenticated';
-
-  useEffect(() => {
-    // Paths inside the Settings context must not become the "back to chat" target, or the footer
-    // entry would send the user back into Settings instead of out of it.
-    if (!isSettings) {
-      lastNonSettingsPathRef.current = `${pathname}${search}${hash}`;
-    }
-  }, [isSettings, pathname, search, hash]);
 
   const handleNewChat = () => {
     cleanupSiderTooltips();
@@ -61,24 +41,6 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
     }
   };
 
-  const handleSettingsClick = () => {
-    cleanupSiderTooltips();
-    blurActiveElement();
-    if (isSettings) {
-      const target = lastNonSettingsPathRef.current || '/guid';
-      Promise.resolve(navigate(target)).catch((error) => {
-        console.error('Navigation failed:', error);
-      });
-    } else {
-      Promise.resolve(navigate('/settings/appearance')).catch((error) => {
-        console.error('Navigation failed:', error);
-      });
-    }
-    if (onSessionClick) {
-      onSessionClick();
-    }
-  };
-
   const handleConversationSelect = () => {
     cleanupSiderTooltips();
     blurActiveElement();
@@ -87,10 +49,6 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
     // keeps the preview open when switching between conversations of the same
     // scope and closes it only when the scope (today = workspace) actually changes.
     setIsBatchMode(false);
-  };
-
-  const handleQuickThemeToggle = () => {
-    void setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const handleLogout = useCallback(async () => {
@@ -153,17 +111,7 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
 
   return (
     <div className='size-full flex flex-col'>
-      {isSettings && <>
-        <SiderToolbar isMobile={isMobile} isBatchMode={isBatchMode} collapsed={collapsed} siderTooltipProps={siderTooltipProps} onNewChat={handleNewChat} onToggleBatchMode={() => setIsBatchMode(prev => !prev)} />
-        <button type='button' className='kel-shell-back kel-shell-settings-back' onClick={handleSettingsClick}>← Back to Kel</button>
-      </>}
-      {/* Main content area */}
       <div className='flex-1 min-h-0 overflow-hidden'>
-        {isSettings ? (
-          <Suspense fallback={<div className='size-full' />}>
-            <SettingsSider collapsed={collapsed} tooltipEnabled={tooltipEnabled} />
-          </Suspense>
-        ) : (
           <div className='size-full flex flex-col gap-2px'>
             <SiderToolbar
               isMobile={isMobile}
@@ -173,9 +121,6 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
               onNewChat={handleNewChat}
               onToggleBatchMode={() => setIsBatchMode((prev) => !prev)}
             />
-            <button type='button' className='kel-shell-settings' onClick={handleSettingsClick}>
-              <img src={settingsIcon} alt='' width={22} height={22} /><span>Settings</span>
-            </button>
             {/* Search entry — desktop moves this into the titlebar toolbar;
                 mobile keeps it here in the sidebar. */}
             {isMobile && (
@@ -194,8 +139,8 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
               </Suspense>
             </div>
           </div>
-        )}
       </div>
+      <KelBottomNav onNavigate={onSessionClick} />
     </div>
   );
 };
