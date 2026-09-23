@@ -539,7 +539,8 @@ older record is left alone, and the data survives.
 tests/test_v16_r8_migrations.py tests/test_v13_memory.py tests/test_v16_resolution_kind.py
 tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed in 50.74 s**; plus
   `tests/test_v2_upgrade.py tests/test_v16_r8_identity.py` → **9 passed in 5.35 s**.
-- A full confirmation sweep was started after the fix; its numbers belong beside this entry when it
-  settles.
+- Full confirmation sweep after the fix: `python -m pytest -q --tb=line -rf` → **1281 passed, 14
+  subtests passed in 1143.84 s (19 m 03 s), exit 0** — the 1280 tests of the first sweep plus the new
+  upgrade case, with the previously failing block running clean.
 - **Not yet in this sweep:** the renderer/desktop suites (they live on the integration line) and the
   phone journeys — those need the Shell stack and stay pending.

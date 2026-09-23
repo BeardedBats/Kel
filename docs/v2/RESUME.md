@@ -31,17 +31,16 @@
    of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
    and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
    needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
-   **NEXT ACTION, in order:** (1) **V2-19 — finish the full V2 regression.** The first full sweep of
-   `runtime/` ran on 2026-09-23: **1277 passed, 3 failed (19 m 30 s)**; the three failures were one stale
-   expectation left behind by D-50 (the recipes step moved from `4/v13-recipes` to `30/v2-recipe-library`)
-   and are fixed, with the missing "a store that recorded the old recipes step upgrades additively" case
-   added — bounded groups after the fix are green (93 + 9 passed). A confirmation sweep of the whole
-   suite was started; read its numbers before marking V2-19 done. Still outside this sweep: the
-   renderer/desktop suites (integration line) and the phone journeys. (2) the two measured limits above,
-   when they matter — neither blocks V2-19; (3) `bun install` in the integration worktree, then its
-   bounded renderer suites; (4) package a candidate at `C:\Users\Nick\KelV2Candidate` — the path does not
-   exist yet, so nothing has to be preserved or rolled back, and installation stays behind Nick's
-   explicit decision.
+   **NEXT ACTION, in order:** (1) **V2-19 — the runtime suite is green; finish the rest of the phase.**
+   The first full sweep of `runtime/` ran on 2026-09-23 (1277 passed, 3 failed in 19 m 30 s); the three
+   failures were one stale expectation left behind by D-50 (the recipes step moved 4/`v13-recipes` →
+   30/`v2-recipe-library`), fixed with the missing "a store that recorded the old recipes step upgrades
+   additively" case added, and the **confirmation sweep is green: 1281 passed, 14 subtests passed in
+   1143.84 s, exit 0.** What is still outside it: the renderer/desktop suites (integration line, needs
+   `bun install`) and the phone journeys. (2) the two measured limits above, when they matter — neither
+   blocks V2-19; (3) `bun install` in the integration worktree, then its bounded renderer suites;
+   (4) package a candidate at `C:\Users\Nick\KelV2Candidate` — the path does not exist yet, so nothing has
+   to be preserved or rolled back, and installation stays behind Nick's explicit decision.
    **PASSED so far on the real root:** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real
    codex-code repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has
    the baseline as an ancestor), the negatives (a cancelled mission claims nothing; a mission whose
