@@ -387,7 +387,7 @@ const Connections: React.FC = () => {
   const needing = list.counts.needs_credentials;
 
   return (
-    <div className="kel-page">
+    <div className="kel-page kel-connections-page">
       <div className="kel-page__head">
         <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1>
         <p className="kel-sub">
@@ -417,7 +417,7 @@ const Connections: React.FC = () => {
           <div className="kel-divider" />
         )}
         {addable.map((service) => (
-          <div className="kel-row" key={service.id}>
+          <div className="kel-row kel-connection-row" key={service.id}>
             <div className="kel-attention__text">
               <strong>{service.name}</strong>
               <span className="kel-meta">
@@ -449,7 +449,7 @@ const Connections: React.FC = () => {
             const shellFields = heldByShell?.[connection.id] ?? [];
             const disagree = shellFields.length > 0 && !connection.has_credentials;
             return (
-              <div className="kel-row" key={connection.id}>
+              <div className="kel-row kel-connection-row" key={connection.id}>
                 <div className="kel-attention__text">
                   <strong>{connection.name}</strong>
                   <span className="kel-meta">
