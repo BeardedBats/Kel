@@ -510,9 +510,9 @@ export default function KelProjectsPage() {
                 <p className="kel-sub">Review the inputs before Kel starts this recipe.</p>
                 {note && <p className="kel-meta" role="status">{note}</p>}
                 {runDraft.inputs.map((input) => (
-                  <label key={input.name} className="kel-field" style={{ display: 'block', marginBottom: 12 }}>
+                  <label key={input.name} className="kel-recipe-input">
                     <span className="kel-strong">{input.name}{input.required ? ' *' : ''}</span>
-                    {input.description && <span className="kel-meta" style={{ display: 'block' }}>{input.description}</span>}
+                    {input.description && <span className="kel-meta">{input.description}</span>}
                     {input.type === 'bool' ? (
                       <input
                         type="checkbox"
