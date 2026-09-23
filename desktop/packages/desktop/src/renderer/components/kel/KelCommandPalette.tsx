@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { configService } from '@/common/config/configService';
+import { DARK_THEME_ID } from '@/common/theme/constants';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
 import { kelState, kelWork } from '@renderer/components/kel/kelApi';
 
@@ -200,7 +201,7 @@ const KelCommandPalette: React.FC = () => {
     }));
     // Actions are real, verified behaviours: theme switch and a composer handoff that prefills
     // a vetting start. Anything that cannot actually run never appears here.
-    const activeThemeId = (configService.get('theme.activeId') as string | undefined) ?? 'light';
+    const activeThemeId = (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
     const otherTheme = activeThemeId === 'dark' ? 'Light' : 'Dark';
     const actions: PaletteItem[] = [
       {
