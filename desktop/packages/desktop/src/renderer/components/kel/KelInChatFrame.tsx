@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ShellWorkspaceLink from './ShellWorkspaceLink';
 import ShellSettingsIcon from './ShellSettingsIcon';
 import { useExtensionSettingsTabs } from '@renderer/hooks/system/useExtensionSettingsTabs';
 import { useExtI18n } from '@renderer/hooks/system/useExtI18n';
 import { resolveExtensionAssetUrl } from '@renderer/utils/platform';
+import { configService } from '@/common/config/configService';
 import workIcon from '@renderer/assets/figma/refresh/work.svg';
 import activityIcon from '@renderer/assets/figma/refresh/activity.svg';
 import permissionsIcon from '@renderer/assets/figma/refresh/permissions.svg';
@@ -60,6 +61,16 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
   const settings = pathname.startsWith('/settings') || pathname === '/connections';
+  const [setupOpen, setSetupOpen] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void configService.initialize().then(() => {
+      if (!cancelled) setSetupOpen(!Boolean(configService.get('kel.onboardingCompleted_v1')));
+    }).catch(() => {
+      if (!cancelled) setSetupOpen(true);
+    });
+    return () => { cancelled = true; };
+  }, [pathname]);
   const heading = settings ? 'Settings' : pathname === '/onboarding' ? 'Workspaces' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
   const groups = settings ? [...settingsGroups, ...(extensionTabs.length ? [{ label: 'Extensions', items: extensionTabs.map(tab => {
     const icon = resolveExtensionAssetUrl(tab.icon) || tab.icon;
@@ -89,7 +100,13 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
           </button>)}
         </div>)}
       </nav>
-      <div className='kel-in-chat-frame__pane'>{children}</div>
+      <div className='kel-in-chat-frame__pane'>
+        {setupOpen && pathname !== '/onboarding' && <div className='kel-setup-return' role='status'>
+          <span>Setup is still open. Finish setup before starting a chat.</span>
+          <button type='button' onClick={() => void navigate('/onboarding')}>Continue setup</button>
+        </div>}
+        {children}
+      </div>
     </div>
   </div>;
 }

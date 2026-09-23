@@ -90,6 +90,19 @@ describe('theme color hex field', () => {
     await waitFor(() => expect(savedValues()).toEqual(['#7a1f1f', null]));
     expect(store.overrides.dark['--bg-base']).toBeUndefined();
   });
+
+  it('keeps the native picker mounted through repeated color changes', async () => {
+    render(<ThemeColorsSection />);
+    const picker = screen.getByTestId('theme-color-bg-base') as HTMLInputElement;
+    fireEvent.change(picker, { target: { value: '#123456' } });
+    await waitFor(() => expect(savedValues()).toEqual(['#123456']));
+    expect(screen.getByTestId('theme-color-bg-base')).toBe(picker);
+
+    fireEvent.change(picker, { target: { value: '#234567' } });
+    await waitFor(() => expect(savedValues()).toEqual(['#123456', '#234567']));
+    expect(screen.getByTestId('theme-color-bg-base')).toBe(picker);
+    expect(field().value).toBe('#234567');
+  });
 });
 
 describe('command palette surface (D2)', () => {

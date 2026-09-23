@@ -796,3 +796,40 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
    Elevated surfaces (`--bg-2`, "Menus and raised cards") is opaque and still follows that row.
    Light keeps its existing opaque card fill. */
 html:not([data-theme='light']) .kel-v2-shell .kel-palette[role='dialog'] { background: var(--bg-2, #1b3568) !important; }
+
+.kel-v2-shell .kel-setup-return {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 16px; padding: 10px 12px; border: 1px solid rgba(127,160,255,.45);
+  border-radius: 8px; background: rgba(47,107,224,.14);
+  color: var(--kel-text-1); font: 400 13px/18px var(--kel-shell-body);
+}
+.kel-v2-shell .kel-setup-return button {
+  flex: none; padding: 0; border: 0; background: transparent; color: #9fc3ff;
+  font: 600 13px/18px var(--kel-shell-heading); cursor: pointer;
+}
+@media (max-width: 1050px) {
+  .kel-v2-shell [data-testid='theme-colors-section'] > .flex:first-child {
+    display: flex; height: auto; min-height: 34px; flex-wrap: wrap; gap: 4px 8px;
+  }
+  .kel-v2-shell [data-testid='theme-colors-restore'] {
+    position: static; height: auto; margin-left: auto;
+  }
+  .kel-v2-shell .kel-shell-theme-color-row {
+    display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 6px 12px;
+    align-items: center; min-height: 0;
+  }
+  .kel-v2-shell .kel-shell-theme-color-row > .w-160px { grid-column: 2; width: auto; min-width: 0; }
+  .kel-v2-shell .kel-shell-theme-color-row > .arco-input {
+    grid-column: 2; grid-row: 2; box-sizing: border-box; width: min(120px,100%);
+    max-width: 100% !important;
+  }
+  .kel-v2-shell .kel-shell-theme-color-row > .arco-btn,
+  .kel-v2-shell .kel-shell-theme-color-row > .text-11px { grid-column: 2; }
+}
+@media (max-width: 767px) {
+  .kel-v2-shell .kel-setup-return { flex-wrap: wrap; }
+  .kel-v2-shell .kel-shell-theme-gallery-actions { margin-bottom: 10px; }
+  .kel-v2-shell .kel-shell-theme-gallery > .flex.flex-wrap [data-testid^='theme-card-'] {
+    flex: 1 1 100% !important; max-width: none !important;
+  }
+}

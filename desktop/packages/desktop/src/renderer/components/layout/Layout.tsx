@@ -21,6 +21,7 @@ import KelInChatFrame from '@renderer/components/kel/KelInChatFrame';
 import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
+import { setupRouteAllowed } from './setupRoute';
 import { usePreviewContext } from '@renderer/pages/conversation/Preview';
 import { ProjectPanelHost } from '@renderer/components/layout/ProjectPanelHost';
 import { ProjectPanelMobileOverlay } from '@renderer/components/layout/ProjectPanelMobileOverlay';
@@ -166,12 +167,14 @@ const Layout: React.FC<{
       } catch {
         completed = false;
       }
-      if (!completed) navigate('/onboarding', { replace: true });
+      if (!completed && !setupRouteAllowed(location.pathname)) {
+        navigate('/onboarding', { replace: true, state: { setupGate: true } });
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
   const workspaceAvailable =
     location.pathname.startsWith('/conversation/') || (TEAM_MODE_ENABLED && location.pathname.startsWith('/team/'));
   const toggleSider = useCallback(() => {
