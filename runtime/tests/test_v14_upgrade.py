@@ -1,10 +1,11 @@
 """V1.4 Gate 10: the V1.3 -> V1.4 data upgrade path (UPG-*).
 
-A "V1.3 store" is exactly what the V1.3 module set produces: `Store` + `Context` + `Memory` +
-`ProjectMap` + `Recipes` + `Continuation`, i.e. schema_migrations 1-4 — plus, since the v1.6 memory
-proposal surface shipped inside `Memory`, the additive proposals step (15). None of the V1.4 tables
-exist. Opening that store with the V1.4 modules must add tables additively, keep every existing row,
-and leave a backup + schema record behind — never rewrite or drop anything.
+A "V1.3 store" is what the V1.3 module set produces as this line ships it: `Store` + `Context` +
+`Memory` + `ProjectMap` + `Recipes` + `Continuation`, i.e. schema_migrations 1, 2, 3 — plus the v1.6
+memory proposal step (15) that rides inside `Memory` and the recipes step, which V2-07 (D-50) moved
+from version 4 (`v13-recipes`) to 30 (`v2-recipe-library`). None of the V1.4 tables exist. Opening that
+store with the V1.4 modules must add tables additively, keep every existing row, and leave a backup +
+schema record behind — never rewrite or drop anything.
 """
 import contextlib
 import json
@@ -49,7 +50,8 @@ class UpgradeTests(unittest.TestCase):
         self.store = Store(self.root)
         self.context = Context(self.store)
         self.memory = Memory(self.store)
-        # The rest of the V1.3 module set, so the fixture really is a V1.3 store (schema_migrations 1-4).
+        # The rest of the V1.3 module set, so the fixture really is a V1.3 store (schema_migrations
+        # 1, 2, 3, 15 — and the recipes step, 30 since D-50 moved it off 4).
         ProjectMap(self.store)
         Continuation(self.store)
         RecipeLibrary(self.store)
@@ -77,9 +79,27 @@ class UpgradeTests(unittest.TestCase):
         self.assertNotIn('team_assignments', tables)
         self.assertNotIn('capability_leases', tables)
         self.assertNotIn('health_observations', tables)
-        # The v1.6 proposals step rides with the memory module (additive table, own version row).
+        # The v1.6 proposals step rides with the memory module (additive table, own version row),
+        # and the recipes step is 30 since V2-07 (D-50) moved it off 4.
         self.assertIn('memory_proposals', tables)
-        self.assertEqual(self.versions(), [1, 2, 3, 4, 15])
+        self.assertEqual(self.versions(), [1, 2, 3, 15, 30])
+
+    def test_a_store_that_recorded_the_old_recipes_step_upgrades_additively(self):
+        """V2-07 (D-50) moved the recipes step from 4 (`v13-recipes`) to 30 (`v2-recipe-library`).
+
+        A store the older line wrote records 4. Opening it with these modules must apply the new step
+        additively, keep the data, and leave the older record where it is.
+        """
+        before = self.store.get(self.legacy_job)
+        with self.store.transaction() as db:
+            db.execute("UPDATE schema_migrations SET version=4, name='v13-recipes' WHERE version=30")
+        RecipeLibrary(self.store)
+        self.assertEqual(self.versions(), [1, 2, 3, 4, 15, 30])
+        with contextlib.closing(self.store.connect()) as db:
+            older = db.execute('SELECT name FROM schema_migrations WHERE version=4').fetchone()
+        self.assertIsNotNone(older, 'the older step record must not be rewritten')
+        self.assertEqual(older['name'], 'v13-recipes')
+        self.assertEqual(self.store.get(self.legacy_job)['id'], before['id'])
 
     def test_opening_it_with_v14_modules_upgrades_additively_and_keeps_the_data(self):
         before_job = self.store.get(self.legacy_job)
@@ -96,7 +116,7 @@ class UpgradeTests(unittest.TestCase):
         tables = self.tables()
         missing = [table for table in V14_TABLES if table not in tables]
         self.assertEqual(missing, [])
-        self.assertEqual(self.versions(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 15])
+        self.assertEqual(self.versions(), [1, 2, 3, 5, 6, 7, 8, 9, 15, 30])
 
         # Nothing pre-existing moved or disappeared.
         self.assertEqual(self.store.get(self.legacy_job)['id'], before_job['id'])
@@ -129,7 +149,7 @@ class UpgradeTests(unittest.TestCase):
             rows = list(db.execute('SELECT version, name FROM schema_migrations ORDER BY version'))
         names = {row['name'] for row in rows if row['version'] >= 5}
         self.assertEqual(names, {'v14-solution', 'v14-team', 'v14-providers', 'v14-autonomy',
-                                 'v14-diagnostics', 'v16-memory-proposals'})
+                                 'v14-diagnostics', 'v16-memory-proposals', 'v2-recipe-library'})
 
     def test_v14_features_work_on_upgraded_data(self):
         team = Team(self.store)

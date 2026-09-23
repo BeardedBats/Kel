@@ -36,9 +36,9 @@ phases:
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
   V2-05: partial     # iPhone Kel PWA V1 — voice (real Muse) and the send round trip (real model, continued) proved on the phone; drawer history (DEFERRED for shell integration), job attention, project routing open
-  V2-06: queued      # Needs Your Attention 2.0
-  V2-07: queued      # Recipes 2.0
-  V2-08: queued      # Activity 2.0
+  V2-06: done        # Needs Your Attention 2.0 — attention rows on the existing Work surface (priority/age/reason/related/one direct action/grouping) + the row for a real ask answered in one action (D-50; journey J-ATTN)
+  V2-07: done        # Recipes 2.0 — the recipe library's own surfaces (search/favourites/recent/categories/history/last result/duplicate/project attachment/run again), migration 30 `v2-recipe-library` (D-50; journey J-RECIPE)
+  V2-08: done        # Activity 2.0 — /api/activity over the records the line already keeps (D-50; journey J-ACTIVITY)
   V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
   V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
   V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
@@ -49,7 +49,7 @@ phases:
   V2-16: queued      # Performance + UX polish
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
   V2-18: partial     # Synthetic V2 acceptance journeys — every backend-reachable §27 row is PASSED on real paths (J-FIX/J-UPGRADE/J-SEC/J-KBU+negatives/J-CONV/J-PROJ/J-MEM/J-RECIPE/J-MODEL/J-NET/J-CONN/J-TRANS/J-ACTIVITY/J-WORK/J-ATTN/J-RECOV/J-REMOTE; the FAILED runs are kept as the record). Remaining rows need Shell integration (Astra) or real credentials/Muse audio — never claimed here. Two measured limits (reviewer unusable ⇒ work settles UNCERTAIN explained; a no-job request stays DISPATCHED) are in KNOWN_LIMITATIONS.md
-  V2-19: queued      # Full V2 regression
+  V2-19: partial     # Full V2 regression — first full sweep of runtime/ on this line: `python -m pytest -q` → 1277 passed, 3 failed (19m30s), all three in tests/test_v14_upgrade.py::UpgradeTests because D-50 moved the recipes migration from 4 (`v13-recipes`) to 30 (`v2-recipe-library`) and the test still pinned [1,2,3,4,15]. Fixed by updating the expectations + adding the missing "a store that recorded the old recipes step upgrades additively" case (93 passed in the bounded upgrade/migration group, 9 more in test_v2_upgrade/test_v16_r8_identity); a full confirmation sweep is running. Renderer suites (integration line) and the desktop suites are NOT yet part of this sweep
   V2-20: queued      # V2 release candidate
 
 invariants:

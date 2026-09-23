@@ -521,3 +521,25 @@ root). Evidence: `docs/v2/evidence/v2-18/runs/2026-09-23-slice5-r3.json` (the FA
 - **Two limits recorded, not passes:** no real work reached `VERIFIED` (the reviewer answered nothing
   usable), and a request that produces no job is recorded as `DISPATCHED` with `job_id: null` and never
   settles. Both are in `KNOWN_LIMITATIONS.md` with their next steps.
+
+### V2-19 — the first full backend regression on this line (2026-09-23)
+
+`cd runtime && python -m pytest -q --tb=line -rf` → **1277 passed, 3 failed, 14 subtests passed in
+1170.80 s (19 m 30 s)**.
+
+All three failures turned out to be one stale expectation, not a product fault:
+`tests/test_v14_upgrade.py::UpgradeTests` pinned `schema_migrations == [1, 2, 3, 4, 15]` and the
+migration-name set, but **D-50 moved the recipes step from version 4 (`v13-recipes`) to 30
+(`v2-recipe-library`)** — `kel/recipes.py` now carries `MIGRATION_VERSION = 30`. Fixed by updating the
+expectations to the current module set and adding the case the suite was missing: a store that recorded
+the *older* step (version 4, `v13-recipes`) still upgrades **additively** — the new step is applied, the
+older record is left alone, and the data survives.
+
+- Bounded group after the fix: `python -m pytest -q tests/test_v14_upgrade.py tests/test_v15_upgrade.py
+tests/test_v16_r8_migrations.py tests/test_v13_memory.py tests/test_v16_resolution_kind.py
+tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed in 50.74 s**; plus
+  `tests/test_v2_upgrade.py tests/test_v16_r8_identity.py` → **9 passed in 5.35 s**.
+- A full confirmation sweep was started after the fix; its numbers belong beside this entry when it
+  settles.
+- **Not yet in this sweep:** the renderer/desktop suites (they live on the integration line) and the
+  phone journeys — those need the Shell stack and stay pending.
