@@ -1,10 +1,16 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r23) — supersedes the older checkpoints below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r26) — supersedes the older checkpoints below
 
-`integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` has the pushed source increment `407f5a3`. The new staged candidate is `C:\Users\Nick\KelV2Candidate.r23` (archive `1c3bde1f4ab0b162`). The packaged setup and Dark Settings pass, archive gate, 294 desktop tests, typecheck, and the first bounded V2-19 packaged navigation pass are recorded in `docs/v2/evidence/v2-19/CANDIDATE_R23.md`. Read that record before changing or packing anything. The r23 test processes are stopped; the user's r20 session and protected stable app remain running. No promotion or rename occurred.
+`integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` has pushed source `c0391b6`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r26` (archive `5749e1a92cc25837`). `docs/v2/evidence/v2-19/CANDIDATE_R26.md` records the recipe and Work fixes, the refreshed frozen engine, packaged UI checks, archive gate, and five isolated journeys. Read it and `CANDIDATE_R23.md` before changing or packing anything. r23–r26 test processes are stopped. The user's r20 session and protected stable app remain running. No promotion or rename occurred.
 
-**Next action:** continue V2-19 in bounded functional groups on an isolated r23 root. Start with packaged Work and recipe actions, then attention/recovery, and record exact inputs, outcomes, and failures. Fix only reproduced defects. Keep Light-mode faint labels outside the Dark pass. Google sign-in, live services, fresh Muse audio, physical iPhone, and remaining V2-16 timings stay pending until their inputs are available. `request_review` was unavailable; no independent review occurred.
+**Next action:** continue V2-19 on an isolated r26 root with packaged Projects/Knowledge/Map, Kibble, Connections, Permissions, and transcription actions. Record exact UI and engine outcomes; fix reproduced defects. Then measure V2-16 conversation-open, project-switch, and remote paths where accessible. Keep Light-mode faint labels outside the Dark pass. The second native picker adjustment remains unverified. Google sign-in, live services, fresh Muse audio, and physical iPhone checks stay pending until their inputs are available. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r23) — superseded by r26
+
+`407f5a3` produced the staged r23 candidate (archive `1c3bde1f4ab0b162`). Its packaged setup and Dark Settings pass, archive gate, 294 desktop tests, typecheck, and first V2-19 navigation pass are in `docs/v2/evidence/v2-19/CANDIDATE_R23.md`.
 
 ---
 
