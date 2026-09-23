@@ -1,0 +1,294 @@
+{
+  "journeys": [
+    {
+      "id": "J-RECIPE",
+      "name": "Recipe library and the V2-07 scope",
+      "shell_required": false,
+      "requirements": [
+        "Recipes: repeated workflows"
+      ],
+      "detail": {
+        "entries": 5,
+        "recipe_id": "audit-and-repair",
+        "entry_fields": [
+          "category",
+          "description",
+          "digest",
+          "favourite",
+          "kind",
+          "last_run_at",
+          "name",
+          "opened_at",
+          "recipe_id",
+          "runs",
+          "scope",
+          "source",
+          "version"
+        ],
+        "get_ok": true,
+        "preview_keys": [
+          "message",
+          "needs_project"
+        ],
+        "ops": {
+          "search": {
+            "supported": true,
+            "keys": [
+              "entries"
+            ]
+          },
+          "favourites": {
+            "supported": true,
+            "keys": [
+              "favourites"
+            ]
+          },
+          "recent": {
+            "supported": true,
+            "keys": [
+              "recent"
+            ]
+          },
+          "categories": {
+            "supported": true,
+            "keys": [
+              "categories"
+            ]
+          },
+          "history": {
+            "supported": true,
+            "keys": [
+              "history"
+            ]
+          },
+          "last_result": {
+            "supported": true,
+            "keys": [
+              "recipe_id",
+              "sentence",
+              "state"
+            ]
+          },
+          "duplicate": {
+            "supported": true,
+            "keys": [
+              "copied_from",
+              "note",
+              "recipe"
+            ]
+          },
+          "save": {
+            "supported": true,
+            "sentence": "/api/recipes save -> A recipe object is required"
+          },
+          "run": {
+            "supported": true,
+            "sentence": "/api/recipes run -> Unknown recipe: no-such-recipe"
+          },
+          "propose_from_job": {
+            "supported": true,
+            "sentence": "/api/recipes propose_from_job -> Job missing"
+          }
+        },
+        "supported": {
+          "library": true,
+          "create": true,
+          "edit": true,
+          "run": true,
+          "project attachment": true,
+          "suggestions": true,
+          "search": true,
+          "favourites": true,
+          "recent": true,
+          "categories": true,
+          "history": true,
+          "last result": true,
+          "duplicate": true,
+          "run again": true
+        },
+        "missing": []
+      },
+      "status": "PASSED",
+      "seconds": 0.4
+    },
+    {
+      "id": "J-ATTN",
+      "name": "An interruption appears, is answered and clears",
+      "shell_required": false,
+      "requirements": [
+        "Needs Your Attention: human interruptions"
+      ],
+      "detail": {
+        "conversation": "fea13ffd-72b9-43a7-9da7-3ba308c7e95b",
+        "job": "9ce36c6f-9538-4b45-8441-53871162556f",
+        "approval": "1feb1035-781d-4a9f-a3c4-5b84f99c23a8",
+        "appeared_pending": true,
+        "row_before": {
+          "needs_you": true,
+          "priority": "now",
+          "direct": {
+            "action": "answer",
+            "hint": "Answer the request in this conversation.",
+            "id": "1feb1035-781d-4a9f-a3c4-5b84f99c23a8",
+            "route": "/api/approval"
+          },
+          "related": {
+            "approvals": 1,
+            "conversation": "fea13ffd-72b9-43a7-9da7-3ba308c7e95b",
+            "milestones": 1,
+            "project_id": "acceptance-attn-1790193469"
+          }
+        },
+        "answer": {
+          "status": "APPROVED"
+        },
+        "row_after": {
+          "needs_you": false,
+          "direct": {
+            "action": "stop",
+            "hint": "Stop this work.",
+            "route": "/api/control"
+          }
+        },
+        "still_pending": 0
+      },
+      "status": "PASSED",
+      "seconds": 0.5
+    },
+    {
+      "id": "J-ACTIVITY",
+      "name": "Activity timeline and filters",
+      "shell_required": false,
+      "requirements": [
+        "Activity: timeline, filters, search, results"
+      ],
+      "detail": {
+        "entries": 5,
+        "total": 5,
+        "counts": {
+          "attention": 2,
+          "connections": 0,
+          "learning": 0,
+          "network": 0,
+          "other": 0,
+          "recipes": 0,
+          "recovery": 0,
+          "staffing": 0,
+          "work": 3
+        },
+        "kinds": [
+          "work",
+          "attention",
+          "learning",
+          "recipes",
+          "connections",
+          "network",
+          "staffing",
+          "recovery",
+          "other"
+        ],
+        "projects": [
+          {
+            "count": 5,
+            "project_id": "acceptance-attn-1790193469"
+          }
+        ],
+        "work_rows": 3,
+        "failure_rows": 5,
+        "search_rows": 5,
+        "sample": [
+          {
+            "at": 1790193470.3588016,
+            "can_retry": false,
+            "evidence": null,
+            "failed": true,
+            "job_id": "9ce36c6f-9538-4b45-8441-53871162556f",
+            "kind": "work",
+            "project_id": "acceptance-attn-1790193469",
+            "result": null,
+            "state": "CANCELLING",
+            "type": "job.cancel",
+            "verdict": "UNCERTAIN",
+            "what": "This work was stopped."
+          },
+          {
+            "at": 1790193470.2353933,
+            "can_retry": false,
+            "evidence": null,
+            "failed": true,
+            "job_id": "9ce36c6f-9538-4b45-8441-53871162556f",
+            "kind": "attention",
+            "project_id": "acceptance-attn-1790193469",
+            "result": null,
+            "state": "CANCELLING",
+            "type": "approval.resolved",
+            "verdict": "UNCERTAIN",
+            "what": "You were asked something about this work."
+          }
+        ]
+      },
+      "status": "PASSED",
+      "seconds": 0.1
+    },
+    {
+      "id": "J-RECOV",
+      "name": "Failures keep their work; retry is guarded",
+      "shell_required": false,
+      "requirements": [
+        "Recovery: failures without lost work"
+      ],
+      "detail": {
+        "conversation": "026e00b7-3b3d-42f2-8fbb-0683f9a696c9",
+        "job": "1c430677-4cb5-429a-969b-f218dbf0454f",
+        "job_state": "CANCELLED",
+        "request_kept": true,
+        "submissions": 1,
+        "retry_answer": {
+          "refused": true,
+          "sentence": "/api/retry None -> This request is not ready for retry"
+        },
+        "row": {
+          "accepted": 0,
+          "age_seconds": 2,
+          "direct": null,
+          "fenced": false,
+          "job_id": "1c430677-4cb5-429a-969b-f218dbf0454f",
+          "last_at": 1790193478.768214,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "026e00b7-3b3d-42f2-8fbb-0683f9a696c9",
+            "milestones": 1,
+            "project_id": "acceptance-recovery-1790193470"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Recovery Acceptance about what happens to saved work when a run is stopped.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "A stopped job keeps its work and is never silently re-run; the retry endpoint's refusal proves non-execution, not recovery. A genuinely retryable FAILED submission going through /api/retry is pinned by the engine suite, not claimed here.",
+      "seconds": 9.3
+    }
+  ],
+  "identity": {
+    "pid": 43636,
+    "port": 50069,
+    "url": "http://127.0.0.1:50069",
+    "command_line": "C:\\Users\\Nick\\KelV2Candidate.r25\\resources\\kel-engine\\KelEngine.exe --data C:\\Users\\Nick\\KelV2Runs\\prepared\\r25-journeys\\engine",
+    "port_owner": 43636,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r25-journeys\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 15:57:59",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}

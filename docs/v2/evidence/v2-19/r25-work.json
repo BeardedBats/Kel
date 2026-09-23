@@ -1,0 +1,86 @@
+{
+  "journeys": [
+    {
+      "id": "J-WORK",
+      "name": "Real execution, and what a stopped job shows",
+      "shell_required": false,
+      "requirements": [
+        "Work: real autonomous execution",
+        "Work: recovery"
+      ],
+      "detail": {
+        "conversation": "88750a07-18f9-4581-b129-87e1597926c4",
+        "job": "f75a2c0c-12f6-4599-b3ed-704d27f13549",
+        "job_state": "CLOSED",
+        "verdict": "VERIFIED",
+        "assistant_replies": 1,
+        "row": {
+          "accepted": 1,
+          "age_seconds": 21,
+          "direct": null,
+          "fenced": false,
+          "job_id": "f75a2c0c-12f6-4599-b3ed-704d27f13549",
+          "last_at": 1790193515.0700731,
+          "needs_you": false,
+          "next": "Nothing needed \u2014 ask for a new change for more work.",
+          "open": 0,
+          "priority": "later",
+          "reason": "Done and verified.",
+          "related": {
+            "approvals": 0,
+            "conversation": "88750a07-18f9-4581-b129-87e1597926c4",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790193489"
+          },
+          "state": "CLOSED",
+          "title": "Write a short note titled Finished Work about what a settled job looks like from the outside.",
+          "total": 1,
+          "verdict": "VERIFIED",
+          "why": "Done and verified."
+        },
+        "stopped_job": "92b35916-c152-41a2-8b32-777494081c1c",
+        "stopped_row": {
+          "accepted": 0,
+          "age_seconds": 1,
+          "direct": null,
+          "fenced": false,
+          "job_id": "92b35916-c152-41a2-8b32-777494081c1c",
+          "last_at": 1790193526.0476923,
+          "needs_you": false,
+          "next": "This work was stopped. Its saved request is kept in this conversation.",
+          "open": 0,
+          "priority": "soon",
+          "reason": "You stopped this work.",
+          "related": {
+            "approvals": 0,
+            "conversation": "88750a07-18f9-4581-b129-87e1597926c4",
+            "milestones": 1,
+            "project_id": "acceptance-work-1790193489"
+          },
+          "state": "CANCELLED",
+          "title": "Write a short note titled Stopped Work that will be stopped before it finishes.",
+          "total": 1,
+          "verdict": "UNCERTAIN",
+          "why": "You stopped this work."
+        }
+      },
+      "status": "PASSED",
+      "note": "The abandoned-run fence itself is V2-11 evidence (a run no broker can carry is fenced, never replayed); this journey demonstrates real execution and what a deliberately stopped run shows.",
+      "seconds": 37.4
+    }
+  ],
+  "identity": {
+    "pid": 43636,
+    "port": 50069,
+    "url": "http://127.0.0.1:50069",
+    "command_line": "C:\\Users\\Nick\\KelV2Candidate.r25\\resources\\kel-engine\\KelEngine.exe --data C:\\Users\\Nick\\KelV2Runs\\prepared\\r25-journeys\\engine",
+    "port_owner": 43636,
+    "problems": []
+  },
+  "root": "C:\\Users\\Nick\\KelV2Runs\\prepared\\r25-journeys\\engine",
+  "fixtures": "C:\\Users\\Nick\\KelV2Runs\\prepared\\acceptance",
+  "started": "2026-09-23 15:58:46",
+  "labelled_fixtures": [
+    "synthetic findings and fixture repositories; the engine, store, HTTP surface, workspaces and runtimes are real"
+  ]
+}
