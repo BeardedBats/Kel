@@ -12,6 +12,7 @@ import { THEME_TOKENS } from '@/common/theme/tokenContract';
 import { configService } from '@/common/config/configService';
 import { BUILTIN_THEMES } from '@renderer/theme/builtinThemes';
 import type { Theme } from '@/common/theme/types';
+import { DARK_THEME_ID } from '@/common/theme/constants';
 import { clearThemeOverrides, setThemeOverride, themeOverrides } from '@renderer/utils/theme/applyTheme';
 
 type FeaturedRow = { token: string; label: string; why: string };
@@ -75,7 +76,7 @@ const readVar = (token: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(token).trim();
 
 const activeThemeName = (): string => {
-  const activeId = (configService.get('theme.activeId') as string | undefined) ?? 'light';
+  const activeId = (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
   if (activeId === 'system') return 'Follow system';
   const builtin = BUILTIN_THEMES.find((t: Theme) => t.id === activeId);
   if (builtin) return builtin.name;
@@ -83,7 +84,7 @@ const activeThemeName = (): string => {
   return user?.name ?? 'Selected theme';
 };
 
-const activeThemeId = (): string => (configService.get('theme.activeId') as string | undefined) ?? 'light';
+const activeThemeId = (): string => (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
 
 const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onChanged?: () => void }> = ({ token, label, hint, onChanged }) => {
   const [rev, setRev] = useState(0);

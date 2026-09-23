@@ -9,6 +9,7 @@ import { THEME_TOKENS } from '@/common/theme/tokenContract';
 import { configService } from '@/common/config/configService';
 import { ipcBridge } from '@/common';
 import { resolveActiveTheme } from '@/common/theme/resolveTheme';
+import { DARK_THEME_ID } from '@/common/theme/constants';
 import { BUILTIN_THEMES } from '@renderer/theme/builtinThemes';
 import { processCustomCss } from './customCssProcessor';
 import { tokensToCss } from './tokensToCss';
@@ -102,7 +103,7 @@ export function applyTheme(theme: Theme, root: Document = document): void {
 
 async function reapplyIfActive(themeId: string): Promise<Theme> {
   const userThemes = (configService.get('theme.userThemes') as Theme[] | undefined) ?? [];
-  const activeId = (configService.get('theme.activeId') as string | undefined) ?? 'light';
+  const activeId = (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
   const resolved = resolveActiveTheme(activeId, [...BUILTIN_THEMES, ...userThemes], getSystemPrefersDark());
   if (resolved.id === themeId) {
     applyTheme(resolved);
