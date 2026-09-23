@@ -46,7 +46,18 @@
 }
 .kel-v2-shell { font-family: var(--kel-shell-body); color: var(--kel-text-1); }
 [data-theme='dark'] .kel-v2-shell {
-  background: var(--kel-shell-custom-canvas, linear-gradient(180deg, rgba(10,31,69,.7), rgba(10,31,69,0) 168px), linear-gradient(var(--kel-figma-color-canvas-wash), var(--kel-figma-color-canvas-wash)), url('../assets/figma/canvas.svg') center / 100% 100%);
+  /* A saved App background color tints the Figma canvas; it must not replace its artwork. */
+  background-color: var(--kel-shell-custom-canvas, var(--kel-figma-color-canvas-base));
+  background-image:
+    linear-gradient(180deg, rgba(10,31,69,.7), rgba(10,31,69,0) 168px),
+    linear-gradient(
+      color-mix(in srgb, var(--kel-shell-custom-canvas, transparent) 20%, transparent),
+      color-mix(in srgb, var(--kel-shell-custom-canvas, transparent) 20%, transparent)
+    ),
+    linear-gradient(var(--kel-figma-color-canvas-wash), var(--kel-figma-color-canvas-wash)),
+    url('../assets/figma/canvas.svg');
+  background-position: center;
+  background-size: 100% 100%;
 }
 .kel-v2-shell :is(.layout, .layout-content, .layout-sider, .arco-layout-content, .layout-sider-children, .bg-1, .bg-2, .app-titlebar) {
   background: transparent !important;
