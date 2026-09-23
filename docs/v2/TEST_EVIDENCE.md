@@ -544,3 +544,11 @@ tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed i
   upgrade case, with the previously failing block running clean.
 - **Not yet in this sweep:** the renderer/desktop suites (they live on the integration line) and the
   phone journeys — those need the Shell stack and stay pending.
+- Desktop slice in this worktree (no install needed — `desktop/node_modules` is populated, bun 1.4.2):
+  `bunx tsc --noEmit -p tsconfig.json` → **exit 0** with **1176** non-`node_modules` files actually
+  checked (verified with `--listFiles`, so the clean result is not vacuous), and
+  `bunx vitest run tests/unit` → **36 test files, 273 tests passed in 27.37 s, exit 0**.
+- Two groups have nothing to run here, and that is not a pass: `tests/contract` and `tests/integration`
+  hold no test files in this worktree (vitest says "No test files found"), and no
+  `*.bun.test.ts` driver file is present. The Playwright e2e and phone journeys still need the Shell
+  stack (gateway + built renderer) and stay pending.
