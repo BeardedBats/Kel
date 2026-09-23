@@ -556,6 +556,16 @@ export interface KelRecipeEntry {
   favourite?: boolean;
 }
 
+export interface KelRecipeInput {
+  name: string;
+  type: 'text' | 'path' | 'choice' | 'bool';
+  required: boolean;
+  description?: string;
+  choices?: string[];
+  default?: string | boolean;
+  max_chars?: number;
+}
+
 export interface KelWork {
   project_id: string;
   memory: {
@@ -589,6 +599,11 @@ export const kelMapAction = (action: string, conversation = 'main', extra: Recor
 
 export const kelRecipes = (conversation = 'main') =>
   call<Record<string, unknown>>('/api/recipes', { action: 'list', conversation });
+
+export const kelRecipeGet = (recipeId: string, conversation = 'main') =>
+  call<{ recipe: { recipe_id: string; name: string; inputs: KelRecipeInput[] } }>('/api/recipes', {
+    action: 'get', recipe_id: recipeId, conversation,
+  });
 
 /** Compile a recipe without running it — the engine's preview/dry-run path. */
 export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknown> = {}) =>
@@ -1065,7 +1080,7 @@ export interface KelJobRoute {
   at?: number;
 }
 
-export const kelState = () =>
+export const kelState = (conversation = 'main') =>
   call<{
     jobs: KelWorkJob[];
     continuation?: KelContinuationCandidate[];
@@ -1078,7 +1093,7 @@ export const kelState = () =>
     draining?: boolean;
     /** D6: the engine's recorded restore outcome (audit PER-02); null when never attempted. */
     restore?: { ok: boolean; detail?: string; at?: number } | null;
-  }>('/api/state');
+  }>(`/api/state?conversation=${encodeURIComponent(conversation)}`);
 
 /** Markdown artifact text for an ACCEPTED milestone (the engine refuses anything unverified). */
 export const kelArtifact = (job: string, milestone: string) =>

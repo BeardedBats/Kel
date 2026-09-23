@@ -41,8 +41,8 @@ describe('recipe contract (D10)', () => {
 
 describe('Recipes tab (D10)', () => {
   it('can run a recipe and points at where the run lives', () => {
-    expect(projectsPage).toContain('kelRecipeRun(recipeId)');
-    expect(projectsPage).toContain('Run submitted — follow it on the Work page');
+    expect(projectsPage).toContain('kelRecipeRun(draft.recipeId, values)');
+    expect(projectsPage).toContain('Run request sent — follow it on Work');
     expect(projectsPage).toContain('Preview (dry run)');
   });
 });
