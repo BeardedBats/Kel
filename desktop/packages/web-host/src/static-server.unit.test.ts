@@ -178,6 +178,20 @@ describe('static-server', () => {
     expect(await root.text()).toContain('<title>root</title>');
   });
 
+  it('a long-extension asset is served, never redirected into the hash route', async () => {
+    // Measured cause: the deep-link guard only recognised extensions of 1–8 characters, so
+    // `/manifest.webmanifest` was answered with `302 → /#/manifest.webmanifest`; the browser then
+    // parsed HTML as a manifest and logged "Manifest: Line: 1, column: 1, Syntax error" on every
+    // packaged load. A file request must never become a hash route.
+    await fs.writeFile(path.join(staticDir, 'manifest.webmanifest'), '{"name":"Kel"}');
+    const backend = await startMockBackend((_req, res) => res.end('nope'));
+    stopBackend = backend.close;
+    handle = await startStaticServer({ staticDir, backendPort: backend.port, port: 0 });
+    const r = await fetch(`${handle.localUrl}/manifest.webmanifest`, { redirect: 'manual' });
+    expect(r.status).toBe(200);
+    expect(await r.text()).toContain('"name":"Kel"');
+  });
+
   it('static asset /assets/main.js served', async () => {
     const backend = await startMockBackend((_req, res) => res.end('nope'));
     stopBackend = backend.close;
