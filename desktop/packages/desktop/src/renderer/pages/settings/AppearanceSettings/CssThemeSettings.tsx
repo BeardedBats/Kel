@@ -168,6 +168,9 @@ const ensureBackgroundCss = <T extends { id?: string; cover?: string; css?: stri
  * CSS 主题设置组件 / CSS Theme Settings Component
  * 用于管理和切换 CSS 皮肤主题 / For managing and switching CSS skin themes
  */
+/** 200px per the Figma Appearance frame, shrinking to 180px before a row wraps. */
+const THEME_CARD_SIZE: React.CSSProperties = { flex: '1 1 180px', maxWidth: 200 };
+
 const CssThemeSettings: React.FC = () => {
   const { t } = useTranslation();
   const { theme: currentTheme, activeTheme, activeId, selectTheme } = useThemeContext();
@@ -385,10 +388,10 @@ const CssThemeSettings: React.FC = () => {
       </div>
 
       {/* 主题卡片列表 / Theme card list.
-          Fixed-width cards that wrap: a full row packs several cards, while a
-          short list (e.g. just Light/Dark/Follow System) stays at its natural
-          size and leaves the trailing space empty instead of stretching each
-          card across the whole row. */}
+          Cards are 200px wide (the Figma Appearance frame, 76:3173) and may shrink
+          to 180px, so Light/Dark/Follow System stay on one row inside the nested
+          Settings panel (~620px) instead of wrapping Follow System alone. A longer
+          list still wraps, and a short one never stretches past 200px. */}
       <div className='flex flex-wrap gap-12px'>
         {displayThemes.map((theme) => {
           const previewPalette =
@@ -410,8 +413,8 @@ const CssThemeSettings: React.FC = () => {
               data-active={activeThemeId === theme.id}
               role='button' tabIndex={0} aria-label={theme.name} aria-pressed={activeThemeId === theme.id}
               onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleSelectTheme(theme); } }}
-              className={`relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px w-200px flex-shrink-0 ${activeThemeId === theme.id ? 'border-[var(--color-primary)]' : 'border-transparent hover:border-border-2'}`}
-              style={cardStyle}
+              className={`relative cursor-pointer rounded-12px overflow-hidden border-2 transition-all duration-200 h-112px min-w-0 ${activeThemeId === theme.id ? 'border-[var(--color-primary)]' : 'border-transparent hover:border-border-2'}`}
+              style={{ ...cardStyle, ...THEME_CARD_SIZE }}
               onClick={() => handleSelectTheme(theme)}
             >
               {theme.id === SYSTEM_THEME_ID ? (
