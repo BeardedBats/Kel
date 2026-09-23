@@ -28,6 +28,27 @@ Two corrections came out of writing these, and both are the point of the phase:
   own sentence. Fixed: Kel's sentence leads, git's detail follows in parentheses, and the existing
   refusal test pins the wording. 15 tests green (build_update 11 + migration ledger 4).
 
+## Slices 2–4 — the backend-shaped rows (`runs/2026-09-22-slice2.json`, `-slice3`, `-slice4`)
+
+Every one of these ran on the real root against the real surfaces; only J-CONN/J-TRANS are labelled
+fixtures, and they say so in their own `detail`.
+
+| Journey | §27 row | Status | What it actually did |
+|---|---|---|---|
+| J-PROJ | 2 Projects | PASSED | two synthetic Projects created idempotently; each held its own conversation, work row and attachments (alpha `acceptance-alpha.txt`, beta none) |
+| J-MEM | 5 Memory | PASSED | learnings read back with their evidence (`routing_outcomes:coding:codex`), `confidence`/`effective_confidence`/`enabled`/`stale` and `source`; 6 history entries, 3 project memories |
+| J-RECIPE | 8 Recipes | slice 2 FAILED → slice 4 PASSED | the journey probes all 14 V2-07 scope items against the live surface: slice 2 measured **9 missing** ("Unknown recipe action" — search, favourites, recent, categories, duplicate, project attachment, run again, history, last result), slice 3 measured 2 left, slice 4 reads all present |
+| J-MODEL | 4 Models | slice 3 FAILED → slice 4 PASSED | a real turn routed to `codex` and `/api/model {action:'why'}` read the stored decision back ("Kel is using Codex: the lowest cost among the models that are healthy and capable here.", chain `[codex, claude]`, `samples 4`, `verified_rate 1.0`); slice 3's read-back comparison did not match the stored route and that file is kept as the record |
+| J-CONV | 1 Conversation | PASSED | two real turns in one thread → four stored messages, real replies, listed back from the store |
+| J-NET | 14 Security (network) | PASSED | a real network mode on `tool:github.test` → the refusal sentence, access history 4 → 5, policy restored exactly |
+| J-CONN | 6 Connections | PASSED (labelled) | the real choke point against a local stand-in (`http://127.0.0.1:41999`); the recorded state is honest (`last_test_state: unreachable`) and no real credential was used |
+| J-TRANS | 7 Transcription | PASSED (labelled) | the transcription surface on the real root (mode `muse`, `has_key`, `live_capable`); no audio device or credential, so real recording is **not** claimed |
+| J-ACTIVITY | V2-06 read surface | PASSED | `/api/activity` read 137 entries with per-kind counts and a project breakdown on the real root |
+
+The two FAILED runs are kept on purpose: they are the record of a real gap (the V2-07 scope, closed by
+D-50) and of the runner's own journey bugs, which were found and fixed in the same increment (a
+dict/list mix-up in the Fix Capture list, the connection-test key names, an unbracketed string).
+
 ## The Kibble Build Update journey — four claims kept separate (`runs/2026-09-22-kbu.json`)
 
 Synthetic findings, a labelled fixture repository (`acceptance/kibble-repo`, whose `add()` returns the
@@ -92,6 +113,10 @@ python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engi
   --journeys J-FIX,J-UPGRADE,J-SEC,J-KBU --out ../docs/v2/evidence/v2-18/runs/<name>.json
 python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engine \
   --journeys J-KBU-NEG --runtime-negatives --out ../docs/v2/evidence/v2-18/runs/<name>.json
+# the quick backend slice (seconds, no runtime dispatch):
+python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engine \
+  --journeys J-CONV,J-PROJ,J-MEM,J-RECIPE,J-MODEL,J-NET,J-CONN,J-TRANS,J-ACTIVITY \
+  --out ../docs/v2/evidence/v2-18/runs/<name>.json
 ```
 
 The Kibble journeys dispatch real coding runtimes and take 1–6 minutes each; everything else is
