@@ -6,12 +6,12 @@ and then continues the exact `current_item`. Update this file whenever a phase s
 ```yaml
 program: kel-v2.0
 line: v2                    # development line created by this setup commit
-branch: dev/v2
+branch: integration/v2       # current packaged integration line; dev/v2 remains its source line
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
-phase: V2-05                # iPhone Kel PWA V1 — PARTIAL: voice and send are proved on the phone (real Muse; real model round trip incl. continuation); drawer history / job attention / project routing remain. V2-05-history is temporarily DEFERRED FOR SHELL INTEGRATION (Astra owns the phone drawer/history presentation) — see the parallel-ownership section below
-next_item: V2-18 synthetic acceptance journeys — IN PROGRESS (2026-09-22; D-48/D-49/D-50) [V2-06/07/08 BUILT 2026-09-22 — see FEATURE_LEDGER.md and D-50: attention rows (priority/age/reason/related/one direct action/grouping), the recipe library's own surfaces (migration 30 `v2-recipe-library`), and `/api/activity`; next unchecked journeys J-WORK, J-RECOV, J-ATTN, J-REMOTE] # The matrix is docs/v2/evidence/v2-18/ACCEPTANCE_MATRIX.md; the executable journeys are runtime/tools/acceptance_journeys.py (attaches only after proving the recorded pid, its command line and the port owner agree). PASSED so far on the real root: J-FIX (Fix Capture round trip), J-UPGRADE (110 tables / 26-row ledger, all V2 tables), J-SEC (own data folder + protected stable-app folder + non-repository folder, each refused in Kel's own sentence), J-KBU (claims C1–C4: mission on a verified clean baseline, promotion refusal, candidate record outside the source checkout, a REAL codex-code repair inside the isolated repositories/<job_id> copy with check_evidence VERIFIED and the baseline as the candidate revision's ancestor, review + second-review refusal, promote refusing before/after approval, Fix Capture statuses untouched) and the negatives (a cancelled mission claims nothing). Three defects were found and fixed here: a leaked raw git refusal sentence, a candidate note that contradicted its own verified evidence, and — the serious one — a candidate claiming verified:true from one run's evidence while the mission's own verdict was FAILED (D-49). NEXT UNCHECKED JOURNEYS, in order: J-MODEL (a real turn's stored route read back through /api/model why), J-WORK (real work to CLOSED, then an abandoned run fenced + the brief), J-MEM (save → recall → forget + the authority fence), J-RECIPE (create, run twice, history + last result), J-ATTN (a real approval as an attention row, answered), J-RECOV (a failed run keeps its work + bounded retry), J-NET (a real network mode refusal + recorded decision), then the labelled-fixture journeys J-CONN (local stand-in through the real choke point; a real service needs Nick's credentials) and J-TRANS (synthetic audio on the real transcription path). Phone/renderer journeys stay PENDING for Shell integration (Astra) and are never marked passed from a backend journey. V2-17 upgrade reliability, V2-14 network permissions, V2-13 isolation, V2-12 staffing, V2-11 long-running work, V2-10 learning, V2-09 routing, V2-04b and the V2-04 execution hardening are BUILT (D-34…D-47); Kibble Build Update is BUILT (D-46/D-47). V2-15 needs Nick's real dogfood batches; V2-16 is largely renderer/Shell; V2-19/V2-20 are whole-system phases whose promotion gate is Nick's.
+phase: V2-19                # bounded regression in progress on staged r23
+next_item: V2-19 packaged functional regression on an isolated r23 root: Work and recipe actions, then attention and recovery; record exact evidence and fix reproduced failures.
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -20,6 +20,7 @@ deferred:
 
 paths:
   source_v2: C:\Users\Nick\Desktop\Kel\kel-v2
+  source_integration: C:\Users\Nick\Desktop\Kel\kel-v2-integration  # active r23 source checkout
   source_predecessor: C:\Users\Nick\Desktop\Kel\kel-daily-driver   # dev/daily-driver, reference only
   shared_git_dir: C:\Users\Nick\Desktop\Kel\Kel-Repo\.git         # one object database for all trees
   v2_test_data: C:\Users\Nick\KelV2Runs\prepared                  # V2 development/test data root
@@ -46,10 +47,10 @@ phases:
   V2-13: done        # Local execution isolation — sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
   V2-14: done        # Network permissions — modes + per-tool/per-Project rules behind the one seam, ask-before-a-new-domain, access history
   V2-15: queued      # Real dogfood integration pass
-  V2-16: queued      # Performance + UX polish
+  V2-16: partial     # Dark Settings and setup path repaired; conversation/project/remote timings pending
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
-  V2-18: partial     # Synthetic V2 acceptance journeys — the §27 matrix is written and walked on real paths: J-FIX/J-UPGRADE/J-SEC/J-KBU (+negatives) PASSED; three defects found and fixed (D-48/D-49); the remaining journeys are listed in next_item
-  V2-19: queued      # Full V2 regression
+  V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
+  V2-19: partial     # r23 setup, Dark Settings, native picker first change, restart, and packaged navigation passed; full functional groups remain
   V2-20: queued      # V2 release candidate
 
 invariants:

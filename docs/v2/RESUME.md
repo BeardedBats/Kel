@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT CHECKPOINT (2026-09-23, night) — read this first; it supersedes every block below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r23) — supersedes the older checkpoints below
+
+`integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` has the pushed source increment `407f5a3`. The new staged candidate is `C:\Users\Nick\KelV2Candidate.r23` (archive `1c3bde1f4ab0b162`). The packaged setup and Dark Settings pass, archive gate, 294 desktop tests, typecheck, and the first bounded V2-19 packaged navigation pass are recorded in `docs/v2/evidence/v2-19/CANDIDATE_R23.md`. Read that record before changing or packing anything. The r23 test processes are stopped; the user's r20 session and protected stable app remain running. No promotion or rename occurred.
+
+**Next action:** continue V2-19 in bounded functional groups on an isolated r23 root. Start with packaged Work and recipe actions, then attention/recovery, and record exact inputs, outcomes, and failures. Fix only reproduced defects. Keep Light-mode faint labels outside the Dark pass. Google sign-in, live services, fresh Muse audio, physical iPhone, and remaining V2-16 timings stay pending until their inputs are available. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, night) — superseded by the r23 integration checkpoint
 
 **Where:** `integration/v2` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` @ **`fe6edec`**
 (pushed): `8117742` = the F1 repair, `ea7de07` = Astra's Figma refresh merged in.
