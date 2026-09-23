@@ -35,12 +35,12 @@ left open: the Settings save path and the palette were only ever proved by **[IN
 
 ## Defects found
 
-- **D1 — typing a 6-digit hex saves its 3-digit prefix.** `ThemeColorRow`'s hex `Input` calls `apply()`
+- **D1 — typing a 6-digit hex saves its 3-digit prefix.** *Fixed in r22 (`11928da`, `CANDIDATE_R22.md`).* `ThemeColorRow`'s hex `Input` calls `apply()`
   on every keystroke that parses; `hex()` accepts `#rgb`, so `#7a1` is saved as `#77aa11`. `onChanged`
   bumps `refresh`, which is part of every row's `key`, so the row remounts, focus is lost and the remaining
   keystrokes (`f1f`) go nowhere. Any typed 6-digit value hits this (every one has a valid 4-char prefix).
   Paste and Reset are unaffected. Source: `components/kel/ThemeColorsSection.tsx` (hex `onChange`, row keys).
-- **D2 — the command palette is see-through in Dark.** The palette panel is a `.kel-card`
+- **D2 — the command palette is see-through in Dark.** *Fixed in r22 (`11928da`, `CANDIDATE_R22.md`).* The palette panel is a `.kel-card`
   (`rgba(15,45,100,0.3)`, no `backdrop-filter`) over a `rgba(20,22,26,0.32)` scrim, so page text bleeds
   through its rows (`p2-typed`, `p7-palette-dark`). Independent of the custom background. Opaque in Light (`p4-offer-dark`).
 
@@ -50,10 +50,11 @@ left open: the Settings save path and the palette were only ever proved by **[IN
   `#/onboarding` with no explanation.
 - **O2** — in Light, several labels are very faint: sider group headers ("Kel", "Application", "Data",
   "Other"), "Restore all colors", the Light card's checkmark, the Fonts "Reset" (`p3-light`).
-- Theme-card wrapping ("Follow System" on its own row) is still visible — the known gap.
+- Theme-card wrapping ("Follow System" on its own row) is still visible — the known gap. *Fixed in r22.*
 
 ## Not claimed
 
+- Independent review: `AGENTS.md`'s `request_review` tool was not available in this session; none was performed.
 - The native `<input type=color>` picker (opens an OS dialog) was not driven.
 - V2-16 timings (conversation open, project switch) — still not measured.
 - r21 is still **staged**: the user's r20 session is running from `C:\Users\Nick\KelV2Candidate`, so the
