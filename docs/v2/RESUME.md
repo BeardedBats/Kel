@@ -31,15 +31,17 @@
    of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
    and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
    needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
-   **NEXT ACTION, in order:** (1) **V2-19 — the full V2 regression, in bounded groups against one owned
-   stack.** The engine for this root may already be alive (`desktop-session.json` + its pid's command
-   line + the port owner must all agree before use; a second engine on the same data root is refused by
-   design with "Kel is already open for this data folder"). A full `python -m pytest -q` sweep was
-   started from `runtime/`; **read its result before calling V2-19 anything.** (2) the two measured
-   limits above, when they matter — neither blocks V2-19; (3) `bun install` in the integration worktree,
-   then its bounded renderer suites; (4) package a candidate at `C:\Users\Nick\KelV2Candidate` — the
-   path does not exist yet, so nothing has to be preserved or rolled back, and installation stays behind
-   Nick's explicit decision.
+   **NEXT ACTION, in order:** (1) **V2-19 — finish the full V2 regression.** The first full sweep of
+   `runtime/` ran on 2026-09-23: **1277 passed, 3 failed (19 m 30 s)**; the three failures were one stale
+   expectation left behind by D-50 (the recipes step moved from `4/v13-recipes` to `30/v2-recipe-library`)
+   and are fixed, with the missing "a store that recorded the old recipes step upgrades additively" case
+   added — bounded groups after the fix are green (93 + 9 passed). A confirmation sweep of the whole
+   suite was started; read its numbers before marking V2-19 done. Still outside this sweep: the
+   renderer/desktop suites (integration line) and the phone journeys. (2) the two measured limits above,
+   when they matter — neither blocks V2-19; (3) `bun install` in the integration worktree, then its
+   bounded renderer suites; (4) package a candidate at `C:\Users\Nick\KelV2Candidate` — the path does not
+   exist yet, so nothing has to be preserved or rolled back, and installation stays behind Nick's
+   explicit decision.
    **PASSED so far on the real root:** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real
    codex-code repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has
    the baseline as an ancestor), the negatives (a cancelled mission claims nothing; a mission whose
