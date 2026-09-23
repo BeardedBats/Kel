@@ -12,9 +12,10 @@ export function sourceCard(title?: string) {
   const key = title?.split(' · ')[0];
   return key && TITLES.includes(key) ? { description: DESCRIPTIONS[key] } : undefined;
 }
-export default function ShellSourceCardHeader({ title, description }: { title: string; description?: string }) {
+export default function ShellSourceCardHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
   return <header className='kel-shell-source-card-head'>
     <h2 className='kel-h2'>{title}</h2>
     {description && <p className='kel-meta'>{description}</p>}
+    {actions && <div className='kel-shell-source-card-actions'>{actions}</div>}
   </header>;
 }

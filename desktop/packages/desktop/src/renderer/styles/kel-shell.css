@@ -505,7 +505,19 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-source-card-head .kel-meta { margin: 0; color: var(--kel-text-2); }
 .kel-shell-source-card-head:has(.kel-shell-source-add-theme) { padding-right: 144px; }
 .kel-shell-source-add-theme { position: absolute; right: 0; top: 8px; }
+.kel-shell-source-card-head:has(.kel-shell-source-card-actions) { padding-right: 168px; min-height: 34px; }
+.kel-shell-source-card-actions { position: absolute; right: 0; top: 0; }
+@media (max-width: 560px) {
+  .kel-shell-source-card-head:has(.kel-shell-source-card-actions) { padding-right: 0; }
+  .kel-shell-source-card-actions { position: static; align-self: flex-start; margin-top: 4px; }
+  .kel-connections-page .kel-connection-row { flex-wrap: wrap; align-items: flex-start; padding-block: 12px; }
+  .kel-connections-page .kel-connection-row > .kel-attention__text { flex-basis: 100%; }
+  .kel-connections-page .kel-connection-row > .kel-grow { display: none; }
+  .kel-project-table-scroll { max-width: 100%; overflow-x: auto; }
+  .kel-project-table-scroll .kel-table { min-width: 560px; }
+}
 .kel-v2-shell .kel-card--source > .kel-empty > .kel-empty-description, .kel-v2-shell .kel-card--source > .kel-empty > .kel-row { display: none; }
+.kel-v2-shell .kel-card--source > .kel-empty--action > .kel-row { display: flex; }
 .kel-v2-shell .kel-empty { gap: 0; }
 .kel-v2-shell .kel-empty strong { font: 400 14px/20px var(--kel-shell-body); color: var(--kel-text-2); }
 .kel-v2-shell .kel-page { padding-top: 22px; }

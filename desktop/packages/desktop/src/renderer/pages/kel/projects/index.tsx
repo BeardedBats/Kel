@@ -198,6 +198,7 @@ export default function KelProjectsPage() {
                   why="Kel records what it learns while working — with its source and a trust score."
                 />
               ) : (
+                <div className="kel-project-table-scroll">
                 <KelTable
                   head={['Topic', 'Type', 'Trust', 'Status', 'Source', 'Updated', 'Actions']}
                   rows={records.map((record) => [
@@ -249,6 +250,7 @@ export default function KelProjectsPage() {
                     </span>,
                   ])}
                 />
+                </div>
               )}
             </KelCard>
             {proposals.length > 0 && (
@@ -342,6 +344,7 @@ export default function KelProjectsPage() {
                 onAction={() => void act('Refresh map', () => kelMapAction('refresh'))}
               />
             ) : (
+              <div className="kel-project-table-scroll">
               <KelTable
                 head={['Section', 'Trust', 'Freshness', 'Digest', 'Sources']}
                 rows={sections.map((section) => [
@@ -358,6 +361,7 @@ export default function KelProjectsPage() {
                   </span>,
                 ])}
               />
+              </div>
             )}
           </KelCard>
         )}
