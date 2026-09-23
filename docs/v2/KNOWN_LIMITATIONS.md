@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Current r29 acceptance limits (2026-09-23)
+
+Packaged local conversation opening, two disposable project contexts, Dark widths, and two native picker adjustments are verified in `docs/v2/evidence/v2-19/CANDIDATE_R29.md`. Remote load, first response, Google sign-in, and live personal services need a signed-in isolated candidate session and a model request. Fresh Muse audio needs a new recording; physical iPhone checks need the device. The web-host suite requires stopping all Kel instances, which is excluded while r20 runs. V2-20 promotion remains gated. Faint Light-mode labels remain outside this Dark pass.
+
 Honest, current limits at the V2 base — things a later run must not pretend are solved. Phase-specific
 limits are appended as phases land.
 

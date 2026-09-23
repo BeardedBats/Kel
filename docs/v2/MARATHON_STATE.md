@@ -11,7 +11,7 @@ base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-d
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
 phase: V2-19                # bounded regression in progress on staged r29
-next_item: Select two disposable project folders on isolated r29 and measure a real loaded context switch; then continue V2-19 isolated paths.
+next_item: Obtain a signed-in isolated candidate session for remote load, first response, Google sign-in, and live service checks; fresh Muse audio and physical iPhone need inputs. Do not promote while r20 runs.
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -47,10 +47,10 @@ phases:
   V2-13: done        # Local execution isolation — sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
   V2-14: done        # Network permissions — modes + per-tool/per-Project rules behind the one seam, ask-before-a-new-domain, access history
   V2-15: queued      # Real dogfood integration pass
-  V2-16: partial     # Dark Settings and setup path repaired; r29 local conversation-open median 112.4 ms; project/remote/first response pending
+  V2-16: partial     # Dark Settings/setup repaired; r29 local conversation-open median 112.4 ms, project switch median 114.9 ms; remote/first response pending
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
-  V2-19: partial     # r23 Dark Settings; r26 Recipes/Work; r28 Projects/Knowledge/Map and service UI; r29 blank Recent title; live paths remain
+  V2-19: partial     # r23 Dark Settings; r26 Recipes/Work; r28 Projects/Knowledge/Map and service UI; r29 Recent title, local projects, native picker; live paths remain
   V2-20: queued      # V2 release candidate
 
 invariants:

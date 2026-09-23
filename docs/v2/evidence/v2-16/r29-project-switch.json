@@ -1,0 +1,22 @@
+{
+  "candidate": "r29",
+  "source": "41b2bf6e738952ebad6a4181ba604874d6373019",
+  "surface": "packaged Electron, isolated KEL_HOST_DATA_DIR / AIONUI_DATA_DIR / KEL_DATA_DIR",
+  "fixture": "two disposable local project folders, seeded into this isolated host profile recent-workspaces list; two real empty conversations created via packaged UI",
+  "conversationIds": {
+    "a": "c5053ad9",
+    "b": "82f97400"
+  },
+  "method": "alternate persisted conversation rows across different workspace folders; wait for matching URL, visible project folder in Files, and visible sendbox; five warm samples",
+  "projectSwitchMs": [
+    123,
+    127.5,
+    107.8,
+    114.1,
+    114.9
+  ],
+  "medianMs": 114.9,
+  "modelRequest": false,
+  "remoteLoad": "pending: no signed-in remote session",
+  "firstResponse": "pending: no model request"
+}

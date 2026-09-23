@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current packaged r29 checkpoint (2026-09-23)
+
+Source `41b2bf6` and staged candidate `C:\Users\Nick\KelV2Candidate.r29`: `cd desktop && npx vitest run tests/unit --reporter=dot` passed **43 files / 294 tests**. The earlier typecheck, focused tests, package build, and archive gate passed after the source change. Packaged local conversation opening had a 112.4 ms median. Switching between two disposable project contexts had a 114.9 ms median. Dark Appearance had no document overflow at 1440, 800, or 390px. The native colour popup saved two adjustments while open, kept the second after reload, and Reset restored the default. See [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) for conditions and limits. Remote, live service, audio, and phone claims remain pending.
+
 Cumulative verification. Every phase appends its own block; nothing here is copied from a plan. Each
 row names the command and the result, so a resume run can re-run it instead of trusting prose.
 
