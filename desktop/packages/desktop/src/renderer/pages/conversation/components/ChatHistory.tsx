@@ -193,7 +193,7 @@ const ChatHistory: React.FC<{ onSessionClick?: () => void; collapsed?: boolean }
       <Tooltip
         key={conversation.id}
         {...siderTooltipProps}
-        content={conversation.name || t('conversation.welcome.newConversation')}
+        content={conversation.name?.trim() || t('conversation.historySearch.untitled')}
         position='right'
       >
         <div
@@ -221,7 +221,7 @@ const ChatHistory: React.FC<{ onSessionClick?: () => void; collapsed?: boolean }
             ) : (
               <div className='flex items-center gap-4px w-full'>
                 <div className='chat-history__item-name text-nowrap overflow-hidden text-ellipsis inline-block flex-1 text-14px lh-24px whitespace-nowrap min-w-0'>
-                  {conversation.name}
+                  {conversation.name?.trim() || t('conversation.historySearch.untitled')}
                 </div>
                 <CronJobIndicator status={cronStatus} size={14} />
               </div>
