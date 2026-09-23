@@ -6,7 +6,7 @@
  * Built-in themes are never mutated: switching themes keeps each theme's own overrides, and
  * "Restore all colors" removes them for the selected theme only.
  */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Input, Message, Tooltip } from '@arco-design/web-react';
 import { THEME_TOKENS } from '@/common/theme/tokenContract';
 import { configService } from '@/common/config/configService';
@@ -87,25 +87,20 @@ const activeThemeName = (): string => {
 const activeThemeId = (): string => (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
 
 const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onChanged?: () => void }> = ({ token, label, hint, onChanged }) => {
-  const [rev, setRev] = useState(0);
   const overrides = themeOverrides(activeThemeId());
   const saved = overrides[token];
   const effective = saved ?? readVar(token);
   const hexValue = hex(effective) ?? '#000000';
   const [draft, setDraft] = useState(hexValue);
+  useEffect(() => setDraft(hexValue), [hexValue]);
 
   const apply = useCallback(
     async (value: string | null) => {
       await setThemeOverride(activeThemeId(), token, value);
-      setRev((n) => n + 1);
       onChanged?.();
     },
     [onChanged, token]
   );
-
-  // Keep the text field in sync when the theme switches or an override is cleared.
-  const key = `${token}:${hexValue}:${saved ?? ''}:${rev}`;
-  void key;
 
   // Typing saves only a complete six-digit code: `#7a1` is a valid shorthand, and saving it
   // mid-word remounts the row and drops the rest of the keystrokes. Shorthand (and rgb()) is
@@ -231,9 +226,9 @@ export const ThemeColorsSection: React.FC = () => {
           ))}
         </div>
       ) : null}
-      <div className='divide-y divide-border-2' key={`${themeId}:${refresh}`}>
+      <div className='divide-y divide-border-2'>
         {FEATURED.map((row) => (
-          <ThemeColorRow key={`${themeId}:${row.token}:${refresh}`} token={row.token} label={row.label} hint={row.why} onChanged={handleChanged} />
+          <ThemeColorRow key={`${themeId}:${row.token}`} token={row.token} label={row.label} hint={row.why} onChanged={handleChanged} />
         ))}
       </div>
       <button
@@ -247,7 +242,7 @@ export const ThemeColorsSection: React.FC = () => {
       {showAll ? (
         <div className='mt-4px divide-y divide-border-2'>
           {extraTokens.map((token) => (
-            <ThemeColorRow key={`${themeId}:${token.key}:${refresh}`} token={token.key} label={token.key.replace(/^--/, '')} hint={token.description} onChanged={handleChanged} />
+            <ThemeColorRow key={`${themeId}:${token.key}`} token={token.key} label={token.key.replace(/^--/, '')} hint={token.description} onChanged={handleChanged} />
           ))}
         </div>
       ) : null}

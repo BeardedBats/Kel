@@ -6,7 +6,7 @@ import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
  * installs never see it. Every claim on these screens is read from the engine, not asserted.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { configService } from '@/common/config/configService';
 import {
   KelButton,
@@ -42,6 +42,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function KelOnboardingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<Step>('Welcome');
   const [providers, setProviders] = useState<
     Array<{ provider: string; label: string; status: string; auth_mode: string }>
@@ -51,6 +52,7 @@ export default function KelOnboardingPage() {
   const [digest, setDigest] = useState('');
   const [engine, setEngine] = useState<string>('');
   const [error, setError] = useState<unknown>(null);
+  const [finishError, setFinishError] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -79,10 +81,16 @@ export default function KelOnboardingPage() {
   }, []);
 
   const finish = useCallback(
-    async (skipped: boolean) => {
-      await configService.set('kel.onboardingCompleted_v1', true).catch((): undefined => undefined);
-      // Useful work within moments: setup ends in the chat composer, not on a browsing page.
-      navigate('/guid', { replace: true });
+    async () => {
+      try {
+        setFinishError(false);
+        await configService.set('kel.onboardingCompleted_v1', true);
+        // Useful work within moments: setup ends in the chat composer.
+        navigate('/guid', { replace: true });
+      } catch (err) {
+        console.error('Could not save Kel setup:', err);
+        setFinishError(true);
+      }
     },
     [navigate]
   );
@@ -107,6 +115,10 @@ export default function KelOnboardingPage() {
         </div>
 
         <p className='kel-meta kel-shell-setup-label'>{`Step ${index + 1} of ${STEPS.length} · ${step}`}</p>
+        {(location.state as { setupGate?: boolean } | null)?.setupGate && (
+          <p className='kel-meta' role='status'>Finish setup before opening the main Kel pages. Settings and setup controls remain available.</p>
+        )}
+        {finishError && <p className='kel-meta' role='alert'>Setup could not be saved. Try again.</p>}
 
         {error && (
           <p className='kel-meta'>
@@ -144,7 +156,7 @@ export default function KelOnboardingPage() {
         </KelCard>
 
         <KelCard title="You're set">
-          <div className='kel-row'><KelButton onClick={() => void finish(false)}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
+          <div className='kel-row'><KelButton onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
         </KelCard>
 
       </main>
