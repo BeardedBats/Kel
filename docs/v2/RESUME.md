@@ -19,27 +19,36 @@
    `v2-recipe-library`) and `/api/activity` — and the journeys J-FIX, J-UPGRADE, J-SEC, J-KBU
    (C1–C4 + negatives), J-PROJ, J-MEM, J-NET, J-CONN, J-TRANS, J-CONV, J-MODEL, J-RECIPE and
    J-ACTIVITY have all PASSED on the real root (evidence under `docs/v2/evidence/v2-18/runs/`).
-   **Remaining unchecked journeys: J-WORK, J-RECOV, J-ATTN (backend) and J-REMOTE (gateway), then the
-   Shell/phone ones.** The web-host deep-link cause is fixed and pinned
+   **Remaining unchecked journeys: none that a backend can reach.** J-WORK, J-RECOV, J-ATTN and
+   J-REMOTE all PASSED on 2026-09-23 (slice 5, `runs/2026-09-23-slice5-r3.json`); what is left of §27
+   needs Shell integration (Astra: phone/renderer) or Nick's real credentials/Muse audio, and is never
+   claimed from a backend journey. Two measured limits are recorded in `KNOWN_LIMITATIONS.md` instead of
+   passes: real work settles `UNCERTAIN` here because the reviewer answers nothing usable, and a request
+   that produces no job stays `DISPATCHED` with no job. The web-host deep-link cause is fixed and pinned
    (`packages/web-host/src/static-server.unit.test.ts`, 15 tests on the merged line). The integration
    line `integration/v2` @ `fe5e6b7` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` merges Astra's
    committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the merge's second parent; the rest
    of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
    and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
    needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
-   **NEXT ACTION, in order:** (1) the three remaining backend journeys on a fresh owned engine;
-   (2) `bun install` in the integration worktree, then its bounded renderer suites; (3) package a
-   candidate at `C:\Users\Nick\KelV2Candidate` — the path does not exist yet, so nothing has to be
-   preserved or rolled back, and installation stays behind Nick's explicit decision.
-   **PASSED (2026-09-22):** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real codex-code
-   repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has the
-   baseline as an ancestor), and the negatives (a cancelled mission claims nothing; a mission whose
-   tests can never pass never claims a verified build — D-49). **THE NEXT UNCHECKED JOURNEY IS
-   J-MODEL** (drive one real turn, then read the stored route back through `/api/model {action:'why'}`
-   and assert the sentence matches the stored decision), then in order J-WORK, J-MEM, J-RECIPE,
-   J-ATTN, J-RECOV, J-NET, then the labelled fixtures J-CONN and J-TRANS. Phone/renderer journeys stay
-   PENDING for Shell integration. Read `ROADMAP.md`'s V2-18 line and the directive before designing;
-   do not build Astra-owned presentation. **Kibble Build Update is BUILT**
+   **NEXT ACTION, in order:** (1) **V2-19 — the full V2 regression, in bounded groups against one owned
+   stack.** The engine for this root may already be alive (`desktop-session.json` + its pid's command
+   line + the port owner must all agree before use; a second engine on the same data root is refused by
+   design with "Kel is already open for this data folder"). A full `python -m pytest -q` sweep was
+   started from `runtime/`; **read its result before calling V2-19 anything.** (2) the two measured
+   limits above, when they matter — neither blocks V2-19; (3) `bun install` in the integration worktree,
+   then its bounded renderer suites; (4) package a candidate at `C:\Users\Nick\KelV2Candidate` — the
+   path does not exist yet, so nothing has to be preserved or rolled back, and installation stays behind
+   Nick's explicit decision.
+   **PASSED so far on the real root:** J-FIX, J-UPGRADE, J-SEC, J-KBU (claims C1–C4, including a real
+   codex-code repair inside the isolated `repositories/<job_id>` copy and a candidate whose revision has
+   the baseline as an ancestor), the negatives (a cancelled mission claims nothing; a mission whose
+   tests can never pass never claims a verified build — D-49), and — 2026-09-23 — J-CONV, J-PROJ,
+   J-MEM, J-RECIPE, J-MODEL, J-NET, J-CONN, J-TRANS, J-ACTIVITY, J-WORK, J-ATTN, J-RECOV, J-REMOTE.
+   **No backend-reachable journey is left.** Phone/renderer journeys stay PENDING for Shell integration;
+   real external services and real Muse audio stay labelled fixtures. Read `ROADMAP.md`'s V2-18 line and
+   the directive before designing; do not build Astra-owned presentation. **Kibble Build Update is
+   BUILT**
    (D-46 corrected D-44; D-47; `docs/v2/evidence/kibble-build-update/README.md`): the mission and
    candidate contract on the existing machinery, `promote()` always refusing, the UI contract recorded
    in `PARALLEL_SHELL_TOUCHES.md`. **V2-17 upgrade reliability, V2-14 network permissions, V2-13

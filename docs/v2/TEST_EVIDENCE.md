@@ -489,3 +489,35 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   measured example is recorded in `DECISIONS.md` (D-49).
 - Bounded group after the fixes: `python -m unittest tests.test_v2_build_update
   tests.test_v16_r8_migrations` → **17 OK** (15.7 s).
+
+### V2-18 — slice 5: Work, Needs Your Attention, Recovery, Remote (2026-09-23)
+
+One owned engine, identity proven before use (pid 15116, port 60979, command line naming the data
+root). Evidence: `docs/v2/evidence/v2-18/runs/2026-09-23-slice5-r3.json` (the FAILED first attempts,
+`-slice5.json` and `-slice5-r2.json`, are kept as the record).
+
+- **J-WORK PASSED** (2 claims): a real request ran on the real root and settled CLOSED with a recorded
+  artifact (`result.md`, 379 bytes, lineage id) and an explained verdict — the `manual_review` check
+  said "The reviewer returned no usable assessment." (provider `claude`), the row said "Settled:
+  uncertain." and offered the retry; then a real claim with an expired lease went through the engine's
+  `recover_abandoned()`: `ORPHANED` with a fresh epoch, milestone `UNCERTAIN` +
+  "Expired run; native state requires reconciliation", job `WAITING_RESOURCE`/`UNCERTAIN`, a second
+  recovery fenced nothing, the row read `fenced` + `needs_you` + `resume → /api/send`, and
+  `/api/diagnostics` reported `expired_unfenced: 0`.
+- **J-ATTN PASSED** (3 claims, 1.5 s): a real ask raised through the coding adapter's own `approval()`
+  appeared as one attention row (`needs_you`, `priority: now`, `related.approvals: 1`, `direct {answer,
+  /api/approval}`); one action answered it `APPROVED`, the waiting runtime continued without a second
+  ask (`run` back to `RUNNING`, row `needs_you: false`, `approvals: 0`), and answering the same ask
+  twice was refused.
+- **J-RECOV PASSED** (2 claims): a real request that could not run kept its text and its reason ("This
+  project needs a test command. Set it in Project context before coding.") with no job fabricated;
+  `/api/retry` was accepted on the same submission (one row, nothing duplicated) and re-settled with
+  the same reason; a request that is not `FAILED`/`INTERRUPTED` was refused with "This request is not
+  ready for retry".
+- **J-REMOTE PASSED** (2 claims, backend half): the listening web-host gateway was proven by pid +
+  command line + port ownership, then probed with no session: the API answered `401 {"success":false,
+  "error":"Authentication required","code":"UNAUTHORIZED"}` and the engine's bearer token appeared in
+  neither body.
+- **Two limits recorded, not passes:** no real work reached `VERIFIED` (the reviewer answered nothing
+  usable), and a request that produces no job is recorded as `DISPATCHED` with `job_id: null` and never
+  settles. Both are in `KNOWN_LIMITATIONS.md` with their next steps.

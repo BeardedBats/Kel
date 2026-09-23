@@ -49,6 +49,39 @@ The two FAILED runs are kept on purpose: they are the record of a real gap (the 
 D-50) and of the runner's own journey bugs, which were found and fixed in the same increment (a
 dict/list mix-up in the Fix Capture list, the connection-test key names, an unbracketed string).
 
+## Slice 5 — Work, Needs Your Attention, Recovery, Remote (`runs/2026-09-23-slice5-r3.json`)
+
+The last four backend-shaped §27 rows, on the same owned engine (pid, port and command line proven
+before use). All four PASS; the first attempts' FAILED runs are kept as the record
+(`-slice5.json`, `-slice5-r2.json`).
+
+| Journey | §27 row | What it actually did |
+|---|---|---|
+| J-WORK | 3 Work | a real request ran on the real root and settled CLOSED with a recorded artifact (`result.md`, 379 bytes, with a lineage id) and an **explained** verdict; then a real claim with an expired lease went through the engine's own `recover_abandoned()`: the run became `ORPHANED` with a fresh epoch, the milestone `UNCERTAIN` with "Expired run; native state requires reconciliation", the job `WAITING_RESOURCE`/`UNCERTAIN`, a second recovery fenced **nothing** (never replayed), the row read `fenced` + `needs_you` + `resume → /api/send` with Kel's own sentences, and `/api/diagnostics` reported `expired_unfenced: 0` |
+| J-ATTN | 12 Needs Your Attention | a real ask raised through the coding adapter's own `approval()` (approval row + `approval_actions` + the in-chat card, then it waited) appeared as one attention row (`needs_you`, `priority: now`, `related.approvals: 1`, `direct {action: answer, route: /api/approval}`); one action answered it `APPROVED`, the waiting runtime continued without a second ask, the run went back to `RUNNING` and the row to `needs_you: false`; answering the same ask twice was refused |
+| J-RECOV | 13 Recovery | a real request that could not run kept its text and its reason ("This project needs a test command. Set it in Project context before coding.") with no job fabricated for work that never started; `/api/retry` was accepted on the **same** submission (one row, nothing duplicated) and it re-settled with the same reason; a request that is not `FAILED`/`INTERRUPTED` was refused with "This request is not ready for retry" |
+| J-REMOTE | 9 Remote (backend half) | the gateway listening on this machine was proven by pid + command line + port ownership (its command line names its worktree), then probed with **no session at all**: the API answered `401 {"success":false,"error":"Authentication required","code":"UNAUTHORIZED"}`, and the engine's bearer token appeared in neither body. `/` answers 200 by design so the sign-in surface can load — the gate is on the API, not the page (recorded for the Shell in `PARALLEL_SHELL_TOUCHES.md`) |
+
+**Synthetic inputs, labelled.** J-WORK's fence leg and J-ATTN's ask use the engine's own APIs in its
+own process (`Store.create/claim/recover_abandoned`, `CodingAdapter.approval`) because no HTTP surface
+exposes "raise an approval" or "expire a lease"; the rows, the surfaces, the resolution and the state
+transitions are the engine's, not the journey's. J-RECOV's failure is a real request on the real path.
+
+**Two limits this slice measured honestly (not passes):**
+
+- **Verification needs a usable reviewer.** No real work reached `VERIFIED` in this slice: the
+  milestone's `manual_review` check answered **"The reviewer returned no usable assessment."**
+  (provider `claude`, model `null`), so the job settled CLOSED/**UNCERTAIN** with its artifact kept,
+  the row explaining itself and offering the retry. The engine refused to claim a verified build it
+  could not confirm — the contract working — but this root currently has no usable reviewer, so the
+  "verified" half of the Work row is pending on one (`KNOWN_LIMITATIONS.md`).
+- **A request that produces no job never settles (measured defect).** A recipe request that does not
+  exist answers in the conversation ("I could not find that recipe. …") and is then recorded as
+  `DISPATCHED` with `job_id: null` — a state that never settles, offers no retry, and tells a shell
+  nothing. Measured in `runs/2026-09-23-slice5.json` (40 consecutive `DISPATCHED` reads). Recorded in
+  `KNOWN_LIMITATIONS.md` and as a shared-contract item in `PARALLEL_SHELL_TOUCHES.md`; a fix needs a
+  settled state the Shell can render, so it is not changed unilaterally here.
+
 ## The Kibble Build Update journey — four claims kept separate (`runs/2026-09-22-kbu.json`)
 
 Synthetic findings, a labelled fixture repository (`acceptance/kibble-repo`, whose `add()` returns the
@@ -116,6 +149,11 @@ python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engi
 # the quick backend slice (seconds, no runtime dispatch):
 python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engine \
   --journeys J-CONV,J-PROJ,J-MEM,J-RECIPE,J-MODEL,J-NET,J-CONN,J-TRANS,J-ACTIVITY \
+  --out ../docs/v2/evidence/v2-18/runs/<name>.json
+# work / attention / recovery / remote (one real turn and one real chat answer; ~30s; J-REMOTE
+# attaches to whichever web-host gateway is listening, or takes --gateway <url>):
+python tools/acceptance_journeys.py --root C:/Users/Nick/KelV2Runs/prepared/engine \
+  --journeys J-ATTN,J-RECOV,J-REMOTE,J-WORK --wait 240 \
   --out ../docs/v2/evidence/v2-18/runs/<name>.json
 ```
 

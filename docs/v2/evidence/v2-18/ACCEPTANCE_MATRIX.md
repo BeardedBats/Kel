@@ -64,7 +64,12 @@ green suite is *available evidence*, never a passed journey.
   `test_isolated_recovery.py`, `test_broker_recovery.py`.
 - **Missing journey/assertion:** the acceptance-level journey that runs real work to CLOSED on the
   real root and then abandons a second run and shows the fence + the brief.
-- **Shell required:** no. **Status:** pending — see journey J-WORK.
+- **Shell required:** no. **Status: PASSED** (2026-09-23, journey J-WORK —
+  `runs/2026-09-23-slice5-r3.json`): a real request ran on the real root and settled CLOSED with a
+  recorded artifact (`result.md`, 379 bytes, with a lineage id) and an **explained** verdict — the
+  milestone's own `manual_review` check named why verification could not be confirmed ("The reviewer
+  returned no usable assessment.", provider `claude`), the row said so and offered the retry, and the
+  same journey fenced an abandoned run (below).
 
 ## 4. Models — routing, fallback, transparency
 
@@ -158,7 +163,13 @@ green suite is *available evidence*, never a passed journey.
   gateway); `desktop/tests/unit/kel-remote-bridge.test.ts`.
 - **Missing journey/assertion:** an acceptance journey that starts the gateway and asserts the
   session gate (unauthenticated request refused; no bearer in the client).
-- **Shell required:** partly (renderer is Astra's). **Status:** pending.
+- **Shell required:** partly (renderer is Astra's). **Status: PASSED (backend half)** (2026-09-23,
+  journey J-REMOTE — `runs/2026-09-23-slice5-r3.json`): the gateway listening on this machine was
+  proven by pid, command line and port ownership, then probed with no session at all — the API
+  answered `401 {"success":false,"error":"Authentication required","code":"UNAUTHORIZED"}`, and
+  the engine's bearer token appeared in neither body. `/` answers 200 on purpose so the sign-in
+  surface can load; the gate is on the API (recorded in `PARALLEL_SHELL_TOUCHES.md`). The renderer
+  half stays Astra's and is not claimed here.
 
 ## 10. iPhone — chat, voice, status, approvals, Project routing, resume/stop
 
@@ -195,8 +206,14 @@ green suite is *available evidence*, never a passed journey.
   `test_v12_trust_summary.py`.
 - **Missing journey/assertion:** no acceptance journey raises a real approval on the real root,
   sees it as an attention row, answers it and asserts the state transition.
-- **Shell required:** no (the phone presentation of the same rows is Shell work). **Status:** pending
-  — see journey J-ATTN.
+- **Shell required:** no (the phone presentation of the same rows is Shell work). **Status: PASSED**
+  (2026-09-23, journey J-ATTN — `runs/2026-09-23-slice5-r3.json`): a real ask raised through the
+  coding adapter's own `approval()` path (approval + `approval_actions` + the in-chat card, then it
+  waited) appeared as one attention row (`needs_you`, `priority: now`, `related.approvals: 1`,
+  `direct: {action: answer, route: /api/approval}`, with a reason and a next step); one action
+  answered it (`APPROVED`), the waiting runtime continued without repeating the ask, the row went
+  back to `needs_you: false` with the run `RUNNING` again, and the same ask could not be answered a
+  second time.
 
 ## 13. Recovery — failures without lost work
 
@@ -207,7 +224,14 @@ green suite is *available evidence*, never a passed journey.
   `test_review_recovery.py`, `test_broker_recovery.py`, `test_failure_surfacing.py`.
 - **Missing journey/assertion:** no acceptance journey fails real work on the real root and shows the
   saved result + reason + a bounded retry.
-- **Shell required:** no. **Status:** pending — see journey J-RECOV.
+- **Shell required:** no. **Status: PASSED** (2026-09-23, journey J-RECOV —
+  `runs/2026-09-23-slice5-r3.json`): a real request that could not run kept its saved text and its
+  reason ("This project needs a test command. Set it in Project context before coding.") with no job
+  fabricated for work that never started; `/api/retry` was accepted on the **same** request (one
+  submission row, nothing duplicated), it re-attempted and settled with the same reason, and a
+  request that is not FAILED/INTERRUPTED was refused with "This request is not ready for retry". The
+  abandoned-run leg is journey J-WORK's fence (fresh epoch, `ORPHANED`, milestone `UNCERTAIN`, never
+  replayed, `expired_unfenced: 0`).
 
 ## 14. Security — authority narrowing, execution boundaries, network restrictions
 
@@ -293,8 +317,10 @@ the port owner agree.
 | J-CONN | 6 Connections | PASSED (labelled stand-in; no real credential used) | `runs/2026-09-22-slice2.json` |
 | J-TRANS | 7 Transcription | PASSED (labelled: no audio device, no credential use) | `runs/2026-09-22-slice2.json` |
 | J-ACTIVITY | V2-06 activity read surface | PASSED | `runs/2026-09-22-slice4.json` |
-| J-WORK, J-ATTN, J-RECOV | 3, 12, 13 | pending — the next unchecked journeys | — |
-| J-REMOTE | 9 Remote | pending | — |
+| J-WORK | 3 Work | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-ATTN | 12 Needs Your Attention | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-RECOV | 13 Recovery | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-REMOTE | 9 Remote | PASSED (backend gate; the renderer half stays Astra's) | `runs/2026-09-23-slice5-r3.json` |
 | phone/renderer journeys | 9, 10 and the rest of 2/12 | **pending — Shell integration required** (Astra); never marked passed here | — |
 
 The negative assertions under §16 are now **shown**: a cancelled mission claims nothing, a mission
