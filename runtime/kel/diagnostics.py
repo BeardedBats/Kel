@@ -72,12 +72,35 @@ def ensure_schema(store):
 
 
 def _pid_alive(pid):
-    """Liveness for a recorded pid. On Windows os.kill(pid, 0) raises OSError for a missing process
-    and PermissionError for one we do not own (which still means it is alive)."""
-    if not pid:
-        return False
+    """Inspect a recorded process without sending a signal on Windows."""
     try:
-        os.kill(int(pid), 0)
+        pid = int(pid)
+    except (ValueError, TypeError, OverflowError):
+        return False
+    if pid <= 0:
+        return False
+    if os.name == 'nt':
+        import ctypes
+        from ctypes import wintypes
+        if pid > 0xffffffff:
+            return False
+        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+        kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        kernel.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel.CloseHandle.restype = wintypes.BOOL
+        handle = kernel.OpenProcess(0x1000, False, pid)
+        if not handle:
+            return ctypes.get_last_error() == 5  # Access denied still indicates a process.
+        try:
+            code = wintypes.DWORD()
+            return bool(kernel.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
         return True
     except PermissionError:
         return True

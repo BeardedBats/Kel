@@ -2,6 +2,8 @@
 import contextlib
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -93,6 +95,20 @@ class RecordingTests(DiagnosticsBase):
         self.assertTrue(_pid_alive(os.getpid()))
         self.assertFalse(_pid_alive(999999))
         self.assertFalse(_pid_alive(None))
+
+    def test_pid_liveness_does_not_stop_child(self):
+        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])
+        try:
+            self.assertTrue(_pid_alive(child.pid))
+            self.assertIsNone(child.poll())
+        finally:
+            child.terminate()
+            child.wait(timeout=10)
+        self.assertFalse(_pid_alive(child.pid))
+
+    def test_pid_liveness_rejects_invalid_ids(self):
+        for pid in (0, -1, 'invalid', 2 ** 40):
+            self.assertFalse(_pid_alive(pid))
 
 
 class ExportTests(DiagnosticsBase):
