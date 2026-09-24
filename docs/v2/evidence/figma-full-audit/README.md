@@ -28,6 +28,8 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 
 The r46 packaged Copy action displayed [a Dark toast](key/r46-ramble-copy-toast.png) above the phone tabs. Its computed panel gradient was `#2C3B5C → #1A2846`, its text was `#EDF2FA`, and its bounds were x101/y691, 181×43. This checks one success toast; error and loading variants remain open.
 
+**r47 desktop Dark polish:** [The scoped record](DESKTOP_POLISH_R47.md) compares packaged 1440px Tools and Transcriptions with FINAL `188:1956` and `189:4032`. Tools MCP rows shrink from 50px to Figma's 40px, while retaining Add MCP; its card shrinks from 198px to 158px. The empty Image Model sentence and link now separate and align within the control area. At 800px, Add MCP fits inside the card and the Image Model field stacks legibly. The embedded Transcriptions route now opens the newest saved item instead of showing a false empty document. [Package measurements](r47-desktop-check.json), [interaction results](r47-tools-interactions.json), and [1440px](key/r47-tools-1440.png), [800px](key/r47-tools-800.png), and [Transcriptions](key/r47-transcriptions-1440.png) captures show the result. No phone layout was audited or changed in this pass.
+
 The populated chat used a Playwright response fixture only for the two message turns, not production data. [Phone](key/r45-chat-fixture-393.png) and [desktop](key/r45-chat-fixture-1440.png) captures prove rendering and width, not remote model behavior. Its phone copy action, missing feedback actions, and turn spacing still differ from `216:2`. The r45 attempt to fixture the transcription library returned no rows; the separate packaged audio upload above supplied the saved-state evidence. Figma's four transcript footer icons and duration text are not yet matched. Other rows below describe the original r29 pass unless their observation names a later candidate.
 
 ## Desktop screen pass
@@ -40,7 +42,7 @@ The populated chat used a Playwright response fixture only for the two message t
 | `186:1097` Appearance | `/settings/appearance` | Main card and three theme tiles follow the frame. The package adds **Add Theme**, absent from the visible FINAL screen. Figma shows a changed `#0a1e42` example; the isolated package shows its own saved/default color. [Source](key/186-1097.png), [package](key/appearance.png). |
 | `188:1327` Model | `/settings/model` | Default model list and custom model card match the main hierarchy. The package adds **Add Model** in the desktop card header, absent from the visible FINAL screen. Row borders and weight still need a desktop matched-state check. |
 | `188:1620` System | `/settings/system` | Main grouping matches. Data paths, version values, and current settings come from the isolated machine; the Figma sample is not a valid value comparison. |
-| `188:1956` Tools | `/settings/tools` | MCP and Image Generation groups appear. r45 keeps live status/actions; its compact phone treatment does not establish desktop exact parity. |
+| `188:1956` Tools | `/settings/tools` | r47 aligns the two desktop MCP rows with Figma's 40px rhythm, retains live status/actions and Add MCP, and repairs empty-model spacing at 1440/800px. Extra functional controls still differ from the sample frame. |
 | `188:2240` WebUI | `/settings/webui` | Step and controls are present. The package adds explanatory copy and different field treatment; exact text and spacing remain open. |
 | `188:2541` Desktop Pet | `/settings/pet` | Controls and group are present. Value and enabled state reflect the isolated profile. |
 | `188:2825` Archived | `/settings/archived` | Empty card is present. The package uses a centered icon and short message; the mobile FINAL frame uses a sentence instead. |
@@ -54,7 +56,7 @@ The populated chat used a Playwright response fixture only for the two message t
 | `189:2628` Scheduled tasks | `/scheduled` | r45 has three real manual samples in disposable data and compact phone list/detail cards. Desktop populated alignment still needs a matched comparison. |
 | `189:3098` Providers | `/providers` | Integration and preflight groups appear. The package adds credential metadata and action controls; compact FINAL rows remain open. |
 | `189:3564` Diagnostics | `/diagnostics` | Health, performance, and maintenance groups appear. Live values replace Figma's sample values. |
-| `189:4032` Transcriptions | `/transcription/library` | r45/r46 saved a synthetic one-second upload in disposable data. Desktop library row and action parity remain open. |
+| `189:4032` Transcriptions | `/transcription/library` | r47 opens the newest saved item in the embedded desktop document. Its one-second synthetic transcript verifies local selection and actions; long real transcript typography remains open. |
 | `189:4492` Set up Kel | `/onboarding` | Figma shows step 2; fresh isolated package starts at step 1. Step 2 needs a matching setup state. |
 | `194:1366` Ramble | `/transcription` | r46 verifies the saved transcript and More controls on phone. Desktop populated layout and real Muse speech remain open. |
 

@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r46) — supersedes r43 below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r47) — supersedes r46 below
+
+`integration/v2` has desktop Dark source `54ce43fa08295799cddb0101816369e22d872bd2`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r47` (archive `B216B4FB082DD3B6`). [The r47 record](evidence/v2-19/CANDIDATE_R47.md) has hashes, typecheck, 296 desktop tests, package and archive gates, and packaged 1440/800px desktop checks. [The scoped polish record](evidence/figma-full-audit/DESKTOP_POLISH_R47.md) shows matched Tools and Transcriptions before/after captures. MCP rows now use Figma's 40px desktop rhythm; Add MCP fits at 800px; the embedded Transcriptions route opens the newest saved item. No phone layout work occurred. Exact product-wide Figma parity is **not** established. r46 remains preserved; no candidate was promoted or renamed. The r47 test tree was stopped after path checks. The final process list showed only the protected stable engine; the earlier r20 PID was absent. Recheck ownership before stopping any process.
+
+**Next action:** continue desktop Dark comparison on populated Scheduled tasks, chat, Providers, and Diagnostics. Repair measured token, text, alignment, and control gaps. Preserve the stable app, any live r20 session, shortcuts, rollback copies, and Astra's branch. Google sign-in, live services, remote model response, fresh Muse audio, and physical iPhone checks remain pending for access or hardware. Keep faint Light-mode labels and phone layout work outside this pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r46) — superseded by r47
 
 `integration/v2` has UI source commit `70248659853d71e2b97a07ccc16b165526b6636f`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r46` (archive `1E6ACC2F412CB977`). [The r46 record](evidence/v2-19/CANDIDATE_R46.md) has hashes, 295 desktop tests, typecheck, package and archive gates, 23 post-setup phone routes, and populated Tools, Scheduled, chat, and Ramble evidence. It fixes the saved Ramble mobile detail found in r45. [The full Figma audit](evidence/figma-full-audit/README.md) retains all 51 screen pairs and exact remaining gaps. Exact UI parity is **not** established. r44/r45 are preserved intermediates. No promotion or rename occurred. The r46 test tree was stopped after path checks. The final process list contained only the stable engine; the earlier r20 PID was absent. Recheck ownership before stopping any process.
 
