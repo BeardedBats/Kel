@@ -1,6 +1,6 @@
 # Consolidation status — 2026-09-24
 
-Core source, installation, and data migration are verified. Final cleanup is blocked; do not report full completion.
+Status: COMPLETE. Core migration and the final canonical layout are verified.
 
 ## Authoritative layout
 
@@ -53,19 +53,32 @@ Removed obsolete registered worktrees while retaining all their committed histor
 Kept one repository dependency installation. Restored its junctions to the canonical path.
 Removed temporary recovery archives and reproducible donor-history bundles after verifying the smaller retained archives.
 
-## Remaining blockers
+## Final verification — 2026-09-24
 
-1. `C:\Users\Nick\Desktop\Kel\kel-v2-integration` is empty but locked by Claude and its PowerShell terminal.
-   Observed owners were PowerShell PID 43276 and Claude PID 63316. Recheck ownership before any future action.
-   Automatic approval review rejected stopping the terminal. Nick was asked to close the terminal/workspace.
-2. `C:\Users\Nick\Desktop\Kel\Kel-Repo` contains only an empty `.git` directory, `.pytest_cache`, and old `dist` output.
-   The source and complete Git metadata are already in `Kel\Kel`. The old runtime output totals 21,783,679 bytes.
-   Automatic approval review rejected deletion of this residue.
-3. `Kel\desktop\out` contains an old generated desktop bundle, totaling 28,019,754 bytes.
-   Automatic approval review rejected its deletion. Other ignored build caches remain visible through Git's ignored-file inventory.
+Nick manually removed `Kel-Repo` and `kel-v2-integration`. Both paths are absent.
+The project root contains exactly four directories: `Kel`, `App`, `Data`, and `Tools`.
+`Kel` is the only registered Git worktree, on `main`.
+Before this status update, local HEAD matched GitHub `main` at `d3d6b8098cd1aba909daf8b3bdddffbeac6ab744`.
+The only pending tracked change was this status document. This final update is committed and pushed separately.
 
-The review rejection supplied only "blocked by policy". Do not work around it or call cleanup complete.
-The separate `request_review` tool required by AGENTS.md was unavailable; no independent review occurred.
+Desktop and Start Menu shortcuts target `App\Kel.exe`, with `App` as their working directory.
+Windows uninstall registration also points into `App`.
+The executable, app archive, and engine hashes match the previously verified installed artifacts.
+
+Read-only checks returned `ok` for both canonical databases, with no foreign-key issues.
+Current counts remain 70 conversations, 12 messages, two jobs, eight projects, six Kibble fixes, and two transcripts.
+The six screenshots, two prompts, and two audio files remain present. Backups and recovery archives remain present.
+Prior byte-level preservation evidence is retained above; no migration or app launch was repeated.
+
+The obsolete roots in both cleanup manifests are absent, except the empty `Roaming\kel-desktop` bootstrap directory.
+No Kel candidate folders remain under the user home. No stale Kel test roots were found in the checked temporary locations.
+No historical registered worktrees or old release roots remain.
+
+Per Nick's final instruction, no further deletion occurred.
+Ignored source build output, bundled packaging resources, dependencies, and caches remain inside the canonical repository.
+They are not separate installations, worktrees, or data roots. Their removal is outside this final verification scope.
+Preserved user data and Git history were not changed.
+The separate `request_review` tool remains unavailable; no independent review is claimed.
 
 Detailed local evidence is in `Tools\consolidation`, especially `final-verification.json`,
 `after-cleanup-smoke.json`, `installed-data-preservation.json`, and the cleanup manifests.
