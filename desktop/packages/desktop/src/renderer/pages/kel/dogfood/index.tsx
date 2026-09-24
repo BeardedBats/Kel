@@ -322,7 +322,7 @@ const DogfoodFixes: React.FC = () => {
               )}
               {buildState && (
                 <div className={styles.buildState}>
-                  <p className='kel-strong'>{`Mission ${buildState.mission.id.slice(0, 8)} · ${buildState.mission.state ?? 'OPEN'}`}</p>
+                  <p className='kel-strong'>{`Mission ${buildState.mission.id.slice(0, 8)} · ${buildState.job?.state === 'CANCELLED' ? 'cancelled' : (buildState.mission.stage ?? 'OPEN').toLowerCase()}`}</p>
                   {buildState.job && (
                     <p className='kel-meta'>{`Job ${buildState.job.id.slice(0, 8)} · ${buildState.job.state ?? 'queued'}${buildState.job.verdict ? ` · ${buildState.job.verdict}` : ''}`}</p>
                   )}
@@ -391,7 +391,9 @@ const DogfoodFixes: React.FC = () => {
                       )}
                     </>
                   ) : (
-                    <p className='kel-meta'>No candidate yet — one appears when the mission settles.</p>
+                    <p className='kel-meta'>{buildState.job?.state === 'CANCELLED'
+                      ? 'This update was cancelled. No candidate was created.'
+                      : 'No candidate yet — one appears when the mission settles.'}</p>
                   )}
                 </div>
               )}

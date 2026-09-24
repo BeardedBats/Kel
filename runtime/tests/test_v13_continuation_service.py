@@ -30,7 +30,7 @@ class ContinuationServiceTests(unittest.TestCase):
         self.service.shutdown()
         self.tmp.cleanup()
 
-    def wait_submission(self, sid, terminal=('DISPATCHED', 'FAILED', 'INTERRUPTED')):
+    def wait_submission(self, sid, terminal=('DISPATCHED', 'SETTLED', 'FAILED', 'INTERRUPTED')):
         deadline = time.time() + 15
         while time.time() < deadline:
             with contextlib.closing(self.service.store.connect()) as db:
@@ -61,7 +61,7 @@ class ContinuationServiceTests(unittest.TestCase):
         cid = self.service.context.conversation('default', title='Continuation chat')
         job = self.seed_job(cid, state='PAUSED')
         sid = self.service.submit({'text': 'continue', 'conversation': cid})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertIn(self.service.store.get(job)['state'], ('READY', 'WAITING_RESOURCE'))
         text = '\n'.join(self.assistant_messages(cid))
         self.assertIn('Continuing', text)
@@ -75,7 +75,7 @@ class ContinuationServiceTests(unittest.TestCase):
         first = self.seed_job(other, state='PAUSED')
         second = self.seed_job(other, state='PAUSED')
         sid = self.service.submit({'text': 'continue', 'conversation': cid})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         text = '\n'.join(self.assistant_messages(cid))
         self.assertIn('Which one should I continue', text)
         self.assertIn(first, text)
@@ -90,7 +90,7 @@ class ContinuationServiceTests(unittest.TestCase):
                             milestones={'m1': {'state': 'NEEDS_REPAIR'}})
         sid = self.service.submit({'text': 'continue this please', 'conversation': cid,
                                    'job_id': job})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertIn(self.service.store.get(job)['state'], ('READY', 'WAITING_RESOURCE'))
         with contextlib.closing(self.service.store.connect()) as db:
             row = db.execute('SELECT kind FROM job_links WHERE job_id=? AND conversation_id=?',
@@ -103,14 +103,14 @@ class ContinuationServiceTests(unittest.TestCase):
         job = self.seed_job(cid2, state='PAUSED')
         cid = self.service.context.conversation('default', title='P1 chat')
         sid = self.service.submit({'text': 'continue this', 'conversation': cid, 'job_id': job})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertEqual(self.service.store.get(job)['state'], 'PAUSED')
         text = '\n'.join(self.assistant_messages(cid))
         self.assertIn('another project', text)
     def test_continue_none_message(self):
         cid = self.service.context.conversation('default', title='Empty chat')
         sid = self.service.submit({'text': 'continue', 'conversation': cid})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         text = '\n'.join(self.assistant_messages(cid)).lower()
         self.assertIn('no unfinished work', text)
 
@@ -129,7 +129,7 @@ class ContinuationServiceTests(unittest.TestCase):
         job = self.seed_job(cid, state='CLOSED', verdict='VERIFIED',
                             milestones={'m1': {'state': 'ACCEPTED'}})
         sid = self.service.submit({'text': 'continue again', 'conversation': cid, 'job_id': job})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         text = '\n'.join(self.assistant_messages(cid))
         self.assertIn('already verified', text)
         self.assertEqual(self.service.store.get(job)['state'], 'CLOSED')
@@ -145,7 +145,7 @@ class ContinuationServiceTests(unittest.TestCase):
                        "'{\"kind\":\"command\",\"command\":\"echo hi\"}')")
         sid = self.service.submit({'text': 'continue this work', 'conversation': cid,
                                    'job_id': job})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertEqual(self.service.store.get(job)['state'], 'AWAITING_USER')
         state = self.service.state(cid)
         self.assertEqual(len(state['approvals']), 1)

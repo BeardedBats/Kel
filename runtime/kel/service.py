@@ -313,7 +313,11 @@ class Service:
                     # create() records the source request; remove only its duplicate intake message.
                     dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
                     if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
-            with self.store.transaction() as db:db.execute("UPDATE submissions SET state='DISPATCHED',job_id=? WHERE id=?",(jid,sid))
+            # A direct answer or a refused recipe has no job to dispatch. Mark the request
+            # settled so every client can stop waiting without inventing running work.
+            with self.store.transaction() as db:db.execute(
+                'UPDATE submissions SET state=?,job_id=? WHERE id=?',
+                ('DISPATCHED' if jid else 'SETTLED', jid, sid))
         except Exception as exc:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
 
@@ -717,6 +721,11 @@ class Service:
             conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
             messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
             submissions=[dict(r) for r in db.execute('SELECT * FROM submissions WHERE conversation_id=? ORDER BY created',(cid,))]
+            # Older releases recorded completed direct answers as DISPATCHED without a job.
+            # Normalize the read without rewriting preserved conversation history.
+            for submission in submissions:
+                if submission['state'] == 'DISPATCHED' and not submission['job_id']:
+                    submission['state'] = 'SETTLED'
             approvals=[dict(r) for r in db.execute("SELECT a.*,x.action FROM approvals a JOIN approval_actions x ON x.approval_id=a.id WHERE a.status='PENDING'")]
             from .chat_approvals import plain_summary
             for a in approvals:

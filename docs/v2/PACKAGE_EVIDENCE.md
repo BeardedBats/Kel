@@ -1,5 +1,9 @@
 # KEL V2.0 — PACKAGE EVIDENCE
 
+## Current canonical installation (2026-09-24)
+
+`C:\Users\Nick\Desktop\Kel\App` is the only installed Kel app. It uses `C:\Users\Nick\Desktop\Kel\Data`. The installed product was built from `842c01d`; `docs/CONSOLIDATION_STATUS.md` records its verified hashes, paths, and data preservation. The rXX candidate and protected dogfood locations below are historical records, not active paths. This source continuation has not rebuilt or replaced the installed app.
+
 ## Current staged candidate (2026-09-23)
 
 `C:\Users\Nick\KelV2Candidate.r29` is staged only, from pushed source `41b2bf6`. The verified `app.asar` SHA-256 is `6ae8b552e6cf167647957cf566bf7318e1449ddeb8bf51f40e50453f0152032b`; `Kel.exe` is `b42a19307508e52ea08f4a6a09aa5089441adc42e2a70949dfd58f5b9b10b594`. The frozen engine is unchanged. Its launcher now supplies separate host, store, and engine roots; launcher SHA-256 `09af1bb5ac96d11af8c8558a1d177532ec04162fc198853b16c1e5f170376476`. A packaged launcher smoke confirmed all three process paths. `CANDIDATE_R29.md` records the archive gate and isolated packaged checks. r20 runs from `C:\Users\Nick\KelV2Candidate`; the stable app remains protected. No candidate was renamed, promoted, or installed over either app.

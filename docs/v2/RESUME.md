@@ -1,5 +1,15 @@
 # RESUME — exact continuation
 
+## CURRENT CANONICAL CHECKPOINT (2026-09-24, `main`) — supersedes candidate checkpoints below
+
+Consolidation is complete at `docs/CONSOLIDATION_STATUS.md`. The only source is `C:\Users\Nick\Desktop\Kel\Kel` on `main`; `App`, `Data`, and `Tools` are its siblings. The installed app was built from `842c01d`. The r61 System and r62 Appearance evidence is in `evidence/figma-full-audit/`; old rXX candidate locations and separate V2 data roots have been removed. Do not recreate them for ordinary development.
+
+V2-00 through V2-04, V2-06 through V2-14, and V2-17 are built. V2-05, V2-16, V2-18, and V2-19 remain partial. V2-15 and V2-20 remain planned. The first local source increment after consolidation fixes two measured V2-18 state defects: cancelled Build Update missions now report `CANCELLED` with no candidate, and requests answered without a job now settle as `SETTLED`. Focused engine tests and desktop typecheck passed. The installed app has not yet been updated for this increment.
+
+**Next item:** continue V2-19 with disconnected MCP, active retest, error/help, and enabled Image Model states. Compare their rendered desktop Dark controls with Components at 1440 and 800 on disposable data; repair only confirmed gaps. The connected Tools sample was reviewed against FINAL and retained its r47 repair ([record](evidence/figma-full-audit/DESKTOP_TOOLS_STATUS_CANONICAL.md)). Exact product-wide parity is still open. Live personal services, remote first response, Google sign-in, fresh Muse speech, enabled WebUI/Pet, and a physical iPhone still need separate acceptance.
+
+---
+
 ## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r59) — supersedes r57 below
 
 `integration/v2` has pushed desktop Dark source `96d2b5d55185d5ec0bc112132c82ba7edac4932e`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r59` (archive `40CD6EB857BACC1D`). [The r59 record](evidence/v2-19/CANDIDATE_R59.md) has hashes, typecheck, package and archive gates, packaged Model checks, process ownership, and limits. [The desktop comparison](evidence/figma-full-audit/DESKTOP_MODEL_R59.md) matches FINAL `188:1327` at 1440px, checks 800px, and repairs Add Model fields and error messages against Components. r58 remains a preserved intermediate. The r59 test tree was stopped after ownership checks; only the protected stable engine remained. Recheck ownership before stopping any process.

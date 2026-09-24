@@ -129,6 +129,17 @@ class CandidateTests(Base):
         self.assertEqual(result['state'], 'BUILDING')
         self.assertIsNone(result['candidate'])
 
+    def test_cancelled_mission_does_not_claim_a_build_or_create_a_candidate(self):
+        mission_id, job_id = self.start()
+        self.store.control(job_id, 'cancel')
+        result = self.builder.candidate(mission_id)
+        self.assertEqual(result, {'state': 'CANCELLED', 'candidate': None,
+                                  'job_state': 'CANCELLED'})
+        self.assertEqual(self.builder.status(mission_id)['job']['state'], 'CANCELLED')
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertIsNone(db.execute('SELECT * FROM build_candidates').fetchone())
+        self.assertFalse((self.store.root / 'candidates').exists())
+
     def test_candidate_assembles_after_settle_isolated_from_the_source(self):
         mission_id, job_id = self.start()
         self.settle(job_id)

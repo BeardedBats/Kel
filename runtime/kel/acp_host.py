@@ -420,7 +420,7 @@ class ACPHost:
                             self.text(session, 'Work state: ' + status + '. Verification: ' + verdict + '.\n')
                         self._resurface(session, cid)
                         return {'stopReason': 'cancelled' if status == 'CANCELLED' else 'end_turn'}
-                elif submission['state'] == 'DISPATCHED':
+                elif submission['state'] in ('DISPATCHED', 'SETTLED'):
                     self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
                 self.closed.wait(self.poll_interval)
