@@ -1,5 +1,7 @@
 # Kel V2 shell implementation — audit 2
 
+**2026-09-23 update:** this is the prior shell record. The [current 51-screen audit](evidence/figma-full-audit/README.md) covers desktop FINAL `185:2` and mobile FINAL `213:2`. Its mobile page and component findings supersede this record's “no mobile frame” statement.
+
 September 22 amendment: [plain status text](STATUS_TEXT_POLISH.md) replaces chip containers, following the user's latest reference.
 
 Base dev/v2: `772b2c357943cf9793639bbf660171c49d809c38`.

@@ -1,0 +1,308 @@
+[
+  {
+    "mode": "desktop",
+    "source": "185:1050",
+    "name": "Kel / Chat — PLPD bg 2",
+    "built": "chat"
+  },
+  {
+    "mode": "desktop",
+    "source": "185:2658",
+    "name": "Kel / Home",
+    "built": "home"
+  },
+  {
+    "mode": "desktop",
+    "source": "185:4284",
+    "name": "Kel / Chat — Sidebar B",
+    "built": "chat"
+  },
+  {
+    "mode": "desktop",
+    "source": "186:1097",
+    "name": "Kel / Settings (in-chat) — Appearance",
+    "built": "appearance"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:1327",
+    "name": "Kel / Settings (in-chat) — Model",
+    "built": "model"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:1620",
+    "name": "Kel / Settings (in-chat) — System",
+    "built": "system"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:1956",
+    "name": "Kel / Settings (in-chat) — Tools",
+    "built": "tools"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:2240",
+    "name": "Kel / Settings (in-chat) — WebUI",
+    "built": "webui"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:2541",
+    "name": "Kel / Settings (in-chat) — Desktop Pet",
+    "built": "pet"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:2825",
+    "name": "Kel / Settings (in-chat) — Archived",
+    "built": "archived"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:3080",
+    "name": "Kel / Settings (in-chat) — Assistants",
+    "built": "assistants"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:3335",
+    "name": "Kel / Settings (in-chat) — Skills Hub",
+    "built": "skills"
+  },
+  {
+    "mode": "desktop",
+    "source": "188:3602",
+    "name": "Kel / Settings (in-chat) — About",
+    "built": "about"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:907",
+    "name": "Kel / Work (in-chat)",
+    "built": "work"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:1342",
+    "name": "Kel / Activity (in-chat)",
+    "built": "activity"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:1758",
+    "name": "Kel / Permissions (in-chat)",
+    "built": "permissions"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:2193",
+    "name": "Kel / Projects (in-chat)",
+    "built": "projects"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:2628",
+    "name": "Kel / Scheduled tasks (in-chat)",
+    "built": "scheduled"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:3098",
+    "name": "Kel / Providers (in-chat)",
+    "built": "providers"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:3564",
+    "name": "Kel / Diagnostics (in-chat)",
+    "built": "diagnostics"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:4032",
+    "name": "Kel / Transcriptions (in-chat)",
+    "built": "transcriptions"
+  },
+  {
+    "mode": "desktop",
+    "source": "189:4492",
+    "name": "Kel / Set up Kel (in-chat)",
+    "built": "setup"
+  },
+  {
+    "mode": "desktop",
+    "source": "194:1366",
+    "name": "Kel / Ramble",
+    "built": "ramble"
+  },
+  {
+    "mode": "mobile",
+    "source": "216:2",
+    "name": "M / Chat",
+    "built": "chat"
+  },
+  {
+    "mode": "mobile",
+    "source": "216:139",
+    "name": "M / Home",
+    "built": "home"
+  },
+  {
+    "mode": "mobile",
+    "source": "216:230",
+    "name": "M / Chats",
+    "built": "chat-drawer"
+  },
+  {
+    "mode": "mobile",
+    "source": "218:242",
+    "name": "M / Settings",
+    "built": "appearance"
+  },
+  {
+    "mode": "mobile",
+    "source": "218:436",
+    "name": "M / Settings — Appearance",
+    "built": "appearance"
+  },
+  {
+    "mode": "mobile",
+    "source": "218:598",
+    "name": "M / Settings — Model",
+    "built": "model"
+  },
+  {
+    "mode": "mobile",
+    "source": "218:701",
+    "name": "M / Settings — Model — Add Model sheet",
+    "built": "model-sheet"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:572",
+    "name": "M / Settings — System",
+    "built": "system"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:767",
+    "name": "M / Settings — Tools",
+    "built": "tools"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:858",
+    "name": "M / Settings — WebUI",
+    "built": "webui"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:966",
+    "name": "M / Settings — Desktop Pet",
+    "built": "pet"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:1052",
+    "name": "M / Settings — Archived",
+    "built": "archived"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:1109",
+    "name": "M / Settings — Assistants",
+    "built": "assistants"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:1166",
+    "name": "M / Settings — Skills Hub",
+    "built": "skills"
+  },
+  {
+    "mode": "mobile",
+    "source": "219:1233",
+    "name": "M / Settings — About",
+    "built": "about"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1016",
+    "name": "M / Projects",
+    "built": "projects"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1171",
+    "name": "M / Work",
+    "built": "work"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1249",
+    "name": "M / Activity",
+    "built": "activity"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1328",
+    "name": "M / Permissions",
+    "built": "permissions"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1405",
+    "name": "M / Knowledge",
+    "built": "projects"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1482",
+    "name": "M / Scheduled tasks",
+    "built": "scheduled"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1594",
+    "name": "M / Providers",
+    "built": "providers"
+  },
+  {
+    "mode": "mobile",
+    "source": "220:1699",
+    "name": "M / Diagnostics",
+    "built": "diagnostics"
+  },
+  {
+    "mode": "mobile",
+    "source": "222:1475",
+    "name": "M / Ramble",
+    "built": "ramble"
+  },
+  {
+    "mode": "mobile",
+    "source": "222:1628",
+    "name": "M / Ramble — Transcript",
+    "built": "ramble"
+  },
+  {
+    "mode": "mobile",
+    "source": "222:1714",
+    "name": "M / Set up Kel",
+    "built": "setup"
+  },
+  {
+    "mode": "mobile",
+    "source": "222:1800",
+    "name": "M / Kibble",
+    "built": "kibble"
+  },
+  {
+    "mode": "mobile",
+    "source": "230:1674",
+    "name": "M / Chat — Drawer open",
+    "built": "chat-drawer"
+  }
+]

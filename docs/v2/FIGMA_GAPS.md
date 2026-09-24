@@ -1,5 +1,7 @@
 # Active Figma gaps after audit 2
 
+**2026-09-23 update:** this file is a historical audit of the older `76:2` page. The current FINAL desktop page is `185:2`, and Figma now has 28 mobile screens on `213:2`. The [51-screen audit](evidence/figma-full-audit/README.md) supersedes the “No mobile final frame” row and tracks current gaps.
+
 Source: Kel Design System `BlpVvZGuc9j9HhxUojIiJI`, final screens on page `76:2`.
 Audit 2 supersedes the earlier sidebar, extra-card, and placeholder-copy decisions.
 

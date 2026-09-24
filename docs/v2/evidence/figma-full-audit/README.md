@@ -1,0 +1,118 @@
+# Kel V2 UI audit — Figma FINAL and mobile screens
+
+**Authority:** [Kel Design System](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System), `Screens - FINAL` (`185:2`), `MOBILE SCREENS` (`213:2`), `DS v2 — Foundations` (`139:2`), `DS v2 — Components` (`136:2`), and `MOBILE COMPONENTS` (`213:3`). **Baseline:** staged r29, source `41b2bf6`, Dark mode, isolated package data. **Method:** 23 desktop frames and 28 mobile frames were inspected in Figma and paired with packaged 1440×900 or 393×852 captures. [Pair map](pair-map.json) and [UI capture manifest](ui-manifest.json) record all 51 comparisons. The [desktop](desktop/01.jpg) and [mobile](mobile/01.jpg) contact sheets continue in numbered order.
+
+**Result:** exact parity is **not established**. Desktop shares the intended frame and tokens, but several controls and states differ. The r29 phone layout used the desktop frame, lacked the five tabs, and showed a centered Add Model modal. r33 fixes the shared mobile frame, theme rows, sheet, image chip, and lightbox. The screen rows below retain the r29 baseline for comparison; the r33 sections identify fixed gaps. Every row is a visual audit, not proof of a user journey.
+
+**r30 packaged check:** the new [Settings index](key/r30-settings.png) and [Projects index](key/r30-projects.png) route correctly at 393px. Both show five tabs and no horizontal document overflow. [Appearance](key/r30-appearance.png) now shows three theme tiles in one row, yet its color rows still use a desktop form. The [Add Model sheet](key/r30-model-sheet.png) moved to the bottom, but an older 520px modal rule still forced the right button beyond the 393px viewport. The next source edit overrides that rule and uses the Figma field and footer widths; packaged proof remains pending.
+
+After using the existing **Start using Kel** action on the isolated r30 profile, 23 mobile routes were captured again. Every route stayed at 393px document width. The [post-setup manifest](r30-mobile-ui-manifest.json) records each route, visible button, and position. This verifies the shared width rule; it does not close screen-specific layout or copy gaps.
+
+**r31 packaged check:** [Add Model](key/r31-model-sheet.png) reached the Figma sheet's 393px width and 476px height. All four fields and both buttons fit. Cancel and Escape exposed a CSS fault: Arco set the wrapper to `display: none`, but the mobile sheet rule forced `display: flex`. The final source edit removes that override. r31 is a failed intermediate candidate; closure needs the next packaged click check.
+
+**r32 packaged check:** removing the CSS override made Cancel close the sheet. Escape still left it visible and blocked the mobile tabs. [r32 sheet](key/r32-model-sheet.png) is visual evidence only. r32 is a failed intermediate candidate.
+
+**r33 packaged check:** [navigation results](r33-navigation.json) pass all nine checks at 393px. Add Model is 393×476, both actions fit, Cancel and Escape close, Settings and Projects indexes route, Back returns, and the document has no horizontal overflow. [Appearance at 393px](key/r33-appearance-393.png) keeps three theme tiles and each color label, swatch, and hex field on one row. [Layout measurements](r33-appearance-layout.json) cover 393, 800, and 1440px. At 800px the third theme tile wraps; the FINAL file defines 393 and 1440px layouts, so this is an interpolation limit. The [23-route packaged phone sweep](r33-mobile-ui-manifest.json) found 393px document width on every route after the existing **Start using Kel** action.
+
+Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The [r33 lightbox](key/r33-lightbox.png) reached those bounds with a real image attached through the isolated composer. [Click results](r33-lightbox-check.json) show PNG clipboard content, a Download event named `audit-sample.png`, and scrim closure. Escape closure was also observed. The source image chip is 146×36 and keeps Remove separate from Preview. Generated image turns now use the same lightbox, but an actual generated turn was not available in this profile.
+
+## Desktop screen pass
+
+| Figma frame | Route | Observation |
+| --- | --- | --- |
+| `185:1050` Chat PLPD | `/conversation/:id` | Figma shows a populated reply and attachment state. The isolated package had an empty conversation, so message text and actions lack a matched state. |
+| `185:2658` Home | `/guid` | Shared left rail and content width track the frame. Figma has three sample attention rows; the isolated package has one real setup row. |
+| `185:4284` Chat Sidebar B | `/conversation/:id` | Populated history, message, and sidebar text remain unproved with the empty data root. The package may show a Files panel for a project conversation. |
+| `186:1097` Appearance | `/settings/appearance` | Main card and three theme tiles follow the frame. The package adds **Add Theme**, absent from the visible FINAL screen. Figma shows a changed `#0a1e42` example; the isolated package shows its own saved/default color. [Source](key/186-1097.png), [package](key/appearance.png). |
+| `188:1327` Model | `/settings/model` | Default model list and custom model card match the main hierarchy. The package adds **Add Model** in the desktop card header, absent from the visible FINAL screen. Row borders and weight differ. |
+| `188:1620` System | `/settings/system` | Main grouping matches. Data paths, version values, and current settings come from the isolated machine; the Figma sample is not a valid value comparison. |
+| `188:1956` Tools | `/settings/tools` | MCP and Image Generation groups appear. The package exposes live status and action controls that the FINAL sample does not show. |
+| `188:2240` WebUI | `/settings/webui` | Step and controls are present. The package adds explanatory copy and different field treatment; exact text and spacing remain open. |
+| `188:2541` Desktop Pet | `/settings/pet` | Controls and group are present. Value and enabled state reflect the isolated profile. |
+| `188:2825` Archived | `/settings/archived` | Empty card is present. The package uses a centered icon and short message; the mobile FINAL frame uses a sentence instead. |
+| `188:3080` Assistants | `/settings/assistants` | Figma shows an empty state. The package shows the real Kel assistant, so the empty text state is unverified. |
+| `188:3335` Skills Hub | `/settings/skills` | Figma shows empty copy. The package uses a centered icon and shorter copy. |
+| `188:3602` About | `/settings/about` | Version card is present. The visible FINAL frame has a Licenses card and Third-party notices row; the package screenshot lacks that card. |
+| `189:907` Work | `/work` | Jobs, continuation, and team cards follow the frame. Empty wording differs in the isolated state. |
+| `189:1342` Activity | `/activity` | Three card groups follow the frame. Figma has a sample running job; the package has real empty states. |
+| `189:1758` Permissions | `/autonomy` | Three card groups follow the frame. Guardrail digest and current counts are runtime values. |
+| `189:2193` Projects | `/projects/knowledge` | Knowledge, map, and Recipes groups appear. The package includes functional map actions missing from the sample. |
+| `189:2628` Scheduled tasks | `/scheduled` | Figma has three sample tasks; the package has none. List row geometry needs a populated package fixture. |
+| `189:3098` Providers | `/providers` | Integration and preflight groups appear. The package adds credential metadata and action controls; compact FINAL rows remain open. |
+| `189:3564` Diagnostics | `/diagnostics` | Health, performance, and maintenance groups appear. Live values replace Figma's sample values. |
+| `189:4032` Transcriptions | `/transcription/library` | Figma shows saved recordings; isolated package has none. Populated row and action states remain open. |
+| `189:4492` Set up Kel | `/onboarding` | Figma shows step 2; fresh isolated package starts at step 1. Step 2 needs a matching setup state. |
+| `194:1366` Ramble | `/transcription` | Figma shows a transcript; isolated package is empty. Saved transcript controls remain open. |
+
+## Mobile screen pass
+
+Figma's mobile frame is 393×852. It uses a phone header, five persistent tabs, compact list cards, and bottom sheets. The r29 package showed an Electron title bar in the narrow window; a physical iPhone remains pending. The r29 baseline had no five-tab bar on any screen. Numbered [mobile contact sheets](mobile/01.jpg) through [07](mobile/07.jpg) show every pair.
+
+| Figma frame | Screen | r29 finding |
+| --- | --- | --- |
+| `216:2` | Chat | Missing tabs and mobile header; empty package lacks the populated turn. |
+| `216:139` | Home | Missing tabs and mobile header; attention sample state differs. |
+| `216:230` | Chats | Drawer presented the desktop sidebar links and omitted the persistent tabs. |
+| `218:242` | Settings index | No index route; it redirected to Appearance with horizontal desktop tabs. |
+| `218:436` | Appearance | Theme tiles stacked; card and field rows were desktop sized. [Source](key/218-436.png), [r29](key/appearance.png). |
+| `218:598` | Model | Desktop list rows and custom model empty state; no mobile card hierarchy. |
+| `218:701` | Add Model sheet | Centered desktop modal, no grab handle, narrow fields. [Source](key/218-701.png), [r29](key/model-sheet.png). |
+| `219:572` | System | Desktop form with expanded backup text; compact mobile rows missing. |
+| `219:767` | Tools | Desktop MCP controls; compact status rows missing. |
+| `219:858` | WebUI | Extra introduction and expanded controls; mobile list rows missing. |
+| `219:966` | Desktop Pet | Desktop field layout and radio options; compact rows missing. |
+| `219:1052` | Archived | Centered icon empty state instead of the FINAL sentence. |
+| `219:1109` | Assistants | Package has the Kel assistant; empty sample text is unverified. |
+| `219:1166` | Skills Hub | Centered icon and nested tip instead of two compact text cards. |
+| `219:1233` | About | Package lacks the Licenses card and Third-party notices row. |
+| `220:1016` | Projects index | No index route; it redirected to Knowledge with horizontal desktop tabs. |
+| `220:1171` | Work | Desktop frame and wording; card order matches. |
+| `220:1249` | Activity | Desktop frame; runtime empty state differs from sample running work. |
+| `220:1328` | Permissions | Desktop frame; card order matches, but mobile row spacing differs. |
+| `220:1405` | Knowledge | Desktop frame with map action; mobile three-card treatment missing. |
+| `220:1482` | Scheduled tasks | Empty real state cannot verify Figma's populated task and detail cards. |
+| `220:1594` | Providers | Expanded credential metadata and desktop preflight controls. |
+| `220:1699` | Diagnostics | Expanded runtime detail and desktop maintenance controls. |
+| `222:1475` | Ramble | Desktop recording sidebar and content stack; mobile recording list missing. |
+| `222:1628` | Ramble transcript | No saved transcript in the isolated profile; actions unverified. |
+| `222:1714` | Set up Kel | Fresh profile at step 1, while FINAL shows step 2 and a bottom Continue action. |
+| `222:1800` | Kibble | FINAL has a placeholder. The package contains the working Fix Capture and Build Update surface; preserve that behavior while deriving its controls from Components. |
+| `230:1674` | Chat drawer | r29 drawer is too narrow and includes desktop section links. [Source](key/230-1674.png), [r29](key/chat-drawer.png). |
+
+## Component and nonrepresented screen pass
+
+| Figma authority | Package finding | Required work |
+| --- | --- | --- |
+| `136:28` Button v2 | Shared `.kel-btn` has the 34px height, 8px radius, and state colors. Arco buttons and page actions still use several variants. | Audit Secondary, Danger, and Link states in rendered examples; align actions without removing working controls. |
+| `148:229` Input v2 | `.kel-input` maps default fill, edge, radius, and height. Error, disabled, and pointer-focus states have no complete shared mapping. | Verify rendered controls, then add shared state rules. |
+| `147:162` Lightbox v2 | r33 image attachments and generated-image turns use the shared filename, metadata, Copy, Download, and Close header. A real local PNG passed the packaged copy, download, Escape, and scrim checks. | Verify a generated-image turn and large files with real content. |
+| `214:144` Mobile Sheet | r33 Add Model is a bottom sheet with handle and two fitting actions; Cancel and Escape close it. | Compare representative dropdowns and context menus. |
+| Foundations `139:2` | Dark canvas, text, card, control, and status variables are mapped in `kel-shell.css`. The Figma Appearance frame depicts a changed color state. | Compare computed tokens in matched states; do not replace defaults with a demonstration value. |
+| No FINAL screen | Connections, Project map, Recipes, Kibble actions, command palette, error and recovery panels, and file previews have no full-screen FINAL frames. | Derive their card, field, button, sheet, and lightbox states from Components. Record each route and control state in a later rendered pass. |
+
+Foundation source values were checked against `figma-variables.css`: canvas `#0B1734`, blue wash `#1E4BB0` at 10%, primary text `#EDF2FA`, secondary `#C4D4E8`, muted `#8FA9D6`, accent text `#9FC3FF`, card title `#FFC481`, working `#FCAC51`, unread `#7FA0FF`, and success `#7EE0A8` match the stored variables. Custom theme settings can override rendered values; the token match alone does not prove every screen's computed color.
+
+The full Components board inventory was read, including its behavior notes. This table records the coverage limit for every component family. “Mapped” means a source style exists; it does not mean every state passed a packaged click check.
+
+| Component nodes | Coverage at this checkpoint |
+| --- | --- |
+| `136:28` Button; `136:42` Sidebar hero; `152:163` New Chat | Shared button and New Chat styles are mapped. Hover, pressed, disabled, and Danger variants need rendered checks. |
+| `137:6` Card; `137:47` Row | Card title, edge, radius, and fill are mapped. Mobile row heights and labels differ from the mobile FINAL screens. |
+| `137:68` Chat turn; `147:108` Message action; `147:179` Text selection | Empty isolated chat cannot verify populated turns, action states, and selection pill. |
+| `138:20` Composer; `148:187` composer states; `148:188` attachment row | Empty composer is mapped. Sending, disabled, drop target, and attachment-row states remain unverified. |
+| `138:44` Record; `138:47` Progress; `138:58` Attention; `138:93` Status dot | Styles exist in the source. The isolated package lacks a real recording or populated task state for complete parity. |
+| `143:74` Toggle; `143:87` Nav row; `143:88` Drop indicator | Default controls are visible. Hover, disabled, dragging, and insertion states remain unverified. |
+| `146:51` Menu item; `146:52` Dropdown; `146:81` Context menu; `146:125` Toast | Existing Arco menus and messages remain. Their Figma open states, bottom-centre toast, and mobile sheet behavior need a rendered pass. |
+| `147:161` Attachment chip; `147:162` Lightbox | r33 image chip and lightbox passed packaged click checks with a local PNG. Non-image file chips, generated turns, and large-image behavior remain open. |
+| `148:229` Input; `148:230` Skeleton; `148:234` Badge; `156:159` Tooltip | Default input token mapping exists. Error/disabled states, skeleton timing, badge count, and tooltip path remain unverified. |
+| Mobile `213:5` status bar, `213:41` top bar, `213:172` tab bar | The new tab bar and frame are source edits. Device status bar belongs to iOS; Electron narrow-window captures retain native controls. |
+| Mobile `214:43` composer, `214:78` chat turn, `214:137` list row, `214:138` section header, `214:140` card, `214:144` sheet | New index rows and standard modal sheet use these patterns. Chat, compact page rows, and non-modal sheets remain incomplete. |
+
+## Evidence limits
+
+- The 51 Figma-to-package pairs used Dark mode. Figma's new mobile page was discovered during this audit; older `FIGMA_GAPS.md` claims about no FINAL mobile frames are stale.
+- The inspected FINAL frames and Foundations board show a Dark palette. They do not provide a matching Light screen set, so pixel parity for Light cannot be claimed from this file.
+- Packaged r29 used disposable host, store, and engine roots. Sample content in Figma was not injected into production data. A content mismatch alone is not a code defect.
+- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. Compact mobile card layouts, exact text on mismatched data, menu states, and populated-data gaps remain open.
+- Google sign-in, live services, fresh Muse audio, remote model response, and physical iPhone checks need access, media, or hardware and remain pending.
+- No `request_review` tool was available in the tool inventory. No independent review occurred.
