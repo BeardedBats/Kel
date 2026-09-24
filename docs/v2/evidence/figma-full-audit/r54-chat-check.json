@@ -1,0 +1,34 @@
+{
+  "kind": "packaged r54; injected visual conversation; no live model",
+  "stored": "up",
+  "cleared": null,
+  "copyVisible": true,
+  "copyAlert": 1,
+  "widths": {
+    "393": {
+      "documentWidth": 393,
+      "actions": [
+        "Copy"
+      ],
+      "time": "09:37"
+    },
+    "768": {
+      "documentWidth": 768,
+      "actions": [
+        "Mark helpful",
+        "Mark unhelpful",
+        "More reply actions"
+      ],
+      "time": "9:37 AM"
+    },
+    "800": {
+      "documentWidth": 800,
+      "actions": [
+        "Mark helpful",
+        "Mark unhelpful",
+        "More reply actions"
+      ],
+      "time": "9:37 AM"
+    }
+  }
+}

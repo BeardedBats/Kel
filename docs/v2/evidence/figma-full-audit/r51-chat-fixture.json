@@ -1,0 +1,45 @@
+{
+  "kind": "injected visual fixture; no saved chat or live model response",
+  "route": "#/conversation/desktop-chat-visual-fixture",
+  "turns": 3,
+  "text": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nWebsite Redesign\n09:03\nI want to plan the homepage refresh. Can you help me outline the key steps, and use our latest brief as context?\n09:04\n09:06\nThis looks great. Let's start with step 1 — can you draft a few questions we should answer?\nfixture\n—\n— tokens\n— cache\n— remaining",
+  "geometry": [
+    {
+      "text": "09:03\nI want to plan the homepage refresh. Can you help me outline the key steps, and use our latest",
+      "box": {
+        "x": 915,
+        "y": 9,
+        "width": 390,
+        "height": 139
+      },
+      "actions": [
+        "Copy"
+      ]
+    },
+    {
+      "text": "09:04",
+      "box": {
+        "x": 385,
+        "y": 174,
+        "width": 920,
+        "height": 426
+      },
+      "actions": [
+        "Copy"
+      ]
+    },
+    {
+      "text": "09:06\nThis looks great. Let's start with step 1 — can you draft a few questions we should answer?",
+      "box": {
+        "x": 915,
+        "y": 626,
+        "width": 390,
+        "height": 114
+      },
+      "actions": [
+        "Copy"
+      ]
+    }
+  ],
+  "pageWidth": 1440
+}

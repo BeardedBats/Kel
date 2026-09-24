@@ -1,5 +1,13 @@
 # RESUME — exact continuation
 
+## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r54) — supersedes r51 below
+
+`integration/v2` has desktop Dark source `58a0533a3d66e183775c7d756c00d3cc91eadd88`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r54` (archive `817B0DE3D6342942`). [The r54 record](evidence/v2-19/CANDIDATE_R54.md) has hashes, typecheck, package and archive gates, packaged chat checks, process ownership, and limits. [The chat comparison](evidence/figma-full-audit/DESKTOP_CHAT_R54.md) matches a populated desktop fixture against FINAL `185:1050`. It repairs timestamp format, numbered-list rhythm and color, and the three reply actions. r52 and r53 remain preserved intermediates. The r54 test tree was stopped after ownership checks; only the protected stable engine remained. Recheck ownership before stopping any process.
+
+**Next action:** compare desktop Dark WebUI and populated Settings overlays with FINAL and Components. Fix measured gaps, then continue bounded V2-19 regression on an isolated candidate. Preserve the stable app, any live r20 session, shortcuts, rollback copies, and Astra's branch. Exact product-wide Figma parity remains open. Google sign-in, live services, remote model response, fresh Muse audio, and physical iPhone checks remain pending for access or hardware. Keep faint Light-mode labels and phone layout work outside this pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
 ## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r51) — supersedes r47 below
 
 `integration/v2` has desktop Dark source `56df3742ca6d9734f1771230d0dbee05e2874300`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r51` (archive `F564D5B2C876612B`). [The r51 record](evidence/v2-19/CANDIDATE_R51.md) has hashes, typecheck, package and archive gates, packaged 1440/800/768px desktop checks, process ownership, and limits. [The scoped polish record](evidence/figma-full-audit/DESKTOP_POLISH_R51.md) compares populated Scheduled tasks and Diagnostics with FINAL frames and the New task dialog with Components. It repairs desktop row dividers, instruction copy placement, narrow desktop rails, Dark task fields, and opaque select popups. r47–r50 remain preserved; no candidate was renamed or promoted. The r51 test tree was stopped after path checks. The final process list showed only the protected stable engine; the earlier r20 PID was absent. Recheck ownership before stopping any process.
