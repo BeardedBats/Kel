@@ -1,0 +1,716 @@
+{
+  "source": "r49 packaged, disposable r43-populated roots",
+  "screens": {
+    "scheduled-1440": {
+      "route": "#/scheduled",
+      "pageWidth": 1440,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 256,
+        "height": 900,
+        "top": 0,
+        "right": 256,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 388,
+        "y": 112,
+        "width": 920,
+        "height": 760,
+        "top": 112,
+        "right": 1308,
+        "bottom": 872,
+        "left": 388
+      },
+      "panel": {
+        "x": 613,
+        "y": 397,
+        "width": 670,
+        "height": 443,
+        "top": 397,
+        "right": 1283,
+        "bottom": 840,
+        "left": 613
+      },
+      "headerButton": {
+        "text": "New task",
+        "rect": {
+          "x": 1193.84375,
+          "y": 133,
+          "width": 89.15625,
+          "height": 34,
+          "top": 133,
+          "right": 1283,
+          "bottom": 167,
+          "left": 1193.84375
+        },
+        "textFits": true
+      },
+      "taskRows": [
+        {
+          "text": "Instructions\n\nThis manual task i",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "text": "Assistant\nKel",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Model\nAutomatic",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Execution mode\nNew conversation",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Queue",
+          "height": 45,
+          "border": "1px"
+        }
+      ],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "diagnostics-1440": {
+      "route": "#/diagnostics",
+      "pageWidth": 1440,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 256,
+        "height": 900,
+        "top": 0,
+        "right": 256,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 388,
+        "y": 112,
+        "width": 920,
+        "height": 760,
+        "top": 112,
+        "right": 1308,
+        "bottom": 872,
+        "left": 388
+      },
+      "panel": {
+        "x": 613,
+        "y": 554,
+        "width": 670,
+        "height": 202,
+        "top": 554,
+        "right": 1283,
+        "bottom": 756,
+        "left": 613
+      },
+      "headerButton": {
+        "text": "Export and issue report",
+        "rect": {
+          "x": 1101.109375,
+          "y": 133,
+          "width": 181.890625,
+          "height": 34,
+          "top": 133,
+          "right": 1283,
+          "bottom": 167,
+          "left": 1101.109375
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [
+        {
+          "text": "Clear caches\n\nRemoves preview an",
+          "height": 64,
+          "border": "1px"
+        },
+        {
+          "text": "Restart runtime\n\nRestarts the lo",
+          "height": 64,
+          "border": "1px"
+        }
+      ],
+      "themeCards": 0
+    },
+    "providers-1440": {
+      "route": "#/providers",
+      "pageWidth": 1440,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 256,
+        "height": 900,
+        "top": 0,
+        "right": 256,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 388,
+        "y": 112,
+        "width": 920,
+        "height": 760,
+        "top": 112,
+        "right": 1308,
+        "bottom": 872,
+        "left": 388
+      },
+      "headerButton": {
+        "text": "Run preflight",
+        "rect": {
+          "x": 1168.5625,
+          "y": 133,
+          "width": 114.4375,
+          "height": 34,
+          "top": 133,
+          "right": 1283,
+          "bottom": 167,
+          "left": 1168.5625
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "tools-1440": {
+      "route": "#/settings/tools",
+      "pageWidth": 1440,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 256,
+        "height": 900,
+        "top": 0,
+        "right": 256,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 388,
+        "y": 112,
+        "width": 920,
+        "height": 760,
+        "top": 112,
+        "right": 1308,
+        "bottom": 872,
+        "left": 388
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "appearance-1440": {
+      "route": "#/settings/appearance",
+      "pageWidth": 1440,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 256,
+        "height": 900,
+        "top": 0,
+        "right": 256,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 388,
+        "y": 112,
+        "width": 920,
+        "height": 760,
+        "top": 112,
+        "right": 1308,
+        "bottom": 872,
+        "left": 388
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 3
+    },
+    "scheduled-800": {
+      "route": "#/scheduled",
+      "pageWidth": 800,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 572,
+        "height": 760,
+        "top": 112,
+        "right": 776,
+        "bottom": 872,
+        "left": 204
+      },
+      "panel": {
+        "x": 371,
+        "y": 393,
+        "width": 388,
+        "height": 443,
+        "top": 393,
+        "right": 759,
+        "bottom": 836,
+        "left": 371
+      },
+      "headerButton": {
+        "text": "New task",
+        "rect": {
+          "x": 669.84375,
+          "y": 129,
+          "width": 89.15625,
+          "height": 34,
+          "top": 129,
+          "right": 759,
+          "bottom": 163,
+          "left": 669.84375
+        },
+        "textFits": true
+      },
+      "taskRows": [
+        {
+          "text": "Instructions\n\nThis manual task i",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "text": "Assistant\nKel",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Model\nAutomatic",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Execution mode\nNew conversation",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Queue",
+          "height": 45,
+          "border": "1px"
+        }
+      ],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "diagnostics-800": {
+      "route": "#/diagnostics",
+      "pageWidth": 800,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 572,
+        "height": 760,
+        "top": 112,
+        "right": 776,
+        "bottom": 872,
+        "left": 204
+      },
+      "panel": {
+        "x": 371,
+        "y": 550,
+        "width": 388,
+        "height": 202,
+        "top": 550,
+        "right": 759,
+        "bottom": 752,
+        "left": 371
+      },
+      "headerButton": {
+        "text": "Export and issue report",
+        "rect": {
+          "x": 577.109375,
+          "y": 129,
+          "width": 181.890625,
+          "height": 34,
+          "top": 129,
+          "right": 759,
+          "bottom": 163,
+          "left": 577.109375
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [
+        {
+          "text": "Clear caches\n\nRemoves preview an",
+          "height": 64,
+          "border": "1px"
+        },
+        {
+          "text": "Restart runtime\n\nRestarts the lo",
+          "height": 64,
+          "border": "1px"
+        }
+      ],
+      "themeCards": 0
+    },
+    "providers-800": {
+      "route": "#/providers",
+      "pageWidth": 800,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 572,
+        "height": 760,
+        "top": 112,
+        "right": 776,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": {
+        "text": "Run preflight",
+        "rect": {
+          "x": 644.5625,
+          "y": 129,
+          "width": 114.4375,
+          "height": 34,
+          "top": 129,
+          "right": 759,
+          "bottom": 163,
+          "left": 644.5625
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "tools-800": {
+      "route": "#/settings/tools",
+      "pageWidth": 800,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 572,
+        "height": 760,
+        "top": 112,
+        "right": 776,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "appearance-800": {
+      "route": "#/settings/appearance",
+      "pageWidth": 800,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 572,
+        "height": 760,
+        "top": 112,
+        "right": 776,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 3
+    },
+    "scheduled-768": {
+      "route": "#/scheduled",
+      "pageWidth": 768,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 540,
+        "height": 760,
+        "top": 112,
+        "right": 744,
+        "bottom": 872,
+        "left": 204
+      },
+      "panel": {
+        "x": 371,
+        "y": 393,
+        "width": 356,
+        "height": 443,
+        "top": 393,
+        "right": 727,
+        "bottom": 836,
+        "left": 371
+      },
+      "headerButton": {
+        "text": "New task",
+        "rect": {
+          "x": 637.84375,
+          "y": 129,
+          "width": 89.15625,
+          "height": 34,
+          "top": 129,
+          "right": 727,
+          "bottom": 163,
+          "left": 637.84375
+        },
+        "textFits": true
+      },
+      "taskRows": [
+        {
+          "text": "Instructions\n\nThis manual task i",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "text": "Assistant\nKel",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Model\nAutomatic",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Execution mode\nNew conversation",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "text": "Queue",
+          "height": 45,
+          "border": "1px"
+        }
+      ],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "diagnostics-768": {
+      "route": "#/diagnostics",
+      "pageWidth": 768,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 540,
+        "height": 760,
+        "top": 112,
+        "right": 744,
+        "bottom": 872,
+        "left": 204
+      },
+      "panel": {
+        "x": 371,
+        "y": 550,
+        "width": 356,
+        "height": 202,
+        "top": 550,
+        "right": 727,
+        "bottom": 752,
+        "left": 371
+      },
+      "headerButton": {
+        "text": "Export and issue report",
+        "rect": {
+          "x": 545.109375,
+          "y": 129,
+          "width": 181.890625,
+          "height": 34,
+          "top": 129,
+          "right": 727,
+          "bottom": 163,
+          "left": 545.109375
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [
+        {
+          "text": "Clear caches\n\nRemoves preview an",
+          "height": 64,
+          "border": "1px"
+        },
+        {
+          "text": "Restart runtime\n\nRestarts the lo",
+          "height": 64,
+          "border": "1px"
+        }
+      ],
+      "themeCards": 0
+    },
+    "providers-768": {
+      "route": "#/providers",
+      "pageWidth": 768,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 540,
+        "height": 760,
+        "top": 112,
+        "right": 744,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": {
+        "text": "Run preflight",
+        "rect": {
+          "x": 612.5625,
+          "y": 129,
+          "width": 114.4375,
+          "height": 34,
+          "top": 129,
+          "right": 727,
+          "bottom": 163,
+          "left": 612.5625
+        },
+        "textFits": true
+      },
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "tools-768": {
+      "route": "#/settings/tools",
+      "pageWidth": 768,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 540,
+        "height": 760,
+        "top": 112,
+        "right": 744,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 0
+    },
+    "appearance-768": {
+      "route": "#/settings/appearance",
+      "pageWidth": 768,
+      "rail": {
+        "x": 0,
+        "y": 0,
+        "width": 180,
+        "height": 900,
+        "top": 0,
+        "right": 180,
+        "bottom": 900,
+        "left": 0
+      },
+      "card": {
+        "x": 204,
+        "y": 112,
+        "width": 540,
+        "height": 760,
+        "top": 112,
+        "right": 744,
+        "bottom": 872,
+        "left": 204
+      },
+      "headerButton": null,
+      "taskRows": [],
+      "maintenanceRows": [],
+      "themeCards": 3
+    }
+  },
+  "taskSelection": "UI toast audit\n\nManual\n\nInstructions\n\nDisposable visual sample. Do not run.\n\nAssistant\nKel\nModel\nAutomatic\nExecution mode\nNew conversation\nQueue\nHistory\n\nNo runs yet\n\nGo to conversation",
+  "newTaskDialog": "Create Scheduled Task\n Name\n Assistant\nSelect the assistant to execute this task\nExecution Mode\nNew conversation\nOngoing conversation\n\nEach run starts a fresh conversation, so previous context does not carry over. Best for recurring reports or checks that should stay independent.\n\n Prompt\n\nQueue protection\n\nWhen enabled, a new trigger is skipped while the previous scheduled conversation is still running, without interrupting the assistant.\n\nFrequency\nManual\nAdvanced Settings\nCancel\nSave",
+  "exportDialog": "Export and issue report\nExport and issue report\nExport sanitized diagnostics\n\nThe export is built from an allowlist, not by filtering a dump: credentials, tokens and API keys, prompts, transcripts of unrelated conversations, personal files and environment dumps are excluded by construction.\n\nWrite local draft"
+}

@@ -1,0 +1,214 @@
+{
+  "source": "r50 packaged, disposable r43-populated roots",
+  "screens": {
+    "scheduled-1440": {
+      "route": "#/scheduled",
+      "pageWidth": 1440,
+      "railWidth": 256,
+      "cardWidth": 920,
+      "headerButtonFits": null,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "diagnostics-1440": {
+      "route": "#/diagnostics",
+      "pageWidth": 1440,
+      "railWidth": 256,
+      "cardWidth": 920,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": [
+        64,
+        64
+      ]
+    },
+    "providers-1440": {
+      "route": "#/providers",
+      "pageWidth": 1440,
+      "railWidth": 256,
+      "cardWidth": 920,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "tools-1440": {
+      "route": "#/settings/tools",
+      "pageWidth": 1440,
+      "railWidth": 256,
+      "cardWidth": 920,
+      "headerButtonFits": null,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "scheduled-800": {
+      "route": "#/scheduled",
+      "pageWidth": 800,
+      "railWidth": 180,
+      "cardWidth": 572,
+      "headerButtonFits": true,
+      "taskBorders": [
+        "1px",
+        "1px",
+        "1px",
+        "1px",
+        "1px"
+      ],
+      "maintenanceHeights": []
+    },
+    "diagnostics-800": {
+      "route": "#/diagnostics",
+      "pageWidth": 800,
+      "railWidth": 180,
+      "cardWidth": 572,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": [
+        64,
+        64
+      ]
+    },
+    "providers-800": {
+      "route": "#/providers",
+      "pageWidth": 800,
+      "railWidth": 180,
+      "cardWidth": 572,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "tools-800": {
+      "route": "#/settings/tools",
+      "pageWidth": 800,
+      "railWidth": 180,
+      "cardWidth": 572,
+      "headerButtonFits": null,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "scheduled-768": {
+      "route": "#/scheduled",
+      "pageWidth": 768,
+      "railWidth": 180,
+      "cardWidth": 540,
+      "headerButtonFits": true,
+      "taskBorders": [
+        "1px",
+        "1px",
+        "1px",
+        "1px",
+        "1px"
+      ],
+      "maintenanceHeights": []
+    },
+    "diagnostics-768": {
+      "route": "#/diagnostics",
+      "pageWidth": 768,
+      "railWidth": 180,
+      "cardWidth": 540,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": [
+        64,
+        64
+      ]
+    },
+    "providers-768": {
+      "route": "#/providers",
+      "pageWidth": 768,
+      "railWidth": 180,
+      "cardWidth": 540,
+      "headerButtonFits": true,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    },
+    "tools-768": {
+      "route": "#/settings/tools",
+      "pageWidth": 768,
+      "railWidth": 180,
+      "cardWidth": 540,
+      "headerButtonFits": null,
+      "taskBorders": [],
+      "maintenanceHeights": []
+    }
+  },
+  "modal": {
+    "open-1440": {
+      "dialog": true,
+      "pageWidth": 1440,
+      "panel": {
+        "background": "linear-gradient(rgba(191, 216, 255, 0.08), rgba(0, 0, 0, 0)) repeat scroll 0% 0% / auto padding-box border-box, rgba(15, 45, 100, 0.4) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "16px",
+        "border": "rgba(221, 233, 255, 0.5)",
+        "height": 838
+      },
+      "input": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 34
+      },
+      "select": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 34
+      },
+      "textarea": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 76
+      },
+      "primary": {
+        "background": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(21, 57, 115), rgb(54, 86, 147)) repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgba(140, 150, 167, 0.5)",
+        "height": 34
+      }
+    },
+    "focus-1440": {
+      "border": "rgba(47, 73, 128, 0.984)",
+      "shadow": "rgba(47, 107, 224, 0.35) 0px 0px 8px 1px"
+    },
+    "closed-1440": false,
+    "open-800": {
+      "dialog": true,
+      "pageWidth": 800,
+      "panel": {
+        "background": "linear-gradient(rgba(191, 216, 255, 0.08), rgba(0, 0, 0, 0)) repeat scroll 0% 0% / auto padding-box border-box, rgba(15, 45, 100, 0.4) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "16px",
+        "border": "rgba(221, 233, 255, 0.5)",
+        "height": 838
+      },
+      "input": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 34
+      },
+      "select": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 34
+      },
+      "textarea": {
+        "background": "rgba(47, 107, 224, 0.1) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgb(42, 68, 120)",
+        "height": 76
+      },
+      "primary": {
+        "background": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(21, 57, 115), rgb(54, 86, 147)) repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "8px",
+        "border": "rgba(140, 150, 167, 0.5)",
+        "height": 34
+      }
+    },
+    "focus-800": {
+      "border": "rgba(47, 73, 128, 0.984)",
+      "shadow": "rgba(47, 107, 224, 0.35) 0px 0px 8px 1px"
+    },
+    "closed-800": false
+  }
+}

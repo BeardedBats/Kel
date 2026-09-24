@@ -1,0 +1,98 @@
+{
+  "source": "r51 packaged, disposable r43-populated roots",
+  "widths": {
+    "768": {
+      "pageWidth": 768,
+      "railWidth": 180,
+      "rowBorders": [
+        "1px",
+        "1px",
+        "1px",
+        "1px",
+        "1px"
+      ],
+      "popup": {
+        "visible": true,
+        "background": "rgba(0, 0, 0, 0) linear-gradient(rgb(44, 59, 92), rgb(26, 40, 70)) repeat scroll 0% 0% / auto padding-box border-box",
+        "text": "Kel",
+        "rect": {
+          "x": 130,
+          "y": 273,
+          "width": 502,
+          "height": 46,
+          "top": 273,
+          "right": 632,
+          "bottom": 319,
+          "left": 130
+        }
+      },
+      "panel": {
+        "background": "linear-gradient(rgba(191, 216, 255, 0.08), rgba(0, 0, 0, 0)) repeat scroll 0% 0% / auto padding-box border-box, rgba(15, 45, 100, 0.4) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "16px"
+      },
+      "closed": true
+    },
+    "800": {
+      "pageWidth": 800,
+      "railWidth": 180,
+      "rowBorders": [
+        "1px",
+        "1px",
+        "1px",
+        "1px",
+        "1px"
+      ],
+      "popup": {
+        "visible": true,
+        "background": "rgba(0, 0, 0, 0) linear-gradient(rgb(44, 59, 92), rgb(26, 40, 70)) repeat scroll 0% 0% / auto padding-box border-box",
+        "text": "Kel",
+        "rect": {
+          "x": 146,
+          "y": 273,
+          "width": 502,
+          "height": 46,
+          "top": 273,
+          "right": 648,
+          "bottom": 319,
+          "left": 146
+        }
+      },
+      "panel": {
+        "background": "linear-gradient(rgba(191, 216, 255, 0.08), rgba(0, 0, 0, 0)) repeat scroll 0% 0% / auto padding-box border-box, rgba(15, 45, 100, 0.4) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "16px"
+      },
+      "closed": true
+    },
+    "1440": {
+      "pageWidth": 1440,
+      "railWidth": 256,
+      "rowBorders": [
+        "1px",
+        "1px",
+        "1px",
+        "1px",
+        "1px"
+      ],
+      "popup": {
+        "visible": true,
+        "background": "rgba(0, 0, 0, 0) linear-gradient(rgb(44, 59, 92), rgb(26, 40, 70)) repeat scroll 0% 0% / auto padding-box border-box",
+        "text": "Kel",
+        "rect": {
+          "x": 466,
+          "y": 273,
+          "width": 502,
+          "height": 46,
+          "top": 273,
+          "right": 968,
+          "bottom": 319,
+          "left": 466
+        }
+      },
+      "panel": {
+        "background": "linear-gradient(rgba(191, 216, 255, 0.08), rgba(0, 0, 0, 0)) repeat scroll 0% 0% / auto padding-box border-box, rgba(15, 45, 100, 0.4) none repeat scroll 0% 0% / auto padding-box border-box",
+        "radius": "16px"
+      },
+      "closed": true
+    }
+  }
+}

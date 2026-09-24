@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r47) — supersedes r46 below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r51) — supersedes r47 below
+
+`integration/v2` has desktop Dark source `56df3742ca6d9734f1771230d0dbee05e2874300`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r51` (archive `F564D5B2C876612B`). [The r51 record](evidence/v2-19/CANDIDATE_R51.md) has hashes, typecheck, package and archive gates, packaged 1440/800/768px desktop checks, process ownership, and limits. [The scoped polish record](evidence/figma-full-audit/DESKTOP_POLISH_R51.md) compares populated Scheduled tasks and Diagnostics with FINAL frames and the New task dialog with Components. It repairs desktop row dividers, instruction copy placement, narrow desktop rails, Dark task fields, and opaque select popups. r47–r50 remain preserved; no candidate was renamed or promoted. The r51 test tree was stopped after path checks. The final process list showed only the protected stable engine; the earlier r20 PID was absent. Recheck ownership before stopping any process.
+
+**Next action:** continue a bounded desktop Dark comparison on chat, Settings controls, and populated overlays. Use matched Figma and packaged captures before editing. Preserve the stable app, any live r20 session, shortcuts, rollback copies, and Astra's branch. Exact product-wide Figma parity remains open. Google sign-in, live services, remote model response, fresh Muse audio, and physical iPhone checks remain pending for access or hardware. Keep faint Light-mode labels and phone layout work outside this pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-24, r47) — superseded by r51
 
 `integration/v2` has desktop Dark source `54ce43fa08295799cddb0101816369e22d872bd2`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r47` (archive `B216B4FB082DD3B6`). [The r47 record](evidence/v2-19/CANDIDATE_R47.md) has hashes, typecheck, 296 desktop tests, package and archive gates, and packaged 1440/800px desktop checks. [The scoped polish record](evidence/figma-full-audit/DESKTOP_POLISH_R47.md) shows matched Tools and Transcriptions before/after captures. MCP rows now use Figma's 40px desktop rhythm; Add MCP fits at 800px; the embedded Transcriptions route opens the newest saved item. No phone layout work occurred. Exact product-wide Figma parity is **not** established. r46 remains preserved; no candidate was promoted or renamed. The r47 test tree was stopped after path checks. The final process list showed only the protected stable engine; the earlier r20 PID was absent. Recheck ownership before stopping any process.
 

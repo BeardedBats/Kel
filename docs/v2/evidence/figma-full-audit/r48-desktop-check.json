@@ -1,0 +1,144 @@
+{
+  "source": "r48 packaged, disposable r43-populated roots",
+  "screens": {
+    "scheduled-1440": {
+      "route": "#/scheduled",
+      "pageWidth": 1440,
+      "body": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nProjects\nProjects\nWork\nActivity\nPermissions\nKnowledge\nScheduled tasks\nProviders\nDiagnostics\nRamble\nTranscriptions\nWorkspaces\nSet up Kel\nScheduled tasks\nNew task\nScheduled tasks\n\n3 tasks\n\nUI audit sample\nManual\nActive\nUI toast audit\nManual\nActive\nUI toast final\nManual\nActive\nUI audit sample\n\nManual\n\nInstructions\n\nThis manual task is a disposable UI audit sample. Do not run it.\n\nAssistant\nKel\nModel\nAutomatic\nExecution mode\nNew conversation\nQueue\nHistory\n\nNo runs yet\n\nGo to conversation",
+      "panel": {
+        "x": 613,
+        "y": 397,
+        "width": 670,
+        "height": 443,
+        "top": 397,
+        "right": 1283,
+        "bottom": 840,
+        "left": 613
+      },
+      "rows": [
+        {
+          "label": "Instructions\n\nThis manual task is a di",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "label": "Assistant\nKel",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Model\nAutomatic",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Execution mode\nNew conversation",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Queue",
+          "height": 45,
+          "border": "1px"
+        }
+      ]
+    },
+    "diagnostics-1440": {
+      "route": "#/diagnostics",
+      "pageWidth": 1440,
+      "body": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nProjects\nProjects\nWork\nActivity\nPermissions\nKnowledge\nScheduled tasks\nProviders\nDiagnostics\nRamble\nTranscriptions\nWorkspaces\nSet up Kel\nDiagnostics\nExport and issue report\nHealth\nRuntime\n1.7.0-dev\nHealthy\nProviders\n2 reported\nAvailable\nProcess ownership\nKel owns 0 child processes\nOK\nMeasured performance\nStartup\n0.5 s\nFirst model reply\n—\nMaintenance\nClear caches\n\nRemoves preview and thumbnail caches. Chats are untouched.\n\nClear\nRestart runtime\n\nRestarts the local runtime without closing Kel.\n\nRestart",
+      "panel": {
+        "x": 613,
+        "y": 554,
+        "width": 670,
+        "height": 202,
+        "top": 554,
+        "right": 1283,
+        "bottom": 756,
+        "left": 613
+      },
+      "rows": [
+        {
+          "label": "Clear caches\n\nRemoves preview and thum",
+          "height": 64,
+          "border": "1px"
+        },
+        {
+          "label": "Restart runtime\n\nRestarts the local ru",
+          "height": 64,
+          "border": "1px"
+        }
+      ]
+    },
+    "scheduled-800": {
+      "route": "#/scheduled",
+      "pageWidth": 800,
+      "body": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nProjects\nProjects\nWork\nActivity\nPermissions\nKnowledge\nScheduled tasks\nProviders\nDiagnostics\nRamble\nTranscriptions\nWorkspaces\nSet up Kel\nScheduled tasks\nNew task\nScheduled tasks\n\n3 tasks\n\nUI audit sample\nManual\nActive\nUI toast audit\nManual\nActive\nUI toast final\nManual\nActive\nUI audit sample\n\nManual\n\nInstructions\n\nThis manual task is a disposable UI audit sample. Do not run it.\n\nAssistant\nKel\nModel\nAutomatic\nExecution mode\nNew conversation\nQueue\nHistory\n\nNo runs yet\n\nGo to conversation",
+      "panel": {
+        "x": 505,
+        "y": 418,
+        "width": 240,
+        "height": 443,
+        "top": 418,
+        "right": 745,
+        "bottom": 861,
+        "left": 505
+      },
+      "rows": [
+        {
+          "label": "Instructions\n\nThis manual task is a di",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "label": "Assistant\nKel",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Model\nAutomatic",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Execution mode\nNew conversation",
+          "height": 63,
+          "border": "1px"
+        },
+        {
+          "label": "Queue",
+          "height": 45,
+          "border": "1px"
+        }
+      ]
+    },
+    "diagnostics-800": {
+      "route": "#/diagnostics",
+      "pageWidth": 800,
+      "body": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nProjects\nProjects\nWork\nActivity\nPermissions\nKnowledge\nScheduled tasks\nProviders\nDiagnostics\nRamble\nTranscriptions\nWorkspaces\nSet up Kel\nDiagnostics\nExport and issue report\nHealth\nRuntime\n1.7.0-dev\nHealthy\nProviders\n2 reported\nAvailable\nProcess ownership\nKel owns 0 child processes\nOK\nMeasured performance\nStartup\n0.5 s\nFirst model reply\n—\nMaintenance\nClear caches\n\nRemoves preview and thumbnail caches. Chats are untouched.\n\nClear\nRestart runtime\n\nRestarts the local runtime without closing Kel.\n\nRestart",
+      "panel": {
+        "x": 505,
+        "y": 562,
+        "width": 246,
+        "height": 212,
+        "top": 562,
+        "right": 751,
+        "bottom": 774,
+        "left": 505
+      },
+      "rows": [
+        {
+          "label": "Clear caches\n\nRemoves preview and thum",
+          "height": 69,
+          "border": "1px"
+        },
+        {
+          "label": "Restart runtime\n\nRestarts the local ru",
+          "height": 69,
+          "border": "1px"
+        }
+      ]
+    }
+  },
+  "exportModal": "Export and issue report\nExport and issue report\nExport sanitized diagnostics\n\nThe export is built from an allowlist, not by filtering a dump: credentials, tokens and API keys, prompts, transcripts of unrelated conversations, personal files and environment dumps are excluded by construction.\n\nWrite local draft"
+}

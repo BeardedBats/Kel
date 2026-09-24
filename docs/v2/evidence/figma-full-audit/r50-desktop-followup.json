@@ -1,0 +1,45 @@
+{
+  "scheduled": {
+    "selected": "UI audit sample\n\nManual\n\nInstructions\n\nThis manual task is a disposable UI audit sample. Do not run it.\n\nAssis",
+    "rows": [
+      {
+        "height": 69,
+        "border": "1px"
+      },
+      {
+        "height": 63,
+        "border": "1px"
+      },
+      {
+        "height": 63,
+        "border": "1px"
+      },
+      {
+        "height": 63,
+        "border": "1px"
+      },
+      {
+        "height": 45,
+        "border": "1px"
+      }
+    ],
+    "panel": {
+      "x": 604.375,
+      "y": 397,
+      "width": 670,
+      "height": 443,
+      "top": 397,
+      "right": 1274.375,
+      "bottom": 840,
+      "left": 604.375
+    }
+  },
+  "assistantPopup": {
+    "visible": true,
+    "text": "Kel"
+  },
+  "preflight": {
+    "text": "Providers\nRun preflight\nIntegrations\nClaude (Claude Code)\nclaude-native\nAvailable\nCodex\ncodex-native\nAvailable\nAnthropic API\nclaude-sonnet-4-6\nAvailable\nDeepSeek API\ndeepseek-chat · deepseek-reasoner\nNeeds setup\nReadiness preflight\nCheck options\n\nChosen: Claude (Claude Code) · claude-native\n\nFell back to claude-code for capability \"text\"\n\nDeepSeek API unusable (installed_not_authenticated: API key needed)\n\nChain: Claude (Claude Code) → Codex → Anthropic API → DeepSeek API\n\nCredential metadata\n\nValues are never stored here.\n\nNo Kel-owned credential metadata yet.",
+    "pageWidth": 1440
+  }
+}
