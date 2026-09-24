@@ -1,0 +1,64 @@
+{
+  "800": {
+    "documentWidth": 800,
+    "cards": [
+      {
+        "x": 371,
+        "y": 179,
+        "w": 388,
+        "h": 440
+      },
+      {
+        "x": 371,
+        "y": 631,
+        "w": 388,
+        "h": 718
+      },
+      {
+        "x": 371,
+        "y": 1361,
+        "w": 388,
+        "h": 580
+      },
+      {
+        "x": 371,
+        "y": 1953,
+        "w": 388,
+        "h": 137
+      }
+    ],
+    "themes": [],
+    "text": "ThemeSelect or customize a themeAdd ThemeLightDarkFollow SystemTheme colorsRestore all colorsApp backgroundPanelsElevated surfacesPrimary textSecondary textBordersAccentSuccessWarningErrorMore colors (20)FontsGlobal-14+ResetChat-16+ResetMarkdown-16+ResetCode-14+ResetScale-+95%Reset zoom"
+  },
+  "1440": {
+    "documentWidth": 1440,
+    "cards": [
+      {
+        "x": 613,
+        "y": 183,
+        "w": 670,
+        "h": 180
+      },
+      {
+        "x": 613,
+        "y": 375,
+        "w": 670,
+        "h": 458
+      },
+      {
+        "x": 613,
+        "y": 845,
+        "w": 670,
+        "h": 580
+      },
+      {
+        "x": 613,
+        "y": 1437,
+        "w": 670,
+        "h": 99
+      }
+    ],
+    "themes": [],
+    "text": "ThemeSelect or customize a themeAdd ThemeLightDarkFollow SystemTheme colorsRestore all colorsApp backgroundPanelsElevated surfacesPrimary textSecondary textBordersAccentSuccessWarningErrorMore colors (20)FontsGlobal-14+ResetChat-16+ResetMarkdown-16+ResetCode-14+ResetScale-+95%Reset zoom"
+  }
+}

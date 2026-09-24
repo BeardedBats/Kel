@@ -1,0 +1,250 @@
+{
+  "800": {
+    "route": "#/settings/system",
+    "documentWidth": 800,
+    "card": {
+      "x": 371,
+      "y": 179,
+      "w": 388,
+      "h": 297.390625
+    },
+    "dataRows": [
+      {
+        "y": 226,
+        "h": 68
+      },
+      {
+        "y": 294,
+        "h": 68
+      },
+      {
+        "y": 362,
+        "h": 97.390625
+      }
+    ],
+    "buttons": [
+      {
+        "text": "Show in folder",
+        "x": 633.1875,
+        "y": 241.5,
+        "w": 126.21875,
+        "h": 36,
+        "background": "linear-gradient(rgba(71, 122, 233, 0.06), rgba(0, 0, 0, 0)), none",
+        "color": "rgb(237, 242, 250)"
+      },
+      {
+        "text": "Back up now",
+        "x": 622.25,
+        "y": 309.5,
+        "w": 115.75,
+        "h": 36,
+        "background": "linear-gradient(rgba(71, 122, 233, 0.06), rgba(0, 0, 0, 0)), none",
+        "color": "rgb(237, 242, 250)"
+      },
+      {
+        "text": "Restore from this backup",
+        "x": 541.265625,
+        "y": 392.1875,
+        "w": 196.734375,
+        "h": 36,
+        "background": "linear-gradient(rgb(166, 68, 63), rgb(139, 49, 45))",
+        "color": "rgb(237, 242, 250)"
+      }
+    ],
+    "restoreCopy": "Restores a backup folder. Current data is kept; Kel restarts.",
+    "generalCard": {
+      "x": 371,
+      "y": 488.390625,
+      "w": 388,
+      "h": 519
+    },
+    "generalRows": [
+      {
+        "y": 537.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 587.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 637.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 687.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 737.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 787.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 838.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 889.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 940.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      }
+    ],
+    "language": {
+      "x": 538,
+      "y": 545.890625,
+      "w": 200,
+      "h": 32
+    },
+    "number": {
+      "x": 658,
+      "y": 795.390625,
+      "w": 80,
+      "h": 34
+    }
+  },
+  "1440": {
+    "route": "#/settings/system",
+    "documentWidth": 1440,
+    "card": {
+      "x": 613,
+      "y": 183,
+      "w": 670,
+      "h": 297.390625
+    },
+    "dataRows": [
+      {
+        "y": 230,
+        "h": 68
+      },
+      {
+        "y": 298,
+        "h": 68
+      },
+      {
+        "y": 366,
+        "h": 97.390625
+      }
+    ],
+    "buttons": [
+      {
+        "text": "Show in folder",
+        "x": 1135.78125,
+        "y": 245.5,
+        "w": 126.21875,
+        "h": 36,
+        "background": "linear-gradient(rgba(71, 122, 233, 0.06), rgba(0, 0, 0, 0)), none",
+        "color": "rgb(237, 242, 250)"
+      },
+      {
+        "text": "Back up now",
+        "x": 1146.25,
+        "y": 313.5,
+        "w": 115.75,
+        "h": 36,
+        "background": "linear-gradient(rgba(71, 122, 233, 0.06), rgba(0, 0, 0, 0)), none",
+        "color": "rgb(237, 242, 250)"
+      },
+      {
+        "text": "Restore from this backup",
+        "x": 1065.265625,
+        "y": 396.1875,
+        "w": 196.734375,
+        "h": 36,
+        "background": "linear-gradient(rgb(166, 68, 63), rgb(139, 49, 45))",
+        "color": "rgb(237, 242, 250)"
+      }
+    ],
+    "restoreCopy": "Restores a backup folder. Current data is kept; Kel restarts.",
+    "generalCard": {
+      "x": 613,
+      "y": 492.390625,
+      "w": 670,
+      "h": 519
+    },
+    "generalRows": [
+      {
+        "y": 541.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 591.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 641.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 691.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 741.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 791.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 842.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 893.390625,
+        "h": 51,
+        "border": "rgba(191, 216, 255, 0.08)"
+      },
+      {
+        "y": 944.390625,
+        "h": 50,
+        "border": "rgba(191, 216, 255, 0.08)"
+      }
+    ],
+    "language": {
+      "x": 1062,
+      "y": 549.890625,
+      "w": 200,
+      "h": 32
+    },
+    "number": {
+      "x": 1182,
+      "y": 799.390625,
+      "w": 80,
+      "h": 34
+    }
+  },
+  "backupDialog": {
+    "visible": 1,
+    "title": "Back up now",
+    "closed": false
+  },
+  "restoreDialog": {
+    "visible": 1,
+    "title": "Restore from this backup",
+    "closed": false
+  }
+}
