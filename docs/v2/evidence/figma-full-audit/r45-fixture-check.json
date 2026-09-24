@@ -1,0 +1,24 @@
+{
+  "kind": "injected UI fixture, no live model or saved chat",
+  "chat": {
+    "393": {
+      "route": "#/conversation/shell-visual-fixture",
+      "turns": 2,
+      "docWidth": 393,
+      "text": "Skip to main content\nWebsite Redesign\n09:32\nI want to plan the homepage refresh. Can you help outline the key steps?\n09:32\n—\n— tokens\n— cache\n— remaining\nChats\nKibble\nRamble\nProjects\nSettings"
+    },
+    "1440": {
+      "route": "#/conversation/shell-visual-fixture",
+      "turns": 2,
+      "docWidth": 1440,
+      "text": "Skip to main content\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nWebsite Redesign\n09:32\nI want to plan the homepage refresh. Can you help outline the key steps?\n09:32\nfixture\n—\n— tokens\n— cache\n— remaining"
+    }
+  },
+  "ramble": {
+    "list": {
+      "route": "#/transcription",
+      "rows": 0,
+      "text": "Skip to main content\nKel\nRamble\nRecord\nFolders\n+\nGroup recordings into folders — drag a transcript onto one.\nRecent\nNothing here yet.\nChats\nKibble\nRamble\nProjects\nSettings"
+    }
+  }
+}

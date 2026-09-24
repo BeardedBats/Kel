@@ -1,0 +1,272 @@
+{
+  "candidate": "r44",
+  "widths": {
+    "393": {
+      "tools": {
+        "route": "#/settings/tools",
+        "docWidth": 393,
+        "viewport": 393,
+        "composer": null,
+        "tabs": {
+          "x": 0,
+          "y": 768,
+          "w": 393,
+          "h": 84,
+          "display": "grid"
+        },
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": {
+          "x": 16,
+          "y": 107,
+          "w": 361,
+          "h": 168,
+          "display": "flex"
+        },
+        "imageCard": {
+          "x": 16,
+          "y": 291,
+          "w": 361,
+          "h": 131,
+          "display": "block"
+        },
+        "bodyText": "Skip to main content\nKel\n←\nTools\nMCP Tools Configuration\nAdd MCP\nchrome-devtools\nConnected\nKel Browser\nNot tested\nImage Generation\nImage Generation\n… None\n›\nChats\nKibble\nRamble\nProjects\nSettings"
+      },
+      "scheduled": {
+        "route": "#/scheduled",
+        "docWidth": 393,
+        "viewport": 393,
+        "composer": null,
+        "tabs": {
+          "x": 0,
+          "y": 768,
+          "w": 393,
+          "h": 84,
+          "display": "grid"
+        },
+        "taskList": {
+          "x": 16,
+          "y": 163,
+          "w": 361,
+          "h": 104,
+          "display": "flex"
+        },
+        "taskDetail": {
+          "x": 16,
+          "y": 279,
+          "w": 361,
+          "h": 213,
+          "display": "block"
+        },
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKel\n←\nScheduled tasks\nScheduled tasks\n+\nUI audit sample\nActive\nUI audit sample\nⓘ\nAssistant\nKel\nModel\nAutomatic\nQueue\nOff\nHistory\n›\nChats\nKibble\nRamble\nProjects\nSettings"
+      },
+      "ramble": {
+        "route": "#/transcription",
+        "docWidth": 393,
+        "viewport": 393,
+        "composer": null,
+        "tabs": {
+          "x": 0,
+          "y": 768,
+          "w": 393,
+          "h": 84,
+          "display": "grid"
+        },
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": {
+          "x": 0,
+          "y": 43,
+          "w": 393,
+          "h": 809,
+          "display": "flex"
+        },
+        "rambleMain": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "display": "none"
+        },
+        "search": {
+          "x": 16,
+          "y": 109,
+          "w": 361,
+          "h": 34,
+          "display": "block"
+        },
+        "folders": {
+          "x": 8,
+          "y": 151,
+          "w": 377,
+          "h": 32,
+          "display": "flex"
+        },
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKel\nRamble\nRecord\nFolders\n+\nGroup recordings into folders — drag a transcript onto one.\nRecent\nNothing here yet.\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nChats\nKibble\nRamble\nProjects\nSettings"
+      },
+      "chat": {
+        "route": "#/conversation/84fc4ec1",
+        "docWidth": 393,
+        "viewport": 393,
+        "composer": {
+          "x": 16,
+          "y": 692,
+          "w": 361,
+          "h": 60,
+          "display": "flex"
+        },
+        "tabs": {
+          "x": 0,
+          "y": 768,
+          "w": 393,
+          "h": 84,
+          "display": "grid"
+        },
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKel\nKel\nHi! Tell me what you need and I'll get started.\nFiles\nChanges\nacp-temp-84fc4ec1\nChats\nKibble\nRamble\nProjects\nSettings"
+      }
+    },
+    "1440": {
+      "tools": {
+        "route": "#/settings/tools",
+        "docWidth": 1440,
+        "viewport": 1440,
+        "composer": null,
+        "tabs": null,
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": {
+          "x": 485,
+          "y": 183,
+          "w": 670,
+          "h": 198,
+          "display": "flex"
+        },
+        "imageCard": {
+          "x": 485,
+          "y": 397,
+          "w": 670,
+          "h": 169,
+          "display": "block"
+        },
+        "bodyText": "Skip to main content\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nTools\nMCP Tools Configuration\nAdd MCP\nchrome-devtools\nKel Browser\nImage Generation\nImage Generation\nImage Model\nNo available image models.\nGo to configure"
+      },
+      "scheduled": {
+        "route": "#/scheduled",
+        "docWidth": 1440,
+        "viewport": 1440,
+        "composer": null,
+        "tabs": null,
+        "taskList": {
+          "x": 485,
+          "y": 185,
+          "w": 664,
+          "h": 124,
+          "display": "flex"
+        },
+        "taskDetail": {
+          "x": 485,
+          "y": 748,
+          "w": 664,
+          "h": 207.3125,
+          "display": "flex"
+        },
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nProjects\nProjects\nWork\nActivity\nPermissions\nKnowledge\nScheduled tasks\nProviders\nDiagnostics\nRamble\nTranscriptions\nWorkspaces\nSet up Kel\nScheduled tasks\nNew task\nScheduled tasks\n\n1 task\n\nUI audit sample\nManual\nActive\nUI audit sample\n\nManual\n\nInstructions\n\nThis manual task is a disposable UI audit sample. Do not run it.\n\nAssistant\nKel\nModel\nAutomatic\nExecution mode\nNew conversation\nQueue\nHistory\n\nNo runs yet\n\nGo to conversation\nUI audit sample\nⓘ\nAssistantKel\nModelAutomatic\nQueueOff\nHistory›"
+      },
+      "ramble": {
+        "route": "#/transcription",
+        "docWidth": 1440,
+        "viewport": 1440,
+        "composer": null,
+        "tabs": null,
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": {
+          "x": 0,
+          "y": 0,
+          "w": 256,
+          "h": 900,
+          "display": "flex"
+        },
+        "rambleMain": {
+          "x": 256,
+          "y": 0,
+          "w": 1184,
+          "h": 900,
+          "display": "flex"
+        },
+        "search": {
+          "x": 20,
+          "y": 115,
+          "w": 216,
+          "h": 34,
+          "display": "block"
+        },
+        "folders": {
+          "x": 8,
+          "y": 153,
+          "w": 240,
+          "h": 32,
+          "display": "flex"
+        },
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKel\nNew Recording\nFolders\n+\nGroup recordings into folders — drag a transcript onto one.\nRecent\nNothing here yet.\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nRamble\nAPI Key\nUpload Audio\nRecord More\nRecord\nYour transcripts live here\nRecord with the button above, or drop an MP3 or MP4 file anywhere on this page. Everything is saved automatically.\nUpload audio"
+      },
+      "chat": {
+        "route": "#/conversation/84fc4ec1",
+        "docWidth": 1440,
+        "viewport": 1440,
+        "composer": {
+          "x": 149.5,
+          "y": 824,
+          "w": 920,
+          "h": 60,
+          "display": "flex"
+        },
+        "tabs": null,
+        "taskList": null,
+        "taskDetail": null,
+        "rambleAside": null,
+        "rambleMain": null,
+        "search": null,
+        "folders": null,
+        "mcpCard": null,
+        "imageCard": null,
+        "bodyText": "Skip to main content\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nUntitled conversation\nKel\nHi! Tell me what you need and I'll get started.\nKel model: Automatic\nTools\nFiles\nChanges\nacp-temp-84fc4ec1"
+      }
+    }
+  },
+  "routes": {},
+  "toolsExpanded": true,
+  "imageControlsOpen": true
+}

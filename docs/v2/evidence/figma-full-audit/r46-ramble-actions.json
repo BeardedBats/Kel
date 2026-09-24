@@ -1,0 +1,14 @@
+{
+  "menuOpen": true,
+  "menuLabels": [
+    "Rename",
+    "Upload Audio",
+    "API Key",
+    "Record More",
+    "Combine"
+  ],
+  "disabledRecordMore": true,
+  "disabledCombine": true,
+  "width": 393,
+  "renameVisible": true
+}

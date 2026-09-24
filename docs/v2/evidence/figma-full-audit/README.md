@@ -24,6 +24,12 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 
 **r42–r43 packaged follow-up:** [r42 measurements](r42-settings-check.json) found the WebUI step strip 38px above its first card while a legacy 32px margin and content-box rows kept both cards too tall. The source repair removed that margin, tightened the rows, and used the mobile FINAL copy. [r43 measurements](r43-settings-check.json) place the WebUI card at x16/y232, 361×166 and Login Info at x16/y410, 361×126, including the 79px setup notice. [The r43 screenshot](key/r43-webui.png) shows the three-part step strip, switches, short copy, and compact login rows. Pet now measures 361×197, close to the FINAL off-state card; its enabled selector remains unverified. System retains its 361×204 first card. These packaged checks preserve setup and show no 393px document overflow.
 
+**r44–r46 populated Dark follow-up:** r44 was an intermediate package. r45 added truthful phone Tools status text, a compact Image Model expander, populated Scheduled task list and detail cards, a Ramble list/detail split, a 361px chat composer above the phone tabs, and solid Dark dropdown/toast surfaces derived from Components `146:52` and `146:125`. [r45 measurements](r45-ui-check.json) cover 393 and 1440px, and the [r45 route sweep](r45-route-sweep.json) found no bounce or horizontal overflow on 23 post-setup phone routes. Three manual task samples were created in disposable data through the packaged UI. A local one-second synthetic tone uploaded through the packaged UI and produced a saved transcript; this verifies the local path, not fresh Muse speech. [r45 saved detail](key/r45-ramble-saved-detail.png) exposed a real layout gap: actions sat inside an oversized document card. r46 moves the mobile title, saved status, transcript card, and Copy/Download/Audio/More footer into the `222:1628` hierarchy while retaining desktop actions. [The r46 detail](key/r46-ramble-saved-detail.png) and [open More menu](key/r46-ramble-more.png) show the packaged result; [action checks](r46-ramble-actions.json) confirm Rename opens, unavailable Record More/Combine stay disabled, and width remains 393px. [r46 sweep](r46-route-sweep.json) found no bounce or horizontal overflow on the same 23 phone routes. The Figma phone status bar remains a device-only layer; the Windows package has a native title bar.
+
+The r46 packaged Copy action displayed [a Dark toast](key/r46-ramble-copy-toast.png) above the phone tabs. Its computed panel gradient was `#2C3B5C → #1A2846`, its text was `#EDF2FA`, and its bounds were x101/y691, 181×43. This checks one success toast; error and loading variants remain open.
+
+The populated chat used a Playwright response fixture only for the two message turns, not production data. [Phone](key/r45-chat-fixture-393.png) and [desktop](key/r45-chat-fixture-1440.png) captures prove rendering and width, not remote model behavior. Its phone copy action, missing feedback actions, and turn spacing still differ from `216:2`. The r45 attempt to fixture the transcription library returned no rows; the separate packaged audio upload above supplied the saved-state evidence. Figma's four transcript footer icons and duration text are not yet matched. Other rows below describe the original r29 pass unless their observation names a later candidate.
+
 ## Desktop screen pass
 
 | Figma frame | Route | Observation |
@@ -34,7 +40,7 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 | `186:1097` Appearance | `/settings/appearance` | Main card and three theme tiles follow the frame. The package adds **Add Theme**, absent from the visible FINAL screen. Figma shows a changed `#0a1e42` example; the isolated package shows its own saved/default color. [Source](key/186-1097.png), [package](key/appearance.png). |
 | `188:1327` Model | `/settings/model` | Default model list and custom model card match the main hierarchy. The package adds **Add Model** in the desktop card header, absent from the visible FINAL screen. Row borders and weight still need a desktop matched-state check. |
 | `188:1620` System | `/settings/system` | Main grouping matches. Data paths, version values, and current settings come from the isolated machine; the Figma sample is not a valid value comparison. |
-| `188:1956` Tools | `/settings/tools` | MCP and Image Generation groups appear. The package exposes live status and action controls that the FINAL sample does not show. |
+| `188:1956` Tools | `/settings/tools` | MCP and Image Generation groups appear. r45 keeps live status/actions; its compact phone treatment does not establish desktop exact parity. |
 | `188:2240` WebUI | `/settings/webui` | Step and controls are present. The package adds explanatory copy and different field treatment; exact text and spacing remain open. |
 | `188:2541` Desktop Pet | `/settings/pet` | Controls and group are present. Value and enabled state reflect the isolated profile. |
 | `188:2825` Archived | `/settings/archived` | Empty card is present. The package uses a centered icon and short message; the mobile FINAL frame uses a sentence instead. |
@@ -45,12 +51,12 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 | `189:1342` Activity | `/activity` | Three card groups follow the frame. Figma has a sample running job; the package has real empty states. |
 | `189:1758` Permissions | `/autonomy` | Three card groups follow the frame. Guardrail digest and current counts are runtime values. |
 | `189:2193` Projects | `/projects/knowledge` | Knowledge, map, and Recipes groups appear. The package includes functional map actions missing from the sample. |
-| `189:2628` Scheduled tasks | `/scheduled` | Figma has three sample tasks; the package has none. List row geometry needs a populated package fixture. |
+| `189:2628` Scheduled tasks | `/scheduled` | r45 has three real manual samples in disposable data and compact phone list/detail cards. Desktop populated alignment still needs a matched comparison. |
 | `189:3098` Providers | `/providers` | Integration and preflight groups appear. The package adds credential metadata and action controls; compact FINAL rows remain open. |
 | `189:3564` Diagnostics | `/diagnostics` | Health, performance, and maintenance groups appear. Live values replace Figma's sample values. |
-| `189:4032` Transcriptions | `/transcription/library` | Figma shows saved recordings; isolated package has none. Populated row and action states remain open. |
+| `189:4032` Transcriptions | `/transcription/library` | r45/r46 saved a synthetic one-second upload in disposable data. Desktop library row and action parity remain open. |
 | `189:4492` Set up Kel | `/onboarding` | Figma shows step 2; fresh isolated package starts at step 1. Step 2 needs a matching setup state. |
-| `194:1366` Ramble | `/transcription` | Figma shows a transcript; isolated package is empty. Saved transcript controls remain open. |
+| `194:1366` Ramble | `/transcription` | r46 verifies the saved transcript and More controls on phone. Desktop populated layout and real Muse speech remain open. |
 
 ## Mobile screen pass
 
@@ -66,7 +72,7 @@ Figma's mobile frame is 393×852. It uses a phone header, five persistent tabs, 
 | `218:598` | Model | r29 used desktop rows. r41 uses FINAL wording, mobile rows, custom-model help text, and a full-width Add Model action; exact row spacing remains open. |
 | `218:701` | Add Model sheet | Centered desktop modal, no grab handle, narrow fields. [Source](key/218-701.png), [r29](key/model-sheet.png). |
 | `219:572` | System | r29 used expanded backup text. r41 uses compact Data folder and Back up now rows plus the Foundation danger Restore control. Both dialogs opened. General field spacing remains open. |
-| `219:767` | Tools | [r39 package](key/r39-tools.png) still has Add MCP, icon-based status actions, and an Image Model configuration row. The FINAL frame uses compact Connected/Needs setup text rows. Preserve the live controls while aligning the visible status treatment. |
+| `219:767` | Tools | [r45 package](key/r45-tools-393.png) uses compact Connected/Needs setup/Not tested rows and an expandable Image Model row. Add MCP and live checks remain available. Exact card copy and state parity remain open. |
 | `219:858` | WebUI | [r39](key/r39-webui.png) had an extra introduction and expanded fields. [r43](key/r43-webui.png) uses the FINAL step strip, short copy, compact switches, and login rows. Runtime step and credential values remain truthful; enabled and later step states still need a live pass. |
 | `219:966` | Desktop Pet | r43 uses compact phone rows and a disabled Medium selector for the off state. Its card is 361×197. The isolated runtime refused enable, so the enabled selector remains unverified. |
 | `219:1052` | Archived | r29 used a centered icon. r37/r38 use the FINAL sentence in a 361×94 card. |
@@ -78,11 +84,11 @@ Figma's mobile frame is 393×852. It uses a phone header, five persistent tabs, 
 | `220:1249` | Activity | Desktop frame; runtime empty state differs from sample running work. |
 | `220:1328` | Permissions | Desktop frame; card order matches, but mobile row spacing differs. |
 | `220:1405` | Knowledge | Desktop frame with map action; mobile three-card treatment missing. |
-| `220:1482` | Scheduled tasks | Empty real state cannot verify Figma's populated task and detail cards. |
+| `220:1482` | Scheduled tasks | r45 used three real manual samples and compact phone list/detail cards. Execution history with actual runs remains unverified. |
 | `220:1594` | Providers | Expanded credential metadata and desktop preflight controls. |
 | `220:1699` | Diagnostics | Expanded runtime detail and desktop maintenance controls. |
-| `222:1475` | Ramble | Desktop recording sidebar and content stack; mobile recording list missing. |
-| `222:1628` | Ramble transcript | No saved transcript in the isolated profile; actions unverified. |
+| `222:1475` | Ramble | r45 shows the phone recording list, search, and tabs with one saved local upload. |
+| `222:1628` | Ramble transcript | r46 aligns the title/status/card/footer structure and verifies the More menu. Footer icons, saved duration text, and real Muse audio remain open. |
 | `222:1714` | Set up Kel | Fresh profile at step 1, while FINAL shows step 2 and a bottom Continue action. |
 | `222:1800` | Kibble | FINAL has a placeholder. The package contains the working Fix Capture and Build Update surface; preserve that behavior while deriving its controls from Components. |
 | `230:1674` | Chat drawer | r29 drawer is too narrow and includes desktop section links. [Source](key/230-1674.png), [r29](key/chat-drawer.png). |
@@ -121,6 +127,6 @@ The full Components board inventory was read, including its behavior notes. This
 - The 51 Figma-to-package pairs used Dark mode. Figma's new mobile page was discovered during this audit; older `FIGMA_GAPS.md` claims about no FINAL mobile frames are stale.
 - The inspected FINAL frames and Foundations board show a Dark palette. They do not provide a matching Light screen set, so pixel parity for Light cannot be claimed from this file.
 - Packaged r29 used disposable host, store, and engine roots. Sample content in Figma was not injected into production data. A content mismatch alone is not a code defect.
-- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. r39 closes mobile About, Archived, Skills Hub, and notices. r41 closes the confirmed mobile Model and System structure gaps. r43 aligns WebUI and Pet off-state layout. Tools, other compact mobile rows, menu states, enabled WebUI/Pet states, and populated-data comparisons remain open.
+- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. r39 closes mobile About, Archived, Skills Hub, and notices. r41 aligns mobile Model and System structure gaps. r43 aligns WebUI and Pet off-state layout. r45/r46 add populated task, transcript, Tools, menu, and toast checks. Exact parity remains open for populated chat actions, transcript icons/duration, other desktop controls, enabled WebUI/Pet states, and component interaction states.
 - Google sign-in, live services, fresh Muse audio, remote model response, and physical iPhone checks need access, media, or hardware and remain pending.
 - No `request_review` tool was available in the tool inventory. No independent review occurred.

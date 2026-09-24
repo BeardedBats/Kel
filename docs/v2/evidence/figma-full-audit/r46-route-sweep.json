@@ -1,0 +1,152 @@
+[
+  {
+    "route": "/guid",
+    "actual": "#/guid",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/appearance",
+    "actual": "#/settings/appearance",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/model",
+    "actual": "#/settings/model",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/system",
+    "actual": "#/settings/system",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/tools",
+    "actual": "#/settings/tools",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/webui",
+    "actual": "#/settings/webui",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/pet",
+    "actual": "#/settings/pet",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/archived",
+    "actual": "#/settings/archived",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/assistants",
+    "actual": "#/settings/assistants",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/skills",
+    "actual": "#/settings/skills",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/about",
+    "actual": "#/settings/about",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/work",
+    "actual": "#/work",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/activity",
+    "actual": "#/activity",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/autonomy",
+    "actual": "#/autonomy",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/projects/knowledge",
+    "actual": "#/projects/knowledge",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/scheduled",
+    "actual": "#/scheduled",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/providers",
+    "actual": "#/providers",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/diagnostics",
+    "actual": "#/diagnostics",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/transcription/library",
+    "actual": "#/transcription/library",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/onboarding",
+    "actual": "#/onboarding",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/transcription",
+    "actual": "#/transcription",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/dogfood",
+    "actual": "#/dogfood",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/connections",
+    "actual": "#/connections",
+    "width": 393,
+    "setup": false
+  },
+  {
+    "route": "/settings/model desktop",
+    "actual": "#/settings/model",
+    "width": 1440,
+    "text": "Skip to main content\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nDefault Kel model\nDefault Kel model\nAutomatic — Kel picks what is available\nCurrent\nClaude (built-in)Claude\nAvailable\nCodex (built-in)Codex\nAvailable\nClaude Sonnet 4.6Anthropic\nAvailable\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\n\nSaved immediately. Switching back to Automatic restores Kel's normal routing.\n\nCustom models\nAdd Model\nNo custom models configured"
+  },
+  {
+    "route": "/settings/system desktop",
+    "actual": "#/settings/system",
+    "width": 1440,
+    "text": "e\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nSystem\nData & backup\nData folder\n\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r43-populated\\engine\n\nShow in folder\nBackup\n\nSaves a copy of everything above to a folder you choose.\n\nBack up now\nRestore\n\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\n\nRestore from this backup\nGeneral\nLanguage\nEnglish\nKeep computer awake\nStart on Boot\nClose to Tray\nHardware Acceleration\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nmin\nPreview Size Limit (MB)\nMB\nCross-conversation messages"
+  }
+]
