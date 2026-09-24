@@ -61,14 +61,13 @@ REQUIRED = {
         'execution-path',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx': (
-        # V1.5 G7: enforcement is real. The V1.6 human-visual repair rewrote this page in plain
-        # language; the daily-driver lane re-pins the same claims to the repaired shipped copy.
-        'Kel enforces those limits while it works',
+        # The V2 page retains the locked guardrail and action-check claims.
+        'These safety rules are locked and cannot be changed',
         'checked against them before it runs',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
-        # Updated in V1.5 G4: injection is real; the pinned claim is the shipped copy.
-        'injected into provider runs from OS-backed storage',
+        # V2 describes credential custody in its metadata empty state.
+        'the value itself lives in the OS-backed store',
     ),
 }
 
