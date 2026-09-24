@@ -4,7 +4,7 @@ Feature → state → evidence. "State" is what is actually true on disk right n
 describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidence lives in that line's
 `docs/daily-driver/` and `docs/transcription/`), and the V2 rows are added as phases land.
 
-Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historical phase rows retain their original evidence. V2-18's cancelled Build Update and no-job submission defects are fixed in source; focused tests are in `TEST_EVIDENCE.md`. V2-19's r61 System and r62 Appearance packaged evidence is in `evidence/figma-full-audit/`. Exact UI parity and live acceptance remain open.
+Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historical phase rows retain their original evidence. V2-18's cancelled Build Update and no-job submission defects are fixed in source. Kibble now reads candidate verification and report location from the fields the engine actually returns. Focused tests are in `TEST_EVIDENCE.md`. V2-19's r61 System and r62 Appearance packaged evidence is in `evidence/figma-full-audit/`. Exact UI parity and live acceptance remain open.
 
 ## Baseline inherited by V2 (verified on `dev/daily-driver` @ a471e17)
 

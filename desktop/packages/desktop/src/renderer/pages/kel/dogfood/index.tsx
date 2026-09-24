@@ -339,10 +339,10 @@ const DogfoodFixes: React.FC = () => {
                     <>
                       <p className='kel-strong'>{`Candidate ${buildState.candidate.id.slice(0, 8)} · ${buildState.candidate.review_state ?? 'BUILDING'}`}</p>
                       <p className='kel-meta'>
-                        {`verified: ${buildState.candidate.verified === true || buildState.candidate.verified === 1 ? 'yes' : 'no'} · revision ${String(buildState.candidate.revision ?? '—').slice(0, 12)}`}
+                        {`verified: ${buildState.candidate.evidence?.verified === true ? 'yes' : 'no'} · revision ${String(buildState.candidate.revision ?? '—').slice(0, 12)}`}
                       </p>
-                      {buildState.candidate.artifact && (
-                        <p className='kel-meta'>{`evidence: ${buildState.candidate.artifact}`}</p>
+                      {buildState.candidate.artifact_location && (
+                        <p className='kel-meta'>{`Review files: ${buildState.candidate.artifact_location}`}</p>
                       )}
                       {Boolean(buildState.candidate.fixed_findings?.length) && (
                         <p className='kel-meta'>{`fixed: ${(buildState.candidate.fixed_findings ?? []).join(', ')}`}</p>
