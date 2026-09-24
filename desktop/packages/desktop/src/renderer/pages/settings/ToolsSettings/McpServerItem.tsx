@@ -1,4 +1,4 @@
-import { Collapse } from '@arco-design/web-react';
+import { Button, Collapse } from '@arco-design/web-react';
 import React from 'react';
 import type { IMcpServer } from '@/common/config/storage';
 import McpServerHeader from './McpServerHeader';
@@ -57,6 +57,7 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
         name='1'
         className={'[&_div.arco-collapse-item-content-box]:py-3'}
       >
+        {!isReadOnly && <div className='kel-tools-mcp-mobile-action'><Button size='mini' loading={isTestingConnection} onClick={() => onTestConnection(server)}>Check connection</Button></div>}
         <McpServerToolsList server={server} />
       </Collapse.Item>
     </Collapse>

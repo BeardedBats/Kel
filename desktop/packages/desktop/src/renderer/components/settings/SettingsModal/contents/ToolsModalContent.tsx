@@ -272,6 +272,7 @@ const ToolsModalContent: React.FC = () => {
   const mcpMessage = useMountedMessage(rawMcpMessage);
   const [imageGenerationModel, setImageGenerationModel] = useState<ImageGenerationModelSetting | undefined>();
   const [isUpdatingImageGeneration, setIsUpdatingImageGeneration] = useState(false);
+  const [showMobileImageModel, setShowMobileImageModel] = useState(false);
   const { modelListWithImage: data } = useConfigModelListWithImage();
   const { mcpServers, extensionMcpServers, saveMcpServers, setMcpServers, isMcpServersLoading } = useMcpServers();
   const builtinImageGenServer = useMemo(() => mcpServers.find(isBuiltinImageGenServer), [mcpServers]);
@@ -489,7 +490,7 @@ const ToolsModalContent: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
           {/* MCP 工具配置 */}
-          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px flex flex-col min-h-0 border border-border-2'>
+          <div className='kel-shell-settings-card kel-tools-mcp-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px flex flex-col min-h-0 border border-border-2'>
             <div className='flex-1 min-h-0'>
               <AionScrollArea
                 className={classNames('h-full', isPageMode && 'overflow-visible')}
@@ -507,7 +508,7 @@ const ToolsModalContent: React.FC = () => {
             </div>
           </div>
           {/* 图像生成 */}
-          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
+          <div className='kel-shell-settings-card kel-tools-image-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
             <ShellSourceCardHeader title='Image Generation' />
             <div className='flex items-center justify-between mb-16px'>
               <div><span className='text-14px text-t-primary'>Image Generation</span></div>
@@ -526,7 +527,12 @@ const ToolsModalContent: React.FC = () => {
 
             <Divider className='mt-0px mb-20px' />
 
-            <Form layout='horizontal' labelAlign='left' className='space-y-12px'>
+            <button type='button' className='kel-tools-image-mobile-row' aria-expanded={showMobileImageModel} onClick={() => setShowMobileImageModel((open) => !open)}>
+              <span>{imageGenerationModel?.use_model || '… None'}</span>
+              <span aria-hidden='true'>{showMobileImageModel ? '⌃' : '›'}</span>
+            </button>
+
+            <Form layout='horizontal' labelAlign='left' className={classNames('kel-tools-image-controls space-y-12px', showMobileImageModel && 'is-open')}>
               <Form.Item
                 label='Image Model'
                 tooltip={
