@@ -1,0 +1,117 @@
+[
+  {
+    "route": "/guid",
+    "actual": "#/guid",
+    "width": 393
+  },
+  {
+    "route": "/settings/appearance",
+    "actual": "#/settings/appearance",
+    "width": 393
+  },
+  {
+    "route": "/settings/model",
+    "actual": "#/settings/model",
+    "width": 393
+  },
+  {
+    "route": "/settings/system",
+    "actual": "#/settings/system",
+    "width": 393
+  },
+  {
+    "route": "/settings/tools",
+    "actual": "#/settings/tools",
+    "width": 393
+  },
+  {
+    "route": "/settings/webui",
+    "actual": "#/settings/webui",
+    "width": 393
+  },
+  {
+    "route": "/settings/pet",
+    "actual": "#/settings/pet",
+    "width": 393
+  },
+  {
+    "route": "/settings/archived",
+    "actual": "#/settings/archived",
+    "width": 393
+  },
+  {
+    "route": "/settings/assistants",
+    "actual": "#/settings/assistants",
+    "width": 393
+  },
+  {
+    "route": "/settings/skills",
+    "actual": "#/settings/skills",
+    "width": 393
+  },
+  {
+    "route": "/settings/about",
+    "actual": "#/settings/about",
+    "width": 393
+  },
+  {
+    "route": "/work",
+    "actual": "#/work",
+    "width": 393
+  },
+  {
+    "route": "/activity",
+    "actual": "#/activity",
+    "width": 393
+  },
+  {
+    "route": "/autonomy",
+    "actual": "#/autonomy",
+    "width": 393
+  },
+  {
+    "route": "/projects/knowledge",
+    "actual": "#/projects/knowledge",
+    "width": 393
+  },
+  {
+    "route": "/scheduled",
+    "actual": "#/scheduled",
+    "width": 393
+  },
+  {
+    "route": "/providers",
+    "actual": "#/providers",
+    "width": 393
+  },
+  {
+    "route": "/diagnostics",
+    "actual": "#/diagnostics",
+    "width": 393
+  },
+  {
+    "route": "/transcription/library",
+    "actual": "#/transcription/library",
+    "width": 393
+  },
+  {
+    "route": "/onboarding",
+    "actual": "#/onboarding",
+    "width": 393
+  },
+  {
+    "route": "/transcription",
+    "actual": "#/transcription",
+    "width": 393
+  },
+  {
+    "route": "/dogfood",
+    "actual": "#/dogfood",
+    "width": 393
+  },
+  {
+    "route": "/connections",
+    "actual": "#/connections",
+    "width": 393
+  }
+]
