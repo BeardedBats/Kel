@@ -53,6 +53,8 @@
 .kel-image-lightbox__image { display: grid; place-items: center; min-height: 0; overflow: hidden; border-radius: 10px; background: linear-gradient(150deg,#1e3f86,#0b1734); }
 .kel-image-lightbox__image img { display: block; max-width: 100%; max-height: min(60vh,540px); object-fit: contain; }
 @media (max-width: 767px) {
+  .kel-v2-shell .kel-in-chat-frame__pane { scrollbar-width: none; }
+  .kel-v2-shell .kel-in-chat-frame__pane::-webkit-scrollbar { display: none; }
   .kel-image-lightbox { padding: 16px; }
   .kel-image-lightbox__detail { display: none; }
 }
@@ -930,15 +932,25 @@ html:not([data-theme='light']) .kel-v2-shell .kel-palette[role='dialog'] { backg
   .kel-v2-shell .kel-shell-system-mobile-rows { width: 100%; }
   .kel-v2-shell .kel-shell-system-mobile-row {
     display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px;
-    padding: 0 12px; border: 0; border-bottom: 1px solid rgba(191,216,255,.12);
+    padding: 0; border: 0; border-bottom: 1px solid rgba(191,216,255,.12);
     background: transparent; color: var(--kel-text-1); text-align: left;
     font: 400 14px/20px var(--kel-shell-body); cursor: pointer;
   }
   .kel-v2-shell .kel-shell-system-mobile-row > span { color: var(--kel-figma-color-text-muted); font-size: 20px; }
   .kel-v2-shell .kel-shell-system-mobile-restore {
     width: 100%; min-height: 40px; margin-top: 12px; border: 0; border-radius: 8px;
-    background: #9D3F3E; color: #FFFFFF; font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
+    background: linear-gradient(var(--kel-figma-color-danger-top),var(--kel-figma-color-danger-bottom));
+    color: var(--kel-figma-color-danger-text); font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
   }
+  .kel-v2-shell .kel-shell-pet-card { padding: 16px !important; }
+  .kel-v2-shell .kel-shell-pet-card .divide-y > div:not(.kel-desktop-only) { min-height: 38px; padding-block: 8px; box-sizing: border-box; }
+  .kel-v2-shell .kel-shell-pet-card .divide-y > div:not(.kel-desktop-only) > div:first-child { min-width: 0; }
+  .kel-v2-shell .kel-shell-pet-size {
+    width: 100%; min-height: 38px; padding: 0 12px; border: 0;
+    border-bottom: 1px solid rgba(191,216,255,.12); background: transparent;
+    color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body);
+  }
+  .kel-v2-shell .kel-shell-pet-size option { background: var(--kel-figma-color-canvas-base); }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty,
   .kel-v2-shell .kel-shell-catalog-card,
   .kel-v2-shell .kel-shell-catalog-tip { min-height: 0; }
