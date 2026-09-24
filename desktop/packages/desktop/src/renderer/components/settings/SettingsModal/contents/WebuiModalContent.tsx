@@ -577,7 +577,10 @@ const WebuiModalContent: React.FC = () => {
 
         {/* 描述说明 / Description */}
         <div className='kel-shell-webui-intro space-y-6px'>
-          <p className='m-0 text-13px text-t-secondary leading-relaxed'>Use Kel as your "24/7 Remote Assistant" — arrange tasks from any remote device, anytime, anywhere.</p>
+          <p className='kel-desktop-only m-0 text-13px text-t-secondary leading-relaxed'>Use Kel as your "24/7 Remote Assistant" — arrange tasks from any remote device, anytime, anywhere.</p>
+          <div className='kel-phone-only kel-shell-webui-progress' aria-hidden='true'>
+            {[1, 2, 3].map((step) => <span key={step} className={step === (!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3) ? 'is-active' : ''} />)}
+          </div>
           <div className='kel-shell-source-step'><span>{`Step ${!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3} of 3`}</span><span>·</span><strong>{!webuiEnabled ? 'Enable WebUI' : !allowRemotePreference ? 'Access URL' : 'Allow Remote Access'}</strong></div>
         </div>
 
@@ -599,8 +602,9 @@ const WebuiModalContent: React.FC = () => {
         {/* WebUI 服务卡片 / WebUI Service Card */}
         <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
           <ShellSourceCardHeader title='WebUI' />
+          <p className='kel-phone-only kel-shell-webui-mobile-intro'>Turn on WebUI to reach Kel from your phone or a browser.</p>
           {/* WebUI 引导提示 / WebUI hint */}
-          <div className='mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
+          <div className='kel-desktop-only mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
             <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
             <div className='text-12px text-t-secondary leading-relaxed'>{t('settings.webui.featureRemoteDesc')}</div>
           </div>
