@@ -1,0 +1,195 @@
+{
+  "startedAt": "2026-09-22T03:21:47.018Z",
+  "installDir": "C:\\Users\\Nick\\KelDogfoodCandidate",
+  "appExe": "C:\\Users\\Nick\\KelDogfoodCandidate\\Kel.exe",
+  "dataRoot": "C:\\Users\\Nick\\KelDogfoodRuns\\prepared\\engine",
+  "cdpPort": 60697,
+  "checks": {
+    "timings": {
+      "Landing": 3018,
+      "startupToWindow": 6270,
+      "Work": 4249,
+      "Projects": 4241,
+      "Recipes": 4264,
+      "Activity": 4233,
+      "Transcription": 4238,
+      "Team": 3033,
+      "Settings": 4233,
+      "Tools": 4233
+    },
+    "surface_landing": {
+      "pass": true,
+      "hash": "#/guid",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "route",
+      "screenshotError": null
+    },
+    "landing_brief": {
+      "pass": true,
+      "resumptionBriefPresent": true,
+      "engineHasRecordedWork": false,
+      "briefText": "While you were away\n2 need you\nA connection needs setup\nAnthropic API — finish setting it up so Kel can keep it available.\nSet it up\nA connection needs setup\nDeepSeek API — finish setting it up so Kel can keep it available.\nSet it up",
+      "sample": "Skip to main content\nKel\nNew Chat\nWork\nProjects\nActivity\nPermissions\nTranscription\nProject conversations\nWorkspace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nI'm sending a test message here\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and"
+    },
+    "surface_work": {
+      "pass": true,
+      "hash": "#/work",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_projects": {
+      "pass": true,
+      "hash": "#/projects/knowledge",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_recipes": {
+      "pass": true,
+      "hash": "#/projects/recipes",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_activity": {
+      "pass": true,
+      "hash": "#/activity",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_transcription": {
+      "pass": true,
+      "hash": "#/transcription",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_team": {
+      "pass": true,
+      "hash": "#/guid",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "route",
+      "screenshotError": null
+    },
+    "surface_settings": {
+      "pass": true,
+      "hash": "#/settings/appearance",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "surface_tools": {
+      "pass": true,
+      "hash": "#/settings/tools",
+      "horizontalOverflowPx": 0,
+      "rawErrorPatterns": [],
+      "donorTerms": [],
+      "navigatedBy": "click",
+      "screenshotError": null
+    },
+    "permissions_nav": {
+      "clicked": false,
+      "hash": "#/autonomy"
+    },
+    "permissions_tables": [],
+    "permissions_work_column": {
+      "pass": true,
+      "reason": "no lease in this data root — the honest empty state is the correct surface"
+    },
+    "permissions_no_donor_terms": true,
+    "permissions_screenshotError": null,
+    "pet_nav": {
+      "clicked": false,
+      "hash": "#/settings/pet"
+    },
+    "pet_switch_found": 0,
+    "pet_single_message": {
+      "pass": true,
+      "toastCount": 1,
+      "toasts": [
+        "The desktop pet is not available in this build, so it stays off."
+      ],
+      "occurrencesOfRefusalInPage": 1,
+      "switchSettledOff": true
+    },
+    "pet_screenshotError": null,
+    "providers_nav": {
+      "clicked": false,
+      "hash": "#/providers"
+    },
+    "providers_human_status": {
+      "pass": true,
+      "sample": "Skip to main content\nKel\nNew Chat\nWork\nProjects\nActivity\nPermissions\nTranscription\nProject conversations\nWorkspace\nBadge chat\nwork\nstatus\nmain\nHey! I wanted to test this out. How far along are we?\nConversations\nI'm sending a test message here\nHey! What fonts are you using?\nI want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard\nI "
+    },
+    "providers_readiness": {
+      "pass": true,
+      "chosen": "Chosen: Claude (Claude Code) · claude-native",
+      "chain": "Chain: Claude (Claude Code) → Codex → DeepSeek API → Anthropic API",
+      "honestNoProvider": false,
+      "rawIdsInTheAnswer": []
+    },
+    "providers_targeted_card": "Anthropic API",
+    "providers_setup_flow": {
+      "pass": true,
+      "keyFieldAppeared": true,
+      "saveEnabled": true,
+      "namesTheProvider": true,
+      "messages": [],
+      "savedLine": "Saved and verified Anthropic API: the key is in the OS store and recorded for the engine. Kel starts using it the next time its engine starts."
+    },
+    "providers_no_false_health": {
+      "pass": true,
+      "anthropicCardAfterSave": "Anthropic API Available Update key Remove key API · API key (billed per use) · https://api.anthropic.com Ready to use — this provider does not report usage. Model Capabilities claude-sonnet-4-6 text · vision · tools"
+    },
+    "providers_key_removed": true,
+    "providers_after_cleanup": 2,
+    "providers_screenshotError": null,
+    "update_nav": {
+      "clicked": false,
+      "hash": "#/settings/about"
+    },
+    "update_identity": {
+      "pass": true,
+      "versionLine": "v1.7.0-dev",
+      "donorTermPresent": false
+    },
+    "update_fails_closed": {
+      "pass": true,
+      "outcome": "Update metadata request failed (404)",
+      "interpretation": "honest fail-closed answer",
+      "releaseCardShown": false
+    },
+    "update_screenshotError": null
+  },
+  "consoleErrors": [],
+  "cdp": {
+    "Browser": "Chrome/138.0.7204.251",
+    "Protocol-Version": "1.3",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Kel/1.7.0-dev Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
+    "V8-Version": "13.8.258.32",
+    "WebKit-Version": "537.36 (@e9338f3ca35356d29b834450ba248c96511395e0)",
+    "webSocketDebuggerUrl": "ws://127.0.0.1:60697/devtools/browser/b66b0799-93ce-421e-97d3-2aa0cf01571a"
+  },
+  "appUrl": "file:///C:/Users/Nick/KelDogfoodCandidate/resources/app.asar/out/renderer/index.html#/guid",
+  "startupMs": 6270,
+  "allPassed": true,
+  "donorTermsInConsole": 0
+}

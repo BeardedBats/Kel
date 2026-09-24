@@ -1,8 +1,8 @@
 {
   "phase": "D18",
-  "when": "2026-09-20T17:42:37Z",
+  "when": "2026-09-22T03:09:25Z",
   "mode": "synthetic provider (engine fixture adapter), real execution paths",
-  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d18-qar78ylo",
+  "data_dir": "C:\\Users\\Nick\\AppData\\Local\\Temp\\kel-d18-npxq0ki3",
   "verdict": {
     "j1_conversation_round_trip": true,
     "j2_task_closed": true,

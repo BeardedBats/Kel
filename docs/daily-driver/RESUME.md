@@ -180,8 +180,12 @@ Deeper records (read only when auditing a specific phase): `IMPLEMENTATION_STATU
 
 ## Package / install (final phases)
 
-- Candidate install: `C:\Users\Nick\KelDailyDriverCandidate`
-- Candidate data root: `C:\Users\Nick\KelDailyDriverRuns\prepared`
+- Candidate install: `C:\Users\Nick\KelDailyDriverCandidate` — **no longer present** (2026-09-21: a later
+  lane's NSIS update healed into it and then moved on). The app installed on this machine now is
+  `C:\Users\Nick\KelDogfoodCandidate` (data root `C:\Users\Nick\KelDogfoodRuns\prepared`).
+- Candidate data root: `C:\Users\Nick\KelDailyDriverRuns\prepared` — **no longer present** (same move).
+- The installed battery verifies whatever is installed: point `KEL_INSTALL_DIR` / `KEL_BATTERY_DATA` /
+  `KEL_BATTERY_OUT` at it (see `PACKAGE_EVIDENCE.md`).
 - Do **not** overwrite preserved audit/release-candidate installations.
 
 ## Never
