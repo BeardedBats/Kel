@@ -107,8 +107,10 @@ class RecordingTests(DiagnosticsBase):
         self.assertFalse(_pid_alive(child.pid))
 
     def test_pid_liveness_rejects_invalid_ids(self):
-        for pid in (0, -1, 'invalid', 2 ** 40):
+        for pid in (0, -1, 'invalid'):
             self.assertFalse(_pid_alive(pid))
+        if os.name == 'nt':
+            self.assertFalse(_pid_alive(2 ** 40))
 
 
 class ExportTests(DiagnosticsBase):
