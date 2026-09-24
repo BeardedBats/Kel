@@ -10,7 +10,7 @@ import { ipcBridge } from '@/common';
 import { uuid } from '@/common/utils';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext.tsx';
 import { Button, Message, Modal } from '@arco-design/web-react';
-import { EditTwo } from '@icon-park/react';
+import { EditTwo, CheckOne } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CssThemeModal from './CssThemeModal.tsx';
@@ -440,9 +440,9 @@ const CssThemeSettings: React.FC = () => {
 
               {/* 选中标记 / Selected indicator */}
               {activeThemeId === theme.id && (
-                <span className='kel-shell-theme-selected-check' aria-hidden='true'>
-                  <svg width='10' height='10' viewBox='0 0 10 10' fill='none'><path d='M1.5 5 4 7.3 8.5 2.8' stroke='white' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' /></svg>
-                </span>
+                <div className='absolute bottom-8px end-8px'>
+                  <CheckOne theme='filled' size='20' fill='var(--color-primary)' />
+                </div>
               )}
             </div>
           );

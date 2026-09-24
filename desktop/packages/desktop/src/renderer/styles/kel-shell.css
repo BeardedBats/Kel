@@ -403,7 +403,6 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
 .kel-v2-shell [data-testid='theme-card-light'] { background: #edf2fa !important; }
 .kel-v2-shell [data-testid='theme-card-light'] .text-white { color: #14213e; }
 .kel-v2-shell [data-testid^='theme-card-'][data-active='true'] { border-color: #7fa0ff; box-shadow: 0 0 0 1px rgba(127,160,255,.4); }
-.kel-shell-theme-selected-check { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #7fa0ff; }
 .kel-v2-shell [data-testid^='theme-card-'] > .bg-gradient-to-t { background: transparent; }
 .kel-shell-theme-preview { display: flex; gap: 4px; height: 72px; margin: 10px; }
 .kel-shell-theme-preview > div:first-child { width: 40px; background: var(--preview-side); border-radius: 3px; }
@@ -767,7 +766,6 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-v2-shell .kel-shell-theme-gallery > .flex.flex-wrap { gap: 14px; }
 .kel-v2-shell [data-testid='theme-colors-section'] > .flex:first-child { height: 34px; margin-bottom: 10px; }
 .kel-v2-shell [data-testid='theme-colors-restore'] { top: 0; height: 34px; color: #9fc3ff; }
-.kel-v2-shell [data-testid='theme-colors-restore'].arco-btn { padding: 0 4px !important; border: 0 !important; background: transparent !important; box-shadow: none !important; color: #edf2fa !important; font: 500 14px/20px var(--kel-shell-heading); }
 .kel-v2-shell [data-testid='theme-colors-more'] { display: block; height: 20px; margin: 0; padding: 0; font: 400 14px/20px var(--kel-shell-body); text-decoration: underline; }
 .kel-v2-shell .kel-shell-theme-color-row { gap: 14px; }
 .kel-v2-shell .kel-shell-theme-color-row .arco-input { width: 120px; height: 30px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); font: 400 13px/18px var(--kel-font-mono); }
@@ -1513,25 +1511,4 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
     box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
   }
   html[data-theme='dark'] body :is(.kel-shell-task-modal, .kel-shell-webui-modal) .aionui-modal-std-footer .arco-btn:disabled { opacity: .4; }
-}
-
-/* Desktop Appearance dialog follows the same Dark modal, field, and button roles. */
-@media (min-width: 768px) {
-  .kel-v2-shell [data-testid='theme-colors-restore'].arco-btn { height: 34px !important; }
-  html[data-theme='dark'] body .arco-modal.kel-shell-theme-modal {
-    box-sizing: border-box; border: 1px solid rgba(191,216,255,.16) !important; border-radius: 16px;
-    background: linear-gradient(180deg,rgba(191,216,255,.08),transparent),rgba(15,45,100,.86) !important;
-    box-shadow: inset 0 1px 0 rgba(191,216,255,.18),0 20px 48px -16px rgba(0,0,0,.35); backdrop-filter: blur(24px);
-  }
-  html[data-theme='dark'] body .kel-shell-theme-modal :is(.arco-modal-content,.aionui-modal-std-body) { background: transparent !important; border: 0 !important; }
-  .kel-shell-theme-modal :is(.aionui-modal-std-header,.aionui-modal-std-footer) { border-color: rgba(191,216,255,.12) !important; }
-  .kel-shell-theme-modal .aionui-modal-std-body > .space-y-20px > .flex { background: rgba(47,107,224,.08) !important; }
-  .kel-shell-theme-modal .text-13px.text-t-secondary { color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
-  .kel-shell-theme-modal .border-dashed { border-color: rgba(127,160,255,.28) !important; background: rgba(47,107,224,.1) !important; }
-  .kel-shell-theme-modal .arco-input { height: 34px !important; border: 1px solid rgba(127,160,255,.28) !important; border-radius: 8px !important; background: rgba(47,107,224,.1) !important; color: #edf2fa !important; }
-  .kel-shell-theme-modal .arco-input:focus { border-color: rgba(127,160,255,.8) !important; box-shadow: 0 0 8px 1px rgba(47,107,224,.35) !important; }
-  .kel-shell-theme-modal .cm-editor { background: rgba(6,18,46,.4) !important; color: #edf2fa !important; }
-  .kel-shell-theme-modal .cm-gutters { border-color: rgba(191,216,255,.12) !important; background: rgba(6,18,46,.2) !important; color: #8fa3c4 !important; }
-  .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn { height: 34px; border: 1px solid rgba(140,150,167,.5) !important; border-radius: 8px; background: rgba(15,45,100,.34) !important; color: #e4dccf !important; }
-  .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn-primary { background: linear-gradient(135deg,#153973,#365693) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
 }
