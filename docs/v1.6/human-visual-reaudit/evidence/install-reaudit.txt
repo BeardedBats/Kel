@@ -1,0 +1,87 @@
+== stop Kel processes ==
+== clear registration keys (fresh path; backups already taken) ==
+== silent install -> C:\Users\Nick\KelVisualReauditInstall ==
+INSTALL_EXIT=0
+== installed files (top) ==
+locales
+resources
+chrome_100_percent.pak
+chrome_200_percent.pak
+d3dcompiler_47.dll
+dxcompiler.dll
+dxil.dll
+ffmpeg.dll
+icudtl.dat
+Kel.exe
+libEGL.dll
+libGLESv2.dll
+LICENSE.electron.txt
+LICENSES.chromium.html
+resources.pak
+snapshot_blob.bin
+Uninstall Kel.exe
+uninstallerIcon.ico
+v8_context_snapshot.bin
+version
+== installed hashes ==
+E7AFA62DD74B6F6CA434A6A3FBA557BB20345E0B09A15C1FFE7040A3E0FDDAB5  Kel.exe
+F525B15BB77385831C0695FB02998ED6EA3DD21315926792052E4894021AF5D8  kel-engine/KelEngine.exe
+== version ==
+
+
+ProductName    : Kel
+ProductVersion : 1.6.0.0
+FileVersion    : 1.6.0
+
+
+
+== registry now ==
+
+
+InstallLocation : C:\Users\Nick\KelVisualReauditInstall
+
+
+
+== preserved installs (must match pre-install values) ==
+F65B430AD2BD62868F5846D40C3A201B60FF43847E47ABF52A857476ECC84A96  KelV16ReviewInstall/Kel.exe
+DF4F0EE991DFD5C0D74E54FFFC9510EBF4948DD3D9050088F39561A33EA7E01F  KelV16ReviewInstall/engine
+28AD709821A3FB124BDAD4B54E615F7A02270ADB79D64B3605DFEC314015E5F1  KelVisualFixInstall/Kel.exe
+F525B15BB77385831C0695FB02998ED6EA3DD21315926792052E4894021AF5D8  KelVisualFixInstall/engine
+== Kel shortcuts ==
+C:\Users\Nick\Desktop\Kel.lnk -> C:\Users\Nick\KelVisualReauditInstall\Kel.exe
+C:\Users\Nick\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk -> C:\Users\Nick\KelVisualReauditInstall\Kel.exe
+== done ==
+
+
+FileVersionRaw     : 1.6.0.0
+ProductVersionRaw  : 1.6.0.0
+Comments           : 
+CompanyName        : Kel
+FileBuildPart      : 0
+FileDescription    : Kel
+FileMajorPart      : 1
+FileMinorPart      : 6
+FileName           : C:\Users\Nick\KelVisualReauditInstall\Kel.exe
+FilePrivatePart    : 0
+FileVersion        : 1.6.0
+InternalName       : Kel
+IsDebug            : False
+IsPatched          : False
+IsPrivateBuild     : False
+IsPreRelease       : False
+IsSpecialBuild     : False
+Language           : English (United States)
+LegalCopyright     : Copyright c 2026 Kel
+LegalTrademarks    : 
+OriginalFilename   : 
+PrivateBuild       : 
+ProductBuildPart   : 0
+ProductMajorPart   : 1
+ProductMinorPart   : 6
+ProductName        : Kel
+ProductPrivatePart : 0
+ProductVersion     : 1.6.0.0
+SpecialBuild       : 
+
+
+

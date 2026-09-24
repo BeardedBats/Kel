@@ -1,0 +1,40 @@
+== out/renderer manifest (reaudit | campaign) ==
+d84453f7ba1210b1658db4bc5e8be799e6a0df69b2671686ccb813c38f36df13 *-
+d84453f7ba1210b1658db4bc5e8be799e6a0df69b2671686ccb813c38f36df13 *-
+== out/main manifest ==
+ea921d34f5f29c457dc7c6c2a0e5952aadd5c6929ae38a9f30c5885bc0fc45de *-
+ea921d34f5f29c457dc7c6c2a0e5952aadd5c6929ae38a9f30c5885bc0fc45de *-
+== out/preload manifest ==
+50c013bd7405868758da9ac57eb96be9ae5ddcd9f8eae3025ca112b4c6e6a99c *-
+50c013bd7405868758da9ac57eb96be9ae5ddcd9f8eae3025ca112b4c6e6a99c *-
+== package.json diff ==
+PACKAGE_JSON_IDENTICAL
+== app.asar.unpacked trees ==
+unpacked reaudit=e82fbbf1d69350101b97bcdb1294ee869bc3848a8c3c2d778a23c8bf33b2cccd
+unpacked campaign=8c8e21db369945abde8f4838660ff8005b1637d605dfdcca7285b6f9bce42672
+unpacked differing entries=51
+Files node_modules/better-sqlite3/build/better_sqlite3.vcxproj and node_modules/better-sqlite3/build/better_sqlite3.vcxproj differ
+Files node_modules/better-sqlite3/build/better_sqlite3.vcxproj.filters and node_modules/better-sqlite3/build/better_sqlite3.vcxproj.filters differ
+Files node_modules/better-sqlite3/build/deps/locate_sqlite3.vcxproj and node_modules/better-sqlite3/build/deps/locate_sqlite3.vcxproj differ
+Files node_modules/better-sqlite3/build/deps/locate_sqlite3.vcxproj.filters and node_modules/better-sqlite3/build/deps/locate_sqlite3.vcxproj.filters differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.recipe and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.recipe differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/Cl.items.tlog and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/Cl.items.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.command.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.command.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.read.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.read.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.write.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/CustomBuild.write.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/locate_sqlite3.lastbuildstate and node_modules/better-sqlite3/build/deps/Release/obj/locate_sqlite3/locate_sqlite3.tlog/locate_sqlite3.lastbuildstate differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.lib.recipe and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.lib.recipe differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.command.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.command.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Cl.items.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Cl.items.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.read.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.read.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.write.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/CL.write.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib.command.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib.command.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib.read.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib.read.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib-link.write.1.tlog and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/Lib-link.write.1.tlog differ
+Files node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/sqlite3.lastbuildstate and node_modules/better-sqlite3/build/deps/Release/obj/sqlite3/sqlite3.tlog/sqlite3.lastbuildstate differ
+Files node_modules/better-sqlite3/build/deps/sqlite3.vcxproj and node_modules/better-sqlite3/build/deps/sqlite3.vcxproj differ
+Files node_modules/better-sqlite3/build/deps/sqlite3.vcxproj.filters and node_modules/better-sqlite3/build/deps/sqlite3.vcxproj.filters differ
+Files node_modules/better-sqlite3/build/Release/better_sqlite3.exp and node_modules/better-sqlite3/build/Release/better_sqlite3.exp differ
+Files node_modules/better-sqlite3/build/Release/better_sqlite3.iobj and node_modules/better-sqlite3/build/Release/better_sqlite3.iobj differ
+Files node_modules/better-sqlite3/build/Release/better_sqlite3.ipdb and node_modules/better-sqlite3/build/Release/better_sqlite3.ipdb differ
+Files node_modules/better-sqlite3/build/Release/obj/better_sqlite3/better_sqlite3.node.recipe and node_modules/better-sqlite3/build/Release/obj/better_sqlite3/better_sqlite3.node.recipe differ

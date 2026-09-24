@@ -1,0 +1,84 @@
+=== REAUDIT installer top-level listing ===
+
+7-Zip (a) 24.09 (x86) : Copyright (c) 1999-2024 Igor Pavlov : 2024-11-29
+
+Scanning the drive for archives:
+1 file, 213615918 bytes (204 MiB)
+
+Listing archive: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\Kel-1.6.0-win-x64.exe
+
+--
+Path = C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\dist\package-r12\Kel-1.6.0-win-x64.exe
+Type = 7z
+WARNINGS:
+There are data after the end of archive
+Offset = 597041
+Physical Size = 212772556
+Tail Size = 246321
+Headers Size = 32018
+Method = LZMA2:26 BCJ
+Solid = +
+Blocks = 2
+
+   Date      Time    Attr         Size   Compressed  Name
+------------------- ----- ------------ ------------  ------------------------
+                    D....            0            0  locales
+                    D....            0            0  resources
+                    D....            0            0  resources\app.asar.unpacked
+                    D....            0            0  resources\app.asar.unpacked\node_modules
+                    D....            0            0  resources\app.asar.unpacked\node_modules\@napi-rs
+                    D....            0            0  resources\app.asar.unpacked\node_modules\@napi-rs\canvas-win32-x64-msvc
+                    D....            0            0  resources\app.asar.unpacked\node_modules\@rollup
+                    D....            0            0  resources\app.asar.unpacked\node_modules\@rollup\rollup-win32-x64-msvc
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release\obj
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release\obj\locate_sqlite3
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release\obj\locate_sqlite3\locate_sqlite3.tlog
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release\obj\sqlite3
+                    D....            0            0  resources\app.asar.unpacked\node_modules\better-sqlite3\build\deps\Release\obj\sqlite3\sqlite3.tlog
+
+=== donor-name entries in REAUDIT installer (expected: only internal helper names) ===
+                    D....            0            0  resources\bundled-aioncore
+                    D....            0            0  resources\bundled-aioncore\win32-x64
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\corepack
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\corepack\dist
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\corepack\dist\lib
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\corepack\shims
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\corepack\shims\nodewin
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\bin
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\bin\node-gyp-bin
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\content
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\content\commands
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\content\configuring-npm
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\content\using-npm
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\lib
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\output
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\output\commands
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\output\configuring-npm
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\docs\output\using-npm
+                    D....            0            0  resources\bundled-aioncore\win32-x64\managed-resources\node\node-v24.11.0-win-x64\node_modules\npm\lib
+--- count:
+2740
+
+=== CAMPAIGN installer top-level ===
+
+7-Zip (a) 24.09 (x86) : Copyright (c) 1999-2024 Igor Pavlov : 2024-11-29
+
+Scanning the drive for archives:
+1 file, 213608723 bytes (204 MiB)
+
+Listing archive: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-fix\dist\package-r12\Kel-1.6.0-win-x64.exe
+
+--
+Path = C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-fix\dist\package-r12\Kel-1.6.0-win-x64.exe
+Type = 7z
+WARNINGS:

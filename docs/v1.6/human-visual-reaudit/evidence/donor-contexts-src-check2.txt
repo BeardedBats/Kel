@@ -1,0 +1,25 @@
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/main.tsx
+3: * Copyright 2025 AionUi (aionui.com)
+163:// Every language AionUi ships that Arco publishes a locale for. Arco has no
+197:        scope.setTag('aionui.installation_integrity', event.failure_kind ?? 'unknown');
+198:        scope.setTag('aionui.runtime_resource', event.resource);
+199:        scope.setTag('aionui.runtime_resource_id', event.resource_id ?? '');
+200:        scope.setTag('aionui.runtime_scope', event.scope.kind);
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx
+4: * Copyright 2025 AionUi (aionui.com)
+182:  // The "AionUi" wordmark acts as Home / Back-to-Chat, but only from settings routes.
+364:      window.dispatchEvent(new CustomEvent('aionui-open-update-modal', { detail: { source: 'tray' } }));
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/common/config/constants.ts
+3: * Copyright 2025 AionUi (aionui.com)
+31:export const BROWSER_SESSION_PARTITION = 'persist:aionui-browser';
+48:export const BUILTIN_BROWSER_MCP_NAME = 'aionui-browser';
+53:export const AIONUI_TIMESTAMP_SEPARATOR = '_aionui_';
+56:export const AIONUI_TIMESTAMP_REGEX = /_aionui_\d{13}(\.\w+)?$/;
+60:// 必须与后端 crates/aionui-common/src/constants.rs 中的值逐字一致。
+-- C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx
+3: * Copyright 2026 AionUi (aionui.com)
+17:export const OPEN_MIGRATION_DIALOG_EVENT = 'aionui-open-migration-dialog';
+19:// Official website users are guided to for the AionUi Pro download. Kept as a
+21:const AIONUI_WEBSITE_URL = 'https://www.aionui.com/';
+27:const MIGRATION_INVITE_SHOWN_KEY = 'aionui.migration-invite-shown';
+100:      console.error('Failed to open AionUi Pro website:', error);

@@ -1,0 +1,59 @@
+== useUpdateNotificationController migration logic ==
+3: * Copyright 2026 AionUi (aionui.com)
+8:import type { AutoUpdateStatus, UpdateDownloadProgressEvent } from '@/common/update/updateTypes';
+15:  updateNotificationReducer,
+21:} from './updateNotificationState';
+23:import { setUpdateReadyState } from './updateReadyState';
+25:import { OPEN_MIGRATION_DIALOG_EVENT } from './UpdateMigrationDialog';
+29:export const UPDATE_AVAILABLE_EVENT = 'aionui-update-available';
+60:): UpdateNotificationState => updateNotificationReducer(current, event).state;
+65:  state.updateInfo?.version || state.autoUpdateInfo?.version || '';
+84:      const res = await ipcBridge.update.check.invoke({
+90:          updateInfo: res.data.latest,
+122:      checkFailedLabel: t('update.checkFailed'),
+130:          updateInfo: outcome.updateInfo,
+140:          updateInfo: outcome.updateInfo,
+162:      updateInfo: outcome.updateInfo,
+190:      console.warn('Restore downloaded auto-update error:', error);
+207:    void ipcBridge.update.consumeInstallerLastFailure
+224:      // opens the migration card instead of checking. Flag is compile-time, so
+244:    const removeOpenListener = ipcBridge.update.open.on((evt) => {
+251:    window.addEventListener('aionui-open-update-modal', handleWindowOpen);
+254:    // update is actually available, handing over the already-fetched outcome.
+265:      window.removeEventListener('aionui-open-update-modal', handleWindowOpen);
+296:          dispatch({ type: 'autoError', message: evt.error || t('update.downloadFailed') });
+309:    const removeProgressListener = ipcBridge.update.downloadProgress.on((evt: UpdateDownloadProgressEvent) => {
+317:        error: evt.error || t('update.downloadFailed'),
+335:      dispatch({ type: 'autoError', message: res?.msg || t('update.downloadStartFailed') });
+340:    const asset = state.updateInfo?.recommendedAsset;
+346:    const res = await ipcBridge.update.download.invoke({
+353:      dispatch({ type: 'checkError', message: res?.msg || t('update.downloadStartFailed') });
+361:  }, [state.updateInfo?.recommendedAsset, t]);
+
+== MigrationInviteCapsule conditions ==
+3: * Copyright 2026 AionUi (aionui.com)
+10:import { OPEN_MIGRATION_DIALOG_EVENT } from '@/renderer/components/settings/UpdateMigrationDialog';
+12:// Persistent titlebar capsule shown only in the discontinued build. After the
+13:// migration invite dialog auto-opens once and the user dismisses it, this
+18:const MigrationInviteCapsule: React.FC = () => {
+20:  const label = t('update.migration.capsule');
+29:      className='app-titlebar__migration-capsule'
+34:      <span className='app-titlebar__migration-capsule-dot' aria-hidden='true' />
+40:export default MigrationInviteCapsule;
+== discontinued/migration gate definitions ==
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts:577:        // Check for updates after 3 seconds delay. Skipped in the discontinued
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts:580:        // literal, so this branch is tree-shaken out of non-discontinued builds.
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/index.ts:582:        if (!process.env.IS_DISCONTINUED_BUILD) {
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx:44:import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Layout.tsx:536:                {IS_DISCONTINUED_BUILD && <UpdateMigrationDialog />}
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Titlebar/index.tsx:19:import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Titlebar/index.tsx:412:        {IS_DISCONTINUED_BUILD && <MigrationInviteCapsule />}
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Titlebar/MigrationInviteCapsule.tsx:12:// Persistent titlebar capsule shown only in the discontinued build. After the
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/layout/Titlebar/titlebar.css:185:/* Migration invite capsule (discontinued build only): a pill-shaped button in
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx:19:import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/AboutModalContent.tsx:72:    if (IS_DISCONTINUED_BUILD) {
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx:15:// updates" entry points dispatch it in the discontinued build instead of
+
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx:27:const MIGRATION_INVITE_SHOWN_KEY = 'aionui.migration-invite-shown';
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx:31:    return window.localStorage.getItem(MIGRATION_INVITE_SHOWN_KEY) === '1';
+C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop/packages/desktop/src/renderer/components/settings/UpdateMigrationDialog.tsx:41:    window.localStorage.setItem(MIGRATION_INVITE_SHOWN_KEY, '1');

@@ -1,0 +1,50 @@
+== REAUDIT installer ==
+
+
+ProductName     : Kel
+FileDescription : Kel with the AionUI interface
+Comments        : 
+CompanyName     : Kel
+LegalCopyright  : Copyright c 2026 Kel
+
+
+
+== CAMPAIGN installer ==
+
+
+ProductName     : Kel
+FileDescription : Kel with the AionUI interface
+Comments        : 
+CompanyName     : Kel
+LegalCopyright  : Copyright c 2026 Kel
+
+
+
+== installed Uninstall Kel.exe (reaudit) ==
+
+
+ProductName     : Kel
+FileDescription : Kel with the AionUI interface
+Comments        : 
+CompanyName     : Kel
+
+
+
+== installed Kel.exe (reaudit) ==
+
+
+ProductName     : Kel
+FileDescription : Kel
+Comments        : 
+CompanyName     : Kel
+
+
+
+== review install Uninstall exe ==
+
+
+FileDescription : Kel with the AionUI interface
+ProductName     : Kel
+
+
+

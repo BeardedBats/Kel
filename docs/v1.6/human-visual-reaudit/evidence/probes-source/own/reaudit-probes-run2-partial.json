@@ -1,0 +1,311 @@
+{
+  "startedAt": "2026-09-20T02:27:12.929Z",
+  "appDir": "C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-human-visual-reaudit\\dist\\package-r12\\win-unpacked",
+  "rootDir": "C:\\Users\\Nick\\KelVisualReauditRuns\\prepared",
+  "probes": {
+    "boot": {
+      "hash": "#/guid",
+      "title": "Kel",
+      "windows": 1
+    },
+    "sidebar": {
+      "img": {
+        "src": "file:///C:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/dist/package-r12/win-unpacked/resources/app.asar/out/renderer/assets/app-Bq_S8k2x.png",
+        "naturalWidth": 1024,
+        "naturalHeight": 1024
+      },
+      "badge": {
+        "text": "2",
+        "left": 230,
+        "right": 250,
+        "top": 861,
+        "bottom": 881,
+        "w": 20,
+        "h": 20
+      },
+      "badgeInsideSider": true,
+      "noSvgText": true,
+      "narrowBadgeInside": true,
+      "plainKTextPresent": false
+    },
+    "permissionsScroll": [
+      {
+        "size": "1366x768",
+        "canScroll": true,
+        "initial": 0,
+        "wheelDelta": 150,
+        "endTop": 150,
+        "max": 150,
+        "homeTop": 0,
+        "pageUpDelta": 150,
+        "pageDownDelta": 150,
+        "bottomReach": {
+          "lastBottom": 667.21875,
+          "viewportH": 768,
+          "visible": true
+        },
+        "dualScroll": {
+          "htmlScrollTop": 0,
+          "bodyOverflow": 0
+        },
+        "docOverflowX": 0,
+        "clientHeight": 725
+      },
+      {
+        "size": "1440x900",
+        "canScroll": true,
+        "initial": 0,
+        "wheelDelta": 56,
+        "endTop": 56,
+        "max": 56,
+        "homeTop": 0,
+        "pageUpDelta": 56,
+        "pageDownDelta": 56,
+        "bottomReach": {
+          "lastBottom": 761.21875,
+          "viewportH": 900,
+          "visible": true
+        },
+        "dualScroll": {
+          "htmlScrollTop": 0,
+          "bodyOverflow": 0
+        },
+        "docOverflowX": 0,
+        "clientHeight": 857
+      },
+      {
+        "size": "1440x960",
+        "canScroll": true,
+        "initial": 0,
+        "wheelDelta": 56,
+        "endTop": 56,
+        "max": 56,
+        "homeTop": 0,
+        "pageUpDelta": 56,
+        "pageDownDelta": 56,
+        "bottomReach": {
+          "lastBottom": 761.21875,
+          "viewportH": 960,
+          "visible": true
+        },
+        "dualScroll": {
+          "htmlScrollTop": 0,
+          "bodyOverflow": 0
+        },
+        "docOverflowX": 0,
+        "clientHeight": 917
+      },
+      {
+        "size": "1920x1080",
+        "canScroll": true,
+        "initial": 0,
+        "wheelDelta": 56,
+        "endTop": 56,
+        "max": 56,
+        "homeTop": 0,
+        "pageUpDelta": 56,
+        "pageDownDelta": 56,
+        "bottomReach": {
+          "lastBottom": 761.21875,
+          "viewportH": 1080,
+          "visible": true
+        },
+        "dualScroll": {
+          "htmlScrollTop": 0,
+          "bodyOverflow": 0
+        },
+        "docOverflowX": 0,
+        "clientHeight": 1037
+      },
+      {
+        "size": "1100x800",
+        "canScroll": true,
+        "initial": 0,
+        "wheelDelta": 139,
+        "endTop": 139,
+        "max": 139,
+        "homeTop": 0,
+        "pageUpDelta": 139,
+        "pageDownDelta": 139,
+        "bottomReach": {
+          "lastBottom": 699.21875,
+          "viewportH": 800,
+          "visible": true
+        },
+        "dualScroll": {
+          "htmlScrollTop": 0,
+          "bodyOverflow": 0
+        },
+        "docOverflowX": 0,
+        "clientHeight": 757
+      }
+    ],
+    "permissionsLanguage": {
+      "text": "Skip to main content\nKel\nNew Chat\nWork\nProjects\nPermissions\nTranscription\nProject conversations\nmain\nRelease checklist - build step\ndemo-quick\nGetting started\nreview-long-response\nDesktop review guide\nWork & context\n2\nSettings\nSkip to main content\nPermissions\n\n1 active permission · 1 waiting on you\n\nReload\nEmergency stop\n\nEmergency stop revokes every active permission and pauses all active or queued work; Kel stops at its next safe check. It does not undo work that already finished.\n\nActive permissions\nWork\tState\tExpires\tScope\tActions\njob_review_summary\tActive\tin 3d\t\tRevoke\nAccess requests\nroot: C:\\Users\\Nick\\Documents\\Kel review\nwaiting on you\n\nWrite the weekly summary file to your Documents folder.\n\nWhy: The summary belongs with your other notes, not inside the project workspace.\n\nBenefit: Your notes stay together in one place.\n\nIf denied: Kel keeps the summary inside the project folder instead.\n\nRisk: low\n\nAllow once\nAllow for this project\nDeny\nAdvanced details",
+      "hasActive": true,
+      "hasRequests": true,
+      "hasLeaseWord": false,
+      "hasSnapshot": false,
+      "hasWorker": false,
+      "hasReviewSample": false,
+      "hasZeroAgo": false,
+      "jobIdMatches": [
+        "job_review_summary"
+      ],
+      "leaseIdMatches": [],
+      "advBtnPresent": true,
+      "permCheckHidden": true,
+      "guardrailsHidden": true,
+      "emergency": true,
+      "advClicked": true,
+      "afterAdvanced": {
+        "permCheckVisible": true,
+        "guardrailsVisible": true,
+        "hideBtn": true
+      }
+    },
+    "permissionsRows": [
+      "Work State Expires Scope Actions",
+      "job_review_summary Active in 3d Revoke"
+    ],
+    "workToChat": {
+      "attentionRows": [
+        "An approval is waiting Run the release checklist build step — Kel is holding until you decide. Open the chat",
+        "Ready to continue when you are Run the release checklist build step — Kel can pick this up where it stopped. Open the chat",
+        "Ready to continue when you are Save the weekly summary to Documents — Kel can pick this up where it stopped. Open the chat",
+        "A permission decision is waiting Write the weekly summary file to your Documents folder. — Kel asked before acting; only you can grant it. Review the request"
+      ],
+      "openChatCount": 3,
+      "opened": [
+        {
+          "index": 0,
+          "hash": "#/conversation/3bdaab68",
+          "convId": "3bdaab68",
+          "idIsKnownDonor": true,
+          "textSample": "Skip to main content Kel New Chat Work Projects Permissions Transcription Project conversations main Release checklist - build step demo-quick Getting started review-long-response Desktop review guide Work & context 2 Settings Release checklist - build step Kick off the release checklist for this bu",
+          "backHash": "#/work",
+          "forwardHash": "#/conversation/3bdaab68"
+        },
+        {
+          "index": 1,
+          "hash": "#/conversation/3bdaab68",
+          "convId": "3bdaab68",
+          "idIsKnownDonor": true,
+          "textSample": "Skip to main content Kel New Chat Work Projects Permissions Transcription Project conversations main Release checklist - build step demo-quick Getting started review-long-response Desktop review guide Work & context 2 Settings Release checklist - build step Kick off the release checklist for this bu",
+          "backHash": "#/work",
+          "forwardHash": "#/conversation/3bdaab68"
+        },
+        {
+          "index": 2,
+          "hash": "#/conversation/3bdaab68",
+          "convId": "3bdaab68",
+          "idIsKnownDonor": true,
+          "textSample": "Skip to main content Kel New Chat Work Projects Permissions Transcription Project conversations main Release checklist - build step demo-quick Getting started review-long-response Desktop review guide Work & context 2 Settings Release checklist - build step Kick off the release checklist for this bu",
+          "backHash": "#/work",
+          "forwardHash": "#/conversation/3bdaab68"
+        }
+      ],
+      "expectedMain": "3bdaab68"
+    },
+    "conversationManual": {
+      "donor": "4d37b815",
+      "hash": "#/conversation/4d37b815",
+      "textSample": "Skip to main content Kel New Chat Work Projects Permissions Transcription Project conversations main Release checklist - build step demo-quick Getting started review-long-response Desktop review guide Work & context Settings Getting started"
+    },
+    "fontFloors": {
+      "mdVar": "16px",
+      "codeVar": "14px"
+    },
+    "modelPage": {
+      "textSample": "Skip to main content\nKel\nModel\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nDefault Kel model\n\nKel uses this model for normal conversations. The list shows the models available to Kel right now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's routing across every available provider.\n\nAutomatic — Kel picks what is available\nCurrent\nClaude (built-in)Claude\nAvailable\nCodex (built-in)Codex\nAvailable\nClaude Sonnet 4.6Anthropic\nNeeds setup\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\n\nSaved immediately. Switching back to Automatic restores Kel's normal routing.\n\nModel\nClear status\nAdd Model\n\nAdd your own API-backed models. The built-in models are listed above with their current availability.\n\nNo custom models configured\n\nAdd an API-backed model of your own — or keep using the built-in models listed above.",
+      "hasNoConfigured": false,
+      "hasNoCustomConfigured": true,
+      "hasDefaultCard": true,
+      "hasAvailable": true,
+      "hasNeedsSetup": true,
+      "hasCurrent": true,
+      "availableCount": 2,
+      "needsSetupCount": 3,
+      "hasAutomatic": true
+    },
+    "systemPage": {
+      "before": {
+        "hasAdvancedFolders": true,
+        "hasShow": true,
+        "hasWorkDir": false,
+        "hasDonorPath": false,
+        "textSample": "Skip to main content\nKel\nModel\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nData & backup\nWhere Kel keeps your chats, projects, transcripts and settings on this computer — plus simple backup and restore. Credentials are never included in backups.\nData folder\nC:\\Users\\Nick\\KelVisualReauditRuns\\prepared\\kelwork\nCopy path\nShow in folder\nBackup\nSaves a copy of everything above to a folder you choose.\nBack up now\nRestore\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\nRestore from th"
+      },
+      "sysClicked": true,
+      "after": {
+        "foldersOpenText": true,
+        "hasHide": true,
+        "donorPathVisibleNow": true
+      }
+    },
+    "appearancePage": {
+      "before": {
+        "hasLight": true,
+        "hasDark": true,
+        "hasFollow": true,
+        "donorText": false,
+        "textSample": "Skip to main content\nKel\nModel\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nTheme\nSelect or customize a theme\nAdd Theme\nLight\nDark\nFollow System\nTheme colors\nAdjust the foundation colors of the selected theme (Light). Changes apply immediately and are saved to this theme only — other themes stay as they are.\nApp background\nPanels\nElevated surfaces\nPrimary text\nSecondary text\nBorders\nAccent\nSuccess\nWarning\nError\nMore colors (20)\nFonts\nGlobal\nSystem default\nSystem default\n-\n14\n+\nReset\nChat\nSystem default\nSystem default\n-\n14\n+\nReset\nMarkdown\nSystem default\nSystem default\n-\n16\n+\nReset\nCode\nSystem default\nSystem default\n-\n14\n+\nReset\nScale\n-\n+\n95%\nReset zoom"
+      },
+      "darkTry": {
+        "label": "Dark",
+        "clicked": false,
+        "state": {
+          "bodyAttr": "light",
+          "htmlClass": "",
+          "bg": "rgb(249, 250, 251)"
+        }
+      },
+      "lightTry": {
+        "label": "Light",
+        "clicked": false,
+        "state": {
+          "bodyAttr": "light",
+          "htmlClass": "",
+          "bg": "rgb(249, 250, 251)"
+        }
+      },
+      "followTry": {
+        "label": "Follow System",
+        "clicked": false,
+        "state": {
+          "bodyAttr": "light",
+          "htmlClass": "",
+          "bg": "rgb(249, 250, 251)"
+        }
+      }
+    },
+    "toolsPage": {
+      "textSample": "Skip to main content\nKel\nModel\nTools\nApplication\nAppearance\nRemote\nDesktop Pet\nSystem\nArchived\nArchived conversations\nOther\nAbout\nWork & context\nBack to Chat\nTools\n\nConfigure MCP servers and built-in tools like image generation. Image generation must be enabled after configuring an image-capable model on the Model page.\n\nMCP Tools Configuration\nAdd MCP\nchrome-devtools\nKel Browser\nImage Generation\nImage Model\nNo available image models.\nGo to configure",
+      "hasKelBrowser": true,
+      "hasDonorBrowserId": false,
+      "hasChromeDevtools": true,
+      "donorAny": false
+    }
+  },
+  "shots": [
+    "sidebar-1440",
+    "sidebar-1000",
+    "permissions-1366x768-top",
+    "permissions-matrix-end",
+    "permissions-language-top",
+    "permissions-advanced",
+    "conversation-0-3bdaab68",
+    "conversation-1-3bdaab68",
+    "conversation-2-3bdaab68",
+    "conversation-manual-4d37b815",
+    "model",
+    "system",
+    "appearance",
+    "tools"
+  ],
+  "consoleErrors": [],
+  "httpErrors": [],
+  "pageErrors": [],
+  "notes": [],
+  "fatal": "page.evaluate: TypeError: el.click is not a function\n    at eval (eval at evaluate (:302:30), <anonymous>:5:8)\n    at UtilityScript.evaluate (<anonymous>:304:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n    at domClick (C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-human-visual-reaudit\\docs\\v1.6\\human-visual-reaudit\\evidence\\tools\\reaudit-probes.cjs:101:46)\n    at C:\\Users\\Nick\\Desktop\\Kel\\kel-v16-human-visual-reaudit\\docs\\v1.6\\human-visual-reaudit\\evidence\\tools\\reaudit-probes.cjs:401:30"
+}

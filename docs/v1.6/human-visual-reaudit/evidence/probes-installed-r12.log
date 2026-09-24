@@ -1,0 +1,30 @@
+{
+ "healthy": true,
+ "engine": "1.6.0",
+ "attention": true,
+ "aboutLogo": true,
+ "leaks": [],
+ "errors": 0,
+ "overflow": {
+  "/work": {
+   "doc": 0,
+   "body": 0
+  },
+  "/settings/about": {
+   "doc": 0,
+   "body": 0
+  },
+  "/": {
+   "doc": 0,
+   "body": 0
+  },
+  "/settings/appearance": {
+   "doc": 0,
+   "body": 0
+  },
+  "/autonomy": {
+   "doc": 0,
+   "body": 0
+  }
+ }
+}
