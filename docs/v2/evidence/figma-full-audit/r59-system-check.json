@@ -1,0 +1,30 @@
+{
+  "800": {
+    "route": "#/settings/system",
+    "documentWidth": 800,
+    "text": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nSystem\nData & backup\nData folder\n\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r43-populated\\engine\n\nShow in folder\nBackup\n\nSaves a copy of everything above to a folder you choose.\n\nBack up now\nRestore\n\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\n\nRestore from this backup\nGeneral\nLanguage\nEnglish\nKeep computer awake\nStart on Boot\nClose to Tray\nHardware Acceleration\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nmin\nPreview Size Limit (MB)\nMB\nCross-conversation messages",
+    "cards": [
+      {
+        "x": 371,
+        "y": 179,
+        "width": 382,
+        "height": 294,
+        "text": "Data & backupData folder ›Back up now ›Restore from this backupData fo"
+      }
+    ]
+  },
+  "1440": {
+    "route": "#/settings/system",
+    "documentWidth": 1440,
+    "text": "Skip to main content\nKel\nNew Chat\nRecent\nUntitled conversation\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nSystem\nData & backup\nData folder\n\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r43-populated\\engine\n\nShow in folder\nBackup\n\nSaves a copy of everything above to a folder you choose.\n\nBack up now\nRestore\n\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\n\nRestore from this backup\nGeneral\nLanguage\nEnglish\nKeep computer awake\nStart on Boot\nClose to Tray\nHardware Acceleration\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nmin\nPreview Size Limit (MB)\nMB\nCross-conversation messages",
+    "cards": [
+      {
+        "x": 613,
+        "y": 183,
+        "width": 664,
+        "height": 273,
+        "text": "Data & backupData folder ›Back up now ›Restore from this backupData fo"
+      }
+    ]
+  }
+}

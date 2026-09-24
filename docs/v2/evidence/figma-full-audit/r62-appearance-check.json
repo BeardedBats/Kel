@@ -1,0 +1,80 @@
+{
+  "800": {
+    "documentWidth": 800,
+    "theme": {
+      "x": 371,
+      "y": 179,
+      "w": 388,
+      "h": 440
+    },
+    "colors": {
+      "x": 371,
+      "y": 631,
+      "w": 388,
+      "h": 718
+    },
+    "darkCard": {
+      "x": 392,
+      "y": 356,
+      "w": 200,
+      "h": 116
+    },
+    "selected": "true",
+    "check": {
+      "x": 567,
+      "y": 447,
+      "w": 16,
+      "h": 16
+    },
+    "checkFill": "rgb(127, 160, 255)",
+    "reset": {
+      "x": 620.0625,
+      "y": 655,
+      "w": 117.9375,
+      "h": 20
+    },
+    "resetBackground": "rgba(0, 0, 0, 0)",
+    "resetBorder": "0px none rgb(237, 242, 250)",
+    "resetColor": "rgb(237, 242, 250)",
+    "resetFont": "500 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif"
+  },
+  "1440": {
+    "documentWidth": 1440,
+    "theme": {
+      "x": 613,
+      "y": 183,
+      "w": 670,
+      "h": 180
+    },
+    "colors": {
+      "x": 613,
+      "y": 375,
+      "w": 670,
+      "h": 458
+    },
+    "darkCard": {
+      "x": 848,
+      "y": 230,
+      "w": 200,
+      "h": 116
+    },
+    "selected": "true",
+    "check": {
+      "x": 1023,
+      "y": 321,
+      "w": 16,
+      "h": 16
+    },
+    "checkFill": "rgb(127, 160, 255)",
+    "reset": {
+      "x": 1144.0625,
+      "y": 392,
+      "w": 117.9375,
+      "h": 34
+    },
+    "resetBackground": "rgba(0, 0, 0, 0)",
+    "resetBorder": "0px none rgb(237, 242, 250)",
+    "resetColor": "rgb(237, 242, 250)",
+    "resetFont": "500 14px / 20px \"Instrument Sans\", \"Segoe UI\", sans-serif"
+  }
+}
