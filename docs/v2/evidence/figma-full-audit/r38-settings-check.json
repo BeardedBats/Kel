@@ -1,0 +1,114 @@
+[
+  {
+    "name": "about",
+    "url": "#/settings/about",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 214
+      },
+      {
+        "x": 16,
+        "y": 420,
+        "width": 361,
+        "height": 109
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAbout\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nKel\nVersion\n1.7.0 · dev\nRuntime\nElectron 37\nCheck for updates\nLicenses\nThird-party notices\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "notices first open",
+    "text": "Third-party notices and provenance\n\nThis repository contains original Kel code (Apache-2.0) plus the components below. Packaged binaries are never stored in git; see the README for the binary/release policy.\n\nComponents included in this repository\nComponent\tUpstream\tPinned revision\tLicense\tRole in K",
+    "rect": {
+      "x": 26,
+      "y": 298.8125,
+      "width": 341,
+      "height": 511.1875
+    },
+    "childCount": 14,
+    "visible": "visible",
+    "opacity": "1",
+    "pass": false
+  },
+  {
+    "name": "notices Escape closes",
+    "pass": false
+  },
+  {
+    "name": "archived",
+    "url": "#/settings/archived",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 94
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nArchived\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nArchived conversations\n\nNo archived items. Archived chats will appear here.\n\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "skills",
+    "url": "#/settings/skills",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 114
+      },
+      {
+        "x": 16,
+        "y": 319,
+        "width": 361,
+        "height": 114
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSkills Hub\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nMy Skills\n\nNo skills installed. Import a skill pack to make it available to every assistant.\n\nUsage Tip\n\nSkills are shared. Enable one on an assistant to let it use the pack.\n\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "about-800",
+    "url": "#/settings/about",
+    "width": 800,
+    "cards": [
+      {
+        "x": 249,
+        "y": 239,
+        "width": 502,
+        "height": 228
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      }
+    ],
+    "text": "Skip to main content\nNo chat history\nNew Chat\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nAbout\nKel\nVersion\nv1.7.0-dev\nRuntime\nElectron 37 · React 19 · Arco Design\nData folder\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r38-figma-final\\engine\nShow in folder\nCheck for updates"
+  },
+  {
+    "name": "about-1440",
+    "url": "#/settings/about",
+    "width": 1440,
+    "cards": [
+      {
+        "x": 485,
+        "y": 239,
+        "width": 670,
+        "height": 228
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      }
+    ],
+    "text": "Skip to main content\nNo chat history\nNew Chat\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nWorkspace\nSettings\nKel\nModel\nAssistants\nTools\nSkills\nApplication\nAppearance\nSystem\nDesktop Pet\nRemote / WebUI\nData\nArchived\nTranscriptions\nOther\nAbout\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nAbout\nKel\nVersion\nv1.7.0-dev\nRuntime\nElectron 37 · React 19 · Arco Design\nData folder\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r38-figma-final\\engine\nShow in folder\nCheck for updates"
+  }
+]
