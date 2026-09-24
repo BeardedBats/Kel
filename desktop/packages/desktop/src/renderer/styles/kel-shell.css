@@ -1360,6 +1360,16 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
 
 /* Keep desktop Tools controls readable between the phone and FINAL widths. */
 @media (min-width: 768px) and (max-width: 980px) {
+  /* Keep both desktop rails while giving the page room for its labels and actions. */
+  .kel-v2-shell .layout-sider {
+    width: 180px !important; min-width: 180px !important; flex-basis: 180px !important;
+  }
+  .kel-v2-shell .kel-in-chat-frame__card { grid-template-columns: 150px minmax(0,1fr); }
+  .kel-v2-shell .kel-in-chat-frame__nav { padding-inline: 6px; }
+  .kel-v2-shell .kel-in-chat-frame__nav-row { gap: 6px; padding-inline: 6px; font-size: 13px; }
+  .kel-v2-shell .kel-in-chat-frame__pane { padding: 16px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-page__head { flex-wrap: wrap; gap: 8px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-page__head > .kel-btn { white-space: nowrap; }
   .kel-v2-shell .kel-tools-mcp-layout > div:first-child { flex-wrap: wrap; gap: 8px; }
   .kel-v2-shell .kel-tools-mcp-card .arco-collapse-item-header {
     height: 48px; min-height: 48px; padding-left: 28px !important;
