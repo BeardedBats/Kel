@@ -57,7 +57,7 @@ class ProjectRootRoutingTests(unittest.TestCase):
         while time.time() < deadline:
             with contextlib.closing(self.service.store.connect()) as db:
                 row = db.execute('SELECT state FROM submissions WHERE id=?', (sid,)).fetchone()
-            if row and row['state'] in ('DISPATCHED', 'FAILED', 'INTERRUPTED'):
+            if row and row['state'] in ('DISPATCHED', 'SETTLED', 'FAILED', 'INTERRUPTED'):
                 break
             time.sleep(0.05)
         jobs = [j for j in self.service.store.list_jobs() if j['conversation'] == cid]
@@ -74,13 +74,13 @@ class ProjectRootRoutingTests(unittest.TestCase):
 
     def test_plain_chat_does_not_prompt(self):
         state, jobs, msgs = self.plan("hello, what can you do?")
-        self.assertEqual(state, 'DISPATCHED')
+        self.assertEqual(state, 'SETTLED')
         self.assertEqual(jobs, [])
         self.assertIn('chat reply', msgs)
 
     def test_ambiguous_coding_without_root_asks_for_a_project(self):
         state, jobs, msgs = self.plan("fix the login bug in the auth module")
-        self.assertEqual(state, 'DISPATCHED')
+        self.assertEqual(state, 'SETTLED')
         self.assertEqual(jobs, [])
         self.assertTrue(any('no project is selected' in m for m in msgs), msgs)
 

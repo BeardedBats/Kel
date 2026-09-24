@@ -40,7 +40,7 @@ class WorkContextTests(unittest.TestCase):
         cid = self.context.conversation(project_id=pid, title=name + ' chat')
         return pid, str(root), cid
 
-    def wait_submission(self, sid, terminal=('DISPATCHED', 'FAILED', 'INTERRUPTED')):
+    def wait_submission(self, sid, terminal=('DISPATCHED', 'SETTLED', 'FAILED', 'INTERRUPTED')):
         deadline = time.time() + 15
         while time.time() < deadline:
             with contextlib.closing(self.service.store.connect()) as db:
@@ -149,7 +149,7 @@ class WorkContextTests(unittest.TestCase):
         pid, root, cid = self.rooted_project('Askcase')
         sid = self.service._recipes_action({'action': 'run', 'conversation': cid,
                                             'recipe_id': 'fix-bug', 'inputs': {}})['submission']
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertIn('needs the "bug" input', self.assistant_texts(cid))
         self.assertEqual([j for j in self.service.store.list_jobs() if j['conversation'] == cid],
                          [])
@@ -179,7 +179,7 @@ class WorkContextTests(unittest.TestCase):
         sid = self.service._recipes_action({'action': 'run', 'conversation': self.cid,
                                             'recipe_id': 'continue-work',
                                             'inputs': {}})['submission']
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         self.assertIn('no unfinished work', self.assistant_texts(self.cid).lower())
         self.assertEqual(self.service.store.list_jobs(), [])
         preview = self.service._recipes_action({'action': 'preview',

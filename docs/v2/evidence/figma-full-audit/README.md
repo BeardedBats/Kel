@@ -4,6 +4,10 @@
 
 **Result:** exact parity is **not established**. Desktop shares the intended frame and tokens, but several controls and states differ. The r29 phone layout used the desktop frame, lacked the five tabs, and showed a centered Add Model modal. r33 fixes the shared mobile frame, theme rows, sheet, image chip, and lightbox. The screen rows below retain the r29 baseline for comparison; the r33 sections identify fixed gaps. Every row is a visual audit, not proof of a user journey.
 
+**Canonical follow-up:** r61 aligns desktop Dark System cards and controls with FINAL at 1440/800px ([record](DESKTOP_SYSTEM_R61.md)). r62 aligns the desktop Dark Appearance cards, selected theme state, and Restore text at those widths ([record](DESKTOP_APPEARANCE_R62.md)). These candidates were folded into canonical `main` and `App` during consolidation. The older candidate paths in this audit are historical.
+
+The canonical [Tools status review](DESKTOP_TOOLS_STATUS_CANONICAL.md) found no new gap in the connected sample and retains the r47 repair. Disconnected, active retest, error/help, and enabled Image Model states still need a rendered pass.
+
 **r30 packaged check:** the new [Settings index](key/r30-settings.png) and [Projects index](key/r30-projects.png) route correctly at 393px. Both show five tabs and no horizontal document overflow. [Appearance](key/r30-appearance.png) now shows three theme tiles in one row, yet its color rows still use a desktop form. The [Add Model sheet](key/r30-model-sheet.png) moved to the bottom, but an older 520px modal rule still forced the right button beyond the 393px viewport. The next source edit overrides that rule and uses the Figma field and footer widths; packaged proof remains pending.
 
 After using the existing **Start using Kel** action on the isolated r30 profile, 23 mobile routes were captured again. Every route stayed at 393px document width. The [post-setup manifest](r30-mobile-ui-manifest.json) records each route, visible button, and position. This verifies the shared width rule; it does not close screen-specific layout or copy gaps.

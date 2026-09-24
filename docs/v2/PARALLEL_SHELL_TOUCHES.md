@@ -77,11 +77,10 @@ meet, recorded so presentation and backend agree when the phone/Work surfaces la
   `401 {"success":false,"error":"Authentication required","code":"UNAUTHORIZED"}` for API routes
   (measured by J-REMOTE against the listening web-host). A remote surface should read that 401 as
   "sign in", not as a broken backend; the engine's bearer never appears in the client's body.
-- **A submission can read `DISPATCHED` with a null `job_id`.** `/api/state`'s `submissions` include
-  every request the person made: an answered chat turn and a request that produced no job at all (e.g.
-  a recipe that does not exist) are both recorded as `DISPATCHED` with `job_id: null`. That state does
-  **not** mean "work is running" — there is no job. Until the backend has a settled state for it (see
-  `KNOWN_LIMITATIONS.md`, V2-18 slice 5), a surface must not show such a request as in-progress work.
+- **A request without a job now settles.** `/api/state` records an answered chat turn or a request
+  that produced no job (for example, a missing recipe) as `SETTLED` with `job_id: null`.
+  `DISPATCHED` is reserved for requests linked to a job. A surface must not show `SETTLED` as running
+  work. Older database rows may still contain `DISPATCHED` with a null job id; treat those as settled.
 - **A settled-but-unverified job offers one action, not two.** `/api/work` rows carry `why` and
   `direct`; a job that closed without verification reads `why: "Settled: uncertain."` with
   `direct {action: retry, route: /api/retry}`, and a fenced run reads `direct {action: resume, route:

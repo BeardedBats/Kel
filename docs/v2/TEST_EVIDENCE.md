@@ -1,5 +1,11 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Canonical continuation (2026-09-24)
+
+The repository is now `C:\Users\Nick\Desktop\Kel\Kel` on `main`. Earlier candidate paths below are historical. For the cancelled Build Update and no-job submission changes, `python -B -m pytest -x -q tests/test_service_routing.py tests/test_v13_continuation_service.py tests/test_acp_host.py tests/test_v2_build_update.py` passed **53 tests**. Desktop `bun x tsc --noEmit --project tsconfig.json` passed. `bun x vitest run tests/unit --reporter=dot` passed **45 files / 298 tests** (the suite printed existing React `act` and CSS `NaN` warnings).
+
+A full engine `python -B -m pytest -q` run finished **1,284 passed, 4 failed, 14 subtests passed** in 922 seconds. Each failure asserted the old `DISPATCHED` state for an answered request with no job. Those assertions were updated. A focused run of all six affected engine files, including the read-only compatibility check for old submission rows, passed **71 tests**. The full suite was not repeated after this narrow test update. This is source-level regression evidence, not a fresh packaged app check.
+
 ## Current packaged r29 checkpoint (2026-09-23)
 
 Source `41b2bf6` and staged candidate `C:\Users\Nick\KelV2Candidate.r29`: `cd desktop && npx vitest run tests/unit --reporter=dot` passed **43 files / 294 tests**. The earlier typecheck, focused tests, package build, and archive gate passed after the source change. Packaged local conversation opening had a 112.4 ms median. Switching between two disposable project contexts had a 114.9 ms median. Dark Appearance had no document overflow at 1440, 800, or 390px. The native colour popup saved two adjustments while open, kept the second after reload, and Reset restored the default. See [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) for conditions and limits. Remote, live service, audio, and phone claims remain pending.

@@ -917,7 +917,7 @@ export const kelDogfood = {
 export interface KelBuildMission {
   id: string;
   job_id?: string | null;
-  state?: string;
+  stage?: string;
   source_root?: string;
   baseline_revision?: string | null;
   findings?: string[];

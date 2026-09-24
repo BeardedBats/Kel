@@ -247,7 +247,7 @@ class BuildUpdate:
     # -- the candidate -----------------------------------------------------------------------------
 
     def candidate(self, mission_id):
-        """Assemble (or return) the candidate. Before the mission settles it only reports BUILDING."""
+        """Assemble a settled mission, or report its live or cancelled state."""
         mission = self._mission_dict(self._mission_row(mission_id))
         with contextlib.closing(self.store.connect()) as db:
             existing = db.execute('SELECT * FROM build_candidates WHERE mission_id=?',
@@ -255,6 +255,8 @@ class BuildUpdate:
         if existing is not None and existing['review_state'] in ('APPROVED', 'REJECTED'):
             return {'state': existing['review_state'], 'candidate': self._candidate_dict(existing)}
         job = self.store.get(mission['job_id']) if mission.get('job_id') else None
+        if job is not None and job.get('state') == 'CANCELLED':
+            return {'state': 'CANCELLED', 'candidate': None, 'job_state': 'CANCELLED'}
         if job is None or job.get('state') != 'CLOSED':
             return {'state': 'BUILDING',
                     'candidate': self._candidate_dict(existing) if existing else None,

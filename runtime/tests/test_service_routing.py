@@ -26,7 +26,7 @@ class RoutingTests(unittest.TestCase):
         self.service.shutdown()
         self.tmp.cleanup()
 
-    def wait_submission(self, sid, terminal=('DISPATCHED', 'FAILED', 'INTERRUPTED')):
+    def wait_submission(self, sid, terminal=('DISPATCHED', 'SETTLED', 'FAILED', 'INTERRUPTED')):
         deadline = time.time() + 15
         while time.time() < deadline:
             with contextlib.closing(self.service.store.connect()) as db:
@@ -102,10 +102,35 @@ class RoutingTests(unittest.TestCase):
 
     def test_status_query_answers_without_a_model(self):
         sid = self.service.submit({'text': 'status', 'conversation': 'main'})
-        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
         state = self.service.state('main')
         self.assertTrue(any(m['role'] == 'assistant' and 'No work is running' in m['text'] for m in state['messages']))
         self.assertEqual(state['jobs'], [])
+        submission = next(item for item in state['submissions'] if item['id'] == sid)
+        self.assertIsNone(submission['job_id'])
+
+    def test_missing_recipe_answer_settles_without_a_job(self):
+        sid = self.service.submit({'text': 'Run a missing recipe', 'conversation': 'main',
+                                   'kind': 'recipe'})
+        self.assertEqual(self.wait_submission(sid), 'SETTLED')
+        state = self.service.state('main')
+        submission = next(item for item in state['submissions'] if item['id'] == sid)
+        self.assertIsNone(submission['job_id'])
+        self.assertTrue(any(message['role'] == 'assistant' and
+                            'could not find that recipe' in message['text']
+                            for message in state['messages']))
+
+    def test_old_no_job_dispatch_is_read_as_settled_without_rewriting_data(self):
+        with self.service.store.transaction() as db:
+            db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',
+                       ('old-answer', 'main', 'status', 'DISPATCHED', None, None, 1.0))
+        submission = next(item for item in self.service.state('main')['submissions']
+                          if item['id'] == 'old-answer')
+        self.assertEqual(submission['state'], 'SETTLED')
+        with contextlib.closing(self.service.store.connect()) as db:
+            raw = db.execute('SELECT state FROM submissions WHERE id=?',
+                             ('old-answer',)).fetchone()['state']
+        self.assertEqual(raw, 'DISPATCHED')
 
     def test_untyped_request_is_classified_and_compiled_deterministically(self):
         sid = self.service.submit({'text': 'Write a short plan for a weekend hike', 'conversation': 'main'})
