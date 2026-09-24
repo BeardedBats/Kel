@@ -503,7 +503,7 @@ const SystemModalContent: React.FC = () => {
 
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
-          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
+          <div className='kel-shell-settings-card kel-shell-system-general px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
             <ShellSourceCardHeader title='General' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {preferenceItems.filter(item => item.key !== 'saveUploadToWorkspace').map((item) => (
