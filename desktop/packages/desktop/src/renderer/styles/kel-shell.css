@@ -1385,6 +1385,10 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
 
 /* Components 148:229 and 147:162: desktop task dialog fields use the Dark glass tokens. */
 @media (min-width: 768px) {
+  /* Components 146:52: select menus must cover labels behind the popup. */
+  html[data-theme='dark'] body:has(.kel-v2-shell) .arco-select-popup {
+    background: linear-gradient(180deg, #2c3b5c, #1a2846) !important;
+  }
   html[data-theme='dark'] body .arco-modal.kel-shell-task-modal .arco-modal-content {
     background: linear-gradient(180deg, rgba(191,216,255,.08), transparent), rgba(15,45,100,.4) !important;
     border: 1px solid var(--kel-figma-color-glass-edge-lit) !important;
