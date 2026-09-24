@@ -133,3 +133,32 @@ Replay: `node packaging/verify-installed-battery.cjs` (drives the installed app 
 window; `--tour` and `--dump-providers` are the structural inspection modes). The engine-side
 journeys that support this battery are re-runnable with
 `cd runtime && python ../packaging/verify_synthetic_journeys.py`.
+
+## Re-verification of the app installed today (2026-09-21)
+
+The candidate recorded above was installed at `C:\Users\Nick\KelDailyDriverCandidate`. That directory no
+longer exists: the later Fix Capture work (a separate lane) ran an NSIS update that heals to the
+registered directory, so that path came to hold that build, and the lane has since moved its own target;
+the data root `C:\Users\Nick\KelDailyDriverRuns` went with it.
+
+What is installed on this machine today is `C:\Users\Nick\KelDogfoodCandidate` (registered in HKCU; data
+root `C:\Users\Nick\KelDogfoodRuns\prepared`). Its bundled engine `e6444991…` is byte-identical to
+`dist/runtime/KelEngine/KelEngine.exe` at HEAD, and `Kel.exe` reports Kel / 1.7.0-dev.
+
+The battery takes its target from the environment, so it verifies whatever is installed:
+
+    KEL_INSTALL_DIR="C:\Users\Nick\KelDogfoodCandidate" \
+    KEL_BATTERY_DATA="C:\Users\Nick\KelDogfoodRuns\prepared\engine" \
+    KEL_BATTERY_OUT="C:\Users\Nick\Desktop\Kel\kel-daily-driver\docs\daily-driver\evidence\d19-current" \
+    node packaging/verify-installed-battery.cjs
+
+Result: **allPassed true** — nine surfaces with no raw errors / no overflow / no donor terms, 0 console
+errors, D0-001 (the honest empty state, because this data root holds no lease), D0-004 (exactly one
+refusal message), D1 (human statuses; Set up → Save; no false health), D2 (`Update metadata request
+failed (404)` fail-closed, no release card), `v1.7.0-dev`. Evidence `evidence/d19-current/`.
+
+Two probes used to encode one environment's content rather than the product's behaviour: the landing
+brief required the candidate root's provider notice and seeded request, and the Permissions probe
+required a lease to exist before it could run. Both are now data-driven — the brief is checked against
+the engine's own record for the data root, and the Permissions probe accepts the honest empty state when
+the engine holds no lease while keeping the strong column check whenever it does.
