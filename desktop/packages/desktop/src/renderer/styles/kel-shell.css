@@ -402,6 +402,10 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
 .kel-shell-about-notices-content p,
 .kel-shell-about-notices-content li { font: 400 14px/20px 'Instrument Sans', 'Segoe UI', sans-serif; }
 .kel-shell-about-notices-content table { font: 400 12px/18px 'Instrument Sans', 'Segoe UI', sans-serif; }
+.kel-shell-about-notices-table { max-width: 100%; overflow-x: auto; }
+.kel-shell-about-notices-table table { display: table; min-width: 640px; max-width: none; overflow-wrap: normal; }
+.kel-shell-about-notices-table th,
+.kel-shell-about-notices-table td { padding: 6px 8px; text-align: left; vertical-align: top; }
 .kel-shell-preference-row { display: flex; min-height: 46px; align-items: center; justify-content: space-between; gap: 16px; font: 500 14px/20px var(--kel-shell-heading); }
 .kel-v2-shell .kel-shell-settings-card, .kel-v2-shell .settings-page-content .kel-card {
   padding: 16px 20px; border: 1px solid rgba(191,216,255,.24); border-radius: 16px;

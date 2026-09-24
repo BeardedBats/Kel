@@ -1,7 +1,8 @@
 import { KelCard } from '@renderer/components/kel/KelPrimitives';
 import AionModal from '@renderer/components/base/AionModal';
-import MarkdownView from '@renderer/components/Markdown';
 import thirdPartyNotices from '../../../../../../../../../THIRD_PARTY_NOTICES.md?raw';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useNavigate } from 'react-router-dom';
 /**
  * @license
@@ -150,7 +151,15 @@ const AboutModalContent: React.FC = () => {
         </KelCard>
       </div>
       <AionModal visible={showNotices} onCancel={() => setShowNotices(false)} variant='standard' header={{ title: 'Third-party notices', showClose: true }} footer={null} aria-label='Third-party notices'>
-        <div className='kel-shell-about-notices-content'><MarkdownView>{thirdPartyNotices}</MarkdownView></div>
+        <div className='kel-shell-about-notices-content'>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ table: ({ children }) =>
+            <div className='kel-shell-about-notices-table'><table>{children}</table></div>, a: ({ href, children }) =>
+            <a href={href} onClick={(event) => {
+              event.preventDefault();
+              if (href && /^https?:\/\//i.test(href)) void openExternalUrl(href);
+            }}>{children}</a>
+          }}>{thirdPartyNotices}</ReactMarkdown>
+        </div>
       </AionModal>
       <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />
     </div>
