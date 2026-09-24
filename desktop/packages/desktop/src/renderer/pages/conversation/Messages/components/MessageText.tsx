@@ -13,6 +13,7 @@ import { parseFileMarker, resolveMessageFilePath } from './fileMarker';
 import SessionMentionAction from './SessionMentionAction';
 import { parseSessionMessageBlock, parseSessionsBlock } from './sessionMarkers';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
 import { Alert, Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
@@ -34,14 +35,14 @@ import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
 
 /**
  * Format a timestamp for message display.
- * Today: "h:mm AM", older: "MM-DD h:mm AM".
+ * Desktop uses "h:mm AM"; phone keeps "HH:mm". Older dates add "MM-DD".
  */
-export const formatMessageTime = (timestamp: number): string => {
+export const formatMessageTime = (timestamp: number, twelveHour = true): string => {
   const date = new Date(timestamp);
   const now = new Date();
-  const hours = (date.getHours() % 12 || 12).toString();
+  const hours = twelveHour ? (date.getHours() % 12 || 12).toString() : date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  const time = `${hours}:${minutes} ${date.getHours() < 12 ? 'AM' : 'PM'}`;
+  const time = `${hours}:${minutes}${twelveHour ? ` ${date.getHours() < 12 ? 'AM' : 'PM'}` : ''}`;
 
   if (
     date.getFullYear() !== now.getFullYear() ||
@@ -126,6 +127,7 @@ const MessageText: React.FC<{
   }, [message.content.content]);
 
   const { t } = useTranslation();
+  const layout = useLayoutContext();
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const isUserMessage = message.position === 'right';
   const [reaction, setReaction] = useState<'up' | 'down' | null>(() => {
@@ -285,7 +287,7 @@ const MessageText: React.FC<{
       <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
         {message.created_at && <div className='kel-shell-message-meta'>
           {!isUserMessage && !isTeammateMessage && <img src={kelMark} alt='Kel' width={22} height={22} />}
-          <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at)}</time>
+          <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at, !layout?.isMobile)}</time>
         </div>}
         {cronMeta && <MessageCronBadge meta={cronMeta} />}
         {isTeammateMessage && displaySenderName && (
@@ -411,7 +413,7 @@ const MessageText: React.FC<{
               'flex-row-reverse': isUserMessage,
             })}
           >
-            {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
+            {!layout?.isMobile && !isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
 
           </div>
         )}
