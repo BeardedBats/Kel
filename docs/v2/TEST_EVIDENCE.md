@@ -493,3 +493,66 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
   measured example is recorded in `DECISIONS.md` (D-49).
 - Bounded group after the fixes: `python -m unittest tests.test_v2_build_update
   tests.test_v16_r8_migrations` → **17 OK** (15.7 s).
+
+### V2-18 — slice 5: Work, Needs Your Attention, Recovery, Remote (2026-09-23)
+
+One owned engine, identity proven before use (pid 15116, port 60979, command line naming the data
+root). Evidence: `docs/v2/evidence/v2-18/runs/2026-09-23-slice5-r3.json` (the FAILED first attempts,
+`-slice5.json` and `-slice5-r2.json`, are kept as the record).
+
+- **J-WORK PASSED** (2 claims): a real request ran on the real root and settled CLOSED with a recorded
+  artifact (`result.md`, 379 bytes, lineage id) and an explained verdict — the `manual_review` check
+  said "The reviewer returned no usable assessment." (provider `claude`), the row said "Settled:
+  uncertain." and offered the retry; then a real claim with an expired lease went through the engine's
+  `recover_abandoned()`: `ORPHANED` with a fresh epoch, milestone `UNCERTAIN` +
+  "Expired run; native state requires reconciliation", job `WAITING_RESOURCE`/`UNCERTAIN`, a second
+  recovery fenced nothing, the row read `fenced` + `needs_you` + `resume → /api/send`, and
+  `/api/diagnostics` reported `expired_unfenced: 0`.
+- **J-ATTN PASSED** (3 claims, 1.5 s): a real ask raised through the coding adapter's own `approval()`
+  appeared as one attention row (`needs_you`, `priority: now`, `related.approvals: 1`, `direct {answer,
+  /api/approval}`); one action answered it `APPROVED`, the waiting runtime continued without a second
+  ask (`run` back to `RUNNING`, row `needs_you: false`, `approvals: 0`), and answering the same ask
+  twice was refused.
+- **J-RECOV PASSED** (2 claims): a real request that could not run kept its text and its reason ("This
+  project needs a test command. Set it in Project context before coding.") with no job fabricated;
+  `/api/retry` was accepted on the same submission (one row, nothing duplicated) and re-settled with
+  the same reason; a request that is not `FAILED`/`INTERRUPTED` was refused with "This request is not
+  ready for retry".
+- **J-REMOTE PASSED** (2 claims, backend half): the listening web-host gateway was proven by pid +
+  command line + port ownership, then probed with no session: the API answered `401 {"success":false,
+  "error":"Authentication required","code":"UNAUTHORIZED"}` and the engine's bearer token appeared in
+  neither body.
+- **Two limits recorded, not passes:** no real work reached `VERIFIED` (the reviewer answered nothing
+  usable), and a request that produces no job is recorded as `DISPATCHED` with `job_id: null` and never
+  settles. Both are in `KNOWN_LIMITATIONS.md` with their next steps.
+
+### V2-19 — the first full backend regression on this line (2026-09-23)
+
+`cd runtime && python -m pytest -q --tb=line -rf` → **1277 passed, 3 failed, 14 subtests passed in
+1170.80 s (19 m 30 s)**.
+
+All three failures turned out to be one stale expectation, not a product fault:
+`tests/test_v14_upgrade.py::UpgradeTests` pinned `schema_migrations == [1, 2, 3, 4, 15]` and the
+migration-name set, but **D-50 moved the recipes step from version 4 (`v13-recipes`) to 30
+(`v2-recipe-library`)** — `kel/recipes.py` now carries `MIGRATION_VERSION = 30`. Fixed by updating the
+expectations to the current module set and adding the case the suite was missing: a store that recorded
+the *older* step (version 4, `v13-recipes`) still upgrades **additively** — the new step is applied, the
+older record is left alone, and the data survives.
+
+- Bounded group after the fix: `python -m pytest -q tests/test_v14_upgrade.py tests/test_v15_upgrade.py
+tests/test_v16_r8_migrations.py tests/test_v13_memory.py tests/test_v16_resolution_kind.py
+tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed in 50.74 s**; plus
+  `tests/test_v2_upgrade.py tests/test_v16_r8_identity.py` → **9 passed in 5.35 s**.
+- Full confirmation sweep after the fix: `python -m pytest -q --tb=line -rf` → **1281 passed, 14
+  subtests passed in 1143.84 s (19 m 03 s), exit 0** — the 1280 tests of the first sweep plus the new
+  upgrade case, with the previously failing block running clean.
+- **Not yet in this sweep:** the renderer/desktop suites (they live on the integration line) and the
+  phone journeys — those need the Shell stack and stay pending.
+- Desktop slice in this worktree (no install needed — `desktop/node_modules` is populated, bun 1.4.2):
+  `bunx tsc --noEmit -p tsconfig.json` → **exit 0** with **1176** non-`node_modules` files actually
+  checked (verified with `--listFiles`, so the clean result is not vacuous), and
+  `bunx vitest run tests/unit` → **36 test files, 273 tests passed in 27.37 s, exit 0**.
+- Two groups have nothing to run here, and that is not a pass: `tests/contract` and `tests/integration`
+  hold no test files in this worktree (vitest says "No test files found"), and no
+  `*.bun.test.ts` driver file is present. The Playwright e2e and phone journeys still need the Shell
+  stack (gateway + built renderer) and stay pending.

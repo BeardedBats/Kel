@@ -22,10 +22,12 @@ Design rules this runner holds to:
 """
 import argparse
 import base64
+import contextlib
 import json
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -929,223 +931,442 @@ def journey_transcription(client, ctx):
     return journey
 
 
-def journey_work(client, ctx, wait=600, poll=10):
-    """§27 Work — a real turn runs to a settled job, and the row says what a stopped one needs.
 
-    A deliberately stopped job proves what cancellation does; it does **not** prove abandoned-run
-    recovery, which is V2-11 evidence (`recover_abandoned` fences a run no broker can carry). The
-    note on the result keeps those two claims apart.
+# --------------------------------------------------------------------- Work / Attention / Recovery
+def _engine_imports():
+    """Import the engine's own modules (this file lives in `tools/`, so the package needs a path)."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
+
+def _engine_store(root):
+    """The engine's own Store, for the raises and settlements no HTTP surface exposes.
+
+    A journey may not invent engine internals: this imports the SAME module the engine runs and
+    calls the same public methods its runtime calls (`create`, `claim`, `recover_abandoned`). The
+    rows it makes are synthetic inputs; the machinery that reads, fences and resumes them is not.
     """
-    journey = {'id': 'J-WORK', 'name': 'Real execution, and what a stopped job shows',
-               'shell_required': False,
-               'requirements': ['Work: real autonomous execution', 'Work: recovery'], 'detail': {}}
-    stamp = int(time.time())
-    project = client.call('/api/project', {'id': 'acceptance-work-%d' % stamp,
-                                           'name': 'acceptance-work-%d' % stamp,
-                                           'context': 'V2-18 work journey'})['id']
-    conversation = client.call('/api/conversation', {'project': project})['id']
-    client.call('/api/send', {'text': 'Write a short note titled Finished Work about what a settled job '
-                                      'looks like from the outside.',
-                              'conversation': conversation})
-    job, state = _wait_for_job(client, conversation, wait, poll)
-    job_id = (job or {}).get('id')
-    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
-    row = next((item for item in work.get('jobs') or [] if item['job_id'] == job_id), None)
-    assistant = [m for m in (state.get('messages') or []) if m.get('role') == 'assistant']
-    # A second turn, stopped while it runs: the row must say what happened and offer the recovery.
-    client.call('/api/send', {'text': 'Write a short note titled Stopped Work that will be stopped '
-                                      'before it finishes.',
-                              'conversation': conversation})
-    stopped_row = None
-    stopped_id = None
-    deadline = time.time() + 60
-    while time.time() < deadline:
-        state_now = _state(client, conversation)
-        open_jobs = [item for item in (state_now.get('jobs') or [])
-                     if item.get('state') not in ('CLOSED', 'CANCELLED') and item['id'] != job_id]
-        if open_jobs:
-            stopped_id = sorted(open_jobs, key=lambda item: item.get('created') or 0)[-1]['id']
-            break
-        time.sleep(2)
-    if stopped_id:
-        client.call('/api/control', {'action': 'cancel', 'job': stopped_id})
-        for _ in range(30):
-            time.sleep(1)
-            rows = (client.call('/api/work?conversation=' + urllib.parse.quote(conversation))
-                    .get('work') or {}).get('jobs') or []
-            stopped_row = next((item for item in rows if item['job_id'] == stopped_id), None)
-            if stopped_row and stopped_row.get('state') in ('CANCELLED', 'CANCELLING'):
-                break
-    journey['detail'] = {'conversation': conversation, 'job': job_id,
-                         'job_state': (job or {}).get('state'),
-                         'verdict': (job or {}).get('verdict'),
-                         'assistant_replies': len(assistant), 'row': row,
-                         'stopped_job': stopped_id, 'stopped_row': stopped_row}
-    ok = (bool(job_id) and (job or {}).get('state') == 'CLOSED' and assistant and row
-          and row.get('state') == 'CLOSED' and row.get('priority') == 'later'
-          and bool(row.get('next')) and bool(row.get('why'))
-          and row.get('needs_you') is False
-          and bool(stopped_row)
-          and stopped_row.get('state') in ('CANCELLED', 'CANCELLING')
-          # A stopped job must not promise an action the product cannot honour (measured: the row
-          # used to offer retry while /api/retry refused it) — its saved request is what is kept.
-          and stopped_row.get('direct') is None
-          and 'stopped' in str(stopped_row.get('next') or '').lower())
-    journey['status'] = 'PASSED' if ok else 'FAILED'
-    journey['note'] = ('The abandoned-run fence itself is V2-11 evidence (a run no broker can carry is '
-                       'fenced, never replayed); this journey demonstrates real execution and what a '
-                       'deliberately stopped run shows.')
-    if not ok:
-        journey['problem'] = ('real execution or the stopped job\'s row did not match: state=%r '
-                              'row=%r stopped=%r'
-                              % ((job or {}).get('state'), bool(row), bool(stopped_row)))
-    return journey
-
-
-def journey_recovery(client, ctx, wait=300, poll=5):
-    """§27 Recovery — a stopped job keeps its work, says so, and is never silently re-run.
-
-    Honest label: a *cancelled* job is not a retryable failure. This journey asserts the preserved
-    work, the accurate row (no action it cannot honour) and the guarded endpoint; it does not claim a
-    successful retry.
-    """
-    journey = {'id': 'J-RECOV', 'name': 'Failures keep their work; retry is guarded',
-               'shell_required': False,
-               'requirements': ['Recovery: failures without lost work'], 'detail': {}}
-    stamp = int(time.time())
-    project = client.call('/api/project', {'id': 'acceptance-recovery-%d' % stamp,
-                                           'name': 'acceptance-recovery-%d' % stamp,
-                                           'context': 'V2-18 recovery journey'})['id']
-    conversation = client.call('/api/conversation', {'project': project})['id']
-    request_text = ('Write a short note titled Recovery Acceptance about what happens to saved work '
-                    'when a run is stopped.')
-    client.call('/api/send', {'text': request_text, 'conversation': conversation})
-    running = None
-    deadline = time.time() + 60
-    while time.time() < deadline:
-        state = _state(client, conversation)
-        open_jobs = [item for item in (state.get('jobs') or [])
-                     if item.get('state') not in ('CLOSED', 'CANCELLED')]
-        if open_jobs:
-            running = sorted(open_jobs, key=lambda item: item.get('created') or 0)[-1]
-            break
-        time.sleep(2)
-    if running is None:
-        journey['status'] = 'PENDING'
-        journey['problem'] = 'the turn did not leave a running job to stop'
-        journey['detail'] = {'jobs': state.get('jobs')}
-        return journey
-    target = running
-    client.call('/api/control', {'action': 'cancel', 'job': target['id']})
-    settled = None
-    for _ in range(30):
-        time.sleep(1)
-        settled = next((item for item in (_state(client, conversation).get('jobs') or [])
-                        if item['id'] == target['id']), None)
-        if settled and settled.get('state') in ('CANCELLED', 'CANCELLING'):
-            break
-    after = _state(client, conversation)
-    kept_request = any(m.get('role') == 'user' and request_text[:40] in str(m.get('text'))
-                       for m in (after.get('messages') or []))
-    submissions = [s for s in (after.get('submissions') or [])]
-    retry = client.refusal('/api/retry', {'id': submissions[-1]['id']}) if submissions else \
-        {'refused': False, 'answer': 'no submission recorded'}
-    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
-    row = next((item for item in work.get('jobs') or [] if item['job_id'] == target['id']), None)
-    journey['detail'] = {'conversation': conversation, 'job': target['id'],
-                         'job_state': (settled or {}).get('state'),
-                         'request_kept': kept_request, 'submissions': len(submissions),
-                         'retry_answer': retry, 'row': row}
-    ok = ((settled or {}).get('state') in ('CANCELLED', 'CANCELLING') and kept_request
-          and row is not None and row.get('direct') is None
-          and 'stopped' in str(row.get('why') or '').lower()
-          and retry.get('refused') is True)
-    journey['status'] = 'PASSED' if ok else 'FAILED'
-    journey['note'] = ('A stopped job keeps its work and is never silently re-run; the retry endpoint\'s '
-                       'refusal proves non-execution, not recovery. A genuinely retryable FAILED '
-                       'submission going through /api/retry is pinned by the engine suite, not claimed '
-                       'here.')
-    if not ok:
-        journey['problem'] = ('the stopped job lost something, or retry was not guarded: kept=%r '
-                              'refused=%r' % (kept_request, retry.get('refused')))
-    return journey
-
-
-def journey_attention(client, ctx):
-    """§27 Needs Your Attention — a real interruption appears, is answered, and clears."""
-    journey = {'id': 'J-ATTN', 'name': 'An interruption appears, is answered and clears',
-               'shell_required': False,
-               'requirements': ['Needs Your Attention: human interruptions'], 'detail': {}}
+    _engine_imports()
     from kel.core import Store
     from kel.engine import compile_document
-    store = Store(Path(ctx['root']))
-    stamp = int(time.time())
-    project = client.call('/api/project', {'id': 'acceptance-attn-%d' % stamp,
-                                           'name': 'acceptance-attn-%d' % stamp,
-                                           'context': 'V2-18 attention journey'})['id']
-    conversation = client.call('/api/conversation', {'project': project})['id']
-    contract = compile_document('Write the attention note with enough text to pass.', required=[])
-    created = store.create(contract, conversation=conversation)
-    job_id = created['id'] if isinstance(created, dict) else created
-    milestone = next(iter(store.get(job_id)['milestones']))
-    claimed = None
-    deadline = time.time() + 90
-    while time.time() < deadline:
+    return Store(Path(root)), compile_document
+
+
+def _fresh_conversation(client, name):
+    """A real Project and conversation on the real root, named so a run can be told apart."""
+    project = client.call('/api/project', {'name': '%s-%d' % (name, int(time.time())),
+                                           'context': 'V2-18 acceptance journey'})['id']
+    return project, client.call('/api/conversation', {'project': project})['id']
+
+
+def _work_row(client, conversation, job_id):
+    """The Work row for one job, as the person's surface answers it."""
+    work = (client.call('/api/work?conversation=' + urllib.parse.quote(conversation)) or {}).get('work') or {}
+    for entry in work.get('jobs') or []:
+        if entry.get('job_id') == job_id:
+            return entry, work
+    return None, work
+
+
+def _submissions(client, conversation):
+    return _state(client, conversation).get('submissions') or []
+
+
+def journey_work(client, ctx, wait=600, poll=10):
+    """§27 Work — real autonomous execution, and an abandoned run fenced but never replayed."""
+    journey = {'id': 'J-WORK', 'name': 'Work settles; an abandoned run is fenced, never replayed',
+               'shell_required': False,
+               'requirements': ['Work: real autonomous execution', 'Work: recovery of abandoned runs'],
+               'claims': {}, 'detail': {}}
+
+    # C1 — a real request on the real root runs and settles with a recorded artifact and an
+    # explained verdict. A settled job must never claim more than it can show: when verification
+    # cannot be confirmed, the milestone's own check has to say why (and the row offers the retry).
+    project, conversation = _fresh_conversation(client, 'acceptance-work')
+    client.call('/api/send', {'text': 'Write a short note titled Acceptance Work Note about why a '
+                                      'bounded test group beats one long run.',
+                              'conversation': conversation})
+    job, _ = _wait_for_job(client, conversation, wait, poll)
+    entry, work = _work_row(client, conversation, (job or {}).get('id'))
+    artifacts, reviewer = [], None
+    if job:
+        store, _ = _engine_store(ctx['root'])
+        record = store.get(job['id'])
+        for milestone_id, milestone in (record.get('milestones') or {}).items():
+            artifact = milestone.get('artifact') or {}
+            if artifact.get('digest') or artifact.get('path'):
+                artifacts.append({'milestone': milestone_id, 'bytes': artifact.get('bytes'),
+                                  'digest': artifact.get('digest'), 'path': artifact.get('path'),
+                                  'lineage': artifact.get('lineage')})
+            for check in milestone.get('checks') or []:
+                if check.get('kind') == 'manual_review':
+                    reviewer = check
+    reviewer_explained = bool(reviewer) and bool(reviewer.get('findings'))
+    c1 = bool(job) and job.get('state') == 'CLOSED' and bool(entry) and bool(artifacts) \
+        and bool(entry.get('reason')) \
+        and (job.get('verdict') == 'VERIFIED' or reviewer_explained)
+    journey['claims']['real work runs and settles with an explained verdict'] = {
+        'status': 'PASSED' if c1 else 'FAILED',
+        'detail': {'conversation': conversation, 'project': project,
+                   'job': (job or {}).get('id'), 'state': (job or {}).get('state'),
+                   'verdict': (job or {}).get('verdict'),
+                   'artifacts': artifacts, 'reviewer_check': reviewer,
+                   'acceptance_limit': 'work reaches VERIFIED only with a usable reviewer; when the '
+                                       'reviewer answers nothing usable the milestone says so '
+                                       'instead of claiming a verified build',
+                   'row': {'priority': (entry or {}).get('priority'),
+                           'needs_you': (entry or {}).get('needs_you'),
+                           'accepted': (entry or {}).get('accepted'),
+                           'total': (entry or {}).get('total'),
+                           'open': (entry or {}).get('open'),
+                           'direct': (entry or {}).get('direct'),
+                           'reason': (entry or {}).get('reason')}}}
+
+    # C2 — the abandoned run: a real claim, an expired lease, the engine's own runtime recovery.
+    store, compile_document = _engine_store(ctx['root'])
+    contract = compile_document('Write the fenced note with enough text to pass.', required=[])
+    fenced_job = store.create(contract, conversation=conversation)
+    milestone_id = next(iter(store.get(fenced_job)['milestones']))
+    claim = store.claim(fenced_job, milestone_id, provider='fixture', model='fixture', timeout=30)
+    first_fence = store.recover_abandoned(now=time.time() + 600)
+    again = store.recover_abandoned(now=time.time() + 600)
+    settled = store.get(fenced_job)
+    milestone = (settled.get('milestones') or {}).get(milestone_id) or {}
+    with contextlib.closing(store.connect()) as db:
+        runs = [dict(row) for row in db.execute('SELECT id,state,epoch FROM runs WHERE job_id=?',
+                                                (fenced_job,)).fetchall()]
+    fenced_entry, _ = _work_row(client, conversation, fenced_job)
+    try:
+        diagnostics = client.call('/api/diagnostics', {'action': 'snapshot'})
+    except PolicyRefusal:
+        diagnostics = client.call('/api/diagnostics', {})
+    unfenced = (diagnostics.get('runs') or {}).get('expired_unfenced')
+    c2 = (claim['id'] in first_fence and not again and len(runs) == 1
+          and runs[0]['state'] == 'ORPHANED' and runs[0]['epoch'] != claim.get('epoch')
+          and milestone.get('state') == 'UNCERTAIN'
+          and 'reconcil' in str(milestone.get('error') or '').lower()
+          and settled.get('state') == 'WAITING_RESOURCE' and settled.get('verdict') == 'UNCERTAIN'
+          and bool(fenced_entry) and fenced_entry.get('fenced') is True
+          and fenced_entry.get('needs_you') is True
+          and ((fenced_entry.get('direct') or {}).get('action') == 'resume')
+          and ((fenced_entry.get('direct') or {}).get('route') == '/api/send')
+          and unfenced == 0)
+    journey['claims']['an abandoned run is fenced, never replayed'] = {
+        'status': 'PASSED' if c2 else 'FAILED',
+        'detail': {'synthetic_input': 'a job and a claim made with the real Store API; the expired '
+                                      'lease is the input, the fence is the engine\'s',
+                   'job': fenced_job, 'run': claim['id'],
+                   'runs_after': runs, 'fenced_by_first_recovery': first_fence,
+                   'fenced_by_second_recovery': again,
+                   'milestone': {'state': milestone.get('state'), 'error': milestone.get('error')},
+                   'job_state': settled.get('state'), 'job_verdict': settled.get('verdict'),
+                   'row': {'fenced': (fenced_entry or {}).get('fenced'),
+                           'needs_you': (fenced_entry or {}).get('needs_you'),
+                           'priority': (fenced_entry or {}).get('priority'),
+                           'why': (fenced_entry or {}).get('why'),
+                           'next': (fenced_entry or {}).get('next'),
+                           'direct': (fenced_entry or {}).get('direct')},
+                   'diagnostics_expired_unfenced': unfenced}}
+    statuses = [claim_result.get('status') for claim_result in journey['claims'].values()]
+    journey['status'] = 'PASSED' if all(value == 'PASSED' for value in statuses) else 'FAILED'
+    if journey['status'] == 'FAILED':
+        journey['problem'] = '; '.join(name for name, claim_result in journey['claims'].items()
+                                       if claim_result.get('status') != 'PASSED')
+    return journey
+
+
+def journey_attention(client, ctx, wait=90):
+    """§27 Needs Your Attention — a real ask as one row, answered in one action."""
+    journey = {'id': 'J-ATTN', 'name': 'A real interruption, one action, consistent state',
+               'shell_required': False,
+               'requirements': ['Needs Your Attention: human interruptions',
+                                'Needs Your Attention: resolvable in one action'],
+               'claims': {}, 'detail': {}}
+    project, conversation = _fresh_conversation(client, 'acceptance-attention')
+    store, compile_document = _engine_store(ctx['root'])
+    _engine_imports()
+    from kel.coding import CodingAdapter
+    contract = compile_document('Write the approval note with enough text to pass.', required=[])
+    job_id = store.create(contract, conversation=conversation)
+    milestone_id = next(iter(store.get(job_id)['milestones']))
+    run = store.claim(job_id, milestone_id, provider='fixture', model='fixture', timeout=300)
+    run_row = dict(run)
+    run_row.setdefault('job_id', job_id)
+
+    # The real admission path: the coding adapter's own `approval()` builds the action, records the
+    # approval (and its action), announces the card and then waits for the person.
+    decided = {}
+
+    def wait_for_the_person():
         try:
-            claimed = store.claim(job_id, milestone, provider='codex', model='codex', timeout=120)
+            decided['allowed'] = CodingAdapter(store).approval(
+                run_row, 'item/commandExecution/requestApproval',
+                {'cwd': str(store.root), 'command': ['python', '-c', 'print(1)'],
+                 'permissions': [], 'grantRoot': None}, None)
+        except Exception as exc:                                   # a wait must never kill the run
+            decided['error'] = '%s: %s' % (type(exc).__name__, exc)
+
+    thread = threading.Thread(target=wait_for_the_person, daemon=True)
+    thread.start()
+    approval_id, entry, items = None, None, []
+    deadline = time.time() + min(wait, 120)
+    while time.time() < deadline and approval_id is None:
+        if decided:
+            # The raise itself finished (or failed) without leaving a pending ask: waiting longer
+            # would only hide the reason it did.
             break
-        except Exception as exc:
-            # The engine allows only a couple of live workers; a busy engine is a wait, not a
-            # failure of the interruption itself.
-            last = str(exc)
-            time.sleep(3)
-    if claimed is None:
+        time.sleep(1)
+        items = (client.call('/api/approvals?conversation=' + urllib.parse.quote(conversation))
+                 or {}).get('items') or []
+        pending = [item for item in items
+                   if item.get('state') == 'pending' and item.get('job_id') == job_id]
+        if pending:
+            approval_id = pending[0]['id']
+        entry, work = _work_row(client, conversation, job_id)
+    c1 = bool(approval_id) and bool(entry) and entry.get('needs_you') is True \
+        and entry.get('priority') == 'now' and (entry.get('related') or {}).get('approvals') == 1 \
+        and ((entry.get('direct') or {}).get('action') == 'answer') \
+        and ((entry.get('direct') or {}).get('route') == '/api/approval') \
+        and bool(entry.get('reason')) and bool(entry.get('next')) \
+        and entry.get('age_seconds') is not None and work.get('grouping') == 'project' \
+        and 'needs_you' in (work.get('filters') or {})
+    journey['claims']['a real ask becomes one attention row'] = {
+        'status': 'PASSED' if c1 else 'FAILED',
+        'detail': {'synthetic_input': 'the job and the run are synthetic (real Store API); the ask, '
+                                      'the card and the wait are the coding adapter\'s own',
+                   'conversation': conversation, 'project': project, 'job': job_id,
+                   'approval': approval_id, 'seconds_to_raise': round(wait - (deadline - time.time()), 1),
+                   'row': {'priority': (entry or {}).get('priority'),
+                           'needs_you': (entry or {}).get('needs_you'),
+                           'age_seconds': (entry or {}).get('age_seconds'),
+                           'reason': (entry or {}).get('reason'),
+                           'next': (entry or {}).get('next'),
+                           'related': (entry or {}).get('related'),
+                           'direct': (entry or {}).get('direct')},
+                   'grouping': work.get('grouping'), 'filters': work.get('filters'),
+                   'card': [item for item in items if item.get('id') == approval_id]}}
+
+    # C2 — the person answers once and the waiting work continues (no second ask).
+    resolved = client.refusal('/api/approval', {'id': approval_id, 'allow': True,
+                                                'conversation': conversation})
+    thread.join(timeout=15)
+    entry2, _ = _work_row(client, conversation, job_id)
+    with contextlib.closing(store.connect()) as db:
+        run_state = db.execute('SELECT state FROM runs WHERE id=?', (run['id'],)).fetchone()
+    run_after = run_state['state'] if run_state else None
+    c2 = resolved.get('refused') is False and (resolved.get('answer') or {}).get('status') == 'APPROVED' \
+        and decided.get('allowed') is True and not thread.is_alive() \
+        and bool(entry2) and entry2.get('needs_you') is False \
+        and (entry2.get('related') or {}).get('approvals') == 0 and run_after == 'RUNNING'
+    journey['claims']['one action resolves it and the work continues'] = {
+        'status': 'PASSED' if c2 else 'FAILED',
+        'detail': {'answer': resolved, 'adapter_allowed': decided.get('allowed'),
+                   'adapter_error': decided.get('error'), 'run_state_after': run_after,
+                   'row_after': {'needs_you': (entry2 or {}).get('needs_you'),
+                                 'priority': (entry2 or {}).get('priority'),
+                                 'related': (entry2 or {}).get('related'),
+                                 'direct': (entry2 or {}).get('direct'),
+                                 'state': (entry2 or {}).get('state')}}}
+
+    # C3 — the same ask cannot be answered twice.
+    second = client.refusal('/api/approval', {'id': approval_id, 'allow': True,
+                                              'conversation': conversation})
+    journey['claims']['the same ask cannot be answered twice'] = {
+        'status': 'PASSED' if second.get('refused') else 'FAILED', 'detail': second}
+    statuses = [claim_result.get('status') for claim_result in journey['claims'].values()]
+    journey['status'] = 'PASSED' if all(value == 'PASSED' for value in statuses) else 'FAILED'
+    if journey['status'] == 'FAILED':
+        journey['problem'] = '; '.join(name for name, claim_result in journey['claims'].items()
+                                       if claim_result.get('status') != 'PASSED')
+    return journey
+
+
+def journey_recovery(client, ctx, wait=120, poll=3):
+    """§27 Recovery — a real failure keeps its work and its reason; retry is bounded."""
+    journey = {'id': 'J-RECOV', 'name': 'A real failure keeps its work; retry is bounded',
+               'shell_required': False,
+               'requirements': ['Recovery: failures without lost work',
+                                'Recovery: retry without duplicating effects'],
+               'claims': {}, 'detail': {}}
+    fixture = ensure_fixture(Path(ctx['fixtures']) / 'kibble-repo')
+    project = client.call('/api/project', {'name': 'acceptance-recovery-%d' % int(time.time()),
+                                           'root': fixture['root'],
+                                           'context': 'V2-18 acceptance journey'})['id']
+    conversation = client.call('/api/conversation', {'project': project})['id']
+    text = 'Change add() in calc.py so it returns the sum of its arguments.'
+    client.call('/api/send', {'text': text, 'conversation': conversation})
+    submission, seen = None, []
+    deadline = time.time() + wait
+    while time.time() < deadline:
+        rows = [row for row in _submissions(client, conversation) if row.get('text') == text]
+        if rows:
+            submission = rows[0]
+            seen.append(submission.get('state'))
+            if submission.get('state') in ('FAILED', 'INTERRUPTED'):
+                break
+        time.sleep(poll)
+    sid = (submission or {}).get('id')
+    reason = (submission or {}).get('error')
+    c1 = bool(submission) and submission.get('state') in ('FAILED', 'INTERRUPTED') \
+        and bool(reason) and submission.get('job_id') in (None, '') \
+        and submission.get('text') == text
+    journey['claims']['a real failure keeps the request and its reason'] = {
+        'status': 'PASSED' if c1 else 'FAILED',
+        'detail': {'synthetic_input': 'a coding request for the fixture repository with no test '
+                                      'command set: a real refusal on the real path, recorded as an '
+                                      'input, not as engine state',
+                   'conversation': conversation, 'project': project,
+                   'submission': {key: (submission or {}).get(key)
+                                  for key in ('id', 'state', 'error', 'job_id', 'text')},
+                   'states_seen': seen}}
+
+    # C2 — one bounded retry, on the same stored request, with no duplicate; and the boundary: a
+    # request that is not FAILED/INTERRUPTED cannot be retried at all.
+    retried = client.refusal('/api/retry', {'id': sid}) if sid else {'refused': False}
+    time.sleep(2)
+    after = [row for row in _submissions(client, conversation) if row.get('text') == text]
+    settled, deadline = None, time.time() + wait
+    while time.time() < deadline:
+        rows = [row for row in _submissions(client, conversation) if row.get('text') == text]
+        if rows and rows[0].get('state') in ('FAILED', 'INTERRUPTED'):
+            settled = rows[0]
+            break
+        time.sleep(poll)
+    chat_text = 'V2-18 recovery boundary: answer with the single word ready.'
+    client.call('/api/send', {'text': chat_text, 'kind': 'chat', 'conversation': conversation})
+    chat, deadline = None, time.time() + wait
+    while time.time() < deadline:
+        rows = [row for row in _submissions(client, conversation) if row.get('text') == chat_text]
+        if rows and rows[0].get('state') != 'PLANNING':
+            chat = rows[0]
+            break
+        time.sleep(poll)
+    boundary = client.refusal('/api/retry', {'id': (chat or {}).get('id')}) if chat \
+        else {'refused': False}
+    c2 = retried.get('refused') is False and (retried.get('answer') or {}).get('id') == sid \
+        and len(after) == 1 and settled is not None and settled.get('id') == sid \
+        and settled.get('error') == reason \
+        and boundary.get('refused') is True and 'not ready for retry' in str(boundary.get('sentence'))
+    journey['claims']['retry is bounded and duplicates nothing'] = {
+        'status': 'PASSED' if c2 else 'FAILED',
+        'detail': {'first_retry': retried,
+                   'settled_after_retry': {'state': (settled or {}).get('state'),
+                                           'error': (settled or {}).get('error')},
+                   'submissions_for_this_request': len(after),
+                   'non_retryable_submission': {'id': (chat or {}).get('id'),
+                                                'state': (chat or {}).get('state'),
+                                                'text': (chat or {}).get('text')},
+                   'boundary_refusal': boundary}}
+    statuses = [claim_result.get('status') for claim_result in journey['claims'].values()]
+    journey['status'] = 'PASSED' if all(value == 'PASSED' for value in statuses) else 'FAILED'
+    if journey['status'] == 'FAILED':
+        journey['problem'] = '; '.join(name for name, claim_result in journey['claims'].items()
+                                       if claim_result.get('status') != 'PASSED')
+    return journey
+
+
+# ------------------------------------------------------------------------------------------ remote
+def _plain_get(url, timeout=15):
+    """A GET with no Kel session at all: no bearer, no cookie, and redirects not followed."""
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, request, fp, code, msg, headers, newurl):
+            return None
+
+    opener = urllib.request.build_opener(NoRedirect)
+    try:
+        with opener.open(urllib.request.Request(url, method='GET'), timeout=timeout) as response:
+            return {'status': response.status, 'location': response.headers.get('Location'),
+                    'body': response.read(6000).decode(errors='replace')}
+    except urllib.error.HTTPError as exc:
+        return {'status': exc.code, 'location': exc.headers.get('Location') if exc.headers else None,
+                'body': exc.read(6000).decode(errors='replace')}
+    except Exception as exc:
+        return {'status': None, 'problem': '%s: %s' % (type(exc).__name__, exc)}
+
+
+def _running_gateway():
+    """The web-host process listening right now: pid, port and the command line that names it."""
+    script = ("Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'webui' } | "
+              "ForEach-Object { $p=$_; $c=Get-NetTCPConnection -State Listen -ErrorAction "
+              "SilentlyContinue | Where-Object OwningProcess -eq $p.ProcessId | "
+              "Select-Object -First 1; if($c){ Write-Output ($p.ProcessId.ToString() + '|' + "
+              "$c.LocalPort.ToString() + '|' + $p.CommandLine) } }")
+    out, _, _ = powershell(script, timeout=120)
+    for line in out.splitlines():
+        parts = line.split('|')
+        if len(parts) >= 3:
+            try:
+                return {'pid': int(parts[0]), 'port': int(parts[1]), 'command_line': '|'.join(parts[2:])}
+            except ValueError:
+                continue
+    return None
+
+
+def journey_remote(client, ctx, gateway=None):
+    """§27 Remote — the gateway refuses an unauthenticated request and carries no credential."""
+    journey = {'id': 'J-REMOTE', 'name': 'The gateway gate, and no credential in the client',
+               'shell_required': False, 'claims': {},
+               'requirements': ['Remote: secure browser use'], 'detail': {}}
+    gateway = gateway or ctx.get('gateway')
+    found = {'url': gateway} if gateway else _running_gateway()
+    if not found:
         journey['status'] = 'PENDING'
-        journey['problem'] = 'no worker slot became free: %s' % last
-        journey['detail'] = {'job': job_id}
+        journey['problem'] = ('no web-host gateway is running that this run can prove: start one '
+                              'with `bun run webui` and pass --gateway <url>')
         return journey
-    run_id = claimed['id'] if isinstance(claimed, dict) else claimed
-    # The exact sequence the coding adapter uses to raise a real interruption (kel/coding.py):
-    # the approval row, its action payload, then the conversation's decision card.
-    from kel.chat_approvals import announce_approval
-    from kel.core import encode
-    action = {'tool': 'repository_edit', 'reason': 'V2-18 acceptance interruption'}
-    approval_id = store.request_approval(job_id, run_id, action, seconds=300)
-    with store.transaction() as db:
-        db.execute('INSERT INTO approval_actions VALUES(?,?)', (approval_id, encode(action)))
-    announce_approval(store, approval_id, store.get(job_id), action)
-    state = _state(client, conversation)
-    pending = [a for a in (state.get('approvals') or []) if a.get('id') == approval_id]
-    work = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
-    row = next((item for item in work.get('jobs') or [] if item['job_id'] == job_id), None)
-    answer = client.call('/api/approval', {'id': approval_id, 'allow': True,
-                                           'conversation': conversation})
-    after = _state(client, conversation)
-    still_pending = [a for a in (after.get('approvals') or []) if a.get('id') == approval_id]
-    work_after = client.call('/api/work?conversation=' + urllib.parse.quote(conversation)).get('work') or {}
-    row_after = next((item for item in work_after.get('jobs') or [] if item['job_id'] == job_id), None)
-    client.call('/api/control', {'action': 'cancel', 'job': job_id})
-    journey['detail'] = {'conversation': conversation, 'job': job_id, 'approval': approval_id,
-                         'appeared_pending': bool(pending),
-                         'row_before': {'needs_you': (row or {}).get('needs_you'),
-                                        'priority': (row or {}).get('priority'),
-                                        'direct': (row or {}).get('direct'),
-                                        'related': (row or {}).get('related')},
-                         'answer': answer,
-                         'row_after': {'needs_you': (row_after or {}).get('needs_you'),
-                                       'direct': (row_after or {}).get('direct')},
-                         'still_pending': len(still_pending)}
-    ok = (bool(pending) and (row or {}).get('needs_you') is True
-          and (row or {}).get('priority') == 'now'
-          and ((row or {}).get('direct') or {}).get('action') == 'answer'
-          and ((row or {}).get('direct') or {}).get('route') == '/api/approval'
-          and (row or {}).get('related', {}).get('approvals') == 1
-          and answer.get('status') == 'APPROVED' and not still_pending
-          and (row_after or {}).get('needs_you') is False)
-    journey['status'] = 'PASSED' if ok else 'FAILED'
-    if not ok:
-        journey['problem'] = ('the interruption did not appear, resolve or clear as promised: '
-                              'pending=%r answer=%r' % (bool(pending), answer))
+    pid, port = found.get('pid'), found.get('port')
+    if port is None:
+        parsed = urllib.parse.urlparse(str(gateway))
+        port = parsed.port
+    owner = port_owner(port) if port else None
+    command_line = found.get('command_line') or (process_command_line(pid) if pid else None)
+    problems = []
+    if not pid or owner != pid:
+        problems.append('port %s is owned by %s, not pid %s' % (port, owner, pid))
+    if not command_line or 'webui' not in str(command_line).lower():
+        problems.append('pid %s is not a Kel web-host process' % pid)
+    if problems:
+        journey['status'] = 'PENDING'
+        journey['problem'] = ('the running gateway could not be owned by this run: %s'
+                              % '; '.join(problems))
+        journey['detail'] = {'pid': pid, 'port': port, 'port_owner': owner,
+                             'command_line': command_line}
+        return journey
+    url = str(gateway or 'http://127.0.0.1:%d/' % port)
+    root = _plain_get(url)
+    state = _plain_get(urllib.parse.urljoin(url, 'api/state'))
+    token = client.token
+    # The app shell at `/` is served without a session so the sign-in surface can load; the
+    # session gate is on the API, which refuses a request that carries no session.
+    c1 = state.get('status') in (401, 403) and 'auth' in str(state.get('body') or '').lower()
+    leaked = [probe for probe in (root, state) if token and token in str(probe.get('body') or '')]
+    c2 = not leaked
+    text = str(command_line).replace('\\', '/')
+    head = text.split('/desktop/', 1)[0]
+    worktree = head.split()[-1].strip('"') if head.split() and '/desktop/' in text else None
+    journey['claims']['an unauthenticated API request is refused'] = {
+        'status': 'PASSED' if c1 else 'FAILED',
+        'detail': {'url': url, 'api_state_status': state.get('status'),
+                   'api_state_body': str(state.get('body') or '')[:200],
+                   'root_status': root.get('status'),
+                   'note': ('/ serves the app shell so the sign-in surface can load; the gate is on '
+                            'the API, which refuses a request with no session')}}
+    journey['claims']['no credential reaches the client'] = {
+        'status': 'PASSED' if c2 else 'FAILED',
+        'detail': {'engine_token_in_body': bool(leaked),
+                   'searched': ['/', 'api/state']}}
+    journey['detail'] = {'gateway': {'pid': pid, 'port': port, 'port_owner': owner,
+                                      'url': url, 'worktree': worktree,
+                                      'command_line': command_line},
+                         'labelled': 'the gateway this run probed is the one listening now; its '
+                                     'renderer is Astra\'s (Shell presentation is out of scope here)',
+                         'api_state_body_head': str(state.get('body') or '')[:200]}
+    statuses = [claim_result.get('status') for claim_result in journey['claims'].values()]
+    journey['status'] = 'PASSED' if all(value == 'PASSED' for value in statuses) else 'FAILED'
+    if journey['status'] == 'FAILED':
+        journey['problem'] = '; '.join(name for name, claim_result in journey['claims'].items()
+                                       if claim_result.get('status') != 'PASSED')
+
     return journey
 
 
@@ -1156,8 +1377,10 @@ JOURNEYS = {'J-FIX': journey_fix_capture, 'J-UPGRADE': journey_upgrade,
             'J-MEM': journey_memory, 'J-RECIPE': journey_recipes,
             'J-NET': journey_network, 'J-CONN': journey_connections,
             'J-TRANS': journey_transcription, 'J-ACTIVITY': journey_activity,
-            'J-WORK': journey_work, 'J-RECOV': journey_recovery,
-            'J-ATTN': journey_attention}
+
+            'J-WORK': journey_work, 'J-ATTN': journey_attention,
+            'J-RECOV': journey_recovery, 'J-REMOTE': journey_remote}
+
 
 
 # ----------------------------------------------------------------------------------------------- runner
@@ -1174,6 +1397,8 @@ def main(argv=None):
                         help='do not let the real runtime dispatch (claims become PENDING)')
     parser.add_argument('--runtime-negatives', action='store_true',
                         help='also dispatch a mission whose test command really fails')
+    parser.add_argument('--gateway', default=None,
+                        help='the web-host gateway URL for J-REMOTE (default: the one listening now)')
     args = parser.parse_args(argv)
 
     client = EngineClient(args.root)
@@ -1191,7 +1416,7 @@ def main(argv=None):
         print('unknown journeys: %s' % ', '.join(unknown))
         return 2
 
-    ctx = {'root': args.root, 'fixtures': args.fixtures}
+    ctx = {'root': args.root, 'fixtures': args.fixtures, 'gateway': args.gateway}
     results = []
     for name in wanted:
         started = time.time()
@@ -1208,6 +1433,15 @@ def main(argv=None):
                 result = journey_model(client, ctx, wait=args.wait, poll=args.poll)
             elif name == 'J-CONV':
                 result = journey_conversation(client, ctx, wait=args.wait, poll=args.poll)
+            elif name == 'J-WORK':
+                result = journey_work(client, ctx, wait=args.wait, poll=args.poll)
+            elif name == 'J-ATTN':
+                result = journey_attention(client, ctx, wait=min(args.wait, 120))
+            elif name == 'J-RECOV':
+                result = journey_recovery(client, ctx, wait=min(args.wait, 180),
+                                          poll=max(2, args.poll // 3))
+            elif name == 'J-REMOTE':
+                result = journey_remote(client, ctx, gateway=args.gateway)
             else:
                 result = JOURNEYS[name](client, ctx)
         except (PolicyRefusal, IdentityError) as exc:

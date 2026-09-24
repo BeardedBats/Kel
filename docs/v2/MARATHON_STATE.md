@@ -10,8 +10,10 @@ branch: integration/v2       # current packaged integration line; dev/v2 remains
 base_commit: a471e17ac25590369e74824ebed0dd7b54e4b00b   # V2.0 base (dev/daily-driver head at setup)
 setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initialization; this file's hash record is the records commit
 remote: https://github.com/BeardedBats/Kel
+
 phase: V2-19                # bounded regression in progress on staged r29
 next_item: Obtain a signed-in isolated candidate session for remote load, first response, Google sign-in, and live service checks; fresh Muse audio and physical iPhone need inputs. Do not promote while r20 runs.
+
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
@@ -24,7 +26,9 @@ paths:
   source_predecessor: C:\Users\Nick\Desktop\Kel\kel-daily-driver   # dev/daily-driver, reference only
   shared_git_dir: C:\Users\Nick\Desktop\Kel\Kel-Repo\.git         # one object database for all trees
   v2_test_data: C:\Users\Nick\KelV2Runs\prepared                  # V2 development/test data root
+
   v2_candidate: C:\Users\Nick\KelV2Candidate                      # r20 live; r29 is staged separately
+
 
 protected_paths:            # never modify, uninstall, overwrite, reset, migrate, clean or use as V2 test data
   - C:\Users\Nick\KelDogfoodCandidate        # the stable dogfood build Nick actually uses
@@ -37,9 +41,9 @@ phases:
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: partial     # Connection Framework: three templates + request policy/retries built; actions and OAuth not
   V2-05: partial     # iPhone Kel PWA V1 — voice (real Muse) and the send round trip (real model, continued) proved on the phone; drawer history (DEFERRED for shell integration), job attention, project routing open
-  V2-06: queued      # Needs Your Attention 2.0
-  V2-07: queued      # Recipes 2.0
-  V2-08: queued      # Activity 2.0
+  V2-06: done        # Needs Your Attention 2.0 — attention rows on the existing Work surface (priority/age/reason/related/one direct action/grouping) + the row for a real ask answered in one action (D-50; journey J-ATTN)
+  V2-07: done        # Recipes 2.0 — the recipe library's own surfaces (search/favourites/recent/categories/history/last result/duplicate/project attachment/run again), migration 30 `v2-recipe-library` (D-50; journey J-RECIPE)
+  V2-08: done        # Activity 2.0 — /api/activity over the records the line already keeps (D-50; journey J-ACTIVITY)
   V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
   V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
   V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
@@ -49,8 +53,10 @@ phases:
   V2-15: queued      # Real dogfood integration pass
   V2-16: partial     # Dark Settings/setup repaired; r29 local conversation-open median 112.4 ms, project switch median 114.9 ms; remote/first response pending
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
+
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
   V2-19: partial     # r23 Dark Settings; r26 Recipes/Work; r28 Projects/Knowledge/Map and service UI; r29 Recent title, local projects, native picker; live paths remain
+
   V2-20: queued      # V2 release candidate
 
 invariants:
