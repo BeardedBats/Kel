@@ -247,7 +247,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title={compact ? 'Available now' : 'Default Kel model'} data-testid='kel-default-model-card'>
+    <KelCard title='Default Kel model' data-testid='kel-default-model-card'>
       {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
@@ -264,7 +264,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
             className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer'
             style={{ background: !state.default ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
           >
-            <span className='text-14px'>Automatic — Kel picks what is available</span>
+            <span className='text-14px'>Automatic<span className='kel-desktop-only'> — Kel picks what is available</span></span>
             {!state.default ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : null}
           </button>
           {providers.map((provider) =>
@@ -285,7 +285,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
                 >
                   <span className='text-14px' style={{ opacity: option.available ? 1 : 0.6 }}>
                     {option.label}
-                    <span className='ms-6px text-12px text-t-secondary'>{provider.label}</span>
+                    <span className='ms-6px text-12px text-t-secondary kel-desktop-only'>{provider.label}</span>
                   </span>
                   {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availabilityLabel(option.available)}
                 </button>
@@ -294,7 +294,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
           )}
         </div>
       )}
-      <p className='text-12px text-t-secondary m-0 mt-8px'>Saved immediately. Switching back to Automatic restores Kel's normal routing.</p>
+      <p className='text-12px text-t-secondary m-0 mt-8px kel-desktop-only'>Saved immediately. Switching back to Automatic restores Kel's normal routing.</p>
     </KelCard>
   );
 };
