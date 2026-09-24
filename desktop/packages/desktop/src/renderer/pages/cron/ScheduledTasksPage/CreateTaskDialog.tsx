@@ -619,7 +619,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       confirmLoading={submitting}
       okText={t('cron.page.save')}
       cancelText={t('cron.page.cancel')}
-      className='w-[min(560px,calc(100vw-32px))] max-w-560px'
+      className='kel-shell-task-modal w-[min(560px,calc(100vw-32px))] max-w-560px'
       unmountOnExit
     >
       <div>

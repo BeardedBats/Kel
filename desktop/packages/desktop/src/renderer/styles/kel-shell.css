@@ -1382,3 +1382,37 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
   .kel-v2-shell .kel-tools-image-card .arco-form-label-item { height: auto; margin-bottom: 8px; }
   .kel-v2-shell .kel-tools-image-empty { justify-content: flex-start; text-align: left; }
 }
+
+/* Components 148:229 and 147:162: desktop task dialog fields use the Dark glass tokens. */
+@media (min-width: 768px) {
+  html[data-theme='dark'] body .arco-modal.kel-shell-task-modal .arco-modal-content {
+    background: linear-gradient(180deg, rgba(191,216,255,.08), transparent), rgba(15,45,100,.4) !important;
+    border: 1px solid var(--kel-figma-color-glass-edge-lit) !important;
+    box-shadow: inset 0 1px 0 rgba(191,216,255,.18), 0 20px 48px -16px rgba(0,0,0,.35);
+    backdrop-filter: blur(24px);
+  }
+  html[data-theme='dark'] body .kel-shell-task-modal .aionui-modal-std-body { background: transparent !important; }
+  html[data-theme='dark'] body .kel-shell-task-modal :is(.arco-input, .arco-select-view, .arco-textarea) {
+    min-height: 34px;
+    border: 1px solid rgba(127,160,255,.28) !important;
+    border-radius: 8px !important;
+    background: rgba(47,107,224,.1) !important;
+    color: var(--kel-figma-color-text-primary);
+  }
+  html[data-theme='dark'] body .kel-shell-task-modal :is(.arco-input, .arco-select-view, .arco-textarea):focus-within {
+    border-color: rgba(127,160,255,.8) !important;
+    box-shadow: 0 0 8px 1px rgba(47,107,224,.35);
+  }
+  html[data-theme='dark'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn {
+    min-height: 34px;
+    border: 1px solid var(--kel-figma-color-glass-button-edge);
+    border-radius: 8px;
+    background: rgba(15,45,100,.34);
+    color: var(--kel-figma-color-text-button);
+  }
+  html[data-theme='dark'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn-primary {
+    background: linear-gradient(135deg,#153973,#365693);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  html[data-theme='dark'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn:disabled { opacity: .4; }
+}
