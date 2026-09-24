@@ -1,0 +1,17 @@
+{
+  "kind": "packaged r53; injected conversation fixture; local UI actions only",
+  "helped": "true",
+  "storedHelp": "up",
+  "unhelped": "true",
+  "helpedAfter": "false",
+  "storedUnhelp": "down",
+  "copyVisible": true,
+  "copyAlert": 1,
+  "visual": {
+    "pageWidth": 800,
+    "viewportWidth": 800,
+    "listDescription": "rgb(143, 169, 214)",
+    "listTitle": "rgb(237, 242, 250)",
+    "listLineHeight": "20px"
+  }
+}

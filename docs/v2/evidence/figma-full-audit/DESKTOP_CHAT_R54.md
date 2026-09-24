@@ -1,0 +1,11 @@
+# Desktop Dark chat comparison — r54
+
+**Authority:** Kel Design System, `Screens - FINAL` `185:1050`, Foundations `139:2`, Components `136:2`. **Package:** `C:\Users\Nick\KelV2Candidate.r54`, source `58a0533a3d66e183775c7d756c00d3cc91eadd88`, Dark, 100% zoom. The `r43-populated` roots are disposable. The three message turns were injected through a Playwright response fixture. No model response or saved chat was claimed.
+
+The [r51 baseline](key/r51-chat-fixture-1440.png) clipped the first user turn. Its assistant turn began at y174 and measured 426px. It used 24-hour timestamps, white list descriptions, and a Copy icon where FINAL shows thumbs up, thumbs down, and More. The [r52 intermediate](key/r52-chat-fixture-1440.png) corrected the desktop rhythm and timestamps, but still lacked the FINAL actions.
+
+The [r54 1440px package](key/r54-chat-fixture-1440.png) shows all three turns. The first user turn starts at y130; the assistant turn starts at y259 and measures 377px; the second user turn starts at y662. The main content starts at x385. FINAL uses x388 in its 1440px frame. The numbered list uses 20px lines, 7px item margins, primary titles, and muted descriptions from Foundations. The reply action row uses the exact three 16×16 SVGs from FINAL, in 28px targets. Copy and conditional Fork remain in More. User Copy is available on hover and focus without taking a default row.
+
+[The r54 click and width record](r54-chat-check.json) confirms that Mark helpful writes `up` to this profile's local storage, a second click clears it, More exposes Copy, and Copy shows success. The reaction is a local choice; no service feedback was sent. [800px](key/r54-chat-fixture-800.png) and [768px](key/r54-chat-fixture-768.png) retain the three actions and 12-hour time with document widths equal to their viewports. A 393px regression check found the prior Copy action and 24-hour time, with 393px document width. No phone layout was audited.
+
+The sample sidebar entries, provider label, telemetry values, and live task context in FINAL do not correspond to this disposable fixture. A real long model reply, copy of a split tool turn, and a live service response remain unverified. This pass does not establish exact product-wide parity.
