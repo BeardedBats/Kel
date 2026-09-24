@@ -1,4 +1,5 @@
 import ShellSourceCardHeader, { sourceCard } from '@renderer/components/kel/ShellSourceCardHeader';
+import modelActivityIcon from '@renderer/assets/figma/model/activity.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -391,7 +392,7 @@ const ModelModalContent: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0' disableOverflow={isPageMode}>
         {!data || data.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-40px'>
-            {isPageMode ? <span className='kel-shell-model-empty-icon' aria-hidden='true'><Heartbeat theme='outline' size='20' /></span> : <Info theme='outline' size='48' className='text-t-secondary mb-16px' />}
+            {isPageMode ? <span className='kel-shell-model-empty-icon' aria-hidden='true'><img src={modelActivityIcon} alt='' /></span> : <Info theme='outline' size='48' className='text-t-secondary mb-16px' />}
             <h3 className='text-16px font-500 text-t-primary mb-8px'>{t('settings.noConfiguredModels')}</h3>
             {isPageMode && <p className='kel-phone-only kel-shell-custom-empty-copy'>No custom models configured. Add an API-backed model of your own.</p>}
 

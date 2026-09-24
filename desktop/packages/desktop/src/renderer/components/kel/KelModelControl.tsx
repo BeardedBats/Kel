@@ -247,7 +247,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title='Default Kel model' data-testid='kel-default-model-card'>
+    <KelCard title='Available now' data-testid='kel-default-model-card'>
       {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
@@ -260,6 +260,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
           <button
             type='button'
             data-testid='kel-default-auto'
+            aria-pressed={!state.default}
             onClick={() => void setDefault(null)}
             className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer'
             style={{ background: !state.default ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
@@ -276,6 +277,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
                   type='button'
                   disabled={false}
                   data-testid={'kel-default-' + provider.id + '-' + option.id}
+                  aria-pressed={current}
                   onClick={() => void setDefault({ provider: provider.id, model: option.id })}
                   className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer disabled:cursor-not-allowed'
                   style={{
