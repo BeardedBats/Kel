@@ -177,9 +177,14 @@ const PetSettings: React.FC = () => {
     <SettingsPageWrapper>
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
-          <div className='kel-shell-settings-card px-[12px] md:px-[32px] py-16px bg-2 rd-16px space-y-12px'>
+          <div className='kel-shell-settings-card kel-shell-pet-card px-[12px] md:px-[32px] py-16px bg-2 rd-16px space-y-12px'>
             <ShellSourceCardHeader title='Desktop Pet' /><div className='w-full flex flex-col divide-y divide-border-2'>
-              {preferenceItems.map((item) => (
+              {preferenceItems.map((item) => item.key === 'size' ? <React.Fragment key='size'>
+                <div className='kel-desktop-only'><PreferenceRow label={item.label}>{item.component}</PreferenceRow></div>
+                <select className='kel-phone-only kel-shell-pet-size' aria-label='Pet Size' value={size} disabled={!enabled} onChange={(event) => handleSizeChange(Number(event.target.value))}>
+                  <option value={200}>… Small</option><option value={280}>… Medium</option><option value={360}>… Large</option>
+                </select>
+              </React.Fragment> : (
                 <PreferenceRow key={item.key} label={item.label}>
                   {item.component}
                 </PreferenceRow>
