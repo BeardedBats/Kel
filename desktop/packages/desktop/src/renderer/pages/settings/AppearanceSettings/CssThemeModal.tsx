@@ -13,6 +13,7 @@ import AionModal from '@renderer/components/base/AionModal.tsx';
 import { Plus, Delete } from '@icon-park/react';
 import CodeMirror from '@uiw/react-codemirror';
 import { css as cssLang } from '@codemirror/lang-css';
+import { EditorView } from '@codemirror/view';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CSSProperties } from 'react';
@@ -52,7 +53,7 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
   const [name, setName] = useState('');
   const [cover, setCover] = useState<string>('');
   const [css, setCss] = useState('');
-  const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
+  const [appearance, setAppearance] = useState<'light' | 'dark'>(colorTheme === 'dark' ? 'dark' : 'light');
 
   const applyBackgroundImageToCss = useCallback((imageDataUrl: string) => {
     if (!imageDataUrl) return;
@@ -70,9 +71,9 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
       setName('');
       setCover('');
       setCss('');
-      setAppearance('light');
+      setAppearance(colorTheme === 'dark' ? 'dark' : 'light');
     }
-  }, [theme, visible]);
+  }, [theme, visible, colorTheme]);
 
   /**
    * 处理封面图片上传 / Handle cover image upload
@@ -118,6 +119,7 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
   return (
     <AionModal
       variant='standard'
+      className='kel-shell-theme-modal'
       visible={visible}
       header={{
         title: isEditing ? t('settings.cssTheme.editTheme') : t('settings.cssTheme.addToPreset'),
@@ -162,7 +164,11 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
             <div className='text-13px text-t-secondary mb-8px'>{t('settings.cssTheme.previewCover')}</div>
             <div
               className='w-120px h-80px rounded-8px border border-dashed border-border-2 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-primary)] transition-colors overflow-hidden bg-[var(--fill-0)]'
+              role='button'
+              tabIndex={0}
+              aria-label='Upload background image'
               onClick={handleCoverUpload}
+              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); void handleCoverUpload(); } }}
             >
               {cover ? (
                 <img src={cover} alt='cover' className='w-full h-full object-cover' />
@@ -206,7 +212,7 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
           <CodeMirror
             value={css}
             theme={colorTheme}
-            extensions={[cssLang()]}
+            extensions={[cssLang(), EditorView.lineWrapping]}
             onChange={setCss}
             placeholder={`/* ${t('settings.customCssDesc') || 'Enter custom CSS styles here'} */`}
             basicSetup={CODE_MIRROR_BASIC_SETUP}
