@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r41) — supersedes r39 below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r43) — supersedes r41 below
+
+`integration/v2` has pushed UI source `8bde9aa`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r43` (archive `65F4C64D927A9ACB`). [The r43 record](evidence/v2-19/CANDIDATE_R43.md) contains hashes, 295 desktop tests, typecheck, package and archive gates, and measured mobile WebUI and Pet checks. [The full Figma audit](evidence/figma-full-audit/README.md) pairs 23 desktop FINAL and 28 mobile screens. r43 builds on r41's Model/System and r39's About/Archived/Skills/notices fixes. Exact UI parity is **not** established. r42 is a preserved intermediate candidate. r20 and stable remain protected. No promotion or rename occurred.
+
+**Next action:** use a disposable populated profile for chat, tasks, recordings, Tools, and menu states. Compare these against paired FINAL frames, then fix measured copy, control, and spacing differences. Preserve r20, stable data, shortcuts, rollback copies, and Astra's branch. Google sign-in, live services, remote model response, fresh Muse audio, and a physical iPhone remain pending for access or hardware. The web-host suite needs all Kel instances stopped. Keep faint Light-mode labels outside this Dark pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r41) — superseded by r43
 
 `integration/v2` has pushed UI source `ea054bf`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r41` (archive `6C670D7ADE06C5C8`). [The r41 record](evidence/v2-19/CANDIDATE_R41.md) contains hashes, 295 desktop tests, typecheck, package and archive gates, phone Model/System/Pet checks, backup/restore dialogs, and 23 post-setup phone routes without overflow or redirect. [The full Figma audit](evidence/figma-full-audit/README.md) pairs 23 desktop FINAL and 28 mobile screens. r41 builds on r39's About, Archived, Skills Hub, and notices fixes. Exact UI parity is **not** established. r40 is a preserved intermediate candidate. r20 and stable remain protected. No promotion or rename occurred.
 
