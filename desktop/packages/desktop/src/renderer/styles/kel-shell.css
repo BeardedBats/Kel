@@ -1299,3 +1299,44 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
   .kel-v2-shell .kel-shell-ramble--selected .kel-shell-ramble-more button:hover { background: var(--kel-shell-hover); }
   .kel-v2-shell .kel-shell-ramble--selected .kel-shell-ramble-more button:disabled { opacity: .4; cursor: default; }
 }
+
+/* FINAL 188:1956: desktop Tools uses 40px MCP rows and a quiet panel edge. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-tools-mcp-card,
+  .kel-v2-shell .kel-tools-image-card { border-color: var(--kel-figma-color-glass-edge); }
+  .kel-v2-shell .kel-tools-mcp-layout { gap: 10px; }
+  .kel-v2-shell .kel-tools-mcp-card .space-y-12px > .arco-collapse {
+    margin: 0 !important; border: 0; background: transparent;
+  }
+  .kel-v2-shell .kel-tools-mcp-card .arco-collapse-item-header {
+    box-sizing: border-box; height: 40px; min-height: 40px; padding: 0 12px 0 32px !important;
+    border: 0; border-bottom: 1px solid rgba(191,216,255,.08);
+    border-radius: 0; background: transparent;
+  }
+  .kel-v2-shell .kel-tools-mcp-card .kel-tools-mcp-retest {
+    box-sizing: border-box; width: 24px; min-width: 24px; height: 24px; min-height: 24px;
+    padding: 0; border: 1px solid rgba(191,216,255,.16); border-radius: 6px;
+    background: rgba(191,216,255,.07);
+  }
+  .kel-v2-shell .kel-tools-mcp-card .kel-tools-mcp-name > span:first-child {
+    font: 500 14px/20px var(--kel-shell-heading);
+  }
+  .kel-v2-shell .kel-tools-image-empty {
+    justify-content: flex-end; flex-wrap: wrap; gap: 6px; text-align: right;
+  }
+}
+
+/* Keep desktop Tools controls readable between the phone and FINAL widths. */
+@media (min-width: 768px) and (max-width: 980px) {
+  .kel-v2-shell .kel-tools-mcp-layout > div:first-child { flex-wrap: wrap; gap: 8px; }
+  .kel-v2-shell .kel-tools-mcp-card .arco-collapse-item-header {
+    height: 48px; min-height: 48px; padding-left: 28px !important;
+  }
+  .kel-v2-shell .kel-tools-image-card .arco-form-item { display: block; }
+  .kel-v2-shell .kel-tools-image-card .arco-form-label-item,
+  .kel-v2-shell .kel-tools-image-card .arco-form-item-wrapper {
+    box-sizing: border-box; width: 100%; max-width: none; flex-basis: 100%;
+  }
+  .kel-v2-shell .kel-tools-image-card .arco-form-label-item { height: auto; margin-bottom: 8px; }
+  .kel-v2-shell .kel-tools-image-empty { justify-content: flex-start; text-align: left; }
+}

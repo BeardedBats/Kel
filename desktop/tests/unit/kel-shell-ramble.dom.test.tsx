@@ -7,7 +7,7 @@ import { Message } from '@arco-design/web-react';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-function libraryTransport() {
+function libraryTransport(transcripts: unknown[] = []) {
   delete (window as unknown as { kelAPI?: unknown }).kelAPI;
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const folders: Array<{ id: string; name: string; created: number }> = [];
@@ -15,7 +15,7 @@ function libraryTransport() {
   vi.stubGlobal('fetch', vi.fn(async (url, init) => {
     const body = JSON.parse(init?.body || '{}');
     requests.push({ url: String(url), body });
-    let result: unknown = { folders: [...folders], transcripts: [] };
+    let result: unknown = { folders: [...folders], transcripts };
     if (body.action === 'status') result = { mode: 'practice', label: 'Muse', has_key: false };
     if (body.action === 'folder_create') {
       const folder = { id: `folder-${folders.length}`, name: body.name, created: 1 };
@@ -30,6 +30,17 @@ function libraryTransport() {
   }));
   return { requests, folders, failRename: () => { failRename = true; } };
 }
+
+it('opens the newest saved transcript in the embedded desktop library', async () => {
+  libraryTransport([
+    { id: 'older', name: 'Older note', text: 'A: First note', created: 1, updated: 1, folder_id: null, source_type: 'upload', source_filename: null, duration_ms: 1000, status: 'complete', has_audio: true },
+    { id: 'newer', name: 'Latest note', text: 'A: Current note', created: 2, updated: 2, folder_id: null, source_type: 'upload', source_filename: null, duration_ms: 1000, status: 'complete', has_audio: true },
+  ]);
+  render(<MemoryRouter initialEntries={['/transcription/library']}><Ramble /></MemoryRouter>);
+  expect((await screen.findByTestId('transcript-name')).textContent).toBe('Latest note');
+  expect(screen.getByTestId('transcript-text').textContent).toBe('A: Current note');
+  expect(screen.queryByText('Your transcripts live here')).toBeNull();
+});
 
 it('creates a persisted New Folder with its name selected, then saves one inline rename', async () => {
   const { requests, folders } = libraryTransport();
