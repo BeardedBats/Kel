@@ -1,0 +1,66 @@
+[
+  {
+    "name": "about",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 214
+      },
+      {
+        "x": 16,
+        "y": 420,
+        "width": 361,
+        "height": 109
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAbout\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nKel\nVersion\n1.7.0 · dev\nRuntime\nElectron 37\nCheck for updates\nLicenses\nThird-party notices\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "archived",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 94
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nArchived\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nArchived conversations\n\nNo archived items. Archived chats will appear here.\n\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "skills",
+    "width": 393,
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 114
+      },
+      {
+        "x": 16,
+        "y": 319,
+        "width": 361,
+        "height": 114
+      }
+    ],
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSkills Hub\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nMy Skills\n\nNo skills installed. Import a skill pack to make it available to every assistant.\n\nUsage Tip\n\nSkills are shared. Enable one on an assistant to let it use the pack.\n\nChats\nKibble\nRamble\nProjects\nSettings"
+  },
+  {
+    "name": "notices opens",
+    "pass": true,
+    "content": "Third-party notices"
+  },
+  {
+    "name": "notices Escape closes",
+    "pass": true
+  },
+  {
+    "name": "setup route remains available",
+    "pass": true
+  }
+]

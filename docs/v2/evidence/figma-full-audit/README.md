@@ -16,6 +16,10 @@ After using the existing **Start using Kel** action on the isolated r30 profile,
 
 Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The [r33 lightbox](key/r33-lightbox.png) reached those bounds with a real image attached through the isolated composer. [Click results](r33-lightbox-check.json) show PNG clipboard content, a Download event named `audit-sample.png`, and scrim closure. Escape closure was also observed. The source image chip is 146×36 and keeps Remove separate from Preview. Generated image turns now use the same lightbox, but an actual generated turn was not available in this profile.
 
+**r37–r38 packaged follow-up:** Mobile About, Archived, and Skills Hub now use the FINAL wording and card geometry. At 393px, About cards measure 361×214 and 361×109; Archived measures 361×94; Skills cards each measure 361×114. Their package y positions include a 79px setup notice, so they align with Figma after subtracting that notice. [r38 measurements and text](r38-settings-check.json) include desktop About at 800 and 1440px. The desktop keeps Data folder and omits the phone-only Licenses card. r37's notices sheet initially painted blank until scroll ([failure capture](key/r37-notices.png)). r38 renders its text on first open ([capture](key/r38-notices.png)); its Escape transition closes the modal after animation. The r38 first-open check's automated `pass: false` used a truncated 300-character sample, and its immediate visibility check ran before the close animation; the full-text and post-animation checks passed. Its table columns are cramped at 393px, so a scrollable table source repair follows in r39.
+
+**r39 packaged closure:** [All six route and overlay checks](r39-settings-check.json) passed in a fresh isolated root. The notices text appears on first open; its six-column table scrolls within a 335px region and keeps 931px of table content. [The screenshot](key/r39-notices.png) shows readable names and links. Escape closes after its transition. Mobile About, Archived, and Skills Hub retain the measured FINAL card sizes and wording. At 800 and 1440px, About keeps Data folder and omits Licenses. Every checked width has no document overflow. The setup notice remains visible, with Continue setup available. This closes those confirmed gaps; the other screen rows below still need matched populated states or component repairs.
+
 ## Desktop screen pass
 
 | Figma frame | Route | Observation |
@@ -32,7 +36,7 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 | `188:2825` Archived | `/settings/archived` | Empty card is present. The package uses a centered icon and short message; the mobile FINAL frame uses a sentence instead. |
 | `188:3080` Assistants | `/settings/assistants` | Figma shows an empty state. The package shows the real Kel assistant, so the empty text state is unverified. |
 | `188:3335` Skills Hub | `/settings/skills` | Figma shows empty copy. The package uses a centered icon and shorter copy. |
-| `188:3602` About | `/settings/about` | Version card is present. The visible FINAL frame has a Licenses card and Third-party notices row; the package screenshot lacks that card. |
+| `188:3602` About | `/settings/about` | The desktop FINAL frame has a Kel card with Version, Runtime, and Data folder. The package includes those controls and a live version value. The Licenses card belongs to mobile `219:1233`, not this desktop frame. |
 | `189:907` Work | `/work` | Jobs, continuation, and team cards follow the frame. Empty wording differs in the isolated state. |
 | `189:1342` Activity | `/activity` | Three card groups follow the frame. Figma has a sample running job; the package has real empty states. |
 | `189:1758` Permissions | `/autonomy` | Three card groups follow the frame. Guardrail digest and current counts are runtime values. |
@@ -61,10 +65,10 @@ Figma's mobile frame is 393×852. It uses a phone header, five persistent tabs, 
 | `219:767` | Tools | Desktop MCP controls; compact status rows missing. |
 | `219:858` | WebUI | Extra introduction and expanded controls; mobile list rows missing. |
 | `219:966` | Desktop Pet | Desktop field layout and radio options; compact rows missing. |
-| `219:1052` | Archived | Centered icon empty state instead of the FINAL sentence. |
+| `219:1052` | Archived | r29 used a centered icon. r37/r38 use the FINAL sentence in a 361×94 card. |
 | `219:1109` | Assistants | Package has the Kel assistant; empty sample text is unverified. |
-| `219:1166` | Skills Hub | Centered icon and nested tip instead of two compact text cards. |
-| `219:1233` | About | Package lacks the Licenses card and Third-party notices row. |
+| `219:1166` | Skills Hub | r29 used an icon and nested tip. r37/r38 use the two FINAL text cards at 361×114 each. |
+| `219:1233` | About | r29 lacked Licenses. r37/r38 show Licenses and Third-party notices on mobile, with the FINAL wording and card sizes. Data folder stays on desktop. |
 | `220:1016` | Projects index | No index route; it redirected to Knowledge with horizontal desktop tabs. |
 | `220:1171` | Work | Desktop frame and wording; card order matches. |
 | `220:1249` | Activity | Desktop frame; runtime empty state differs from sample running work. |
@@ -113,6 +117,6 @@ The full Components board inventory was read, including its behavior notes. This
 - The 51 Figma-to-package pairs used Dark mode. Figma's new mobile page was discovered during this audit; older `FIGMA_GAPS.md` claims about no FINAL mobile frames are stale.
 - The inspected FINAL frames and Foundations board show a Dark palette. They do not provide a matching Light screen set, so pixel parity for Light cannot be claimed from this file.
 - Packaged r29 used disposable host, store, and engine roots. Sample content in Figma was not injected into production data. A content mismatch alone is not a code defect.
-- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. Compact mobile card layouts, exact text on mismatched data, menu states, and populated-data gaps remain open.
+- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. r39 closes the mobile About, Archived, Skills Hub, and notices gaps. Other compact mobile rows, menu states, and populated-data comparisons remain open.
 - Google sign-in, live services, fresh Muse audio, remote model response, and physical iPhone checks need access, media, or hardware and remain pending.
 - No `request_review` tool was available in the tool inventory. No independent review occurred.

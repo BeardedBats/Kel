@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r33) — supersedes r29 below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r39) — supersedes r33 below
+
+`integration/v2` has pushed UI source `61db8d5`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r39` (archive `F2C73B0B58B4C158`). [The r39 record](evidence/v2-19/CANDIDATE_R39.md) contains hashes, 295 desktop tests, typecheck, package and archive gates, and a fresh packaged Dark UI pass. [The full Figma audit](evidence/figma-full-audit/README.md) pairs 23 desktop FINAL and 28 mobile screens with package captures. r39 closes the mobile About, Archived, Skills Hub, and notices gaps in addition to r33's frame, theme rows, sheet, and lightbox. Exact UI parity is **not** established. r34–r38 remain intermediate candidates. r20 and the stable app remain protected. No promotion or rename occurred.
+
+**Next action:** use a disposable populated profile for chat, tasks, recordings, and menu states. Compare these against their paired FINAL frames, then repair confirmed copy, control, and spacing differences. Preserve r20, stable data, shortcuts, rollback copies, and Astra's branch. Google sign-in, live services, remote model response, fresh Muse audio, and a physical iPhone remain pending for access or hardware. The web-host suite needs all Kel instances stopped. Keep faint Light-mode labels outside this Dark pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r33) — superseded by r39
 
 `integration/v2` has pushed UI source `c6d47ea`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r33` (archive `D3978ED3254C3256`). [The r33 record](evidence/v2-19/CANDIDATE_R33.md) contains its full hashes, 295-test suite, typecheck, archive gate, packaged sheet and lightbox clicks, 23-route phone sweep, and process ownership. [The full Figma audit](evidence/figma-full-audit/README.md) pairs all 23 desktop FINAL frames and 28 mobile frames with package captures, and checks Foundations and Components. Exact UI parity is **not** established; use its screen rows as the gap list. r30–r32 were failed intermediate candidates. r20 and the stable app remain protected. No promotion or rename occurred.
 
