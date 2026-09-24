@@ -185,7 +185,7 @@ const ModalMcpManagementSection: React.FC<{
   };
 
   return (
-    <div className='flex flex-col gap-16px min-h-0'>
+    <div className='kel-tools-mcp-layout flex flex-col gap-16px min-h-0'>
       <div className='flex gap-8px items-center justify-between'>
         <ShellSourceCardHeader title='MCP Tools Configuration' />
         <div>{renderAddButton()}</div>
@@ -576,7 +576,7 @@ const ToolsModalContent: React.FC = () => {
                     ))}
                   </AionSelect>
                 ) : (
-                  <div className='text-t-secondary flex items-center'>
+                  <div className='kel-tools-image-empty text-t-secondary flex items-center'>
                     {t('settings.noAvailable')}
                     {navigateToSettingsTab ? (
                       <a

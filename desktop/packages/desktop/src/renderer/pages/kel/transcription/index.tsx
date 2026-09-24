@@ -147,11 +147,18 @@ const TranscriptionPage: React.FC = () => {
       ]);
       setStatus(state);
       setLibrary(data);
+      if (embedded) {
+        setSelectedId((current) =>
+          current && data.transcripts.some((item) => item.id === current)
+            ? current
+            : [...data.transcripts].sort((a, b) => b.created - a.created)[0]?.id || null
+        );
+      }
       setLoadError(null);
     } catch (error) {
       setLoadError(error);
     }
-  }, []);
+  }, [embedded]);
 
   useEffect(() => {
     void refresh();
