@@ -1,4 +1,7 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
+import thumbsUpIcon from '@renderer/assets/figma/chat/thumbs-up.svg';
+import thumbsDownIcon from '@renderer/assets/figma/chat/thumbs-down.svg';
+import moreIcon from '@renderer/assets/figma/chat/more.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -12,7 +15,7 @@ import { parseSessionMessageBlock, parseSessionsBlock } from './sessionMarkers';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
-import { Alert, Message, Tooltip } from '@arco-design/web-react';
+import { Alert, Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
 import { Copy } from '@icon-park/react';
 import classNames from 'classnames';
 import React, { useMemo, useState } from 'react';
@@ -31,14 +34,14 @@ import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
 
 /**
  * Format a timestamp for message display.
- * Today: "HH:mm", older: "MM-DD HH:mm".
+ * Today: "h:mm AM", older: "MM-DD h:mm AM".
  */
 export const formatMessageTime = (timestamp: number): string => {
   const date = new Date(timestamp);
   const now = new Date();
-  const hours = date.getHours().toString().padStart(2, '0');
+  const hours = (date.getHours() % 12 || 12).toString();
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  const time = `${hours}:${minutes}`;
+  const time = `${hours}:${minutes} ${date.getHours() < 12 ? 'AM' : 'PM'}`;
 
   if (
     date.getFullYear() !== now.getFullYear() ||
@@ -125,6 +128,14 @@ const MessageText: React.FC<{
   const { t } = useTranslation();
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const isUserMessage = message.position === 'right';
+  const [reaction, setReaction] = useState<'up' | 'down' | null>(() => {
+    try {
+      const saved = localStorage.getItem(`kel.chatReaction.${message.id}`);
+      return saved === 'up' || saved === 'down' ? saved : null;
+    } catch {
+      return null;
+    }
+  });
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
   // supporting backend (claude/codex). The message already reached the
   // server (it's rendered); this only answers "has the agent picked it up
@@ -207,6 +218,17 @@ const MessageText: React.FC<{
     </Tooltip>
   );
 
+  const chooseReaction = (choice: 'up' | 'down') => {
+    const next = reaction === choice ? null : choice;
+    setReaction(next);
+    try {
+      if (next) localStorage.setItem(`kel.chatReaction.${message.id}`, next);
+      else localStorage.removeItem(`kel.chatReaction.${message.id}`);
+    } catch {
+      // The visual choice still works when local storage is unavailable.
+    }
+  };
+
   // Fork entry point: only when the agent declares the capability, and only on
   // messages the backend can actually fork at (any message for at_turn/codex,
   // the last message otherwise) — see `isForkEnabled`.
@@ -228,6 +250,29 @@ const MessageText: React.FC<{
       </button>
     </Tooltip>
   ) : null;
+
+  const kelReplyActions = (
+    <>
+      <Tooltip content='Mark helpful'>
+        <button type='button' aria-label='Mark helpful' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
+          <img src={thumbsUpIcon} alt='' width={16} height={16} />
+        </button>
+      </Tooltip>
+      <Tooltip content='Mark unhelpful'>
+        <button type='button' aria-label='Mark unhelpful' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
+          <img src={thumbsDownIcon} alt='' width={16} height={16} />
+        </button>
+      </Tooltip>
+      <Dropdown trigger='click' position='bl' droplist={<Menu>
+        <Menu.Item key='copy' onClick={handleCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
+        {showForkButton && <Menu.Item key='fork' onClick={() => void forkConversation(message.msg_id ?? message.id)}>{t('messages.fork.action')}</Menu.Item>}
+      </Menu>}>
+        <button type='button' aria-label='More reply actions' className='kel-shell-message-action'>
+          <img src={moreIcon} alt='' width={16} height={16} />
+        </button>
+      </Dropdown>
+    </>
+  );
 
   const cronMeta = message.content.cronMeta;
   const displaySenderName = senderName === 'team_system' ? t('team.systemNotice.sender') : senderName;
@@ -362,12 +407,11 @@ const MessageText: React.FC<{
             of the turn shows this row (showCopyRow); user messages always do. */}
         {showCopyRow && (
           <div
-            className={classNames('h-32px flex items-center mt-4px gap-8px', {
+            className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
               'flex-row-reverse': isUserMessage,
             })}
           >
-            {copyButton}
-            {forkButton}
+            {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
 
           </div>
         )}

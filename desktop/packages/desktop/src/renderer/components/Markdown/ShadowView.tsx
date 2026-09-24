@@ -67,8 +67,15 @@ export const createInitStyle = (
     margin-block-end: ${paragraphMargin};
   }
   .markdown-shadow-body li {
-    margin-block-start: 6px;
-    margin-block-end: 6px;
+    margin-block-start: var(--kel-chat-list-item-gap, 6px);
+    margin-block-end: var(--kel-chat-list-item-gap, 6px);
+    line-height: var(--kel-chat-list-line-height, ${lineHeight});
+    color: var(--kel-chat-list-description-color, inherit);
+  }
+  .markdown-shadow-body li::marker { color: var(--kel-chat-list-primary-color, inherit); }
+  .markdown-shadow-body li strong { color: var(--kel-chat-list-primary-color, var(--text-primary)); font-family: var(--kel-chat-list-title-font, inherit); font-weight: var(--kel-chat-list-title-weight, 600); }
+  .markdown-shadow-body li * {
+    line-height: var(--kel-chat-list-line-height, ${lineHeight});
   }
   a{
     color:var(--primary);
@@ -160,6 +167,7 @@ export const createInitStyle = (
   }
   ol, ul {
     padding-inline-start:24px;
+    margin-block: var(--kel-chat-list-margin, 16px);
   }
   hr {
     border: none;

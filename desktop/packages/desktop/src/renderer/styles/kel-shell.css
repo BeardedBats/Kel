@@ -366,8 +366,19 @@
 .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn { max-width: 390px; }
 .kel-shell-message-meta { display: flex; gap: 12px; align-items: center; font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); margin-bottom: 12px; }
 .kel-v2-shell .kel-shell-message-text { font: 400 16px/25px var(--chat-font-family, var(--kel-shell-body)); }
+.kel-v2-shell[data-theme='dark'] .kel-shell-message-meta,
+[data-theme='dark'] .kel-v2-shell .kel-shell-message-meta { font: 500 13px/16px var(--kel-shell-heading); color: #cfe7ff; }
+@media (min-width: 768px) {
+  .kel-v2-shell .message-item .markdown-shadow { --kel-chat-list-line-height: 20px; --kel-chat-list-item-gap: 7px; --kel-chat-list-margin: 10px; --kel-chat-list-description-color: var(--kel-figma-color-text-muted); --kel-chat-list-primary-color: var(--kel-figma-color-text-primary); --kel-chat-list-title-font: var(--kel-shell-heading); --kel-chat-list-title-weight: 500; }
+  .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn { position: relative; }
+  .kel-v2-shell [data-message-position='right'] .kel-shell-message-actions { position: absolute; right: 0; bottom: -32px; opacity: 0; pointer-events: none; }
+  .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn:hover .kel-shell-message-actions,
+  .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn:focus-within .kel-shell-message-actions { opacity: 1; pointer-events: auto; }
+}
 .kel-shell-message-action { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--kel-text-2); cursor: pointer; }
 .kel-shell-message-action:hover { background: var(--kel-shell-hover); }
+.kel-shell-message-action[aria-pressed='true'] { background: var(--kel-shell-hover); }
+.kel-v2-shell .kel-shell-message-actions { gap: 4px; }
 @media (max-width: 980px) {
   .kel-shell-ramble > aside { min-width: 0; width: 100%; max-height: 280px; }
   .kel-shell-ramble > main { padding: 12px; }
