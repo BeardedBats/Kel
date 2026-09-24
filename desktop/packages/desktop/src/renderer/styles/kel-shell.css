@@ -910,6 +910,35 @@ html:not([data-theme='light']) .kel-v2-shell .kel-palette[role='dialog'] { backg
   .kel-v2-shell .settings-page-content .kel-card { padding: 16px; }
   .kel-v2-shell .kel-desktop-only { display: none; }
   .kel-v2-shell .kel-phone-only { display: block; }
+  .kel-v2-shell [data-testid='kel-default-model-card'] { gap: 0; }
+  .kel-v2-shell [data-testid='kel-default-model-card'] > .flex.flex-col { gap: 0; }
+  .kel-v2-shell [data-testid='kel-default-model-card'] button {
+    min-height: 42px; padding: 0 12px; border: 0 !important;
+    border-bottom: 1px solid rgba(191,216,255,.12) !important;
+    border-radius: 0; background: transparent !important;
+  }
+  .kel-v2-shell [data-testid='kel-default-model-card'] button > span:first-child { font: 400 14px/20px var(--kel-shell-body); }
+  .kel-v2-shell [data-testid='kel-default-model-card'] button > span:last-child { margin-left: auto; font: 500 12px/16px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-custom-models { min-height: 0 !important; }
+  .kel-v2-shell .kel-shell-custom-models .kel-shell-model-actions { position: static !important; width: 100%; order: 2; }
+  .kel-v2-shell .kel-shell-custom-models .kel-shell-model-actions button { width: 100%; min-height: 40px; }
+  .kel-v2-shell .kel-shell-custom-models .arco-scrollbar { order: 1; }
+  .kel-v2-shell .kel-shell-custom-models .py-40px { min-height: 0 !important; padding: 0 !important; align-items: flex-start !important; }
+  .kel-v2-shell .kel-shell-custom-models .kel-shell-model-empty-icon,
+  .kel-v2-shell .kel-shell-custom-models .py-40px h3 { display: none; }
+  .kel-v2-shell .kel-shell-custom-empty-copy { margin: 0; color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-system-mobile-rows { width: 100%; }
+  .kel-v2-shell .kel-shell-system-mobile-row {
+    display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px;
+    padding: 0 12px; border: 0; border-bottom: 1px solid rgba(191,216,255,.12);
+    background: transparent; color: var(--kel-text-1); text-align: left;
+    font: 400 14px/20px var(--kel-shell-body); cursor: pointer;
+  }
+  .kel-v2-shell .kel-shell-system-mobile-row > span { color: var(--kel-figma-color-text-muted); font-size: 20px; }
+  .kel-v2-shell .kel-shell-system-mobile-restore {
+    width: 100%; min-height: 40px; margin-top: 12px; border: 0; border-radius: 8px;
+    background: #9D3F3E; color: #FFFFFF; font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
+  }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty,
   .kel-v2-shell .kel-shell-catalog-card,
   .kel-v2-shell .kel-shell-catalog-tip { min-height: 0; }
