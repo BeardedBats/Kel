@@ -18,6 +18,7 @@ import { setGlobalNavigate } from '@/renderer/utils/navigation';
 import brandMark from '@renderer/assets/figma/kel-mark.png';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
 import KelInChatFrame from '@renderer/components/kel/KelInChatFrame';
+import KelMobileTabs from '@renderer/components/kel/KelMobileTabs';
 import FixCaptureLayer from '@renderer/components/kel/fixCapture/FixCaptureLayer';
 import { KelEngineNotice } from '@renderer/components/kel/KelEngineNotice';
 import { configService } from '@/common/config/configService';
@@ -105,8 +106,8 @@ const DESKTOP_COLLAPSED_WIDTH = 0;
 // 桌面侧栏连续可调：下限 200；低于此值拖拽即吸附收起（消灭旧 130 死区）。
 // 上限 = 窗口宽 50%（动态随窗口）。
 const SIDER_MIN_WIDTH = 200;
-const MOBILE_SIDER_WIDTH_RATIO = 0.67;
-const MOBILE_SIDER_MIN_WIDTH = 260;
+const MOBILE_SIDER_WIDTH_RATIO = 0.78;
+const MOBILE_SIDER_MIN_WIDTH = 280;
 const MOBILE_SIDER_MAX_WIDTH = 420;
 
 const detectMobileViewportOrTouch = (): boolean => {
@@ -611,6 +612,7 @@ const Layout: React.FC<{
               />
             )}
           </ArcoLayout>
+          {isMobile && <KelMobileTabs />}
         </div>
       </NavigationHistoryProvider>
     </LayoutContext.Provider>

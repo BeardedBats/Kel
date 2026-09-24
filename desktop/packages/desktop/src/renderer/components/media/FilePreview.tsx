@@ -10,8 +10,9 @@ import { useTranslation } from 'react-i18next';
 import { formatByteSize } from '@/renderer/services/i18n/format';
 import { getFileExtension } from '@/renderer/services/FileService';
 import { ipcBridge } from '@/common';
-import { Image, Tooltip } from '@arco-design/web-react';
+import { Tooltip } from '@arco-design/web-react';
 import fileIcon from '@/renderer/assets/icons/file-icon.svg';
+import KelImageLightbox from './KelImageLightbox';
 
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg']);
 
@@ -49,6 +50,16 @@ const FilePreview: React.FC<FilePreviewProps> = ({ path, onRemove, readonly = fa
   const { i18n } = useTranslation();
   const [imageUrl, setImageUrl] = useState<string>('');
   const [fileSize, setFileSize] = useState<string>('');
+  const [imageDimensions, setImageDimensions] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    const image = new window.Image();
+    image.onload = () => setImageDimensions(`${image.naturalWidth}×${image.naturalHeight}`);
+    image.src = imageUrl;
+    return () => { image.onload = null; };
+  }, [imageUrl]);
 
   useEffect(() => {
     // 获取文件大小
@@ -111,27 +122,17 @@ const FilePreview: React.FC<FilePreviewProps> = ({ path, onRemove, readonly = fa
 
   if (isImage) {
     return withHint(
-      <div className='relative inline-block'>
-        <div className='rd-8px overflow-hidden border-1 border-solid b-color-border-2'>
-          <Image
-            src={imageUrl}
-            alt={file_name}
-            width={60}
-            height={60}
-            className='object-cover cursor-pointer'
-            style={{ display: imageUrl ? 'block' : 'none' }}
-            preview={Boolean(imageUrl)}
-          />
-          {!imageUrl && <div className='w-60px h-60px bg-bg-3'></div>}
-        </div>
+      <div className='kel-attachment-chip'>
+        <button type='button' className='kel-attachment-chip__open' onClick={() => setPreviewOpen(true)} disabled={!imageUrl} aria-label={`Preview ${file_name}`}>
+          {imageUrl ? <img src={imageUrl} alt='' /> : <span className='kel-attachment-chip__placeholder' />}
+          <span className='kel-attachment-chip__text'><span title={file_name}>{file_name}</span><small>{fileSize || '...'}</small></span>
+        </button>
         {!readonly && (
-          <div
-            className='absolute -top-4px -end-4px w-16px h-16px rd-50% bg-white dark:bg-gray-700 cursor-pointer flex items-center justify-center shadow-md hover:shadow-lg transition-all z-10 border-1 border-solid border-gray-200 dark:border-gray-600'
-            onClick={handleRemove}
-          >
+          <button type='button' className='kel-attachment-chip__remove' onClick={handleRemove} aria-label={`Remove ${file_name}`}>
             <Close theme='filled' size='10' fill='var(--text-secondary)' />
-          </div>
+          </button>
         )}
+        {previewOpen && imageUrl && <KelImageLightbox src={imageUrl} name={file_name} detail={[fileSize, imageDimensions].filter(Boolean).join(' · ')} onClose={() => setPreviewOpen(false)} />}
       </div>
     );
   }

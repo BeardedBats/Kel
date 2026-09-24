@@ -133,6 +133,9 @@ const CatchAllRedirect: React.FC = () => {
   );
 };
 
+const MobileRootRoute: React.FC<{ desktopPath: string }> = ({ desktopPath }) =>
+  window.matchMedia('(max-width: 767px)').matches ? <div /> : <Navigate to={desktopPath} replace />;
+
 const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
   const { status } = useAuth();
 
@@ -196,7 +199,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/system' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/about' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/ext/:tabId' element={withRouteFallback(ExtensionSettingsPage)} />
-          <Route path='/settings' element={<Navigate to='/settings/appearance' replace />} />
+          <Route path='/settings' element={<MobileRootRoute desktopPath='/settings/appearance' />} />
           <Route path='/test/components' element={withRouteFallback(ComponentsShowcase)} />
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
@@ -219,7 +222,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             path='/team/studio'
             element={HIDE_WORKFORCE_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(KelTeam)}
           />
-          <Route path='/projects' element={<Navigate to='/projects/knowledge' replace />} />
+          <Route path='/projects' element={<MobileRootRoute desktopPath='/projects/knowledge' />} />
           <Route path='/projects/knowledge' element={withRouteFallback(KelProjects)} />
           <Route path='/projects/map' element={withRouteFallback(KelProjects)} />
           <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />

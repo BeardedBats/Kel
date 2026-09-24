@@ -9,7 +9,7 @@ import { Modal, Button } from '@arco-design/web-react';
 import { Close } from '@icon-park/react';
 import classNames from 'classnames';
 import type { CSSProperties } from 'react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useThemeContext } from '@/renderer/hooks/context/ThemeContext';
 
@@ -207,6 +207,17 @@ const AionModal: React.FC<AionModalProps> = ({
   ...props
 }) => {
   const isStandard = variant === 'standard';
+  useEffect(() => {
+    if (!isStandard || !props.visible || !onCancel || window.innerWidth > 767) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      onCancel();
+    };
+    window.addEventListener('keydown', closeOnEscape, true);
+    return () => window.removeEventListener('keydown', closeOnEscape, true);
+  }, [isStandard, props.visible, onCancel]);
   const { fontScale } = useThemeContext();
   const { t } = useTranslation();
   // standard 变体默认给内容区标准内边距（上下20/左右24）；当调用方显式传入
