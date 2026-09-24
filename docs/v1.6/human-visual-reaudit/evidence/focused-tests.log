@@ -1,0 +1,11 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/Nick/Desktop/Kel/kel-v16-human-visual-reaudit/desktop[39m
+
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/donor-policy.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m node [49m[39m tests/unit/needs-attention.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 22:10:24
+[2m   Duration [22m 228ms[2m (transform 79ms, setup 39ms, import 77ms, tests 11ms, environment 0ms)[22m
+

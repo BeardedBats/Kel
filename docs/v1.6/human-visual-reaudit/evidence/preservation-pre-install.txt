@@ -1,0 +1,24 @@
+== preserved installs BEFORE reaudit install (timestamp Sat, Sep 19, 2026 10:27:23 PM) ==
+-- KelV16ReviewInstall (audit) --
+f65b430ad2bd62868f5846d40c3a201b60ff43847e47abf52a857476ecc84a96 *C:/Users/Nick/KelV16ReviewInstall/Kel.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *C:/Users/Nick/KelV16ReviewInstall/resources/kel-engine/KelEngine.exe
+-- KelVisualFixInstall (review) --
+28ad709821a3fb124bdad4b54e615f7a02270adb79d64b3605dfec314015e5f1 *C:/Users/Nick/KelVisualFixInstall/Kel.exe
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *C:/Users/Nick/KelVisualFixInstall/resources/kel-engine/KelEngine.exe
+== registry state ==
+
+
+InstallLocation : C:\Users\Nick\KelVisualFixInstall
+KeepShortcuts   : true
+ShortcutName    : Kel
+
+
+
+
+
+DisplayName     : Kel
+DisplayVersion  : 1.6.0
+UninstallString : "C:\Users\Nick\KelVisualFixInstall\Uninstall Kel.exe" /currentuser
+
+
+

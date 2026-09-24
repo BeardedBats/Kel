@@ -1,0 +1,29 @@
+--- KELVIS VERIFY SUMMARY ---
+PASS boot :: engine 1.6.0 pid 10228
+PASS profileReady :: #/guid
+PASS sidebarMark :: file:///C:/Users/Nick/KelVisualReauditInstall/resources/app.asar/out/renderer/as
+PASS attentionBadge :: badge "2" right=250.0 <= sider 261.0
+PASS contrast :: 3 sub-4.5 findings, none below 2.5:1
+PASS donorVisible :: no donor strings in visible text
+PASS scroll 1366x768 :: wheel=150 end=150/150 home=0
+PASS scroll 1440x900 :: wheel=56 end=56/56 home=0
+PASS scroll 1440x960 :: wheel=56 end=56/56 home=0
+PASS scroll 1920x1080 :: wheel=56 end=56/56 home=0
+PASS scroll 1100x800 :: wheel=139 end=139/139 home=0
+PASS workLanguage :: no raw enums on Work page
+PASS workToChat :: #/conversation/3bdaab68
+PASS drawerLanguage :: drawer in plain language
+PASS drawerStatus :: translated statuses present
+PASS modelClarity :: custom-models framing present
+PASS modelBadges :: availability badges present
+PASS systemFolders :: advanced folders section present
+PASS systemPathHidden :: work directory hidden by default
+PASS toolsLabel :: Kel Browser label present
+PASS petTruthful :: reverted to OFF with message: The desktop pet is not available in this build, so it stays off.
+PASS petReload :: still OFF after reload
+PASS teamHidden :: team route redirected to home
+PASS aboutLogo :: naturalWidth=1024
+PASS narrowOverflow :: no horizontal overflow at 1100x800
+console errors: 0
+failures: 0
+json: C:\Users\Nick\Desktop\Kel\kel-v16-human-visual-reaudit\docs\v1.6\human-visual-reaudit\evidence\probes-installed\kelvis\kelvis-verify.json

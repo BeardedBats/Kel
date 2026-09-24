@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "appDir": "C:\\Users\\Nick\\KelVisualReauditInstall",
+  "startedAt": "2026-09-20T02:35:51.449Z",
+  "steps": {
+    "healthyBoot": true,
+    "engineVersion": "1.6.0",
+    "conversations": [
+      "cc26ae8f-aae1-4d5a-99fe-08193394dc72",
+      "dc1f2101-e04e-4142-8770-ab7fa5f5eb8d",
+      "4f06a8cb-41cd-451b-bc4a-3269aedffb5b",
+      "b4e9aadd-7c24-4e15-aeff-cfbea21cd528",
+      "review-long-response"
+    ],
+    "restore": null,
+    "hashAfterSkip": "#/guid",
+    "attentionVisible": true,
+    "attentionText": "Needs your attention 4 An approval is waiting Run the release checklist build step — Kel is holding until you decide. Open the chat Ready to continue when you are Run the release checklist build step ",
+    "aboutLogoLoaded": true,
+    "aboutText": "Model Tools Application Appearance Remote Desktop Pet System Archived Archived conversations Other About Work & context 2 Back to Chat"
+  },
+  "consoleErrors": [],
+  "rawLeaks": [],
+  "overflow": {
+    "/work": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/about": {
+      "doc": 0,
+      "body": 0
+    },
+    "/": {
+      "doc": 0,
+      "body": 0
+    },
+    "/settings/appearance": {
+      "doc": 0,
+      "body": 0
+    },
+    "/autonomy": {
+      "doc": 0,
+      "body": 0
+    }
+  },
+  "screenshots": [
+    "r12-work.png",
+    "r12-about.png"
+  ],
+  "linkLog": [
+    "[KEL-LINK] 2026-09-19T00:44:07.436Z state=connected attempts=0",
+    "[KEL-LINK] 2026-09-19T21:19:01.816Z state=connected attempts=0",
+    "[KEL-LINK] 2026-09-20T02:32:36.759Z state=connected attempts=0",
+    "[KEL-LINK] 2026-09-20T02:34:05.583Z state=connected attempts=0",
+    "[KEL-LINK] 2026-09-20T02:35:53.492Z state=connected attempts=0"
+  ],
+  "gate": {
+    "pass": true,
+    "failures": []
+  }
+}

@@ -1,0 +1,23 @@
+appDir: C:\Users\Nick\KelVisualReauditInstall
+rootDir: C:\Users\Nick\KelVisualReauditRuns\prepared
+boot: {"hash":"#/guid","title":"Kel","windows":1}
+sidebar: badgeInside=true noSvgText=true imgW=1024
+scroll 1366x768: wheel=150 end=150/150 home=0 pgup=150 pgdn=150 bottomVisible=true ovx=0
+scroll 1440x900: wheel=56 end=56/56 home=0 pgup=56 pgdn=56 bottomVisible=true ovx=0
+scroll 1440x960: wheel=56 end=56/56 home=0 pgup=56 pgdn=56 bottomVisible=true ovx=0
+scroll 1920x1080: wheel=56 end=56/56 home=0 pgup=56 pgdn=56 bottomVisible=true ovx=0
+scroll 1100x800: wheel=139 end=139/139 home=0 pgup=139 pgdn=139 bottomVisible=true ovx=0
+permLang: lease=false worker=false jobIds=["job_review_summary"] advAfter={"permCheckVisible":true,"guardrailsVisible":true,"hideBtn":true}
+workToChat: buttons=3 opened=[{"h":"#/conversation/3bdaab68","known":true,"back":"#/work","fwd":"#/conversation/3bdaab68"},{"h":"#/conversation/3bdaab68","known":true,"back":"#/work","fwd":"#/conversation/3bdaab68"},{"h":"#/conversation/3bdaab68","known":true,"back":"#/work","fwd":"#/conversation/3bdaab68"}]
+model: noConfigured=false noCustom=true available=2 needsSetup=3
+system: before={"adv":true,"workDir":false,"donor":false} after={"foldersOpenText":true,"hasHide":true,"donorPathVisibleNow":true}
+appearance: dark={"bodyAttr":"dark","htmlClass":"","bg":"rgb(22, 32, 44)"} light={"bodyAttr":"light","htmlClass":"","bg":"rgb(249, 250, 251)"}
+tools: kelBrowser=true donorId=false chromeDevtools=true
+pet: before={"checked":"false","cls":"arco-switch arco-switch-type-circle","disabled":false} after=false msgs=["The desktop pet is not available in this build, so it stays off.","The desktop pet is not available in this build, so it stays off."] reload=false persisted=unparsed windows=1
+hiddenRoutes: {"#/team":"#/guid","#/team/office":"#/guid","#/team/roster":"#/guid","#/team/studio":"#/guid","#/settings/skills-hub":"#/guid","#/settings/agent":"#/guid","#/settings/assistants":"#/guid","#/settings/capabilities":"#/guid"} siderWords={"team":false,"roster":false,"office":false,"studio":false}
+about: imgs=[{"src":"file:///C:/Users/Nick/KelVisualReauditInstall/resources/app.asar/out/renderer/assets/app-Bq_S8k2x.png","w":1024,"h":1024},{"src":"file:///C:/Users/Nick/KelVisualReauditInstall/resources/app.asar/out/renderer/assets/app-Bq_S8k2x.png","w":1024,"h":1024}] donor=false
+donorSweep hits: []
+narrowOverflow: {"#/work":0,"#/autonomy":0,"#/settings/model":0,"#/settings/system":0,"#/settings/appearance":0,"#/settings/tools":0,"#/settings/pet":0}
+zoom125: {"#/work":{"ovx":0,"innerW":1093},"#/autonomy":{"ovx":0,"innerW":1093},"#/settings/model":{"ovx":0,"innerW":1093}}
+consoleErrors: 0 → []
+pageErrors: 0 → []

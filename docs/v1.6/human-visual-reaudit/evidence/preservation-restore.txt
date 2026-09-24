@@ -1,0 +1,101 @@
+== Sat, Sep 19, 2026 10:37:09 PM ==
+== post-audit preservation re-check (must equal pre-install hashes) ==
+f65b430ad2bd62868f5846d40c3a201b60ff43847e47abf52a857476ecc84a96 *C:/Users/Nick/KelV16ReviewInstall/Kel.exe
+df4f0ee991dfd5c0d74e54fffc9510ebf4948dd3d9050088f39561a33ea7e01f *C:/Users/Nick/KelV16ReviewInstall/resources/kel-engine/KelEngine.exe
+28ad709821a3fb124bdad4b54e615f7a02270adb79d64b3605dfec314015e5f1 *C:/Users/Nick/KelVisualFixInstall/Kel.exe
+f525b15bb77385831c0695fb02998ed6ea3dd21315926792052e4894021af5d8 *C:/Users/Nick/KelVisualFixInstall/resources/kel-engine/KelEngine.exe
+== registry before restore ==
+
+
+InstallLocation : C:\Users\Nick\KelVisualReauditInstall
+
+
+
+== restore registration backups ==
+The operation completed successfully.
+The operation completed successfully.
+== registry after restore ==
+
+
+InstallLocation : C:\Users\Nick\KelVisualFixInstall
+
+
+
+== repoint Kel shortcuts back to the review install ==
+At line:1 char:50
++  = New-Object -ComObject WScript.Shell; foreach ( in @('C:\Users\Nick ...
++                                                  ~
+Missing variable name after foreach.
+At line:1 char:166
++ ... Data\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk')) { if (T ...
++                                                                 ~
+Unexpected token ')' in expression or statement.
+At line:1 char:207
++ ... u\Programs\Kel.lnk')) { if (Test-Path ) {  = .CreateShortcut(); .Targ ...
++                                                                  ~
+An expression was expected after '('.
+At line:1 char:389
++ ... ocation='C:\Users\Nick\KelVisualFixInstall\Kel.exe,0'; .Save(); Write ...
++                                                                  ~
+An expression was expected after '('.
+At line:1 char:419
++ ... sualFixInstall\Kel.exe,0'; .Save(); Write-Output ('updated: ' + ) } }
++                                                                    ~
+You must provide a value expression following the '+' operator.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingVariableNameAfterForeach
+ 
+== final shortcut state ==
+At line:1 char:50
++  = New-Object -ComObject WScript.Shell; foreach ( in @('C:\Users\Nick ...
++                                                  ~
+Missing variable name after foreach.
+At line:1 char:166
++ ... Data\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk')) { if (T ...
++                                                                 ~
+Unexpected token ')' in expression or statement.
+At line:1 char:207
++ ... u\Programs\Kel.lnk')) { if (Test-Path ) {  = .CreateShortcut(); Write ...
++                                                                  ~
+An expression was expected after '('.
+At line:1 char:235
++ ... Test-Path ) {  = .CreateShortcut(); Write-Output ( + ' -> ' + .Target ...
++                                                                  ~
+You must provide a value expression following the '+' operator.
+At line:1 char:236
++ ...  ) {  = .CreateShortcut(); Write-Output ( + ' -> ' + .TargetPath) } }
++                                                          ~~~~~~~~~~~
+Unexpected token '.TargetPath' in expression or statement.
+At line:1 char:235
++ ... Test-Path ) {  = .CreateShortcut(); Write-Output ( + ' -> ' + .Target ...
++                                                                  ~
+Missing closing ')' in expression.
+At line:1 char:186
++ ... ft\Windows\Start Menu\Programs\Kel.lnk')) { if (Test-Path ) {  = .Cre ...
++                                                                 ~
+Missing closing '}' in statement block or type definition.
+At line:1 char:168
++ ... ta\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk')) { if (Tes ...
++                                                                 ~
+Missing closing '}' in statement block or type definition.
+At line:1 char:247
++ ...  ) {  = .CreateShortcut(); Write-Output ( + ' -> ' + .TargetPath) } }
++                                                                     ~
+Unexpected token ')' in expression or statement.
+At line:1 char:249
++ ...  ) {  = .CreateShortcut(); Write-Output ( + ' -> ' + .TargetPath) } }
++                                                                       ~
+Unexpected token '}' in expression or statement.
+Not all parse errors were reported.  Correct the reported errors and try again.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingVariableNameAfterForeach
+ 
+== note ==
+KelVisualReauditInstall remains on disk as the audit artifact (files untouched); its shortcuts now point at the review install again.
+
+== shortcut repoint re-run (corrected quoting) Sat, Sep 19, 2026 10:37:20 PM ==
+updated: C:\Users\Nick\Desktop\Kel.lnk -> C:\Users\Nick\KelVisualFixInstall\Kel.exe
+updated: C:\Users\Nick\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk -> C:\Users\Nick\KelVisualFixInstall\Kel.exe
+== final shortcut state ==
+C:\Users\Nick\Desktop\Kel.lnk -> C:\Users\Nick\KelVisualFixInstall\Kel.exe
+C:\Users\Nick\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Kel.lnk -> C:\Users\Nick\KelVisualFixInstall\Kel.exe

@@ -1,0 +1,37 @@
+== AionUi : total=8 (showing up to 40) ==
+  direction.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Layou
+  direction.ts ::  for the app language. * * fa-IR is the only right-to-left language AionUi ships. Direction is derived * from the app language (`i18n.language`
+  format.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Local
+  format.ts :: , which has nothing to do with the language * the user picked inside AionUi. A German desktop running AionUi in English used * to render `0,42 $
+  format.ts :: e language * the user picked inside AionUi. A German desktop running AionUi in English used * to render `0,42 $` and `17.8.2025` next to English
+  format.ts :: sh labels, and the same app on * a `zh-HK` desktop rendered a locale AionUi does not even ship. * * Every user-visible number or date must ther
+  format.ts ::  second: 'numeric', }; /** * Reduce any language hint to a locale AionUi actually ships, so formatting is * deterministic and never depends o
+  list.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Join 
+
+== aionui : total=17 (showing up to 40) ==
+  direction.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Layout direct
+  format.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Locale-aware 
+  i18n-keys.d.ts :: ation.agentError.notRetryable' | 'conversation.agentError.ownership.aionui' | 'conversation.agentError.ownership.unknown_upstream' | 'conver
+  list.ts :: /** * @license * Copyright 2025 AionUi (aionui.com) * SPDX-License-Identifier: Apache-2.0 */ /** * Join a list o
+  locales\de-DE\conversation.json ::  Team das Problem untersuchen kann." }, "ownership": { "aionui": "App", "user_agent": "Agent", "user_llm_provider": "Mod
+  locales\en-US\conversation.json :: h logs so the team can investigate." }, "ownership": { "aionui": "App", "user_agent": "Agent", "user_llm_provider": "Mod
+  locales\es-ES\conversation.json :: ara que el equipo pueda investigar." }, "ownership": { "aionui": "Aplicación", "user_agent": "Agente", "user_llm_provide
+  locales\fa-IR\conversation.json :: با لاگ‌ها بفرستید تا تیم بررسی کند." }, "ownership": { "aionui": "برنامه", "user_agent": "ایجنت", "user_llm_provider": "
+  locales\fr-FR\conversation.json ::  afin que l'équipe puisse enquêter." }, "ownership": { "aionui": "Application", "user_agent": "Agent", "user_llm_provide
+  locales\ja-JP\conversation.json :: チームが調査できるよう、ログを添えてフィードバックを送信してください。" }, "ownership": { "aionui": "アプリ", "user_agent": "エージェント", "user_llm_provider": "モデ
+  locales\ko-KR\conversation.json :: k": "팀이 조사할 수 있도록 로그와 함께 피드백을 보내세요." }, "ownership": { "aionui": "앱", "user_agent": "에이전트", "user_llm_provider": "모델 제공자
+  locales\pt-BR\conversation.json :: para que a equipe possa investigar." }, "ownership": { "aionui": "Aplicativo", "user_agent": "Agente", "user_llm_provide
+  locales\ru-RU\conversation.json :: и, чтобы команда могла разобраться." }, "ownership": { "aionui": "Приложение", "user_agent": "Агент", "user_llm_provider
+  locales\tr-TR\conversation.json :: le birlikte geri bildirim gönderin." }, "ownership": { "aionui": "Uygulama", "user_agent": "Ajan", "user_llm_provider": 
+  locales\uk-UA\conversation.json :: ами, щоб команда могла розібратися." }, "ownership": { "aionui": "Застосунок", "user_agent": "Агент", "user_llm_provider
+  locales\zh-CN\conversation.json :: send_feedback": "请提交反馈并附带日志，方便团队排查。" }, "ownership": { "aionui": "应用", "user_agent": "Agent", "user_llm_provider": "模型服务
+  locales\zh-TW\conversation.json :: h logs so the team can investigate." }, "ownership": { "aionui": "應用", "user_agent": "Agent", "user_llm_provider": "模型服務
+
+== AionCore : total=0 (showing up to 40) ==
+
+== aioncore : total=0 (showing up to 40) ==
+
+== iOfficeAI : total=0 (showing up to 40) ==
+
+== Butler : total=0 (showing up to 40) ==
+
