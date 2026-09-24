@@ -1423,6 +1423,18 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
 }
 
 /* FINAL 188:1956: desktop Tools uses 40px MCP rows and a quiet panel edge. */
+/* Components 156:159: MCP status detail uses the same ice-glass material as the tooltip. */
+html[data-theme='dark'] body .kel-tools-status-popover .arco-popover-content {
+  background: linear-gradient(180deg, #2c3b5c, #1a2846) !important;
+  border: 1px solid var(--kel-figma-color-glass-edge-lit) !important;
+  border-radius: 8px;
+  color: var(--kel-figma-color-text-primary) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,.24) !important;
+}
+html[data-theme='dark'] body .kel-tools-status-popover .arco-popover-arrow.arco-trigger-arrow {
+  background: #1a2846 !important;
+  border-color: var(--kel-figma-color-glass-edge-lit) !important;
+}
 @media (min-width: 768px) {
   .kel-v2-shell .kel-tools-mcp-card,
   .kel-v2-shell .kel-tools-image-card { border-color: var(--kel-figma-color-glass-edge); }

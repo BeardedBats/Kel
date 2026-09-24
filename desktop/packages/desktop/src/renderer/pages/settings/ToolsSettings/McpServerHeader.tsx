@@ -184,7 +184,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
         <span>{MCP_DISPLAY_NAMES[server.name] ?? server.name}</span>
         <span className='kel-tools-mcp-mobile-status' data-status={mobileStatus === 'Connected' ? 'connected' : mobileStatus === 'Needs setup' ? 'attention' : 'muted'}>{mobileStatus}</span>
         {statusPopoverContent ? (
-          <Popover content={statusPopoverContent} trigger='hover' position='top'>
+          <Popover className='kel-tools-status-popover' content={statusPopoverContent} trigger='hover' position='top'>
             <span className='kel-tools-mcp-status-icon flex items-center cursor-default'>{statusIcon}</span>
           </Popover>
         ) : (

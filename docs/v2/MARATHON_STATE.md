@@ -12,7 +12,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Exercise disconnected MCP, active retest, error/help, and enabled Image Model states on disposable data. Compare desktop Dark Tools at 1440 and 800 with Components; repair confirmed gaps only.
+next_item: Repair the confirmed Tools failed-status popover material against Components 156:159 and recheck at 1440/800 on disposable data; then exercise an enabled Image Model with isolated configuration.
 
 status: partial
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
