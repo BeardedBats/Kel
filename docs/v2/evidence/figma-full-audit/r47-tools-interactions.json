@@ -1,0 +1,10 @@
+{
+  "opened": {
+    "className": "arco-collapse-item arco-collapse-item-active [&_div.arco-collapse-item-content-box]:py-3",
+    "contentVisible": true,
+    "body": "MCP Tools Configuration\nAdd MCP\nchrome-devtools\nclick\nClicks on the provided element\nclose_page\nCloses the page by its index. The last open page cannot be closed.\ndrag\nDrag an element onto another element\nemulate\nEmulates various features on the target page.\nevaluate_script\nEvaluate a JavaScript function inside the target page. Returns the response as JSON, so returned values have to be JSON-serializable.\nfill\nType text into an input, text area or select an option from a <select> element.\nfill_f"
+  },
+  "collapsed": false,
+  "modelRoute": "#/settings/model",
+  "width": 1440
+}

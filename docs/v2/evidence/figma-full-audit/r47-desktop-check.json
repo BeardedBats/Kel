@@ -1,0 +1,104 @@
+{
+  "source": "packaged r47 with disposable r43-populated host/store/engine",
+  "desktop": {
+    "route": "#/settings/tools",
+    "width": 1440,
+    "mcpCard": {
+      "x": 613,
+      "y": 183,
+      "width": 670,
+      "height": 158,
+      "top": 183,
+      "right": 1283,
+      "bottom": 341,
+      "left": 613
+    },
+    "imageCard": {
+      "x": 613,
+      "y": 357,
+      "width": 670,
+      "height": 169,
+      "top": 357,
+      "right": 1283,
+      "bottom": 526,
+      "left": 613
+    },
+    "rows": [
+      {
+        "x": 634,
+        "y": 244,
+        "width": 628,
+        "height": 40,
+        "top": 244,
+        "right": 1262,
+        "bottom": 284,
+        "left": 634
+      },
+      {
+        "x": 634,
+        "y": 284,
+        "width": 628,
+        "height": 40,
+        "top": 284,
+        "right": 1262,
+        "bottom": 324,
+        "left": 634
+      }
+    ],
+    "emptyText": "No available image models.\nGo to configure",
+    "emptyGap": "6px",
+    "addMenu": [
+      "Import from JSON\nOne-Click Import"
+    ],
+    "expanded": false
+  },
+  "narrow": {
+    "route": "#/settings/tools",
+    "width": 800,
+    "mcpCard": {
+      "x": 505,
+      "y": 183,
+      "width": 246,
+      "height": 202,
+      "top": 183,
+      "right": 751,
+      "bottom": 385,
+      "left": 505
+    },
+    "addMcp": {
+      "x": 526,
+      "y": 228,
+      "width": 112.09375,
+      "height": 34,
+      "top": 228,
+      "right": 638.09375,
+      "bottom": 262,
+      "left": 526
+    },
+    "addMcpFits": true,
+    "imageCard": {
+      "x": 505,
+      "y": 401,
+      "width": 246,
+      "height": 258,
+      "top": 401,
+      "right": 751,
+      "bottom": 659,
+      "left": 505
+    },
+    "emptyText": "No available image models.\nGo to configure",
+    "emptyGap": "6px"
+  },
+  "transcriptions": {
+    "route": "#/transcription/library",
+    "name": "Yeah",
+    "text": "A: Yeah",
+    "empty": false,
+    "width": 1440
+  },
+  "neighbor": {
+    "route": "#/settings/appearance",
+    "width": 1440,
+    "themeCards": 3
+  }
+}
