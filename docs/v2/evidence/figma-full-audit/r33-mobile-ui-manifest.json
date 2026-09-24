@@ -1,0 +1,3350 @@
+[
+  {
+    "mode": "mobile",
+    "name": "home",
+    "route": "/guid",
+    "url": "#/guid",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\nWorkspace\nNew chat\nNeeds you\nDeepSeek API needs setup so Kel can keep it available.\naudit-sample.png\n268.4 KB\nFile(1)\nWork in a project\n—\n— tokens\n— cache\n— remaining\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "Workspace",
+        "aria": null,
+        "x": 16,
+        "y": 55,
+        "w": 113,
+        "h": 18
+      },
+      {
+        "t": "DeepSeek API needs setup so Kel can keep it available.",
+        "aria": null,
+        "x": 37,
+        "y": 186,
+        "w": 319,
+        "h": 64
+      },
+      {
+        "t": "audit-sample.png\n268.4 KB",
+        "aria": "Preview audit-sample.png",
+        "x": 38,
+        "y": 708,
+        "w": 108,
+        "h": 31
+      },
+      {
+        "t": "",
+        "aria": "Remove audit-sample.png",
+        "x": 150,
+        "y": 713,
+        "w": 16,
+        "h": 20
+      },
+      {
+        "t": "",
+        "aria": "Attach files and tools",
+        "x": 29,
+        "y": 757,
+        "w": 28,
+        "h": 28
+      },
+      {
+        "t": "",
+        "aria": "Record a message",
+        "x": 291,
+        "y": 753,
+        "w": 35,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Send message",
+        "x": 332,
+        "y": 753,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "Work in a project",
+        "aria": null,
+        "x": 16,
+        "y": 804,
+        "w": 127,
+        "h": 24
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "appearance",
+    "route": "/settings/appearance",
+    "url": "#/settings/appearance",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAppearance\nTheme\nLight\nDark\nFollow System\nTheme colors\nRestore all colors\nApp background\nPanels\nElevated surfaces\nPrimary text\nSecondary text\nBorders\nAccent\nSuccess\nWarning\nError\nMore colors (20)\nFonts\nGlobal\n-\n14\n+\nReset\nChat\n-\n16\n+\nReset\nMarkdown\n-\n16\n+\nReset\nCode\n-\n14\n+\nReset\nScale\n-\n+\n95%\nReset zoom\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Restore all colors",
+        "aria": null,
+        "x": 212,
+        "y": 272,
+        "w": 142,
+        "h": 44
+      },
+      {
+        "t": "More colors (20)",
+        "aria": null,
+        "x": 33,
+        "y": 846,
+        "w": 110,
+        "h": 20
+      },
+      {
+        "t": "-",
+        "aria": "Decrease",
+        "x": 33,
+        "y": 987,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "+",
+        "aria": "Increase",
+        "x": 115,
+        "y": 987,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "Reset",
+        "aria": null,
+        "x": 155,
+        "y": 982,
+        "w": 47,
+        "h": 44
+      },
+      {
+        "t": "-",
+        "aria": "Decrease",
+        "x": 33,
+        "y": 1088,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "+",
+        "aria": "Increase",
+        "x": 115,
+        "y": 1088,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "Reset",
+        "aria": null,
+        "x": 155,
+        "y": 1083,
+        "w": 47,
+        "h": 44
+      },
+      {
+        "t": "-",
+        "aria": "Decrease",
+        "x": 33,
+        "y": 1189,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "+",
+        "aria": "Increase",
+        "x": 115,
+        "y": 1189,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "Reset",
+        "aria": null,
+        "x": 155,
+        "y": 1184,
+        "w": 47,
+        "h": 44
+      },
+      {
+        "t": "-",
+        "aria": "Decrease",
+        "x": 33,
+        "y": 1290,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "+",
+        "aria": "Increase",
+        "x": 115,
+        "y": 1290,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "Reset",
+        "aria": null,
+        "x": 155,
+        "y": 1285,
+        "w": 47,
+        "h": 44
+      },
+      {
+        "t": "-",
+        "aria": "Smaller text",
+        "x": 33,
+        "y": 1414,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "+",
+        "aria": "Larger text",
+        "x": 324,
+        "y": 1414,
+        "w": 30,
+        "h": 34
+      },
+      {
+        "t": "Reset zoom",
+        "aria": null,
+        "x": 268,
+        "y": 1458,
+        "w": 86,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "model",
+    "route": "/settings/model",
+    "url": "#/settings/model",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nModel\nAvailable now\nAutomatic — Kel picks what is available\nCurrent\nClaude (built-in)Claude\nAvailable\nCodex (built-in)Codex\nAvailable\nClaude Sonnet 4.6Anthropic\nAvailable\nDeepSeek ChatDeepSeek\nNeeds setup\nDeepSeek ReasonerDeepSeek\nNeeds setup\n\nSaved immediately. Switching back to Automatic restores Kel's normal routing.\n\nCustom models\nAdd Model\nNo custom models configured\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Automatic — Kel picks what is available\nCurrent",
+        "aria": null,
+        "x": 37,
+        "y": 154,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "Claude (built-in)Claude\nAvailable",
+        "aria": null,
+        "x": 37,
+        "y": 194,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "Codex (built-in)Codex\nAvailable",
+        "aria": null,
+        "x": 37,
+        "y": 234,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "Claude Sonnet 4.6Anthropic\nAvailable",
+        "aria": null,
+        "x": 37,
+        "y": 274,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "DeepSeek ChatDeepSeek\nNeeds setup",
+        "aria": null,
+        "x": 37,
+        "y": 314,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "DeepSeek ReasonerDeepSeek\nNeeds setup",
+        "aria": null,
+        "x": 37,
+        "y": 354,
+        "w": 319,
+        "h": 40
+      },
+      {
+        "t": "Add Model",
+        "aria": null,
+        "x": 255,
+        "y": 466,
+        "w": 101,
+        "h": 34
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "system",
+    "route": "/settings/system",
+    "url": "#/settings/system",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSystem\nData & backup\nData folder\n\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r33-figma-final\\engine\n\nShow in folder\nBackup\n\nSaves a copy of everything above to a folder you choose.\n\nBack up now\nRestore\n\nBrings back a backup folder. Your current data is kept and Kel restarts to finish.\n\nRestore from this backup\nGeneral\nLanguage\nEnglish\nKeep computer awake\nStart on Boot\nClose to Tray\nHardware Acceleration\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nmin\nPreview Size Limit (MB)\nMB\nCross-conversation messages\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Show in folder",
+        "aria": null,
+        "x": 37,
+        "y": 222,
+        "w": 122,
+        "h": 34
+      },
+      {
+        "t": "Back up now",
+        "aria": null,
+        "x": 37,
+        "y": 334,
+        "w": 112,
+        "h": 34
+      },
+      {
+        "t": "Restore from this backup",
+        "aria": null,
+        "x": 37,
+        "y": 446,
+        "w": 193,
+        "h": 34
+      },
+      {
+        "t": "",
+        "aria": "Keep computer awake",
+        "x": 314,
+        "y": 625,
+        "w": 40,
+        "h": 22
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "tools",
+    "route": "/settings/tools",
+    "url": "#/settings/tools",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nTools\nMCP Tools Configuration\nAdd MCP\nchrome-devtools\nKel Browser\nImage Generation\nImage Generation\nImage Model\nNo available image models.\nGo to configure\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Add MCP",
+        "aria": null,
+        "x": 248,
+        "y": 122,
+        "w": 112,
+        "h": 34
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "webui",
+    "route": "/settings/webui",
+    "url": "#/settings/webui",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nWebUI\n\nUse Kel as your \"24/7 Remote Assistant\" — arrange tasks from any remote device, anytime, anywhere.\n\nStep 1 of 3\n·\nEnable WebUI\nWebUI\nEnable WebUI so your phone or remote browser can access Kel.\nEnable WebUI\nAllow Remote Access\nLogin Info\nUsername:\nadmin\nInitial Password:\n••••••\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "admin",
+        "aria": "Edit username",
+        "x": 220,
+        "y": 566,
+        "w": 140,
+        "h": 34
+      },
+      {
+        "t": "••••••",
+        "aria": "Change password",
+        "x": 220,
+        "y": 645,
+        "w": 140,
+        "h": 34
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "pet",
+    "route": "/settings/pet",
+    "url": "#/settings/pet",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nDesktop Pet\nDesktop Pet\nEnable Desktop Pet\nPet Size\nSmall (200px)\nMedium (280px)\nLarge (360px)\nDo Not Disturb\nShow authorizations on the pet\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "archived",
+    "route": "/settings/archived",
+    "url": "#/settings/archived",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nArchived\nArchived\n\nNo archived items\n\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "assistants",
+    "route": "/settings/assistants",
+    "url": "#/settings/assistants",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAssistants\nMy Assistants\nKel\nYour assistant for projects and everyday work.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "skills",
+    "route": "/settings/skills",
+    "url": "#/settings/skills",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSkills Hub\nMy Skills\n\nNo skills installed\n\nUsage Tip\n\nSkills work across assistants. Enable a skill on an assistant to let it use the pack.\n\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "about",
+    "route": "/settings/about",
+    "url": "#/settings/about",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAbout\nKel\nVersion\nv1.7.0-dev\nRuntime\nElectron 37 · React 19 · Arco Design\nData folder\nC:\\Users\\Nick\\KelV2Runs\\prepared\\r33-figma-final\\engine\nShow in folder\nCheck for updates\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Back to Chat",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Show in folder",
+        "aria": null,
+        "x": 37,
+        "y": 328,
+        "w": 122,
+        "h": 34
+      },
+      {
+        "t": "Check for updates",
+        "aria": null,
+        "x": 37,
+        "y": 362,
+        "w": 319,
+        "h": 34
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "work",
+    "route": "/work",
+    "url": "#/work",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nWork\nSkip to main content\nSave as a recipe\nJobs\nNo unfinished work in this project.\nWaiting to continue\nNothing.\nTeam assignments\nNo specialist has been assigned yet.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Save as a recipe",
+        "aria": null,
+        "x": 245,
+        "y": 107,
+        "w": 132,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "activity",
+    "route": "/activity",
+    "url": "#/activity",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nActivity\nHappening now\nNothing is running right now.\nWaiting on you\nAll clear.\nRecently finished\nAll clear.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "permissions",
+    "route": "/autonomy",
+    "url": "#/autonomy",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nPermissions\nSkip to main content\nRun check\nActive permissions\nNo permissions yet in this project.\nAccess requests\nNothing is waiting for extra access.\nPermission check\n\nLocked guardrails · digest e666e7c59873\n\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Run check",
+        "aria": null,
+        "x": 279,
+        "y": 107,
+        "w": 98,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "projects",
+    "route": "/projects/knowledge",
+    "url": "#/projects/knowledge",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nKnowledge\nSkip to main content\nKel suggests\nKnowledge\nNo saved knowledge in this project yet.\nProject map\nNo map built yet.\nRefresh map\nRecipes\nNo recipes in this project yet.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Kel suggests",
+        "aria": null,
+        "x": 265,
+        "y": 107,
+        "w": 113,
+        "h": 44
+      },
+      {
+        "t": "Refresh map",
+        "aria": null,
+        "x": 33,
+        "y": 351,
+        "w": 112,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "scheduled",
+    "route": "/scheduled",
+    "url": "#/scheduled",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nScheduled tasks\nNew task\nScheduled tasks\n\n0 tasks\n\nNo scheduled tasks\n\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "New task",
+        "aria": null,
+        "x": 288,
+        "y": 107,
+        "w": 89,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "providers",
+    "route": "/providers",
+    "url": "#/providers",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nProviders\nSkip to main content\nRun preflight\nIntegrations\nClaude (Claude Code)\nclaude-native\nAvailable\nCodex\ncodex-native\nAvailable\nAnthropic API\nclaude-sonnet-4-6\nAvailable\nDeepSeek API\ndeepseek-chat · deepseek-reasoner\nNeeds setup\nReadiness preflight\n\nRun preflight to check which provider can handle this work.\n\nCheck options\nCredential metadata\n\nValues are never stored here.\n\nNo Kel-owned credential metadata yet.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Run preflight",
+        "aria": null,
+        "x": 263,
+        "y": 107,
+        "w": 114,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "diagnostics",
+    "route": "/diagnostics",
+    "url": "#/diagnostics",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nDiagnostics\nExport and issue report\nHealth\nRuntime\n1.7.0-dev\nHealthy\nProviders\n2 reported\nAvailable\nProcess ownership\nKel owns 0 child processes\nOK\nMeasured performance\nStartup\n0.8 s\nFirst model reply\n—\nMaintenance\nClear caches\n\nRemoves preview and thumbnail caches. Chats are untouched.\n\nClear\nRestart runtime\n\nRestarts the local runtime without closing Kel.\n\nRestart\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Projects",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Export and issue report",
+        "aria": null,
+        "x": 189,
+        "y": 107,
+        "w": 182,
+        "h": 44
+      },
+      {
+        "t": "Clear",
+        "aria": null,
+        "x": 33,
+        "y": 650,
+        "w": 65,
+        "h": 44
+      },
+      {
+        "t": "Restart",
+        "aria": null,
+        "x": 33,
+        "y": 756,
+        "w": 78,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "transcriptions",
+    "route": "/transcription/library",
+    "url": "#/transcription/library",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nTranscriptions\nTranscriptions\nUpload Audio\nRecord More\nRecord\nYour transcripts live here\nRecord with the button above, or drop an MP3 or MP4 file anywhere on this page. Everything is saved automatically.\nUpload audio\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Ramble",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Upload Audio",
+        "aria": null,
+        "x": 53,
+        "y": 159,
+        "w": 118,
+        "h": 34
+      },
+      {
+        "t": "Record More",
+        "aria": null,
+        "x": 179,
+        "y": 159,
+        "w": 113,
+        "h": 34
+      },
+      {
+        "t": "Record",
+        "aria": null,
+        "x": 300,
+        "y": 159,
+        "w": 77,
+        "h": 34
+      },
+      {
+        "t": "Upload audio",
+        "aria": null,
+        "x": 53,
+        "y": 370,
+        "w": 115,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "setup",
+    "route": "/onboarding",
+    "url": "#/onboarding",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSet up Kel\nSkip to main content\nAdd Model\n\nStep 1 of 5 · Welcome\n\nKel runs on this machine\n\nNothing leaves your computer unless you connect a provider.\n\nLocal runtime\nDetected · ready\nReady\nConnect a model\nOpen Providers\nClaude (Claude Code)\nready, usage not reported\nQueued\nCodex\nready\nVerified\nAnthropic API\nready, usage not reported\nQueued\nDeepSeek API\nneeds you to sign in\nWaiting on you\nWhere work happens\n\nChoose the folder Kel treats as your workspace.\n\nWorkspace folder\nGeneral\nChange\nHow much Kel does on its own\nAutonomy\nAsk before edits\nYou're set\nStart using Kel\nYou can change any of this later in Settings.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Workspaces",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Add Model",
+        "aria": null,
+        "x": 270,
+        "y": 107,
+        "w": 101,
+        "h": 44
+      },
+      {
+        "t": "Open Providers",
+        "aria": null,
+        "x": 33,
+        "y": 410,
+        "w": 131,
+        "h": 44
+      },
+      {
+        "t": "Change",
+        "aria": null,
+        "x": 273,
+        "y": 732,
+        "w": 81,
+        "h": 44
+      },
+      {
+        "t": "Ask before edits",
+        "aria": null,
+        "x": 219,
+        "y": 838,
+        "w": 135,
+        "h": 44
+      },
+      {
+        "t": "Start using Kel",
+        "aria": null,
+        "x": 33,
+        "y": 944,
+        "w": 125,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "ramble",
+    "route": "/transcription",
+    "url": "#/transcription",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\nKel\nNew Recording\nFolders\n+\nGroup recordings into folders — drag a transcript onto one.\nRecent\nNothing here yet.\nKibble\nRamble\nRecipes\nProjects\nWorkspaces\nSettings\nRamble\nAPI Key\nUpload Audio\nRecord More\nRecord\nYour transcripts live here\nRecord with the button above, or drop an MP3 or MP4 file anywhere on this page. Everything is saved automatically.\nUpload audio\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "New Recording",
+        "aria": null,
+        "x": 8,
+        "y": 106,
+        "w": 371,
+        "h": 40
+      },
+      {
+        "t": "+",
+        "aria": "New folder",
+        "x": 339,
+        "y": 146,
+        "w": 28,
+        "h": 32
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 8,
+        "y": 352,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 8,
+        "y": 382,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "Recipes",
+        "aria": null,
+        "x": 8,
+        "y": 412,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 8,
+        "y": 442,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "Workspaces",
+        "aria": null,
+        "x": 8,
+        "y": 472,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 8,
+        "y": 502,
+        "w": 371,
+        "h": 28
+      },
+      {
+        "t": "API Key",
+        "aria": null,
+        "x": 12,
+        "y": 379,
+        "w": 80,
+        "h": 34
+      },
+      {
+        "t": "Upload Audio",
+        "aria": null,
+        "x": 100,
+        "y": 379,
+        "w": 118,
+        "h": 34
+      },
+      {
+        "t": "Record More",
+        "aria": null,
+        "x": 226,
+        "y": 379,
+        "w": 113,
+        "h": 34
+      },
+      {
+        "t": "Record",
+        "aria": null,
+        "x": 12,
+        "y": 421,
+        "w": 77,
+        "h": 34
+      },
+      {
+        "t": "Upload audio",
+        "aria": null,
+        "x": 49,
+        "y": 632,
+        "w": 115,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "kibble",
+    "route": "/dogfood",
+    "url": "#/dogfood",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\nSkip to main content\nKibble\n\nWhat Ctrl+Shift+F captured while you were using Kel. Everything stays on this computer until you deliberately prepare a fix prompt.\n\nPrepare a fix prompt\nPrepare Fix Prompt (0)\n\nOpen fixes are included by default. Preparing a prompt moves them to Batched — it never starts development on its own.\n\nNothing is open right now.\n\nBuild Update\nStart update (0)\n\nKel fixes the selected findings in a copy of this repository and offers the result for review. Fix Capture statuses stay exactly as they are, and nothing is installed.\n\nRepository folder\n\nPick the findings above, name the repository folder, then start.\n\nOpen (0)\nBatched (0)\nFixed (0)\nDismissed (0)\nNo open fixes.\nPress Ctrl+Shift+F while something in Kel bothers you, click it, and say what is wrong.\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "Prepare Fix Prompt (0)",
+        "aria": null,
+        "x": 33,
+        "y": 239,
+        "w": 178,
+        "h": 44
+      },
+      {
+        "t": "Start update (0)",
+        "aria": null,
+        "x": 221,
+        "y": 461,
+        "w": 133,
+        "h": 44
+      },
+      {
+        "t": "Open (0)",
+        "aria": null,
+        "x": 16,
+        "y": 766,
+        "w": 75,
+        "h": 44
+      },
+      {
+        "t": "Batched (0)",
+        "aria": null,
+        "x": 95,
+        "y": 766,
+        "w": 91,
+        "h": 44
+      },
+      {
+        "t": "Fixed (0)",
+        "aria": null,
+        "x": 190,
+        "y": 766,
+        "w": 75,
+        "h": 44
+      },
+      {
+        "t": "Dismissed (0)",
+        "aria": null,
+        "x": 269,
+        "y": 766,
+        "w": 102,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  },
+  {
+    "mode": "mobile",
+    "name": "connections",
+    "route": "/connections",
+    "url": "#/connections",
+    "title": "Kel",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nConnections\n\nThe services Kel can use. You keep the credential — it is stored encrypted on this computer, and Kel only ever records that it exists.\n\nServices\nnone yet\nAdd a service\nGitHub\nAPI key · https://api.github.com\nKel needs a personal access token with the scopes you want Kel to have.\nKel knows this address from the service’s own documentation.\nSet up GitHub\nStripe\nAPI key · https://api.stripe.com\nKel needs a secret key from your Stripe account.\nKel knows this address from the service’s own documentation.\nSet up Stripe\nFigma\nAPI key · https://api.figma.com\nKel needs a personal access token from your Figma settings.\nKel knows this address from the service’s own documentation.\nSet up Figma\nClickUp\nAPI key · https://api.clickup.com/api/v2\nKel needs your personal ClickUp API token.\nKel knows this address from the service’s own documentation.\nSet up ClickUp\nDiscord\nBot or webhook · https://discord.com/api/v10\nKel needs the bot token for the Discord bot you want Kel to use.\nKel knows this address from the service’s own documentation.\nSet up Discord\nGoogle Drive\nAccount authorization · https://www.googleapis.com/drive/v3\nKel needs account authorization — you sign in and Kel keeps the token.\nKel knows this address from the service’s own documentation.\nSet up Google Drive\nPitcher List\nAPI key · https://pitcherlist.com/wp-json\nKel needs the WordPress application password from your Pitcher List account, with your username.\nKel assumes the usual address — correct it if this service gave you a different one.\nSet up Pitcher List\nRaptive\nAPI key · address comes with your credential\nKel needs the API credential from your Raptive account.\nKel does not know this address; the service tells you when it issues your credential.\nSet up Raptive\nNo connections yet.\nAdd a service and its credential, and Kel can work with it directly instead of you copying things across.\nAdd a service\nChats\nKibble\nRamble\nProjects\nSettings",
+    "viewport": 393,
+    "docWidth": 393,
+    "buttons": [
+      {
+        "t": "",
+        "aria": "Expand More",
+        "x": 16,
+        "y": 5,
+        "w": 32,
+        "h": 32
+      },
+      {
+        "t": "",
+        "aria": "Minimize",
+        "x": 265,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Maximize",
+        "x": 305,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "Close",
+        "x": 345,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      {
+        "t": "",
+        "aria": "New Chat",
+        "x": 8,
+        "y": 63,
+        "w": 30,
+        "h": 40
+      },
+      {
+        "t": "",
+        "aria": "Search messages",
+        "x": 8,
+        "y": 105,
+        "w": 2,
+        "h": 32
+      },
+      {
+        "t": "New Chat",
+        "aria": null,
+        "x": -39,
+        "y": 306,
+        "w": 93,
+        "h": 34
+      },
+      {
+        "t": "←",
+        "aria": "Back to Settings",
+        "x": 16,
+        "y": 57,
+        "w": 28,
+        "h": 36
+      },
+      {
+        "t": "Add a service",
+        "aria": null,
+        "x": 237,
+        "y": 208,
+        "w": 117,
+        "h": 44
+      },
+      {
+        "t": "Set up GitHub",
+        "aria": null,
+        "x": 33,
+        "y": 420,
+        "w": 101,
+        "h": 44
+      },
+      {
+        "t": "Set up Stripe",
+        "aria": null,
+        "x": 33,
+        "y": 601,
+        "w": 94,
+        "h": 44
+      },
+      {
+        "t": "Set up Figma",
+        "aria": null,
+        "x": 33,
+        "y": 798,
+        "w": 95,
+        "h": 44
+      },
+      {
+        "t": "Set up ClickUp",
+        "aria": null,
+        "x": 33,
+        "y": 979,
+        "w": 105,
+        "h": 44
+      },
+      {
+        "t": "Set up Discord",
+        "aria": null,
+        "x": 33,
+        "y": 1176,
+        "w": 105,
+        "h": 44
+      },
+      {
+        "t": "Set up Google Drive",
+        "aria": null,
+        "x": 33,
+        "y": 1389,
+        "w": 139,
+        "h": 44
+      },
+      {
+        "t": "Set up Pitcher List",
+        "aria": null,
+        "x": 33,
+        "y": 1586,
+        "w": 128,
+        "h": 44
+      },
+      {
+        "t": "Set up Raptive",
+        "aria": null,
+        "x": 33,
+        "y": 1767,
+        "w": 104,
+        "h": 44
+      },
+      {
+        "t": "Add a service",
+        "aria": null,
+        "x": 33,
+        "y": 1901,
+        "w": 117,
+        "h": 44
+      },
+      {
+        "t": "Chats",
+        "aria": null,
+        "x": 8,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Kibble",
+        "aria": null,
+        "x": 83,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Ramble",
+        "aria": null,
+        "x": 159,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Projects",
+        "aria": null,
+        "x": 234,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      },
+      {
+        "t": "Settings",
+        "aria": null,
+        "x": 310,
+        "y": 775,
+        "w": 75,
+        "h": 57
+      }
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "copy action",
+    "toast": [
+      "Image copied"
+    ],
+    "clipboard": [
+      [
+        "image/png"
+      ]
+    ]
+  },
+  {
+    "name": "scrim closes",
+    "pass": true
+  },
+  {
+    "name": "download action",
+    "event": {
+      "name": "audit-sample.png"
+    }
+  }
+]

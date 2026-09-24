@@ -1,0 +1,58 @@
+[
+  {
+    "name": "model route stays behind setup",
+    "pass": true
+  },
+  {
+    "name": "sheet and actions fit 393px",
+    "pass": true,
+    "detail": {
+      "rect": {
+        "x": 0,
+        "y": 376,
+        "width": 393,
+        "height": 476
+      },
+      "cancel": {
+        "x": 17,
+        "y": 763,
+        "width": 174.5,
+        "height": 44
+      },
+      "confirm": {
+        "x": 201.5,
+        "y": 763,
+        "width": 174.5,
+        "height": 44
+      }
+    }
+  },
+  {
+    "name": "Cancel closes sheet",
+    "pass": true
+  },
+  {
+    "name": "Escape closes sheet",
+    "pass": true
+  },
+  {
+    "name": "Settings tab opens index",
+    "pass": true
+  },
+  {
+    "name": "Model row opens leaf",
+    "pass": true
+  },
+  {
+    "name": "Back opens Settings index",
+    "pass": true
+  },
+  {
+    "name": "Projects tab opens index",
+    "pass": true
+  },
+  {
+    "name": "no horizontal overflow",
+    "pass": true
+  }
+]

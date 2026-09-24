@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r29) — supersedes the older checkpoints below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r33) — supersedes r29 below
+
+`integration/v2` has pushed UI source `c6d47ea`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r33` (archive `D3978ED3254C3256`). [The r33 record](evidence/v2-19/CANDIDATE_R33.md) contains its full hashes, 295-test suite, typecheck, archive gate, packaged sheet and lightbox clicks, 23-route phone sweep, and process ownership. [The full Figma audit](evidence/figma-full-audit/README.md) pairs all 23 desktop FINAL frames and 28 mobile frames with package captures, and checks Foundations and Components. Exact UI parity is **not** established; use its screen rows as the gap list. r30–r32 were failed intermediate candidates. r20 and the stable app remain protected. No promotion or rename occurred.
+
+**Next action:** build a disposable populated profile for chat, task, transcript, and overlay states. Compare each against its paired FINAL frame, then repair confirmed copy, control, and spacing differences. Preserve live r20, stable data, shortcuts, rollback copies, and Astra's branch. Google sign-in, live services, remote model response, fresh Muse audio, and a physical iPhone remain pending for access or hardware. The web-host suite cannot run while r20 remains live. Keep faint Light-mode labels outside this Dark pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r29) — superseded by r33
 
 `integration/v2` has pushed source `41b2bf6`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r29` (archive `6ae8b552e6cf1676`). [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) records the repaired blank Recent title; packaged local conversation opening (median 112.4 ms); two disposable project contexts (switch median 114.9 ms); two native picker adjustments in one open popup; Dark Settings at 1440/800/390; and the 294-test desktop suite. r20 and stable remain protected. No promotion or rename occurred. Read r29, r28, r26, and r23 records before changing or packing.
 
