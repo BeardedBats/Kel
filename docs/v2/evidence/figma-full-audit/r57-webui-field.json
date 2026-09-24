@@ -1,0 +1,15 @@
+{
+  "before": {
+    "innerBorder": "0px none rgb(42, 68, 120)",
+    "innerOutline": "rgb(237, 242, 250) none 0px",
+    "outerBorder": "1px solid rgb(42, 68, 120)",
+    "outerBackground": "rgba(47, 107, 224, 0.1)"
+  },
+  "focus": {
+    "innerBorder": "0px none rgb(237, 242, 250)",
+    "innerOutline": "rgb(237, 242, 250) none 0px",
+    "outerBorder": "1px solid rgba(127, 160, 255, 0.8)",
+    "outerShadow": "rgba(47, 107, 224, 0.35) 0px 0px 8px 1px"
+  },
+  "closed": true
+}

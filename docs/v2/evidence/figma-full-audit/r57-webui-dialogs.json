@@ -1,0 +1,53 @@
+{
+  "boxes": [
+    {
+      "x": 613,
+      "y": 228,
+      "width": 670,
+      "height": 213
+    },
+    {
+      "x": 613,
+      "y": 453,
+      "width": 670,
+      "height": 190
+    }
+  ],
+  "progress": {
+    "x": 613,
+    "y": 183,
+    "width": 670,
+    "height": 3,
+    "segments": 3
+  },
+  "dialogs": {
+    "username": {
+      "visible": true,
+      "text": "Set New Username\n New Username\nCancel\nConfirm",
+      "inputs": [
+        {
+          "type": "text",
+          "placeholder": "Enter a new username"
+        }
+      ],
+      "width": 1440,
+      "closed": true
+    },
+    "password": {
+      "visible": true,
+      "text": "Set New Password\n New Password\n Confirm Password\nCancel\nConfirm",
+      "inputs": [
+        {
+          "type": "password",
+          "placeholder": "Enter new password (at least 8 characters)"
+        },
+        {
+          "type": "password",
+          "placeholder": "Enter new password again"
+        }
+      ],
+      "width": 1440,
+      "closed": true
+    }
+  }
+}
