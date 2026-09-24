@@ -1,4 +1,7 @@
 import { KelCard } from '@renderer/components/kel/KelPrimitives';
+import AionModal from '@renderer/components/base/AionModal';
+import MarkdownView from '@renderer/components/Markdown';
+import thirdPartyNotices from '../../../../../../../../../THIRD_PARTY_NOTICES.md?raw';
 import { useNavigate } from 'react-router-dom';
 /**
  * @license
@@ -47,6 +50,7 @@ const AboutModalContent: React.FC = () => {
 
   const [includePrerelease, setIncludePrerelease] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showNotices, setShowNotices] = useState(false);
   const [updateReadyState, setLocalUpdateReadyState] = useState<UpdateReadyState>(() => getUpdateReadyState());
   const [checking, setChecking] = useState(false);
 
@@ -130,15 +134,24 @@ const AboutModalContent: React.FC = () => {
   return (
     <div className='kel-shell-about'>
       <KelCard title='Kel'>
-        <div className='kel-shell-preference-row'><span>Version</span><span>v{__APP_VERSION__}</span></div>
-        <div className='kel-shell-preference-row'><span>Runtime</span><span>{`${isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'} · React ${React.version.split('.')[0]} · Arco Design`}</span></div>
-        <div className='kel-shell-preference-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
+        <div className='kel-shell-preference-row'><span>Version</span><span><span className='kel-desktop-only'>v{__APP_VERSION__}</span><span className='kel-phone-only'>{__APP_VERSION__.replace(/-/, ' · ')}</span></span></div>
+        <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'}<span className='kel-shell-about-runtime-detail'>{` · React ${React.version.split('.')[0]} · Arco Design`}</span></span></div>
+        <div className='kel-shell-preference-row kel-shell-about-data-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
         {isElectron && <>
           <Button className='kel-shell-about-update' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
             {updateReadyState.preparing ? t('update.preparingInstall') : updateReadyState.ready ? t('settings.updateReadyInstall', { version: updateReadyState.version }) : checking ? t('settings.checkingForUpdates') : t('settings.checkForUpdates')}
+            <Right theme='outline' size='16' className='kel-phone-only' />
           </Button>
         </>}
       </KelCard>
+      <div className='kel-shell-about-licenses'>
+        <KelCard title='Licenses'>
+          <button type='button' className='kel-shell-about-notices-row' onClick={() => setShowNotices(true)}>Third-party notices <Right theme='outline' size='16' /></button>
+        </KelCard>
+      </div>
+      <AionModal visible={showNotices} onCancel={() => setShowNotices(false)} variant='standard' header={{ title: 'Third-party notices', showClose: true }} footer={null} aria-label='Third-party notices'>
+        <div className='kel-shell-about-notices-content'><MarkdownView>{thirdPartyNotices}</MarkdownView></div>
+      </AionModal>
       <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />
     </div>
   );

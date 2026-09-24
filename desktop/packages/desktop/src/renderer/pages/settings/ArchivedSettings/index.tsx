@@ -512,10 +512,12 @@ const ArchivedSettings: React.FC = () => {
         </div>
       ) : total === 0 ? (
         <div className='kel-card kel-shell-archived-empty'>
-          <ShellSourceCardHeader title='Archived' />
+          <div className='kel-desktop-only'><ShellSourceCardHeader title='Archived' /></div>
+          <div className='kel-phone-only'><ShellSourceCardHeader title='Archived conversations' /></div>
           <div className='kel-shell-archived-empty-content'>
             <span className='kel-shell-archived-empty-icon' aria-hidden='true'><img src={archivedIcon} alt='' /></span>
-            <p className='kel-meta'>No archived items</p>
+            <p className='kel-meta kel-desktop-only'>No archived items</p>
+            <p className='kel-meta kel-phone-only'>No archived items. Archived chats will appear here.</p>
           </div>
         </div>
       ) : (

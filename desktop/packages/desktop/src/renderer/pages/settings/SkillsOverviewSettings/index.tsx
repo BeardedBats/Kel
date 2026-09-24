@@ -19,7 +19,8 @@ const SkillsOverviewSettings: React.FC = () => {
           : error ? <p className='kel-shell-catalog-status'>Skills are unavailable.</p>
           : mine.length === 0 ? <div className='kel-shell-catalog-empty'>
             <span className='kel-shell-catalog-empty-icon' aria-hidden='true'><img src={emptyIcon} alt='' /></span>
-            <p>No skills installed</p>
+            <p className='kel-desktop-only'>No skills installed</p>
+            <p className='kel-phone-only'>No skills installed. Import a skill pack to make it available to every assistant.</p>
           </div>
           : <div className='kel-shell-catalog-list'>
             {mine.map((skill) => <div className='kel-shell-catalog-row' key={skill.name}>
@@ -30,7 +31,8 @@ const SkillsOverviewSettings: React.FC = () => {
       </section>
       <section className='kel-card kel-shell-catalog-tip'>
         <ShellSourceCardHeader title='Usage Tip' />
-        <p>Skills work across assistants. Enable a skill on an assistant to let it use the pack.</p>
+        <p className='kel-desktop-only'>Skills work across assistants. Enable a skill on an assistant to let it use the pack.</p>
+        <p className='kel-phone-only'>Skills are shared. Enable one on an assistant to let it use the pack.</p>
       </section>
     </div>
   </SettingsPageWrapper>;

@@ -393,6 +393,15 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
 }
 
 .kel-shell-about { display: flex; flex-direction: column; gap: 12px; position: relative; }
+.kel-phone-only { display: none; }
+.kel-shell-about-licenses { display: none; }
+.kel-shell-about-notices-content { max-height: 60vh; overflow: auto; margin: 0; overflow-wrap: anywhere; color: var(--kel-text-1); font: 400 13px/19px var(--kel-shell-body); }
+.kel-shell-about-notices-content table { display: block; max-width: 100%; overflow-x: auto; }
+.kel-shell-about-notices-content h1 { font: 700 18px/24px 'Instrument Sans', 'Segoe UI', sans-serif; }
+.kel-shell-about-notices-content h2 { font: 700 15px/20px 'Instrument Sans', 'Segoe UI', sans-serif; }
+.kel-shell-about-notices-content p,
+.kel-shell-about-notices-content li { font: 400 14px/20px 'Instrument Sans', 'Segoe UI', sans-serif; }
+.kel-shell-about-notices-content table { font: 400 12px/18px 'Instrument Sans', 'Segoe UI', sans-serif; }
 .kel-shell-preference-row { display: flex; min-height: 46px; align-items: center; justify-content: space-between; gap: 16px; font: 500 14px/20px var(--kel-shell-heading); }
 .kel-v2-shell .kel-shell-settings-card, .kel-v2-shell .settings-page-content .kel-card {
   padding: 16px 20px; border: 1px solid rgba(191,216,255,.24); border-radius: 16px;
@@ -894,6 +903,46 @@ html:not([data-theme='light']) .kel-v2-shell .kel-palette[role='dialog'] { backg
   .kel-v2-shell .kel-shell-theme-color-row > .text-11px { grid-column: 2; }
 }
 @media (max-width: 767px) {
+  .kel-v2-shell .settings-page-content .kel-card { padding: 16px; }
+  .kel-v2-shell .kel-desktop-only { display: none; }
+  .kel-v2-shell .kel-phone-only { display: block; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty,
+  .kel-v2-shell .kel-shell-catalog-card,
+  .kel-v2-shell .kel-shell-catalog-tip { min-height: 0; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty { padding-bottom: 22px; }
+  .kel-v2-shell .settings-page-content .kel-shell-catalog-card { padding-bottom: 22px; }
+  .kel-v2-shell .settings-page-content .kel-shell-catalog-tip { padding-bottom: 26px; }
+  .kel-v2-shell .kel-shell-about { gap: 13px; }
+  .kel-v2-shell .kel-shell-about > .kel-card { padding-bottom: 24px; }
+  .kel-v2-shell .kel-shell-about-licenses .kel-card { padding-bottom: 19px; }
+  .kel-v2-shell .kel-shell-archived-empty-content,
+  .kel-v2-shell .kel-shell-catalog-empty { display: block; flex: none; padding: 4px 0 0; }
+  .kel-v2-shell .kel-shell-archived-empty-icon,
+  .kel-v2-shell .kel-shell-catalog-empty-icon { display: none; }
+  .kel-v2-shell .kel-shell-archived-empty-content .kel-meta,
+  .kel-v2-shell .kel-shell-catalog-empty p,
+  .kel-v2-shell .kel-shell-catalog-tip p {
+    margin: 0; padding: 0; border: 0; border-radius: 0; background: none;
+    color: var(--kel-figma-color-text-muted); font: 400 14px/20px 'Instrument Sans', 'Segoe UI', sans-serif;
+  }
+  .kel-shell-about-licenses { display: block; }
+  .kel-v2-shell .kel-shell-about-data-row,
+  .kel-v2-shell .kel-shell-about-runtime-detail { display: none; }
+  .kel-v2-shell .kel-shell-about .kel-shell-preference-row { min-height: 52px; border-bottom: 1px solid rgba(191,216,255,.12); }
+  .kel-v2-shell .kel-shell-about .kel-shell-preference-row > span:last-child { color: var(--kel-figma-color-text-muted); font: 400 14px/16px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-about-update,
+  .kel-shell-about-notices-row {
+    display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
+    width: 100%; min-height: 52px; padding: 0 16px; border: 0; border-bottom: 1px solid rgba(191,216,255,.12);
+    border-radius: 0; background: transparent; color: var(--kel-text-1);
+    text-align: left; font: 500 15px/20px var(--kel-shell-heading); cursor: pointer;
+  }
+  .kel-v2-shell .kel-shell-about-update:hover,
+  .kel-shell-about-notices-row:hover { background: rgba(191,216,255,.06); }
+  .kel-v2-shell .kel-shell-about-update.arco-btn {
+    justify-content: space-between !important; border: 0 !important; border-bottom: 1px solid rgba(191,216,255,.12) !important;
+    border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+  }
   .kel-v2-shell .kel-setup-return { flex-wrap: wrap; }
   .kel-v2-shell .kel-shell-theme-gallery-actions { margin-bottom: 10px; }
   .kel-v2-shell .kel-shell-theme-gallery > .flex.flex-wrap [data-testid^='theme-card-'] {
