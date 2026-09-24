@@ -928,10 +928,8 @@ export interface KelBuildCandidate {
   mission_id?: string;
   review_state?: string;
   revision?: string | null;
-  artifact?: string | null;
-  artifact_sha256?: string | null;
-  verified?: number | boolean | null;
-  evidence?: Record<string, unknown>;
+  artifact_location?: string | null;
+  evidence?: { verified?: boolean; [key: string]: unknown };
   fixed_findings?: string[];
   unresolved_findings?: string[];
   limitations?: string[];

@@ -6,6 +6,8 @@ The repository is now `C:\Users\Nick\Desktop\Kel\Kel` on `main`. Earlier candida
 
 A full engine `python -B -m pytest -q` run finished **1,284 passed, 4 failed, 14 subtests passed** in 922 seconds. Each failure asserted the old `DISPATCHED` state for an answered request with no job. Those assertions were updated. A focused run of all six affected engine files, including the read-only compatibility check for old submission rows, passed **71 tests**. The full suite was not repeated after this narrow test update. This is source-level regression evidence, not a fresh packaged app check.
 
+After the Kibble candidate readout mapping changed, desktop typecheck passed and the unit suite passed again: **45 files / 298 tests**. The engine's verified-candidate unit test proves `evidence.verified` is nested in the returned candidate record; the page now reads that field. No packaged Kibble review journey ran for this follow-up.
+
 ## Current packaged r29 checkpoint (2026-09-23)
 
 Source `41b2bf6` and staged candidate `C:\Users\Nick\KelV2Candidate.r29`: `cd desktop && npx vitest run tests/unit --reporter=dot` passed **43 files / 294 tests**. The earlier typecheck, focused tests, package build, and archive gate passed after the source change. Packaged local conversation opening had a 112.4 ms median. Switching between two disposable project contexts had a 114.9 ms median. Dark Appearance had no document overflow at 1440, 800, or 390px. The native colour popup saved two adjustments while open, kept the second after reload, and Reset restored the default. See [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) for conditions and limits. Remote, live service, audio, and phone claims remain pending.
