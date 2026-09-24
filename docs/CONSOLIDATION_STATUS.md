@@ -9,7 +9,7 @@ Status: COMPLETE. Core migration and the final canonical layout are verified.
 - Durable state: `C:\Users\Nick\Desktop\Kel\Data`.
 - Tools and local verification records: `C:\Users\Nick\Desktop\Kel\Tools`.
 
-The installed product was built from source commit `842c01d`. Later changes concern documentation and test portability only.
+The installed product was built from source commit `842c01d`. This is the completed consolidation checkpoint; later V2 development commits can advance source ahead of the installed App.
 All prior local branches were ancestors of that source. Branches, tags, and Git history were retained.
 The canonical repository has one registered worktree. Git's full object check passed after relocation.
 The repository dependency links were repaired with `bun install --frozen-lockfile --ignore-scripts`.
