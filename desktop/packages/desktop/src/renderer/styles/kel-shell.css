@@ -742,6 +742,38 @@ button.kel-shell-attention-line { cursor: pointer; }
 
 .kel-shell-task-detail { gap: 0 !important; }
 
+/* Screens FINAL 189:2628: setting rows and the instruction note share panel dividers. */
+@media(min-width:768px) {
+  .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field {
+    min-height: 62px;
+    border-bottom: 1px solid rgba(191,216,255,.08);
+  }
+  .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field:first-of-type {
+    min-height: 68px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field:first-of-type > p {
+    max-width: 100%;
+    margin: 0;
+    color: var(--kel-figma-color-text-muted);
+    font: 400 12px/16px var(--kel-shell-body);
+  }
+  .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field:has(.arco-switch) { min-height: 44px; }
+  .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-preference-row { min-height: 64px; }
+}
+
+/* Screens FINAL 189:3564: diagnostic values and maintenance actions use hairline rows. */
+@media(min-width:768px) {
+  .kel-v2-shell #kel-diagnostics-main .kel-shell-diagnostic-row,
+  .kel-v2-shell #kel-diagnostics-main .kel-shell-preference-row {
+    border-bottom: 1px solid rgba(191,216,255,.08);
+  }
+  .kel-v2-shell #kel-diagnostics-main .kel-shell-preference-row { min-height: 63px; }
+}
+
 html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-model-btn, [data-testid='aionrs-attach-folder-btn'], .send-button-custom) { background: transparent !important; border: 0 !important; box-shadow: none !important; }
 
 /* Static and interactive tag content keeps its meaning and handlers; remove chip chrome. */
