@@ -1,0 +1,74 @@
+{
+  "defaultInput": {
+    "x": 613,
+    "y": 404,
+    "width": 470,
+    "height": 34,
+    "border": "1px solid rgb(42, 68, 120)",
+    "background": "rgba(47, 107, 224, 0.1)",
+    "shadow": "none",
+    "outline": "rgb(237, 242, 250) none 0px"
+  },
+  "defaultSelect": {
+    "x": 613,
+    "y": 330,
+    "width": 470,
+    "height": 34,
+    "border": "1px solid rgb(42, 68, 120)",
+    "background": "rgba(47, 107, 224, 0.1)",
+    "shadow": "none",
+    "outline": "rgb(237, 242, 250) none 0px"
+  },
+  "modal": {
+    "x": 588,
+    "y": 212,
+    "width": 520,
+    "height": 476
+  },
+  "focusInput": {
+    "x": 613,
+    "y": 404,
+    "width": 470,
+    "height": 34,
+    "border": "1px solid rgba(127, 160, 255, 0.8)",
+    "background": "rgba(47, 107, 224, 0.1)",
+    "shadow": "rgba(47, 107, 224, 0.35) 0px 0px 8px 1px",
+    "outline": "rgb(237, 242, 250) none 0px"
+  },
+  "errorText": "Add Model\n Model Platform\nCustom\n API Endpoint\nEnter an API endpoint.\n API Key\nEnter an API key.\n Model Name\nChoose or enter a model name.\nCancel\nConfirm",
+  "errorInput": {
+    "x": 613,
+    "y": 374,
+    "width": 470,
+    "height": 34,
+    "border": "1px solid rgba(242, 125, 125, 0.7)",
+    "background": "rgba(47, 107, 224, 0.1)",
+    "shadow": "rgba(242, 125, 125, 0.3) 0px 0px 8px 1px",
+    "outline": "rgb(237, 242, 250) none 0px"
+  },
+  "errorClasses": [
+    {
+      "class": "arco-row-align-start arco-row-justify-start arco-form-item arco-form-item-error arco-form-item-status-error arco-form-layout-vertical",
+      "text": "API EndpointEnter an API endpoint."
+    },
+    {
+      "class": "arco-row-align-start arco-row-justify-start arco-form-item arco-form-item-error arco-form-item-status-error arco-form-layout-vertical",
+      "text": "API KeyEnter an API key."
+    },
+    {
+      "class": "arco-row-align-start arco-row-justify-start arco-form-item arco-form-item-error arco-form-item-status-error arco-form-layout-vertical",
+      "text": "Model NameChoose or enter a model name."
+    }
+  ],
+  "escapeClosed": true,
+  "narrow": {
+    "modal": {
+      "x": 140,
+      "y": 212,
+      "width": 520,
+      "height": 476
+    },
+    "documentWidth": 800,
+    "closed": true
+  }
+}

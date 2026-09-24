@@ -1,0 +1,11 @@
+{
+  "initialAuto": "true",
+  "firstName": "Claude (built-in)Claude Available",
+  "chosen": "true",
+  "autoAfterChoice": "false",
+  "restoredAuto": "true",
+  "firstAfterRestore": "false",
+  "addModelOpen": true,
+  "addModelClosed": true,
+  "documentWidth": 1440
+}

@@ -1,5 +1,13 @@
 # RESUME — exact continuation
 
+## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r59) — supersedes r57 below
+
+`integration/v2` has pushed desktop Dark source `96d2b5d55185d5ec0bc112132c82ba7edac4932e`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r59` (archive `40CD6EB857BACC1D`). [The r59 record](evidence/v2-19/CANDIDATE_R59.md) has hashes, typecheck, package and archive gates, packaged Model checks, process ownership, and limits. [The desktop comparison](evidence/figma-full-audit/DESKTOP_MODEL_R59.md) matches FINAL `188:1327` at 1440px, checks 800px, and repairs Add Model fields and error messages against Components. r58 remains a preserved intermediate. The r59 test tree was stopped after ownership checks; only the protected stable engine remained. Recheck ownership before stopping any process.
+
+**Next action:** compare desktop Dark System and Appearance field states with FINAL and Components. Continue bounded V2-19 regression on an isolated candidate. Preserve the stable app, any live r20 session, shortcuts, rollback copies, and Astra's branch. Exact product-wide Figma parity remains open. Google sign-in, live services, remote model response, fresh Muse audio, and physical iPhone checks remain pending for access or hardware. Keep faint Light-mode labels and phone layout work outside this pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
 ## CURRENT INTEGRATION CHECKPOINT (2026-09-24, r57) — supersedes r54 below
 
 `integration/v2` has pushed desktop Dark source `cafe10e32abcf53f4d65ca00fb9814c4f44865c8`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r57` (archive `8BFB8503A4433668`). [The r57 record](evidence/v2-19/CANDIDATE_R57.md) has hashes, build and archive gates, packaged WebUI checks, process ownership, and limits. [The desktop comparison](evidence/figma-full-audit/DESKTOP_WEBUI_R57.md) matches FINAL `188:2240` at 1440px and checks 800px. It repairs the step strip, first-step copy, card spacing, and Dark username/password overlays. r55 and r56 remain preserved intermediates. The r57 test tree was stopped after ownership checks; only the protected stable engine remained. Recheck ownership before stopping any process.
