@@ -10,6 +10,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import os from 'os';
 import { applyGpuRecoveryFlags } from './gpuRecovery';
+import { canonicalDataRoot } from './canonicalDataRoot';
+
+// The installed app owns one durable data tree beside App. Explicit roots still isolate tests.
+const canonicalDataDir = canonicalDataRoot(process.execPath, app.isPackaged);
+if (canonicalDataDir) {
+  process.env.KEL_DATA_DIR ||= path.join(canonicalDataDir, 'engine');
+  process.env.AIONUI_DATA_DIR ||= path.join(canonicalDataDir, 'store');
+  process.env.KEL_HOST_DATA_DIR ||= path.join(canonicalDataDir, 'host');
+  fs.mkdirSync(process.env.KEL_HOST_DATA_DIR, { recursive: true });
+}
 
 app.setName('Kel');
 app.setPath('userData', process.env.KEL_HOST_DATA_DIR || path.join(app.getPath('appData'), 'kel-aionui'));

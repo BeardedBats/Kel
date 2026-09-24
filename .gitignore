@@ -60,3 +60,6 @@ credentials.json
 # --- local session tooling scratch (never publish) ---
 .kunsdd/
 .tmp-image/
+App/
+Data/
+Temp/
