@@ -424,7 +424,7 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.modelPlatform')}
             field={'platform'}
             required
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: t('settings.modelPlatformRequired', 'Choose a model platform.') }]}
           >
             <Select
               showSearch
@@ -486,7 +486,7 @@ const AddPlatformModal = ModalHOC<{
             }
             field={'base_url'}
             required={isCustom || isNewApi}
-            rules={[{ required: isCustom || isNewApi }]}
+            rules={[{ required: isCustom || isNewApi, message: t('settings.apiEndpointRequired', 'Enter an API endpoint.') }]}
           >
             <Input
               placeholder={
@@ -525,7 +525,7 @@ const AddPlatformModal = ModalHOC<{
             hidden={isBedrock}
             label={t('settings.apiKey')}
             required={!isBedrock}
-            rules={[{ required: !isBedrock }]}
+            rules={[{ required: !isBedrock, message: t('settings.apiKeyRequired', 'Enter an API key.') }]}
             field={'api_key'}
             extra={
               <div className='space-y-2px'>
@@ -556,7 +556,7 @@ const AddPlatformModal = ModalHOC<{
             field={'bedrockAuthMethod'}
             initialValue='accessKey'
             required={isBedrock}
-            rules={[{ required: isBedrock }]}
+            rules={[{ required: isBedrock, message: t('settings.bedrock.authMethodRequired', 'Choose an authentication method.') }]}
           >
             <Select>
               <Select.Option value='accessKey'>{t('settings.bedrock.authMethodAccessKey')}</Select.Option>
@@ -571,7 +571,7 @@ const AddPlatformModal = ModalHOC<{
             field={'bedrockRegion'}
             initialValue='us-east-1'
             required={isBedrock}
-            rules={[{ required: isBedrock }]}
+            rules={[{ required: isBedrock, message: t('settings.bedrock.regionRequired', 'Choose an AWS region.') }]}
             extra={t('settings.bedrock.regionHint')}
           >
             <Select showSearch>
@@ -592,7 +592,7 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.accessKeyId')}
             field={'bedrockAccessKeyId'}
             required={isBedrock && bedrockAuthMethod === 'accessKey'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey' }]}
+            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey', message: t('settings.bedrock.accessKeyIdRequired', 'Enter an access key ID.') }]}
           >
             <Input.Password placeholder='AKIA...' visibilityToggle />
           </Form.Item>
@@ -603,7 +603,7 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.secretAccessKey')}
             field={'bedrockSecretAccessKey'}
             required={isBedrock && bedrockAuthMethod === 'accessKey'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey' }]}
+            rules={[{ required: isBedrock && bedrockAuthMethod === 'accessKey', message: t('settings.bedrock.secretAccessKeyRequired', 'Enter a secret access key.') }]}
           >
             <Input.Password visibilityToggle />
           </Form.Item>
@@ -614,7 +614,7 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.bedrock.profile')}
             field={'bedrockProfile'}
             required={isBedrock && bedrockAuthMethod === 'profile'}
-            rules={[{ required: isBedrock && bedrockAuthMethod === 'profile' }]}
+            rules={[{ required: isBedrock && bedrockAuthMethod === 'profile', message: t('settings.bedrock.profileRequired', 'Enter an AWS profile.') }]}
             extra={t('settings.bedrock.profileHint')}
           >
             <Input placeholder='default' />
@@ -625,8 +625,8 @@ const AddPlatformModal = ModalHOC<{
             label={t('settings.modelName')}
             field={'model'}
             required
-            rules={[{ required: true }]}
-            validateStatus={!isFullUrl && modelListState.error ? 'error' : 'success'}
+            rules={[{ required: true, message: t('settings.modelNameRequired', 'Choose or enter a model name.') }]}
+            validateStatus={!isFullUrl && modelListState.error ? 'error' : undefined}
             help={
               !isFullUrl && modelListState.error instanceof Error
                 ? modelListState.error.message

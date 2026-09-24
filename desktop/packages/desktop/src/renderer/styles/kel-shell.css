@@ -581,6 +581,28 @@ html[data-theme='dark'] body .kel-shell-model-modal .arco-modal-content { backgr
 .kel-shell-model-modal .arco-btn { border: 1px solid var(--kel-figma-color-glass-button-edge); border-radius: 8px; background: rgba(15,45,100,.34); color: var(--kel-figma-color-text-button); }
 .kel-shell-model-modal .arco-btn-primary { background: linear-gradient(135deg,#153973,#365693); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
 .kel-shell-model-modal .arco-btn:disabled { opacity: .4; }
+@media (min-width: 768px) {
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal :is(.arco-input, .arco-input-inner-wrapper, .arco-select-view) {
+    box-sizing: border-box; min-height: 34px; height: 34px; padding-inline: 12px;
+    border: 1px solid rgba(127,160,255,.28) !important; border-radius: 8px !important;
+    background: rgba(47,107,224,.1) !important; color: var(--kel-figma-color-text-primary);
+  }
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal :is(.arco-input, .arco-input-inner-wrapper, .arco-select-view):focus-within {
+    border: 1px solid rgba(127,160,255,.8) !important;
+    box-shadow: 0 0 8px 1px rgba(47,107,224,.35) !important; outline: 0 !important;
+  }
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal .arco-form-item-error :is(.arco-input, .arco-input-inner-wrapper, .arco-select-view) {
+    border: 1px solid rgba(242,125,125,.7) !important;
+    box-shadow: 0 0 8px 1px rgba(242,125,125,.3) !important;
+  }
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal .arco-input-inner-wrapper .arco-input {
+    min-height: 0; height: auto; padding-inline: 0; border: 0 !important;
+    background: transparent !important; box-shadow: none !important; outline: 0 !important;
+  }
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal .arco-form-message {
+    font: 400 12px/16px var(--kel-shell-body); color: #f9a3a3;
+  }
+}
 
 .kel-shell-model-settings { position: relative; }
 .kel-shell-model-description { margin: -8px 0 20px; font: 400 14px/18px var(--kel-shell-body); color: var(--kel-text-2); }
