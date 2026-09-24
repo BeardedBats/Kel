@@ -1,0 +1,101 @@
+[
+  {
+    "route": "model",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nModel\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nDefault Kel model\nAutomatic\nCurrent\nClaude (built-in)\nAvailable\nCodex (built-in)\nAvailable\nClaude Sonnet 4.6\nAvailable\nDeepSeek Chat\nNeeds setup\nDeepSeek Reasoner\nNeeds setup\nCustom models\nAdd Model\n\nNo custom models configured. Add an API-backed model of your own.\n\nChats\nKibble\nRamble\nProjects\nSettings",
+    "width": 393,
+    "pane": {
+      "client": 393,
+      "scroll": 393
+    },
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 306
+      },
+      {
+        "x": 16,
+        "y": 511,
+        "width": 361,
+        "height": 148
+      }
+    ]
+  },
+  {
+    "route": "system",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nSystem\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nData & backup\nData folder\n›\nBack up now\n›\nRestore from this backup\nGeneral\nLanguage\nEnglish\nKeep computer awake\nStart on Boot\nClose to Tray\nHardware Acceleration\nLLM Prompt Timeout (s)\ns\nAgent Idle Timeout (min)\nmin\nPreview Size Limit (MB)\nMB\nCross-conversation messages\nChats\nKibble\nRamble\nProjects\nSettings",
+    "width": 393,
+    "pane": {
+      "client": 393,
+      "scroll": 393
+    },
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 204
+      },
+      {
+        "x": 16,
+        "y": 409,
+        "width": 361,
+        "height": 536
+      }
+    ]
+  },
+  {
+    "route": "backup opens",
+    "pass": true
+  },
+  {
+    "route": "restore opens",
+    "pass": true
+  },
+  {
+    "route": "pet",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nDesktop Pet\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nDesktop Pet\nEnable Desktop Pet\n… Small\n… Medium\n… Large\nDo Not Disturb\nShow authorizations on the pet\nChats\nKibble\nRamble\nProjects\nSettings",
+    "width": 393,
+    "pane": {
+      "client": 393,
+      "scroll": 393
+    },
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 229
+      }
+    ]
+  },
+  {
+    "route": "pet size",
+    "value": "280",
+    "disabled": true
+  },
+  {
+    "route": "about",
+    "text": "Skip to main content\nKel\nNo chat history\nNew Chat\n←\nAbout\nSetup is still open. Finish setup before starting a chat.\nContinue setup\nKel\nVersion\n1.7.0 · dev\nRuntime\nElectron 37\nCheck for updates\nLicenses\nThird-party notices\nChats\nKibble\nRamble\nProjects\nSettings",
+    "width": 393,
+    "pane": {
+      "client": 393,
+      "scroll": 393
+    },
+    "cards": [
+      {
+        "x": 16,
+        "y": 193,
+        "width": 361,
+        "height": 214
+      },
+      {
+        "x": 16,
+        "y": 420,
+        "width": 361,
+        "height": 109
+      }
+    ]
+  }
+]

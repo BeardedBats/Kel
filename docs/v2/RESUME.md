@@ -1,6 +1,14 @@
 # RESUME — exact continuation
 
-## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r39) — supersedes r33 below
+## CURRENT INTEGRATION CHECKPOINT (2026-09-23, r41) — supersedes r39 below
+
+`integration/v2` has pushed UI source `ea054bf`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r41` (archive `6C670D7ADE06C5C8`). [The r41 record](evidence/v2-19/CANDIDATE_R41.md) contains hashes, 295 desktop tests, typecheck, package and archive gates, phone Model/System/Pet checks, backup/restore dialogs, and 23 post-setup phone routes without overflow or redirect. [The full Figma audit](evidence/figma-full-audit/README.md) pairs 23 desktop FINAL and 28 mobile screens. r41 builds on r39's About, Archived, Skills Hub, and notices fixes. Exact UI parity is **not** established. r40 is a preserved intermediate candidate. r20 and stable remain protected. No promotion or rename occurred.
+
+**Next action:** use a disposable populated profile for chat, tasks, recordings, and menu states. Compare these against their paired FINAL frames, then fix measured Tools, WebUI, Pet height, row, copy, and component differences. Preserve r20, stable data, shortcuts, rollback copies, and Astra's branch. Google sign-in, live services, remote model response, fresh Muse audio, and a physical iPhone remain pending for access or hardware. The web-host suite needs all Kel instances stopped. Keep faint Light-mode labels outside this Dark pass. `request_review` was unavailable; no independent review occurred.
+
+---
+
+## PREVIOUS CHECKPOINT (2026-09-23, r39) — superseded by r41
 
 `integration/v2` has pushed UI source `61db8d5`. The latest staged candidate is `C:\Users\Nick\KelV2Candidate.r39` (archive `F2C73B0B58B4C158`). [The r39 record](evidence/v2-19/CANDIDATE_R39.md) contains hashes, 295 desktop tests, typecheck, package and archive gates, and a fresh packaged Dark UI pass. [The full Figma audit](evidence/figma-full-audit/README.md) pairs 23 desktop FINAL and 28 mobile screens with package captures. r39 closes the mobile About, Archived, Skills Hub, and notices gaps in addition to r33's frame, theme rows, sheet, and lightbox. Exact UI parity is **not** established. r34–r38 remain intermediate candidates. r20 and the stable app remain protected. No promotion or rename occurred.
 

@@ -20,6 +20,8 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 
 **r39 packaged closure:** [All six route and overlay checks](r39-settings-check.json) passed in a fresh isolated root. The notices text appears on first open; its six-column table scrolls within a 335px region and keeps 931px of table content. [The screenshot](key/r39-notices.png) shows readable names and links. Escape closes after its transition. Mobile About, Archived, and Skills Hub retain the measured FINAL card sizes and wording. At 800 and 1440px, About keeps Data folder and omits Licenses. Every checked width has no document overflow. The setup notice remains visible, with Continue setup available. This closes those confirmed gaps; the other screen rows below still need matched populated states or component repairs.
 
+**r40–r41 packaged follow-up:** [r40](r40-model-system-check.json) changed phone Model to FINAL wording, list rows, custom-model help text, and full-width Add Model action. Phone System uses Data folder and Back up now rows, plus the Figma danger button for Restore. Both backup and restore dialogs opened. r41 applies the Foundation danger gradient, removes the six-pixel phone scrollbar width loss, and uses a compact Pet Size selector while the pet is off. [r41 measurements](r41-mobile-settings-check.json) show 361px cards at 393px for Model, System, Pet, and About; the pane and document both measure 393px. The Model card is 361×306, System's first card 361×204, and Pet 361×229. [Model](key/r41-model.png), [System](key/r41-system.png), and [Pet](key/r41-pet.png) captures preserve the rendered states. The [fresh setup route sweep](r41-route-sweep.json) recorded expected redirects on eight gated routes. The [23-route sweep after the existing Start using Kel action](r41-post-setup-route-sweep.json) found no redirects or horizontal overflow. Pet enabling was refused by this isolated runtime, so an enabled Pet Size picker remains unverified.
+
 ## Desktop screen pass
 
 | Figma frame | Route | Observation |
@@ -28,7 +30,7 @@ Figma Lightbox v2 has a 960px panel at x=240, y=146 in a 1440×900 viewport. The
 | `185:2658` Home | `/guid` | Shared left rail and content width track the frame. Figma has three sample attention rows; the isolated package has one real setup row. |
 | `185:4284` Chat Sidebar B | `/conversation/:id` | Populated history, message, and sidebar text remain unproved with the empty data root. The package may show a Files panel for a project conversation. |
 | `186:1097` Appearance | `/settings/appearance` | Main card and three theme tiles follow the frame. The package adds **Add Theme**, absent from the visible FINAL screen. Figma shows a changed `#0a1e42` example; the isolated package shows its own saved/default color. [Source](key/186-1097.png), [package](key/appearance.png). |
-| `188:1327` Model | `/settings/model` | Default model list and custom model card match the main hierarchy. The package adds **Add Model** in the desktop card header, absent from the visible FINAL screen. Row borders and weight differ. |
+| `188:1327` Model | `/settings/model` | Default model list and custom model card match the main hierarchy. The package adds **Add Model** in the desktop card header, absent from the visible FINAL screen. Row borders and weight still need a desktop matched-state check. |
 | `188:1620` System | `/settings/system` | Main grouping matches. Data paths, version values, and current settings come from the isolated machine; the Figma sample is not a valid value comparison. |
 | `188:1956` Tools | `/settings/tools` | MCP and Image Generation groups appear. The package exposes live status and action controls that the FINAL sample does not show. |
 | `188:2240` WebUI | `/settings/webui` | Step and controls are present. The package adds explanatory copy and different field treatment; exact text and spacing remain open. |
@@ -59,12 +61,12 @@ Figma's mobile frame is 393×852. It uses a phone header, five persistent tabs, 
 | `216:230` | Chats | Drawer presented the desktop sidebar links and omitted the persistent tabs. |
 | `218:242` | Settings index | No index route; it redirected to Appearance with horizontal desktop tabs. |
 | `218:436` | Appearance | Theme tiles stacked; card and field rows were desktop sized. [Source](key/218-436.png), [r29](key/appearance.png). |
-| `218:598` | Model | Desktop list rows and custom model empty state; no mobile card hierarchy. |
+| `218:598` | Model | r29 used desktop rows. r41 uses FINAL wording, mobile rows, custom-model help text, and a full-width Add Model action; exact row spacing remains open. |
 | `218:701` | Add Model sheet | Centered desktop modal, no grab handle, narrow fields. [Source](key/218-701.png), [r29](key/model-sheet.png). |
-| `219:572` | System | Desktop form with expanded backup text; compact mobile rows missing. |
-| `219:767` | Tools | Desktop MCP controls; compact status rows missing. |
-| `219:858` | WebUI | Extra introduction and expanded controls; mobile list rows missing. |
-| `219:966` | Desktop Pet | Desktop field layout and radio options; compact rows missing. |
+| `219:572` | System | r29 used expanded backup text. r41 uses compact Data folder and Back up now rows plus the Foundation danger Restore control. Both dialogs opened. General field spacing remains open. |
+| `219:767` | Tools | [r39 package](key/r39-tools.png) still has Add MCP, icon-based status actions, and an Image Model configuration row. The FINAL frame uses compact Connected/Needs setup text rows. Preserve the live controls while aligning the visible status treatment. |
+| `219:858` | WebUI | [r39 package](key/r39-webui.png) still has an extra introduction, explanatory callout, and expanded fields. The FINAL frame uses a three-step strip, compact switches, and short login rows. Runtime step and credential values must stay truthful. |
+| `219:966` | Desktop Pet | r41 uses compact phone rows and a disabled Medium selector for the off state. The 361×229 card remains taller than the FINAL frame. The isolated runtime refused enable, so the enabled selector remains unverified. |
 | `219:1052` | Archived | r29 used a centered icon. r37/r38 use the FINAL sentence in a 361×94 card. |
 | `219:1109` | Assistants | Package has the Kel assistant; empty sample text is unverified. |
 | `219:1166` | Skills Hub | r29 used an icon and nested tip. r37/r38 use the two FINAL text cards at 361×114 each. |
@@ -117,6 +119,6 @@ The full Components board inventory was read, including its behavior notes. This
 - The 51 Figma-to-package pairs used Dark mode. Figma's new mobile page was discovered during this audit; older `FIGMA_GAPS.md` claims about no FINAL mobile frames are stale.
 - The inspected FINAL frames and Foundations board show a Dark palette. They do not provide a matching Light screen set, so pixel parity for Light cannot be claimed from this file.
 - Packaged r29 used disposable host, store, and engine roots. Sample content in Figma was not injected into production data. A content mismatch alone is not a code defect.
-- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. r39 closes the mobile About, Archived, Skills Hub, and notices gaps. Other compact mobile rows, menu states, and populated-data comparisons remain open.
+- The r33 source and package close the shared mobile frame, image lightbox, and narrow theme-row gaps. r39 closes mobile About, Archived, Skills Hub, and notices. r41 closes the confirmed mobile Model and System structure gaps and narrows Pet. Tools, WebUI, other compact mobile rows, menu states, and populated-data comparisons remain open.
 - Google sign-in, live services, fresh Muse audio, remote model response, and physical iPhone checks need access, media, or hardware and remain pending.
 - No `request_review` tool was available in the tool inventory. No independent review occurred.
