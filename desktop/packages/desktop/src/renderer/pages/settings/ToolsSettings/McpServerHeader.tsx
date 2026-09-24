@@ -170,18 +170,26 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   const statusPopoverContent = getStatusPopoverContent(server, i18n.language, t);
 
   const isError = server.last_test_status === 'error';
+  const mobileStatus = isTestingConnection || oauthStatus?.isChecking
+    ? 'Checking'
+    : isError || needsLogin
+      ? 'Needs setup'
+      : server.last_test_status === 'connected' || oauthStatus?.isAuthenticated
+        ? 'Connected'
+        : 'Not tested';
 
   return (
-    <div className='flex items-center justify-between group'>
-      <div className='flex items-center gap-2'>
+    <div className='kel-tools-mcp-header flex items-center justify-between group'>
+      <div className='kel-tools-mcp-name flex items-center gap-2'>
         <span>{MCP_DISPLAY_NAMES[server.name] ?? server.name}</span>
+        <span className='kel-tools-mcp-mobile-status' data-status={mobileStatus === 'Connected' ? 'connected' : mobileStatus === 'Needs setup' ? 'attention' : 'muted'}>{mobileStatus}</span>
         {statusPopoverContent ? (
           <Popover content={statusPopoverContent} trigger='hover' position='top'>
-            <span className='flex items-center cursor-default'>{statusIcon}</span>
+            <span className='kel-tools-mcp-status-icon flex items-center cursor-default'>{statusIcon}</span>
           </Popover>
         ) : (
           <Tooltip content={statusText} position='top'>
-            <span className='flex items-center cursor-default'>{statusIcon}</span>
+            <span className='kel-tools-mcp-status-icon flex items-center cursor-default'>{statusIcon}</span>
           </Tooltip>
         )}
         {isError && <FeedbackButton module='mcp-tools' />}
@@ -199,6 +207,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
         )}
         {!isReadOnly && !needsLogin && (
           <Button
+            className='kel-tools-mcp-retest'
             size='mini'
             icon={<Refresh size={'14'} />}
             title={t('settings.mcpTestConnection')}

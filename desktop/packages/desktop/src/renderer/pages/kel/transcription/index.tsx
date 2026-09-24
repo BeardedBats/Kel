@@ -639,7 +639,7 @@ const statusCopy =
   return (
     <div className='relative h-full'>
       <div
-        className={`${styles.shell} kel-shell-ramble${embedded ? ' kel-shell-ramble--embedded' : ''}`}
+        className={`${styles.shell} kel-shell-ramble${embedded ? ' kel-shell-ramble--embedded' : ''}${!embedded && (selected || recState !== 'idle') ? ' kel-shell-ramble--detail' : ''}${!embedded && selected && recState === 'idle' ? ' kel-shell-ramble--selected' : ''}`}
         data-testid='transcription-page'
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes('Files')) {
@@ -655,9 +655,22 @@ const statusCopy =
             <div className='kel-shell-tool-brand'><img src={rambleBrand} alt='' width={30} height={31} /><span>Kel</span></div>
             <div className={styles.navigation} ref={layout?.setTitlebarMenuHost} data-testid='ramble-navigation' />
           </div>
+          <div className='kel-shell-ramble-mobile-header'>
+            <div><img src={rambleIcon} alt='' /><span className='kel-shell-ramble-mobile-title'>Ramble</span></div>
+            <button type='button' disabled={recState !== 'idle'} onClick={() => void beginRecording()}>Record</button>
+          </div>
           <button type='button' className='kel-shell-new-chat kel-shell-ramble-new' onClick={() => void beginRecording()} disabled={recState !== 'idle'}>
             <span className='kel-shell-ramble-hero-icon'><img src={rambleIcon} alt='' /></span><span>New Recording</span>
           </button>
+          <input
+            type='search'
+            className={`${styles.searchInput} kel-shell-ramble-search`}
+            aria-label='Search transcripts'
+            placeholder='Search Transcripts'
+            value={recentSearch}
+            onChange={(event) => setRecentSearch(event.target.value)}
+            data-testid='transcript-search'
+          />
           <div className={styles.foldersHeader}>
             <h2 className={styles.sectionTitle}>Folders</h2>
             <button type='button' className={styles.addFolder} aria-label='New folder' title='New folder' disabled={creatingFolder} onClick={() => void createFolder()} data-testid='folder-create'>+</button>
@@ -794,21 +807,13 @@ const statusCopy =
           </div>
 
           <div className='kel-shell-ramble-bottom'>
-            <input
-              type='search'
-              className={styles.searchInput}
-              aria-label='Search transcripts'
-              placeholder='Search Transcripts'
-              value={recentSearch}
-              onChange={(event) => setRecentSearch(event.target.value)}
-              data-testid='transcript-search'
-            />
             <KelBottomNav />
           </div>
 
         </aside>}
 
         <main className={styles.workspace}>
+          {!embedded && selected && recState === 'idle' && <button type='button' className='kel-shell-ramble-mobile-back' onClick={() => setSelectedId(undefined)}><span aria-hidden='true'>←</span><span>{selected.name}</span></button>}
           {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
           <header className={styles.pageHeader}>
             <h1 className='kel-h1'>{embedded ? 'Transcriptions' : 'Ramble'}</h1>
@@ -917,13 +922,13 @@ const statusCopy =
                     additions stay available but quieter, so the document footer still reads as before. */}
                 <div className={styles.documentActions}>
                   <Button onClick={() => void copyTranscript()} data-testid='copy-transcript'>
-                    Copy Transcript
+                    <span className='kel-shell-ramble-desktop-label'>Copy Transcript</span><span className='kel-shell-ramble-mobile-label'>Copy</span>
                   </Button>
                   <Button onClick={downloadText} data-testid='download-txt'>
-                    Download Transcript
+                    <span className='kel-shell-ramble-desktop-label'>Download Transcript</span><span className='kel-shell-ramble-mobile-label'>Download</span>
                   </Button>
                   <Button disabled={!selected.has_audio} onClick={() => void downloadAudio()} data-testid='download-audio'>
-                    Download Audio
+                    <span className='kel-shell-ramble-desktop-label'>Download Audio</span><span className='kel-shell-ramble-mobile-label'>Audio</span>
                   </Button>
                   <Button
                     disabled={library.transcripts.length < 2}
@@ -935,6 +940,16 @@ const statusCopy =
                   >
                     Combine
                   </Button>
+                  {!embedded && <details className='kel-shell-ramble-more'>
+                    <summary>More</summary>
+                    <div>
+                      <button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button>
+                      <button type='button' onClick={() => fileInputRef.current?.click()}>Upload Audio</button>
+                      <button type='button' onClick={() => setSettingsOpen(true)}>API Key</button>
+                      <button type='button' disabled={selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)}>Record More</button>
+                      <button type='button' disabled={library.transcripts.length < 2} onClick={() => { setCombineSource(''); setCombineOpen(true); }}>Combine</button>
+                    </div>
+                  </details>}
                 </div>
 
               </>
