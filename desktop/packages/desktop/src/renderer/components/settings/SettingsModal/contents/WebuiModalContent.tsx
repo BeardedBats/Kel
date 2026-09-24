@@ -1,4 +1,5 @@
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
+import webuiActivityIcon from '@renderer/assets/figma/webui/activity.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -20,7 +21,7 @@ import ChannelWecomLogo from '@/renderer/assets/channel-logos/wecom.svg';
 import ChannelWeixinLogo from '@/renderer/assets/channel-logos/weixin.svg';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import { Button, Form, Input, Message, Switch, Tabs, Tooltip } from '@arco-design/web-react';
-import { CheckOne, Communication, Copy, Earth, EditTwo, Refresh } from '@icon-park/react';
+import { CheckOne, Communication, Copy, EditTwo, Refresh } from '@icon-park/react';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
@@ -577,8 +578,7 @@ const WebuiModalContent: React.FC = () => {
 
         {/* 描述说明 / Description */}
         <div className='kel-shell-webui-intro space-y-6px'>
-          <p className='kel-desktop-only m-0 text-13px text-t-secondary leading-relaxed'>Use Kel as your "24/7 Remote Assistant" — arrange tasks from any remote device, anytime, anywhere.</p>
-          <div className='kel-phone-only kel-shell-webui-progress' aria-hidden='true'>
+          <div className='kel-shell-webui-progress' aria-hidden='true'>
             {[1, 2, 3].map((step) => <span key={step} className={step === (!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3) ? 'is-active' : ''} />)}
           </div>
           <div className='kel-shell-source-step'><span>{`Step ${!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3} of 3`}</span><span>·</span><strong>{!webuiEnabled ? 'Enable WebUI' : !allowRemotePreference ? 'Access URL' : 'Allow Remote Access'}</strong></div>
@@ -605,8 +605,8 @@ const WebuiModalContent: React.FC = () => {
           <p className='kel-phone-only kel-shell-webui-mobile-intro'>Turn on WebUI to reach Kel from your phone or a browser.</p>
           {/* WebUI 引导提示 / WebUI hint */}
           <div className='kel-desktop-only mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
-            <Earth theme='outline' size='16' className='mt-1px text-[rgb(var(--primary-6))]' />
-            <div className='text-12px text-t-secondary leading-relaxed'>{t('settings.webui.featureRemoteDesc')}</div>
+            <img src={webuiActivityIcon} alt='' className='shrink-0' />
+            <div className='text-12px text-t-secondary leading-relaxed'>Turn on WebUI to reach Kel from your phone or a browser.</div>
           </div>
 
           {/* 启用 WebUI / Enable WebUI */}
@@ -741,6 +741,8 @@ const WebuiModalContent: React.FC = () => {
       {webuiPanel}
 
       <AionModal
+        variant='standard'
+        className='kel-shell-webui-modal'
         visible={setUsernameModalVisible}
         onCancel={() => setSetUsernameModalVisible(false)}
         onOk={handleSetNewUsername}
@@ -748,7 +750,7 @@ const WebuiModalContent: React.FC = () => {
         title={t('settings.webui.setNewUsername')}
         size='small'
       >
-        <Form form={usernameForm} layout='vertical' className='pt-16px'>
+        <Form form={usernameForm} layout='vertical'>
           <Form.Item
             label={t('settings.webui.newUsername')}
             field='newUsername'
@@ -794,6 +796,8 @@ const WebuiModalContent: React.FC = () => {
 
       {/* 设置新密码弹窗 / Set New Password Modal */}
       <AionModal
+        variant='standard'
+        className='kel-shell-webui-modal'
         visible={setPasswordModalVisible}
         onCancel={() => setSetPasswordModalVisible(false)}
         onOk={handleSetNewPassword}
@@ -801,7 +805,7 @@ const WebuiModalContent: React.FC = () => {
         title={t('settings.webui.setNewPassword')}
         size='small'
       >
-        <Form form={form} layout='vertical' className='pt-16px'>
+        <Form form={form} layout='vertical'>
           <Form.Item
             label={t('settings.webui.newPassword')}
             field='newPassword'
