@@ -7,9 +7,9 @@
 import { ipcBridge } from '@/common';
 import type { IMessageToolGroup } from '@/common/chat/chatLib';
 import { iconColors } from '@/renderer/styles/colors';
-import { Alert, Button, Image, Message, Radio, Tag, Tooltip } from '@arco-design/web-react';
+import { Alert, Button, Message, Radio, Tag, Tooltip } from '@arco-design/web-react';
 import { Copy, Download, LoadingOne } from '@icon-park/react';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
 import FileChangesPanel from '@/renderer/components/base/FileChangesPanel';
@@ -20,7 +20,7 @@ import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import LocalImageView from '@renderer/components/media/LocalImageView';
 import MarkdownView from '@renderer/components/Markdown';
 import { ToolConfirmationOutcome } from '@renderer/utils/common';
-import { ImagePreviewContext } from '../MessageList';
+import KelImageLightbox from '@renderer/components/media/KelImageLightbox';
 import { COLLAPSE_CONFIG, TEXT_CONFIG } from '../constants';
 import type { ImageGenerationResult, WriteFileResult } from '../types';
 
@@ -232,7 +232,7 @@ const ImageDisplay: React.FC<{
   const [imageUrl, setImageUrl] = useState<string>(imgUrl);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const { inPreviewGroup } = useContext(ImagePreviewContext);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // 如果是本地路径，需要加载为 base64 Load local paths as base64
   React.useEffect(() => {
@@ -367,27 +367,16 @@ const ImageDisplay: React.FC<{
     );
   }
 
-  // 图片元素 Image element
-  const imageElement = (
-    <Image
-      src={imageUrl}
-      alt={relativePath || 'Generated image'}
-      width={197}
-      style={{
-        maxHeight: '320px',
-        objectFit: 'contain',
-        borderRadius: '8px',
-        cursor: 'pointer',
-      }}
-    />
-  );
-
   return (
     <>
       {messageContext}
       <div className='flex flex-col gap-8px my-8px' style={{ maxWidth: '197px' }}>
-        {/* 图片预览 Image preview - 如果已在 PreviewGroup 中则直接渲染，否则包裹 PreviewGroup */}
-        {inPreviewGroup ? imageElement : <Image.PreviewGroup>{imageElement}</Image.PreviewGroup>}
+        <button type='button' aria-label={`Preview ${relativePath || 'Generated image'}`} onClick={() => setPreviewOpen(true)} style={{ padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}>
+          <img src={imageUrl} alt={relativePath || 'Generated image'} width={197} style={{ maxHeight: 320, objectFit: 'contain', borderRadius: 8 }} />
+        </button>
+        {previewOpen && (
+          <KelImageLightbox src={imageUrl} name={relativePath?.split(/[\\/]/).pop() || 'Generated image'} onCopy={handleCopy} onDownload={handleDownload} onClose={() => setPreviewOpen(false)} />
+        )}
         {/* 操作按钮 Action buttons */}
         <div className='flex gap-8px'>
           <Tooltip content={t('common.copy', { defaultValue: 'Copy' })}>
