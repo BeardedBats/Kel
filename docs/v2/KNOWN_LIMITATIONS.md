@@ -358,3 +358,27 @@ blank-body deep link — below), job-driven attention actions, conversational pr
 - **Cancelled missions leave a `BUILDING` reading and synthetic records in the real V2 root**: the
   acceptance journeys add their own findings, missions and candidates to the development root by design
   (never to the stable app or its data).
+
+## V2-18 acceptance, slice 5 (2026-09-23)
+
+- **Verification on the acceptance root needs a usable reviewer (measured).** A real work request
+  produced a real artifact and its digest check passed, but the milestone's `manual_review` check
+  answered **"The reviewer returned no usable assessment."** (provider `claude`, model `null`), so the
+  job settled CLOSED/**UNCERTAIN** — with the artifact kept, the row saying "Settled: uncertain." and a
+  retry on offer. The engine refusing to claim a verification it could not obtain is the contract
+  working and must stay; what is missing is a reviewer that answers on this root. Next step: give the
+  acceptance engine a working reviewer (a healthy provider for the reviewer role), re-run
+  `--journeys J-WORK`, and expect `VERIFIED` instead of an explained `UNCERTAIN`.
+- **A request that produces no job never settles (measured defect).** `/api/send` for a recipe that does
+  not exist answers in the conversation ("I could not find that recipe. …") and is then recorded as
+  `DISPATCHED` with `job_id: null`; it stayed there across 40 consecutive reads with no job, no error
+  and no retry offered. A shell cannot tell that request settled, and `/api/retry` refuses it (it is not
+  `FAILED`). A fix needs a settled state the Shell can render, so the contract comes first: recorded in
+  `PARALLEL_SHELL_TOUCHES.md` (V2-18 slice 5). Same shape applies to every "answered, no job" turn.
+- **Two journeys raise state through the engine's own APIs in-process, and say so.** J-ATTN's ask
+  (`CodingAdapter.approval`) and J-WORK's fence leg (`Store.create/claim/recover_abandoned`) exist only
+  inside the engine, so the journey enters through the same calls the runtime uses; the surfaces,
+  resolution and state transitions are the engine's. Labelled in each claim's `detail`.
+- **The remote journey's "unauthenticated request" assertion is on the API, not the page.** `/` answers
+  200 so the sign-in surface can load; the gate is `401 {"success":false,"error":"Authentication
+  required","code":"UNAUTHORIZED"}` on API routes. The renderer half of §9 stays Astra's.

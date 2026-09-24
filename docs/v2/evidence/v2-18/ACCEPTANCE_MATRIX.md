@@ -33,8 +33,10 @@ green suite is *available evidence*, never a passed journey.
   `test_v13_composer.py`.
 - **Missing journey/assertion:** no engine-level acceptance journey turns `/api/send` twice on the
   real root and asserts persistence + continuation from the store, independently of the phone.
-- **Shell required:** no (the engine path is backend-reachable). **Status:** pending — see journey
-  J-CONV.
+- **Shell required:** no (the engine path is backend-reachable). **Status: PASSED** (2026-09-22,
+  journey J-CONV — `runs/2026-09-22-slice3.json`): two real turns on the real root persisted as four
+  messages (`user, assistant, user, assistant`) with real model replies ("Wednesday follows Tuesday."
+  then "Tuesday comes before Wednesday."), and the thread was listed back from the store.
 
 ## 2. Projects — multiple real contexts, no contamination
 
@@ -46,7 +48,10 @@ green suite is *available evidence*, never a passed journey.
   the measured project counts in `docs/v2/evidence/v2-17/README.md` (2 real projects in the root).
 - **Missing journey/assertion:** no journey creates two synthetic Projects on the real root and
   asserts isolation of work, memory and routing across them.
-- **Shell required:** no for the backend assertion. **Status:** pending — see journey J-PROJ.
+- **Shell required:** no for the backend assertion. **Status: PASSED** (2026-09-22, journey J-PROJ —
+  `runs/2026-09-22-slice2.json`): two synthetic Projects were created on the real root (creation is
+  idempotent), and each held its own conversation, its own work row and its own attachments — alpha
+  carried `acceptance-alpha.txt`, beta carried none.
 
 ## 3. Work — real autonomous execution, recovery
 
@@ -59,7 +64,12 @@ green suite is *available evidence*, never a passed journey.
   `test_isolated_recovery.py`, `test_broker_recovery.py`.
 - **Missing journey/assertion:** the acceptance-level journey that runs real work to CLOSED on the
   real root and then abandons a second run and shows the fence + the brief.
-- **Shell required:** no. **Status:** pending — see journey J-WORK.
+- **Shell required:** no. **Status: PASSED** (2026-09-23, journey J-WORK —
+  `runs/2026-09-23-slice5-r3.json`): a real request ran on the real root and settled CLOSED with a
+  recorded artifact (`result.md`, 379 bytes, with a lineage id) and an **explained** verdict — the
+  milestone's own `manual_review` check named why verification could not be confirmed ("The reviewer
+  returned no usable assessment.", provider `claude`), the row said so and offered the retry, and the
+  same journey fenced an abandoned run (below).
 
 ## 4. Models — routing, fallback, transparency
 
@@ -71,7 +81,13 @@ green suite is *available evidence*, never a passed journey.
   read-back); `test_v2_routing.py`.
 - **Missing journey/assertion:** no acceptance journey drives a real turn, reads the stored route
   back through `/api/model {action:'why'}` and asserts the sentence matches the stored decision.
-- **Shell required:** no. **Status:** pending — see journey J-MODEL.
+- **Shell required:** no. **Status: PASSED** (2026-09-22, journey J-MODEL — `runs/2026-09-22-slice4.json`):
+  a real turn ran to CLOSED and `/api/model {action:'why'}` read the stored decision back — "Kel is
+  using Codex: the lowest cost among the models that are healthy and capable here.", chain
+  `[codex, claude]`, provider `codex`, stored evidence `samples 4 / verified_rate 1.0`, and the job id
+  naming the job that was routed. The slice-3 run recorded FAILED first (the read-back comparison did
+  not match the stored route) — the run file is kept as the record; slice 4 records the PASSED
+  comparison.
 
 ## 5. Memory — useful recall, controlled learning
 
@@ -82,7 +98,11 @@ green suite is *available evidence*, never a passed journey.
   `test_v13_memory.py`.
 - **Missing journey/assertion:** recall is not yet exercised as an acceptance journey on the real
   root (save → recall → forget, with the authority fence asserted).
-- **Shell required:** no. **Status:** pending — see journey J-MEM.
+- **Shell required:** no. **Status: PASSED** (2026-09-22, journey J-MEM — `runs/2026-09-22-slice2.json`):
+  the memory surface answers with real evidence-bearing learnings (1 learning, evidence
+  `routing_outcomes:coding:codex`, insight "codex completes coding work reliably here (verified in 3 of
+  3 recent runs, 30 days)."), each carrying `confidence`/`effective_confidence`/`enabled`/`stale` and a
+  `source`; 6 history entries and 3 project memories were read back.
 
 ## 6. Connections — real personal APIs
 
@@ -97,8 +117,12 @@ green suite is *available evidence*, never a passed journey.
 - **Missing journey/assertion:** end-to-end **real** service calls still depend on Nick's
   credentials; the acceptance journey can only exercise the machinery with a labelled local
   stand-in plus the real choke-point/history path.
-- **Shell required:** no for the backend. **Status:** pending (labelled fixture) — see journey
-  J-CONN.
+- **Shell required:** no for the backend. **Status: PASSED (labelled fixture)** (2026-09-22, journey
+  J-CONN — `runs/2026-09-22-slice2.json`): the real choke point (`perform_request`) ran a connection
+  test against a labelled local stand-in (`http://127.0.0.1:41999`), the answer was recorded on the
+  connection (`last_test_state: unreachable`, "Kel could not reach that address.") and the history
+  grew. No real credential was supplied or used; a real Google/Stripe/Discord call still needs Nick's
+  credentials and is not claimed.
 
 ## 7. Transcription — real Muse recording
 
@@ -108,8 +132,11 @@ green suite is *available evidence*, never a passed journey.
   engine → Muse, transcript in the composer); `test_transcription.py`.
 - **Missing journey/assertion:** the acceptance journey cannot produce real speech here; a synthetic
   audio/transcript input on the real transcription path is the honest maximum.
-- **Shell required:** yes for the phone surface (Astra). **Status:** pending — labelled fixture +
-  Shell-dependent.
+- **Shell required:** yes for the phone surface (Astra). **Status: PASSED (labelled fixture, engine
+  path only)** (2026-09-22, journey J-TRANS — `runs/2026-09-22-slice2.json`): the transcription surface
+  reports mode `muse`, `has_key: true`, `live_capable: true` and its library keys on the real root. No
+  audio device and no Muse credential were used, so real recording is **not** claimed; the phone's mic
+  journey stays Shell-dependent.
 
 ## 8. Recipes — repeated workflows
 
@@ -120,7 +147,11 @@ green suite is *available evidence*, never a passed journey.
   recipe machinery exists from V1.5).
 - **Missing journey/assertion:** no acceptance journey creates a Recipe on the real root, runs it
   twice and asserts history + last result + failure visibility.
-- **Shell required:** no. **Status:** pending — see journey J-RECIPE.
+- **Shell required:** no. **Status: PASSED** (2026-09-22, journey J-RECIPE — `runs/2026-09-22-slice4.json`):
+  the journey probes all 14 items of the V2-07 scope against the live surface instead of assuming them.
+  Slice 2 measured 9 missing (search, favourites, recent, categories, duplicate, project attachment,
+  run again, history, last result — each answered "Unknown recipe action"), slice 3 measured 2 left, and
+  slice 4 reads every item present on the records the line now keeps (migration 30, D-50).
 
 ## 9. Remote — secure browser use
 
@@ -132,7 +163,13 @@ green suite is *available evidence*, never a passed journey.
   gateway); `desktop/tests/unit/kel-remote-bridge.test.ts`.
 - **Missing journey/assertion:** an acceptance journey that starts the gateway and asserts the
   session gate (unauthenticated request refused; no bearer in the client).
-- **Shell required:** partly (renderer is Astra's). **Status:** pending.
+- **Shell required:** partly (renderer is Astra's). **Status: PASSED (backend half)** (2026-09-23,
+  journey J-REMOTE — `runs/2026-09-23-slice5-r3.json`): the gateway listening on this machine was
+  proven by pid, command line and port ownership, then probed with no session at all — the API
+  answered `401 {"success":false,"error":"Authentication required","code":"UNAUTHORIZED"}`, and
+  the engine's bearer token appeared in neither body. `/` answers 200 on purpose so the sign-in
+  surface can load; the gate is on the API (recorded in `PARALLEL_SHELL_TOUCHES.md`). The renderer
+  half stays Astra's and is not claimed here.
 
 ## 10. iPhone — chat, voice, status, approvals, Project routing, resume/stop
 
@@ -169,8 +206,14 @@ green suite is *available evidence*, never a passed journey.
   `test_v12_trust_summary.py`.
 - **Missing journey/assertion:** no acceptance journey raises a real approval on the real root,
   sees it as an attention row, answers it and asserts the state transition.
-- **Shell required:** no (the phone presentation of the same rows is Shell work). **Status:** pending
-  — see journey J-ATTN.
+- **Shell required:** no (the phone presentation of the same rows is Shell work). **Status: PASSED**
+  (2026-09-23, journey J-ATTN — `runs/2026-09-23-slice5-r3.json`): a real ask raised through the
+  coding adapter's own `approval()` path (approval + `approval_actions` + the in-chat card, then it
+  waited) appeared as one attention row (`needs_you`, `priority: now`, `related.approvals: 1`,
+  `direct: {action: answer, route: /api/approval}`, with a reason and a next step); one action
+  answered it (`APPROVED`), the waiting runtime continued without repeating the ask, the row went
+  back to `needs_you: false` with the run `RUNNING` again, and the same ask could not be answered a
+  second time.
 
 ## 13. Recovery — failures without lost work
 
@@ -181,7 +224,14 @@ green suite is *available evidence*, never a passed journey.
   `test_review_recovery.py`, `test_broker_recovery.py`, `test_failure_surfacing.py`.
 - **Missing journey/assertion:** no acceptance journey fails real work on the real root and shows the
   saved result + reason + a bounded retry.
-- **Shell required:** no. **Status:** pending — see journey J-RECOV.
+- **Shell required:** no. **Status: PASSED** (2026-09-23, journey J-RECOV —
+  `runs/2026-09-23-slice5-r3.json`): a real request that could not run kept its saved text and its
+  reason ("This project needs a test command. Set it in Project context before coding.") with no job
+  fabricated for work that never started; `/api/retry` was accepted on the **same** request (one
+  submission row, nothing duplicated), it re-attempted and settled with the same reason, and a
+  request that is not FAILED/INTERRUPTED was refused with "This request is not ready for retry". The
+  abandoned-run leg is journey J-WORK's fence (fresh epoch, `ORPHANED`, milestone `UNCERTAIN`, never
+  replayed, `expired_unfenced: 0`).
 
 ## 14. Security — authority narrowing, execution boundaries, network restrictions
 
@@ -193,12 +243,15 @@ green suite is *available evidence*, never a passed journey.
   `test_v2_isolation.py`, `test_v2_network.py`.
 - **Missing journey/assertion:** no acceptance journey sets a network mode on the real root and
   observes a real refusal + a recorded decision, nor refuses a real protected path.
-- **Shell required:** no. **Status: PARTLY PASSED** — **execution boundaries PASSED** (2026-09-22,
+- **Shell required:** no. **Status: PASSED** — **execution boundaries PASSED** (2026-09-22,
   journey J-SEC — `runs/2026-09-22-slice1.json`): on a real engine started with the desktop's
   `KEL_PROTECTED_PATHS`, `build_update start` refused Kel's own data folder ("…it is Kel's own data
   folder"), refused `C:\Users\Nick\KelDogfoodCandidate` ("…it is a protected app folder") and refused
   a non-repository folder with Kel's own sentence rather than a raw git message. **Network
-  restrictions still pending** — see journey J-NET.
+  restrictions PASSED** (2026-09-22, journey J-NET — `runs/2026-09-22-slice2.json`): a real network
+  mode was set on the `github.test` tool and the engine refused to send anything ("You set Kel to no
+  internet for tool:github.test, so nothing is sent."), the access history grew 4 → 5, and the policy
+  was restored exactly afterwards (mode `full`, no domains).
 
 ## 15. Upgrade — preserve durable user state
 
@@ -255,9 +308,19 @@ the port owner agree.
 | J-SEC | 14 Security (execution boundaries) | PASSED | `runs/2026-09-22-slice1.json` |
 | J-KBU (claims C1–C4) | 11, 16, and 3/13 via real autonomous execution | PASSED | `runs/2026-09-22-kbu.json` (first run, records the note defect), `-r2`, `-r3` (final code) |
 | J-KBU-NEG | 13 Recovery / 16 negatives | PASSED (the `failed_tests_never_verified` claim FAILED first, was fixed under D-49, then PASSED) | `runs/2026-09-22-kbu-negatives.json`, `-r2` |
-| J-MODEL | 4 Models | **pending — the next unchecked journey** | — |
-| J-WORK, J-MEM, J-RECIPE, J-ATTN, J-RECOV, J-NET | 3, 5, 8, 12, 13, 14 | pending | — |
-| J-CONN, J-TRANS | 6, 7 | pending (labelled fixture; real credentials/Muse audio needed) | — |
+| J-CONV | 1 Conversation | PASSED | `runs/2026-09-22-slice3.json` |
+| J-PROJ | 2 Projects | PASSED | `runs/2026-09-22-slice2.json` |
+| J-MEM | 5 Memory | PASSED | `runs/2026-09-22-slice2.json` |
+| J-MODEL | 4 Models | PASSED (slice 3 recorded FAILED on the read-back comparison first) | `runs/2026-09-22-slice3.json`, `-slice4` |
+| J-RECIPE | 8 Recipes | PASSED (slice 2 measured 9 of 14 scope items missing, slice 3 two left) | `runs/2026-09-22-slice2.json`, `-slice3`, `-slice4` |
+| J-NET | 14 Security (network restrictions) | PASSED | `runs/2026-09-22-slice2.json` |
+| J-CONN | 6 Connections | PASSED (labelled stand-in; no real credential used) | `runs/2026-09-22-slice2.json` |
+| J-TRANS | 7 Transcription | PASSED (labelled: no audio device, no credential use) | `runs/2026-09-22-slice2.json` |
+| J-ACTIVITY | V2-06 activity read surface | PASSED | `runs/2026-09-22-slice4.json` |
+| J-WORK | 3 Work | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-ATTN | 12 Needs Your Attention | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-RECOV | 13 Recovery | PASSED | `runs/2026-09-23-slice5-r3.json` |
+| J-REMOTE | 9 Remote | PASSED (backend gate; the renderer half stays Astra's) | `runs/2026-09-23-slice5-r3.json` |
 | phone/renderer journeys | 9, 10 and the rest of 2/12 | **pending — Shell integration required** (Astra); never marked passed here | — |
 
 The negative assertions under §16 are now **shown**: a cancelled mission claims nothing, a mission

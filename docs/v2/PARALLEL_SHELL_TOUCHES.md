@@ -66,3 +66,24 @@ write when the Ramble/Kibble presentation lands.
 - **Copy discipline for the surface**: “Build Update” creates and verifies a candidate; it never
   installs and never changes the running app. Installation/promotion is a separate future step behind
   an explicit human decision and is not part of this contract.
+
+## V2-18 slice 5 — two shared-contract notes (2026-09-23, `dev/v2` @ the slice-5 commit)
+
+Nothing here asks the Shell to change today; these are measured backend facts a Shell surface will
+meet, recorded so presentation and backend agree when the phone/Work surfaces land.
+
+- **The gateway gate is on the API, not on the page.** A browser with no session gets `200` for `/`
+  (the app shell must load so the sign-in surface can appear) and
+  `401 {"success":false,"error":"Authentication required","code":"UNAUTHORIZED"}` for API routes
+  (measured by J-REMOTE against the listening web-host). A remote surface should read that 401 as
+  "sign in", not as a broken backend; the engine's bearer never appears in the client's body.
+- **A submission can read `DISPATCHED` with a null `job_id`.** `/api/state`'s `submissions` include
+  every request the person made: an answered chat turn and a request that produced no job at all (e.g.
+  a recipe that does not exist) are both recorded as `DISPATCHED` with `job_id: null`. That state does
+  **not** mean "work is running" — there is no job. Until the backend has a settled state for it (see
+  `KNOWN_LIMITATIONS.md`, V2-18 slice 5), a surface must not show such a request as in-progress work.
+- **A settled-but-unverified job offers one action, not two.** `/api/work` rows carry `why` and
+  `direct`; a job that closed without verification reads `why: "Settled: uncertain."` with
+  `direct {action: retry, route: /api/retry}`, and a fenced run reads `direct {action: resume, route:
+  /api/send}` with the sentence "An attempt was interrupted and fenced; Kel will not replay it on its
+  own…". The Shell should render `direct` as the single action and never invent a resume/retry itself.

@@ -203,14 +203,19 @@ dev engine and the candidate app are stopped unless the checkpoint that follows 
    `v2-recipe-library`) and `/api/activity` — and the journeys J-FIX, J-UPGRADE, J-SEC, J-KBU
    (C1–C4 + negatives), J-PROJ, J-MEM, J-NET, J-CONN, J-TRANS, J-CONV, J-MODEL, J-RECIPE and
    J-ACTIVITY have all PASSED on the real root (evidence under `docs/v2/evidence/v2-18/runs/`).
-   **Remaining unchecked journeys: J-WORK, J-RECOV, J-ATTN (backend) and J-REMOTE (gateway), then the
-   Shell/phone ones.** The web-host deep-link cause is fixed and pinned
+   **Remaining unchecked journeys: none that a backend can reach.** J-WORK, J-RECOV, J-ATTN and
+   J-REMOTE all PASSED on 2026-09-23 (slice 5, `runs/2026-09-23-slice5-r3.json`); what is left of §27
+   needs Shell integration (Astra: phone/renderer) or Nick's real credentials/Muse audio, and is never
+   claimed from a backend journey. Two measured limits are recorded in `KNOWN_LIMITATIONS.md` instead of
+   passes: real work settles `UNCERTAIN` here because the reviewer answers nothing usable, and a request
+   that produces no job stays `DISPATCHED` with no job. The web-host deep-link cause is fixed and pinned
    (`packages/web-host/src/static-server.unit.test.ts`, 15 tests on the merged line). The integration
    line `integration/v2` @ `fe5e6b7` in `C:\Users\Nick\Desktop\Kel\kel-v2-integration` merges Astra's
    committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the merge's second parent; the rest
    of this file's line list is unchanged); its renderer suites (`desktop/tests/**`, `tsc`)
    and a packaged candidate are **not** verified yet — `desktop/node_modules` there is a junction and
    needs a real `bun install`. See `docs/v2/evidence/integration/README.md`.
+
    **NEXT ACTION, in order:** (1) the three remaining backend journeys on a fresh owned engine;
    (2) `bun install` in the integration worktree, then its bounded renderer suites; (3) package a
    candidate at `C:\Users\Nick\KelV2Candidate` — the path does not exist yet, so nothing has to be
@@ -248,6 +253,7 @@ dev engine and the candidate app are stopped unless the checkpoint that follows 
    J-ATTN, J-RECOV, J-NET, then the labelled fixtures J-CONN and J-TRANS. Phone/renderer journeys stay
    PENDING for Shell integration. Read `ROADMAP.md`'s V2-18 line and the directive before designing;
    do not build Astra-owned presentation. **Kibble Build Update is BUILT**
+
    (D-46 corrected D-44; D-47; `docs/v2/evidence/kibble-build-update/README.md`): the mission and
    candidate contract on the existing machinery, `promote()` always refusing, the UI contract recorded
    in `PARALLEL_SHELL_TOUCHES.md`. **V2-17 upgrade reliability, V2-14 network permissions, V2-13
