@@ -230,7 +230,11 @@ export default function KelAutonomyPage() {
         )}
 
         <KelCard title="Permission check">
-          <p className="kel-sub">Locked guardrails · digest {digest ? digest.slice(0, 12) : 'loading…'}</p>
+          <p className="kel-sub kel-permission-check-desktop">Locked guardrails · digest {digest ? digest.slice(0, 12) : 'loading…'}</p>
+          <button type="button" className="kel-permission-check-mobile" aria-expanded={advanced} onClick={() => setAdvanced(value => !value)}>
+            <span>Locked guardrails</span>
+            <span>{digest ? digest.slice(0, 8) : 'loading…'}</span>
+          </button>
         </KelCard>
 
         {advanced && (

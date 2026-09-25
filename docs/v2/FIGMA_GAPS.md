@@ -18,6 +18,7 @@ The live desktop page is `319:2`; the live mobile page is `319:3858`. The older 
 | Mobile Projects with multiple projects | Mobile index `299:13686` | The scoped package uses one synthetic project. With several projects, keep the heading generic until a real selector can scope Work and Knowledge; never imply the first project owns global content. | `KelInChatFrame.tsx`, Work/Knowledge routes |
 | Mobile Work with real jobs | Mobile Work `299:13910` shows only empty cards | Keep the existing job actions and render the same Card language for populated rows. Do not invent a sample job merely for visual parity. | `work/index.tsx`, `kel-shell.css` |
 | Mobile Activity states beyond one running job | Mobile Activity `299:14061` | Use the same Card and row components for multiple, paused, failed, and finished jobs. A synthetic engine claim verified the one running row only; a real model worker was not started. | `activity/index.tsx`, `kel-shell.css` |
+| Populated mobile Permissions | Mobile Permissions `299:14218` shows empty grants and requests | The empty cards and dynamic digest match the current frame. Keep real grants and requests; their populated rows need a separate direct Figma comparison. | `autonomy/index.tsx`, `kel-shell.css` |
 
 
 **2026-09-23 update:** this file is a historical audit of the older `76:2` page. The current FINAL desktop page is `185:2`, and Figma now has 28 mobile screens on `213:2`. The [51-screen audit](evidence/figma-full-audit/README.md) supersedes the “No mobile final frame” row and tracks current gaps.
