@@ -6,7 +6,7 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 Consolidation moved all source to `C:\Users\Nick\Desktop\Kel\Kel` on `main`. See `MARATHON_STATE.md` and `FEATURE_LEDGER.md` for current phase status. The early "Not built yet" list below describes the V2 base, before the appended implementation blocks. The current incomplete phases are V2-05, V2-16, V2-18, and V2-19; V2-15 and V2-20 remain planned. The r61 System and r62 Appearance passes are recorded under `evidence/figma-full-audit/`.
 
-This continuation corrected two V2-18 state gaps in the existing engine and Shell paths. A cancelled Build Update reports cancellation without creating a candidate. An answered request without a job settles as `SETTLED`; ACP ends that turn. The existing Kibble page shows the cancelled job and explains that no candidate was created.
+This continuation corrected two V2-18 state gaps in the existing engine and Shell paths. A cancelled Build Update reports cancellation without creating a candidate. An answered request without a job settles as `SETTLED`; ACP ends that turn. The existing Kibble page shows the cancelled job and explains that no candidate was created. These changes are now in the canonical App. The latest full engine suite passed 1,289 tests and 14 subtests; desktop passed 396. Tools and local enabled WebUI received fresh packaged checks at 1440/800px.
 
 ## Where V2 starts from (base `a471e17`, inherited unchanged)
 
