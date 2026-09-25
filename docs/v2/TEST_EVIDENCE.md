@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current Chat package check (2026-09-25)
+
+[The current Chat record](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) compares live desktop Chat `185:4284`, mobile Chat `299:11571`, and mobile drawer `299:11583` with a disposable package. A two-turn fixture lived only in isolated `%TEMP%` data. The package showed the four mobile reply actions, a 280px user message, a 46px composer, and drawer controls within about 1px of Figma. Search opened its dialog. Document widths matched 393, 320, and 1440px viewports; no page errors occurred. Desktop TypeScript passed, focused navigation/composer tests passed **2 files / 9 tests**, and Electron Vite plus the disposable builder passed. This does not prove the full desktop plan, phone chrome, live model response, or four-tab Kibble placement. The canonical App and Data were untouched.
+
 ## Current Figma discovery (2026-09-25)
 
 Direct Figma reads located live desktop page `319:2` (75 frames), mobile page `319:3858` (50 frames), Foundations `139:2`, Components `136:2`, and mobile Components `213:3`. High-fidelity reads covered desktop and mobile Tools, mobile server detail, five desktop Tools overlay states, and Transcriptions `189:4032`. [The inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the source delta. Older packaged visual checks below remain historical.

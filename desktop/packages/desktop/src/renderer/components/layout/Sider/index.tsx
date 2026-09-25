@@ -112,7 +112,7 @@ const Sider: React.FC<SiderProps> = ({ onSessionClick, collapsed = false }) => {
   return (
     <div className='size-full flex flex-col'>
       <div className='flex-1 min-h-0 overflow-hidden'>
-          <div className='size-full flex flex-col gap-2px'>
+          <div className={classNames('size-full flex flex-col gap-2px', isMobile && 'kel-shell-mobile-drawer-content')}>
             <SiderToolbar
               isMobile={isMobile}
               isBatchMode={isBatchMode}

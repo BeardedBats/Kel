@@ -4,6 +4,8 @@
 
 The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. The current Tools layout, mobile failure detail, and JSON, CLI, report, and delete dialogs have a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md). The installed App still packages `8c67121`. Product-wide parity, current component variants, real CLI import and report delivery, the sign-in-needed Tools row, populated mobile tools, and four-tab Kibble placement remain open. Do not use the older Tools captures below as evidence for the new frames.
 
+The [current Chat package check](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) repaired the mobile two-line user turn, four reply actions, composer height, and drawer layout. Its synthetic conversation has no real project metrics or agent plan. The Windows title bar differs from Figma's iPhone status/home chrome. Attachment and mic controls remain visible in the mobile composer, and Kibble remains a fifth tab pending a product decision. Desktop Chat and mobile drawer screenshots are scoped comparison evidence, not full Chat parity.
+
 ## Current canonical limits (2026-09-24)
 
 The older r29 limits below are historical. The canonical app and durable data paths are in `docs/CONSOLIDATION_STATUS.md`. r61 System and r62 Appearance have scoped packaged evidence. Exact Figma parity remains open, including Tools status and interactive states, populated and enabled states, Light labels, and real phone rendering. Live Google sign-in, personal services, remote first response, fresh Muse speech, and a physical iPhone remain unverified.
