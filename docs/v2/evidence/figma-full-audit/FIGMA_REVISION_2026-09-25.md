@@ -35,7 +35,7 @@
 | `185:2658` | Kel / Home | `/home` | Current heading, Needs you card, and composer compared in isolated package at 1440px. [Scoped evidence](DESKTOP_HOME_CURRENT_REVISION.md). | READ |
 | `189:907` | Kel / Work | `/work` | Current empty cards measured at 1440 and 800px. Populated work remains open. [Scoped evidence](DESKTOP_WORK_CURRENT_REVISION.md). | READ |
 | `189:1342` | Kel / Activity | `/activity` | Current frame read; empty cards checked in a package. Populated active work remains open. [Scoped evidence](DESKTOP_ACTIVITY_CURRENT_REVISION.md). | READ |
-| `189:1758` | Kel / Permissions | `/autonomy` | Retained node; inner revision not measured. | PENDING |
+| `189:1758` | Kel / Permissions | `/autonomy` | Current empty cards measured at 1440 and 800px. Populated grants and requests remain open. [Scoped evidence](DESKTOP_PERMISSIONS_CURRENT_REVISION.md). | READ |
 | `189:2193` | Kel / Projects | `/projects` | Retained node; inner revision not measured. | PENDING |
 | `189:2628` | Kel / Scheduled tasks | `/scheduled` | Selected card controls implemented and package-checked. Three sample tasks and history remain open. [Scoped evidence](DESKTOP_SCHEDULED_LIST_CURRENT_REVISION.md). | READ |
 | `189:3098` | Kel / Providers | `/providers` | Retained node; inner revision not measured. | PENDING |
