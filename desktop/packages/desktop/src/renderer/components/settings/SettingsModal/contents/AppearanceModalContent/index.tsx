@@ -80,11 +80,13 @@ const AppearanceModalContent: React.FC = () => {
           <ThemeColorsSection />
 
           {/* 字体（字族 + 字号）/ Fonts (family + size) */}
-          <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
-            <ShellSourceCardHeader title='Fonts' />
+          <div className='kel-shell-appearance-type px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
+            <div className='kel-desktop-only'><ShellSourceCardHeader title='Text size and zoom' /></div>
+            <div className='kel-phone-only'><ShellSourceCardHeader title='Fonts' /></div>
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {FONT_SIZE_KEYS.map((key) => (
-                <PreferenceRow key={key} label={key === 'app' ? 'Global' : t(FONT_REGION_LABEL_KEY[key])}>
+                <div key={key} className={key === 'app' || key === 'markdown' ? 'kel-shell-appearance-advanced-font' : ''}>
+                <PreferenceRow label={key === 'app' ? 'Global' : key === 'chat' ? 'Chat text' : t(FONT_REGION_LABEL_KEY[key])}>
                   <div className='flex items-center gap-12px flex-wrap justify-end'>
                     <FontSizeStepper
                       value={fontSizes[key]}
@@ -97,12 +99,14 @@ const AppearanceModalContent: React.FC = () => {
                     />
                   </div>
                 </PreferenceRow>
+                </div>
               ))}
+              <div className='kel-desktop-only kel-shell-appearance-zoom'><PreferenceRow label='Zoom'><ScaleControl /></PreferenceRow></div>
             </div>
           </div>
 
           {/* 缩放控制 / Scale Control */}
-          <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
+          <div className='kel-shell-appearance-scale px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
             <div className='w-full flex flex-col divide-y divide-border-2'>
               <ShellSourceCardHeader title='Scale' /><ScaleControl />
             </div>

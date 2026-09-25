@@ -14,21 +14,26 @@ import { BUILTIN_THEMES } from '@renderer/theme/builtinThemes';
 import type { Theme } from '@/common/theme/types';
 import { DARK_THEME_ID } from '@/common/theme/constants';
 import { clearThemeOverrides, setThemeOverride, themeOverrides } from '@renderer/utils/theme/applyTheme';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 type FeaturedRow = { token: string; label: string; why: string };
 
-/** The ten semantic colors a person actually thinks in. The rest stay behind More colors. */
+/** The six primary colors in the desktop design. Advanced tokens stay behind More colors. */
 const FEATURED: FeaturedRow[] = [
   { token: '--bg-base', label: 'App background', why: 'The base behind everything' },
   { token: '--bg-1', label: 'Panels', why: 'Cards and side panels' },
-  { token: '--bg-2', label: 'Elevated surfaces', why: 'Menus and raised cards' },
-  { token: '--text-primary', label: 'Primary text', why: 'Headings and body text' },
-  { token: '--text-secondary', label: 'Secondary text', why: 'Hints and metadata' },
-  { token: '--border-base', label: 'Borders', why: 'Dividers and outlines' },
   { token: '--primary', label: 'Accent', why: 'Buttons and highlights' },
   { token: '--success', label: 'Success', why: 'Confirmations' },
   { token: '--warning', label: 'Warning', why: 'Caution states' },
   { token: '--danger', label: 'Error', why: 'Failures and destructive actions' },
+];
+const MOBILE_FEATURED: FeaturedRow[] = [
+  ...FEATURED.slice(0, 2),
+  { token: '--bg-2', label: 'Elevated surfaces', why: 'Menus and raised cards' },
+  { token: '--text-primary', label: 'Primary text', why: 'Headings and body text' },
+  { token: '--text-secondary', label: 'Secondary text', why: 'Hints and metadata' },
+  { token: '--border-base', label: 'Borders', why: 'Dividers and outlines' },
+  ...FEATURED.slice(2),
 ];
 
 const hex = (value: string) => {
@@ -161,12 +166,14 @@ const ThemeColorRow: React.FC<{ token: string; label: string; hint?: string; onC
 };
 
 export const ThemeColorsSection: React.FC = () => {
+  const layout = useLayoutContext();
+  const featured = layout?.isMobile ? MOBILE_FEATURED : FEATURED;
   const [refresh, setRefresh] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const handleChanged = useCallback(() => setRefresh((value) => value + 1), []);
   const themeId = activeThemeId();
   const overrides = useMemo(() => themeOverrides(themeId), [themeId, refresh]);
-  const extraTokens = THEME_TOKENS.filter((token) => !FEATURED.some((row) => row.token === token.key));
+  const extraTokens = THEME_TOKENS.filter((token) => !featured.some((row) => row.token === token.key));
 
   const warnings = useMemo(() => {
     void refresh;
@@ -212,7 +219,7 @@ export const ThemeColorsSection: React.FC = () => {
               });
             }}
           >
-            Restore all colors
+            Restore all
           </Button>
         )}
       </div>
@@ -227,7 +234,7 @@ export const ThemeColorsSection: React.FC = () => {
         </div>
       ) : null}
       <div className='divide-y divide-border-2'>
-        {FEATURED.map((row) => (
+        {featured.map((row) => (
           <ThemeColorRow key={`${themeId}:${row.token}`} token={row.token} label={row.label} hint={row.why} onChanged={handleChanged} />
         ))}
       </div>

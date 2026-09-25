@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Appearance and Add theme (2026-09-25)
+
+[Appearance `314:2863` and Add theme `314:3373`](evidence/figma-full-audit/DESKTOP_APPEARANCE_CURRENT_REVISION.md) now use the four-slot gallery, six primary color rows, and one Text size and zoom card. The package measured Theme 670×166, Theme colors 670×338, and Add theme x440/y103 560×362 at 1440px. The 800px layout had no color-row wrap or overflow. A separate isolated profile saved, selected, and reloaded a custom theme. No renderer errors appeared. TypeScript, **54 files / 401 tests**, focused theme tests, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.
+
 ## Desktop Assistants and Skills (2026-09-25)
 
 [Assistants `311:3140` and Skills `311:3536`](evidence/figma-full-audit/DESKTOP_CATALOG_CURRENT_REVISION.md) now use Figma's catalog headings and actual-data row structure. A disposable Windows package showed the real Kel assistant at 1440/800px and a truthful empty Skills state at both widths. The desktop Skills Usage Tip card is gone. Neither page overflowed or reported a renderer error. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Populated custom skills remain unverified. Canonical App and Data were untouched.
