@@ -181,6 +181,11 @@ const Layout: React.FC<{
   const toggleSider = useCallback(() => {
     setCollapsed((previous) => !previous);
   }, []);
+  useEffect(() => {
+    const openNavigation = () => setCollapsed(false);
+    window.addEventListener('kel-open-navigation', openNavigation);
+    return () => window.removeEventListener('kel-open-navigation', openNavigation);
+  }, []);
   useConversationShortcuts({ navigate, toggleSider });
   // Expose navigate to code running outside the Router tree (e.g. the globally
   // mounted FeedbackReportModal's "via chat" action).

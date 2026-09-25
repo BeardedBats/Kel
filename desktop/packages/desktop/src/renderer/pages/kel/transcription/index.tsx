@@ -15,6 +15,12 @@ import transcriptMicIcon from '@renderer/assets/figma/refresh/transcript-mic.svg
 import transcriptPlusIcon from '@renderer/assets/figma/refresh/transcript-plus.svg';
 import transcriptCheckIcon from '@renderer/assets/figma/refresh/transcript-check.svg';
 import transcriptSettingsIcon from '@renderer/assets/figma/refresh/transcript-settings.svg';
+import rambleMobileMenuIcon from '@renderer/assets/figma/refresh/ramble-mobile-menu.svg';
+import rambleMobileFolderIcon from '@renderer/assets/figma/refresh/ramble-mobile-folder.svg';
+import rambleMobileMicIcon from '@renderer/assets/figma/refresh/ramble-mobile-mic.svg';
+import rambleMobilePlusIcon from '@renderer/assets/figma/refresh/ramble-mobile-plus.svg';
+import rambleMobileBackIcon from '@renderer/assets/figma/refresh/ramble-mobile-back.svg';
+import rambleMobileMoreIcon from '@renderer/assets/figma/refresh/ramble-mobile-more.svg';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -670,8 +676,8 @@ const statusCopy =
             <div className={styles.navigation} ref={layout?.setTitlebarMenuHost} data-testid='ramble-navigation' />
           </div>
           <div className='kel-shell-ramble-mobile-header'>
-            <div><img src={rambleIcon} alt='' /><span className='kel-shell-ramble-mobile-title'>Ramble</span></div>
-            <button type='button' disabled={recState !== 'idle'} onClick={() => void beginRecording()}>Record</button>
+            <div><button type='button' className='kel-shell-ramble-menu-button' aria-label='Open navigation' onClick={() => window.dispatchEvent(new Event('kel-open-navigation'))}><img src={rambleMobileMenuIcon} alt='' /></button><span className='kel-shell-ramble-mobile-title'>Ramble</span></div>
+            <button type='button' className='kel-shell-ramble-new-button' aria-label='New recording' disabled={recState !== 'idle'} onClick={() => void beginRecording()}><img src={rambleMobilePlusIcon} alt='' /></button>
           </div>
           <button type='button' className='kel-shell-new-chat kel-shell-ramble-new' onClick={() => void beginRecording()} disabled={recState !== 'idle'}>
             <span className='kel-shell-ramble-hero-icon'><img src={rambleIcon} alt='' /></span><span>New Recording</span>
@@ -701,7 +707,7 @@ const statusCopy =
               return (
                 <div key={folder.id}>
                   <div
-                    className={`${styles.folderRow} ${dropFolder === folder.id ? styles.dropTarget : ''}`}
+                    className={`${styles.folderRow} kel-shell-ramble-folder-row ${dropFolder === folder.id ? styles.dropTarget : ''}`}
                     {...folderDrop(folder.id)}
                     data-folder-id={folder.id}
                   >
@@ -720,6 +726,7 @@ const statusCopy =
                     >
                       {open ? '▾' : '▸'}
                     </button>
+                    <img className='kel-shell-ramble-row-icon' src={rambleMobileFolderIcon} alt='' />
                     {folderEditing === folder.id ? (
                       <input
                         className={styles.renameInput}
@@ -742,7 +749,7 @@ const statusCopy =
                       />
                     ) : (
                       <span className={styles.rowName} title={folder.name}>
-                        {folder.name}
+                        {folder.name}<small className='kel-shell-ramble-mobile-meta'>{children.length} {children.length === 1 ? 'transcript' : 'transcripts'}</small>
                       </span>
                     )}
                     <span className={styles.rowMeta}>{children.length}</span>
@@ -788,8 +795,8 @@ const statusCopy =
             })}
           </div>
           <div className={styles.divider} />
-          <div className={styles.sectionTitle}>Recent</div>
-          <div className={styles.scrollArea} data-testid='recent-list'>
+          <div className={`${styles.sectionTitle} kel-shell-ramble-recordings-label`}><span className='kel-shell-ramble-desktop-label'>Recent</span><span className='kel-shell-ramble-mobile-label'>Recordings</span></div>
+          <div className={`${styles.scrollArea} kel-shell-ramble-recordings`} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
                 Nothing here yet.
@@ -810,8 +817,9 @@ const statusCopy =
                 onClick={() => setSelectedId(item.id)}
                 data-testid='transcript-row'
               >
+                <img className='kel-shell-ramble-row-icon' src={rambleMobileMicIcon} alt='' />
                 <span className={styles.rowName} title={item.name}>
-                  {item.name}
+                  {item.name}<small className='kel-shell-ramble-mobile-meta'>{formatWhen(item.created)} · {item.status === 'complete' ? (item.duration_ms && item.duration_ms >= 60000 ? `${Math.round(item.duration_ms / 60000)} min` : formatDuration(item.duration_ms)) : item.status}</small>
                 </span>
                 <span className={styles.rowMeta}>
                   {item.status === 'complete' ? formatDuration(item.duration_ms) : item.status}
@@ -819,6 +827,7 @@ const statusCopy =
               </button>
             ))}
           </div>
+          <button type='button' className='kel-shell-ramble-mobile-record' disabled={recState !== 'idle'} onClick={() => void beginRecording()}>New recording</button>
 
           <div className='kel-shell-ramble-bottom'>
             <KelBottomNav />
@@ -827,7 +836,7 @@ const statusCopy =
         </aside>}
 
         <main className={styles.workspace}>
-          {!embedded && selected && recState === 'idle' && <button type='button' className='kel-shell-ramble-mobile-back' onClick={() => setSelectedId(undefined)}><span aria-hidden='true'>←</span><span>{selected.name}</span></button>}
+          {!embedded && selected && recState === 'idle' && <button type='button' className='kel-shell-ramble-mobile-back' onClick={() => setSelectedId(undefined)}><img src={rambleMobileBackIcon} alt='' /><span>{selected.name}</span></button>}
           {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
           <header className={styles.pageHeader}>
             <h1 className='kel-h1'>{embedded ? 'Transcriptions' : 'Ramble'}</h1>
@@ -928,7 +937,7 @@ const statusCopy =
                   {/* Saved / recording state reads beside the title, as in the standalone app. */}
                   <span className={styles.grow} />
                   <span className={styles.documentStatus} data-testid='transcript-status'>
-                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy} <img src={transcriptSettingsIcon} alt='' width='14' height='14' />
+                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy}<span className='kel-shell-ramble-mobile-duration'>{selected.duration_ms ? ` · ${selected.duration_ms >= 60000 ? Math.round(selected.duration_ms / 60000) + ' min' : formatDuration(selected.duration_ms)}` : ''}</span> <img src={transcriptSettingsIcon} alt='' width='14' height='14' />
                   </span>
                 </div>
                 <p className={styles.transcriptText} data-testid='transcript-text'>
@@ -938,7 +947,7 @@ const statusCopy =
                     additions stay available but quieter, so the document footer still reads as before. */}
                 <div className={styles.documentActions}>
                   <Button icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => void copyTranscript()} data-testid='copy-transcript'>
-                    <span className='kel-shell-ramble-desktop-label'>Copy Transcript</span><span className='kel-shell-ramble-mobile-label'>Copy</span>
+                    <span className='kel-shell-ramble-desktop-label'>Copy Transcript</span><span className='kel-shell-ramble-mobile-label'>Copy transcript</span>
                   </Button>
                   <Button icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={downloadText} data-testid='download-txt'>
                     <span className='kel-shell-ramble-desktop-label'>Download Transcript</span><span className='kel-shell-ramble-mobile-label'>Download</span>
@@ -959,7 +968,7 @@ const statusCopy =
                     Combine
                   </Button>
                   {!embedded && <details className='kel-shell-ramble-more'>
-                    <summary>More</summary>
+                    <summary aria-label='More transcript actions'><img src={rambleMobileMoreIcon} alt='' /></summary>
                     <div>
                       <button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button>
                       <button type='button' onClick={() => fileInputRef.current?.click()}>Upload Audio</button>

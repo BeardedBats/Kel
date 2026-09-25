@@ -21,6 +21,7 @@
 - Mobile model picker `299:12372` was read and compared with an isolated package. The 393×410 bottom sheet matches Figma's x0/y442 bounds, glass and 20px top radius. Per-chat choice and reset worked against an isolated engine record. See [scoped picker evidence](CHAT_MODEL_PICKER_CURRENT_REVISION.md). The model labels depend on live configuration; default-choice persistence remains open.
 - Mobile approval details `299:12281` was read and compared with an isolated pending approval. The 393×433 sheet matches Figma's x0/y419 bounds and x17/y723 Approve button. See [scoped details evidence](CHAT_APPROVAL_DETAILS_CURRENT_REVISION.md). The decision buttons were not clicked.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its populated document and four footer actions have a [scoped disposable package comparison](TRANSCRIPTIONS_CURRENT_REVISION.md) at 1440 and 800px. The selected text and audio are synthetic; live Muse content remains unverified.
+- Mobile Ramble list `299:12588` and transcript `299:12782` now have a [scoped disposable package comparison](RAMBLE_MOBILE_CURRENT_REVISION.md) at 393 and 320px. Search, folder card, recording card, record action, document, and footer bounds were measured. Synthetic content, mobile folder actions, native titlebar, five-tab Kibble placement, and font rasterization limit pixel parity. Vetting sheet `299:12871` was read, but its production path lacks runtime proof.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
 ## Desktop FINAL frames
@@ -120,9 +121,9 @@
 | `299:12459` | M / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 393 and 320px. | READ |
 | `299:12494` | M / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
 | `299:12515` | M / Chat — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
-| `299:12588` | M / Ramble | `/transcription` | Replaced page/node; prior pair absent. | PENDING |
-| `299:12782` | M / Ramble — Transcript | `/transcription` | Replaced page/node; prior pair absent. | PENDING |
-| `299:12871` | M / Ramble — Vetting answers | `/transcription` | Replaced page/node; prior pair absent. | PENDING |
+| `299:12588` | M / Ramble | `/transcription` | Current list compared in isolated package at 393 and 320px. | READ |
+| `299:12782` | M / Ramble — Transcript | `/transcription` | Current detail compared in isolated package at 393 and 320px. | READ |
+| `299:12871` | M / Ramble — Vetting answers | `/transcription` | Current frame read; production vetting preview not opened. | READ |
 | `299:12936` | M / Sign in | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:13626` | M / Startup — Starting up | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:13662` | M / Startup — Engine stopped | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
@@ -166,4 +167,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect mobile Permission `299:12418` with a runtime-capable isolated conversation, then current mobile Ramble and remaining component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** reach mobile Vetting answers `299:12871` through an isolated engine preview, then inspect mobile Permission `299:12418` with a runtime-capable isolated conversation. Keep old evidence for history and label it superseded until refreshed.
