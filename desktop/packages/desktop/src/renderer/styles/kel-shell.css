@@ -1131,6 +1131,58 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-v2-shell .kel-shell-task-setting-control > span { color: var(--kel-figma-color-text-muted); }
 .kel-v2-shell .kel-shell-activity-clear { margin: 0; color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body); }
 @media(min-width:768px) {
+  .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) {
+    display: grid;
+    grid-template-columns: 8px minmax(0,1fr);
+    grid-template-rows: auto auto;
+    align-items: baseline;
+    gap: 0 8px;
+    padding: 0;
+  }
+  .kel-v2-shell .kel-shell-activity__item .kel-shell-activity__dot {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #7ee0a8;
+    box-shadow: 0 0 8px rgba(126,224,168,.45);
+  }
+  .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) .kel-attention__text {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) .kel-attention__text strong {
+    flex: none;
+    font: 500 14px/20px var(--kel-shell-heading);
+  }
+  .kel-v2-shell .kel-shell-activity__item .kel-shell-activity__desktop-detail { display: none; }
+  .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) .kel-shell-activity__mobile-detail {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #edf2fa;
+    font: 500 14px/20px var(--kel-shell-heading);
+  }
+  .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) .kel-shell-activity__mobile-detail::before { content: '— '; white-space: pre; }
+  .kel-v2-shell .kel-shell-activity__item .kel-shell-activity__state {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    color: #7ee0a8;
+    font: 700 13px/18px var(--kel-shell-heading);
+  }
+}
+@media(min-width:768px) {
   .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field {
     min-height: 62px;
     border-bottom: 1px solid rgba(191,216,255,.08);
