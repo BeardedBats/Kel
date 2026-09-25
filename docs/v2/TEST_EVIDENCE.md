@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current Figma discovery (2026-09-25)
+
+Direct Figma reads located live desktop page `319:2` (75 frames), mobile page `319:3858` (50 frames), Foundations `139:2`, Components `136:2`, and mobile Components `213:3`. High-fidelity reads covered desktop Tools `313:2441`, mobile Tools `315:2842`, and Transcriptions `189:4032`. [The inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the source delta. No current-revision App parity or new test pass is claimed by this discovery step; older packaged checks below remain historical.
+
 ## Canonical continuation (2026-09-24)
 
 The latest full engine regression on canonical `main` passed: `python -B -m pytest -q -p no:cacheprovider` from `runtime` reported **1,289 passed and 14 subtests passed** in 856.38 seconds. This supersedes the earlier 1,284-pass/4-failure run below. The four old `DISPATCHED` assertions were corrected before this full rerun. No engine test failed.

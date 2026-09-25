@@ -1,5 +1,7 @@
 # Desktop Dark Tools status — canonical review
 
+> **SUPERSEDED BY FIGMA REVISION (2026-09-25).** This record remains valid for its prior source and App checks. Live desktop Tools is now `313:2441`, and live mobile Tools is `315:2842`. It does not establish parity with those current frames. See [current inventory](FIGMA_REVISION_2026-09-25.md).
+
 **Authority:** [Kel Design System, FINAL Tools `188:1956`](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System?node-id=188-1956), plus Foundations and Components. **Rendered evidence:** [r47 at 1440px](key/r47-tools-1440.png), [r47 at 800px](key/r47-tools-800.png), [measurements](r47-desktop-check.json), and [interaction check](r47-tools-interactions.json).
 
 The r47 source changed MCP rows from 50px to the FINAL 40px desktop rhythm. The first row shows a connected check, and both rows retain their expand and retest controls. At 800px, each row grows to 48px for its label and the card keeps Add MCP inside its bounds. The functional Add MCP control and the second row's status detail are extra runtime information absent from FINAL's sample. They do not justify removing live controls. The r47 interaction record confirms expand/collapse, Add MCP menu, and navigation to Model.
