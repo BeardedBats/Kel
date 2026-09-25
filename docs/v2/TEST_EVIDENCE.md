@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Mobile Recipes list and preview (2026-09-25)
+
+[The scoped implementation record](evidence/figma-full-audit/MOBILE_RECIPES_CURRENT_REVISION.md) compares current Figma `299:14428` and `299:14477` with one disposable package at 393 and 320px. Engine built-ins supplied five real rows and three preview steps. The card starts x16/y115; preview opens and closes. No overflow or renderer error appeared. TypeScript, focused recipe tests **1 file / 4 tests**, Electron Vite, and packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Chat Permission sheet check (2026-09-25)
 
 [The scoped Permission record](evidence/figma-full-audit/CHAT_PERMISSION_CURRENT_REVISION.md) compares live mobile `299:12418` with a disposable package. At 393px, the sheet measured x0/y447, 393×405, matching Figma. All five choices fit at 393 and 320px, with no overflow or renderer error. The title returned to the main menu. Sampled glass background colors differed by at most four channel values in the middle. The ACP session returned no mode catalog, so a session-gated injector supplied the five sample options. No live mode switch was tested. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

@@ -12,10 +12,10 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Compare current mobile Recipes 299:14428 and Preview 299:14477 with isolated real recipe data; then continue remaining current desktop/mobile component variants and V2-18/19 acceptance before App promotion.
+next_item: Complete current desktop implementation first, starting with Recipes list 284:8148, Run 284:8489, and Preview 284:8847; then continue desktop frames, install the accepted desktop App for Nick to test, and implement mobile while he tests.
 
 status: partial
-# Canonical App packages source 8c67121. Figma replaced desktop/mobile FINAL pages on 2026-09-25. Current Tools overlays, Chat/drawer, Chat approval and details, Chat tool-call/plan, Chat agent error, Chat reconnecting, mobile model picker, mobile Permission sheet (injected mode catalog), populated Transcriptions, mobile Ramble list/detail/vetting, mobile Projects, mobile Work empty state, mobile Activity running state, mobile Permissions empty state, mobile Knowledge populated state, and four-tab navigation have scoped disposable package checks; installed App promotion waits for broader current-revision acceptance. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md and its linked scoped records.
+# Nick prioritised complete desktop implementation on 2026-09-25. He will test desktop while mobile UI/UX implementation continues. Package by coherent desktop feature groups instead of per Figma frame. Canonical App packages source 8c67121; promotion awaits desktop acceptance. Current Tools, selected Chat states, Transcriptions, and selected mobile states have scoped disposable package checks. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md and its linked scoped records.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 deferred:
