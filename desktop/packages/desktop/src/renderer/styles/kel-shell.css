@@ -725,6 +725,32 @@ html[data-theme='dark'] body .arco-modal.kel-shell-model-modal { box-sizing: bor
 html[data-theme='dark'] .kel-shell-model-modal :is(.arco-input-wrapper,.arco-select-view) { background: rgba(47,107,224,.1) !important; border: 1px solid rgba(127,160,255,.28) !important; }
 html[data-theme='dark'] .kel-shell-model-modal .arco-input { background: transparent !important; }
 @media(min-width:1024px) { .arco-modal-wrapper:has(.kel-shell-model-modal) { box-sizing: border-box; padding-left: 256px; } }
+@media (min-width: 768px) {
+  .arco-modal-wrapper:has(.kel-shell-model-modal--source) { padding-left: 0; padding-top: 130px; }
+  .arco-modal-wrapper:has(.kel-shell-model-modal--source)::before,
+  .arco-modal-wrapper:has(.kel-shell-model-modal--source)::after { display: none; }
+  html[data-theme='dark'] body .arco-modal.kel-shell-model-modal--source {
+    width: 560px !important; max-width: calc(100vw - 32px);
+    border: 1px solid rgba(221,233,255,.5);
+    background: linear-gradient(rgba(159,195,255,.05),rgba(159,195,255,.05)),rgba(15,45,100,.9) !important;
+    box-shadow: 0 24px 32px rgba(5,13,36,.55);
+  }
+  .kel-shell-model-modal--source .aionui-modal-std-header { padding: 20px 24px 0; border-bottom: 0 !important; }
+  .kel-shell-model-modal--source .aionui-modal-std-header h3 { font: 600 18px/24px var(--kel-shell-heading); }
+  .kel-shell-model-modal--source .aionui-modal-std-body { padding: 16px 24px 0 !important; overflow: visible; }
+  .kel-shell-model-modal--source .arco-form-item { margin-bottom: 14px !important; }
+  .kel-shell-model-modal--source .arco-form-item-symbol { display: none; }
+  .kel-shell-model-modal--source .arco-form-label-item,
+  .kel-shell-model-modal--source .arco-form-label-item label { color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  .kel-shell-model-modal--source .arco-checkbox-group { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .kel-shell-model-modal--source .arco-checkbox { min-height: 26px; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+  .kel-shell-model-modal--source .arco-checkbox-mask { border-radius: 4px; }
+  .kel-shell-model-modal--source .arco-checkbox-checked .arco-checkbox-mask { border-color: rgba(191,216,255,.3); background: #2f6be0; }
+  .kel-shell-model-modal--source .aionui-modal-std-footer { padding: 0 24px 24px; border-top: 0 !important; }
+  .kel-shell-model-modal--source .aionui-modal-std-footer > div { display: flex; justify-content: flex-end; gap: 10px; }
+  .kel-shell-model-modal--source .aionui-modal-std-footer .arco-btn { height: 34px; padding-inline: 12px; border: 0; background: transparent; box-shadow: none; }
+  .kel-shell-model-modal--source .aionui-modal-std-footer .arco-btn-primary { background: linear-gradient(#5a9d61,#24653d); color: #fff; box-shadow: 0 2px 8px rgba(5,13,36,.5); }
+}
 
 /* Typography authority: DS v2 Foundations / Type v2, confirmed by the user. */
 .kel-v2-shell { font: 400 16px/25px var(--kel-shell-body); }
@@ -1365,6 +1391,31 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .kel-shell-model-actions { position: absolute; right: 20px; top: 10px; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px { min-height: 150px; padding: 0; align-items: center; justify-content: center; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models .py-40px h3 { font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-custom-models:has(.kel-shell-model-provider) { gap: 4px; min-height: 0; padding-bottom: 6px; }
+  .kel-v2-shell .kel-shell-model-provider { border-top: 1px solid rgba(191,216,255,.08); }
+  .kel-v2-shell .kel-shell-model-provider-row,
+  .kel-v2-shell .kel-shell-model-entry-row { display: flex; align-items: center; gap: 8px; min-width: 0; border-bottom: 1px solid rgba(191,216,255,.08); }
+  .kel-v2-shell .kel-shell-model-provider-row { min-height: 58px; }
+  .kel-v2-shell .kel-shell-model-entry-row { min-height: 50px; padding-left: 36px; }
+  .kel-v2-shell .kel-shell-model-entry-row:last-child { border-bottom: 0; }
+  .kel-v2-shell .kel-shell-model-provider-expand { flex: 0 0 24px; padding: 0; border: 0; background: transparent; color: #9fc3ff; font: 500 20px/24px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-model-provider-label { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-model-provider-label > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kel-v2-shell .kel-shell-model-provider-label small { overflow: hidden; color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); text-overflow: ellipsis; white-space: nowrap; }
+  .kel-v2-shell .kel-shell-model-health-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: #8fa9d6; }
+  .kel-v2-shell .kel-shell-model-health-dot--healthy { background: #8fe3b4; }
+  .kel-v2-shell .kel-shell-model-health-dot--unhealthy { background: #f27d7d; }
+  .kel-v2-shell .kel-shell-model-check { flex: 0 0 auto; padding: 4px; border: 0; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-model-check:disabled { opacity: .5; cursor: wait; }
+  .kel-v2-shell .kel-shell-model-more { position: relative; flex: 0 0 28px; }
+  .kel-v2-shell .kel-shell-model-more summary { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; list-style: none; color: #9fc3ff; cursor: pointer; }
+  .kel-v2-shell .kel-shell-model-more summary::-webkit-details-marker { display: none; }
+  .kel-v2-shell .kel-shell-model-menu { position: absolute; z-index: 10; top: 30px; right: 0; display: flex; flex-direction: column; min-width: 140px; padding: 5px; border: 1px solid rgba(191,216,255,.22); border-radius: 8px; background: #172b56; box-shadow: 0 8px 20px rgba(5,13,36,.5); }
+  .kel-v2-shell .kel-shell-model-menu button { width: 100%; padding: 7px 9px; border: 0; border-radius: 5px; background: transparent; color: #edf2fa; text-align: left; font: 500 13px/18px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-model-menu button:hover { background: rgba(47,107,224,.18); }
+  .kel-v2-shell .kel-shell-model-provider .arco-switch { flex: 0 0 40px; width: 40px; height: 22px; }
+}
 .kel-v2-shell .kel-shell-model-empty-icon, .kel-v2-shell .kel-shell-archived-empty-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 10px; border: 1px solid rgba(191,216,255,.45); border-radius: 50%; color: var(--kel-text-2); }
 .kel-v2-shell .kel-shell-archived-empty-icon img { width: 20px; height: 20px; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archive-actions:empty { display: none; }

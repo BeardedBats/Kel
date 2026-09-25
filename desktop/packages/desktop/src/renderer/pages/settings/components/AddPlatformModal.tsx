@@ -10,7 +10,7 @@ import { ipcBridge } from '@/common';
 import { uuid } from '@/common/utils';
 import { isGoogleApisHost } from '@/common/utils/urlValidation';
 import ModalHOC from '@/renderer/utils/ui/ModalHOC';
-import { Form, Input, Message, Select, Switch } from '@arco-design/web-react';
+import { Checkbox, Form, Input, Message, Select, Switch } from '@arco-design/web-react';
 import { Loading, PreviewOpen, Refresh, Search } from '@icon-park/react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -204,7 +204,8 @@ const renderPlatformOption = (platform: PlatformConfig, t?: (key: string) => str
 const AddPlatformModal = ModalHOC<{
   onSubmit: (platform: IProvider) => void;
   deepLinkData?: DeepLinkAddProviderDetail;
-}>(({ modalProps, onSubmit, modalCtrl, deepLinkData }) => {
+  desktopSource?: boolean;
+}>(({ modalProps, onSubmit, modalCtrl, deepLinkData, desktopSource = false }) => {
   const [message, messageContext] = Message.useMessage();
   const { t } = useTranslation();
   const [form] = Form.useForm();
@@ -318,7 +319,12 @@ const AddPlatformModal = ModalHOC<{
         if (deepLinkData.base_url) form.setFieldValue('base_url', deepLinkData.base_url);
         if (deepLinkData.api_key) form.setFieldValue('api_key', deepLinkData.api_key);
       } else {
-        form.setFieldValue('platform', DEFAULT_PLATFORM_VALUE);
+        const initialPlatform = desktopSource ? 'DeepSeek' : DEFAULT_PLATFORM_VALUE;
+        form.setFieldValue('platform', initialPlatform);
+        if (desktopSource) {
+          form.setFieldValue('base_url', getPlatformByValue(initialPlatform)?.base_url ?? '');
+          form.setFieldValue('model', ['deepseek-chat', 'deepseek-reasoner']);
+        }
       }
     }
   }, [modalProps.visible, deepLinkData]);
@@ -403,16 +409,16 @@ const AddPlatformModal = ModalHOC<{
 
   return (
     <AionModal
-      className='kel-shell-model-modal'
+      className={`kel-shell-model-modal${desktopSource ? ' kel-shell-model-modal--source' : ''}`}
       contentStyle={{ background: 'transparent' }}
       variant='standard'
       visible={modalProps.visible}
       onCancel={modalCtrl.close}
-      header={{ title: t('settings.addModel'), showClose: true }}
-      style={{ width: 520, maxWidth: 'calc(100vw - 32px)' }}
+      header={{ title: desktopSource ? 'Add model' : t('settings.addModel'), showClose: !desktopSource }}
+      style={{ width: desktopSource ? 560 : 520, maxWidth: 'calc(100vw - 32px)' }}
       onOk={handleSubmit}
       confirmLoading={modalProps.confirmLoading}
-      okText={t('common.confirm')}
+      okText={desktopSource ? 'Add model' : t('common.confirm')}
       cancelText={t('common.cancel')}
     >
       {messageContext}
@@ -420,14 +426,14 @@ const AddPlatformModal = ModalHOC<{
         <Form form={form} layout='vertical' className='[&_.arco-form-item]:mb-12px [&_.arco-form-item:last-child]:mb-0'>
           {/* 模型平台选择（第一层）/ Model Platform Selection (first level) */}
           <Form.Item
-            initialValue={DEFAULT_PLATFORM_VALUE}
-            label={t('settings.modelPlatform')}
+            initialValue={desktopSource ? 'DeepSeek' : DEFAULT_PLATFORM_VALUE}
+            label={desktopSource ? 'Platform' : t('settings.modelPlatform')}
             field={'platform'}
             required
             rules={[{ required: true, message: t('settings.modelPlatformRequired', 'Choose a model platform.') }]}
           >
             <Select
-              showSearch
+              showSearch={!desktopSource}
               filterOption={(inputValue, option) => {
                 const optionValue = (option as React.ReactElement<{ value?: string }>)?.props?.value;
                 const plat = MODEL_PLATFORMS.find((p) => p.value === optionValue);
@@ -449,6 +455,7 @@ const AddPlatformModal = ModalHOC<{
                 const optionValue = (option as { value?: string })?.value;
                 const plat = MODEL_PLATFORMS.find((p) => p.value === optionValue);
                 if (!plat) return optionValue;
+                if (desktopSource) return plat.i18nKey ? t(plat.i18nKey) : plat.name;
                 return renderPlatformOption(plat, t);
               }}
             >
@@ -467,7 +474,7 @@ const AddPlatformModal = ModalHOC<{
             hidden={isBedrock}
             label={
               <span className='inline-flex items-center gap-4px'>
-                {t('settings.apiEndpoint', 'API 请求地址')}
+                {desktopSource ? 'API endpoint' : t('settings.apiEndpoint', 'API 请求地址')}
                 {selectedPlatform?.base_url && !isFullUrl && (
                   <button
                     type='button'
@@ -523,7 +530,7 @@ const AddPlatformModal = ModalHOC<{
           {/* API Key */}
           <Form.Item
             hidden={isBedrock}
-            label={t('settings.apiKey')}
+            label={desktopSource ? 'API key' : t('settings.apiKey')}
             required={!isBedrock}
             rules={[{ required: !isBedrock, message: t('settings.apiKeyRequired', 'Enter an API key.') }]}
             field={'api_key'}
@@ -542,7 +549,7 @@ const AddPlatformModal = ModalHOC<{
               </div>
             }
           >
-            <Input
+            <Input.Password visibilityToggle
               onBlur={() => {
                 void modelListState.mutate();
               }}
@@ -622,7 +629,7 @@ const AddPlatformModal = ModalHOC<{
 
           {/* 模型选择 / Model Selection */}
           <Form.Item
-            label={t('settings.modelName')}
+            label={desktopSource && platformValue === 'DeepSeek' ? 'Models' : t('settings.modelName')}
             field={'model'}
             required
             rules={[{ required: true, message: t('settings.modelNameRequired', 'Choose or enter a model name.') }]}
@@ -635,7 +642,13 @@ const AddPlatformModal = ModalHOC<{
                   : undefined
             }
           >
-            <Select
+            {desktopSource && platformValue === 'DeepSeek' ? <Checkbox.Group
+              direction='vertical'
+              options={[
+                { label: 'deepseek-chat', value: 'deepseek-chat' },
+                { label: 'deepseek-reasoner', value: 'deepseek-reasoner' },
+              ]}
+            /> : <Select
               mode='multiple'
               loading={!isFullUrl && modelListState.isLoading}
               showSearch
@@ -715,7 +728,7 @@ const AddPlatformModal = ModalHOC<{
                 )
               }
               options={isFullUrl ? [] : modelListState.data?.models || []}
-            />
+            />}
           </Form.Item>
 
           {/* New API 协议选择 / New API Protocol Selection */}
