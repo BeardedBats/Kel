@@ -8,6 +8,8 @@ The V2-18 cancelled Build Update reading and no-job `DISPATCHED` defect describe
 
 The canonical App's Tools failure and enabled Image Model states ran on disposable data at 1440 and 800px. The status detail now has Components `156:159` ice-glass material. Its long diagnostic still covers the Tools heading and card title while open at 800px. The short Figma tooltip does not specify this longer runtime content. The Image Model field and menu match the measured Components `146:52` material, and the enabled switch persisted after reload. A fake key and loopback endpoint verified only local configuration. No real image generation, live MCP, or personal credential was used. Keyboard and assistive-technology checks remain open.
 
+WebUI was enabled in an isolated packaged App. Its local page loaded and its API required login. This does not prove remote access, authenticated phone use, or a model response. The available FINAL frame shows step 1; step-2 pixel parity is not claimed.
+
 ## Current r29 acceptance limits (2026-09-23)
 
 Packaged local conversation opening, two disposable project contexts, Dark widths, and two native picker adjustments are verified in `docs/v2/evidence/v2-19/CANDIDATE_R29.md`. Remote load, first response, Google sign-in, and live personal services need a signed-in isolated candidate session and a model request. Fresh Muse audio needs a new recording; physical iPhone checks need the device. The web-host suite requires stopping all Kel instances, which is excluded while r20 runs. V2-20 promotion remains gated. Faint Light-mode labels remain outside this Dark pass.
