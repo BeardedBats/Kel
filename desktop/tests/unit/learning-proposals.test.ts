@@ -42,7 +42,8 @@ describe('Kel suggests surface (D9)', () => {
   it('speaks user language and never applies anything by itself', () => {
     expect(projectsPage).toContain('Kel suggests');
     expect(projectsPage).toContain('nothing here applies by itself');
-    expect(projectsPage).toContain('Why: {proposal.why}');
+    expect(projectsPage).toContain('kel-project-suggestion-why-prefix');
+    expect(projectsPage).toContain('{proposal.why}');
   });
 
   it('wires the three decisions to the engine actions', () => {

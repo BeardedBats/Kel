@@ -1,4 +1,5 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import mobileMapIcon from '@renderer/assets/figma/refresh/mobile-map.svg';
 /**
  * Kel V1.4 Projects workspace — Knowledge (memory) · Map · Recipes.
  * Reads `/api/work`; actions go through `/api/memory` and `/api/map`.
@@ -268,10 +269,10 @@ export default function KelProjectsPage() {
                   Kel only changes what it knows when you agree — nothing here applies by itself.
                 </p>
                 {proposals.slice(0, 5).map((proposal) => (
-                  <div className="kel-row" key={proposal.id} style={{ alignItems: 'flex-start' }}>
+                  <div className="kel-row kel-project-suggestion-row" key={proposal.id} style={{ alignItems: 'flex-start' }}>
                     <div className="kel-attention__text">
                       <strong>{proposal.summary || proposal.topic || 'A change Kel noticed'}</strong>
-                      {proposal.why && <span className="kel-meta">Why: {proposal.why}</span>}
+                      {proposal.why && <span className="kel-meta"><span className="kel-project-suggestion-why-prefix">Why: </span>{proposal.why}</span>}
                     </div>
                     <span className="kel-grow" />
                     <KelButton
@@ -281,7 +282,7 @@ export default function KelProjectsPage() {
                         void act('Accepted', () => kelMemoryAction('accept_proposal', proposal.id))
                       }
                     >
-                      Use this
+                      <span className="kel-project-action-desktop">Use this</span><span className="kel-project-action-mobile">Accept</span>
                     </KelButton>
                     <KelButton
                       variant="quiet"
@@ -303,7 +304,7 @@ export default function KelProjectsPage() {
                         )
                       }
                     >
-                      No thanks
+                      <span className="kel-project-action-desktop">No thanks</span><span className="kel-project-action-mobile">Reject</span>
                     </KelButton>
                   </div>
                 ))}
@@ -327,12 +328,15 @@ export default function KelProjectsPage() {
         {!error && work && !libraryView && (
           <KelCard
             id="project-map"
-            title={`Project map${work.map ? ` · v${work.map.version}` : ''}`}
+            title="Project map"
             actions={
               work.map ? (
+                <>
+                <span className="kel-project-map-version">v{work.map.version}</span>
                 <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
-                  Refresh map
+                  <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
                 </KelButton>
+                </>
               ) : undefined
             }
           >
@@ -344,7 +348,8 @@ export default function KelProjectsPage() {
                 onAction={() => void act('Refresh map', () => kelMapAction('refresh'))}
               />
             ) : (
-              <div className="kel-project-table-scroll">
+              <>
+              <div className="kel-project-table-scroll kel-project-map-desktop">
               <KelTable
                 head={['Section', 'Trust', 'Freshness', 'Digest', 'Sources']}
                 rows={sections.map((section) => [
@@ -362,6 +367,18 @@ export default function KelProjectsPage() {
                 ])}
               />
               </div>
+              <div className="kel-project-map-mobile">
+                {sections.map((section) => (
+                  <div className="kel-project-map-mobile__row" key={section.name}>
+                    <span className="kel-project-map-mobile__icon" aria-hidden="true"><img src={mobileMapIcon} alt="" /></span>
+                    <span>{section.name.replace(/(^|\s)\S/g, (letter) => letter.toUpperCase())}</span>
+                    <span className={section.stale ? 'kel-project-map-mobile__stale' : 'kel-project-map-mobile__fresh'}>
+                      {section.stale ? 'Stale' : 'Fresh'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </KelCard>
         )}

@@ -4,7 +4,7 @@
 
 The [current mobile Permissions empty state](evidence/figma-full-audit/PERMISSIONS_CURRENT_REVISION.md) matches all three card bounds at 393px and fits 320px. Its digest comes from isolated engine data and opens the real check controls. Populated grants and access requests remain unverified. Windows phone chrome and font rendering differ, and Kibble placement remains open.
 
-The [current mobile Knowledge frame](evidence/figma-full-audit/KNOWLEDGE_CURRENT_GAP.md) contains two suggestions and a populated project map. The disposable package has no engine proposals or map, so its older empty cards cannot establish parity. The review actions and map refresh await bounded engine fixtures.
+The [current mobile Knowledge check](evidence/figma-full-audit/KNOWLEDGE_CURRENT_REVISION.md) uses two bounded engine proposals and five map sections. Its first card starts at the current Figma bounds, and defer/refresh worked. Figma pictures three sample map rows; the package keeps all five real sections. Accept and Reject were not submitted. Windows font and phone chrome still differ.
 
 The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. The current Tools layout, mobile failure detail, and JSON, CLI, report, and delete dialogs have a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md). The installed App still packages `8c67121`. Product-wide parity, current component variants, real CLI import and report delivery, the sign-in-needed Tools row, populated mobile tools, and four-tab Kibble placement remain open. Do not use the older Tools captures below as evidence for the new frames.
 

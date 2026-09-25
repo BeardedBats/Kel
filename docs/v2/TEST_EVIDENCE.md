@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Knowledge package check (2026-09-25)
+
+[The scoped Knowledge record](evidence/figma-full-audit/KNOWLEDGE_CURRENT_REVISION.md) compares live mobile `299:14371` with a disposable package containing two engine proposals and five map sections. At 393px, suggestions measured x16/y114 361×265 and the map began y391, each 2px from Figma's sample bounds. At 320px, neither card overflowed. The isolated Not now action deferred a proposal, and Refresh reran the map. No renderer error appeared. TypeScript, the desktop suite with one updated source assertion, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Permissions package check (2026-09-25)
 
 [The scoped Permissions record](evidence/figma-full-audit/PERMISSIONS_CURRENT_REVISION.md) compares live mobile `299:14218` with a disposable package. At 393px, the three cards measured x16/y114 361×75, x16/y201 361×75, and x16/y288 361×85, within 1px of Figma. They fit 320px with no overflow. The real eight-character engine digest stayed on one line and its button opened the existing check controls. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
