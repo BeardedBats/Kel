@@ -943,6 +943,47 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-chat-composer .sendbox-tools .arco-btn { background: transparent !important; border: 0 !important; }
 .kel-shell-chat-workspace { display: flex; align-items: center; gap: 8px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Current Figma Chat agent-error frames 273:13090 and 299:12494. */
+.kel-v2-shell .kel-chat-agent-error {
+  position: relative; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box;
+  width: 100%; padding: 14px 18px; border: 1px solid rgba(242,139,139,.35); border-radius: 14px;
+  background: linear-gradient(90deg, rgba(15,45,100,.25), rgba(15,45,100,.25)),
+    linear-gradient(90deg, rgba(166,68,63,.12), rgba(166,68,63,.12));
+  color: #edf2fa;
+}
+.kel-v2-shell .kel-chat-agent-error__heading { display: flex; align-items: center; gap: 10px; min-height: 18px; }
+.kel-v2-shell .kel-chat-agent-error__heading .i-icon { flex: none; width: 16px; height: 16px; }
+.kel-v2-shell .kel-chat-agent-error__heading strong { color: #f9a3a3; font: 700 15px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-chat-agent-error__body { margin: 0; color: #edf2fa; font: 400 14px/16px var(--kel-shell-body); }
+.kel-v2-shell .kel-chat-agent-error__actions { display: flex; align-items: center; gap: 10px; }
+.kel-v2-shell .kel-chat-agent-error__actions button { cursor: pointer; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell .kel-chat-agent-error__model { order: 0; height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; }
+.kel-v2-shell .kel-chat-agent-error__retry {
+  order: 1; height: 34px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5); border-radius: 8px;
+  background: linear-gradient(180deg, #6493f8, #2356b3); color: #fff1f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1);
+}
+.kel-v2-shell .kel-chat-agent-error__details { position: absolute; top: 12px; right: 14px; z-index: 2; }
+.kel-v2-shell .kel-chat-agent-error__details > summary { width: 20px; height: 20px; cursor: pointer; color: transparent; font-size: 0; list-style: none; }
+.kel-v2-shell .kel-chat-agent-error__details > summary::-webkit-details-marker { display: none; }
+.kel-v2-shell .kel-chat-agent-error__details > summary::after { content: '⋯'; display: block; color: #f9a3a3; font: 600 18px/18px var(--kel-shell-heading); text-align: center; }
+.kel-v2-shell .kel-chat-agent-error__diagnostics {
+  position: absolute; top: 25px; right: 0; display: flex; flex-direction: column; gap: 5px;
+  width: min(340px, calc(100vw - 48px)); max-height: 220px; overflow: auto; padding: 12px;
+  border: 1px solid rgba(191,216,255,.2); border-radius: 10px; background: #10234b;
+  color: #c4d4e8; white-space: pre-wrap; overflow-wrap: anywhere; box-shadow: 0 20px 24px rgba(0,0,0,.35);
+  font: 400 12px/16px var(--kel-shell-body);
+}
+@media(max-width:767px) {
+  .kel-v2-shell .message-item:has(.kel-chat-agent-error) { padding-inline: 0 !important; }
+  .kel-v2-shell .kel-chat-agent-error { left: 3px; flex: none; width: calc(100% + 6px); padding: 14px; }
+  .kel-v2-shell .kel-chat-agent-error__heading { gap: 8px; }
+  .kel-v2-shell .kel-chat-agent-error__body { line-height: 17px; }
+  .kel-v2-shell .kel-chat-agent-error__actions { flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 0 4px; }
+  .kel-v2-shell .kel-chat-agent-error__retry { order: 0; height: 44px; }
+  .kel-v2-shell .kel-chat-agent-error__model { order: 1; height: 40px; }
+}
+
 .kel-shell-task-detail { gap: 0 !important; }
 
 /* Screens FINAL 189:2628: setting rows and the instruction note share panel dividers. */

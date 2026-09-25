@@ -14,6 +14,9 @@ import MarkdownView from '@renderer/components/Markdown';
 import FeedbackButton from '@renderer/components/base/FeedbackButton';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import { iconColors } from '@/renderer/styles/colors';
+import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
+import { emitter } from '@/renderer/utils/emitter';
+import { useMessageList } from '../hooks';
 
 // One entry per `IMessageTips['type']`. `info` was missing, and the render
 // falls back to `warning`, so every informational tip was drawn with the alarm
@@ -62,6 +65,8 @@ const resolveAgentTipBody = (
 
 const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
   const { t } = useTranslation();
+  const conversation = useConversationContextSafe();
+  const messages = useMessageList();
   const { content, type, code, params } = message.content;
   const structuredError = type === 'error' ? message.content.error : undefined;
   const localizedTipBody = resolveAgentTipBody(content, code, params, t);
@@ -71,16 +76,27 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
   // The report chip stays hidden for errors that opt out via
   // feedback_recommended=false (user-environment problems the team can't fix).
   const shouldShowFeedback = type === 'error' && structuredError?.feedback_recommended !== false;
+  const isKelChat = conversation?.type === 'acp' && (!conversation.assistantId || conversation.assistantId === 'kel');
+  const isModelTimeout = structuredError?.code === 'USER_LLM_PROVIDER_TIMEOUT';
+  const messageIndex = messages.findIndex((item) => item.id === message.id);
+  const previousUserText = messageIndex < 0 ? undefined : messages.slice(0, messageIndex).reverse().find(
+    (item) => item.type === 'text' && item.position === 'right' && !item.hidden
+  );
+  const retryText = previousUserText?.type === 'text' ? previousUserText.content.content.trim() : '';
+  const canRetry = isKelChat && structuredError?.retryable === true && Boolean(retryText) &&
+    !/\[\[AION_FILES\]\]|@@/.test(retryText) && !conversation.hideSendBox;
 
   if (structuredError) {
     const errorCode = structuredError.code;
     const ownership = structuredError.ownership;
-    const title = errorCode
+    const title = isKelChat && isModelTimeout ? t('conversation.agentError.fallbackTitle') : errorCode
       ? t(`conversation.agentError.codes.${errorCode}.title`, {
           defaultValue: t('conversation.agentError.fallbackTitle'),
         })
       : t('conversation.agentError.fallbackTitle');
-    const body = errorCode
+    const body = isKelChat && isModelTimeout
+      ? 'The model took too long. Try again or pick another model.'
+      : errorCode
       ? t(
           structuredError.workspacePath
             ? `conversation.agentError.codes.${errorCode}.bodyWithPath`
@@ -136,6 +152,34 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
         ...(structuredError.rawError ? { rawError: structuredError.rawError } : {}),
       },
     };
+
+    if (isKelChat) return (
+      <section className='kel-chat-agent-error' role='alert' data-testid='kel-chat-agent-error'>
+        <div className='kel-chat-agent-error__heading'>
+          {icon.error}
+          <strong>{title}</strong>
+        </div>
+        <p className='kel-chat-agent-error__body'>{body}</p>
+        {(canRetry || isModelTimeout) && (
+          <div className='kel-chat-agent-error__actions'>
+            {canRetry && <button type='button' className='kel-chat-agent-error__retry' onClick={() => emitter.emit('agent.error.retry', retryText, message.conversation_id)}>Try again</button>}
+            {isModelTimeout && <button type='button' className='kel-chat-agent-error__model' onClick={() => emitter.emit('agent.error.pick-model', message.conversation_id)}>Pick another model</button>}
+          </div>
+        )}
+        {(detailParts.length > 0 || ownershipLabel || retryHint || resolutionHint || shouldShowFeedback) && (
+          <details className='kel-chat-agent-error__details'>
+            <summary aria-label={t('common.technical_details')}>{t('common.technical_details')}</summary>
+            <div className='kel-chat-agent-error__diagnostics'>
+              {ownershipLabel && <span>{ownershipLabel}</span>}
+              {retryHint && <span>{retryHint}</span>}
+              {resolutionHint && <span>{resolutionHint}</span>}
+              {detailParts.length > 0 && <span>{detailParts.join('\n')}</span>}
+              {shouldShowFeedback && <FeedbackButton module='conversation-session' feedbackTags={feedbackTags} feedbackExtra={feedbackExtra} />}
+            </div>
+          </details>
+        )}
+      </section>
+    );
 
     return (
       <div className='w-full'>
