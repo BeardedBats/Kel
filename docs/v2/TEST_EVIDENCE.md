@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current Chat approval package check (2026-09-25)
+
+[The current approval record](evidence/figma-full-audit/CHAT_APPROVAL_CURRENT_REVISION.md) compares live desktop `273:1911` and mobile `299:11950` with an isolated engine and disposable package. Pending geometry measured 920×169 at 1440px and 361×302 at 393px, about 1px from the frame bounds. At 320px, the 288px card did not overflow. Sampled card colors were within 3 RGB values. The packaged Details control opened, and the settled card had no live decision buttons. The engine's announcement stayed durable without duplicate host text. The engine approval suite passed **28 tests**; focused renderer approval tests passed **2 tests**; TypeScript, frozen engine build, Electron Vite, and disposable Windows packaging passed. No packaged decision was submitted. The canonical App and Data remained untouched.
+
 ## Current Chat package check (2026-09-25)
 
 [The current Chat record](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) compares live desktop Chat `185:4284`, mobile Chat `299:11571`, and mobile drawer `299:11583` with a disposable package. A two-turn fixture lived only in isolated `%TEMP%` data. The package showed the four mobile reply actions, a 280px user message, a 46px composer, and drawer controls within about 1px of Figma. Search opened its dialog. Document widths matched 393, 320, and 1440px viewports; no page errors occurred. Desktop TypeScript passed, focused navigation/composer tests passed **2 files / 9 tests**, and Electron Vite plus the disposable builder passed. This does not prove the full desktop plan, phone chrome, live model response, or four-tab Kibble placement. The canonical App and Data were untouched.

@@ -203,7 +203,7 @@ def _access_item(row, ann):
     }
 
 
-def _action_item(row, action, ann, now):
+def _action_item(row, action, ann, now, conversation_title=''):
     status = row['status']
     if status == 'PENDING':
         state = 'expired' if float(row.get('expires') or 0) < now else 'pending'
@@ -222,7 +222,9 @@ def _action_item(row, action, ann, now):
         'resolved_at': None, 'job_id': row['job_id'],
         'message_seq': ann.get('message_seq') if ann else None,
         'message_at': ann.get('message_at') if ann else None,
-        'title': 'Kel needs your OK to continue', 'target': None, 'grant_kind': None,
+        'title': 'Kel needs your OK to continue',
+        'target': str(action.get('command') or '').strip() or None,
+        'context_title': conversation_title or None, 'grant_kind': None,
         'what': '', 'why': '', 'benefit': '', 'fallback': '',
         'summary': plain_summary(action),
         'repeatable': not bool(action.get('unrepeatable_request')),
@@ -241,6 +243,8 @@ def items(store, conversation_id='main'):
     out = []
     with contextlib.closing(store.connect()) as db:
         ids = _job_ids_for(db, conversation_id)
+        conversation = db.execute('SELECT title FROM conversations WHERE id=?', (conversation_id,)).fetchone()
+        conversation_title = str(conversation['title'] or '').strip() if conversation else ''
         announcements = {(row['kind'], str(row['ref_id'])): dict(row) for row in db.execute(
             'SELECT a.kind, a.ref_id, a.message_seq, a.created, m.at AS message_at '
             'FROM approval_announcements a LEFT JOIN messages m ON m.seq=a.message_seq '
@@ -265,7 +269,8 @@ def items(store, conversation_id='main'):
                 except (TypeError, ValueError):
                     action = {}
                 out.append(_action_item(row, action,
-                                        announcements.get((ACTION, str(row['id']))), now))
+                                        announcements.get((ACTION, str(row['id']))), now,
+                                        conversation_title))
     out.sort(key=lambda item: -(item.get('message_at') or item.get('created') or 0))
     return out
 

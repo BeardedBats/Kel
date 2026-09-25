@@ -6,6 +6,8 @@ The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 m
 
 The [current Chat package check](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) repaired the mobile two-line user turn, four reply actions, composer height, and drawer layout. Its synthetic conversation has no real project metrics or agent plan. The Windows title bar differs from Figma's iPhone status/home chrome. Attachment and mic controls remain visible in the mobile composer, and Kibble remains a fifth tab pending a product decision. Desktop Chat and mobile drawer screenshots are scoped comparison evidence, not full Chat parity.
 
+The [current approval package check](evidence/figma-full-audit/CHAT_APPROVAL_CURRENT_REVISION.md) covers pending and settled visual states with isolated engine records. It does not prove a packaged live decision, expired state, or the approval-details overlay against its separate Figma frame. The current Chat tool-call, plan, error, and reconnecting frames remain open.
+
 ## Current canonical limits (2026-09-24)
 
 The older r29 limits below are historical. The canonical app and durable data paths are in `docs/CONSOLIDATION_STATUS.md`. r61 System and r62 Appearance have scoped packaged evidence. Exact Figma parity remains open, including Tools status and interactive states, populated and enabled states, Light labels, and real phone rendering. Live Google sign-in, personal services, remote first response, fresh Muse speech, and a physical iPhone remain unverified.
