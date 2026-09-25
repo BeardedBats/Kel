@@ -33,34 +33,57 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   onDeleteServer,
   onOAuthLogin,
 }) => {
+  const checkedAt = server.updated_at
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
+        server.updated_at
+      )
+    : null;
+
   return (
-    <Collapse
-      key={server.id}
-      activeKey={isCollapsed ? ['1'] : []}
-      onChange={onToggleCollapse}
-      className='mb-4 [&_div.arco-collapse-item-header-title]:flex-1'
-    >
-      <Collapse.Item
-        header={
-          <McpServerHeader
-            server={server}
-            isTestingConnection={isTestingConnection}
-            oauthStatus={oauthStatus}
-            isLoggingIn={isLoggingIn}
-            isReadOnly={isReadOnly}
-            onTestConnection={onTestConnection}
-            onEditServer={onEditServer}
-            onDeleteServer={onDeleteServer}
-            onOAuthLogin={onOAuthLogin}
-          />
-        }
-        name='1'
-        className={'[&_div.arco-collapse-item-content-box]:py-3'}
+    <>
+      <Collapse
+        key={server.id}
+        activeKey={isCollapsed ? ['1'] : []}
+        onChange={onToggleCollapse}
+        className='mb-4 [&_div.arco-collapse-item-header-title]:flex-1'
       >
-        {!isReadOnly && <div className='kel-tools-mcp-mobile-action'><Button size='mini' loading={isTestingConnection} onClick={() => onTestConnection(server)}>Check connection</Button></div>}
-        <McpServerToolsList server={server} />
-      </Collapse.Item>
-    </Collapse>
+        <Collapse.Item
+          header={
+            <McpServerHeader
+              server={server}
+              isTestingConnection={isTestingConnection}
+              oauthStatus={oauthStatus}
+              isLoggingIn={isLoggingIn}
+              isReadOnly={isReadOnly}
+              onTestConnection={onTestConnection}
+              onEditServer={onEditServer}
+              onDeleteServer={onDeleteServer}
+              onOAuthLogin={onOAuthLogin}
+            />
+          }
+          name='1'
+          className={'[&_div.arco-collapse-item-content-box]:py-3'}
+        >
+          {!isReadOnly && (
+            <div className='kel-tools-mcp-mobile-action'>
+              <Button size='mini' loading={isTestingConnection} onClick={() => onTestConnection(server)}>
+                Check connection
+              </Button>
+            </div>
+          )}
+          <McpServerToolsList server={server} />
+        </Collapse.Item>
+      </Collapse>
+      {server.last_test_status === 'error' && (
+        <div className='kel-tools-mcp-error-detail'>
+          <div className='kel-tools-mcp-error-note'>
+            <span aria-hidden='true'>⚠</span>
+            <span>Configuration may be incorrect. Review the MCP JSON and test again.</span>
+          </div>
+          {checkedAt && <span className='kel-tools-mcp-checked'>Checked {checkedAt}</span>}
+        </div>
+      )}
+    </>
   );
 };
 

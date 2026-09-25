@@ -1,11 +1,10 @@
 import type { IMcpServer } from '@/common/config/storage';
 import { Button, Dropdown, Menu, Popover, Tooltip } from '@arco-design/web-react';
-import { Check, CloseSmall, Info, LoadingOne, Refresh, Write, DeleteFour, SettingOne, Login } from '@icon-park/react';
+import { Write, DeleteFour, Login, Plug, More } from '@icon-park/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { McpOAuthStatus } from '@/renderer/hooks/mcp/useMcpOAuth';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
-import { iconColors } from '@/renderer/styles/colors';
 import { formatDateTime } from '@/renderer/services/i18n/format';
 
 /**
@@ -26,34 +25,6 @@ interface McpServerHeaderProps {
   onDeleteServer: (serverId: string) => void;
   onOAuthLogin?: (server: IMcpServer) => void;
 }
-
-const getStatusIcon = (
-  last_test_status?: IMcpServer['last_test_status'],
-  oauthStatus?: McpOAuthStatus,
-  isTestingConnection?: boolean
-) => {
-  if (isTestingConnection || last_test_status === 'testing' || oauthStatus?.isChecking) {
-    return <LoadingOne fill={iconColors.primary} className='h-[24px]' />;
-  }
-
-  if (last_test_status === 'error') {
-    return <CloseSmall fill={iconColors.danger} className='h-[24px]' />;
-  }
-
-  if (oauthStatus?.needsLogin) {
-    return <span className='text-orange-500 text-xl font-bold leading-none'>△</span>;
-  }
-
-  if (last_test_status === 'connected') {
-    return <Check fill={iconColors.success} className='h-[24px] items-center' />;
-  }
-
-  if (oauthStatus?.isAuthenticated) {
-    return <Check fill={iconColors.success} className='h-[24px] items-center' />;
-  }
-
-  return <Info theme='outline' fill={iconColors.secondary} className='h-[24px]' />;
-};
 
 const formatStatusTimestamp = (timestamp: number | undefined, locale: string): string | null => {
   if (!timestamp) {
@@ -166,83 +137,101 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   const oauthCapable = supportsOAuth(server);
   const needsLogin = oauthCapable && oauthStatus?.needsLogin;
   const statusText = getStatusText(server, server.last_test_status, oauthStatus, isTestingConnection, t);
-  const statusIcon = getStatusIcon(server.last_test_status, oauthStatus, isTestingConnection);
   const statusPopoverContent = getStatusPopoverContent(server, i18n.language, t);
 
   const isError = server.last_test_status === 'error';
-  const mobileStatus = isTestingConnection || oauthStatus?.isChecking
-    ? 'Checking'
-    : isError || needsLogin
-      ? 'Needs setup'
-      : server.last_test_status === 'connected' || oauthStatus?.isAuthenticated
-        ? 'Connected'
-        : 'Not tested';
+  const visualStatus =
+    isTestingConnection || oauthStatus?.isChecking
+      ? 'Checking'
+      : isError || needsLogin
+        ? isError
+          ? 'Check failed'
+          : 'Sign in needed'
+        : server.last_test_status === 'connected' || oauthStatus?.isAuthenticated
+          ? 'Connected'
+          : 'Not tested';
+  const statusKind = isError
+    ? 'error'
+    : needsLogin
+      ? 'attention'
+      : visualStatus === 'Connected'
+        ? 'connected'
+        : 'muted';
 
   return (
     <div className='kel-tools-mcp-header flex items-center justify-between group'>
       <div className='kel-tools-mcp-name flex items-center gap-2'>
+        <Plug className='kel-tools-mcp-plug' size='14' />
         <span>{MCP_DISPLAY_NAMES[server.name] ?? server.name}</span>
-        <span className='kel-tools-mcp-mobile-status' data-status={mobileStatus === 'Connected' ? 'connected' : mobileStatus === 'Needs setup' ? 'attention' : 'muted'}>{mobileStatus}</span>
+      </div>
+      <div className='kel-tools-mcp-status' data-status={statusKind}>
         {statusPopoverContent ? (
           <Popover className='kel-tools-status-popover' content={statusPopoverContent} trigger='hover' position='top'>
-            <span className='kel-tools-mcp-status-icon flex items-center cursor-default'>{statusIcon}</span>
+            <span>{visualStatus}</span>
           </Popover>
         ) : (
           <Tooltip content={statusText} position='top'>
-            <span className='kel-tools-mcp-status-icon flex items-center cursor-default'>{statusIcon}</span>
+            <span>{visualStatus}</span>
           </Tooltip>
         )}
-        {isError && <FeedbackButton module='mcp-tools' />}
+      </div>
+      <div className='kel-tools-mcp-actions' onClick={(e) => e.stopPropagation()}>
+        {isError && <FeedbackButton module='mcp-tools' label='Report issue' />}
         {!isReadOnly && needsLogin && onOAuthLogin && (
           <Button
             size='mini'
             type='primary'
             icon={<Login size={'14'} />}
-            title={t('settings.mcpLogin') || 'Login'}
+            title='Sign in'
             loading={isLoggingIn}
             onClick={() => onOAuthLogin(server)}
           >
-            {t('settings.mcpLogin') || 'Login'}
+            Sign in
           </Button>
         )}
         {!isReadOnly && !needsLogin && (
           <Button
             className='kel-tools-mcp-retest'
             size='mini'
-            icon={<Refresh size={'14'} />}
             title={t('settings.mcpTestConnection')}
             loading={isTestingConnection}
             onClick={() => onTestConnection(server)}
-          />
+          >
+            Test
+          </Button>
+        )}
+        {!isReadOnly && !server.builtin && (
+          <Dropdown
+            trigger='click'
+            droplist={
+              <Menu>
+                <Menu.Item key='edit' onClick={() => onEditServer(server)}>
+                  <div className='flex items-center gap-2'>
+                    <Write size={'14'} />
+                    {t('settings.mcpEditServer')}
+                  </div>
+                </Menu.Item>
+                <Menu.Item key='delete' onClick={() => onDeleteServer(server.id)}>
+                  <div className='flex items-center gap-2 text-red-500'>
+                    <DeleteFour size={'14'} />
+                    {t('settings.mcpDeleteServer')}
+                  </div>
+                </Menu.Item>
+              </Menu>
+            }
+          >
+            <Button
+              className='kel-tools-mcp-more'
+              size='mini'
+              icon={<More size={'14'} />}
+              aria-label='Server actions'
+            />
+          </Dropdown>
         )}
       </div>
-      {!isReadOnly && (
-        <div className='flex items-center gap-2 invisible group-hover:visible' onClick={(e) => e.stopPropagation()}>
-          {!server.builtin && (
-            <Dropdown
-              trigger='hover'
-              droplist={
-                <Menu>
-                  <Menu.Item key='edit' onClick={() => onEditServer(server)}>
-                    <div className='flex items-center gap-2'>
-                      <Write size={'14'} />
-                      {t('settings.mcpEditServer')}
-                    </div>
-                  </Menu.Item>
-                  <Menu.Item key='delete' onClick={() => onDeleteServer(server.id)}>
-                    <div className='flex items-center gap-2 text-red-500'>
-                      <DeleteFour size={'14'} />
-                      {t('settings.mcpDeleteServer')}
-                    </div>
-                  </Menu.Item>
-                </Menu>
-              }
-            >
-              <Button size='mini' icon={<SettingOne size={'14'} />} />
-            </Dropdown>
-          )}
-        </div>
-      )}
+      <span className='kel-tools-mcp-chevron' aria-hidden='true'>
+        ›
+      </span>
     </div>
   );
 };

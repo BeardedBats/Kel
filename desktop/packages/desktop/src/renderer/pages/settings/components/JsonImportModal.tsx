@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
+import { Copy } from '@icon-park/react';
 import { useThemeContext } from '@/renderer/hooks/context/ThemeContext';
 import AionModal from '@/renderer/components/base/AionModal';
 import { parseMcpJsonImport, type ParsedMcpJsonServer } from '../ToolsSettings/mcpJsonImport';
@@ -24,6 +25,14 @@ interface ValidationResult {
 }
 
 type ImportableMcpServer = Omit<IMcpServer, 'id' | 'created_at' | 'updated_at'>;
+const SAMPLE_JSON = `{
+  "mcpServers": {
+    "weather": {
+      "command": "npx",
+      "args": ["-y", "@example/weather-mcp"]
+    }
+  }
+}`;
 
 const SPLITTABLE_STDIO_LAUNCHERS = new Set(['npx', 'pnpx', 'bunx', 'uvx', 'uv', 'node', 'python', 'python3', 'deno']);
 
@@ -325,16 +334,28 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
   return (
     <AionModal
       variant='standard'
+      className='kel-tools-json-modal'
       visible={visible}
       onCancel={onCancel}
-      onOk={handleSubmit}
-      okButtonProps={{ disabled: !validation.isValid || submitting, loading: submitting }}
-      header={{ title: server ? t('settings.mcpEditServer') : t('settings.mcpImportFromJSON'), showClose: true }}
+      footer={{
+        render: () => (
+          <div className='kel-tools-json-modal__actions'>
+            <Button onClick={onCancel}>Cancel</Button>
+            <Button type='primary' onClick={() => void handleSubmit()} disabled={!validation.isValid || submitting} loading={submitting}>
+              {server ? 'Save server' : 'Add server'}
+            </Button>
+          </div>
+        ),
+      }}
+      header={{
+        title: server ? t('settings.mcpEditServer') : 'Add MCP server',
+        subtitle: server ? undefined : 'Paste the JSON from the server’s docs.',
+        showClose: false,
+      }}
       style={{ width: 600 }}
     >
       <div className='space-y-12px'>
         <div>
-          <div className='mb-2 text-sm text-t-secondary'>{t('settings.mcpImportPlaceholder')}</div>
           {!validation.isValid && jsonInput.trim() && (
             <Alert
               className='mb-3'
@@ -346,19 +367,11 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
           <div className='relative'>
             <CodeMirror
               value={jsonInput}
-              height='300px'
+              height='170px'
               theme={theme}
               extensions={[json()]}
               onChange={(value: string) => setJsonInput(value)}
-              placeholder={`{
-  "mcpServers": {
-    "weather": {
-      "command": "uv",
-      "args": ["--directory", "/path/to/weather", "run", "weather.py"],
-      "description": "Weather information server"
-    }
-  }
-}`}
+              placeholder={SAMPLE_JSON}
               basicSetup={{
                 lineNumbers: true,
                 foldGutter: true,
@@ -369,25 +382,26 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
                 fontSize: '13px',
                 border: validation.isValid || !jsonInput.trim() ? '1px solid var(--bg-3)' : '1px solid var(--danger)',
                 borderRadius: '6px',
-                marginBottom: '20px',
+                marginBottom: '0',
                 overflow: 'hidden',
               }}
               className='[&_.cm-editor]:rounded-[6px]'
             />
-            {jsonInput && (
-              <Button
+            <Button
                 size='mini'
                 type='outline'
-                className='absolute top-2 end-2 z-10'
+                className='kel-tools-json-modal__copy absolute top-2 end-2 z-10'
+                aria-label='Copy MCP JSON'
                 onClick={() => {
                   const copyToClipboard = async () => {
                     try {
+                      const copyValue = jsonInput || SAMPLE_JSON;
                       if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(jsonInput);
+                        await navigator.clipboard.writeText(copyValue);
                       } else {
                         // Fallback to legacy method 降级到传统方法
                         const textArea = document.createElement('textarea');
-                        textArea.value = jsonInput;
+                        textArea.value = copyValue;
                         textArea.style.position = 'fixed';
                         textArea.style.left = '-9999px';
                         textArea.style.top = '-9999px';
@@ -412,30 +426,12 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
                   backdropFilter: 'blur(4px)',
                 }}
               >
-                {copyStatus === 'success'
-                  ? t('common.copySuccess')
-                  : copyStatus === 'error'
-                    ? t('common.copyFailed')
-                    : t('common.copy')}
+                {copyStatus === 'idle' ? <Copy size={14} /> : copyStatus === 'success' ? 'Copied' : 'Copy failed'}
               </Button>
-            )}
           </div>
         </div>
 
-        <Alert
-          type='info'
-          showIcon
-          content={
-            <div>
-              <div>{t('settings.mcpImportTips')}</div>
-              <ul className='list-disc ps-5 mt-2 space-y-1 text-sm'>
-                <li>{t('settings.mcpImportTip1')}</li>
-                <li>{t('settings.mcpImportTip2')}</li>
-                <li>{t('settings.mcpImportTip3')}</li>
-              </ul>
-            </div>
-          }
-        />
+        <p className='kel-tools-json-modal__hint'>Each server needs a “command” or a “url”. You can add several at once.</p>
       </div>
     </AionModal>
   );

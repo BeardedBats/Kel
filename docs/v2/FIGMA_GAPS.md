@@ -1,5 +1,20 @@
 # Active Figma gaps after audit 2
 
+## Current revision gaps (2026-09-25)
+
+The live desktop page is `319:2`; the live mobile page is `319:3858`. The older source IDs and findings below are **SUPERSEDED BY FIGMA REVISION** where they describe presentation. Keep them as history. The [current frame inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) tracks the new source.
+
+| State | Closest current Figma source | Inference or open decision | Implementation |
+| --- | --- | --- | --- |
+| MCP server reports no tools | Mobile detail `315:3004` and mobile Card/List row components `213:3` | Show a neutral `No tools reported` line in the same card. Do not invent tool names. | `ToolsModalContent.tsx` |
+| Runtime MCP error text and check time vary | Desktop Tools `313:2441`; mobile detail `315:3004` | Use the Figma warning surface and real check time. Keep the longer diagnostic in the existing status popover. | `McpServerItem.tsx`, `ToolsModalContent.tsx` |
+| Mobile Kibble entry | Current mobile Chat `299:11571` and Tools `315:2842` show four tabs without Kibble; current Components page still includes an older five-tab variant. | Nick's placement choice is pending. Preserve the existing fifth Kibble tab until a route in the four-tab layout is agreed. | `KelMobileTabs.tsx` |
+| CLI import dialog | Desktop Tools `313:3911` | Figma uses one selectable list with per-server status and an `Import N` action. Production still uses a three-step flow. Keep the working import contract while replacing its presentation. | `OneClickImportModal.tsx` |
+| Failed-server report dialog | Desktop Tools `313:4441` | Figma names the failed server and shows a focused report field and attachment note. Production opens the general feedback dialog; inspect its data and send path before changing the surface. | `FeedbackButton.tsx`, feedback context |
+| Sign-in-needed Tools row | Desktop `313:2441`, mobile `315:2842` | A real OAuth-required local fixture was not created. The row uses existing OAuth state, but the current revision's populated sign-in state lacks packaged proof. | `McpServerHeader.tsx` |
+| Populated mobile server tools | Mobile detail `315:3004` | The isolated failing server reports zero tools. The neutral empty line is an inference; verify live tool rows with a safe fixture. | `ToolsModalContent.tsx` |
+
+
 **2026-09-23 update:** this file is a historical audit of the older `76:2` page. The current FINAL desktop page is `185:2`, and Figma now has 28 mobile screens on `213:2`. The [51-screen audit](evidence/figma-full-audit/README.md) supersedes the “No mobile final frame” row and tracks current gaps.
 
 Source: Kel Design System `BlpVvZGuc9j9HhxUojIiJI`, final screens on page `76:2`.

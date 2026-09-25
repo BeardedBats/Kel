@@ -10,8 +10,9 @@ import { removeImageGenerationEnvKeys, resolveImageGenerationMcpEnv } from '@/co
 import { mcpService } from '@/common/adapter/ipcBridge';
 import { type IMcpServer, BUILTIN_IMAGE_GEN_ID, BUILTIN_IMAGE_GEN_NAME } from '@/common/config/storage';
 import { isImageGenSupported } from '@/common/utils/imageModelAllowlist';
-import { Divider, Form, Tooltip, Message, Modal, Switch } from '@arco-design/web-react';
+import { Button, Divider, Form, Tooltip, Message, Switch } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useConfigModelListWithImage from '@/renderer/hooks/agent/useConfigModelListWithImage';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
@@ -19,6 +20,8 @@ import AionSelect from '@/renderer/components/base/AionSelect';
 import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
 import AddMcpServerModal from '@/renderer/pages/settings/components/AddMcpServerModal';
 import McpServerItem from '@/renderer/pages/settings/ToolsSettings/McpServerItem';
+import FeedbackButton from '@/renderer/components/base/FeedbackButton';
+import AionModal from '@/renderer/components/base/AionModal';
 import {
   useMcpServers,
   useMcpConnection,
@@ -53,10 +56,16 @@ const ModalMcpManagementSection: React.FC<{
   isPageMode?: boolean;
 }> = ({ message, mcpServers, extensionMcpServers, setMcpServers, saveMcpServers, isPageMode }) => {
   const { t } = useTranslation();
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  const selectedServerId = new URLSearchParams(search).get('mcp');
   const { oauthStatus, loggingIn, checkOAuthStatus, markLoginRequired, clearLoginRequired, login } = useMcpOAuth();
   const visibleMcpServers = useMemo(
     () => mcpServers.filter((server) => !isBuiltinImageGenServer(server)),
     [mcpServers]
+  );
+  const selectedServer = [...visibleMcpServers, ...extensionMcpServers].find(
+    (server) => server.id === selectedServerId
   );
 
   const handleAuthRequired = useCallback(
@@ -91,6 +100,17 @@ const ModalMcpManagementSection: React.FC<{
     hideDeleteConfirm,
     toggleServerCollapse,
   } = useMcpModal();
+  const openMobileServer = (server: IMcpServer) => {
+    if (window.innerWidth >= 768) {
+      toggleServerCollapse(server.id);
+      return;
+    }
+    const displayName = server.name === 'aionui-browser' ? 'Kel Browser' : server.name;
+    navigate({
+      pathname: '/settings/tools',
+      search: `?mcp=${encodeURIComponent(server.id)}&name=${encodeURIComponent(displayName)}`,
+    });
+  };
   const { handleAddMcpServer, handleBatchImportMcpServers, handleEditMcpServer, handleDeleteMcpServer } =
     useMcpServerCRUD(saveMcpServers);
 
@@ -161,11 +181,11 @@ const ModalMcpManagementSection: React.FC<{
   const renderAddButton = () => {
     return (
       <SettingsCreateMenu
-        label={t('settings.mcpAddServer')}
+        label='Add MCP server'
         extraActions={[
           {
             key: 'json',
-            label: t('settings.mcpImportFromJSON'),
+            label: 'Paste JSON',
             onClick: () => {
               setImportMode('json');
               showAddMcpModal();
@@ -173,7 +193,7 @@ const ModalMcpManagementSection: React.FC<{
           },
           {
             key: 'oneclick',
-            label: t('settings.mcpOneKeyImport'),
+            label: 'Import from a CLI',
             onClick: () => {
               setImportMode('oneclick');
               showAddMcpModal();
@@ -183,57 +203,114 @@ const ModalMcpManagementSection: React.FC<{
       />
     );
   };
+  const selectedStatus =
+    selectedServer?.last_test_status === 'error'
+      ? 'Check failed'
+      : oauthStatus[selectedServer?.id || '']?.needsLogin
+        ? 'Sign in needed'
+        : selectedServer?.last_test_status === 'connected'
+          ? 'Connected'
+          : 'Not tested';
+  const selectedCheckedAt = selectedServer?.updated_at
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
+        selectedServer.updated_at
+      )
+    : null;
 
   return (
     <div className='kel-tools-mcp-layout flex flex-col gap-16px min-h-0'>
-      <div className='flex gap-8px items-center justify-between'>
-        <ShellSourceCardHeader title='MCP Tools Configuration' />
-        <div>{renderAddButton()}</div>
-      </div>
-
-      <div className='flex-1 min-h-0'>
-        {visibleMcpServers.length === 0 && extensionMcpServers.length === 0 ? (
-          <div className='py-24px text-center text-t-secondary text-14px border border-dashed border-border-2 rd-12px'>
-            {t('settings.mcpNoServersFound')}
-          </div>
-        ) : (
-          <AionScrollArea
-            className={classNames('max-h-360px', isPageMode && 'max-h-none')}
-            disableOverflow={isPageMode}
-          >
-            <div className='space-y-12px'>
-              {visibleMcpServers.map((server) => (
-                <McpServerItem
-                  key={server.id}
-                  server={server}
-                  isCollapsed={mcpCollapseKey[server.id] || false}
-                  isTestingConnection={testingServers[server.id] || false}
-                  oauthStatus={oauthStatus[server.id]}
-                  isLoggingIn={loggingIn[server.id]}
-                  onToggleCollapse={() => toggleServerCollapse(server.id)}
-                  onTestConnection={handleTestMcpConnection}
-                  onEditServer={showEditMcpModal}
-                  onDeleteServer={showDeleteConfirm}
-                  onOAuthLogin={handleOAuthLogin}
-                />
-              ))}
-              {extensionMcpServers.map((server) => (
-                <McpServerItem
-                  key={server.id}
-                  server={server}
-                  isCollapsed={mcpCollapseKey[server.id] || false}
-                  isTestingConnection={false}
-                  onToggleCollapse={() => toggleServerCollapse(server.id)}
-                  onTestConnection={handleTestMcpConnection}
-                  onEditServer={() => {}}
-                  onDeleteServer={() => {}}
-                  isReadOnly
-                />
-              ))}
+      {selectedServer ? (
+        <div className='kel-tools-mobile-detail'>
+          <section className='kel-tools-mobile-detail__card'>
+            <h2>Status</h2>
+            <strong data-status={selectedStatus}>{selectedStatus}</strong>
+            {selectedCheckedAt && <span>Checked {selectedCheckedAt}</span>}
+          </section>
+          {selectedServer.last_test_status === 'error' && (
+            <div className='kel-tools-mobile-detail__warning'>
+              <span aria-hidden='true'>⚠</span>
+              <span>Configuration may be incorrect. Review the MCP JSON and test again.</span>
             </div>
-          </AionScrollArea>
-        )}
-      </div>
+          )}
+          <section className='kel-tools-mobile-detail__card'>
+            <h2>Tools</h2>
+            {selectedServer.tools?.length ? (
+              selectedServer.tools.map((tool) => (
+                <div className='kel-tools-mobile-detail__tool' key={tool.name}>
+                  <span>{tool.name}</span>
+                  <small>{tool.description || t('settings.mcpNoDescription')}</small>
+                </div>
+              ))
+            ) : (
+              <p className='kel-tools-mobile-detail__empty'>No tools reported</p>
+            )}
+          </section>
+          <div className='kel-tools-mobile-detail__actions'>
+            <button
+              type='button'
+              onClick={() => void handleTestMcpConnection(selectedServer)}
+              disabled={testingServers[selectedServer.id]}
+            >
+              {testingServers[selectedServer.id] ? 'Checking' : 'Test again'}
+            </button>
+            <FeedbackButton module='mcp-tools' label='Report issue' />
+            {!selectedServer.builtin && (
+              <button type='button' onClick={() => showDeleteConfirm(selectedServer.id)}>
+                Delete server
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className='kel-tools-add-action'>{renderAddButton()}</div>
+          <ShellSourceCardHeader title='MCP servers' />
+
+          <div className='flex-1 min-h-0'>
+            {visibleMcpServers.length === 0 && extensionMcpServers.length === 0 ? (
+              <div className='py-24px text-center text-t-secondary text-14px border border-dashed border-border-2 rd-12px'>
+                {t('settings.mcpNoServersFound')}
+              </div>
+            ) : (
+              <AionScrollArea
+                className={classNames('max-h-360px', isPageMode && 'max-h-none')}
+                disableOverflow={isPageMode}
+              >
+                <div className='space-y-12px'>
+                  {visibleMcpServers.map((server) => (
+                    <McpServerItem
+                      key={server.id}
+                      server={server}
+                      isCollapsed={mcpCollapseKey[server.id] || false}
+                      isTestingConnection={testingServers[server.id] || false}
+                      oauthStatus={oauthStatus[server.id]}
+                      isLoggingIn={loggingIn[server.id]}
+                      onToggleCollapse={() => openMobileServer(server)}
+                      onTestConnection={handleTestMcpConnection}
+                      onEditServer={showEditMcpModal}
+                      onDeleteServer={showDeleteConfirm}
+                      onOAuthLogin={handleOAuthLogin}
+                    />
+                  ))}
+                  {extensionMcpServers.map((server) => (
+                    <McpServerItem
+                      key={server.id}
+                      server={server}
+                      isCollapsed={mcpCollapseKey[server.id] || false}
+                      isTestingConnection={false}
+                      onToggleCollapse={() => openMobileServer(server)}
+                      onTestConnection={handleTestMcpConnection}
+                      onEditServer={() => {}}
+                      onDeleteServer={() => {}}
+                      isReadOnly
+                    />
+                  ))}
+                </div>
+              </AionScrollArea>
+            )}
+          </div>
+        </>
+      )}
 
       <AddMcpServerModal
         visible={showMcpModal}
@@ -249,23 +326,34 @@ const ModalMcpManagementSection: React.FC<{
         importMode={importMode}
       />
 
-      <Modal
-        title={t('settings.mcpDeleteServer')}
+      <AionModal
+        variant='standard'
+        className='kel-tools-delete-modal'
+        header={{
+          title: `Delete ${mcpServers.find((server) => server.id === serverToDelete)?.name || 'server'}?`,
+          subtitle: 'Kel stops using its tools. You can add it again later.',
+          showClose: false,
+        }}
         visible={deleteConfirmVisible}
         onCancel={hideDeleteConfirm}
-        onOk={handleConfirmDelete}
-        okButtonProps={{ status: 'danger' }}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-      >
-        <p>{t('settings.mcpDeleteConfirm')}</p>
-      </Modal>
+        style={{ width: 460 }}
+        footer={{
+          render: () => (
+            <div className='kel-tools-delete-modal__actions'>
+              <Button onClick={hideDeleteConfirm}>Keep</Button>
+              <Button status='danger' onClick={() => void handleConfirmDelete()}>Delete server</Button>
+            </div>
+          ),
+        }}
+      />
     </div>
   );
 };
 
 const ToolsModalContent: React.FC = () => {
   const { t } = useTranslation();
+  const { search } = useLocation();
+  const selectedMobileServerId = new URLSearchParams(search).get('mcp');
   const [rawMcpMessage, mcpMessageContext] = Message.useMessage({ maxCount: 10 });
   // ELECTRON-1A1: guard message calls so async MCP callbacks that resolve after this
   // component unmounts don't hit a null Arco context holder (null.addInstance crash).
@@ -509,94 +597,106 @@ const ToolsModalContent: React.FC = () => {
             </div>
           </div>
           {/* 图像生成 */}
-          <div className='kel-shell-settings-card kel-tools-image-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
-            <ShellSourceCardHeader title='Image Generation' />
-            <div className='flex items-center justify-between mb-16px'>
-              <div><span className='text-14px text-t-primary'>Image Generation</span></div>
-              <Switch
-                disabled={
-                  isUpdatingImageGeneration ||
-                  isImageGenerationServerLoading ||
-                  !builtinImageGenServer ||
-                  (!builtinImageGenServer.enabled && isImageGenerationModelUnavailable)
-                }
-                checked={Boolean(builtinImageGenServer?.enabled) && !isImageGenerationServerLoading}
-                loading={isImageGenerationServerLoading}
-                onChange={handleImageGenerationToggle}
-              />
-            </div>
+          {!selectedMobileServerId && (
+            <div className='kel-shell-settings-card kel-tools-image-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
+              <ShellSourceCardHeader title='Image generation' />
+              <div className='kel-tools-image-toggle-row flex items-center justify-between'>
+                <div className='flex flex-col gap-2px'>
+                  <span className='text-14px text-t-primary'>Generate images</span>
+                  {isImageGenerationModelUnavailable && (
+                    <span className='kel-tools-image-hint'>Needs an image model first</span>
+                  )}
+                </div>
+                <Switch
+                  disabled={
+                    isUpdatingImageGeneration ||
+                    isImageGenerationServerLoading ||
+                    !builtinImageGenServer ||
+                    (!builtinImageGenServer.enabled && isImageGenerationModelUnavailable)
+                  }
+                  checked={Boolean(builtinImageGenServer?.enabled) && !isImageGenerationServerLoading}
+                  loading={isImageGenerationServerLoading}
+                  onChange={handleImageGenerationToggle}
+                />
+              </div>
 
-            <Divider className='mt-0px mb-20px' />
+              <Divider className='kel-tools-image-divider' />
 
-            <button type='button' className='kel-tools-image-mobile-row' aria-expanded={showMobileImageModel} onClick={() => setShowMobileImageModel((open) => !open)}>
-              <span>{imageGenerationModel?.use_model || '… None'}</span>
-              <span aria-hidden='true'>{showMobileImageModel ? '⌃' : '›'}</span>
-            </button>
-
-            <Form layout='horizontal' labelAlign='left' className={classNames('kel-tools-image-controls space-y-12px', showMobileImageModel && 'is-open')}>
-              <Form.Item
-                label='Image Model'
-                tooltip={
-                  <div className='space-y-4px'>
-                    <div>{t('settings.imageGenSupportedTooltipTitle')}</div>
-                    <ul className='list-disc ps-16px m-0'>
-                      <li>{t('settings.imageGenSupportedTooltipGemini')}</li>
-                      <li>{t('settings.imageGenSupportedTooltipOpenRouter')}</li>
-                      <li>{t('settings.imageGenSupportedTooltipAntigravity')}</li>
-                    </ul>
-                    <div>{t('settings.imageGenUnsupportedTooltip')}</div>
-                  </div>
-                }
+              <button
+                type='button'
+                className='kel-tools-image-mobile-row'
+                aria-expanded={imageGenerationModelList.length > 0 && showMobileImageModel}
+                onClick={() => {
+                  if (imageGenerationModelList.length === 0) navigateToSettingsTab?.('model');
+                  else setShowMobileImageModel((open) => !open);
+                }}
               >
-                {imageGenerationModelList.length > 0 ? (
-                  <AionSelect
-                    className={classNames(isImageModelMenuOpen && 'is-open')}
-                    onVisibleChange={setIsImageModelMenuOpen}
-                    triggerProps={{ className: 'kel-tools-image-popup' }}
-                    value={
-                      imageGenerationModel?.id && imageGenerationModel?.use_model
-                        ? `${imageGenerationModel.id}|${imageGenerationModel.use_model}`
-                        : undefined
+                <span>Image model</span>
+                <span>{imageGenerationModel?.use_model || 'Set up'}</span>
+              </button>
+
+              {imageGenerationModelList.length === 0 ? (
+                <div className='kel-tools-image-setup-row'>
+                  <span>Image model</span>
+                  <button type='button' onClick={() => navigateToSettingsTab?.('model')}>
+                    Set up a model
+                  </button>
+                </div>
+              ) : (
+                <Form
+                  layout='horizontal'
+                  labelAlign='left'
+                  className={classNames('kel-tools-image-controls space-y-12px', showMobileImageModel && 'is-open')}
+                >
+                  <Form.Item
+                    label='Image model'
+                    tooltip={
+                      <div className='space-y-4px'>
+                        <div>{t('settings.imageGenSupportedTooltipTitle')}</div>
+                        <ul className='list-disc ps-16px m-0'>
+                          <li>{t('settings.imageGenSupportedTooltipGemini')}</li>
+                          <li>{t('settings.imageGenSupportedTooltipOpenRouter')}</li>
+                          <li>{t('settings.imageGenSupportedTooltipAntigravity')}</li>
+                        </ul>
+                        <div>{t('settings.imageGenUnsupportedTooltip')}</div>
+                      </div>
                     }
-                    onChange={(value) => {
-                      const [platformId, modelName] = value.split('|');
-                      const platform = imageGenerationModelList.find((p) => p.id === platformId);
-                      if (platform) {
-                        handleImageGenerationModelChange({
-                          ...platform,
-                          use_model: modelName,
-                        });
-                      }
-                    }}
                   >
-                    {imageGenerationModelList.map(({ models, ...platform }) => (
-                      <AionSelect.OptGroup label={platform.name} key={platform.id}>
-                        {models.map((modelName) => (
-                          <AionSelect.Option key={platform.id + modelName} value={platform.id + '|' + modelName}>
-                            {modelName}
-                          </AionSelect.Option>
-                        ))}
-                      </AionSelect.OptGroup>
-                    ))}
-                  </AionSelect>
-                ) : (
-                  <div className='kel-tools-image-empty text-t-secondary flex items-center'>
-                    {t('settings.noAvailable')}
-                    {navigateToSettingsTab ? (
-                      <a
-                        className='text-inherit underline underline-offset-2 cursor-pointer'
-                        onClick={() => navigateToSettingsTab('model')}
-                      >
-                        {t('settings.goToModelSettings')}
-                      </a>
-                    ) : (
-                      t('settings.goToModelSettings')
-                    )}
-                  </div>
-                )}
-              </Form.Item>
-            </Form>
-          </div>
+                    <AionSelect
+                      className={classNames(isImageModelMenuOpen && 'is-open')}
+                      onVisibleChange={setIsImageModelMenuOpen}
+                      triggerProps={{ className: 'kel-tools-image-popup' }}
+                      value={
+                        imageGenerationModel?.id && imageGenerationModel?.use_model
+                          ? `${imageGenerationModel.id}|${imageGenerationModel.use_model}`
+                          : undefined
+                      }
+                      onChange={(value) => {
+                        const [platformId, modelName] = value.split('|');
+                        const platform = imageGenerationModelList.find((p) => p.id === platformId);
+                        if (platform) {
+                          handleImageGenerationModelChange({
+                            ...platform,
+                            use_model: modelName,
+                          });
+                        }
+                      }}
+                    >
+                      {imageGenerationModelList.map(({ models, ...platform }) => (
+                        <AionSelect.OptGroup label={platform.name} key={platform.id}>
+                          {models.map((modelName) => (
+                            <AionSelect.Option key={platform.id + modelName} value={platform.id + '|' + modelName}>
+                              {modelName}
+                            </AionSelect.Option>
+                          ))}
+                        </AionSelect.OptGroup>
+                      ))}
+                    </AionSelect>
+                  </Form.Item>
+                </Form>
+              )}
+            </div>
+          )}
         </div>
       </AionScrollArea>
     </div>

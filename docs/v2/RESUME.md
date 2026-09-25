@@ -2,9 +2,9 @@
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
-The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs and direct Tools findings. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision.
+The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. The current Tools source has a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md).
 
-**Next item:** implement and verify the current desktop and mobile Tools frames `313:2441` and `315:2842` against a built App. Continue the remaining current Figma states before resuming the long transcript check. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
+**Next item:** align CLI import `313:3911` and failed-server report `313:4441` with current Figma while preserving their handlers. Then continue the remaining current Figma frames before the long transcript check. Mobile Kibble placement awaits Nick's answer; keep its existing route. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
 
 ---
 
