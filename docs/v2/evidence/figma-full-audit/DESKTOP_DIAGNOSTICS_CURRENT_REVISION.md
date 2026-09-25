@@ -1,0 +1,5 @@
+# Desktop Diagnostics — current Figma revision
+
+Current Figma [Diagnostics `189:3564`](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System?node-id=189-3564) was read directly. The isolated package rendered [1440px](DESKTOP_DIAGNOSTICS_PACKAGE_1440.png) and [800px](DESKTOP_DIAGNOSTICS_PACKAGE_800.png) without overflow or renderer errors. At 1440px Health, Measured performance, and Maintenance measured x613/y185, x613/y386, and x613/y554, each 670px wide. At 800px they measured x371/y181, x371/y382, and x371/y550, each 388px wide.
+
+The package showed the real engine version, measured startup, no first model reply, zero reported providers, and zero child processes. Figma's values are illustrative. Clear caches and Restart runtime remain disabled in source. No safe matching cache operation exists; the existing engine retry deliberately avoids restarting a healthy engine. Those controls require separate implementation before this frame can be called complete. Neither action was invoked. Canonical App and Data were untouched.

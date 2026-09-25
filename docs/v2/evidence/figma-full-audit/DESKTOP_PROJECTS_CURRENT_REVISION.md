@@ -1,0 +1,5 @@
+# Desktop Projects — current Figma revision
+
+Current Figma [Projects `189:2193`](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System?node-id=189-2193) was read directly. The empty Project map card was 47px taller than Figma because its Refresh map action sat below the empty message. The action now lives in the card header and appears on hover or keyboard focus. The same engine refresh call remains available. No map was created during verification.
+
+The isolated [1440px package](DESKTOP_PROJECTS_EMPTY_PACKAGE_1440.png) measured Knowledge, Project map, and Recipes at x613/y185, x613/y282, and x613/y379, each 670×85. At [800px](DESKTOP_PROJECTS_EMPTY_PACKAGE_800.png), they measured x371/y181, x371/y278, and x371/y375, each 388×85. The Refresh map action became visible and interactive on hover at both widths. No overflow or renderer error appeared. TypeScript, the full desktop suite **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Populated project knowledge, map sections, and project recipes remain open. Canonical App and Data were untouched.

@@ -1131,6 +1131,9 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-v2-shell .kel-shell-task-setting-control > span { color: var(--kel-figma-color-text-muted); }
 .kel-v2-shell .kel-shell-activity-clear { margin: 0; color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body); }
 @media(min-width:768px) {
+  .kel-v2-shell #project-map:has(.kel-empty) .kel-shell-source-card-head { min-height: 20px; padding-right: 0; }
+  .kel-v2-shell #project-map:has(.kel-empty) .kel-shell-source-card-actions { opacity: 0; pointer-events: none; }
+  .kel-v2-shell #project-map:has(.kel-empty):is(:hover, :focus-within) .kel-shell-source-card-actions { opacity: 1; pointer-events: auto; }
   .kel-v2-shell .kel-shell-activity__item:has(.kel-shell-activity__state) {
     display: grid;
     grid-template-columns: 8px minmax(0,1fr);

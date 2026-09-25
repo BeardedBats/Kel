@@ -412,23 +412,17 @@ export default function KelProjectsPage() {
           <KelCard
             id="project-map"
             title="Project map"
-            actions={
-              work.map ? (
-                <>
-                <span className="kel-project-map-version">v{work.map.version}</span>
-                <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
-                  <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
-                </KelButton>
-                </>
-              ) : undefined
-            }
+            actions={<>
+              {work.map && <span className="kel-project-map-version">v{work.map.version}</span>}
+              <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
+                <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
+              </KelButton>
+            </>}
           >
             {!work.map ? (
               <KelEmpty
                 title="No map built yet."
                 why="Kel builds a map of the project from its own verified work."
-                actionLabel="Refresh map"
-                onAction={() => void act('Refresh map', () => kelMapAction('refresh'))}
               />
             ) : (
               <>
