@@ -552,6 +552,7 @@ export interface KelRecipeEntry {
   steps?: unknown[];
   inputs?: unknown[];
   source?: string;
+  category?: string;
   /** The engine's own mark for a starred recipe (`entries()` carries it with the library row). */
   favourite?: boolean;
 }
@@ -601,7 +602,7 @@ export const kelRecipes = (conversation = 'main') =>
   call<Record<string, unknown>>('/api/recipes', { action: 'list', conversation });
 
 export const kelRecipeGet = (recipeId: string, conversation = 'main') =>
-  call<{ recipe: { recipe_id: string; name: string; inputs: KelRecipeInput[] } }>('/api/recipes', {
+  call<{ recipe: { recipe_id: string; name: string; inputs: KelRecipeInput[]; steps: Array<{ id: string; title: string }> } }>('/api/recipes', {
     action: 'get', recipe_id: recipeId, conversation,
   });
 

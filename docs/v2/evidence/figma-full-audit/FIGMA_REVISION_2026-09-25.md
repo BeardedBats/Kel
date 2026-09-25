@@ -134,8 +134,8 @@
 | `299:14061` | M / Activity | `/activity` | Current populated running row and three cards compared with an isolated engine fixture at 393 and 320px. | READ |
 | `299:14218` | M / Permissions | `/autonomy` | Current empty-state cards and dynamic digest compared in an isolated package at 393 and 320px. | READ |
 | `299:14371` | M / Knowledge | `/projects/knowledge` | Current populated suggestions and map compared in isolated package at 393 and 320px. | READ |
-| `299:14428` | M / Recipes | `/recipes` | Replaced page/node; prior pair absent. | PENDING |
-| `299:14477` | M / Recipes — Preview | `/recipes` | Replaced page/node; prior pair absent. | PENDING |
+| `299:14428` | M / Recipes | `/projects/recipes` | [Current list implementation](MOBILE_RECIPES_CURRENT_REVISION.md) uses real engine data and fits 393/320px. | READ |
+| `299:14477` | M / Recipes — Preview | `/projects/recipes` | [Current preview implementation](MOBILE_RECIPES_CURRENT_REVISION.md) reads actual steps and fits 393/320px. | READ |
 | `299:14544` | M / Scheduled tasks | `/scheduled` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14704` | M / Scheduled task — Detail | `/scheduled` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14804` | M / New scheduled task | `/scheduled` | Replaced page/node; prior pair absent. | PENDING |
@@ -169,4 +169,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** compare mobile Recipes `299:14428` and Preview `299:14477` with isolated real recipe data. Inspect the remaining component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next implementation:** finish the current desktop Recipes list, Run, and Preview frames, then the remaining desktop frames. Nick will test the accepted desktop App while mobile work continues. Keep old evidence for history and label it superseded until refreshed.

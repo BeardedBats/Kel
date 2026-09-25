@@ -2359,3 +2359,75 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-ramble-vetting-edit { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
 .kel-ramble-vetting-edit label { color: #ffc481; font: 700 14px/20px 'Instrument Sans',sans-serif; }
 .kel-ramble-vetting-edit textarea { box-sizing: border-box; flex: 1; min-height: 180px; width: 100%; padding: 12px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); color: #edf2fa; font: 400 15px/24px 'SF Pro Text',sans-serif; }
+
+/* Current mobile Recipes list and expanded recipe use the existing engine actions. */
+.kel-v2-shell #project-recipes .kel-recipe-mobile-list { display: none; }
+@media (max-width: 767px) {
+  .kel-v2-shell .kel-in-chat-frame__pane #kel-projects-main.kel-shell-recipe-library { padding-top: 8px !important; }
+  .kel-v2-shell #kel-projects-main.kel-shell-recipe-library > .kel-page__head { display: none; }
+  .kel-v2-shell #project-recipes.kel-recipe-library-card {
+    gap: 0; padding: 14px 16px 4px; border: 1px solid rgba(221,233,255,.5); border-radius: 14px;
+    background: linear-gradient(rgba(221,233,255,.02),transparent 30%),linear-gradient(rgba(47,107,224,.12),rgba(47,107,224,.12)),rgba(15,45,100,.3);
+    box-shadow: 0 10px 15px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.06);
+  }
+  .kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head { min-height: 18px; }
+  .kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
+  .kel-v2-shell #project-recipes .kel-recipe-desktop-list { display: none; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-list { display: block; min-width: 0; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-search {
+    box-sizing: border-box; display: flex; align-items: center; gap: 8px; height: 40px; margin-top: 17px; padding: 0 12px;
+    border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1);
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-search img { display: block; flex: none; width: 14px; height: 14px; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-search input {
+    min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #edf2fa;
+    font: 400 15px/20px var(--kel-shell-body);
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-search input::placeholder { color: #8fa9d6; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-tabs { display: flex; gap: 18px; margin-top: 10px; overflow-x: auto; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-tabs button {
+    box-sizing: border-box; flex: none; height: 28px; padding: 0 6px; border: 0; border-bottom: 1px solid transparent;
+    background: transparent; color: #c4d4e8; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer;
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-tabs button[aria-selected='true'] { border-bottom-color: #fcac51; color: #ffb764; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-tabs + .kel-recipe-mobile-entry { margin-top: 11px; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-entry { border-bottom: 1px solid rgba(191,216,255,.08); }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-entry:last-child { border-bottom: 0; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-row {
+    box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0;
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-star {
+    display: grid; place-items: center; flex: none; width: 24px; height: 24px; padding: 0; border: 0;
+    background: transparent; cursor: pointer;
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-star img { display: block; width: 14px; height: 14px; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-name,
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-row strong {
+    min-width: 0; flex: 1; overflow: hidden; padding: 0; border: 0; background: transparent; color: #edf2fa;
+    text-align: left; text-overflow: ellipsis; white-space: nowrap; font: 500 16px/20px var(--kel-shell-heading);
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-row .kel-btn {
+    flex: none; height: 36px; min-height: 36px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5); border-radius: 8px;
+    background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
+    font: 600 14px/20px var(--kel-shell-heading); box-shadow: 0 4px 6px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.1);
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview {
+    box-sizing: border-box; margin: 8px 0 10px; padding: 8px 16px 16px; border: 1px solid rgba(159,218,255,.55);
+    border-radius: 12px; background: rgba(47,107,224,.14);
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview .kel-recipe-mobile-row { min-height: 48px; padding: 8px 0; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-close { border: 0; background: transparent; color: #c4d4e8; font: 500 14px/20px var(--kel-shell-heading); }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview-label { margin: 12px 0 8px; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text', sans-serif; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview ol { margin: 0 0 14px; padding: 0; list-style: none; counter-reset: recipe-step; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview li {
+    display: flex; gap: 12px; margin: 0 0 10px; color: #edf2fa; font: 400 14px/20px 'SF Pro Text', sans-serif;
+    counter-increment: recipe-step;
+  }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview li::before { content: counter(recipe-step); color: #8fa9d6; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-last-result { color: #c4d4e8; font: 400 13px/18px 'SF Pro Text', sans-serif; }
+  .kel-v2-shell #project-recipes .kel-recipe-mobile-preview > .kel-btn {
+    width: 100%; height: 44px; border: 1px solid rgba(140,150,167,.5); border-radius: 8px;
+    background: linear-gradient(#6493f8,#2356b3); color: #fff1f0; font: 600 14px/20px var(--kel-shell-heading);
+    box-shadow: 0 4px 6px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.1);
+  }
+}
