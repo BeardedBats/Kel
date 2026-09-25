@@ -10,6 +10,8 @@ The [current mobile Projects index](evidence/figma-full-audit/PROJECTS_CURRENT_R
 
 The [current mobile Work empty state](evidence/figma-full-audit/WORK_CURRENT_REVISION.md) matches the three card bounds and current labels at 393 and 320px. A populated job was not run in this package. Windows font and titlebar still differ from the phone frame. The isolated card pixels differ slightly despite using Figma's CSS fill and border values.
 
+The [current mobile Activity running state](evidence/figma-full-audit/ACTIVITY_CURRENT_REVISION.md) uses a synthetic engine claim, not a live model worker. It matches the three current card bounds and fixes the incorrect “Waiting on you” entry for a RUNNING job. Other Activity states, project scope, phone chrome, and the Kibble tab decision remain open.
+
 The [current Chat package check](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) repaired the mobile two-line user turn, four reply actions, composer height, and drawer layout. Its synthetic conversation has no real project metrics or agent plan. The Windows title bar differs from Figma's iPhone status/home chrome. Attachment and mic controls remain visible in the mobile composer, and Kibble remains a fifth tab pending a product decision. Desktop Chat and mobile drawer screenshots are scoped comparison evidence, not full Chat parity.
 
 The [current populated Transcriptions check](evidence/figma-full-audit/TRANSCRIPTIONS_CURRENT_REVISION.md) uses synthetic text and one-second local WAV files. It confirms the panel, actions, and 800px scroll path, but it does not prove live Muse transcription, a real download, clipboard write, or a merge. Windows font rendering and dynamic transcript line breaks still prevent a claim of exact pixel parity for a real recording.
