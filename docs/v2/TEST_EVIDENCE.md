@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current populated Transcriptions package check (2026-09-25)
+
+[The scoped Transcriptions record](evidence/figma-full-audit/TRANSCRIPTIONS_CURRENT_REVISION.md) compares live desktop `189:4032` with a disposable package containing two synthetic engine recordings. The 1440px document panel measured 670×620 at x613/y231, within 2–4px of the current frame. At 800px, the long document scrolled and all four footer actions stayed reachable; Combine opened its existing dialog without merging. Local Figma icons and action colors rendered with no document overflow or page errors. TypeScript, focused Transcriptions tests **2 files / 7 tests**, Electron Vite, and disposable Windows packaging passed. No real Muse audio, download, clipboard write, or canonical Data was used.
+
 ## Current mobile Chat approval-details package check (2026-09-25)
 
 [The scoped approval-details record](evidence/figma-full-audit/CHAT_APPROVAL_DETAILS_CURRENT_REVISION.md) compares live mobile `299:12281` with an isolated pending engine approval in a disposable package. The sheet measured x0/y419, 393×433 at 393px and stayed inside 320px. Its Approve button began at x17/y723. The live isolated record supplied the build command and context; the sheet used the existing approval path. Escape closed it. No decision was submitted. TypeScript, focused renderer approval tests **2 passed**, Electron Vite, and disposable Windows packaging passed. No renderer error or document overflow occurred. Canonical App and Data were untouched.

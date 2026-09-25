@@ -999,6 +999,28 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-mobile-approval-details__foot button:disabled,
 .kel-mobile-approval-details__remember:disabled { opacity: .5; cursor: default; }
 
+/* Current populated Transcriptions frame 189:4032: actions stay attached to the document. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-ramble [data-testid='upload-button'],
+  .kel-v2-shell .kel-shell-ramble [data-testid='record-more'],
+  .kel-v2-shell .kel-shell-ramble [data-testid='record-button'] { display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: 34px; border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-ramble [data-testid='upload-button'] { width: 133px; border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='record-more'] { width: 142px; border: 1px solid rgba(140,150,167,.5) !important; background: linear-gradient(180deg,#6493f8,#2356b3) !important; box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1) !important; color: #fff1f0 !important; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='record-button'] { width: 103px; border: 0 !important; background: linear-gradient(180deg,#a6443f,#8b312d) !important; box-shadow: 0 2px 3px rgba(6,18,46,.3), inset 0 1px rgba(255,255,255,.1) !important; color: #fff1f0 !important; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='transcript-name'] { color: #ffc481; font: 700 15px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-ramble [data-testid='transcript-status'] { display: inline-flex; align-items: center; gap: 6px; color: #8fa9d6; font: 400 13px/18px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-ramble [data-testid='transcript-status'] > :first-child { color: #8fddc0; }
+  .kel-v2-shell .kel-shell-ramble--embedded .kel-shell-transcript-header { padding-right: 0; }
+  .kel-v2-shell .kel-shell-ramble .kel-shell-transcript-header::after { content: ''; position: absolute; right: 0; bottom: -12px; left: 0; height: 1px; background: rgba(191,216,255,.12); }
+  .kel-v2-shell .kel-shell-ramble [class*='documentActions'] > .arco-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box; height: 34px; padding: 0 8px; border: 0 !important; border-radius: 8px; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 600 13px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-ramble [data-testid='copy-transcript'] { width: 139px; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='download-txt'] { width: 170px; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='download-audio'] { width: 145px; }
+  .kel-v2-shell .kel-shell-ramble [class*='documentActions'] > .arco-btn[data-testid='combine-open'] { width: 102px; border: 1px solid rgba(140,150,167,.5) !important; background: linear-gradient(180deg,#6493f8,#2356b3) !important; box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1) !important; color: #fff1f0 !important; }
+  .kel-v2-shell .kel-shell-ramble [data-testid='upload-button'] .arco-btn-icon,
+  .kel-v2-shell .kel-shell-ramble [class*='documentActions'] .arco-btn-icon { color: inherit; }
+}
+
 /* Current Chat reconnecting frames 273:12681 and 299:12515: occupy the composer slot. */
 .kel-v2-shell:has(.kel-chat-reconnecting) .kel-engine-notice { display: none; }
 .kel-v2-shell .kel-chat-reconnecting {

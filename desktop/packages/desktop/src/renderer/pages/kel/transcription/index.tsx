@@ -8,6 +8,13 @@
  */
 import { kelRequest as request } from '@renderer/components/kel/kelApi';
 import rambleBrand from '@renderer/assets/figma/kel-mark.png';
+import transcriptFileIcon from '@renderer/assets/figma/refresh/transcript-file.svg';
+import transcriptAudioIcon from '@renderer/assets/figma/refresh/transcript-audio.svg';
+import transcriptCombineIcon from '@renderer/assets/figma/refresh/transcript-combine.svg';
+import transcriptMicIcon from '@renderer/assets/figma/refresh/transcript-mic.svg';
+import transcriptPlusIcon from '@renderer/assets/figma/refresh/transcript-plus.svg';
+import transcriptCheckIcon from '@renderer/assets/figma/refresh/transcript-check.svg';
+import transcriptSettingsIcon from '@renderer/assets/figma/refresh/transcript-settings.svg';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -828,10 +835,12 @@ const statusCopy =
               {!embedded && <Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>}
               {recState === 'idle' && (
                 <>
-                  <Button onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
+                  <Button className='kel-transcription-upload' icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
                     Upload Audio
                   </Button>
                   <Button
+                    className='kel-transcription-record-more'
+                    icon={<img src={transcriptPlusIcon} alt='' width='16' height='16' />}
                     disabled={selected?.source_type !== 'recording'}
                     onClick={() => {
                       if (selected) void beginRecording(selected.id);
@@ -840,7 +849,7 @@ const statusCopy =
                   >
                     Record More
                   </Button>
-                  <Button type='primary' onClick={() => void beginRecording()} data-testid='record-button'>
+                  <Button type='primary' className='kel-transcription-record' icon={<img src={transcriptMicIcon} alt='' width='16' height='16' />} onClick={() => void beginRecording()} data-testid='record-button'>
                     Record
                   </Button>
                 </>
@@ -917,10 +926,10 @@ const statusCopy =
                     </h2>
                   )}
                   {/* Saved / recording state reads beside the title, as in the standalone app. */}
-                  <span className={styles.documentStatus} data-testid='transcript-status'>
-                    {statusCopy}
-                  </span>
                   <span className={styles.grow} />
+                  <span className={styles.documentStatus} data-testid='transcript-status'>
+                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy} <img src={transcriptSettingsIcon} alt='' width='14' height='14' />
+                  </span>
                 </div>
                 <p className={styles.transcriptText} data-testid='transcript-text'>
                   {(selected.text || '').trim() || '(No speech was recognized.)'}
@@ -928,16 +937,18 @@ const statusCopy =
                 {/* Authoritative IA: the donor's four actions come first and keep the weight; Kel's
                     additions stay available but quieter, so the document footer still reads as before. */}
                 <div className={styles.documentActions}>
-                  <Button onClick={() => void copyTranscript()} data-testid='copy-transcript'>
+                  <Button icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => void copyTranscript()} data-testid='copy-transcript'>
                     <span className='kel-shell-ramble-desktop-label'>Copy Transcript</span><span className='kel-shell-ramble-mobile-label'>Copy</span>
                   </Button>
-                  <Button onClick={downloadText} data-testid='download-txt'>
+                  <Button icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={downloadText} data-testid='download-txt'>
                     <span className='kel-shell-ramble-desktop-label'>Download Transcript</span><span className='kel-shell-ramble-mobile-label'>Download</span>
                   </Button>
-                  <Button disabled={!selected.has_audio} onClick={() => void downloadAudio()} data-testid='download-audio'>
+                  <Button icon={<img src={transcriptAudioIcon} alt='' width='16' height='16' />} disabled={!selected.has_audio} onClick={() => void downloadAudio()} data-testid='download-audio'>
                     <span className='kel-shell-ramble-desktop-label'>Download Audio</span><span className='kel-shell-ramble-mobile-label'>Audio</span>
                   </Button>
                   <Button
+                    icon={<img src={transcriptCombineIcon} alt='' width='16' height='16' />}
+                    className='kel-transcription-combine'
                     disabled={library.transcripts.length < 2}
                     onClick={() => {
                       setCombineSource('');

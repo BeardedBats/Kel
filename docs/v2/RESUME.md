@@ -2,9 +2,9 @@
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
-The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools and mobile Chat/drawer have [scoped Tools](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md) and [Chat](evidence/figma-full-audit/CHAT_CURRENT_REVISION.md) package checks.
+The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, and populated Transcriptions have linked scoped package checks in the inventory.
 
-**Next item:** compare desktop and mobile Chat approval, tool-call, plan, error, and reconnecting frames with current Figma, then shared component variants. Continue the remaining current frames before the long transcript check. Mobile Kibble placement awaits Nick's answer; keep its existing route. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
+**Next item:** compare mobile Permission `299:12418` with a runtime-capable isolated conversation. The current synthetic chat exposes no permission-mode options, so do not claim this frame from its screenshot. Then compare mobile Ramble and remaining components before V2-18/19 acceptance. Mobile Kibble placement awaits Nick's answer; keep its existing route.
 
 ---
 
