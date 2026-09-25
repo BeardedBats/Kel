@@ -18,6 +18,7 @@
 - Desktop tool-call/plan `273:12914` and mobile `299:12459` were read and compared with an isolated package. Three synthetic ACP calls and a processing plan have [scoped package evidence](CHAT_TOOL_PLAN_CURRENT_REVISION.md); real model tool output remains open.
 - Desktop Chat agent error `273:13090` and mobile `299:12494` were read and compared with an isolated package. The timeout card matches its 920×114 and 361×200 frame bounds; model choice and diagnostic details opened. See [scoped error evidence](CHAT_AGENT_ERROR_CURRENT_REVISION.md). A live provider timeout and retry remain unverified.
 - Desktop reconnecting `273:12681` and mobile `299:12515` were read and compared with a disposable package. The composer notice matches 920×60 desktop and 361×48 mobile frame bounds. See [scoped reconnecting evidence](CHAT_RECONNECTING_CURRENT_REVISION.md). The renderer state was injected; no real engine restart was invoked.
+- Mobile model picker `299:12372` was read and compared with an isolated package. The 393×410 bottom sheet matches Figma's x0/y442 bounds, glass and 20px top radius. Per-chat choice and reset worked against an isolated engine record. See [scoped picker evidence](CHAT_MODEL_PICKER_CURRENT_REVISION.md). The model labels depend on live configuration; default-choice persistence remains open.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
@@ -113,7 +114,7 @@
 | `299:11950` | M / Chat — Approval card | `/chat` | Current pending card compared in isolated package at 393 and 320px. | READ |
 | `299:12281` | M / Approval details | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12336` | M / Memory review | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
-| `299:12372` | M / Model picker | `/settings/model` | Replaced page/node; prior pair absent. | PENDING |
+| `299:12372` | M / Model picker | `/chat` bottom sheet | Current bottom sheet compared in isolated package at 393 and 320px. | READ |
 | `299:12418` | M / Permission | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12459` | M / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 393 and 320px. | READ |
 | `299:12494` | M / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
@@ -164,4 +165,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect the current desktop and mobile Chat approval, tool-call, plan, error, and reconnecting states and relevant component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** inspect mobile approval-details `299:12281` and Permission `299:12418`, then the populated Transcriptions frame `189:4032` and remaining component variants. Keep old evidence for history and label it superseded until refreshed.

@@ -51,6 +51,7 @@ import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { KelMobileModelPicker } from '@renderer/components/kel/KelMobileModelPicker';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { buildSendFailureError } from './buildSendFailureError';
 import { useAcpInitialMessage } from './useAcpInitialMessage';
@@ -139,6 +140,7 @@ const AcpSendBox: React.FC<{
   const layout = useLayoutContext();
   const isMobile = Boolean(layout?.isMobile);
   const conversationContext = useConversationContextSafe();
+  const isKelAssistant = !conversationContext?.assistantId || conversationContext.assistantId === 'kel';
   const loadedSkills = conversationContext?.loadedSkills ?? [];
   const loadedMcpStatuses =
     conversationContext?.loadedMcpStatuses ??
@@ -166,6 +168,7 @@ const AcpSendBox: React.FC<{
     [promptCapability, t]
   );
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [isKelModelSheetOpen, setIsKelModelSheetOpen] = useState(false);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const prepareRuntimeConfig = useCallback(async () => {
     if (teamPermission) return;
@@ -473,7 +476,7 @@ Please check your local CLI tool authentication status`,
   useAddEventListener('agent.error.pick-model', (targetConversationId: string) => {
     if (targetConversationId !== conversation_id) return;
     if (isMobile) {
-      navigate('/settings/model');
+      setIsKelModelSheetOpen(true);
     } else {
       const modelPill = document.querySelector<HTMLButtonElement>('[data-testid="kel-model-pill"]:not(:disabled)');
       if (modelPill) modelPill.click();
@@ -588,9 +591,17 @@ Please check your local CLI tool authentication status`,
 
     const entries: MobileActionSheetEntry[] = [];
 
+    if (isKelAssistant) {
+      entries.push({
+        key: 'kel-model', icon: <Brain theme='outline' size='16' />,
+        label: t('common.model', { defaultValue: 'Model' }),
+        onClick: () => setIsKelModelSheetOpen(true),
+      });
+    }
+
     // Model entry: only when the agent exposes a switchable list. Otherwise
     // (Codex with no list, no info) skip — exposing a no-op row would be noise.
-    if (modelOptions.length > 0) {
+    if (!isKelAssistant && modelOptions.length > 0) {
       entries.push({
         key: 'model',
         icon: <Brain theme='outline' size='16' />,
@@ -705,6 +716,7 @@ Please check your local CLI tool authentication status`,
     handleSheetModeChange,
     handleThoughtLevelSetOption,
     isMobile,
+    isKelAssistant,
     loadedMcpStatuses,
     loadedSkills,
     model_info,
@@ -968,6 +980,7 @@ Please check your local CLI tool authentication status`,
       ></SendBox>
       {isMobile && (
         <>
+          {isKelAssistant && <KelMobileModelPicker conversationId={conversation_id} open={isKelModelSheetOpen} onClose={() => setIsKelModelSheetOpen(false)} />}
           <MobileActionSheet
             open={isMobileSheetOpen}
             onClose={() => setIsMobileSheetOpen(false)}
