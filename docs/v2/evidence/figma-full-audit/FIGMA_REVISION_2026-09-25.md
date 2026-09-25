@@ -43,9 +43,9 @@
 | `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
 | `194:1366` | Kel / Ramble | `/transcription` | Retained node; inner revision not measured. | PENDING |
 | `271:247` | Kel / Knowledge — Suggestions & map | `/projects/knowledge` | New or replaced node; prior pair absent. | PENDING |
-| `284:8148` | Kel / Recipes | `/recipes` | New or replaced node; prior pair absent. | PENDING |
-| `284:8489` | Kel / Recipes — Run | `/recipes` | New or replaced node; prior pair absent. | PENDING |
-| `284:8847` | Kel / Recipes — Preview | `/recipes` | New or replaced node; prior pair absent. | PENDING |
+| `284:8148` | Kel / Recipes | `/recipes` | Current list implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
+| `284:8489` | Kel / Recipes — Run | `/recipes` | Real input form implemented and compared in isolated package; no submission. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
+| `284:8847` | Kel / Recipes — Preview | `/recipes` | Engine steps and history surface implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `272:7932` | Kel / Sign in (remote) | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `272:739` | Kel / Scheduled task — Detail | `/scheduled` | New or replaced node; prior pair absent. | PENDING |
 | `272:1087` | Kel / Kibble | `/kibble` | New or replaced node; prior pair absent. | PENDING |

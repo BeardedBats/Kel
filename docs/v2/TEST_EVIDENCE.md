@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Recipes list, preview, and run (2026-09-25)
+
+[The scoped implementation record](evidence/figma-full-audit/DESKTOP_RECIPES_CURRENT_REVISION.md) compares current Figma `284:8148`, `284:8489`, and `284:8847` with an isolated package at 1440 and 800px. The list uses five real engine built-ins, actual step titles, input definitions, and saved history when available. The 1440px inner card measured x613/y185, 670px wide; Figma places it at x613/y184. Preview and Run opened and closed. Neither width overflowed; the renderer reported no errors. TypeScript, the desktop suite **54 files / 400 tests**, Electron Vite, and disposable packaging passed. No recipe was submitted. Canonical App and Data were untouched.
+
 ## Mobile Recipes list and preview (2026-09-25)
 
 [The scoped implementation record](evidence/figma-full-audit/MOBILE_RECIPES_CURRENT_REVISION.md) compares current Figma `299:14428` and `299:14477` with one disposable package at 393 and 320px. Engine built-ins supplied five real rows and three preview steps. The card starts x16/y115; preview opens and closes. No overflow or renderer error appeared. TypeScript, focused recipe tests **1 file / 4 tests**, Electron Vite, and packaging passed. Canonical App and Data were untouched.

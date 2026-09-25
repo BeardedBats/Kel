@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Desktop Recipes (2026-09-25)
+
+The [desktop Recipes implementation](evidence/figma-full-audit/DESKTOP_RECIPES_CURRENT_REVISION.md) uses five real engine built-ins instead of Figma's sample names. The isolated engine has no saved runs, so the Preview history shown in Figma is absent. The Run form uses actual engine inputs, and no recipe was submitted. The package reproduces the current inner card geometry at 1440px and fits 800px. The canonical installed App still packages `8c67121`; this desktop increment remains source-only until the desktop completion install.
+
 ## Latest Figma revision (2026-09-25)
 
 The [current mobile Chat Permission sheet](evidence/figma-full-audit/CHAT_PERMISSION_CURRENT_REVISION.md) matches the frame bounds and option geometry at 393px and fits 320px. Its isolated ACP session did not return a mode catalog; session-gated sample options verified presentation only. A live mode switch and provider support remain unverified. The Windows titlebar and font rendering differ from the phone frame.

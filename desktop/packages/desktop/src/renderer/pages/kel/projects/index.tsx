@@ -61,8 +61,11 @@ export default function KelProjectsPage() {
   const [recent, setRecent] = useState<KelRecipeEntry[]>([]);
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [mobileRecipeTab, setMobileRecipeTab] = useState('All');
+  const [desktopRecipeTab, setDesktopRecipeTab] = useState('All');
+  const [showRecipeTools, setShowRecipeTools] = useState(false);
   const [mobileRecipeDetail, setMobileRecipeDetail] = useState<{
-    id: string; steps: Array<{ id: string; title: string }>; lastResult: string; loading: boolean;
+    id: string; steps: Array<{ id: string; title: string }>; lastResult: string;
+    history: KelRecipeRun[]; loading: boolean;
   } | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [runs, setRuns] = useState<{ recipe: string; sentence: string; items: KelRecipeRun[] } | null>(null);
@@ -148,16 +151,18 @@ export default function KelProjectsPage() {
       setMobileRecipeDetail(null);
       return;
     }
-    setMobileRecipeDetail({ id: recipeId, steps: [], lastResult: '', loading: true });
+    setMobileRecipeDetail({ id: recipeId, steps: [], lastResult: '', history: [], loading: true });
     try {
-      const [definition, last] = await Promise.all([
+      const [definition, last, history] = await Promise.all([
         kelRecipeGet(recipeId),
         kelRecipeLastResult(recipeId).catch((): null => null),
+        kelRecipeHistory(recipeId).catch(() => ({ history: [] as KelRecipeRun[] })),
       ]);
       setMobileRecipeDetail((current) => current?.id === recipeId ? {
         id: recipeId,
         steps: definition.recipe.steps ?? [],
         lastResult: last?.state === 'never_run' ? '' : last?.sentence ?? '',
+        history: history.history ?? [],
         loading: false,
       } : current);
     } catch (err) {
@@ -185,6 +190,30 @@ export default function KelProjectsPage() {
       setBusy(null);
     }
   }, []);
+
+  const startRecipe = useCallback(async () => {
+    if (!runDraft) return;
+    const draft = runDraft;
+    setBusy('Run recipe');
+    setNote(null);
+    try {
+      const values = Object.fromEntries(Object.entries(draft.values)
+        .filter(([, value]) => typeof value === 'boolean' || value.trim() !== ''));
+      const dryRun = await kelRecipePreview(draft.recipeId, values);
+      if (dryRun.needs_project) {
+        setNote(String(dryRun.message ?? 'This recipe needs more project details.'));
+        return;
+      }
+      const out = await kelRecipeRun(draft.recipeId, values);
+      setNote(`Run request sent — follow it on Work (${String(out.submission).slice(0, 8)}).`);
+      setRunDraft(null);
+      await load();
+    } catch (err) {
+      setNote(`Run failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+    } finally {
+      setBusy(null);
+    }
+  }, [runDraft, load]);
 
   const act = useCallback(
     async (label: string, fn: () => Promise<unknown>) => {
@@ -219,6 +248,8 @@ export default function KelProjectsPage() {
   const listed = (found ?? entries).filter((entry) => !favouritesOnly || entry.favourite);
   const mobileListed = (found ?? entries).filter((entry) => mobileRecipeTab === 'All'
     || (mobileRecipeTab === 'Favourites' ? entry.favourite : entry.category === mobileRecipeTab));
+  const desktopListed = (found ?? entries).filter((entry) => desktopRecipeTab === 'All'
+    || (desktopRecipeTab === 'Favourites' ? entry.favourite : entry.category === desktopRecipeTab));
   const libraryView = viewFromPath(pathname) === 'recipes';
   const projectRecipes = entries.filter((entry) => entry.source !== 'builtin');
 
@@ -436,7 +467,8 @@ export default function KelProjectsPage() {
         )}
 
         {!error && work && (
-          <KelCard id="project-recipes" title="Recipes" className={libraryView ? 'kel-recipe-library-card' : undefined}>
+          <KelCard id="project-recipes" title="Recipes" className={libraryView ? 'kel-recipe-library-card' : undefined}
+            actions={libraryView ? <span className="kel-recipe-count">{entries.length} available here</span> : undefined}>
             {!libraryView ? (
               <KelEmpty
                 title={projectRecipes.length === 0 ? 'No recipes in this project yet.' : `${projectRecipes.length} recipes in this project.`}
@@ -449,6 +481,91 @@ export default function KelProjectsPage() {
               />
             ) : (
               <>
+                <div className="kel-recipe-desktop-current">
+                  <div className="kel-recipe-desktop-intro">
+                    <p>Steps Kel saved from finished work. Run one again any time.</p>
+                  </div>
+                  <div className="kel-recipe-desktop-controls">
+                    <label className="kel-recipe-desktop-search">
+                      <img src={mobileRecipeSearchIcon} alt="" width={14} height={14} />
+                      <input value={recipeQuery} onChange={(event) => void searchRecipes(event.target.value)}
+                        placeholder="Search recipes" aria-label="Search recipes" />
+                    </label>
+                    <div className="kel-recipe-desktop-tabs" role="tablist" aria-label="Recipe filters">
+                      {['All', 'Favourites', ...categories.map((category) => category.name)].map((tab) => (
+                        <button key={tab} type="button" role="tab" aria-selected={desktopRecipeTab === tab}
+                          onClick={() => setDesktopRecipeTab(tab)}>{tab}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {desktopListed.length === 0 ? <KelEmpty title="Nothing matches that." why="Clear search or choose All." /> : desktopListed.map((entry) => {
+                    const recipeId = String(entry.recipe_id ?? entry.id ?? '');
+                    const expanded = mobileRecipeDetail?.id === recipeId;
+                    const preparing = runDraft?.recipeId === recipeId;
+                    return <div className="kel-recipe-desktop-entry" key={recipeId}>
+                      <div className="kel-recipe-desktop-row">
+                        <button type="button" className="kel-recipe-desktop-star" disabled={busy !== null}
+                          aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
+                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite))}>
+                          <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
+                        </button>
+                        <span>{entry.name ?? entry.title ?? recipeId}</span>
+                        {(expanded || preparing) ? <button type="button" className="kel-recipe-desktop-link"
+                          onClick={() => { setMobileRecipeDetail(null); setRunDraft(null); }}>Close</button> : <>
+                          <button type="button" className="kel-recipe-desktop-link"
+                            onClick={() => void openMobileRecipe(recipeId)}>Preview</button>
+                          <KelButton variant="primary" disabled={busy !== null || !recipeId}
+                            onClick={() => void prepareRecipe(recipeId)}>Run</KelButton>
+                        </>}
+                      </div>
+                      {preparing && runDraft && <div className="kel-recipe-desktop-expanded kel-recipe-desktop-run">
+                        <p>Check the inputs. Then start the recipe.</p>
+                        <div className="kel-recipe-desktop-fields">
+                          {runDraft.inputs.map((input) => <label key={input.name}>
+                            <span>{input.name}{input.required ? ' *' : ''}</span>
+                            {input.type === 'bool' ? <input type="checkbox"
+                              checked={runDraft.values[input.name] === true}
+                              onChange={(event) => setRunDraft((draft) => draft && ({
+                                ...draft, values: { ...draft.values, [input.name]: event.target.checked },
+                              }))} /> : input.type === 'choice' ? <select
+                                value={String(runDraft.values[input.name] ?? '')}
+                                onChange={(event) => setRunDraft((draft) => draft && ({
+                                  ...draft, values: { ...draft.values, [input.name]: event.target.value },
+                                }))}>
+                                <option value="">Choose one</option>
+                                {(input.choices ?? []).map((choice) => <option key={choice} value={choice}>{choice}</option>)}
+                              </select> : <input type="text" maxLength={input.max_chars}
+                                value={String(runDraft.values[input.name] ?? '')}
+                                onChange={(event) => setRunDraft((draft) => draft && ({
+                                  ...draft, values: { ...draft.values, [input.name]: event.target.value },
+                                }))} />}
+                          </label>)}
+                        </div>
+                        <div className="kel-recipe-desktop-expanded-actions">
+                          <KelButton variant="primary" disabled={busy !== null} onClick={() => void startRecipe()}>Start recipe</KelButton>
+                        </div>
+                      </div>}
+                      {expanded && !preparing && <div className="kel-recipe-desktop-expanded">
+                        <div className="kel-recipe-desktop-expanded-label">What Kel will do</div>
+                        {mobileRecipeDetail.loading ? <p>Loading recipe…</p> : <ol>
+                          {mobileRecipeDetail.steps.map((step) => <li key={step.id}>{step.title}</li>)}
+                        </ol>}
+                        {mobileRecipeDetail.history.length > 0 && <div className="kel-recipe-desktop-history">
+                          <span>Last runs</span>
+                          {mobileRecipeDetail.history.slice(0, 2).map((run) => <div key={run.job_id}>
+                            {formatWhen(run.created ?? 0)} <strong>{run.verdict ?? run.state ?? 'Working'}</strong>
+                          </div>)}
+                        </div>}
+                        <div className="kel-recipe-desktop-expanded-actions">
+                          {mobileRecipeDetail.history.length > 0 && <button type="button" onClick={() => navigate('/work')}>Open on Work</button>}
+                          <button type="button" onClick={() => setShowRecipeTools((previous) => !previous)}>More actions</button>
+                          <KelButton variant="primary" disabled={busy !== null || mobileRecipeDetail.loading}
+                            onClick={() => void prepareRecipe(recipeId)}>Run</KelButton>
+                        </div>
+                      </div>}
+                    </div>;
+                  })}
+                </div>
                 <div className="kel-recipe-mobile-list">
                   <label className="kel-recipe-mobile-search">
                     <img src={mobileRecipeSearchIcon} alt="" width={14} height={14} />
@@ -500,7 +617,7 @@ export default function KelProjectsPage() {
                     </div>;
                   })}
                 </div>
-                <div className="kel-recipe-desktop-list">
+                <div className={`kel-recipe-desktop-list${showRecipeTools ? ' kel-recipe-desktop-list--open' : ''}`}>
                 <div className="kel-row" data-testid="recipe-library-controls">
                   <input
                     className="kel-input"
@@ -652,30 +769,7 @@ export default function KelProjectsPage() {
                   </label>
                 ))}
                 <div className="kel-row">
-                  <KelButton variant="primary" disabled={busy !== null} onClick={() => {
-                    const draft = runDraft;
-                    setBusy('Run recipe');
-                    setNote(null);
-                    void (async () => {
-                      try {
-                        const values = Object.fromEntries(Object.entries(draft.values)
-                          .filter(([, value]) => typeof value === 'boolean' || value.trim() !== ''));
-                        const dryRun = await kelRecipePreview(draft.recipeId, values);
-                        if (dryRun.needs_project) {
-                          setNote(String(dryRun.message ?? 'This recipe needs more project details.'));
-                          return;
-                        }
-                        const out = await kelRecipeRun(draft.recipeId, values);
-                        setNote(`Run request sent — follow it on Work (${String(out.submission).slice(0, 8)}).`);
-                        setRunDraft(null);
-                        await load();
-                      } catch (err) {
-                        setNote(`Run failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
-                      } finally {
-                        setBusy(null);
-                      }
-                    })();
-                  }}>Start recipe</KelButton>
+                  <KelButton variant="primary" disabled={busy !== null} onClick={() => void startRecipe()}>Start recipe</KelButton>
                   <KelButton variant="quiet" disabled={busy !== null} onClick={() => setRunDraft(null)}>Cancel</KelButton>
                 </div>
               </KelSection></div>
