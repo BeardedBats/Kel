@@ -27,6 +27,11 @@ const summaryLine = (summary: BackupSummary): string => {
   if (typeof summary.vetting_sessions === 'number') parts.push(`${summary.vetting_sessions} vetting sessions`);
   return parts.length ? parts.join(' · ') : 'nothing backed up yet';
 };
+const backupDate = (created?: number): string => {
+  if (!created || !Number.isFinite(created)) return 'Selected backup';
+  const date = new Date(created > 1_000_000_000_000 ? created : created * 1000);
+  return Number.isNaN(date.getTime()) ? 'Selected backup' : `Backup from ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+};
 
 export const KelDataCard: React.FC = () => {
   const [dataPath, setDataPath] = useState<DataPath | null>(null);
@@ -96,18 +101,14 @@ export const KelDataCard: React.FC = () => {
     setBusy(true);
     try {
       const details = await api<BackupDetails>({ action: 'inspect', source: restoreSource.trim() });
+      setFolderDialog(null);
       Modal.confirm({
+        className: 'kel-shell-restore-confirm-modal',
         title: 'Restore this backup?',
         content: (
-          <div>
-            <p>
-              This replaces Kel's current data ({summaryLine(details.summary)} in the backup) with the
-              backup from {details.folder}.
-            </p>
-            <p className='text-t-secondary'>
-              Your current data is kept beside the data folder as <code>.pre-restore-…</code> and Kel
-              must be restarted to finish. Credentials are not part of backups — reconnect them after.
-            </p>
+          <div className='kel-shell-restore-confirm-copy'>
+            <p className='kel-shell-restore-confirm-summary'>{backupDate(details.created)} · {summaryLine(details.summary)}</p>
+            <p>Your current data is saved next to the data folder first. Kel restarts to finish. Reconnect your credentials after.</p>
           </div>
         ),
         okText: 'Restore',
@@ -129,7 +130,7 @@ export const KelDataCard: React.FC = () => {
   }, [restoreSource]);
 
   return <div className='kel-card kel-shell-data-card'>
-    <div className='kel-h2'>Data &amp; backup</div>
+    <div className='kel-h2'><span className='kel-desktop-only'>Data and backup</span><span className='kel-phone-only'>Data &amp; backup</span></div>
     <div className='kel-phone-only kel-shell-system-mobile-rows'>
       <button type='button' className='kel-shell-system-mobile-row' onClick={() => pathError ? void loadPath() : void openFolder()} disabled={!dataPath && !pathError}>Data folder <span aria-hidden='true'>›</span></button>
       <button type='button' className='kel-shell-system-mobile-row' onClick={() => setFolderDialog('backup')}>Back up now <span aria-hidden='true'>›</span></button>
@@ -138,8 +139,8 @@ export const KelDataCard: React.FC = () => {
     <div className='kel-shell-preference-row kel-desktop-only'><div><div>Data folder</div><p className='kel-meta' data-testid='data-folder-path'>{dataPath ? dataPath.root : pathError ? 'Kel could not read the data folder path.' : 'Loading…'}</p></div>
       {pathError ? <Button onClick={loadPath}>Try again</Button> : <Button onClick={() => void openFolder()} disabled={!dataPath} data-testid='open-data-folder'>Show in folder</Button>}
     </div>
-    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Backup</div><p className='kel-meta'>Saves a copy of everything above to a folder you choose.</p></div><Button onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
-    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Restore</div><p className='kel-meta'>Restores a backup folder. Current data is kept; Kel restarts.</p></div><Button onClick={() => setFolderDialog('restore')} data-testid='restore-inspect'>Restore from this backup</Button></div>
+    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Back up</div><p className='kel-meta'>Save a copy of everything to a folder</p></div><Button onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
+    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Restore</div><p className='kel-meta'>Replace current data with a backup</p></div><Button onClick={() => setFolderDialog('restore')} data-testid='restore-inspect'>Restore...</Button></div>
     <Modal title={folderDialog === 'backup' ? 'Back up now' : 'Restore from this backup'} visible={folderDialog !== null} onCancel={() => setFolderDialog(null)} okText={folderDialog === 'backup' ? 'Back up now' : 'Inspect backup'} confirmLoading={busy} okButtonProps={{ disabled: !(folderDialog === 'backup' ? backupTarget : restoreSource).trim() }} onOk={() => folderDialog === 'backup' ? createBackup() : restoreBackup()}>
       <Input aria-label={folderDialog === 'backup' ? 'Backup folder' : 'Restore folder'} value={folderDialog === 'backup' ? backupTarget : restoreSource} onChange={folderDialog === 'backup' ? setBackupTarget : setRestoreSource} placeholder='Folder path' />
     </Modal>

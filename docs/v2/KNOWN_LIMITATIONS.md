@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Desktop System, Restore, and About](evidence/figma-full-audit/DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md) match current Figma structure and measured 1440px card/dialog bounds. The isolated 800px data path wraps, making its System card taller. The backup summary came from disposable data; the restore was canceled. System switches, timeouts, version, and runtime display actual settings and package values, which differ from Figma's sample. The canonical App still packages `8c67121`.
+
 [Desktop Appearance](evidence/figma-full-audit/DESKTOP_APPEARANCE_CURRENT_REVISION.md) now follows the current Theme, colors, text/zoom, and Add theme structure at 1440 and 800px. The tested Midnight theme had no custom CSS or color override, so its preview and values differ from Figma's illustrative edited theme. More colors and font Reset controls remain accessible. The Add theme dialog is 14px shorter than the scaled Figma sample. Canonical App still packages `8c67121`.
 
 [Desktop Assistants and Skills](evidence/figma-full-audit/DESKTOP_CATALOG_CURRENT_REVISION.md) have current Figma headings and row layouts. The isolated package contained one real assistant and no custom skills. It therefore cannot prove a three-row populated Skills state. Kel retains its actual stored description instead of Figma's sample copy. The canonical installed App still packages `8c67121`.

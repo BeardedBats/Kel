@@ -132,18 +132,20 @@ const AboutModalContent: React.FC = () => {
     },
   ];
 
+  const updateLabel = updateReadyState.preparing ? t('update.preparingInstall')
+    : updateReadyState.ready ? t('settings.updateReadyInstall', { version: updateReadyState.version })
+    : checking ? t('settings.checkingForUpdates') : t('settings.checkForUpdates');
+
   return (
     <div className='kel-shell-about'>
-      <KelCard title='Kel'>
+      <KelCard title='Kel' actions={isElectron ? <Button className='kel-shell-about-update kel-desktop-only' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
+        {updateLabel}
+      </Button> : undefined}>
         <div className='kel-shell-preference-row'><span>Version</span><span><span className='kel-desktop-only'>v{__APP_VERSION__}</span><span className='kel-phone-only'>{__APP_VERSION__.replace(/-/, ' · ')}</span></span></div>
         <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'}<span className='kel-shell-about-runtime-detail'>{` · React ${React.version.split('.')[0]} · Arco Design`}</span></span></div>
         <div className='kel-shell-preference-row kel-shell-about-data-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
-        {isElectron && <>
-          <Button className='kel-shell-about-update' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
-            {updateReadyState.preparing ? t('update.preparingInstall') : updateReadyState.ready ? t('settings.updateReadyInstall', { version: updateReadyState.version }) : checking ? t('settings.checkingForUpdates') : t('settings.checkForUpdates')}
-            <Right theme='outline' size='16' className='kel-phone-only' />
-          </Button>
-        </>}
+        <div className='kel-shell-preference-row kel-desktop-only kel-shell-about-notices-inline'><span>Third-party notices</span><button type='button' onClick={() => setShowNotices(true)}>View</button></div>
+        {isElectron && <Button className='kel-shell-about-update kel-phone-only' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>{updateLabel}<Right theme='outline' size='16' /></Button>}
       </KelCard>
       <div className='kel-shell-about-licenses'>
         <KelCard title='Licenses'>

@@ -2410,6 +2410,43 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn:not(.arco-btn-primary) { border: 0 !important; background: transparent !important; box-shadow: none !important; }
   .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn-primary { border-color: #2e7939 !important; background: linear-gradient(180deg,#2e7939,#1f5e30) !important; color: #fff1f0 !important; }
 }
+
+/* Current desktop System 314:3912, Restore 314:4383, and About 314:4871. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-data-card { gap: 0; padding-bottom: 12px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-data-card > .kel-h2:first-child { margin-bottom: 4px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-data-card > .kel-shell-preference-row,
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-data-card > .kel-shell-preference-row:last-of-type {
+    min-height: 41px; padding: 1px 0; border-color: rgba(191,216,255,.08);
+  }
+  .kel-v2-shell .kel-shell-data-card > .kel-shell-preference-row:last-of-type .kel-meta { min-height: 0; }
+  .kel-v2-shell .kel-shell-data-card .arco-btn { height: 32px !important; min-height: 32px !important; border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; }
+  .kel-v2-shell .kel-shell-data-card .arco-btn[data-testid='backup-now'] { background: linear-gradient(180deg,#5284df,#2054ac) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22) !important; color: #fff !important; }
+  .kel-v2-shell .kel-shell-data-card .arco-btn[data-testid='restore-inspect'] { border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 500 13px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-data-card [data-testid='data-folder-path'] { overflow-wrap: anywhere; }
+  .kel-v2-shell .kel-shell-system-general > .w-full { margin-top: 4px !important; }
+  .kel-v2-shell .kel-shell-system-general > .w-full > * { min-height: 46px; padding-block: 5px; }
+  .kel-v2-shell .kel-shell-system-general .w-160px { width: 150px; }
+  .kel-v2-shell .kel-shell-system-general .arco-select-view { height: 32px; }
+  .kel-v2-shell .kel-shell-system-general .arco-input-number { width: 100px !important; height: 32px; }
+  .kel-v2-shell .kel-shell-about > .kel-card { padding-bottom: 16px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-about .kel-shell-preference-row { min-height: 52.5px; border-bottom: 1px solid rgba(191,216,255,.08); }
+  .kel-v2-shell .kel-shell-about-data-row .kel-meta { display: none; }
+  .kel-v2-shell .kel-shell-about-data-row .arco-btn,
+  .kel-v2-shell .kel-shell-about-notices-inline button { border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-about-update.arco-btn { position: static; height: 34px; border: 0; border-radius: 8px; background: linear-gradient(180deg,#5284df,#2054ac); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; }
+  html[data-theme='dark'] body .arco-modal.kel-shell-restore-confirm-modal { position: relative; top: -15.2vh; box-sizing: border-box; width: 520px !important; max-width: calc(100vw - 32px); padding: 0 !important; border: 1px solid rgba(191,216,255,.18); border-radius: 16px; background: linear-gradient(120deg,rgba(47,107,224,.1),transparent),rgba(15,45,100,.94); box-shadow: 0 20px 48px rgba(0,0,0,.35); backdrop-filter: blur(24px); }
+  .kel-shell-restore-confirm-modal .arco-modal-header { margin: 0; border: 0; padding: 20px 24px 0; }
+  .kel-shell-restore-confirm-modal .arco-modal-title { text-align: left; color: #f7eee1; font: 600 16px/22px var(--kel-shell-heading); }
+  .kel-shell-restore-confirm-modal .arco-modal-title .arco-icon { display: none; }
+  .kel-shell-restore-confirm-modal .arco-modal-content { padding: 8px 24px 0; }
+  .kel-shell-restore-confirm-modal .arco-modal-footer { margin: 0 !important; border: 0; padding: 16px 24px 20px; }
+  .kel-shell-restore-confirm-copy { font: 400 13px/19px var(--kel-shell-body); color: #edf2fa; }
+  .kel-shell-restore-confirm-copy p { margin: 0; }
+  .kel-shell-restore-confirm-summary { margin-bottom: 8px !important; color: #8fa9d6; }
+  .kel-shell-restore-confirm-modal .arco-btn-primary { border: 0; background: linear-gradient(180deg,#af493d,#81291f) !important; color: #fff !important; }
+  .kel-shell-restore-confirm-modal .arco-btn:not(.arco-btn-primary) { border: 0; background: transparent !important; color: #9fc3ff !important; }
+}
 @media (min-width: 768px) and (max-width: 1050px) {
   .kel-v2-shell .kel-shell-theme-color-row { display: flex; flex-wrap: nowrap; gap: 10px; min-height: 40px; }
   .kel-v2-shell .kel-shell-theme-color-row > .w-160px { width: auto; flex: 1; }
