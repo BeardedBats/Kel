@@ -2,6 +2,8 @@
 
 ## Latest Figma revision (2026-09-25)
 
+The [current mobile Chat Permission sheet](evidence/figma-full-audit/CHAT_PERMISSION_CURRENT_REVISION.md) matches the frame bounds and option geometry at 393px and fits 320px. Its isolated ACP session did not return a mode catalog; session-gated sample options verified presentation only. A live mode switch and provider support remain unverified. The Windows titlebar and font rendering differ from the phone frame.
+
 The [current mobile Permissions empty state](evidence/figma-full-audit/PERMISSIONS_CURRENT_REVISION.md) matches all three card bounds at 393px and fits 320px. Its digest comes from isolated engine data and opens the real check controls. Populated grants and access requests remain unverified. Windows phone chrome and font rendering differ. Earlier five-tab captures are superseded by the [four-tab package](evidence/figma-full-audit/MOBILE_NAV_CURRENT_REVISION.md).
 
 The [current mobile Knowledge check](evidence/figma-full-audit/KNOWLEDGE_CURRENT_REVISION.md) uses two bounded engine proposals and five map sections. Its first card starts at the current Figma bounds, and defer/refresh worked. Figma pictures three sample map rows; the package keeps all five real sections. Accept and Reject were not submitted. Windows font and phone chrome still differ.

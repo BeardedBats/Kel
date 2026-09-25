@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Chat Permission sheet check (2026-09-25)
+
+[The scoped Permission record](evidence/figma-full-audit/CHAT_PERMISSION_CURRENT_REVISION.md) compares live mobile `299:12418` with a disposable package. At 393px, the sheet measured x0/y447, 393×405, matching Figma. All five choices fit at 393 and 320px, with no overflow or renderer error. The title returned to the main menu. Sampled glass background colors differed by at most four channel values in the middle. The ACP session returned no mode catalog, so a session-gated injector supplied the five sample options. No live mode switch was tested. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile four-tab and Kibble path check (2026-09-25)
 
 [The scoped navigation record](evidence/figma-full-audit/MOBILE_NAV_CURRENT_REVISION.md) verifies Figma's Chats, Ramble, Projects, Settings tab order at 393 and 320px. Nick's Settings → Tools → Kibble path opened the existing Kibble page and returned to Tools. Both widths had zero document overflow and no renderer error. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

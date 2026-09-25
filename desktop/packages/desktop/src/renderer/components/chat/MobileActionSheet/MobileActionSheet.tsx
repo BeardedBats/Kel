@@ -130,9 +130,10 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({ open, onClose, ti
 
   return createPortal(
     <Fragment>
-      <div className={`${styles.mask} ${visible ? styles.visible : ''}`} onClick={onClose} />
+      <div className={`${styles.mask} ${visible ? styles.visible : ''}`} data-submenu={renderedSubKey ?? undefined} onClick={onClose} />
       <div
         className={`${styles.sheet} ${visible ? styles.visible : ''}`}
+        data-submenu={renderedSubKey ?? undefined}
         role='dialog'
         aria-modal='true'
         onClick={(e) => e.stopPropagation()}
@@ -181,13 +182,15 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({ open, onClose, ti
               className={`${styles.pane} ${styles.paneSub} ${subPhase === 'shown' ? styles.paneActive : styles.paneOutRight}`}
               aria-hidden={subPhase !== 'shown'}
             >
-              <div className={styles.subbar}>
+              {renderedSubKey === 'permission' ? <button type='button' className={styles.permissionTitle} onClick={() => setActiveSubKey(null)} aria-label='Back to options'>
+                {renderedSub.title}
+              </button> : <div className={styles.subbar}>
                 <button className={styles.back} onClick={() => setActiveSubKey(null)} type='button'>
                   <Left theme='outline' size='16' />
                   <span>{t('common.back', { defaultValue: 'Back' })}</span>
                 </button>
                 <div className={styles.subtitle}>{renderedSub.title}</div>
-              </div>
+              </div>}
               <div className={styles.list}>
                 {renderedSub.options.length === 0 ? (
                   <div className={styles.empty}>{renderedSub.emptyText}</div>

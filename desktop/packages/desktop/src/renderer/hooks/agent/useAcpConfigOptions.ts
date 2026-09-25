@@ -238,6 +238,11 @@ const conversationConfigOptionsPort: AcpConfigOptionsPort = {
   load: async (conversation_id: string) => (await ensureConversationRuntime(conversation_id)).config_options,
 };
 
+/** Disposable renderer QA only: project an ACP catalog without issuing a model request. */
+export function injectAcpConfigOptionsForTests(conversation_id: string, options: AcpConfigOptionDto[]): void {
+  void swrMutate(getRuntimeConfigOptionsKey(conversation_id), options, false);
+}
+
 const configOptionsInFlight = new Map<string, Promise<AcpConfigOptionDto[] | null>>();
 
 function fetchConfigOptionsOnce(
