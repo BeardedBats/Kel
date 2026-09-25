@@ -115,10 +115,7 @@ const KelActivityPage: React.FC = () => {
         title='Waiting on you'
       >
         {waiting.length === 0 ? (
-          <KelEmpty
-            title='Nothing needs you right now.'
-            why='Approvals and offers to continue land here when they genuinely need a person.'
-          />
+          <p className='kel-meta kel-shell-activity-clear'>All clear.</p>
         ) : (
           waiting.map((candidate, index) => (
             <div className='kel-row' key={`${candidate.job_id ?? 'candidate'}-${index}`}>
@@ -139,7 +136,7 @@ const KelActivityPage: React.FC = () => {
         title='Recently finished'
       >
         {finished.length === 0 ? (
-            <KelEmpty title='Nothing has finished yet.' why='Completed work shows up here with its outcome.' />
+            <p className='kel-meta kel-shell-activity-clear'>All clear.</p>
         ) : (
           finished.map((job) => (
             <Row
