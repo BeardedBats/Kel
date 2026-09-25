@@ -127,7 +127,7 @@
 | `299:12936` | M / Sign in | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:13626` | M / Startup — Starting up | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:13662` | M / Startup — Engine stopped | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
-| `299:13686` | M / Projects | `/projects` | Replaced page/node; prior pair absent. | PENDING |
+| `299:13686` | M / Projects | `/projects` | Current two-card index compared in an isolated package at 393 and 320px. | READ |
 | `299:13910` | M / Work | `/work` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14061` | M / Activity | `/activity` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14218` | M / Permissions | `/autonomy` | Replaced page/node; prior pair absent. | PENDING |
@@ -167,4 +167,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect mobile Permission `299:12418` with a runtime-capable isolated conversation, then compare remaining current component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** compare mobile Work `299:13910` with the isolated package, then inspect mobile Permission `299:12418` with a runtime-capable isolated conversation and the remaining component variants. Keep old evidence for history and label it superseded until refreshed.
