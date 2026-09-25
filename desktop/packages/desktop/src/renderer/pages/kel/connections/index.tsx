@@ -81,6 +81,16 @@ const draftFor = (connection: KelConnection): Draft => ({
   notes: connection.notes,
 });
 
+const credentialDraftFor = (connection: KelConnection, list: KelConnectionList) => ({
+  id: connection.id,
+  name: connection.name,
+  field: connection.credential_fields[0] ?? connectionCredentialField(list, connection.kind),
+  header: connection.auth_header || 'Authorization',
+  usesHeader: connection.auth_method === 'header' || connection.auth_method === 'bearer',
+  headerEditable: connection.auth_method === 'header',
+  value: '',
+});
+
 /** The three things a person can mean by "how the credential is presented". */
 const prefixMode = (prefix: string | null): 'auto' | 'raw' | 'custom' =>
   prefix === null || prefix === undefined ? 'auto' : prefix === '' ? 'raw' : 'custom';
@@ -111,6 +121,9 @@ const Connections: React.FC = () => {
     id: string;
     name: string;
     field: string;
+    header: string;
+    usesHeader: boolean;
+    headerEditable: boolean;
     value: string;
   } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
@@ -217,6 +230,10 @@ const Connections: React.FC = () => {
     try {
       const custody = window.kelAPI?.credentials;
       if (!custody) throw new Error('Storing credentials is only available in the Kel app.');
+      const connection = list?.connections.find((item) => item.id === pending.id);
+      if (connection && pending.headerEditable && pending.header !== connection.auth_header) {
+        await kelConnections.save({ ...draftFor(connection), auth_header: pending.header });
+      }
       // The shell encrypts the value into the OS store and syncs the metadata (field names + a
       // pointer) into the engine; the value itself never leaves the main process.
       await custody.set(connectionCustodyKey(pending.id), pending.field, pending.value);
@@ -234,7 +251,7 @@ const Connections: React.FC = () => {
     } finally {
       setBusy(false);
     }
-  }, [credentialDraft, load]);
+  }, [credentialDraft, list, load]);
 
   const forgetCredential = useCallback(
     async (connection: KelConnection) => {
@@ -368,6 +385,7 @@ const Connections: React.FC = () => {
         // The value first (only the main process can reach it), then the record.
         await window.kelAPI?.credentials?.remove(connectionCustodyKey(connection.id));
         await kelConnections.remove(connection.id);
+        setCredentialDraft(null);
         setConfirmRemove(null);
         await load();
         setNote(`${connection.name} is removed. Kel will not use it any more.`);
@@ -392,6 +410,9 @@ const Connections: React.FC = () => {
 
   const ready = list.counts.ready;
   const needing = list.counts.needs_credentials;
+  const pendingAction = doable.flatMap((connection) =>
+    (actionsByConnection[connection.id] ?? []).map((action) => ({ connection, action }))
+  ).find(({ action }) => action.id === confirmAction);
 
   return (
     <div className="kel-page kel-connections-page">
@@ -415,7 +436,7 @@ const Connections: React.FC = () => {
           </span>
         }
       >
-        <p className="kel-connections-caption">The services Kel can use. You keep the credential.</p>
+        {connections.length === 0 && <p className="kel-connections-caption">The services Kel can use. You keep the credential.</p>}
         {connections.length === 0 ? (
           <div className="kel-connections-empty-body"><img src={connectionIcon} alt="" width={20} height={20} /><KelEmpty
             title="No connections yet."
@@ -429,6 +450,7 @@ const Connections: React.FC = () => {
             const disagree = shellFields.length > 0 && !connection.has_credentials;
             return (
               <div className="kel-row kel-connection-row kel-connection-configured-row" key={connection.id}>
+                <img className="kel-connection-row-icon" src={connectionIcon} alt="" />
                 <div className="kel-attention__text">
                   <strong>{connection.name}</strong>
                   <span className="kel-meta">
@@ -480,13 +502,16 @@ const Connections: React.FC = () => {
                     disabled={busy}
                     onClick={() => void checkConnection(connection)}
                   >
-                    Test connection
+                    Test
                   </KelButton>
                 )}
-                <KelButton variant="primary" disabled={busy} onClick={() => setDraft(draftFor(connection))}>
+                <KelButton variant="primary" disabled={busy} onClick={() => setCredentialDraft(credentialDraftFor(connection, list))}>
                   Edit
                 </KelButton>
                 <details className="kel-connection-more"><summary>More actions</summary>
+                <KelButton variant="quiet" disabled={busy} onClick={() => setDraft(draftFor(connection))}>
+                  Edit service details
+                </KelButton>
                 {connection.kind === 'oauth' && (
                   <KelButton
                     variant={connection.auth_state === 'connected' ? 'quiet' : 'primary'}
@@ -503,16 +528,7 @@ const Connections: React.FC = () => {
                 <KelButton
                   variant={connection.has_credentials ? 'quiet' : 'primary'}
                   disabled={busy}
-                  onClick={() =>
-                    setCredentialDraft({
-                      id: connection.id,
-                      name: connection.name,
-                      field:
-                        connection.credential_fields[0] ??
-                        connectionCredentialField(list, connection.kind),
-                      value: '',
-                    })
-                  }
+                  onClick={() => setCredentialDraft(credentialDraftFor(connection, list))}
                 >
                   {connection.has_credentials ? 'Replace credential' : 'Add credential'}
                 </KelButton>
@@ -521,21 +537,36 @@ const Connections: React.FC = () => {
                     Remove credential
                   </KelButton>
                 )}
-                {confirmRemove === connection.id ? (
-                  <>
-                    <KelButton variant="quiet" disabled={busy} onClick={() => void removeConnection(connection)}>
-                      Confirm remove
-                    </KelButton>
-                    <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(null)}>
-                      Cancel
-                    </KelButton>
-                  </>
-                ) : (
-                  <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(connection.id)}>
-                    Remove
-                  </KelButton>
-                )}
                 </details>
+                {credentialDraft?.id === connection.id && (
+                  <div className="kel-connection-inline-credential">
+                    <div className="kel-connection-credential-fields">
+                      <label className="kel-meta" htmlFor="kel-connection-field">{credentialDraft.usesHeader ? 'Header name' : 'Credential field'}
+                        <input id="kel-connection-field" className="kel-input"
+                          value={credentialDraft.usesHeader ? credentialDraft.header : credentialDraft.field}
+                          readOnly={credentialDraft.usesHeader && !credentialDraft.headerEditable}
+                          onChange={(event) => setCredentialDraft({ ...credentialDraft,
+                            [credentialDraft.usesHeader ? 'header' : 'field']: event.target.value })} />
+                      </label>
+                      <label className="kel-meta" htmlFor="kel-connection-value">Credential
+                        <input id="kel-connection-value" className="kel-input" type="password" autoComplete="off"
+                          placeholder="••••••••••••••••••••" value={credentialDraft.value}
+                          onChange={(event) => setCredentialDraft({ ...credentialDraft, value: event.target.value })} />
+                      </label>
+                    </div>
+                    <div className="kel-connection-credential-actions">
+                      {confirmRemove === connection.id ? <>
+                        <KelButton variant="quiet" disabled={busy} onClick={() => void removeConnection(connection)}>Confirm remove</KelButton>
+                        <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(null)}>Keep service</KelButton>
+                      </> : <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(connection.id)}>Remove service</KelButton>}
+                      <span className="kel-grow" />
+                      <KelButton variant="quiet" disabled={busy} onClick={() => setCredentialDraft(null)}>Cancel</KelButton>
+                      <KelButton variant="primary" disabled={busy || !credentialDraft.value || !credentialDraft.field || (credentialDraft.usesHeader && !credentialDraft.header)}
+                        onClick={() => void saveCredential()}>Save credential</KelButton>
+                    </div>
+                    <p className="kel-meta kel-connection-custody-note">Kel stores the value in this computer's secure store.</p>
+                  </div>
+                )}
               </div>
             );
           })
@@ -564,29 +595,17 @@ const Connections: React.FC = () => {
         <KelCard
           title="What Kel can do"
           className="kel-connections-actions"
-          chip={<span className="kel-meta">only when you ask</span>}
         >
-          <p className="kel-sub">
-            Each one is a single request to the service. Kel records that it happened — never what came
-            back, and never your credential.
-          </p>
+          <p className="kel-connections-caption">Kel runs these only when you ask.</p>
           {doable.map((connection) => {
             const actions = actionsByConnection[connection.id] ?? [];
             return actions.map((action) => {
               const answer = answers[action.id];
-              const waiting = confirmAction === action.id;
               return (
-                <div className="kel-row" key={action.id}>
-                  <div className="kel-attention__text">
+                <div className="kel-row kel-connection-action-row" key={action.id}>
+                  <div className="kel-attention__text" title={action.description}>
                     <strong>{action.name}</strong>
-                    <span className="kel-meta">
-                      {connection.name} · {action.description}
-                    </span>
-                    {action.mutating && (
-                      <span className="kel-meta">
-                        This changes something in {connection.name}, so Kel asks first.
-                      </span>
-                    )}
+                    <span className="kel-meta">{connection.name}</span>
                     {answer && (
                       <span className="kel-meta">
                         {CONNECTION_CHECK_LABELS[answer.state] ?? 'Done'} — {answer.note}
@@ -597,84 +616,26 @@ const Connections: React.FC = () => {
                     )}
                   </div>
                   <span className="kel-grow" />
-                  {waiting ? (
-                    <KelButton
-                      variant="primary"
-                      disabled={busy}
-                      onClick={() => void doAction(connection, action, true)}
-                    >
-                      Yes, do it
-                    </KelButton>
-                  ) : (
-                    <KelButton
-                      variant="quiet"
-                      disabled={busy}
-                      onClick={() =>
-                        action.mutating
-                          ? setConfirmAction(action.id)
-                          : void doAction(connection, action)
-                      }
-                    >
-                      {action.mutating ? 'Do it…' : 'Do it'}
-                    </KelButton>
-                  )}
+                  <span className="kel-connection-action-status" data-mutating={action.mutating}>
+                    {action.mutating ? 'Asks first' : 'Reads only'}
+                  </span>
+                  <KelButton variant="primary" disabled={busy}
+                    onClick={() => action.mutating ? setConfirmAction(action.id) : void doAction(connection, action)}>
+                    Run
+                  </KelButton>
                 </div>
               );
             });
           })}
-        </KelCard>
-      )}
-
-      {credentialDraft && (
-        <KelCard
-          title={`Credential for ${credentialDraft.name}`}
-          className="kel-connection-credential-form"
-          chip={<span className="kel-meta">stored encrypted on this computer</span>}
-        >
-          <p className="kel-sub">
-            The value is encrypted into this computer's own secure store. Kel records the field name and
-            a pointer — never the value, so it never reaches the engine's database, logs or exports.
-          </p>
-          <div className="kel-row">
-            <label className="kel-meta" htmlFor="kel-connection-field">
-              Field name
-            </label>
-            <input
-              id="kel-connection-field"
-              className="kel-input"
-              value={credentialDraft.field}
-              onChange={(event) =>
-                setCredentialDraft({ ...credentialDraft, field: event.target.value })
-              }
-            />
-          </div>
-          <div className="kel-row">
-            <label className="kel-meta" htmlFor="kel-connection-value">
-              Credential
-            </label>
-            <input
-              id="kel-connection-value"
-              className="kel-input"
-              type="password"
-              autoComplete="off"
-              value={credentialDraft.value}
-              onChange={(event) =>
-                setCredentialDraft({ ...credentialDraft, value: event.target.value })
-              }
-            />
-          </div>
-          <div className="kel-row">
-            <KelButton
-              variant="primary"
-              disabled={busy || !credentialDraft.value || !credentialDraft.field}
-              onClick={() => void saveCredential()}
-            >
-              Save credential
-            </KelButton>
-            <KelButton variant="quiet" disabled={busy} onClick={() => setCredentialDraft(null)}>
-              Cancel
-            </KelButton>
-          </div>
+          {pendingAction && <div className="kel-connection-action-confirmation">
+            <p>⚠ This changes something in {pendingAction.connection.name}. Kel asks before it changes anything.</p>
+            <div className="kel-row">
+              <span className="kel-grow" />
+              <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmAction(null)}>Cancel</KelButton>
+              <KelButton variant="primary" disabled={busy}
+                onClick={() => void doAction(pendingAction.connection, pendingAction.action, true)}>Yes, run it</KelButton>
+            </div>
+          </div>}
         </KelCard>
       )}
 

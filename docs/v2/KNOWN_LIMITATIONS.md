@@ -2,7 +2,7 @@
 
 ## Desktop Home and Connections (2026-09-25)
 
-[Home](evidence/figma-full-audit/DESKTOP_HOME_CURRENT_REVISION.md) matches the current heading, card, and composer geometry at 1440px. Its isolated state has one provider setup need; Figma's two work updates were not fabricated. [Connections](evidence/figma-full-audit/DESKTOP_CONNECTIONS_CURRENT_REVISION.md) matches the current empty card bounds. The packaged Add form still has more fields than Figma's six-field example. The populated services list, inline credential editor, and action confirmation require further desktop implementation and package checks. No live credential or service call was used. The canonical installed App still packages `8c67121`.
+[Home](evidence/figma-full-audit/DESKTOP_HOME_CURRENT_REVISION.md) matches the current heading, card, and composer geometry at 1440px. Its isolated state has one provider setup need; Figma's two work updates were not fabricated. [Connections](evidence/figma-full-audit/DESKTOP_CONNECTIONS_CURRENT_REVISION.md) now has packaged empty and populated Services states and an inline credential editor. The populated card measures 670×244 at 1440px; Figma shows about 670×240. The credential card remains taller than Figma because Kel keeps service options and a secure-storage note visible. The Add form has extra options. The current engine catalogs read actions only, so Figma's mutating Linear issue confirmation has a DOM test but no packaged visual proof. A final 800px action-label CSS repair also awaits package proof. No live credential or service call was used. The canonical installed App still packages `8c67121`.
 
 ## Desktop Recipes (2026-09-25)
 
