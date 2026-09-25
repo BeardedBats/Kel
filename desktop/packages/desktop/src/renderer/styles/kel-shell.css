@@ -943,6 +943,46 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-chat-composer .sendbox-tools .arco-btn { background: transparent !important; border: 0 !important; }
 .kel-shell-chat-workspace { display: flex; align-items: center; gap: 8px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Current mobile Model picker frame 299:12372. The portal sits above the app shell. */
+.kel-mobile-model-picker { position: fixed; inset: 0; z-index: 2200; }
+.kel-mobile-model-picker__scrim { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: rgba(6,18,46,.6); cursor: default; }
+.kel-mobile-model-picker__sheet {
+  position: absolute; inset-inline: 0; bottom: 0; display: flex; flex-direction: column; gap: 14px;
+  box-sizing: border-box; width: 100%; height: min(410px, calc(100dvh - 20px)); padding: 8px 16px 35px;
+  border: 1px solid rgba(191,216,255,.16); border-bottom: 0; border-radius: 20px 20px 0 0;
+  background: linear-gradient(180deg, rgba(191,216,255,.08), rgba(191,216,255,0)), rgba(15,45,100,.4);
+  backdrop-filter: blur(24px); box-shadow: 0 20px 24px rgba(0,0,0,.35), inset 0 1px rgba(191,216,255,.18);
+  color: #edf2fa;
+}
+.kel-mobile-model-picker__handle { flex: none; width: 36px; height: 5px; margin: 0 auto; border-radius: 3px; background: rgba(191,216,255,.3); }
+.kel-mobile-model-picker__sheet h2 { flex: none; margin: 0; font: 600 20px/24px var(--kel-shell-heading); }
+.kel-mobile-model-picker__tabs { display: flex; flex: none; gap: 18px; padding-bottom: 8px; }
+.kel-mobile-model-picker__tabs button {
+  height: 28px; padding: 0 6px; border: 0; border-bottom: 1px solid transparent; background: transparent;
+  color: #c4d4e8; font: 500 13px/20px var(--kel-shell-heading); white-space: nowrap; cursor: pointer;
+}
+.kel-mobile-model-picker__tabs button[aria-selected='true'] { border-bottom-color: #fcac51; color: #ffb764; }
+.kel-mobile-model-picker__choices { flex: 1; min-height: 0; margin-top: -12px; overflow-y: auto; scrollbar-width: none; }
+.kel-mobile-model-picker__choices::-webkit-scrollbar { display: none; }
+.kel-mobile-model-picker__choice {
+  display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; width: 100%; min-height: 45px;
+  padding: 10px 0; border: 0; border-bottom: 1px solid rgba(191,216,255,.08); background: transparent;
+  color: #edf2fa; text-align: left; cursor: pointer;
+}
+.kel-mobile-model-picker__choice:last-child { border-bottom: 0; }
+.kel-mobile-model-picker__choice > span:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kel-mobile-model-picker__choice strong { overflow: hidden; font: 500 16px/22px var(--kel-shell-heading); text-overflow: ellipsis; white-space: nowrap; }
+.kel-mobile-model-picker__choice small { color: #8fa9d6; font: 400 13px/16px var(--kel-shell-body); }
+.kel-mobile-model-picker__check { flex: none; margin-left: 12px; color: #bcd8ff; font: 600 18px/20px var(--kel-shell-heading); }
+.kel-mobile-model-picker__empty { margin: 8px 0; color: #8fa9d6; font: 400 13px/18px var(--kel-shell-body); }
+.kel-mobile-model-picker__add {
+  flex: none; box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px;
+  border: 1px solid rgba(140,150,167,.5); border-radius: 8px;
+  background: linear-gradient(180deg,#6493f8,#2356b3); color: #fff1f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1);
+  font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
+}
+
 /* Current Chat reconnecting frames 273:12681 and 299:12515: occupy the composer slot. */
 .kel-v2-shell:has(.kel-chat-reconnecting) .kel-engine-notice { display: none; }
 .kel-v2-shell .kel-chat-reconnecting {

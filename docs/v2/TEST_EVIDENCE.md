@@ -1,12 +1,16 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Chat model picker package check (2026-09-25)
+
+[The scoped model picker record](evidence/figma-full-audit/CHAT_MODEL_PICKER_CURRENT_REVISION.md) compares live mobile `299:12372` with a disposable package. The sheet measured x0/y442, 393×410 at 393px and stayed inside 320px. It used Figma's scrim, glass, blur, radius, tabs, and button placement. An isolated engine conversation accepted a Claude (built-in) choice and restored Automatic; Escape closed the sheet, and Add model opened `/settings/model`. No model request ran. No overflow or renderer error occurred. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. Canonical App and Data were untouched.
+
 ## Current Chat reconnecting package check (2026-09-25)
 
 [The scoped reconnecting record](evidence/figma-full-audit/CHAT_RECONNECTING_CURRENT_REVISION.md) compares live desktop `273:12681` and mobile `299:12515` with a disposable package. A test-only renderer event showed the notice in the composer slot at 920×60, x388/y786 on desktop and 361×48, x16/y708 on mobile. At 800 and 320px, the notice stayed inside the viewport. The composer and global notice were hidden while reconnecting; a simulated connected event restored the composer. No renderer error occurred. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. Real engine restart and message delivery remain unverified. Canonical App and Data were untouched.
 
 ## Current Chat agent-error package check (2026-09-25)
 
-[The scoped error record](evidence/figma-full-audit/CHAT_AGENT_ERROR_CURRENT_REVISION.md) compares live desktop `273:13090` and mobile `299:12494` with a disposable package. A synthetic structured timeout produced a 920×114 card at 1440px and a 361×200 card at 393px, matching frame bounds. It remained inside 800px and 320px viewports. The technical-details disclosure opened. Model choice opened the desktop picker and the mobile Model settings screen. Retry was not clicked. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. No renderer error or document overflow occurred. The canonical App and Data were untouched.
+[The scoped error record](evidence/figma-full-audit/CHAT_AGENT_ERROR_CURRENT_REVISION.md) compares live desktop `273:13090` and mobile `299:12494` with a disposable package. A synthetic structured timeout produced a 920×114 card at 1440px and a 361×200 card at 393px, matching frame bounds. It remained inside 800px and 320px viewports. The technical-details disclosure opened. Model choice opened the desktop picker and the mobile model sheet. Retry was not clicked. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. No renderer error or document overflow occurred. The canonical App and Data were untouched.
 
 ## Current Chat tool-call and plan package check (2026-09-25)
 
