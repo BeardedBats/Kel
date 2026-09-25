@@ -21,7 +21,9 @@ import rambleMobileMicIcon from '@renderer/assets/figma/refresh/ramble-mobile-mi
 import rambleMobilePlusIcon from '@renderer/assets/figma/refresh/ramble-mobile-plus.svg';
 import rambleMobileBackIcon from '@renderer/assets/figma/refresh/ramble-mobile-back.svg';
 import rambleMobileMoreIcon from '@renderer/assets/figma/refresh/ramble-mobile-more.svg';
+import rambleMobileEditIcon from '@renderer/assets/figma/refresh/ramble-mobile-edit.svg';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
@@ -123,6 +125,14 @@ const TranscriptionPage: React.FC = () => {
   const [review, setReview] = useState<{ open: boolean; mode: 'answers' | 'freethink'; text: string; editing: boolean; busy: boolean; payload?: ReviewPayload }>(
     { open: false, mode: 'answers', text: '', editing: false, busy: false }
   );
+  useEffect(() => {
+    if (!review.open || !layout?.isMobile) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false });
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [review.open, layout?.isMobile]);
   const captureRef = useRef<MicCapture | null>(null);
   const sessionRef = useRef<string | null>(null);
   const chainRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -975,6 +985,7 @@ const statusCopy =
                       <button type='button' onClick={() => setSettingsOpen(true)}>API Key</button>
                       <button type='button' disabled={selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)}>Record More</button>
                       <button type='button' disabled={library.transcripts.length < 2} onClick={() => { setCombineSource(''); setCombineOpen(true); }}>Combine</button>
+                      <button type='button' onClick={() => void openReview('freethink')} data-testid='open-vetting-review'>Vetting answers</button>
                     </div>
                   </details>}
                 </div>
@@ -1028,6 +1039,46 @@ const statusCopy =
           </div>
         )}
       </Modal>
+      {layout?.isMobile && review.open && createPortal(
+        <div className='kel-ramble-vetting-layer'>
+          <button type='button' className='kel-ramble-vetting-scrim' aria-label='Close vetting answers' onClick={() => setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false })} />
+          <section className='kel-ramble-vetting-sheet' role='dialog' aria-modal='true' aria-labelledby='kel-ramble-vetting-title' data-testid='ramble-vetting-sheet'>
+            <div className='kel-ramble-vetting-handle' />
+            <h2 id='kel-ramble-vetting-title'>Vetting answers</h2>
+            {review.busy ? <p className='kel-ramble-vetting-message'>Checking the transcript…</p> : review.editing ? (
+              <div className='kel-ramble-vetting-edit'>
+                <label htmlFor='kel-ramble-vetting-text'>Transcript</label>
+                <textarea id='kel-ramble-vetting-text' value={review.text} onChange={(event) => setReview((current) => ({ ...current, text: event.target.value }))} data-testid='review-edit-text' />
+                <button type='button' onClick={() => void loadPreview(review.text, review.mode)} data-testid='review-recheck'>Check again</button>
+              </div>
+            ) : review.payload ? (
+              <>
+                <div className='kel-ramble-vetting-content'>
+                  {(['requirements', 'concerns', 'unresolved'] as const).map((key) => {
+                    const lines = review.payload?.buckets?.[key] || [];
+                    if (!lines.length) return null;
+                    return <div className='kel-ramble-vetting-group' key={key}>
+                      <h3>{key === 'requirements' ? 'Requirements heard' : key === 'concerns' ? 'Concerns heard' : 'Still open'}</h3>
+                      {lines.map((line) => <div className='kel-ramble-vetting-row' key={line}>
+                        <span className='kel-ramble-vetting-dot' aria-hidden='true' />
+                        <span>{line}</span>
+                        <button type='button' aria-label={`Edit ${line}`} onClick={() => setReview((current) => ({ ...current, editing: true }))}><img src={rambleMobileEditIcon} alt='' /></button>
+                      </div>)}
+                    </div>;
+                  })}
+                  {review.payload.preview.length > 0 && <div className='kel-ramble-vetting-group'><h3>Answers heard</h3>{review.payload.preview.map((line) => <div className='kel-ramble-vetting-row' key={line.question_id}><span className='kel-ramble-vetting-dot' aria-hidden='true' /><span>{line.question_id.replace('Q', '')}: {line.answer}</span><button type='button' aria-label={`Edit answer ${line.question_id}`} onClick={() => setReview((current) => ({ ...current, editing: true }))}><img src={rambleMobileEditIcon} alt='' /></button></div>)}</div>}
+                  {!review.payload.buckets?.requirements.length && !review.payload.buckets?.concerns.length && !review.payload.buckets?.unresolved.length && !review.payload.preview.length && <p className='kel-ramble-vetting-message'>Kel did not find answers in this transcript yet.</p>}
+                  <button type='button' className='kel-ramble-vetting-process' onClick={() => void runReview({ acceptAll: false, thenProcess: true })} data-testid='review-process'>Process batch</button>
+                </div>
+                <div className='kel-ramble-vetting-footer'>
+                  <button type='button' className='kel-ramble-vetting-accept' onClick={() => void runReview({ acceptAll: true, thenProcess: false })} data-testid='review-accept'>Accept all</button>
+                  <button type='button' className='kel-ramble-vetting-recheck' onClick={() => void loadPreview(review.text, review.mode)} data-testid='review-recheck'>Check again</button>
+                </div>
+              </>
+            ) : <p className='kel-ramble-vetting-message'>Open a design vetting session in chat to review this transcript.</p>}
+          </section>
+        </div>, document.body
+      )}
 
       <Modal
         title='Merge another transcript into this one'
@@ -1057,7 +1108,7 @@ const statusCopy =
         </div>
       </Modal>
 
-      <Modal
+      {!layout?.isMobile && <Modal
         title='Use this transcript as vetting answers'
         visible={review.open}
         footer={null}
@@ -1169,7 +1220,7 @@ const statusCopy =
             </div>
           </>
         )}
-      </Modal>
+      </Modal>}
     </div>
   );
 };

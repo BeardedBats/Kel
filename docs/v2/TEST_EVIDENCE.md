@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Ramble vetting package check (2026-09-25)
+
+[The scoped vetting record](evidence/figma-full-audit/RAMBLE_VETTING_CURRENT_REVISION.md) compares live mobile `299:12871` with an engine-backed disposable package. A synthetic session and recording produced two requirements and one open question. The sheet measured 393×452 at x0/y400; Accept all measured x17/y723, 359×44. It fit 320px with no overflow. Check again reran the preview and Escape closed the sheet. No decision was submitted. The focused engine vetting transcript test passed **1 test**; TypeScript, full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Ramble package check (2026-09-25)
 
 [The scoped mobile Ramble record](evidence/figma-full-audit/RAMBLE_MOBILE_CURRENT_REVISION.md) compares live list `299:12588` and transcript `299:12782` with a disposable package at 393 and 320px. Search, folder card, recording card, and New recording action met their Figma x/y bounds at 393px. The transcript card and Copy/More actions were within 1px vertically. The menu opened the existing drawer, More exposed existing actions, and neither viewport overflowed. Five synthetic recordings differ from Figma's four samples; no microphone, clipboard, merge, or vetting decision ran. TypeScript, focused Ramble tests **2 files / 7 tests**, full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
