@@ -24,6 +24,8 @@ import {
 import { usePendingConfirmationsRecovery } from '@renderer/pages/conversation/Messages/usePendingConfirmationsRecovery';
 import HOC from '@renderer/utils/ui/HOC';
 import React from 'react';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
+import { KelChatReconnectingNotice, useKelEngineFrame } from '@renderer/components/kel/KelEngineNotice';
 import AcpE2EStreamInjector from './AcpE2EStreamInjector';
 import AcpSendBox from './AcpSendBox';
 import { useAcpMessage } from './useAcpMessage';
@@ -74,6 +76,10 @@ const AcpChat: React.FC<{
     skipWarmup: Boolean(teamPermission),
     prepareRuntime: teamPermission?.warmupSession,
   });
+  const layout = useLayoutContext();
+  const engineFrame = useKelEngineFrame();
+  const showReconnecting = Boolean(!hideSendBox &&
+    (!assistantId || assistantId === 'kel') && engineFrame?.state === 'reconnecting');
 
   return (
     <ConversationProvider
@@ -98,7 +104,8 @@ const AcpChat: React.FC<{
           </FlexFullContainer>
           <AcpE2EStreamInjector conversationId={conversation_id} />
           <ConversationPlanBar conversation_id={conversation_id} />
-          {!hideSendBox && (
+          {showReconnecting && <KelChatReconnectingNotice mobile={Boolean(layout?.isMobile)} />}
+          {!hideSendBox && !showReconnecting && (
             <AcpSendBox
               conversation_id={conversation_id}
               backend={backend}

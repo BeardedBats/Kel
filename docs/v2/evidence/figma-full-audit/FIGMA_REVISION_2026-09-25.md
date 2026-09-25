@@ -16,7 +16,8 @@
 - Desktop Chat `185:4284` and mobile Chat/drawer were read and compared with a two-turn disposable package fixture. Mobile message width, reply actions, composer height, and drawer controls were repaired. [The scoped Chat record](CHAT_CURRENT_REVISION.md) shows captures and measured limits; desktop plan, project metrics, four-tab Kibble placement, and phone chrome remain open.
 - Desktop approval `273:1911` and mobile approval `299:11950` were read and compared with an isolated engine approval. The full-width pending card, command box, responsive actions, and settled strip have [scoped package evidence](CHAT_APPROVAL_CURRENT_REVISION.md). Approval resolution was covered by focused tests, not a packaged click.
 - Desktop tool-call/plan `273:12914` and mobile `299:12459` were read and compared with an isolated package. Three synthetic ACP calls and a processing plan have [scoped package evidence](CHAT_TOOL_PLAN_CURRENT_REVISION.md); real model tool output remains open.
-- Desktop Chat agent error `273:13090` and mobile `299:12494` were read and compared with an isolated package. The timeout card matches its 920×114 and 361×200 frame bounds; model choice and diagnostic details opened. See [scoped error evidence](CHAT_AGENT_ERROR_CURRENT_REVISION.md). A live provider timeout and retry remain unverified. Mobile reconnecting `299:12515` was read; its composer notice still differs from production.
+- Desktop Chat agent error `273:13090` and mobile `299:12494` were read and compared with an isolated package. The timeout card matches its 920×114 and 361×200 frame bounds; model choice and diagnostic details opened. See [scoped error evidence](CHAT_AGENT_ERROR_CURRENT_REVISION.md). A live provider timeout and retry remain unverified.
+- Desktop reconnecting `273:12681` and mobile `299:12515` were read and compared with a disposable package. The composer notice matches 920×60 desktop and 361×48 mobile frame bounds. See [scoped reconnecting evidence](CHAT_RECONNECTING_CURRENT_REVISION.md). The renderer state was injected; no real engine restart was invoked.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
@@ -93,7 +94,7 @@
 | `273:12085` | Kel / State — Empty (Connections) | `/connections` | New or replaced node; prior pair absent. | PENDING |
 | `273:12291` | Kel / State — Loading (Activity) | `/activity` | New or replaced node; prior pair absent. | PENDING |
 | `273:12486` | Kel / State — Error (Providers) | `/providers` | New or replaced node; prior pair absent. | PENDING |
-| `273:12681` | Kel / State — Reconnecting | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:12681` | Kel / State — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
 | `273:12914` | Kel / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 1440px. | READ |
 | `273:13090` | Kel / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
 | `273:13249` | Kel / Chat — Workspace panel | `/work` | New or replaced node; prior pair absent. | PENDING |
@@ -116,7 +117,7 @@
 | `299:12418` | M / Permission | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12459` | M / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 393 and 320px. | READ |
 | `299:12494` | M / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
-| `299:12515` | M / Chat — Reconnecting | `/chat` | Current frame read; production composer notice still differs. | READ |
+| `299:12515` | M / Chat — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
 | `299:12588` | M / Ramble | `/transcription` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12782` | M / Ramble — Transcript | `/transcription` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12871` | M / Ramble — Vetting answers | `/transcription` | Replaced page/node; prior pair absent. | PENDING |

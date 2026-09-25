@@ -943,6 +943,40 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-chat-composer .sendbox-tools .arco-btn { background: transparent !important; border: 0 !important; }
 .kel-shell-chat-workspace { display: flex; align-items: center; gap: 8px; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Current Chat reconnecting frames 273:12681 and 299:12515: occupy the composer slot. */
+.kel-v2-shell:has(.kel-chat-reconnecting) .kel-engine-notice { display: none; }
+.kel-v2-shell .kel-chat-reconnecting {
+  display: flex; align-items: center; gap: 12px; box-sizing: border-box; width: 100%; height: 60px;
+  margin-bottom: 54px; padding: 0 14px 0 16px; border: 1px solid rgba(255,196,129,.4); border-radius: 12px;
+  background: linear-gradient(180deg, rgba(191,216,255,.08), rgba(191,216,255,0)), rgba(15,45,100,.4);
+  backdrop-filter: blur(24px); box-shadow: 0 20px 24px rgba(0,0,0,.35), inset 0 1px rgba(191,216,255,.18);
+}
+.kel-v2-shell .kel-chat-reconnecting__spinner {
+  flex: none; box-sizing: border-box; width: 16px; height: 16px; border: 2px solid rgba(255,196,129,.35);
+  border-top-color: #ffc481; border-radius: 50%; animation: kel-chat-reconnecting-spin 1s linear infinite;
+}
+@keyframes kel-chat-reconnecting-spin { to { transform: rotate(360deg); } }
+.kel-v2-shell .kel-chat-reconnecting__text { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.kel-v2-shell .kel-chat-reconnecting__text strong { color: #edf2fa; font: 600 14px/18px var(--kel-shell-heading); white-space: nowrap; }
+.kel-v2-shell .kel-chat-reconnecting__text small { color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kel-v2-shell .kel-chat-reconnecting button {
+  flex: none; box-sizing: border-box; height: 34px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5);
+  border-radius: 8px; background: linear-gradient(180deg,#6493f8,#2356b3); color: #fff1f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1);
+  font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
+}
+.kel-v2-shell .kel-chat-reconnecting button:disabled { opacity: .7; cursor: wait; }
+@media(prefers-reduced-motion:reduce) { .kel-v2-shell .kel-chat-reconnecting__spinner { animation: none; } }
+@media(max-width:767px) {
+  .kel-v2-shell .kel-chat-reconnecting {
+    height: 48px; gap: 10px; margin-bottom: 12px; padding: 0 12px; border-color: rgba(191,216,255,.14); border-radius: 14px;
+  }
+  .kel-v2-shell .kel-chat-reconnecting__text { gap: 1px; }
+  .kel-v2-shell .kel-chat-reconnecting__text strong { line-height: 16px; }
+  .kel-v2-shell .kel-chat-reconnecting__text small { line-height: 14px; }
+  .kel-v2-shell .kel-chat-reconnecting button { height: 32px; }
+}
+
 /* Current Figma Chat agent-error frames 273:13090 and 299:12494. */
 .kel-v2-shell .kel-chat-agent-error {
   position: relative; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box;
