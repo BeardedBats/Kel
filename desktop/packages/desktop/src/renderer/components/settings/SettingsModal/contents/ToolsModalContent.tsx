@@ -273,6 +273,7 @@ const ToolsModalContent: React.FC = () => {
   const [imageGenerationModel, setImageGenerationModel] = useState<ImageGenerationModelSetting | undefined>();
   const [isUpdatingImageGeneration, setIsUpdatingImageGeneration] = useState(false);
   const [showMobileImageModel, setShowMobileImageModel] = useState(false);
+  const [isImageModelMenuOpen, setIsImageModelMenuOpen] = useState(false);
   const { modelListWithImage: data } = useConfigModelListWithImage();
   const { mcpServers, extensionMcpServers, saveMcpServers, setMcpServers, isMcpServersLoading } = useMcpServers();
   const builtinImageGenServer = useMemo(() => mcpServers.find(isBuiltinImageGenServer), [mcpServers]);
@@ -549,6 +550,9 @@ const ToolsModalContent: React.FC = () => {
               >
                 {imageGenerationModelList.length > 0 ? (
                   <AionSelect
+                    className={classNames(isImageModelMenuOpen && 'is-open')}
+                    onVisibleChange={setIsImageModelMenuOpen}
+                    triggerProps={{ className: 'kel-tools-image-popup' }}
                     value={
                       imageGenerationModel?.id && imageGenerationModel?.use_model
                         ? `${imageGenerationModel.id}|${imageGenerationModel.use_model}`

@@ -1425,15 +1425,33 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
 /* FINAL 188:1956: desktop Tools uses 40px MCP rows and a quiet panel edge. */
 /* Components 156:159: MCP status detail uses the same ice-glass material as the tooltip. */
 html[data-theme='dark'] body .kel-tools-status-popover .arco-popover-content {
-  background: linear-gradient(180deg, #2c3b5c, #1a2846) !important;
+  background: linear-gradient(180deg, rgba(44,59,92,.92), rgba(26,40,70,.92)) !important;
   border: 1px solid var(--kel-figma-color-glass-edge-lit) !important;
   border-radius: 8px;
   color: var(--kel-figma-color-text-primary) !important;
+  padding: 8px 12px !important;
+  backdrop-filter: blur(18px);
   box-shadow: 0 6px 18px rgba(0,0,0,.24) !important;
 }
 html[data-theme='dark'] body .kel-tools-status-popover .arco-popover-arrow.arco-trigger-arrow {
-  background: #1a2846 !important;
+  background: rgba(26,40,70,.92) !important;
   border-color: var(--kel-figma-color-glass-edge-lit) !important;
+}
+/* Components 146:52: the enabled Image Model select has the same open field and glass menu. */
+html[data-theme='dark'] body .kel-tools-image-card .aion-select .arco-select-view {
+  box-sizing: border-box; min-height: 34px;
+  border: 1px solid rgba(127,160,255,.28) !important; border-radius: 8px !important;
+  background: rgba(47,107,224,.1) !important; color: var(--kel-figma-color-text-primary);
+}
+html[data-theme='dark'] body .kel-tools-image-card .aion-select.is-open .arco-select-view {
+  border-color: rgba(127,160,255,.8) !important;
+  box-shadow: 0 0 8px 1px rgba(47,107,224,.35) !important;
+}
+html[data-theme='dark'] body:has(.kel-v2-shell) .kel-tools-image-popup .arco-select-popup {
+  border: 1px solid rgba(191,216,255,.14) !important; border-radius: 10px !important;
+  background: linear-gradient(180deg,rgba(191,216,255,.08),transparent),rgba(15,45,100,.86) !important;
+  box-shadow: inset 0 1px 0 rgba(191,216,255,.18),0 20px 48px -16px rgba(0,0,0,.35) !important;
+  backdrop-filter: blur(24px);
 }
 @media (min-width: 768px) {
   .kel-v2-shell .kel-tools-mcp-card,
