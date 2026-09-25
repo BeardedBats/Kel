@@ -2,7 +2,7 @@
 
 ## Latest Figma revision (2026-09-25)
 
-The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. Desktop Tools and mobile Tools now show different explicit states and copy from the old audit. Production parity, including current components and all variants, is open. See the [current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md).
+The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. The current Tools layout, mobile failure detail, JSON dialog, and delete dialog have a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md). The installed App still packages `8c67121`. Product-wide parity, current component variants, the CLI import dialog, the focused report dialog, sign-in-needed Tools row, populated mobile tools, and four-tab Kibble placement remain open. Do not use the older Tools captures below as evidence for the new frames.
 
 ## Current canonical limits (2026-09-24)
 

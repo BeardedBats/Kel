@@ -2,7 +2,9 @@
 
 ## Current Figma discovery (2026-09-25)
 
-Direct Figma reads located live desktop page `319:2` (75 frames), mobile page `319:3858` (50 frames), Foundations `139:2`, Components `136:2`, and mobile Components `213:3`. High-fidelity reads covered desktop Tools `313:2441`, mobile Tools `315:2842`, and Transcriptions `189:4032`. [The inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the source delta. No current-revision App parity or new test pass is claimed by this discovery step; older packaged checks below remain historical.
+Direct Figma reads located live desktop page `319:2` (75 frames), mobile page `319:3858` (50 frames), Foundations `139:2`, Components `136:2`, and mobile Components `213:3`. High-fidelity reads covered desktop and mobile Tools, mobile server detail, five desktop Tools overlay states, and Transcriptions `189:4032`. [The inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the source delta. Older packaged visual checks below remain historical.
+
+The [current Tools package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md) used an isolated Electron package and synthetic loopback server. It captured 1440, 800, 393, and 320px states, plus the Add MCP server and Delete server dialogs. All four document widths matched their viewports; the dialog bounds matched the current Figma geometry at 1440px. No page errors occurred. `bun x tsc --noEmit --project tsconfig.json` passed, `bun run test -- --reporter=dot` passed **52 files / 396 tests**, and `bun run package` plus `electron-builder --dir` passed. These are scoped Tools results. The installed App remains at `8c67121`, and other current Figma frames remain open.
 
 ## Canonical continuation (2026-09-24)
 

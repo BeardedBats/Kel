@@ -8,8 +8,11 @@
 
 ## Exact deltas confirmed so far
 
-- Desktop Tools `313:2441` replaces `188:1956`. It now shows four MCP rows: `local-audit-mcp` (`Check failed` with inline warning and checked time), `chrome-devtools` (`Connected`), `linear-mcp` (`Sign in needed`), and `Kel Browser` (`Not tested`). It also shows `Generate images` off, `Needs an image model first`, and `Image model / Set up a model`. Production routes through `/settings/tools`, `ToolsModalContent.tsx`, `McpServerHeader.tsx`, and `kel-shell.css`. Current production pixel comparison is pending.
-- Mobile Tools `315:2842` replaces `219:767`. It shows four condensed MCP rows with right chevrons and the same four statuses, plus a separate image card with `Generate images` off and `Image model / Set up`. The old audited mobile page used different copy and state. Production routes through the same Tools components and mobile CSS. Current production pixel comparison is pending.
+- Desktop Tools `313:2441` replaces `188:1956`. It shows four MCP rows: `local-audit-mcp` (`Check failed` with inline warning and checked time), `chrome-devtools` (`Connected`), `linear-mcp` (`Sign in needed`), and `Kel Browser` (`Not tested`). It also shows `Generate images` off, `Needs an image model first`, and `Image model / Set up a model`. Production now uses these labels and roles. Disposable packaged checks at 1440 and 800px used three real local rows; the unavailable sign-in row was not fabricated. See [scoped Tools evidence](TOOLS_CURRENT_REVISION.md).
+- Mobile Tools `315:2842` replaces `219:767`. It shows four condensed MCP rows with right chevrons and the same four statuses, plus a separate image card with `Generate images` off and `Image model / Set up`. Production now uses this layout. Disposable packaged checks at 393 and 320px did not overflow; the four-tab versus Kibble decision remains open.
+- Mobile MCP detail `315:3004` is newly explicit: a status card, error note, tools list, and bottom Test again / Report issue / Delete server actions. Production now has a data-driven detail view. The synthetic server reported no tools, so populated tool rows remain unverified.
+- Desktop Tools overlay nodes `313:2923`, `313:3413`, `313:3911`, `313:4441`, and `313:4940` were read directly. Add and row menus and the JSON and delete dialogs have source repairs; CLI import and report dialog presentation still differ from Figma.
+- Current mobile Chat `299:11571`, drawer `299:11583`, and Tools `315:2842` show four bottom tabs: Chats, Ramble, Projects, Settings. The prior package and the still-present older mobile component variant use five tabs, including Kibble. The visible access path for Kibble in the new four-tab design needs Nick's product decision; the fifth tab remains until then.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
@@ -47,11 +50,11 @@
 | `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | New or replaced node; prior pair absent. | PENDING |
 | `311:3536` | Kel / Settings — Skills | `/settings/skills` | New or replaced node; prior pair absent. | PENDING |
 | `313:2441` | Kel / Settings — Tools | `/settings/tools` | Replaces `188:1956`; four MCP status rows and image-off card confirmed. | READ |
-| `313:2923` | Kel / Settings — Tools — Add menu and row menu | `/settings/tools` | New or replaced node; prior pair absent. | PENDING |
-| `313:3413` | Kel / Settings — Tools — Paste JSON | `/settings/tools` | New or replaced node; prior pair absent. | PENDING |
-| `313:3911` | Kel / Settings — Tools — Import from a CLI | `/settings/tools` | New or replaced node; prior pair absent. | PENDING |
-| `313:4441` | Kel / Settings — Tools — Report issue | `/settings/tools` | New or replaced node; prior pair absent. | PENDING |
-| `313:4940` | Kel / Settings — Tools — Delete server | `/settings/tools` | New or replaced node; prior pair absent. | PENDING |
+| `313:2923` | Kel / Settings — Tools — Add menu and row menu | `/settings/tools` | Read menu labels and actions; source now uses Paste JSON / Import from a CLI. | READ |
+| `313:3413` | Kel / Settings — Tools — Paste JSON | `/settings/tools` | Read 600px glass dialog, sample JSON, hint and buttons; source repaired and packaged at 1440px. | READ |
+| `313:3911` | Kel / Settings — Tools — Import from a CLI | `/settings/tools` | Read five-row selectable example; production still uses a three-step import dialog. | READ |
+| `313:4441` | Kel / Settings — Tools — Report issue | `/settings/tools` | Read failure-specific report dialog; production opens the general feedback dialog. | READ |
+| `313:4940` | Kel / Settings — Tools — Delete server | `/settings/tools` | Read 460px danger dialog; source copy and style repaired; final package check pending. | READ |
 | `314:2863` | Kel / Settings — Appearance | `/settings/appearance` | New or replaced node; prior pair absent. | PENDING |
 | `314:3373` | Kel / Settings — Appearance — Add theme | `/settings/appearance` | New or replaced node; prior pair absent. | PENDING |
 | `314:3912` | Kel / Settings — System | `/settings/system` | New or replaced node; prior pair absent. | PENDING |
@@ -97,8 +100,8 @@
 
 | Current node | Frame | Production counterpart | Source delta against prior pair map | Status |
 | --- | --- | --- | --- | --- |
-| `299:11571` | M / Chat | `/chat` | Replaced page/node; prior pair absent. | PENDING |
-| `299:11583` | M / Chat — Drawer open | `/chat` | Replaced page/node; prior pair absent. | PENDING |
+| `299:11571` | M / Chat | `/chat` | Replaced page/node; populated chat and four-tab footer read. | READ |
+| `299:11583` | M / Chat — Drawer open | `/chat` | Replaced page/node; drawer and four-tab footer read. | READ |
 | `299:11619` | M / Home | `/home` | Replaced page/node; prior pair absent. | PENDING |
 | `299:11692` | M / Chats | `/chat` | Replaced page/node; prior pair absent. | PENDING |
 | `299:11879` | M / Chats — Row actions | `/chat` | Replaced page/node; prior pair absent. | PENDING |
@@ -146,7 +149,7 @@
 | `300:15641` | M / Connections — Empty | `/connections` | Replaced page/node; prior pair absent. | PENDING |
 | `300:15660` | M / Connections — Add a service | `/connections` | Replaced page/node; prior pair absent. | PENDING |
 | `300:15698` | M / Connections — Notion | `/connections` | Replaced page/node; prior pair absent. | PENDING |
-| `315:3004` | M / Settings — Tools — local-audit-mcp | `/settings/tools` | Replaced page/node; prior pair absent. | PENDING |
+| `315:3004` | M / Settings — Tools — local-audit-mcp | `/settings/tools` | New populated server detail with status, warning, tools, and actions. | READ |
 
 ## Component and token audit
 
@@ -156,4 +159,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** compare current Tools components and current App captures against live frames `313:2441` and `315:2842`, then inspect each changed state frame at high fidelity. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** finish the CLI import and report dialogs, then inspect the remaining current frames and component variants. Keep old evidence for history and label it superseded until refreshed.

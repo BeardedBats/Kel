@@ -75,7 +75,7 @@ const mobileSettingsGroups: Group[] = [
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`) || (path === '/projects/knowledge' && ['/projects', '/projects/map'].includes(pathname));
 
 export default function KelInChatFrame({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const layout = useLayoutContext();
   const extensionTabs = useExtensionSettingsTabs();
@@ -94,7 +94,10 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   }, [pathname]);
   const heading = settings ? 'Settings' : pathname === '/onboarding' ? 'Workspaces' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
   const activeItem = [...settingsGroups, ...mobileProjectGroups].flatMap(group => group.items).find(item => matches(pathname, item.path));
-  const mobileTitle = mobileIndex ? heading : pathname === '/onboarding' ? 'Set up Kel' : pathname === '/connections' ? 'Connections' : pathname === '/projects/map' ? 'Project map' : pathname === '/settings/skills' ? 'Skills Hub' : pathname === '/settings/webui' ? 'WebUI' : activeItem?.label || heading;
+  const selectedMcpName = pathname === '/settings/tools' && new URLSearchParams(search).has('mcp')
+    ? new URLSearchParams(search).get('name')
+    : null;
+  const mobileTitle = selectedMcpName || (mobileIndex ? heading : pathname === '/onboarding' ? 'Set up Kel' : pathname === '/connections' ? 'Connections' : pathname === '/projects/map' ? 'Project map' : pathname === '/settings/skills' ? 'Skills Hub' : pathname === '/settings/webui' ? 'WebUI' : activeItem?.label || heading);
   const groups = settings ? [...settingsGroups, ...(extensionTabs.length ? [{ label: 'Extensions', items: extensionTabs.map(tab => {
     const icon = resolveExtensionAssetUrl(tab.icon) || tab.icon;
     return { label: resolveExtTabName(tab), path: `/settings/ext/${tab.id}`, icon: icon || 'tools', sourceIcon: Boolean(icon) };
@@ -106,7 +109,7 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
       <h1>{heading}</h1>
     </header>
     <header className='kel-in-chat-frame__mobile-header'>
-      <button type='button' aria-label={mobileIndex ? 'Open chats' : `Back to ${heading}`} onClick={() => mobileIndex ? layout?.setSiderCollapsed(false) : void navigate(settings ? '/settings' : '/projects')}>
+      <button type='button' aria-label={selectedMcpName ? 'Back to Tools' : mobileIndex ? 'Open chats' : `Back to ${heading}`} onClick={() => selectedMcpName ? void navigate('/settings/tools') : mobileIndex ? layout?.setSiderCollapsed(false) : void navigate(settings ? '/settings' : '/projects')}>
         {mobileIndex ? <span aria-hidden='true'>☰</span> : <span aria-hidden='true'>←</span>}
       </button>
       <h1>{mobileTitle}</h1>

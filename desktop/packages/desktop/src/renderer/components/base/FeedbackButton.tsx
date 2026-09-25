@@ -19,6 +19,7 @@ type FeedbackButtonProps = {
   feedbackExtra?: Record<string, unknown>;
   /** Additional classes appended to the default pill styling. */
   className?: string;
+  label?: string;
 };
 
 /**
@@ -27,7 +28,7 @@ type FeedbackButtonProps = {
  * auto-captures the current window and opens the feedback modal with the
  * relevant module preselected; the user only needs to describe the issue.
  */
-const FeedbackButton: React.FC<FeedbackButtonProps> = ({ module, feedbackTags, feedbackExtra, className }) => {
+const FeedbackButton: React.FC<FeedbackButtonProps> = ({ module, feedbackTags, feedbackExtra, className, label }) => {
   const { t } = useTranslation();
   const { openFeedback } = useFeedback();
 
@@ -55,7 +56,7 @@ const FeedbackButton: React.FC<FeedbackButtonProps> = ({ module, feedbackTags, f
       )}
     >
       <Comment theme='outline' size='14' fill='currentColor' className='flex-shrink-0 pt-4px' />
-      <span>{t('settings.oneClickFeedback')}</span>
+      <span>{label ?? t('settings.oneClickFeedback')}</span>
     </button>
   );
 };
