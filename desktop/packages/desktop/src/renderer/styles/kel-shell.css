@@ -2447,6 +2447,73 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-restore-confirm-modal .arco-btn-primary { border: 0; background: linear-gradient(180deg,#af493d,#81291f) !important; color: #fff !important; }
   .kel-shell-restore-confirm-modal .arco-btn:not(.arco-btn-primary) { border: 0; background: transparent !important; color: #9fc3ff !important; }
 }
+
+/* Current desktop Archived and Select frames 314:19219 and 314:19647. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-archived-page { position: relative; }
+  .kel-v2-shell .kel-shell-archived-page .kel-shell-settings-header { margin-bottom: 24px; }
+  .kel-v2-shell .kel-shell-archive-actions { position: absolute; top: 2px; right: 0; left: 0; min-height: 28px; }
+  .kel-v2-shell .kel-shell-archive-desktop-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; min-height: 28px; padding-left: 90px; }
+  .kel-v2-shell .kel-shell-archive-desktop-actions > span { margin-right: auto; color: #8fa9d6; font: 400 12px/18px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-archive-desktop-actions > button:not(.arco-btn) { padding: 2px 0; border: 0; background: transparent; color: #9fc3ff; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-archive-desktop-actions .arco-btn:not(:disabled) { height: 32px; padding: 0 14px; border: 0 !important; border-radius: 8px; background: linear-gradient(180deg,#af493d,#81291f) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff !important; }
+  .kel-v2-shell .kel-shell-archive-groups { margin-top: 0 !important; }
+  .kel-v2-shell .kel-shell-archive-groups > div { gap: 12px; }
+  .kel-v2-shell .kel-shell-archive-group { gap: 0; overflow: hidden; border: 1px solid rgba(127,160,255,.2); border-radius: 12px; background: rgba(23,51,109,.32); }
+  .kel-v2-shell .kel-shell-archive-group-header { box-sizing: border-box; min-height: 46px; padding: 0 18px; }
+  .kel-v2-shell .kel-shell-archive-group-header h2 { color: #fcac51; font: 600 14px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-archive-group-header > span { color: #8fa9d6; font: 400 12px/18px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-archive-group-header .arco-checkbox { display: none; }
+  .kel-v2-shell .kel-shell-archive-group-rows { border: 0; border-radius: 0; background: transparent; }
+  .kel-v2-shell .kel-shell-archive-row { min-height: 56px; padding: 6px 18px; border-bottom: 1px solid rgba(191,216,255,.08); }
+  .kel-v2-shell .kel-shell-archive-row:last-child { border-bottom: 0; }
+  .kel-v2-shell .kel-shell-archive-row > .size-20px { color: #9fc3ff; }
+  .kel-v2-shell .kel-shell-archive-row .arco-checkbox-checked .arco-checkbox-mask { border-color: #2f6be0; background: #2f6be0; }
+  .kel-v2-shell .kel-shell-archive-row .text-t-primary { font: 500 13px/18px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-archive-row .text-t-secondary { color: #8fa9d6; font: 400 11px/16px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-archive-delete.arco-btn { min-width: 42px; padding: 0; border: 0; background: transparent; color: #ff9d9d; font: 500 12px/18px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-archive-unarchive.arco-btn { height: 32px !important; padding: 0 14px !important; border: 0; border-radius: 8px; background: linear-gradient(180deg,#5284df,#2054ac); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; font: 500 12px/18px var(--kel-shell-heading); }
+}
+
+/* Current enabled desktop WebUI and Change password frames 314:18314/18753. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-service-card.is-running,
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-login-card.is-running,
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-qr-card { padding: 12px 20px !important; }
+  .kel-v2-shell .kel-shell-webui-title-line { display: flex; align-items: center; gap: 10px; min-height: 32px; }
+  .kel-v2-shell .kel-shell-webui-title-line .kel-shell-source-card-head { margin: 0; }
+  .kel-v2-shell .kel-shell-webui-running { color: #8be2b5; font: 500 12px/18px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-webui-service-intro.is-hidden { display: none !important; }
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-service-card.is-running .kel-shell-webui-row,
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-login-card.is-running .kel-shell-webui-row { min-height: 50px; padding: 6px 0; }
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-service-card.is-running .kel-shell-webui-row.kel-shell-preference-row,
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-login-card.is-running .kel-shell-webui-row.kel-shell-preference-row { min-height: 50px; }
+  .kel-v2-shell .kel-shell-webui-service-card.is-running .kel-shell-webui-row:last-child,
+  .kel-v2-shell .kel-shell-webui-login-card.is-running .kel-shell-webui-row:last-child { border-bottom: 0; }
+  .kel-v2-shell .kel-shell-webui-address > div:first-child,
+  .kel-v2-shell .kel-shell-webui-credential-row > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+  .kel-v2-shell .kel-shell-webui-address .kel-meta,
+  .kel-v2-shell .kel-shell-webui-credential-row .kel-meta { margin: 0; color: #8fa9d6; font: 400 11px/16px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-webui-address > button,
+  .kel-v2-shell .kel-shell-webui-credential-row > button,
+  .kel-v2-shell .kel-shell-webui-qr-head > button { flex: none; padding: 0; border: 0; background: transparent; color: #9fc3ff; font: 500 12px/18px var(--kel-shell-heading); cursor: pointer; }
+  .kel-v2-shell .kel-shell-webui-login-card.is-running .kel-shell-source-card-head { margin-bottom: 4px; }
+  .kel-v2-shell .kel-shell-webui-qr-head { display: flex; justify-content: space-between; align-items: center; min-height: 32px; }
+  .kel-v2-shell .kel-shell-webui-qr-head .kel-shell-source-card-head { margin: 0; }
+  .kel-v2-shell .kel-shell-webui-qr-body { display: flex; align-items: center; gap: 18px; min-height: 130px; color: #e9f1ff; font: 400 13px/19px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-webui-qr-body .kel-meta { margin: 2px 0 0; color: #8fa9d6; font: 400 11px/16px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-webui-qr-image { display: flex; flex: none; align-items: center; justify-content: center; width: 118px; height: 118px; border-radius: 8px; background: #fff; color: #1b2948; font: 400 11px/15px var(--kel-shell-body); text-align: center; }
+  .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-qr-card { padding-bottom: 28px !important; }
+  html[data-theme='dark'] body .arco-modal.kel-shell-webui-password-modal { position: relative; top: -6.7vh; width: 460px !important; max-width: calc(100vw - 32px); height: auto !important; }
+  .kel-shell-webui-password-modal .aionui-modal-std-header { padding: 16px 24px 12px; }
+  .kel-shell-webui-password-modal .aionui-modal-std-body .arco-form-item { margin-bottom: 4px; }
+  .kel-shell-webui-password-modal .arco-form-label-item { min-height: 18px; line-height: 18px; margin-bottom: 2px; }
+  .kel-shell-webui-password-modal .arco-form-item-message { line-height: 16px; }
+  .kel-shell-webui-password-modal .kel-shell-webui-password-hint { margin: -6px 0 12px; color: #8fa9d6; font: 400 11px/16px var(--kel-shell-body); }
+  .kel-shell-webui-password-modal .aionui-modal-std-footer { padding: 12px 24px 16px; }
+  html[data-theme='dark'] body .kel-shell-webui-password-modal .aionui-modal-std-footer .arco-btn:not(.arco-btn-primary) { border: 0; background: transparent; box-shadow: none; color: #9fc3ff; }
+  html[data-theme='dark'] body .kel-shell-webui-password-modal .aionui-modal-std-footer .arco-btn-primary { border: 0; background: linear-gradient(180deg,#2e7939,#1f5e30); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; }
+}
 @media (min-width: 768px) and (max-width: 1050px) {
   .kel-v2-shell .kel-shell-theme-color-row { display: flex; flex-wrap: nowrap; gap: 10px; min-height: 40px; }
   .kel-v2-shell .kel-shell-theme-color-row > .w-160px { width: auto; flex: 1; }

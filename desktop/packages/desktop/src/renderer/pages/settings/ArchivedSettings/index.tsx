@@ -47,6 +47,7 @@ type ArchivedRow = {
   name: string;
   icon: React.ReactElement;
   updatedAt?: number;
+  archivedAt?: number;
 };
 
 /** One archived project bucket. Ordinary chats are grouped into the synthetic no-project bucket. */
@@ -151,6 +152,7 @@ const ArchivedSettings: React.FC = () => {
           name: item.conversation.name || t('conversation.welcome.newConversation'),
           icon: renderConversationIcon(item),
           updatedAt: item.conversation.created_at,
+          archivedAt: (item.conversation as typeof item.conversation & { archived_at?: number }).archived_at,
         };
       }
       const key = `team:${item.team_id}`;
@@ -407,10 +409,17 @@ const ArchivedSettings: React.FC = () => {
     [i18n.language]
   );
 
+  const formatShortTime = React.useCallback(
+    (timestamp: number) => new Intl.DateTimeFormat(i18n.language || 'en', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    }).format(new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp)),
+    [i18n.language]
+  );
+
   const renderRow = (row: ArchivedRow, isLast: boolean) => (
     <div
       key={row.key}
-      className={`group box-border flex h-56px items-center gap-10px px-14px py-6px transition-colors hover:bg-fill-2 ${
+      className={`kel-shell-archive-row group box-border flex h-56px items-center gap-10px px-14px py-6px transition-colors hover:bg-fill-2 ${
         selectionMode ? 'cursor-pointer' : ''
       } ${!isLast ? 'border-0 border-b border-solid border-[var(--color-border-2)]' : ''}`}
       onClick={() => {
@@ -431,23 +440,25 @@ const ArchivedSettings: React.FC = () => {
         </div>
         {row.updatedAt ? (
           <div className='mt-2px overflow-hidden text-ellipsis whitespace-nowrap text-12px text-t-secondary'>
-            {formatArchivedTime(row.updatedAt)}
+            <span className='kel-desktop-only'>{row.archivedAt ? 'Archived' : 'Created'} {formatShortTime(row.archivedAt ?? row.updatedAt)}</span>
+            <span className='kel-phone-only'>{formatArchivedTime(row.updatedAt)}</span>
           </div>
         ) : null}
       </div>
       {!selectionMode ? (
         <div className='shrink-0 flex items-center gap-6px'>
           <Button
+            className='kel-shell-archive-delete'
             type='text'
             size='small'
             status='danger'
-            icon={<DeleteOne theme='outline' size='14' />}
+            icon={<DeleteOne theme='outline' size='14' className='kel-phone-only' />}
             onClick={() => handleDelete(row)}
-          />
+          ><span className='kel-desktop-only'>Delete</span></Button>
           <Button
             type='secondary'
             size='mini'
-            className='!h-28px !rounded-8px !px-10px'
+            className='kel-shell-archive-unarchive !h-28px !rounded-8px !px-10px'
             onClick={() => void handleRestore(row)}
           >
             {t('settings.archived.restore')}
@@ -458,12 +469,20 @@ const ArchivedSettings: React.FC = () => {
   );
 
   return (
-    <SettingsPageWrapper>
-      <p className='kel-shell-model-description kel-shell-archive-description'>Conversations and teams you archived.</p>
+    <SettingsPageWrapper contentClassName='kel-shell-archived-page'>
+      <p className='kel-shell-model-description kel-shell-archive-description kel-phone-only'>Conversations and teams you archived.</p>
       <div className='kel-shell-archive-actions'>
         {
           total > 0 ? (
-            <div className='flex min-w-0 items-center justify-end gap-10px'>
+            <>
+            <div className='kel-shell-archive-desktop-actions kel-desktop-only'>
+              {selectionMode ? <>
+                <span>{selectedRows.length} selected</span>
+                <button type='button' onClick={handleCancelSelectionMode}>Cancel</button>
+                <Button status='danger' disabled={selectedRows.length === 0} onClick={handleDeleteSelected}>Delete {selectedRows.length}</Button>
+              </> : <button type='button' onClick={() => setSelectionMode(true)}>Select</button>}
+            </div>
+            <div className='kel-phone-only flex min-w-0 items-center justify-end gap-10px'>
               {selectionMode ? (
                 <div className='flex items-center gap-10px rd-12px border border-solid border-[var(--color-border-2)] bg-fill-1 px-10px py-6px'>
                   <span className='px-4px text-14px text-t-secondary'>
@@ -502,6 +521,7 @@ const ArchivedSettings: React.FC = () => {
                 </Button>
               )}
             </div>
+            </>
           ) : null
         }
       </div>
@@ -521,7 +541,7 @@ const ArchivedSettings: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className='mt-18px flex flex-col gap-12px'>
+        <div className='kel-shell-archive-groups mt-18px flex flex-col gap-12px'>
           <div className='flex flex-col gap-20px'>
             {archivedBlocks.map((block) => {
               const blockSelected = block.rows.length > 0 && block.rows.every((row) => selectedKeys.has(row.key));
@@ -529,8 +549,8 @@ const ArchivedSettings: React.FC = () => {
                 block.rows.some((row) => selectedKeys.has(row.key)) &&
                 !block.rows.every((row) => selectedKeys.has(row.key));
               return (
-                <section key={block.key} className='flex flex-col gap-8px'>
-                  <div className='flex items-center gap-8px px-2px'>
+                <section key={block.key} className='kel-shell-archive-group flex flex-col gap-8px'>
+                  <div className='kel-shell-archive-group-header flex items-center gap-8px px-2px'>
                     {selectionMode ? (
                       <Checkbox
                         checked={blockSelected}
@@ -538,15 +558,15 @@ const ArchivedSettings: React.FC = () => {
                         onChange={(checked) => setBlockSelected(block, checked)}
                       />
                     ) : null}
-                    <FolderClose theme='outline' size='16' className='shrink-0 text-t-secondary' />
+                    <FolderClose theme='outline' size='16' className='kel-phone-only shrink-0 text-t-secondary' />
                     <h2 className='m-0 min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-16px font-[600] text-t-primary'>
                       {block.name}
                     </h2>
                     <span className='shrink-0 text-13px text-t-secondary'>
-                      {t('settings.archived.chatCount', { count: block.rows.length })}
+                      {i18n.language.startsWith('en') && block.rows.length === 1 ? '1 chat' : t('settings.archived.chatCount', { count: block.rows.length })}
                     </span>
                   </div>
-                  <div className='overflow-hidden rd-12px border border-solid border-[var(--color-border-2)] bg-bg-1'>
+                  <div className='kel-shell-archive-group-rows overflow-hidden rd-12px border border-solid border-[var(--color-border-2)] bg-bg-1'>
                     {block.rows.map((row, index) => renderRow(row, index === block.rows.length - 1))}
                   </div>
                   {block.hasMore ? (
