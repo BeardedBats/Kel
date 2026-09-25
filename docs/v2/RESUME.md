@@ -2,9 +2,9 @@
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
-The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, populated Transcriptions, and mobile Ramble list/detail/vetting have linked scoped package checks in the inventory.
+The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, populated Transcriptions, mobile Ramble list/detail/vetting, and mobile Projects have linked scoped package checks in the inventory.
 
-**Next item:** compare mobile Permission `299:12418` with a runtime-capable isolated conversation. Mobile Ramble list, transcript, and Vetting answers now have scoped disposable package checks. Mobile Kibble placement awaits Nick's answer; keep its existing route. Continue remaining components and V2-18/19 acceptance before App promotion.
+**Next item:** compare mobile Work `299:13910` with the isolated package, then mobile Permission `299:12418` with a runtime-capable conversation. Mobile Projects now has a scoped check. Mobile Kibble placement awaits Nick's answer; keep its existing route. Continue remaining components and V2-18/19 acceptance before App promotion.
 
 ---
 

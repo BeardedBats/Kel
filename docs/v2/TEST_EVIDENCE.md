@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Projects package check (2026-09-25)
+
+[The scoped Projects record](evidence/figma-full-audit/PROJECTS_CURRENT_REVISION.md) compares live mobile `299:13686` with an isolated Windows package. A synthetic project supplied the heading. At 393px, the first card began at Figma's x16/y163 and measured 361×296; the second was 3px above the frame. At 320px, both cards and all rows fit without document overflow. Work and Recipes navigated to their existing routes. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Ramble vetting package check (2026-09-25)
 
 [The scoped vetting record](evidence/figma-full-audit/RAMBLE_VETTING_CURRENT_REVISION.md) compares live mobile `299:12871` with an engine-backed disposable package. A synthetic session and recording produced two requirements and one open question. The sheet measured 393×452 at x0/y400; Accept all measured x17/y723, 359×44. It fit 320px with no overflow. Check again reran the preview and Escape closed the sheet. No decision was submitted. The focused engine vetting transcript test passed **1 test**; TypeScript, full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

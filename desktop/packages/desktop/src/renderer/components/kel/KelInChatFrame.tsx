@@ -7,6 +7,7 @@ import { useExtI18n } from '@renderer/hooks/system/useExtI18n';
 import { resolveExtensionAssetUrl } from '@renderer/utils/platform';
 import { configService } from '@/common/config/configService';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import { kelState } from './kelApi';
 import workIcon from '@renderer/assets/figma/refresh/work.svg';
 import activityIcon from '@renderer/assets/figma/refresh/activity.svg';
 import permissionsIcon from '@renderer/assets/figma/refresh/permissions.svg';
@@ -18,6 +19,16 @@ import transcriptionIcon from '@renderer/assets/figma/refresh/transcriptions.svg
 import setupIcon from '@renderer/assets/figma/refresh/setup.svg';
 import recipesIcon from '@renderer/assets/figma/refresh/recipes.svg';
 import workspacesIcon from '@renderer/assets/figma/refresh/workspaces.svg';
+import mobileMenuIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconMenu.svg';
+import mobileWorkIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconProjects.svg';
+import mobileActivityIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconActivity.svg';
+import mobilePermissionsIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconLock.svg';
+import mobileKnowledgeIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconFolder1.svg';
+import mobileRecipesIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconStar.svg';
+import mobileScheduledIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconClock.svg';
+import mobileProvidersIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconFile.svg';
+import mobileDiagnosticsIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconSparkle.svg';
+import mobileChevronIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconChevronDown.svg';
 
 type Item = { label: string; path: string; icon: string; sourceIcon?: boolean };
 type Group = { label: string; items: Item[] };
@@ -35,12 +46,18 @@ const projectGroups: Group[] = [
   { label: 'Ramble', items: [{ label: 'Transcriptions', path: '/transcription/library', icon: transcriptionIcon, sourceIcon: true }] },
   { label: 'Workspaces', items: [{ label: 'Set up Kel', path: '/onboarding', icon: setupIcon, sourceIcon: true }] },
 ];
-const mobileProjectGroups: Group[] = [
-  projectGroups[0],
-  { label: 'More', items: [
-    { label: 'Recipes', path: '/projects/recipes', icon: recipesIcon, sourceIcon: true },
-    { label: 'Workspaces', path: '/onboarding', icon: workspacesIcon, sourceIcon: true },
-  ] },
+const mobileProjectItems: Item[] = [
+  { label: 'Work', path: '/work', icon: mobileWorkIcon, sourceIcon: true },
+  { label: 'Activity', path: '/activity', icon: mobileActivityIcon, sourceIcon: true },
+  { label: 'Permissions', path: '/autonomy', icon: mobilePermissionsIcon, sourceIcon: true },
+  { label: 'Knowledge', path: '/projects/knowledge', icon: mobileKnowledgeIcon, sourceIcon: true },
+  { label: 'Recipes', path: '/projects/recipes', icon: mobileRecipesIcon, sourceIcon: true },
+  { label: 'Scheduled tasks', path: '/scheduled', icon: mobileScheduledIcon, sourceIcon: true },
+];
+const mobileKelItems: Item[] = [
+  { label: 'Providers', path: '/providers', icon: mobileProvidersIcon, sourceIcon: true },
+  { label: 'Diagnostics', path: '/diagnostics', icon: mobileDiagnosticsIcon, sourceIcon: true },
+  { label: 'Workspaces', path: '/onboarding', icon: mobileWorkIcon, sourceIcon: true },
 ];
 
 const settingsGroups: Group[] = [
@@ -83,6 +100,19 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const settings = pathname.startsWith('/settings') || pathname === '/connections';
   const mobileIndex = pathname === '/settings' || pathname === '/projects';
   const [setupOpen, setSetupOpen] = useState(false);
+  const [projectName, setProjectName] = useState('Projects');
+  useEffect(() => {
+    if (pathname !== '/projects') return;
+    let cancelled = false;
+    void kelState('main').then(state => {
+      const named = state.projects.filter(item => item.id !== 'default');
+      const project = named.length === 1 ? named[0] : state.projects.length === 1 ? state.projects[0] : null;
+      if (!cancelled) setProjectName(project?.name || 'Projects');
+    }).catch(() => {
+      if (!cancelled) setProjectName('Projects');
+    });
+    return () => { cancelled = true; };
+  }, [pathname]);
   useEffect(() => {
     let cancelled = false;
     void configService.initialize().then(() => {
@@ -93,6 +123,10 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
     return () => { cancelled = true; };
   }, [pathname]);
   const heading = settings ? 'Settings' : pathname === '/onboarding' ? 'Workspaces' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
+  const mobileProjectGroups: Group[] = [
+    { label: projectName, items: mobileProjectItems },
+    { label: 'Kel', items: mobileKelItems },
+  ];
   const activeItem = [...settingsGroups, ...mobileProjectGroups].flatMap(group => group.items).find(item => matches(pathname, item.path));
   const selectedMcpName = pathname === '/settings/tools' && new URLSearchParams(search).has('mcp')
     ? new URLSearchParams(search).get('name')
@@ -110,10 +144,9 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
     </header>
     <header className='kel-in-chat-frame__mobile-header'>
       <button type='button' aria-label={selectedMcpName ? 'Back to Tools' : mobileIndex ? 'Open chats' : `Back to ${heading}`} onClick={() => selectedMcpName ? void navigate('/settings/tools') : mobileIndex ? layout?.setSiderCollapsed(false) : void navigate(settings ? '/settings' : '/projects')}>
-        {mobileIndex ? <span aria-hidden='true'>☰</span> : <span aria-hidden='true'>←</span>}
+        {mobileIndex && !settings ? <img src={mobileMenuIcon} alt='' width={22} height={22} /> : mobileIndex ? <span aria-hidden='true'>☰</span> : <span aria-hidden='true'>←</span>}
       </button>
       <h1>{mobileTitle}</h1>
-      {mobileIndex && <button type='button' aria-label='New chat' onClick={() => void navigate('/guid')}>+</button>}
     </header>
     <div className='kel-in-chat-frame__card'>
       <nav className='kel-in-chat-frame__nav' aria-label={`${heading} pages`}>
@@ -136,10 +169,12 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
       {mobileIndex && <nav className='kel-in-chat-frame__mobile-index' aria-label={`${heading} pages`}>
         {(settings ? mobileSettingsGroups : mobileProjectGroups).map(group => <section key={group.label}>
           <h2>{group.label}</h2>
-          {group.items.map(item => <button key={item.path} type='button' onClick={() => void navigate(item.path)}>
-            <span className='kel-in-chat-frame__nav-icon'>{item.sourceIcon ? <img src={item.icon} alt='' width={16} height={16} /> : <ShellSettingsIcon name={item.icon} />}</span>
-            <span>{item.label}</span><svg aria-hidden='true' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='currentColor' strokeWidth='1.3'><path d='m5 3.5 3.5 3.5L5 10.5' /></svg>
-          </button>)}
+          <div className='kel-in-chat-frame__mobile-index-card'>
+            {group.items.map(item => <button key={item.path} type='button' onClick={() => void navigate(item.path)}>
+              <span className='kel-in-chat-frame__nav-icon'>{item.sourceIcon ? <img src={item.icon} alt='' width={16} height={16} /> : <ShellSettingsIcon name={item.icon} />}</span>
+              <span>{item.label}</span>{settings ? <svg aria-hidden='true' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='currentColor' strokeWidth='1.3'><path d='m5 3.5 3.5 3.5L5 10.5' /></svg> : <img className='kel-in-chat-frame__mobile-chevron' src={mobileChevronIcon} alt='' width={16} height={16} />}
+            </button>)}
+          </div>
         </section>)}
       </nav>}
       <div className='kel-in-chat-frame__pane'>
