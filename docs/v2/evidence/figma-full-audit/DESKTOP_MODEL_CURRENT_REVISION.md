@@ -1,0 +1,7 @@
+# Desktop Model — current Figma revision
+
+Current Figma [Model `311:2239`](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System?node-id=311-2239) was read directly. The source now uses its Model title and Default model rows: a leading icon, model and provider labels, availability, and Use or Set up actions. Its actual six-model catalog stays visible rather than replacing it with Figma's four sample rows. No custom model exists in the isolated profile, so the second card shows a real empty state rather than Figma's populated DeepSeek example.
+
+An isolated Windows package showed the first card at x613/y183, 670×412 at [1440px](DESKTOP_MODEL_PACKAGE_1440.png) and x371/y179, 388×412 at [800px](DESKTOP_MODEL_PACKAGE_800.png). It showed no horizontal overflow or renderer error. Selecting Claude Sonnet 4.6 set the default, Automatic restored it, and DeepSeek Chat's Set up action opened Providers. These checks used only isolated data. The canonical App and Data were untouched.
+
+The 800px column-width repair was verified in the final capture. Populated custom-model rows, their checks and toggles, and the Add model overlay remain open. The existing Add Model dialog was opened at [1440px](DESKTOP_MODEL_ADD_PACKAGE_1440.png) and [800px](DESKTOP_MODEL_ADD_PACKAGE_800.png): it offers the real provider setup form but differs from Figma's compact DeepSeek example. No live credential or model call was used.

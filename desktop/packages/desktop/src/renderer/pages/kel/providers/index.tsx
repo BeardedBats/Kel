@@ -39,6 +39,8 @@ const Providers: React.FC = () => {
     reasons: string[];
     reason: string;
   } | null>(null);
+  const [runtimeMs, setRuntimeMs] = useState<number | null>(null);
+  const [readinessOptionsOpen, setReadinessOptionsOpen] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,6 +59,7 @@ const Providers: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
+      const started = performance.now();
       const [list, credentials, capabilityRows] = await Promise.all([
         kelProviders.list(),
         kelProviders.credentials(),
@@ -65,9 +68,11 @@ const Providers: React.FC = () => {
       setProviders(list.providers ?? []);
       setCredentialRows(credentials.credentials ?? []);
       setCapabilities(capabilityRows);
+      setRuntimeMs(Math.max(0, Math.round(performance.now() - started)));
       setError(null);
     } catch (err) {
       setProviders([]);
+      setRuntimeMs(null);
       setError(err);
     }
   }, []);
@@ -269,12 +274,16 @@ const Providers: React.FC = () => {
 
         </KelCard>
 
-        <KelCard title="Readiness preflight">
-          {!readiness && <p className="kel-meta">Run preflight to check which provider can handle this work.</p>}
-          <details><summary className="kel-meta">Check options</summary>
+        <KelCard title="Readiness preflight" className="kel-shell-provider-preflight"
+          actions={<KelButton variant="quiet" onClick={() => setReadinessOptionsOpen(open => !open)} ariaLabel="Preflight options">Options</KelButton>}>
+          <div className="kel-shell-provider-preflight-rows">
+            <div className="kel-shell-provider-preflight-row"><span>Runtime reachable</span><span className="kel-meta">{runtimeMs === null ? 'local' : `local · ${runtimeMs} ms`}</span><span className={`kel-chip ${error ? 'kel-chip--wait' : 'kel-chip--ok'}`}>{error ? 'Unavailable' : runtimeMs === null ? 'Checking' : 'Pass'}</span></div>
+            <div className="kel-shell-provider-preflight-row"><span>Default model responds</span><span className="kel-meta">Automatic</span><span className="kel-chip kel-chip--wait">Not tested</span></div>
+            <div className="kel-shell-provider-preflight-row"><span>Credential store</span><span className="kel-meta">OS-backed keychain</span><span className={`kel-chip ${secure?.available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{secure?.available ? 'Available' : 'Unavailable'}</span></div>
+          </div>
+          {readinessOptionsOpen && <div className="kel-shell-provider-preflight-options">
           <p className="kel-sub">
-            What Kel would use for a capability right now, and why — the engine records the fallback
-            reason instead of guessing.
+            This checks routing only. It does not send a prompt or prove a model response.
           </p>
           <div className="kel-row">
             {['text', 'vision', 'tools', 'edit', 'shell'].map((name) => (
@@ -300,7 +309,7 @@ const Providers: React.FC = () => {
               Check readiness
             </KelButton>
           </div>
-          </details>
+          </div>}
           {readiness && (
             <>
               <p className="kel-strong">

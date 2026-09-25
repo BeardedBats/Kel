@@ -242,12 +242,13 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
 };
 
 export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const navigate = useNavigate();
   const { state, setDefault } = useKelModelState();
   // Defensive: a payload without the provider listing must not take the page down with it.
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title='Available now' data-testid='kel-default-model-card'>
+    <KelCard title='Default model' data-testid='kel-default-model-card'>
       {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
@@ -256,17 +257,19 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
       {!state ? (
         <p className='text-14px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
       ) : (
-        <div className='flex flex-col gap-4px'>
+        <div className='flex flex-col gap-4px kel-shell-default-model-rows'>
           <button
             type='button'
             data-testid='kel-default-auto'
             aria-pressed={!state.default}
             onClick={() => void setDefault(null)}
-            className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer'
+            className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
             style={{ background: !state.default ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
           >
-            <span className='text-14px'>Automatic<span className='kel-desktop-only'> — Kel picks what is available</span></span>
-            {!state.default ? <span className='ms-auto text-11px text-t-secondary'>Current</span> : null}
+            <span className='kel-shell-default-model-lead' aria-hidden='true'>✦</span>
+            <span className='kel-shell-default-model-name'>Automatic<span>Kel picks what is available</span></span>
+            <span className='kel-shell-default-model-status'>{!state.default ? 'Current' : ''}</span>
+            <span className='kel-shell-default-model-action' />
           </button>
           {providers.map((provider) =>
             provider.options.map((option) => {
@@ -278,25 +281,25 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact =
                   disabled={false}
                   data-testid={'kel-default-' + provider.id + '-' + option.id}
                   aria-pressed={current}
-                  onClick={() => void setDefault({ provider: provider.id, model: option.id })}
-                  className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer disabled:cursor-not-allowed'
+                  onClick={() => option.available ? void setDefault({ provider: provider.id, model: option.id }) : navigate('/providers')}
+                  className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
                   style={{
                     background: current ? 'var(--kel-surface-2)' : 'transparent',
                     border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
                   }}
                 >
-                  <span className='text-14px' style={{ opacity: option.available ? 1 : 0.6 }}>
-                    {option.label}
-                    <span className='ms-6px text-12px text-t-secondary kel-desktop-only'>{provider.label}</span>
+                  <span className='kel-shell-default-model-lead' aria-hidden='true'>⌁</span>
+                  <span className='kel-shell-default-model-name'>{option.label}<span>{provider.label}</span></span>
+                  <span className={`kel-shell-default-model-status${!option.available ? ' kel-shell-default-model-status--wait' : ''}`}>
+                    {current ? 'Current' : option.available ? 'Available' : 'Needs setup'}
                   </span>
-                  {current ? <span className='ms-auto text-12px text-t-secondary'>Current</span> : availabilityLabel(option.available)}
+                  <span className='kel-shell-default-model-action'>{current ? '' : option.available ? 'Use' : 'Set up'}</span>
                 </button>
               );
             })
           )}
         </div>
       )}
-      <p className='text-12px text-t-secondary m-0 mt-8px kel-desktop-only'>Saved immediately. Switching back to Automatic restores Kel's normal routing.</p>
     </KelCard>
   );
 };

@@ -38,7 +38,7 @@
 | `189:1758` | Kel / Permissions | `/autonomy` | Current empty cards measured at 1440 and 800px. Populated grants and requests remain open. [Scoped evidence](DESKTOP_PERMISSIONS_CURRENT_REVISION.md). | READ |
 | `189:2193` | Kel / Projects | `/projects` | Empty cards now match Figma at 1440 and 800px; Refresh map remains accessible on hover/focus. [Scoped evidence](DESKTOP_PROJECTS_CURRENT_REVISION.md). | READ |
 | `189:2628` | Kel / Scheduled tasks | `/scheduled` | Selected card controls implemented and package-checked. Three sample tasks and history remain open. [Scoped evidence](DESKTOP_SCHEDULED_LIST_CURRENT_REVISION.md). | READ |
-| `189:3098` | Kel / Providers | `/providers` | Real catalog and card bounds package-checked; three readiness rows and live response remain open. [Scoped evidence](DESKTOP_PROVIDERS_CURRENT_REVISION.md). | READ |
+| `189:3098` | Kel / Providers | `/providers` | Real catalog and three truthful readiness rows package-checked; live model response remains open. [Scoped evidence](DESKTOP_PROVIDERS_CURRENT_REVISION.md). | READ |
 | `189:3564` | Kel / Diagnostics | `/diagnostics` | Data-driven cards package-checked; two maintenance actions remain disabled. [Scoped evidence](DESKTOP_DIAGNOSTICS_CURRENT_REVISION.md). | READ |
 | `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
 | `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
@@ -56,8 +56,8 @@
 | `269:501` | Kel / Connections — Add a service | `/connections` | Six main fields in two columns; extra options and taller card remain. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:971` | Kel / Connections — Add credential | `/connections` | Inline editor captured in an isolated package; secure-store value never submitted. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:1419` | Kel / Connections — Run an action | `/connections` | Confirmation placement tested in DOM; no real mutating catalog action exists for package capture. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
-| `311:2239` | Kel / Settings — Model | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
-| `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
+| `311:2239` | Kel / Settings — Model | `/settings/model` | Default-model rows and real actions package-checked at 1440/800; populated custom models remain open. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
+| `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | Current frame read; existing functional form captured, but its layout differs from Figma. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
 | `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | New or replaced node; prior pair absent. | PENDING |
 | `311:3536` | Kel / Settings — Skills | `/settings/skills` | New or replaced node; prior pair absent. | PENDING |
 | `313:2441` | Kel / Settings — Tools | `/settings/tools` | Replaces `188:1956`; four MCP status rows and image-off card confirmed. | READ |
