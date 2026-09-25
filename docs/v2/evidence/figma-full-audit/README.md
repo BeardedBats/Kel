@@ -56,7 +56,7 @@ The populated chat used a Playwright response fixture only for the two message t
 | `188:1620` System | `/settings/system` | Main grouping matches. Data paths, version values, and current settings come from the isolated machine; the Figma sample is not a valid value comparison. |
 | `188:1956` Tools | `/settings/tools` | r47 aligns the two desktop MCP rows with Figma's 40px rhythm, retains live status/actions and Add MCP, and repairs empty-model spacing at 1440/800px. Extra functional controls still differ from the sample frame. |
 | `188:2240` WebUI | `/settings/webui` | r57 matches first-step text, icon, strip, and card bounds. Canonical App enables step 2 at 1440/800; the local page returns 200 and unauthenticated API returns 401. Step-2 Figma parity and remote use remain open. |
-| `188:2541` Desktop Pet | `/settings/pet` | Controls and group are present. Value and enabled state reflect the isolated profile. |
+| `188:2541` Desktop Pet | `/settings/pet` | Controls and group are present. Canonical App refuses enable under V1.6 policy AUD-MINOR-008; the switch stays off after reload. Enabled parity needs a product decision. |
 | `188:2825` Archived | `/settings/archived` | Empty card is present. The package uses a centered icon and short message; the mobile FINAL frame uses a sentence instead. |
 | `188:3080` Assistants | `/settings/assistants` | Figma shows an empty state. The package shows the real Kel assistant, so the empty text state is unverified. |
 | `188:3335` Skills Hub | `/settings/skills` | Figma shows empty copy. The package uses a centered icon and shorter copy. |

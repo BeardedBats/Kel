@@ -20,6 +20,7 @@ status: partial
 
 deferred:
   - "Physical iPhone acceptance needs Nick's device. Remote sign-in, live services, and first response need a signed-in session."
+  - "Enabled Desktop Pet needs Nick's decision on V1.6 policy AUD-MINOR-008; the canonical App correctly refuses enable."
 
 paths:
   source: C:\Users\Nick\Desktop\Kel\Kel
