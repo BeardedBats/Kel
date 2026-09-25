@@ -2,6 +2,8 @@
 
 ## Latest Figma revision (2026-09-25)
 
+The [current mobile Permissions empty state](evidence/figma-full-audit/PERMISSIONS_CURRENT_REVISION.md) matches all three card bounds at 393px and fits 320px. Its digest comes from isolated engine data and opens the real check controls. Populated grants and access requests remain unverified. Windows phone chrome and font rendering differ, and Kibble placement remains open.
+
 The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. The current Tools layout, mobile failure detail, and JSON, CLI, report, and delete dialogs have a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md). The installed App still packages `8c67121`. Product-wide parity, current component variants, real CLI import and report delivery, the sign-in-needed Tools row, populated mobile tools, and four-tab Kibble placement remain open. Do not use the older Tools captures below as evidence for the new frames.
 
 The [mobile Ramble list/detail check](evidence/figma-full-audit/RAMBLE_MOBILE_CURRENT_REVISION.md) matched the current 393px geometry and kept controls inside 320px. An [isolated vetting preview](evidence/figma-full-audit/RAMBLE_VETTING_CURRENT_REVISION.md) also matched sheet bounds, but Accept all and Process batch were not submitted. Real audio remains unverified. Folder rename/delete icons remain visible beyond the sample frame so those actions stay reachable. Five synthetic recordings differ from the four pictured. Windows font rasterization, native titlebar, and the unresolved fifth Kibble tab prevent exact mobile pixel parity.

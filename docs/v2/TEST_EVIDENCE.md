@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Permissions package check (2026-09-25)
+
+[The scoped Permissions record](evidence/figma-full-audit/PERMISSIONS_CURRENT_REVISION.md) compares live mobile `299:14218` with a disposable package. At 393px, the three cards measured x16/y114 361×75, x16/y201 361×75, and x16/y288 361×85, within 1px of Figma. They fit 320px with no overflow. The real eight-character engine digest stayed on one line and its button opened the existing check controls. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Activity package check (2026-09-25)
 
 [The scoped Activity record](evidence/figma-full-audit/ACTIVITY_CURRENT_REVISION.md) compares live mobile `299:14061` with a disposable package and one isolated engine Store job. At 393px, the three cards measured x16/y114 361×104, x16/y230 361×75, and x16/y317 361×75, matching Figma. They fit 320px with no overflow. The running job did not appear as a request for user action. The back control returned to Projects, with no renderer error. The fixture was cancelled and acknowledged, and its WAL checkpoint completed. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. No model worker ran. Canonical App and Data were untouched.
