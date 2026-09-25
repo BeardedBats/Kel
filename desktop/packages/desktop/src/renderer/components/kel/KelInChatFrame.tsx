@@ -68,6 +68,7 @@ const settingsGroups: Group[] = [
     { label: 'Assistants', path: '/settings/assistants', icon: 'assistants' },
     { label: 'Tools', path: '/settings/tools', icon: 'tools' },
     { label: 'Skills', path: '/settings/skills', icon: 'skills' },
+    { label: 'Connections', path: '/connections', icon: 'connections' },
   ] },
   { label: 'Application', items: [
     { label: 'Appearance', path: '/settings/appearance', icon: 'appearance' },

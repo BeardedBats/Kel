@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Home and Connections empty state (2026-09-25)
+
+[Home](evidence/figma-full-audit/DESKTOP_HOME_CURRENT_REVISION.md) was compared with current Figma `185:2658` in an isolated 1440px package. The Needs you card starts at x388/y112, matching the frame. Its one real setup row differs from Figma's three sample rows. [Connections](evidence/figma-full-audit/DESKTOP_CONNECTIONS_CURRENT_REVISION.md) was compared with current empty Figma `273:12085`. Its 1440px Services card measures x613/y183, 670×252, matching the frame; the 800px layout does not overflow. Add a service opens the real form above Services. TypeScript, the desktop suite **54 files / 400 tests**, Electron Vite, and disposable packaging passed. No credential or external action was submitted. Canonical App and Data were untouched.
+
 ## Desktop Recipes list, preview, and run (2026-09-25)
 
 [The scoped implementation record](evidence/figma-full-audit/DESKTOP_RECIPES_CURRENT_REVISION.md) compares current Figma `284:8148`, `284:8489`, and `284:8847` with an isolated package at 1440 and 800px. The list uses five real engine built-ins, actual step titles, input definitions, and saved history when available. The 1440px inner card measured x613/y185, 670px wide; Figma places it at x613/y184. Preview and Run opened and closed. Neither width overflowed; the renderer reported no errors. TypeScript, the desktop suite **54 files / 400 tests**, Electron Vite, and disposable packaging passed. No recipe was submitted. Canonical App and Data were untouched.

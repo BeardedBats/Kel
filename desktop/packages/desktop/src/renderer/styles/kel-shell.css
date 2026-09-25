@@ -2501,3 +2501,121 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
     box-shadow: 0 4px 6px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.1);
   }
 }
+
+/* Current desktop Connections: separate saved services from the available catalogue. */
+.kel-v2-shell .kel-connections-page .kel-page__head { align-items: flex-end; margin-bottom: 12px; }
+.kel-v2-shell .kel-connections-page .kel-page__head:has(> .kel-btn) { margin-bottom: 6px; }
+.kel-v2-shell .kel-connections-page .kel-page__head .kel-btn {
+  flex: none; min-height: 32px; height: 32px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5);
+  border-radius: 8px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1);
+}
+.kel-v2-shell .kel-connections-page > .kel-card { padding: 14px 20px 10px; }
+.kel-v2-shell .kel-connections-page > .kel-card > .kel-row:first-child { margin-bottom: 0; }
+.kel-v2-shell .kel-connections-page .kel-connections-caption {
+  margin: 2px 0 4px; color: #8fa9d6; font: 400 12px/16px 'SF Pro Text',sans-serif;
+}
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 164px; text-align: center;
+}
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body > img { width: 20px; height: 20px; margin-bottom: 8px; opacity: .65; }
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body .kel-empty { align-items: center; width: auto; min-height: 0; padding: 0; border: 0; background: transparent; }
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body .kel-empty-description { color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body .kel-row { justify-content: center; }
+.kel-v2-shell .kel-connections-page .kel-connections-empty-body .kel-btn {
+  min-height: 32px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5);
+  border-radius: 7px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
+}
+.kel-v2-shell .kel-connections-page .kel-connection-templates { width: 100%; color: #c4d4e8; font: 400 13px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-templates summary { cursor: pointer; }
+.kel-v2-shell .kel-connections-page .kel-connection-templates > div { max-height: 160px; overflow-y: auto; }
+.kel-v2-shell .kel-connections-page .kel-connection-templates > div > div { display: flex; gap: 8px; padding: 6px 0; }
+.kel-v2-shell .kel-connections-page .kel-connection-templates button { border: 0; background: transparent; color: #9fdaff; cursor: pointer; }
+.kel-v2-shell .kel-connections-page .kel-connections-available-list { max-height: 260px; overflow-y: auto; scrollbar-width: thin; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row {
+  display: flex; align-items: center; flex-wrap: nowrap; min-height: 50px; padding: 6px 0;
+  border-bottom: 1px solid rgba(191,216,255,.08);
+}
+.kel-v2-shell .kel-connections-page .kel-connection-available-row:last-child { border-bottom: 0; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row .kel-attention__text { flex: 1; min-width: 0; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row .kel-attention__text strong { color: #edf2fa; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row .kel-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row .kel-connection-extra { display: none; }
+.kel-v2-shell .kel-connections-page .kel-connection-available-row > .kel-btn {
+  flex: none; min-height: 28px; padding: 0 12px; border: 1px solid rgba(140,150,167,.5);
+  border-radius: 7px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
+}
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 51px;
+  padding: 6px 0; border-bottom: 1px solid rgba(191,216,255,.08);
+}
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text { flex: 1; min-width: 140px; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text strong { color: #edf2fa; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text > .kel-meta:first-of-type {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row:not(:has(.kel-connection-more[open])) .kel-attention__text > .kel-meta:not(:first-of-type) { display: none; }
+.kel-v2-shell .kel-connections-page .kel-connection-status { flex: none; min-width: 98px; color: #a2eacb; font: 600 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-status[data-state='needs-credential'] { color: #ffb764; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-grow { display: none; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-btn { flex: none; min-height: 28px; padding: 0 10px; }
+.kel-v2-shell .kel-connections-page .kel-connection-more { flex: none; color: #c4d4e8; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-more summary { cursor: pointer; }
+.kel-v2-shell .kel-connections-page .kel-connection-more[open] { order: 10; display: flex; flex: 1 0 100%; flex-wrap: wrap; align-items: center; gap: 8px; }
+.kel-v2-shell .kel-connections-page .kel-connection-more[open] summary { flex-basis: 100%; }
+.kel-v2-shell .kel-connections-page > .kel-page__head { order: 0; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form { order: 1; }
+.kel-v2-shell .kel-connections-page > .kel-connections-services { order: 2; }
+.kel-v2-shell .kel-connections-page > .kel-connection-credential-form { order: 3; }
+.kel-v2-shell .kel-connections-page > .kel-connections-available { order: 4; }
+.kel-v2-shell .kel-connections-page > .kel-connections-actions { order: 5; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form {
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 8px;
+}
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:first-child,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > p,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > span,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-templates,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-advanced-toggle,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-btn) { grid-column: 1 / -1; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:first-child { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:first-child .kel-grow { display: none; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > p,
+.kel-v2-shell .kel-connections-page > .kel-connection-form > span { order: 10; margin: 0; color: #8fa9d6; font: 400 11px/16px 'SF Pro Text',sans-serif; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-input) {
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0;
+}
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-input) .kel-input {
+  box-sizing: border-box; width: 100%; min-width: 0; height: 34px; min-height: 34px; padding: 0 10px;
+  font: 400 13px/18px 'SF Pro Text',sans-serif;
+}
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-input) label { font: 400 12px/16px 'SF Pro Text',sans-serif; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form:not(.kel-connection-form--advanced) > .kel-connection-advanced-field { display: none; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-advanced-toggle {
+  order: 15; width: fit-content; padding: 0; border: 0; background: transparent;
+  color: #9fdaff; text-align: left; font: 500 12px/18px var(--kel-shell-heading); cursor: pointer;
+}
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-name) { order: 1; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-base) { order: 2; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-method) { order: 3; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-header) { order: 4; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-test) { order: 5; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-docs) { order: 6; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-kind) { order: 7; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-prefix) { order: 8; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-prefix-word) { order: 8; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(#kel-connection-notes) { order: 9; }
+.kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-btn) { order: 20; justify-content: flex-end; }
+@media (max-width: 560px) {
+  .kel-v2-shell .kel-connections-page .kel-page__head { flex-wrap: wrap; align-items: flex-start; }
+  .kel-v2-shell .kel-connections-page .kel-connection-available-row { flex-wrap: wrap; }
+  .kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text { flex-basis: 100%; }
+  .kel-v2-shell .kel-connections-page > .kel-connection-form { grid-template-columns: minmax(0,1fr); }
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:first-child,
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > p,
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > span,
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-templates,
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-advanced-toggle,
+  .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-btn) { grid-column: 1; }
+}

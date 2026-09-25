@@ -31,7 +31,7 @@
 | Current node | Frame | Production counterpart | Source delta against prior pair map | Status |
 | --- | --- | --- | --- | --- |
 | `185:4284` | Kel / Chat | `/chat` | Retained node; current populated frame read and small-fixture comparison recorded. | READ |
-| `185:2658` | Kel / Home | `/home` | Retained node; inner revision not measured. | PENDING |
+| `185:2658` | Kel / Home | `/home` | Current heading, Needs you card, and composer compared in isolated package at 1440px. [Scoped evidence](DESKTOP_HOME_CURRENT_REVISION.md). | READ |
 | `189:907` | Kel / Work | `/work` | Retained node; inner revision not measured. | PENDING |
 | `189:1342` | Kel / Activity | `/activity` | Retained node; inner revision not measured. | PENDING |
 | `189:1758` | Kel / Permissions | `/autonomy` | Retained node; inner revision not measured. | PENDING |
@@ -96,7 +96,7 @@
 | `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | New or replaced node; prior pair absent. | PENDING |
 | `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
-| `273:12085` | Kel / State — Empty (Connections) | `/connections` | New or replaced node; prior pair absent. | PENDING |
+| `273:12085` | Kel / State — Empty (Connections) | `/connections` | Current empty card implemented and compared in isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `273:12291` | Kel / State — Loading (Activity) | `/activity` | New or replaced node; prior pair absent. | PENDING |
 | `273:12486` | Kel / State — Error (Providers) | `/providers` | New or replaced node; prior pair absent. | PENDING |
 | `273:12681` | Kel / State — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |

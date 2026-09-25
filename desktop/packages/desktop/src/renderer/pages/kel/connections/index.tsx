@@ -1,4 +1,5 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import connectionIcon from '@renderer/assets/figma/nav-connections.svg';
 /**
  * Kel V2.0 — Connections: the one place to see and manage the services Kel can use.
  *
@@ -119,6 +120,7 @@ const Connections: React.FC = () => {
   );
   const [answers, setAnswers] = useState<Record<string, KelConnectionRun>>({});
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [showAdvancedConnectionFields, setShowAdvancedConnectionFields] = useState(false);
 
   const load = useCallback(async () => {
     let current: KelConnection[] = [];
@@ -154,6 +156,11 @@ const Connections: React.FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const draftOpen = draft !== null;
+  useEffect(() => {
+    if (draftOpen) document.getElementById('kel-connection-name')?.focus();
+  }, [draftOpen]);
 
   const connections = useMemo(() => list?.connections ?? [], [list]);
 
@@ -389,16 +396,16 @@ const Connections: React.FC = () => {
   return (
     <div className="kel-page kel-connections-page">
       <div className="kel-page__head">
-        <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1>
-        <p className="kel-sub">
-          The services Kel can use. You keep the credential — it is stored encrypted on this computer,
-          and Kel only ever records that it exists.
-        </p></div>
+        <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1></div>
+        {connections.length > 0 && <KelButton variant="primary" onClick={() => setDraft({ ...EMPTY_DRAFT })} disabled={busy}>
+          Add a service
+        </KelButton>}
       </div>
 
       {note && <p className="kel-meta">{note}</p>}
 
       <KelCard
+        className={`kel-connections-services${connections.length === 0 ? ' kel-connections-empty' : ''}`}
         title="Services"
         chip={
           <span className="kel-meta">
@@ -407,53 +414,25 @@ const Connections: React.FC = () => {
               : `${ready} ready · ${needing} needing a credential`}
           </span>
         }
-        actions={
-          <KelButton variant="primary" onClick={() => setDraft({ ...EMPTY_DRAFT })} disabled={busy}>
-            Add a service
-          </KelButton>
-        }
       >
-        {addable.length > 0 && (
-          <div className="kel-divider" />
-        )}
-        {addable.map((service) => (
-          <div className="kel-row kel-connection-row" key={service.id}>
-            <div className="kel-attention__text">
-              <strong>{service.name}</strong>
-              <span className="kel-meta">
-                {[connectionTemplate(list, service.kind)?.label,
-                  service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
-              </span>
-              <span className="kel-meta">Kel needs {service.credential}.</span>
-              <span className="kel-meta">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
-            </div>
-            <span className="kel-grow" />
-            <KelButton
-              variant="quiet"
-              disabled={busy}
-              onClick={() => setDraft({ ...knownServiceDraft(service) })}
-            >
-              Set up {service.name}
-            </KelButton>
-          </div>
-        ))}
+        <p className="kel-connections-caption">The services Kel can use. You keep the credential.</p>
         {connections.length === 0 ? (
-          <KelEmpty
+          <div className="kel-connections-empty-body"><img src={connectionIcon} alt="" width={20} height={20} /><KelEmpty
             title="No connections yet."
-            why="Add a service and its credential, and Kel can work with it directly instead of you copying things across."
+            why="Add a service and its credential. Then Kel can work with it directly."
             actionLabel="Add a service"
             onAction={() => setDraft({ ...EMPTY_DRAFT })}
-          />
+          /></div>
         ) : (
           connections.map((connection) => {
             const shellFields = heldByShell?.[connection.id] ?? [];
             const disagree = shellFields.length > 0 && !connection.has_credentials;
             return (
-              <div className="kel-row kel-connection-row" key={connection.id}>
+              <div className="kel-row kel-connection-row kel-connection-configured-row" key={connection.id}>
                 <div className="kel-attention__text">
                   <strong>{connection.name}</strong>
                   <span className="kel-meta">
-                    {[stateSentence(connection), connection.kind_label, connection.base_url]
+                    {[connection.kind_label, connection.base_url]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
@@ -491,6 +470,9 @@ const Connections: React.FC = () => {
                     </span>
                   )}
                 </div>
+                <span className="kel-connection-status" title={stateSentence(connection)} data-state={connection.has_credentials ? 'ready' : 'needs-credential'}>
+                  {connection.has_credentials ? 'Ready' : 'Needs a credential'}
+                </span>
                 <span className="kel-grow" />
                 {connection.can_test && (
                   <KelButton
@@ -501,6 +483,10 @@ const Connections: React.FC = () => {
                     Test connection
                   </KelButton>
                 )}
+                <KelButton variant="primary" disabled={busy} onClick={() => setDraft(draftFor(connection))}>
+                  Edit
+                </KelButton>
+                <details className="kel-connection-more"><summary>More actions</summary>
                 {connection.kind === 'oauth' && (
                   <KelButton
                     variant={connection.auth_state === 'connected' ? 'quiet' : 'primary'}
@@ -535,9 +521,6 @@ const Connections: React.FC = () => {
                     Remove credential
                   </KelButton>
                 )}
-                <KelButton variant="quiet" disabled={busy} onClick={() => setDraft(draftFor(connection))}>
-                  Edit
-                </KelButton>
                 {confirmRemove === connection.id ? (
                   <>
                     <KelButton variant="quiet" disabled={busy} onClick={() => void removeConnection(connection)}>
@@ -552,15 +535,35 @@ const Connections: React.FC = () => {
                     Remove
                   </KelButton>
                 )}
+                </details>
               </div>
             );
           })
         )}
       </KelCard>
 
+      {connections.length > 0 && addable.length > 0 && <KelCard title="Available services" className="kel-connections-available">
+        <p className="kel-connections-caption">Known services you can set up when you need them.</p>
+        <div className="kel-connections-available-list">{addable.map((service) => <div className="kel-row kel-connection-row kel-connection-available-row" key={service.id}>
+          <div className="kel-attention__text">
+            <strong>{service.name}</strong>
+            <span className="kel-meta">
+              {[connectionTemplate(list, service.kind)?.label,
+                service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
+            </span>
+            <span className="kel-connection-extra">Kel needs {service.credential}.</span>
+            <span className="kel-connection-extra">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
+          </div>
+          <span className="kel-grow" />
+          <KelButton variant="primary" disabled={busy}
+            onClick={() => setDraft({ ...knownServiceDraft(service) })}>Set up {service.name}</KelButton>
+        </div>)}</div>
+      </KelCard>}
+
       {doable.length > 0 && (
         <KelCard
           title="What Kel can do"
+          className="kel-connections-actions"
           chip={<span className="kel-meta">only when you ask</span>}
         >
           <p className="kel-sub">
@@ -625,6 +628,7 @@ const Connections: React.FC = () => {
       {credentialDraft && (
         <KelCard
           title={`Credential for ${credentialDraft.name}`}
+          className="kel-connection-credential-form"
           chip={<span className="kel-meta">stored encrypted on this computer</span>}
         >
           <p className="kel-sub">
@@ -677,8 +681,20 @@ const Connections: React.FC = () => {
       {draft && (
         <KelCard
           title={draft.id ? `Edit ${draft.name || 'connection'}` : 'Add a service'}
+          className={`kel-connection-form${showAdvancedConnectionFields ? ' kel-connection-form--advanced' : ''}`}
           chip={<span className="kel-meta">what Kel needs to reach the service</span>}
         >
+          {!draft.id && addable.length > 0 && <details className="kel-connection-templates">
+            <summary>Start with a known service</summary>
+            <div>{addable.map((service) => <div key={service.id}>
+              <button type="button" onClick={() => setDraft({ ...knownServiceDraft(service) })}>Set up {service.name}</button>
+              <span>Kel needs {service.credential}.</span>
+              <span>{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
+            </div>)}</div>
+          </details>}
+          <button type="button" className="kel-connection-advanced-toggle"
+            aria-expanded={showAdvancedConnectionFields}
+            onClick={() => setShowAdvancedConnectionFields((open) => !open)}>Advanced options</button>
           <div className="kel-row">
             <label className="kel-meta" htmlFor="kel-connection-name">
               Service name
@@ -691,7 +707,7 @@ const Connections: React.FC = () => {
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
             />
           </div>
-          <div className="kel-row">
+          <div className="kel-row kel-connection-advanced-field">
             <label className="kel-meta" htmlFor="kel-connection-kind">
               How Kel signs in
             </label>
@@ -743,7 +759,7 @@ const Connections: React.FC = () => {
                   onChange={(event) => setDraft({ ...draft, auth_header: event.target.value })}
                 />
               </div>
-              <div className="kel-row">
+              <div className="kel-row kel-connection-advanced-field">
                 <label className="kel-meta" htmlFor="kel-connection-prefix">
                   How the credential is presented
                 </label>
@@ -766,7 +782,7 @@ const Connections: React.FC = () => {
                 </select>
               </div>
               {prefixMode(draft.auth_prefix) === 'custom' ? (
-                <div className="kel-row">
+                <div className="kel-row kel-connection-advanced-field">
                   <label className="kel-meta" htmlFor="kel-connection-prefix-word">
                     The word before the credential
                   </label>
@@ -779,7 +795,7 @@ const Connections: React.FC = () => {
                   />
                 </div>
               ) : null}
-              <span className="kel-meta">
+              <span className="kel-meta kel-connection-advanced-field">
                 Services expect this differently: GitHub and Stripe want “Bearer ”, Discord wants “Bot ”,
                 Figma and ClickUp want the value exactly as it is.
               </span>
@@ -821,11 +837,8 @@ const Connections: React.FC = () => {
               onChange={(event) => setDraft({ ...draft, test_endpoint: event.target.value })}
             />
           </div>
-          <p className="kel-meta">
-            The test address is what Kel will check when it verifies this connection — nothing is called
-            until you ask for that.
-          </p>
-          <div className="kel-row">
+          <p className="kel-meta">Kel calls this to check the credential.</p>
+          <div className="kel-row kel-connection-advanced-field">
             <label className="kel-meta" htmlFor="kel-connection-notes">
               What Kel should use it for
             </label>
