@@ -119,7 +119,7 @@
 | `299:12281` | M / Approval details | `/chat` bottom sheet | Current detail sheet compared in isolated package at 393 and 320px. | READ |
 | `299:12336` | M / Memory review | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12372` | M / Model picker | `/chat` bottom sheet | Current bottom sheet compared in isolated package at 393 and 320px. | READ |
-| `299:12418` | M / Permission | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
+| `299:12418` | M / Permission | `/chat` bottom sheet | [Current package comparison](CHAT_PERMISSION_CURRENT_REVISION.md) at 393 and 320px with injected mode choices; live switch remains open. | READ |
 | `299:12459` | M / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 393 and 320px. | READ |
 | `299:12494` | M / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
 | `299:12515` | M / Chat — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
@@ -169,4 +169,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect chat Permission `299:12418` with a runtime-capable isolated conversation and the remaining component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** compare mobile Recipes `299:14428` and Preview `299:14477` with isolated real recipe data. Inspect the remaining component variants. Keep old evidence for history and label it superseded until refreshed.

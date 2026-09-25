@@ -249,6 +249,35 @@
   background: rgb(var(--primary-6, 22 93 255));
 }
 
+/* The current mobile Permission sheet uses the Figma glass and 61px choice rows. */
+.mask[data-submenu='permission'] { background: rgba(6, 18, 46, 0.6); }
+.sheet[data-submenu='permission'] {
+  box-sizing: border-box; height: 405px; max-height: min(405px, calc(100dvh - 56px));
+  padding: 0 16px 34px; border: 1px solid rgba(191, 216, 255, 0.16); border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(180deg, rgba(25, 43, 78, 0.96), rgba(11, 27, 60, 0.96));
+  backdrop-filter: blur(24px); box-shadow: 0 -20px 24px rgba(0, 0, 0, 0.35), inset 0 1px rgba(191, 216, 255, 0.18);
+}
+.sheet[data-submenu='permission'] .handle { flex: none; width: 36px; height: 5px; margin: 8px auto 14px; background: rgba(191, 216, 255, 0.3); }
+.sheet[data-submenu='permission'] .panes { flex: 1; height: 0; }
+.sheet[data-submenu='permission'] .paneMain[aria-hidden='true'] { visibility: hidden; }
+.sheet[data-submenu='permission'] .paneSub { background: transparent; }
+.sheet[data-submenu='permission'] .permissionTitle {
+  display: block; flex: none; width: 100%; margin: 0 0 14px; padding: 0; border: 0; background: transparent;
+  color: #edf2fa; text-align: left; font: 600 20px/24px 'Instrument Sans', sans-serif; cursor: pointer;
+}
+.sheet[data-submenu='permission'] .list { padding: 0; }
+.sheet[data-submenu='permission'] .paneSub .item {
+  box-sizing: border-box; min-height: 61px; padding: 11px 0; border-bottom: 1px solid rgba(191, 216, 255, 0.08);
+  color: #edf2fa;
+}
+.sheet[data-submenu='permission'] .paneSub .item:last-child { border-bottom: 0; }
+.sheet[data-submenu='permission'] .paneSub .body { gap: 2px; }
+.sheet[data-submenu='permission'] .paneSub .label { font: 500 16px/20px 'Instrument Sans', sans-serif; }
+.sheet[data-submenu='permission'] .paneSub .desc { color: #8fa9d6; font: 400 13px/17px 'SF Pro Text', sans-serif; }
+.sheet[data-submenu='permission'] .radio { width: 16px; height: 16px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.sheet[data-submenu='permission'] .radio.checked::after { content: '✓'; display: block; color: #9fc3ff; font: 600 17px/16px 'Instrument Sans', sans-serif; }
+
 .checkbox.checkboxChecked::after {
   content: '';
   position: absolute;

@@ -5,6 +5,8 @@
  */
 
 import type { TMessage } from '@/common/chat/chatLib';
+import type { AcpConfigOptionDto } from '@/common/types/platform/acpTypes';
+import { injectAcpConfigOptionsForTests } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import { useAddOrUpdateMessage } from '@/renderer/pages/conversation/Messages/hooks';
 import type { TConversationRuntimeSummary } from '@/common/config/storage';
 import {
@@ -24,6 +26,7 @@ type RunScenarioOptions = {
 };
 
 type StreamController = {
+  emitConfigOptions: (options: AcpConfigOptionDto[]) => Promise<void>;
   runScenario: (options?: RunScenarioOptions) => Promise<void>;
   emitInfoTip: (code: string, content: string) => Promise<void>;
   emitErrorTip: (content: string, error?: Record<string, unknown>) => Promise<void>;
@@ -127,6 +130,7 @@ const AcpE2EStreamInjector: React.FC<{ conversationId: string }> = ({ conversati
     });
 
     registry.controllers[conversationId] = {
+      emitConfigOptions: async (options) => injectAcpConfigOptionsForTests(conversationId, options),
       emitPlan: async (entries, options) => {
         const msgId = options?.msgId ?? 'e2e-plan-msg';
         const turnId = options?.turnId ?? 'e2e-plan-turn';
