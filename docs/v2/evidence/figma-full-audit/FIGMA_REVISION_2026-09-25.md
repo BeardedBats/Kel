@@ -36,10 +36,10 @@
 | `189:907` | Kel / Work | `/work` | Current empty cards measured at 1440 and 800px. Populated work remains open. [Scoped evidence](DESKTOP_WORK_CURRENT_REVISION.md). | READ |
 | `189:1342` | Kel / Activity | `/activity` | Current frame read; empty cards checked in a package. Populated active work remains open. [Scoped evidence](DESKTOP_ACTIVITY_CURRENT_REVISION.md). | READ |
 | `189:1758` | Kel / Permissions | `/autonomy` | Current empty cards measured at 1440 and 800px. Populated grants and requests remain open. [Scoped evidence](DESKTOP_PERMISSIONS_CURRENT_REVISION.md). | READ |
-| `189:2193` | Kel / Projects | `/projects` | Retained node; inner revision not measured. | PENDING |
+| `189:2193` | Kel / Projects | `/projects` | Empty cards now match Figma at 1440 and 800px; Refresh map remains accessible on hover/focus. [Scoped evidence](DESKTOP_PROJECTS_CURRENT_REVISION.md). | READ |
 | `189:2628` | Kel / Scheduled tasks | `/scheduled` | Selected card controls implemented and package-checked. Three sample tasks and history remain open. [Scoped evidence](DESKTOP_SCHEDULED_LIST_CURRENT_REVISION.md). | READ |
-| `189:3098` | Kel / Providers | `/providers` | Retained node; inner revision not measured. | PENDING |
-| `189:3564` | Kel / Diagnostics | `/diagnostics` | Retained node; inner revision not measured. | PENDING |
+| `189:3098` | Kel / Providers | `/providers` | Real catalog and card bounds package-checked; three readiness rows and live response remain open. [Scoped evidence](DESKTOP_PROVIDERS_CURRENT_REVISION.md). | READ |
+| `189:3564` | Kel / Diagnostics | `/diagnostics` | Data-driven cards package-checked; two maintenance actions remain disabled. [Scoped evidence](DESKTOP_DIAGNOSTICS_CURRENT_REVISION.md). | READ |
 | `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
 | `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
 | `194:1366` | Kel / Ramble | `/transcription` | Retained node; inner revision not measured. | PENDING |

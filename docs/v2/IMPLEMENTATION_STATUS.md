@@ -6,6 +6,7 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 The canonical source now has a Kel-style scheduled task detail with real Pause/Resume, Edit, Run now, skip protection, delete confirmation, and History actions. The scheduled list has Figma-style Assistant, Model, and Execution mode controls that open the real edit dialog. Activity uses Figma's empty “All clear” copy. Disposable Windows package checks covered these states at 1440 and 800px. Populated Work, waiting and finished Activity, live scheduled History, and many remaining desktop frames still need implementation and verification. The canonical installed App remains on source `8c67121` until the desktop completion install.
 Activity's desktop running row now shows a stored milestone beside its job name, a green progress dot, and a Running label. A bounded engine fixture passed packaged checks at 1440 and 800px. Permissions empty cards also match the current Figma frame. Waiting and finished Activity states, populated Permissions, populated Work, and many desktop frames remain open.
+The Projects empty map card now matches Figma's 85px height while retaining Refresh map on hover or keyboard focus. Providers and Diagnostics received scoped packaged comparisons. Providers' three readiness checks and Diagnostics' cache/restart operations remain open; neither source currently supports Figma's illustrated behavior safely.
 
 ## Current canonical state (2026-09-24)
 
