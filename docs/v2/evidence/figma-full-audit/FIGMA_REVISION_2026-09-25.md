@@ -23,7 +23,7 @@
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its populated document and four footer actions have a [scoped disposable package comparison](TRANSCRIPTIONS_CURRENT_REVISION.md) at 1440 and 800px. The selected text and audio are synthetic; live Muse content remains unverified.
 - Mobile Ramble list `299:12588` and transcript `299:12782` have a [scoped disposable package comparison](RAMBLE_MOBILE_CURRENT_REVISION.md) at 393 and 320px. Search, folder card, recording card, record action, document, and footer bounds were measured. Vetting sheet `299:12871` now has a separate [engine-backed package comparison](RAMBLE_VETTING_CURRENT_REVISION.md). Synthetic content, mobile folder actions, native titlebar, five-tab Kibble placement, and font rasterization limit pixel parity.
 - Mobile Permissions `299:14218` has a [scoped disposable package comparison](PERMISSIONS_CURRENT_REVISION.md) at 393 and 320px. Its three card bounds match within 1px; the real isolated digest opens the existing check controls. Populated grants and access requests remain open.
-- Mobile Knowledge `299:14371` was read directly. Its two populated suggestions and three project-map rows are [not yet matched by the isolated empty-state package](KNOWLEDGE_CURRENT_GAP.md). Use engine-backed fixtures before claiming parity.
+- Mobile Knowledge `299:14371` was read directly and now has a [scoped engine-backed package comparison](KNOWLEDGE_CURRENT_REVISION.md) with two proposals and five map sections. The first card begins at Figma's x16/y114. The data-dependent row count, choice order, font, and phone chrome limit pixel parity.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
 ## Desktop FINAL frames
@@ -133,7 +133,7 @@
 | `299:13910` | M / Work | `/work` | Current three-card empty state compared in an isolated package at 393 and 320px; populated work remains open. | READ |
 | `299:14061` | M / Activity | `/activity` | Current populated running row and three cards compared with an isolated engine fixture at 393 and 320px. | READ |
 | `299:14218` | M / Permissions | `/autonomy` | Current empty-state cards and dynamic digest compared in an isolated package at 393 and 320px. | READ |
-| `299:14371` | M / Knowledge | `/projects/knowledge` | Current populated frame read; empty isolated package exposes a state and layout gap. | READ; GAP OPEN |
+| `299:14371` | M / Knowledge | `/projects/knowledge` | Current populated suggestions and map compared in isolated package at 393 and 320px. | READ |
 | `299:14428` | M / Recipes | `/recipes` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14477` | M / Recipes — Preview | `/recipes` | Replaced page/node; prior pair absent. | PENDING |
 | `299:14544` | M / Scheduled tasks | `/scheduled` | Replaced page/node; prior pair absent. | PENDING |
