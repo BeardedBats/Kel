@@ -147,10 +147,12 @@ states each rule beside the test that enforces it).
 - **The access history** (`events()`): the fact of each call — connection, action, domain (never the path
   or a query string), status, attempts, duration. This is the trail V2-14's "show contacted domains,
   access history" will read, and it contains no service data at all.
-- **Desktop**: a "What Kel can do" card on the Connections page listing each action with a plain "Do it",
+- **Desktop**: a "What Kel can do" card on the Connections page listing each action with a plain "Run",
   the service's answer shown once where it arrived, and a question first for anything that would change
   something in Nick's account. The new `kel:connection-run` channel runs the shared sender guard and hands
-  the engine only the fields the shell holds.
+  the engine only the fields the shell holds. The current desktop card says `Run`, keeps credential
+  editing inside the selected service row, and places confirmation below the action rows. The current
+  catalog has read actions only, so the mutating confirmation is DOM-tested but lacks a packaged state.
 - **What this does not yet reach**: no conversation can call an action, so the assistant cannot use a
   connection — the assistant's tools come from the coding runtime the desktop agent runs, and that bridge
   is carried as follow-up V2-04a in `FEATURE_LEDGER.md`. V2-04's own scope (the framework) is complete;

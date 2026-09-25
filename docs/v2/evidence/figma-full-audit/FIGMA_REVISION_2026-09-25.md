@@ -12,6 +12,7 @@
 - Mobile Tools `315:2842` replaces `219:767`. It shows four condensed MCP rows with right chevrons and the same four statuses, plus a separate image card with `Generate images` off and `Image model / Set up`. Production now uses this layout. Disposable packaged checks at 393 and 320px did not overflow. Nick resolved the Kibble entry through Settings → Tools; [current navigation evidence](MOBILE_NAV_CURRENT_REVISION.md) supersedes earlier five-tab captures.
 - Mobile MCP detail `315:3004` is newly explicit: a status card, error note, tools list, and bottom Test again / Report issue / Delete server actions. Production now has a data-driven detail view. The synthetic server reported no tools, so populated tool rows remain unverified.
 - Desktop Tools overlay nodes `313:2923`, `313:3413`, `313:3911`, `313:4441`, and `313:4940` were read directly. Add and row menus, JSON, CLI import, report, and delete dialogs have source repairs. The CLI and report dialogs have scoped package captures; real import and report delivery were not invoked.
+- Desktop Connections `269:5`, `269:501`, `269:971`, and `269:1419` were read directly. The populated Services rows and inline credential editor now have [scoped package captures](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). Confirmation placement has a DOM test; no packaged mutating action exists in the current engine catalog.
 - Current mobile Chat `299:11571`, drawer `299:11583`, and Tools `315:2842` show four bottom tabs: Chats, Ramble, Projects, Settings. Nick chose Settings → Tools → Kibble. The [disposable package](MOBILE_NAV_CURRENT_REVISION.md) now has those four tabs and a tested Kibble path; older five-tab captures are superseded for navigation.
 - Desktop Chat `185:4284` and mobile Chat/drawer were read and compared with a two-turn disposable package fixture. Mobile message width, reply actions, composer height, and drawer controls were repaired. [The scoped Chat record](CHAT_CURRENT_REVISION.md) shows captures and measured limits; desktop plan, project metrics, and phone chrome remain open. Four-tab placement has a later [package record](MOBILE_NAV_CURRENT_REVISION.md).
 - Desktop approval `273:1911` and mobile approval `299:11950` were read and compared with an isolated engine approval. The full-width pending card, command box, responsive actions, and settled strip have [scoped package evidence](CHAT_APPROVAL_CURRENT_REVISION.md). Approval resolution was covered by focused tests, not a packaged click.
@@ -51,10 +52,10 @@
 | `272:1087` | Kel / Kibble | `/kibble` | New or replaced node; prior pair absent. | PENDING |
 | `272:8149` | Kel / Startup — Starting up | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `272:8364` | Kel / Startup — Engine not running | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `269:5` | Kel / Connections | `/connections` | New or replaced node; prior pair absent. | PENDING |
-| `269:501` | Kel / Connections — Add a service | `/connections` | New or replaced node; prior pair absent. | PENDING |
-| `269:971` | Kel / Connections — Add credential | `/connections` | New or replaced node; prior pair absent. | PENDING |
-| `269:1419` | Kel / Connections — Run an action | `/connections` | New or replaced node; prior pair absent. | PENDING |
+| `269:5` | Kel / Connections | `/connections` | Populated Services rows measured in an isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
+| `269:501` | Kel / Connections — Add a service | `/connections` | Six main fields in two columns; extra options and taller card remain. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
+| `269:971` | Kel / Connections — Add credential | `/connections` | Inline editor captured in an isolated package; secure-store value never submitted. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
+| `269:1419` | Kel / Connections — Run an action | `/connections` | Confirmation placement tested in DOM; no real mutating catalog action exists for package capture. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `311:2239` | Kel / Settings — Model | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
 | `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
 | `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | New or replaced node; prior pair absent. | PENDING |

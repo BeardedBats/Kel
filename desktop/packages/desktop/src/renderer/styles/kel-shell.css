@@ -2515,6 +2515,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-v2-shell .kel-connections-page .kel-connections-caption {
   margin: 2px 0 4px; color: #8fa9d6; font: 400 12px/16px 'SF Pro Text',sans-serif;
 }
+.kel-v2-shell .kel-connections-page .kel-btn--quiet { backdrop-filter: none; }
 .kel-v2-shell .kel-connections-page .kel-connections-empty-body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 164px; text-align: center;
@@ -2532,7 +2533,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-v2-shell .kel-connections-page .kel-connection-templates > div { max-height: 160px; overflow-y: auto; }
 .kel-v2-shell .kel-connections-page .kel-connection-templates > div > div { display: flex; gap: 8px; padding: 6px 0; }
 .kel-v2-shell .kel-connections-page .kel-connection-templates button { border: 0; background: transparent; color: #9fdaff; cursor: pointer; }
-.kel-v2-shell .kel-connections-page .kel-connections-available-list { max-height: 260px; overflow-y: auto; scrollbar-width: thin; }
+.kel-v2-shell .kel-connections-page .kel-connections-available-list { max-height: 112px; overflow-y: auto; scrollbar-width: thin; }
 .kel-v2-shell .kel-connections-page .kel-connection-available-row {
   display: flex; align-items: center; flex-wrap: nowrap; min-height: 50px; padding: 6px 0;
   border-bottom: 1px solid rgba(191,216,255,.08);
@@ -2547,23 +2548,45 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   border-radius: 7px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
 }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 51px;
-  padding: 6px 0; border-bottom: 1px solid rgba(191,216,255,.08);
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; min-height: 0; height: 56px;
+  padding: 0; box-sizing: border-box; border-bottom: 1px solid rgba(191,216,255,.08);
 }
-.kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text { flex: 1; min-width: 140px; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text { flex: 1; min-width: 0; }
+.kel-v2-shell .kel-connections-page .kel-connection-row-icon { width: 16px; height: 16px; flex: none; margin-right: 8px; opacity: .8; }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text strong { color: #edf2fa; }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row .kel-attention__text > .kel-meta:first-of-type {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row:not(:has(.kel-connection-more[open])) .kel-attention__text > .kel-meta:not(:first-of-type) { display: none; }
-.kel-v2-shell .kel-connections-page .kel-connection-status { flex: none; min-width: 98px; color: #a2eacb; font: 600 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-status { flex: none; width: 140px; color: #a2eacb; font: 600 12px/18px var(--kel-shell-heading); }
 .kel-v2-shell .kel-connections-page .kel-connection-status[data-state='needs-credential'] { color: #ffb764; }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-grow { display: none; }
 .kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-btn { flex: none; min-height: 28px; padding: 0 10px; }
-.kel-v2-shell .kel-connections-page .kel-connection-more { flex: none; color: #c4d4e8; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-btn--quiet { border: 0; background: transparent; box-shadow: none; color: #c4d4e8; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row > .kel-btn--primary { border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#6493f8,#2356b3); color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1); }
+.kel-v2-shell .kel-connections-page .kel-connection-more { display: none; color: #c4d4e8; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row:has(.kel-connection-inline-credential) .kel-connection-more { display: block; flex: 1 0 100%; order: 11; }
 .kel-v2-shell .kel-connections-page .kel-connection-more summary { cursor: pointer; }
 .kel-v2-shell .kel-connections-page .kel-connection-more[open] { order: 10; display: flex; flex: 1 0 100%; flex-wrap: wrap; align-items: center; gap: 8px; }
 .kel-v2-shell .kel-connections-page .kel-connection-more[open] summary { flex-basis: 100%; }
+.kel-v2-shell .kel-connections-page .kel-connection-configured-row:has(.kel-connection-inline-credential) { flex-wrap: wrap; height: auto; min-height: 56px; padding-bottom: 8px; }
+.kel-v2-shell .kel-connections-page .kel-connection-inline-credential { flex: 1 0 100%; order: 9; padding-left: 32px; box-sizing: border-box; max-width: 100%; }
+.kel-v2-shell .kel-connections-page .kel-connection-credential-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.kel-v2-shell .kel-connections-page .kel-connection-credential-fields label { display: grid; gap: 4px; }
+.kel-v2-shell .kel-connections-page .kel-connection-credential-fields .kel-input { width: 100%; min-width: 0; height: 34px; box-sizing: border-box; }
+.kel-v2-shell .kel-connections-page .kel-connection-credential-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.kel-v2-shell .kel-connections-page .kel-connection-credential-actions .kel-btn:first-child { margin-right: auto; }
+.kel-v2-shell .kel-connections-page .kel-connection-custody-note { margin: 6px 0 0; font-size: 11px; }
+.kel-v2-shell .kel-connections-page .kel-connection-action-row { min-height: 56px; }
+.kel-v2-shell .kel-connections-page .kel-connection-action-row > .kel-grow { display: none; }
+.kel-v2-shell .kel-connections-page .kel-connection-action-status { flex: none; width: 140px; color: #a7b9d6; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-connections-page .kel-connection-action-status[data-mutating='true'] { color: #ffb764; }
+@media (max-width: 900px) {
+  .kel-v2-shell .kel-connections-page .kel-connection-action-status { width: 80px; }
+}
+.kel-v2-shell .kel-connections-page .kel-connection-action-confirmation { margin-top: 8px; }
+.kel-v2-shell .kel-connections-page .kel-connection-action-confirmation p { margin: 0 0 8px; padding: 8px 10px; border: 1px solid rgba(245,176,92,.3); border-radius: 8px; background: rgba(245,176,92,.08); }
+.kel-v2-shell .kel-connections-page .kel-connection-action-confirmation .kel-row { justify-content: flex-end; }
 .kel-v2-shell .kel-connections-page > .kel-page__head { order: 0; }
 .kel-v2-shell .kel-connections-page > .kel-connection-form { order: 1; }
 .kel-v2-shell .kel-connections-page > .kel-connections-services { order: 2; }

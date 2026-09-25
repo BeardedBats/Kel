@@ -417,12 +417,14 @@ describe('Connections — the central management surface', () => {
   it('stores a credential in the OS store and never shows the value again', async () => {
     rows = [row('stripe', 'Stripe')];
     renderPage();
-    fireEvent.click(await screen.findByText('Add credential'));
-    const field = (await screen.findByLabelText('Field name')) as HTMLInputElement;
-    expect(field.value).toBe('api_key');
+    fireEvent.click(await screen.findByText('Edit'));
+    const field = (await screen.findByLabelText('Header name')) as HTMLInputElement;
+    expect(field.value).toBe('Authorization');
+    expect(field.closest('.kel-connection-configured-row')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
     fireEvent.click(screen.getByText('Save credential'));
     await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
+    expect(calls.some((call) => call.body.action === 'save' && call.body.auth_header === 'Authorization')).toBe(true);
     // The value goes to the shell's custody under the connection namespace, and nowhere else.
     expect(stored).toEqual(['connection:stripe:api_key=sk_live_4242']);
     expect(calls.every((call) => call.route === '/api/connections')).toBe(true);
@@ -439,7 +441,7 @@ describe('Connections — the central management surface', () => {
     rows = [row('stripe', 'Stripe')];
     syncFails = true; // the metadata write does not land; the value is still in the OS store
     renderPage();
-    fireEvent.click(await screen.findByText('Add credential'));
+    fireEvent.click(await screen.findByText('Edit'));
     fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
     fireEvent.click(screen.getByText('Save credential'));
     await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
@@ -447,12 +449,27 @@ describe('Connections — the central management surface', () => {
     expect(screen.queryByText(/Kel has recorded it/)).toBeNull();
   });
 
+  it('keeps the fixed Authorization header read-only for bearer credentials', async () => {
+    rows = [row('notion', 'Notion', { auth_method: 'bearer', auth_header: '' })];
+    renderPage();
+    fireEvent.click(await screen.findByText('Edit'));
+    const header = screen.getByLabelText('Header name') as HTMLInputElement;
+    expect(header.value).toBe('Authorization');
+    expect(header.readOnly).toBe(true);
+    fireEvent.change(screen.getByLabelText('Credential'), { target: { value: 'synthetic-token' } });
+    fireEvent.click(screen.getByText('Save credential'));
+    await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
+    expect(calls.some((call) => call.body.action === 'save')).toBe(false);
+  });
+
   it('removes a stored credential and clears the engine record with it', async () => {
     rows = [
       row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
     ];
     renderPage();
-    fireEvent.click(await screen.findByText('Remove credential'));
+    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(screen.getByText('More actions'));
+    fireEvent.click(screen.getByText('Remove credential'));
     await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
     expect(
       calls.filter((call) => call.body.action === 'delete_credential' && call.body.id === 'stripe')
@@ -466,7 +483,8 @@ describe('Connections — the central management surface', () => {
       row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
     ];
     renderPage();
-    fireEvent.click(await screen.findByText('Remove'));
+    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(screen.getByText('Remove service'));
     expect(await screen.findByText('Confirm remove')).toBeTruthy();
     fireEvent.click(screen.getByText('Confirm remove'));
     await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
@@ -489,7 +507,7 @@ describe('Connections — the central management surface', () => {
     ];
     stored = ['connection:stripe:api_key=sk_live_4242'];
     renderPage();
-    fireEvent.click(await screen.findByText('Test connection'));
+    fireEvent.click(await screen.findByText('Test'));
     await waitFor(() => expect(custody.testConnection).toHaveBeenCalledWith('stripe'));
     // The shell used the value it holds for this one check, and the engine got the value — but the
     // page only ever sees the record, and it says what happened in words.
@@ -504,7 +522,7 @@ describe('Connections — the central management surface', () => {
     rows = [row('stripe', 'Stripe', { has_credentials: true, state: 'ready' })];
     renderPage();
     expect((await screen.findAllByText('Stripe')).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Test connection')).toBeNull();
+    expect(screen.queryByText('Test')).toBeNull();
   });
 
   it('asks for the credential field the framework names for that kind', async () => {
@@ -562,7 +580,7 @@ describe('Connections — the central management surface', () => {
     rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
     stored = ['connection:github:api_key=ghp_token'];
     renderPage();
-    fireEvent.click(await screen.findByText('Do it'));
+    fireEvent.click((await screen.findAllByText('Run'))[0]);
     await waitFor(() =>
       expect(custody.runConnection).toHaveBeenCalledWith('github', 'github-whoami', {}, false)
     );
@@ -576,11 +594,11 @@ describe('Connections — the central management surface', () => {
   it('asks before doing something that changes anything', async () => {
     rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
     renderPage();
-    fireEvent.click(await screen.findByText('Do it…'));
+    fireEvent.click((await screen.findAllByText('Run'))[1]);
     // Nothing is sent yet: the question comes first.
     expect(custody.runConnection).not.toHaveBeenCalled();
-    expect(screen.getByText(/This changes something in GitHub, so Kel asks first\./)).toBeTruthy();
-    fireEvent.click(screen.getByText('Yes, do it'));
+    expect(screen.getByText(/This changes something in GitHub\. Kel asks before it changes anything\./)).toBeTruthy();
+    fireEvent.click(screen.getByText('Yes, run it'));
     await waitFor(() =>
       expect(custody.runConnection).toHaveBeenCalledWith('github', 'github-comment', {}, true)
     );
@@ -589,7 +607,7 @@ describe('Connections — the central management surface', () => {
   it('never talks to the model-provider route', async () => {
     rows = [row('stripe', 'Stripe')];
     renderPage();
-    fireEvent.click(await screen.findByText('Add credential'));
+    fireEvent.click(await screen.findByText('Edit'));
     fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
     fireEvent.click(screen.getByText('Save credential'));
     await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
