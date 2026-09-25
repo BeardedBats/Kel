@@ -8,6 +8,7 @@
  */
 import { Modal, Typography } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export type ApprovalItem = {
   id: string;
@@ -108,6 +109,14 @@ const actionDescription = (item: ApprovalItem): string => {
   return item.summary ? `It wants to ${item.summary}.` : '';
 };
 
+const approvalDetailAction = (item: ApprovalItem, kind: 'access' | 'action'): string => {
+  if (kind === 'access') return item.target || item.what || headline(item, kind);
+  const target = actionTarget(item);
+  if (!target) return item.what || item.summary || headline(item, kind);
+  const context = item.context_title ? ` in ${item.context_title}` : '';
+  return `Run ${target}${context}.`;
+};
+
 type CardProps = {
   kind: 'access' | 'action';
   refId: string;
@@ -120,7 +129,28 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [details, setDetails] = useState(false);
+  const [mobile, setMobile] = useState(() => Boolean(window.matchMedia?.('(max-width: 767px)').matches));
   const inFlight = useRef(false);
+
+  useEffect(() => {
+    const query = window.matchMedia?.('(max-width: 767px)');
+    if (!query) return;
+    const onChange = () => setMobile(query.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!details || !mobile) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setDetails(false); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [details, mobile]);
 
   useEffect(() => {
     let alive = true;
@@ -162,6 +192,7 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
     try {
       await kelApprovalRequest({ kind, id: refId, allow, conversation: engineCid || conversationId, ...extra });
       await refresh();
+      setDetails(false);
     } catch (error) {
       // Audit APR-06: every failure used to be reported as "already settled" — an incorrect claim
       // about the state of the user's approval. The engine's sentence is the truth when it arrived;
@@ -261,7 +292,29 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
           {notice}
         </div>
       ) : null}
-      <Modal
+      {mobile && details ? createPortal(
+        <div className='kel-mobile-model-picker kel-mobile-approval-details' data-testid='kel-mobile-approval-details'>
+          <button type='button' className='kel-mobile-model-picker__scrim' aria-label='Close approval details' onClick={() => setDetails(false)} />
+          <section className='kel-mobile-model-picker__sheet kel-mobile-approval-details__sheet' role='dialog' aria-modal='true' aria-label={kind === 'access' ? 'Access request' : 'Approval request'}>
+            <div className='kel-mobile-model-picker__handle' aria-hidden='true' />
+            <h2>
+              <svg aria-hidden='true' viewBox='0 0 18 18' fill='none'><path d='M9 1.7 14.6 3.8v4.5c0 3.3-2.1 5.9-5.6 7.7-3.5-1.8-5.6-4.4-5.6-7.7V3.8L9 1.7Z' stroke='currentColor' strokeWidth='1.4' strokeLinejoin='round' /></svg>
+              {kind === 'access' ? 'Access request' : 'Approval request'}
+            </h2>
+            <div className='kel-mobile-approval-details__content' data-testid='kel-approval-details-body'>
+              <div><strong>{kind === 'access' ? 'What Kel wants access to' : 'What Kel wants to do'}</strong><p>{approvalDetailAction(item, kind)}</p></div>
+              <div><strong>Why</strong><p>{item.why || (kind === 'action' ? 'Building runs scripts from this project, so Kel asks first.' : 'Kel asks before using this access.')}</p></div>
+              <div><strong>If you say no</strong><p>{item.fallback || 'Kel stops this step and tells you what it could not check.'}</p></div>
+              {pending && item.repeatable ? <button type='button' className='kel-mobile-approval-details__remember' disabled={busy} onClick={() => void act(true, { remember: true })}>Always allow for this project</button> : null}
+            </div>
+            {pending ? <div className='kel-mobile-approval-details__foot'>
+              <button type='button' className='kel-mobile-approval-details__approve' disabled={busy} onClick={() => void act(true)}>Approve</button>
+              <button type='button' className='kel-mobile-approval-details__deny' disabled={busy} onClick={() => void act(false)}>Deny</button>
+            </div> : null}
+          </section>
+        </div>, document.body
+      ) : null}
+      {!mobile && <Modal
         title={kind === 'access' ? 'Access request' : 'Approval request'}
         visible={details}
         footer={null}
@@ -310,7 +363,7 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
               : 'This decision is settled; the card stays here so history makes sense.'}
           </Typography.Paragraph>
         </div>
-      </Modal>
+      </Modal>}
     </div>
   );
 };

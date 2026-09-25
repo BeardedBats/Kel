@@ -983,6 +983,22 @@ button.kel-shell-attention-line { cursor: pointer; }
   font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
 }
 
+/* Current mobile approval-details frame 299:12281 shares the glass sheet material. */
+.kel-mobile-approval-details__sheet { height: min(433px, calc(100dvh - 20px)); padding-bottom: 35px; }
+.kel-mobile-approval-details__sheet h2 { display: flex; align-items: center; gap: 8px; color: #ffc481; }
+.kel-mobile-approval-details__sheet h2 svg { flex: none; width: 18px; height: 18px; }
+.kel-mobile-approval-details__content { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.kel-mobile-approval-details__content::-webkit-scrollbar { display: none; }
+.kel-mobile-approval-details__content strong { display: block; color: #9fc3ff; font: 500 13px/16px var(--kel-shell-heading); }
+.kel-mobile-approval-details__content p { margin: 4px 0 0; color: #edf2fa; font: 400 15px/20px var(--kel-shell-body); }
+.kel-mobile-approval-details__remember { flex: none; align-self: flex-start; height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); cursor: pointer; }
+.kel-mobile-approval-details__foot { display: flex; flex: none; flex-direction: column; gap: 6px; width: 100%; margin-top: -10px; padding: 4px 0; }
+.kel-mobile-approval-details__foot button { width: 100%; border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); cursor: pointer; }
+.kel-mobile-approval-details__approve { height: 44px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(180deg,#2e7939,#1f5e30); color: #fff1f0; box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1); }
+.kel-mobile-approval-details__deny { height: 40px; border: 0; background: transparent; color: #9fc3ff; }
+.kel-mobile-approval-details__foot button:disabled,
+.kel-mobile-approval-details__remember:disabled { opacity: .5; cursor: default; }
+
 /* Current Chat reconnecting frames 273:12681 and 299:12515: occupy the composer slot. */
 .kel-v2-shell:has(.kel-chat-reconnecting) .kel-engine-notice { display: none; }
 .kel-v2-shell .kel-chat-reconnecting {

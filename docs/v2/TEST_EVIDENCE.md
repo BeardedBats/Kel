@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Chat approval-details package check (2026-09-25)
+
+[The scoped approval-details record](evidence/figma-full-audit/CHAT_APPROVAL_DETAILS_CURRENT_REVISION.md) compares live mobile `299:12281` with an isolated pending engine approval in a disposable package. The sheet measured x0/y419, 393×433 at 393px and stayed inside 320px. Its Approve button began at x17/y723. The live isolated record supplied the build command and context; the sheet used the existing approval path. Escape closed it. No decision was submitted. TypeScript, focused renderer approval tests **2 passed**, Electron Vite, and disposable Windows packaging passed. No renderer error or document overflow occurred. Canonical App and Data were untouched.
+
 ## Current mobile Chat model picker package check (2026-09-25)
 
 [The scoped model picker record](evidence/figma-full-audit/CHAT_MODEL_PICKER_CURRENT_REVISION.md) compares live mobile `299:12372` with a disposable package. The sheet measured x0/y442, 393×410 at 393px and stayed inside 320px. It used Figma's scrim, glass, blur, radius, tabs, and button placement. An isolated engine conversation accepted a Claude (built-in) choice and restored Automatic; Escape closed the sheet, and Add model opened `/settings/model`. No model request ran. No overflow or renderer error occurred. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. Canonical App and Data were untouched.
