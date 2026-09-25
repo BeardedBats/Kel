@@ -2,7 +2,9 @@
 
 ## Current canonical installation (2026-09-24)
 
-`C:\Users\Nick\Desktop\Kel\App` is the only installed Kel app. It uses `C:\Users\Nick\Desktop\Kel\Data`. The installed product was built from `842c01d`; `docs/CONSOLIDATION_STATUS.md` records its verified hashes, paths, and data preservation. The rXX candidate and protected dogfood locations below are historical records, not active paths. This source continuation has not rebuilt or replaced the installed app.
+`C:\Users\Nick\Desktop\Kel\App` is the only installed Kel app. It uses `C:\Users\Nick\Desktop\Kel\Data`. Its current package comes from source `8c67121` on `main`. SHA-256: `Kel.exe` `010beb34ceb12dc0495290428abd0c64e067003c1214efb143e8f756a3c051f1`; `resources/app.asar` `dd87843467840cf45a196b4c5c09a97eb5f14099c0d7cb06198a42befd1f9a78`; `resources/kel-engine/KelEngine.exe` `4d0604b4a797a84b07a4acac9dad7e4b35cc467ddfa904c72bd19593409417fe`. Each matches the verified unpacked package. The engine's 67 embedded modules match current source. The installed App retained its 15 installed-only files, including its uninstaller and hub resources. It launched with isolated data after the update. The rXX candidate and dogfood locations below are historical records, not active paths.
+
+The verified `App` is installed, but temporary rollback folders under `Tools` and package/build folders under `Kel/dist` remain. Automatic approval review rejected recursive cleanup. No further delete was attempted.
 
 ## Current staged candidate (2026-09-23)
 

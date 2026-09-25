@@ -6,7 +6,7 @@ The older r29 limits below are historical. The canonical app and durable data pa
 
 The V2-18 cancelled Build Update reading and no-job `DISPATCHED` defect described later in this file were fixed in source during this continuation. Older stored submissions may still carry `DISPATCHED` with no job. No installed app update is claimed for this source increment.
 
-The canonical App's Tools retest and failure states ran on disposable data. Its near-black status detail differs from Components `156:159`; a source-only ice-glass repair is pending packaged visual review. Enabled Image Model remains untested. No live MCP or credential was used.
+The canonical App's Tools failure and enabled Image Model states ran on disposable data at 1440 and 800px. The status detail now has Components `156:159` ice-glass material. Its long diagnostic still covers the Tools heading and card title while open at 800px. The short Figma tooltip does not specify this longer runtime content. The Image Model field and menu match the measured Components `146:52` material, and the enabled switch persisted after reload. A fake key and loopback endpoint verified only local configuration. No real image generation, live MCP, or personal credential was used. Keyboard and assistive-technology checks remain open.
 
 ## Current r29 acceptance limits (2026-09-23)
 

@@ -12,9 +12,10 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Repair the confirmed Tools failed-status popover material against Components 156:159 and recheck at 1440/800 on disposable data; then exercise an enabled Image Model with isolated configuration.
+next_item: Audit the remaining populated desktop Tools, chat, task, and transcript states against paired FINAL frames; measure Light-mode label contrast, then repair only confirmed gaps.
 
 status: partial
+# Canonical App now packages source 8c67121. Tools status glass and enabled Image Model were checked at 1440/800 with disposable data. Live integrations and exact product-wide parity remain open.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 deferred:
