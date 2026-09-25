@@ -50,6 +50,7 @@ import { Button, Message, Tag } from '@arco-design/web-react';
 import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { buildSendFailureError } from './buildSendFailureError';
 import { useAcpInitialMessage } from './useAcpInitialMessage';
@@ -128,6 +129,7 @@ const AcpSendBox: React.FC<{
     context_limit,
   } = messageState;
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const teamPermission = useTeamPermission();
   // In team mode, all agents show the permission mode selector (members don't propagate)
   const showModeSelector = true;
@@ -462,6 +464,22 @@ Please check your local CLI tool authentication status`,
     emitter.emit('acp.selected.file.clear');
     await executeCommand({ input: message, files: allFiles, sessions });
   };
+
+  useAddEventListener('agent.error.retry', (message: string, targetConversationId: string) => {
+    if (targetConversationId !== conversation_id) return;
+    void onSendHandler(message).catch((): void => {});
+  }, [conversation_id, onSendHandler]);
+
+  useAddEventListener('agent.error.pick-model', (targetConversationId: string) => {
+    if (targetConversationId !== conversation_id) return;
+    if (isMobile) {
+      navigate('/settings/model');
+    } else {
+      const modelPill = document.querySelector<HTMLButtonElement>('[data-testid="kel-model-pill"]:not(:disabled)');
+      if (modelPill) modelPill.click();
+      else navigate('/settings/model');
+    }
+  }, [conversation_id, isMobile, navigate]);
 
   const [interrupting, setInterrupting] = useState(false);
   const handleInterruptSend = async () => {

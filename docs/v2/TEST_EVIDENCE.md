@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current Chat agent-error package check (2026-09-25)
+
+[The scoped error record](evidence/figma-full-audit/CHAT_AGENT_ERROR_CURRENT_REVISION.md) compares live desktop `273:13090` and mobile `299:12494` with a disposable package. A synthetic structured timeout produced a 920×114 card at 1440px and a 361×200 card at 393px, matching frame bounds. It remained inside 800px and 320px viewports. The technical-details disclosure opened. Model choice opened the desktop picker and the mobile Model settings screen. Retry was not clicked. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. No renderer error or document overflow occurred. The canonical App and Data were untouched.
+
 ## Current Chat tool-call and plan package check (2026-09-25)
 
 [The current tool-call and plan record](evidence/figma-full-audit/CHAT_TOOL_PLAN_CURRENT_REVISION.md) compares live desktop `273:12914` and mobile `299:12459` with a disposable package. Three synthetic ACP rows measured 920px wide at 1440 and 361px at 393. The collapsed plan measured 920×51 and 361×37; Figma uses about 920×52 and 361×37. At 320px, both surfaces ended at x304 with no document overflow. The assistant actions remained visible before the tools. Row detail and plan expansion worked, with full neutral borders and no page errors. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. This does not prove live model tools or real plan streaming. Canonical App and Data remained untouched.

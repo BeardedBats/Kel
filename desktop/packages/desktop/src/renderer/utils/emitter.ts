@@ -42,6 +42,8 @@ interface EventTypes {
   ];
   // 填充输入框事件 / Fill sendbox input event
   'sendbox.fill': [string]; // prompt text to fill
+  'agent.error.retry': [string, string]; // failed plain-text prompt, target conversation
+  'agent.error.pick-model': [string]; // target conversation
   'sendbox.reply': [ReplyQuote]; // reply/quote a message
   'sendbox.reply.clear': void; // clear reply quote
   /**
