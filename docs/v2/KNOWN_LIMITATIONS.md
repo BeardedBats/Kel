@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Desktop Home and Connections (2026-09-25)
+
+[Home](evidence/figma-full-audit/DESKTOP_HOME_CURRENT_REVISION.md) matches the current heading, card, and composer geometry at 1440px. Its isolated state has one provider setup need; Figma's two work updates were not fabricated. [Connections](evidence/figma-full-audit/DESKTOP_CONNECTIONS_CURRENT_REVISION.md) matches the current empty card bounds. The packaged Add form still has more fields than Figma's six-field example. The populated services list, inline credential editor, and action confirmation require further desktop implementation and package checks. No live credential or service call was used. The canonical installed App still packages `8c67121`.
+
 ## Desktop Recipes (2026-09-25)
 
 The [desktop Recipes implementation](evidence/figma-full-audit/DESKTOP_RECIPES_CURRENT_REVISION.md) uses five real engine built-ins instead of Figma's sample names. The isolated engine has no saved runs, so the Preview history shown in Figma is absent. The Run form uses actual engine inputs, and no recipe was submitted. The package reproduces the current inner card geometry at 1440px and fits 800px. The canonical installed App still packages `8c67121`; this desktop increment remains source-only until the desktop completion install.

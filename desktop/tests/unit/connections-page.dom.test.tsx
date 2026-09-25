@@ -357,7 +357,7 @@ describe('Connections — the central management surface', () => {
     // The name can appear twice now — once as the service, once as where an action lives.
     expect((await screen.findAllByText('Stripe')).length).toBeGreaterThan(0);
     expect(screen.getByText('Pitcher List')).toBeTruthy();
-    expect(screen.getByText(/Ready — Kel has a credential/)).toBeTruthy();
+    expect(screen.getByText('Ready')).toBeTruthy();
     expect(screen.getByText(/Needs a credential/)).toBeTruthy();
     expect(screen.getByText('1 ready · 1 needing a credential')).toBeTruthy();
   });
@@ -523,6 +523,7 @@ describe('Connections — the central management surface', () => {
 
   it('sets up a known service in one step', async () => {
     renderPage();
+    fireEvent.click(await screen.findByText('Add a service'));
     fireEvent.click(await screen.findByText('Set up GitHub'));
     // The form arrives filled in: the address, the header, and how GitHub wants the token presented.
     expect((screen.getByLabelText('Service name') as HTMLInputElement).value).toBe('GitHub');
@@ -548,6 +549,7 @@ describe('Connections — the central management surface', () => {
 
   it('says what to fetch and how sure Kel is about the address', async () => {
     renderPage();
+    fireEvent.click(await screen.findByText('Add a service'));
     expect(await screen.findByText(/Kel needs a personal access token/)).toBeTruthy();
     expect(
       await screen.findByText(/Kel knows this address from the service’s own documentation\./)
