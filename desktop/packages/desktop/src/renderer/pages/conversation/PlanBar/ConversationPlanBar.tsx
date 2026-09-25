@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Badge } from '@arco-design/web-react';
-import { CheckOne, Down, Right } from '@icon-park/react';
+import { CheckOne, Down } from '@icon-park/react';
 import { getChatSurfaceWidthClass } from '@renderer/pages/conversation/utils/chatSurfaceWidth';
 import { useConversationRuntimeView } from '@renderer/pages/conversation/runtime/useConversationRuntimeView';
 import React, { useMemo, useState } from 'react';
@@ -24,54 +23,46 @@ import { useLatestPlan } from './useLatestPlan';
  */
 const ConversationPlanBar: React.FC<{ conversation_id: string }> = ({ conversation_id }) => {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const plan = useLatestPlan();
   const { isProcessing, activeTurnId } = useConversationRuntimeView(conversation_id);
 
   const entries = useMemo(() => plan?.content.entries ?? [], [plan]);
   const completed = useMemo(() => entries.filter((entry) => entry.status === 'completed').length, [entries]);
+  const current = useMemo(
+    () => entries.find((entry) => entry.status === 'in_progress')
+      ?? entries.find((entry) => entry.status === 'pending')
+      ?? entries[entries.length - 1],
+    [entries]
+  );
 
   if (!plan || !entries.length || !isProcessing) return null;
   // A plan whose turn already ended must not hang over the next turn. Rows
   // written before turn_id existed degrade to the isProcessing check alone.
   if (plan.content.turn_id && plan.content.turn_id !== activeTurnId) return null;
 
-  const toggle = () => setExpanded((value) => !value);
-
   return (
-    // Same width class the send box and message rows use: the bar sits directly
-    // above the send box, so a full-bleed bar would visibly overhang it once the
-    // container is wide enough for `.chat-surface-fluid` to reserve gutters.
     <div
       data-testid='conversation-plan-bar'
-      // No horizontal padding on the root: `.chat-surface-fluid` sets a computed
-      // `width`, and with content-box that padding is ADDED on top — measured
-      // 663px against the send box group's 647px, i.e. the bar overhung it by
-      // exactly 2x8px. The inset lives on the children instead, which is also
-      // how CommandQueuePanel and ThoughtDisplay do it in this same stack.
-      className={`${getChatSurfaceWidthClass()} shrink-0 border-t border-solid border-3 border-s-0 border-e-0 border-b-0 py-6px`}
+      className={`${getChatSurfaceWidthClass()} kel-plan-bar shrink-0`}
     >
-      <div
-        className='flex items-center gap-8px px-8px cursor-pointer text-t-secondary select-none'
-        role='button'
-        tabIndex={0}
+      <button
+        type='button'
+        className='kel-plan-bar__summary'
         aria-expanded={expanded}
         aria-label={expanded ? t('conversation.planBar.collapse') : t('conversation.planBar.expand')}
-        onClick={toggle}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            toggle();
-          }
-        }}
+        onClick={() => setExpanded((value) => !value)}
       >
-        {expanded ? <Down size={14} /> : <Right size={14} />}
-        <Badge status='default' text={t('conversation.planBar.title')} />
-        <span className='text-12px'>{t('conversation.planBar.progress', { completed, total: entries.length })}</span>
-      </div>
+        <strong>{t('conversation.planBar.title')}</strong>
+        <span className='kel-plan-bar__count'>{completed}/{entries.length}</span>
+        <span className='kel-plan-bar__current'>{current?.content}</span>
+        <span className='kel-plan-bar__meter' aria-hidden='true'><span style={{ width: `${completed / entries.length * 100}%` }} /></span>
+        <span className='kel-plan-bar__expand'>Expand plan</span>
+        <Down size={14} className={`kel-plan-bar__chevron${expanded ? ' kel-plan-bar__chevron--open' : ''}`} />
+      </button>
       {expanded && (
         <div
-          className='flex flex-col gap-6px pt-6px pl-30px pr-8px overflow-y-auto overscroll-contain'
+          className='kel-plan-bar__entries flex flex-col gap-6px overflow-y-auto overscroll-contain'
           // Viewport-relative, matching CommandQueuePanel's cap in this same
           // stack. The zone above the send box can hold the queue, the thought
           // bar and a multi-line input at once; a FIXED cap here eats a large

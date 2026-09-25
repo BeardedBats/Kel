@@ -7,6 +7,7 @@ export interface NormalizedToolCall {
   key: string;
   name: string;
   status: NormalizedToolStatus;
+  kind?: string;
   description?: string;
   input?: string;
   output?: string;
@@ -76,6 +77,7 @@ export function normalizeToolGroup(message: IMessageToolGroup): NormalizedToolCa
       key: call_id,
       name,
       status: normalizeToolGroupStatus(status),
+      kind: type,
       description: desc,
       input,
       output: getResultDisplayText(result_display),
@@ -167,12 +169,26 @@ export function normalizeAcpToolCall(message: IMessageAcpToolCall): NormalizedTo
   }
 
   const keyParam = buildParamSummary(update.kind, rawInput);
+  const rawOutput = update.rawOutput ?? update.raw_output;
+  const duration = rawOutput?.duration_seconds;
+  const approval = rawOutput?.approval;
+  const filePaths = typeof rawInput?.file_path === 'string' ? rawInput.file_path.split(',').filter(Boolean) : [];
+  const description = typeof rawInput?.display_summary === 'string'
+    ? rawInput.display_summary
+    : approval === 'auto' && typeof duration === 'number'
+      ? `Auto-approved · ${duration} s`
+      : update.kind === 'edit' && filePaths.length > 1
+        ? `${filePaths.length} file changes`
+        : typeof rawInput?.query === 'string'
+          ? rawInput.query
+          : keyParam || (rawInput?.command as string) || update.kind;
 
   return {
     key: update.tool_call_id,
     name: update.title,
     status: normalizeAcpStatus(update.status),
-    description: keyParam || (rawInput?.command as string) || update.kind,
+    kind: update.kind,
+    description,
     input,
     output,
     truncated: content?._compact?.truncated === true,

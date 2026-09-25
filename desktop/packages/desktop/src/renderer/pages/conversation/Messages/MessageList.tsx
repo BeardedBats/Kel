@@ -720,8 +720,10 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
       );
     }
     const message = item as TMessage;
-    // User messages keep their own copy row; AI text only shows it at the turn end.
-    const showCopyRow = message.position !== 'left' || message.type !== 'text' || aiCopyRowTextIds.has(message.id);
+    // A completed reply followed by tool rows already has a stable text body.
+    // Show its actions before the tools even while the tool turn is running.
+    const followedByTools = processedList[_index + 1]?.type === 'tool_summary';
+    const showCopyRow = message.position !== 'left' || message.type !== 'text' || aiCopyRowTextIds.has(message.id) || followedByTools;
     return (
       <MessageItem
         message={message}

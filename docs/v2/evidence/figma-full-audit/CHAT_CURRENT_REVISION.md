@@ -15,3 +15,4 @@ The package used `KEL_DATA_DIR`, `AIONUI_DATA_DIR`, `KEL_HOST_DATA_DIR`, `AIONUI
 **Open:** the Figma phone frame includes iPhone status and home chrome; the Windows Electron viewport has a title bar. Figma has four bottom tabs, while production retains a fifth Kibble tab until its access path is decided. The app still shows attachment and mic controls in the mobile composer; Figma shows only plus and send. The desktop fixture has no live model turn, real project metrics, or populated plan. This is not product-wide Chat parity or physical iPhone proof.
 
 The current desktop and mobile approval frames have a separate [scoped package check](CHAT_APPROVAL_CURRENT_REVISION.md).
+The current desktop and mobile tool-call and plan frames have a separate [scoped package check](CHAT_TOOL_PLAN_CURRENT_REVISION.md).
