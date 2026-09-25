@@ -15,6 +15,7 @@ import {
   Heartbeat,
   Info,
   Minus,
+  More,
   Plus,
   PreviewClose,
   PreviewOpen,
@@ -111,6 +112,12 @@ const ModelModalContent: React.FC = () => {
   const { t, i18n } = useTranslation();
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
+  const [desktopLayout, setDesktopLayout] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
+  useEffect(() => {
+    const onResize = () => setDesktopLayout(window.innerWidth >= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const [collapseKey, setCollapseKey] = useState<Record<string, boolean>>({});
   const [healthCheckLoading, setHealthCheckLoading] = useState<Record<string, boolean>>({});
   const { data, mutate } = useProvidersQuery();
@@ -170,6 +177,26 @@ const ModelModalContent: React.FC = () => {
         console.error('Failed to delete provider:', error);
         message.error(t('settings.saveModelConfigFailed'));
       });
+  };
+
+  const removeModel = (platform: IProvider, model: string) => {
+    const models = platform.models.filter((item: string) => item !== model);
+    const protocols = { ...platform.model_protocols };
+    const enabled = { ...platform.model_enabled };
+    const health = { ...platform.model_health };
+    const settings = { ...platform.model_settings };
+    delete protocols[model];
+    delete enabled[model];
+    delete health[model];
+    delete settings[model];
+    updatePlatform({
+      ...platform,
+      models,
+      model_protocols: Object.keys(protocols).length ? protocols : undefined,
+      model_enabled: Object.keys(enabled).length ? enabled : undefined,
+      model_health: Object.keys(health).length ? health : undefined,
+      model_settings: settings,
+    }, () => {});
   };
 
   // 切换供应商启用状态（全选 ↔ 全不选）
@@ -307,6 +334,7 @@ const ModelModalContent: React.FC = () => {
   };
 
   const [addPlatformModalCtrl, addPlatformModalContext] = AddPlatformModal.useModal({
+    desktopSource: isPageMode && desktopLayout,
     onSubmit(platform) {
       updatePlatform(platform, () => {
         setCollapseKey((prev) => ({ ...prev, [platform.id]: true }));
@@ -401,8 +429,38 @@ const ModelModalContent: React.FC = () => {
           <div className='space-y-16px'>
             {(data || []).map((platform: IProvider) => {
               const key = platform.id;
-              const isExpanded = collapseKey[platform.id] ?? false;
+              const isExpanded = collapseKey[platform.id] ?? (isPageMode && desktopLayout);
               return (
+                isPageMode && desktopLayout ? <section className='kel-shell-model-provider' key={key}>
+                  <div className='kel-shell-model-provider-row'>
+                    <button type='button' className='kel-shell-model-provider-expand' aria-expanded={isExpanded} aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${platform.name}`} onClick={() => setCollapseKey(prev => ({ ...prev, [platform.id]: !isExpanded }))}>{isExpanded ? '⌄' : '›'}</button>
+                    <div className='kel-shell-model-provider-label'><span>{platform.name}</span><small>{(platform.models ?? []).length} models · {getApiKeyCount(platform.api_key)} key</small></div>
+                    <Switch size='small' checked={getProviderState(platform).checked} onChange={() => toggleProviderEnabled(platform)} aria-label={`Enable ${platform.name}`} />
+                    <details className='kel-shell-model-more'><summary aria-label={`${platform.name} options`}><More size='16' /></summary><div className='kel-shell-model-menu'>
+                      <button type='button' onClick={() => addModelModalCtrl.open({ data: platform })}>Add model</button>
+                      <button type='button' onClick={() => editModalCtrl.open({ data: platform })}>Edit provider</button>
+                      <Popconfirm title={t('settings.deleteAllModelConfirm')} onOk={() => removePlatform(platform.id)}><button type='button'>Delete provider</button></Popconfirm>
+                    </div></details>
+                  </div>
+                  {isExpanded && (platform.models ?? []).map((model: string) => {
+                    const health = platform.model_health?.[model];
+                    const healthText = health?.status === 'healthy'
+                      ? `Healthy${health.latency ? ` · ${health.latency} ms` : ''}`
+                      : health?.status === 'unhealthy'
+                        ? `Check failed${health.error ? ` · ${health.error}` : ''}`
+                        : 'Not checked';
+                    return <div className='kel-shell-model-entry-row' key={model}>
+                      <span className={`kel-shell-model-health-dot kel-shell-model-health-dot--${health?.status ?? 'unknown'}`} aria-hidden='true' />
+                      <div className='kel-shell-model-provider-label'><span>{model}</span><small title={healthText}>{healthText}</small></div>
+                      <button type='button' className='kel-shell-model-check' onClick={() => performHealthCheck(platform, model)} disabled={!!healthCheckLoading[`${platform.id}-${model}`]}>{healthCheckLoading[`${platform.id}-${model}`] ? 'Checking' : 'Check'}</button>
+                      <Switch size='small' checked={isModelEnabled(platform, model)} onChange={(checked) => toggleModelEnabled(platform, model, checked)} aria-label={`Enable ${model}`} />
+                      <details className='kel-shell-model-more'><summary aria-label={`${model} options`}><More size='16' /></summary><div className='kel-shell-model-menu'>
+                        <button type='button' onClick={() => addModelModalCtrl.open({ data: platform, model })}>Configure</button>
+                        <Popconfirm title={t('settings.deleteModelConfirm')} onOk={() => removeModel(platform, model)}><button type='button'>Delete model</button></Popconfirm>
+                      </div></details>
+                    </div>;
+                  })}
+                </section> :
                 <Collapse
                   activeKey={isExpanded ? ['image-generation'] : []}
                   onChange={(_, activeKeys) => {

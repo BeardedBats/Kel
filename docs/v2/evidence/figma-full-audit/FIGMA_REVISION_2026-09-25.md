@@ -56,8 +56,8 @@
 | `269:501` | Kel / Connections — Add a service | `/connections` | Six main fields in two columns; extra options and taller card remain. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:971` | Kel / Connections — Add credential | `/connections` | Inline editor captured in an isolated package; secure-store value never submitted. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:1419` | Kel / Connections — Run an action | `/connections` | Confirmation placement tested in DOM; no real mutating catalog action exists for package capture. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
-| `311:2239` | Kel / Settings — Model | `/settings/model` | Default-model rows and real actions package-checked at 1440/800; populated custom models remain open. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
-| `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | Current frame read; existing functional form captured, but its layout differs from Figma. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
+| `311:2239` | Kel / Settings — Model | `/settings/model` | Default and populated custom-model rows with real actions package-checked at 1440/800; healthy remote response remains open. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
+| `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | Compact multi-model dialog implemented and package-checked; blank credential differs from Figma's successful sample. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
 | `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | New or replaced node; prior pair absent. | PENDING |
 | `311:3536` | Kel / Settings — Skills | `/settings/skills` | New or replaced node; prior pair absent. | PENDING |
 | `313:2441` | Kel / Settings — Tools | `/settings/tools` | Replaces `188:1956`; four MCP status rows and image-off card confirmed. | READ |
