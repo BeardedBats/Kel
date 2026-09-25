@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Ramble package check (2026-09-25)
+
+[The scoped mobile Ramble record](evidence/figma-full-audit/RAMBLE_MOBILE_CURRENT_REVISION.md) compares live list `299:12588` and transcript `299:12782` with a disposable package at 393 and 320px. Search, folder card, recording card, and New recording action met their Figma x/y bounds at 393px. The transcript card and Copy/More actions were within 1px vertically. The menu opened the existing drawer, More exposed existing actions, and neither viewport overflowed. Five synthetic recordings differ from Figma's four samples; no microphone, clipboard, merge, or vetting decision ran. TypeScript, focused Ramble tests **2 files / 7 tests**, full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current populated Transcriptions package check (2026-09-25)
 
 [The scoped Transcriptions record](evidence/figma-full-audit/TRANSCRIPTIONS_CURRENT_REVISION.md) compares live desktop `189:4032` with a disposable package containing two synthetic engine recordings. The 1440px document panel measured 670×620 at x613/y231, within 2–4px of the current frame. At 800px, the long document scrolled and all four footer actions stayed reachable; Combine opened its existing dialog without merging. Local Figma icons and action colors rendered with no document overflow or page errors. TypeScript, focused Transcriptions tests **2 files / 7 tests**, Electron Vite, and disposable Windows packaging passed. No real Muse audio, download, clipboard write, or canonical Data was used.

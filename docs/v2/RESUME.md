@@ -2,9 +2,9 @@
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
-The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, and populated Transcriptions have linked scoped package checks in the inventory.
+The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, populated Transcriptions, and mobile Ramble list/detail have linked scoped package checks in the inventory.
 
-**Next item:** compare mobile Permission `299:12418` with a runtime-capable isolated conversation. The current synthetic chat exposes no permission-mode options, so do not claim this frame from its screenshot. Then compare mobile Ramble and remaining components before V2-18/19 acceptance. Mobile Kibble placement awaits Nick's answer; keep its existing route.
+**Next item:** reach mobile Ramble Vetting answers `299:12871` through an isolated engine preview and compare its sheet. The frame is read, but the current route has no packaged vetting preview. Then compare mobile Permission `299:12418` with a runtime-capable isolated conversation. Mobile Kibble placement awaits Nick's answer; keep its existing route. Continue remaining components and V2-18/19 acceptance before App promotion.
 
 ---
 

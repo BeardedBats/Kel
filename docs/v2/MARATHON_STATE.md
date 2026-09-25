@@ -12,10 +12,10 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Compare current mobile Permission 299:12418 with a runtime-capable isolated conversation, then mobile Ramble and remaining component variants before V2-18/19 acceptance and App promotion.
+next_item: Reach mobile Ramble Vetting answers 299:12871 through an isolated engine preview, then compare mobile Permission 299:12418 with a runtime-capable isolated conversation before further V2-18/19 acceptance and App promotion.
 
 status: partial
-# Canonical App packages source 8c67121. Figma replaced desktop/mobile FINAL pages on 2026-09-25. Current Tools overlays, Chat/drawer, Chat approval and details, Chat tool-call/plan, Chat agent error, Chat reconnecting, mobile model picker, and populated Transcriptions have scoped disposable package checks; installed App promotion waits for broader current-revision acceptance. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md and its linked scoped records.
+# Canonical App packages source 8c67121. Figma replaced desktop/mobile FINAL pages on 2026-09-25. Current Tools overlays, Chat/drawer, Chat approval and details, Chat tool-call/plan, Chat agent error, Chat reconnecting, mobile model picker, populated Transcriptions, and mobile Ramble list/detail have scoped disposable package checks; installed App promotion waits for broader current-revision acceptance. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md and its linked scoped records.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 deferred:
