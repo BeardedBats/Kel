@@ -33,11 +33,11 @@
 | --- | --- | --- | --- | --- |
 | `185:4284` | Kel / Chat | `/chat` | Retained node; current populated frame read and small-fixture comparison recorded. | READ |
 | `185:2658` | Kel / Home | `/home` | Current heading, Needs you card, and composer compared in isolated package at 1440px. [Scoped evidence](DESKTOP_HOME_CURRENT_REVISION.md). | READ |
-| `189:907` | Kel / Work | `/work` | Retained node; inner revision not measured. | PENDING |
-| `189:1342` | Kel / Activity | `/activity` | Retained node; inner revision not measured. | PENDING |
+| `189:907` | Kel / Work | `/work` | Current empty cards measured at 1440 and 800px. Populated work remains open. [Scoped evidence](DESKTOP_WORK_CURRENT_REVISION.md). | READ |
+| `189:1342` | Kel / Activity | `/activity` | Current frame read; empty cards checked in a package. Populated active work remains open. [Scoped evidence](DESKTOP_ACTIVITY_CURRENT_REVISION.md). | READ |
 | `189:1758` | Kel / Permissions | `/autonomy` | Retained node; inner revision not measured. | PENDING |
 | `189:2193` | Kel / Projects | `/projects` | Retained node; inner revision not measured. | PENDING |
-| `189:2628` | Kel / Scheduled tasks | `/scheduled` | Retained node; inner revision not measured. | PENDING |
+| `189:2628` | Kel / Scheduled tasks | `/scheduled` | Selected card controls implemented and package-checked. Three sample tasks and history remain open. [Scoped evidence](DESKTOP_SCHEDULED_LIST_CURRENT_REVISION.md). | READ |
 | `189:3098` | Kel / Providers | `/providers` | Retained node; inner revision not measured. | PENDING |
 | `189:3564` | Kel / Diagnostics | `/diagnostics` | Retained node; inner revision not measured. | PENDING |
 | `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
@@ -48,7 +48,7 @@
 | `284:8489` | Kel / Recipes — Run | `/recipes` | Real input form implemented and compared in isolated package; no submission. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `284:8847` | Kel / Recipes — Preview | `/recipes` | Engine steps and history surface implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `272:7932` | Kel / Sign in (remote) | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `272:739` | Kel / Scheduled task — Detail | `/scheduled` | New or replaced node; prior pair absent. | PENDING |
+| `272:739` | Kel / Scheduled task — Detail | `/scheduled` | Details and History implemented and measured at 1440 and 800px. [Scoped evidence](DESKTOP_SCHEDULED_TASK_DETAIL_CURRENT_REVISION.md). | READ |
 | `272:1087` | Kel / Kibble | `/kibble` | New or replaced node; prior pair absent. | PENDING |
 | `272:8149` | Kel / Startup — Starting up | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `272:8364` | Kel / Startup — Engine not running | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |

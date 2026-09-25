@@ -1108,6 +1108,28 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-shell-task-detail { gap: 0 !important; }
 
 /* Screens FINAL 189:2628: setting rows and the instruction note share panel dividers. */
+.kel-v2-shell .kel-shell-task-setting-control {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: min(200px, 52%);
+  min-height: 34px;
+  padding: 0 10px 0 12px;
+  border: 1px solid rgba(127,160,255,.28);
+  border-radius: 8px;
+  background: rgba(47,107,224,.1);
+  color: var(--kel-text-1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+  font: 400 14px/20px var(--kel-shell-body);
+  text-align: left;
+  cursor: pointer;
+}
+.kel-v2-shell .kel-shell-task-setting-control:hover { background: rgba(47,107,224,.2); }
+.kel-v2-shell .kel-shell-task-setting-control:focus-visible { outline: 2px solid #7fa0ff; outline-offset: 2px; }
+.kel-v2-shell .kel-shell-task-setting-control > span { color: var(--kel-figma-color-text-muted); }
+.kel-v2-shell .kel-shell-activity-clear { margin: 0; color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body); }
 @media(min-width:768px) {
   .kel-v2-shell .kel-shell-task-detail-desktop > .kel-shell-task-field {
     min-height: 62px;
@@ -2641,4 +2663,62 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-templates,
   .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-connection-advanced-toggle,
   .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-btn) { grid-column: 1; }
+}
+
+/* Scheduled-task details use the current desktop Projects frame. Keep the existing phone view. */
+.kel-v2-shell .kel-scheduled-detail-legacy { display: none; }
+.kel-v2-shell .kel-scheduled-detail-desktop { gap: 14px; }
+.kel-v2-shell .kel-task-detail-back { align-self: flex-start; height: 18px; padding: 0; border: 0; background: transparent; color: #a6c3f3; font: 500 12px/18px var(--kel-shell-heading); cursor: pointer; }
+.kel-v2-shell .kel-task-detail-heading { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.kel-v2-shell .kel-task-detail-heading h1 { min-width: 0; margin: 0; color: #eef2fa; font: 600 20px/28px var(--kel-shell-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kel-v2-shell .kel-task-detail-state { color: #b6c5de; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-task-detail-state--active { color: #9ce6c4; }
+.kel-v2-shell .kel-task-detail-heading .kel-btn { min-height: 28px; height: 28px; padding: 0 9px; font-size: 12px; }
+.kel-v2-shell .kel-task-detail-heading .kel-btn--quiet { border: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.kel-v2-shell .kel-task-detail-heading .kel-btn--primary,
+.kel-v2-shell .kel-task-detail-history-row .kel-btn--primary { border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#6493f8,#2356b3); color: #fff; }
+.kel-v2-shell .kel-scheduled-detail-desktop > .kel-card { padding: 14px 20px 10px; gap: 0; }
+.kel-v2-shell .kel-task-detail-details > .kel-row:first-child,
+.kel-v2-shell .kel-task-detail-history > .kel-row:first-child { min-height: 20px; margin-bottom: 10px; }
+.kel-v2-shell .kel-task-detail-details .kel-h2,
+.kel-v2-shell .kel-task-detail-history .kel-h2 { color: #ffbf75; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell .kel-task-detail-details > .kel-row:first-child .kel-meta { font: 400 12px/18px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-instructions { min-height: 58px; border-bottom: 1px solid rgba(191,216,255,.08); }
+.kel-v2-shell .kel-task-detail-instructions > span { display: block; color: #a9bddc; font: 400 12px/18px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-instructions p { margin: 0; color: #e7ebf4; font: 400 14px/20px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; border-bottom: 1px solid rgba(191,216,255,.08); color: #e8edf6; font: 400 14px/20px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-field > :last-child { color: #b6c5de; text-align: right; }
+.kel-v2-shell .kel-task-detail-field small { display: block; color: #8fa9d6; font: 400 12px/18px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-switch-row { min-height: 53px; }
+.kel-v2-shell .kel-task-detail-switch-row .arco-switch { flex: none; }
+.kel-v2-shell .kel-task-detail-switch-row .arco-switch-checked { background: linear-gradient(#6493f8,#2356b3); }
+.kel-v2-shell .kel-task-detail-delete-row { min-height: 53px; border-bottom: 0; }
+.kel-v2-shell .kel-task-detail-delete-row > span:first-child { color: #f1a5a0; }
+.kel-v2-shell .kel-task-detail-delete-row .kel-btn { min-height: 28px; height: 28px; padding: 0 12px; border: 1px solid rgba(205,120,116,.55); border-radius: 7px; background: linear-gradient(#b75b57,#78332f); color: #fff; }
+.kel-v2-shell .kel-task-detail-delete-confirm { padding: 10px; border: 1px solid rgba(205,120,116,.4); border-radius: 8px; background: rgba(205,120,116,.08); }
+.kel-v2-shell .kel-task-detail-delete-confirm p { margin: 0 0 8px; }
+.kel-v2-shell .kel-task-detail-delete-confirm .kel-row { justify-content: flex-end; }
+.kel-v2-shell .kel-task-detail-delete-confirm .kel-btn--primary { border-color: rgba(205,120,116,.55); background: linear-gradient(#b75b57,#78332f); }
+.kel-v2-shell .kel-task-detail-history > .kel-row:first-child .kel-btn { height: 25px; min-height: 25px; padding: 0 4px; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; color: #b5c9e8; font-size: 12px; }
+.kel-v2-shell .kel-task-detail-history-actions { display: inline-flex; gap: 8px; }
+.kel-v2-shell .kel-task-detail-history-row { display: flex; align-items: center; gap: 12px; min-height: 58px; border-bottom: 1px solid rgba(191,216,255,.08); }
+.kel-v2-shell .kel-task-detail-history-row:last-child { border-bottom: 0; }
+.kel-v2-shell .kel-task-detail-history-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #9ab0d5; }
+.kel-v2-shell .kel-task-detail-history-dot[data-state='ok'] { background: #86e4b6; }
+.kel-v2-shell .kel-task-detail-history-dot[data-state='error'] { background: #f1a5a0; }
+.kel-v2-shell .kel-task-detail-history-text { display: grid; flex: 1; min-width: 0; }
+.kel-v2-shell .kel-task-detail-history-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-task-detail-history-text small { color: #8fa9d6; font: 400 12px/18px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-run-status { width: 115px; flex: none; color: #a7b9d6; font: 500 12px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-task-detail-run-status[data-state='ok'] { color: #9ce6c4; }
+.kel-v2-shell .kel-task-detail-run-status[data-state='error'] { color: #f1a5a0; }
+.kel-v2-shell .kel-task-detail-history-row .kel-btn { min-height: 28px; height: 28px; padding: 0 12px; }
+@media (max-width: 900px) and (min-width: 561px) {
+  .kel-v2-shell .kel-task-detail-heading { flex-wrap: wrap; }
+  .kel-v2-shell .kel-task-detail-heading h1 { flex: 1 1 75%; }
+  .kel-v2-shell .kel-task-detail-run-status { width: 70px; }
+}
+@media (max-width: 560px) {
+  .kel-v2-shell .kel-scheduled-detail-desktop { display: none; }
+  .kel-v2-shell .kel-scheduled-detail-legacy { display: block; }
 }

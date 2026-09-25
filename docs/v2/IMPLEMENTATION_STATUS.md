@@ -2,6 +2,10 @@
 
 What is actually built, as distinct from what is planned. Updated as phases land.
 
+## Desktop current-Figma continuation (2026-09-25)
+
+The canonical source now has a Kel-style scheduled task detail with real Pause/Resume, Edit, Run now, skip protection, delete confirmation, and History actions. The scheduled list has Figma-style Assistant, Model, and Execution mode controls that open the real edit dialog. Activity uses Figma's empty “All clear” copy. Disposable Windows package checks covered these states at 1440 and 800px. Populated Work and Activity, live scheduled History, and many remaining desktop frames still need implementation and verification. The canonical installed App remains on source `8c67121` until the desktop completion install.
+
 ## Current canonical state (2026-09-24)
 
 Consolidation moved all source to `C:\Users\Nick\Desktop\Kel\Kel` on `main`. See `MARATHON_STATE.md` and `FEATURE_LEDGER.md` for current phase status. The early "Not built yet" list below describes the V2 base, before the appended implementation blocks. The current incomplete phases are V2-05, V2-16, V2-18, and V2-19; V2-15 and V2-20 remain planned. The r61 System and r62 Appearance passes are recorded under `evidence/figma-full-audit/`.

@@ -1,0 +1,5 @@
+# Desktop scheduled tasks list — current Figma revision
+
+Current Figma [Scheduled tasks `189:2628`](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System?node-id=189-2628) was read directly. The selected task card now shows Figma-style controls for Assistant, Model, and Execution mode. Each opens Kel's existing edit dialog, which writes the scheduler's actual settings. The card displays the saved execution mode. Figma's sample says “Queue,” but the scheduler's queue protection is a different setting and is not mislabeled as execution mode.
+
+One isolated task populated the [1440px package](DESKTOP_SCHEDULED_LIST_PACKAGE_1440.png) and [800px package](DESKTOP_SCHEDULED_LIST_PACKAGE_800.png). The list card measured x613/y185, 670×124 at 1440px and x371/y181, 388×124 at 800px. The selected card measured 670×398 and 388×398. All three controls opened and closed the real edit dialog without a renderer error. Neither width overflowed. Figma's three sample tasks and completed history were not fabricated. No task was run or edited during the check.

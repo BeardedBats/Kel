@@ -25,6 +25,7 @@ import { getActivityTime } from '@/renderer/utils/chat/timeline';
 import { mutate } from 'swr';
 import { getConversationRuntimeWorkspaceErrorMessage } from '@renderer/pages/conversation/utils/conversationCreateError';
 import { emitter } from '@/renderer/utils/emitter';
+import { KelButton, KelCard } from '@renderer/components/kel/KelPrimitives';
 
 const resolveTeamId = (conversation: TChatConversation): string | undefined => {
   const extra = conversation.extra as { team_id?: unknown; teamId?: unknown } | undefined;
@@ -43,6 +44,7 @@ const TaskDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editDialogVisible, setEditDialogVisible] = useState(false);
   const [runningNow, setRunningNow] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [historyBatchMode, setHistoryBatchMode] = useState(false);
   const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(() => new Set());
   // Synchronous re-entry guard: `setRunningNow` is async, so two rapid clicks
@@ -115,6 +117,19 @@ const TaskDetailPage: React.FC = () => {
       Message.error(String(err));
     }
   }, [job, fetchJob, t]);
+
+  const handleToggleSkipRunning = useCallback(async () => {
+    if (!job) return;
+    try {
+      await ipcBridge.cron.updateJob.invoke({
+        job_id: job.id,
+        updates: { state: { queue_enabled: !job.state.queue_enabled } },
+      });
+      await fetchJob();
+    } catch (err) {
+      Message.error(String(err));
+    }
+  }, [job, fetchJob]);
 
   const handleRunNow = useCallback(async () => {
     if (!job) return;
@@ -323,7 +338,76 @@ const TaskDetailPage: React.FC = () => {
   const latestExecutionError = job.state.last_status === 'error' ? job.state.last_error?.trim() || '' : '';
   const statusTag = <CronStatusTag job={job} />;
 
-  return (
+  return <>
+    <main className='kel-page kel-scheduled-detail-desktop' data-testid='scheduled-detail-desktop'>
+      <button type='button' className='kel-task-detail-back' onClick={() => navigate('/scheduled')}>←&nbsp; All scheduled tasks</button>
+      <header className='kel-task-detail-heading'>
+        <h1>{job.name}</h1>
+        <span className={`kel-task-detail-state${job.enabled ? ' kel-task-detail-state--active' : ''}`}>
+          {job.enabled ? 'Active' : 'Paused'}
+        </span>
+        <span className='kel-grow' />
+        {!isManualOnly && <KelButton variant='quiet' onClick={() => void handleToggleEnabled()}>
+          {job.enabled ? 'Pause' : 'Resume'}
+        </KelButton>}
+        <KelButton variant='quiet' onClick={() => setEditDialogVisible(true)}>Edit</KelButton>
+        <KelButton variant='primary' disabled={runningNow} onClick={() => void handleRunNow()}>
+          {runningNow ? 'Starting…' : 'Run now'}
+        </KelButton>
+      </header>
+      <KelCard title='Details' className='kel-task-detail-details'
+        chip={<span className='kel-meta'>{formatSchedule(job, t)}</span>}>
+        <div className='kel-task-detail-instructions'>
+          <span>Instructions</span><p>{job.target.payload.text || '—'}</p>
+        </div>
+        <div className='kel-task-detail-field'><span>Assistant</span><span>{assistantIdentity?.name || 'Kel'}</span></div>
+        <div className='kel-task-detail-field'><span>Model</span><span>{job.metadata.agent_config?.model_id || job.metadata.agent_config?.model?.model || 'Automatic'}</span></div>
+        <div className='kel-task-detail-field'><span>Starts</span><span>{isNewConversationMode ? 'A new conversation each run' : 'The existing conversation'}</span></div>
+        <div className='kel-task-detail-field'><span>Project</span><span>—</span></div>
+        <div className='kel-task-detail-field kel-task-detail-switch-row'>
+          <span>Skip if still running<small>If the last run has not finished, Kel skips this one.</small></span>
+          <Switch checked={job.state.queue_enabled} onChange={() => void handleToggleSkipRunning()} aria-label='Skip if still running' />
+        </div>
+        <div className='kel-task-detail-field kel-task-detail-delete-row'>
+          <span>Delete this task<small>Its conversations are deleted too.</small></span>
+          <KelButton variant='primary' onClick={() => setConfirmDelete(true)}>Delete</KelButton>
+        </div>
+        {confirmDelete && <div className='kel-task-detail-delete-confirm' role='alertdialog' aria-label='Delete scheduled task'>
+          <p>Delete this task and its conversations?</p>
+          <div className='kel-row'>
+            <span className='kel-grow' />
+            <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep task</KelButton>
+            <KelButton variant='primary' onClick={() => void handleDelete()}>Delete task and conversations</KelButton>
+          </div>
+        </div>}
+      </KelCard>
+      <KelCard title='History' className='kel-task-detail-history' actions={conversations.length > 0 && (
+        historyBatchMode ? <span className='kel-task-detail-history-actions'>
+          <KelButton variant='quiet' onClick={handleCancelHistoryBatchMode}>Cancel</KelButton>
+          <KelButton variant='quiet' disabled={selectedConversationIds.size === 0} onClick={handleBatchDeleteHistory}>Delete selected</KelButton>
+        </span> : <KelButton variant='quiet' onClick={() => setHistoryBatchMode(true)}>Select runs</KelButton>
+      )}>
+        {conversations.length === 0 ? <p className='kel-meta'>No runs yet.</p> : conversations.map((conversation, index) => (
+          <div className='kel-task-detail-history-row' key={conversation.id}>
+            {historyBatchMode && <Checkbox checked={selectedConversationIds.has(conversation.id)}
+              onChange={() => toggleConversationSelected(conversation.id)} aria-label={`Select ${conversation.name || conversation.id}`} />}
+            <span className='kel-task-detail-history-dot' data-state={index === 0 ? job.state.last_status : undefined} />
+            <span className='kel-task-detail-history-text'>
+              <strong>{formatNextRun(getActivityTime(conversation), i18n.language)}</strong>
+              <small>{isNewConversationMode ? 'Opened a new conversation' : 'Continued the conversation'}</small>
+            </span>
+            {index === 0 && job.state.last_status && <span className='kel-task-detail-run-status' data-state={job.state.last_status}>
+              {job.state.last_status === 'ok' ? 'Success' : job.state.last_status === 'error' ? 'Failed' : job.state.last_status}
+            </span>}
+            <KelButton variant='primary' onClick={() => {
+              const teamId = resolveTeamId(conversation);
+              navigate(teamId ? `/team/${teamId}` : `/conversation/${conversation.id}`);
+            }}>Open</KelButton>
+          </div>
+        ))}
+      </KelCard>
+    </main>
+    <div className='kel-scheduled-detail-legacy'>
     <div className='w-full min-h-full box-border overflow-y-auto px-14px pt-28px pb-24px md:px-40px md:pt-52px md:pb-42px'>
       <div className='mx-auto flex w-full max-w-800px flex-col gap-28px box-border'>
         <Button
@@ -593,15 +677,10 @@ const TaskDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <CreateTaskDialog
-        visible={editDialogVisible}
-        onClose={() => {
-          setEditDialogVisible(false);
-        }}
-        editJob={job ?? undefined}
-      />
+      </div>
     </div>
-  );
+    <CreateTaskDialog visible={editDialogVisible} onClose={() => setEditDialogVisible(false)} editJob={job} />
+  </>;
 };
 
 export default TaskDetailPage;
