@@ -465,6 +465,9 @@ export async function initializeKel(port: number): Promise<void> {
       for (const item of approvals?.items || []) {
         if (!item?.message_seq) continue;
         const anchorId = 'kel-approval-' + item.kind + '-' + item.id;
+        // The anchored card carries the announcement. Keep the engine message durable,
+        // but do not show its sentence a second time immediately above the card.
+        history[id] = history[id].filter((row: HistoryMessage) => row.id !== 'kel-history-' + item.message_seq);
         if (history[id].some((row: HistoryMessage) => row.id === anchorId)) continue;
         history[id].push({
           id: anchorId,

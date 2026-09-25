@@ -13,3 +13,5 @@ The mobile drawer's dark background was sampled from both images. Figma RGB at x
 The package used `KEL_DATA_DIR`, `AIONUI_DATA_DIR`, `KEL_HOST_DATA_DIR`, `AIONUI_MULTI_INSTANCE=1`, and `--user-data-dir` under one `%TEMP%` root. At 393, 320, and 1440px, document width equaled viewport width. No renderer page error occurred. TypeScript passed. The focused navigation and composer suites passed 2 files / 9 tests. Electron Vite and the disposable Windows package passed.
 
 **Open:** the Figma phone frame includes iPhone status and home chrome; the Windows Electron viewport has a title bar. Figma has four bottom tabs, while production retains a fifth Kibble tab until its access path is decided. The app still shows attachment and mic controls in the mobile composer; Figma shows only plus and send. The desktop fixture has no live model turn, real project metrics, or populated plan. This is not product-wide Chat parity or physical iPhone proof.
+
+The current desktop and mobile approval frames have a separate [scoped package check](CHAT_APPROVAL_CURRENT_REVISION.md).

@@ -149,11 +149,17 @@ class ChatApprovalViewTests(ApprovalBase):
 
     def test_pending_step_item_uses_plain_summary(self):
         _, approval_id, thread, result = self.ask_for_step()
+        with self.store.transaction() as db:
+            db.execute("INSERT OR IGNORE INTO conversations(id,project_id,title,created) VALUES(?,?,?,?)",
+                       ('main', 'default', 'Website Redesign', time.time()))
+            db.execute("UPDATE conversations SET title=? WHERE id=?", ('Website Redesign', 'main'))
         items = chat_approvals.items(self.store, 'main')
         self.assertEqual([i['id'] for i in items], [approval_id])
         item = items[0]
         self.assertEqual((item['kind'], item['state']), ('action', 'pending'))
         self.assertIn('npm test', item['summary'])
+        self.assertEqual(item['target'], 'npm test')
+        self.assertEqual(item['context_title'], 'Website Redesign')
         self.assertTrue(item['repeatable'])
         self.assertGreater(item['seconds_left'], 0)
         self.assertTrue(item['message_seq'])

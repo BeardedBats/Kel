@@ -6,7 +6,7 @@
  * buttons never linger. Every action goes through the Kel engine's durable approval records —
  * the card is a presentation surface only, and it reads live state, so chat and Work agree.
  */
-import { Button, Modal, Space, Typography } from '@arco-design/web-react';
+import { Modal, Typography } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ApprovalItem = {
@@ -18,6 +18,7 @@ export type ApprovalItem = {
   job_id?: string | null;
   title: string;
   target?: string | null;
+  context_title?: string | null;
   what?: string | null;
   why?: string | null;
   benefit?: string | null;
@@ -70,7 +71,7 @@ export const fetchApprovalItems = async (conversationId: string): Promise<Approv
 const resolvedWords = (item: ApprovalItem): string => {
   switch (item.state) {
     case 'allowed_once':
-      return 'Allowed once — Kel is continuing.';
+      return 'Allowed once. Kel is continuing.';
     case 'allowed_project':
       return 'Allowed for this project — Kel won\u2019t need to ask again for this.';
     case 'approved':
@@ -89,6 +90,22 @@ const resolvedWords = (item: ApprovalItem): string => {
 const headline = (item: ApprovalItem | null | undefined, kind: 'access' | 'action'): string => {
   if (item?.title) return item.title;
   return kind === 'access' ? 'Kel needs access to continue' : 'Kel needs your OK to continue';
+};
+
+const actionTarget = (item: ApprovalItem): string | null => {
+  if (item.target) return item.target;
+  const summary = item.summary || '';
+  return summary.startsWith('run ') ? summary.slice(4) : null;
+};
+
+const actionDescription = (item: ApprovalItem): string => {
+  const target = actionTarget(item);
+  if (target) {
+    const action = /\bbuild\b/i.test(target) ? 'a build command' : 'a command';
+    const context = item.context_title ? ` in ${item.context_title}` : '';
+    return `It wants to run ${action}${context}.`;
+  }
+  return item.summary ? `It wants to ${item.summary}.` : '';
 };
 
 type CardProps = {
@@ -167,74 +184,76 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
   }
   if (item === null) {
     return (
-      <div className='w-360px max-w-[84vw] hairline-border rounded-8px p-12px bg-[var(--color-bg-2)]'
+      <div className='kel-approval-card kel-approval-card--resolved'
         data-testid='kel-approval-card'>
-        <Typography.Text className='text-13px'>
-          This request is no longer active.
-        </Typography.Text>
+        <span data-testid='kel-approval-resolved'>This request is no longer active.</span>
       </div>
     );
   }
 
   const pending = item.state === 'pending';
+  const target = kind === 'action' ? actionTarget(item) : item.target;
 
   return (
-    <div className='w-360px max-w-[84vw] hairline-border rounded-8px p-12px bg-[var(--color-bg-2)]'
+    <div className={`kel-approval-card kel-approval-card--${pending ? 'pending' : 'resolved'} kel-approval-card--${kind}`}
       data-testid='kel-approval-card'>
-      <Typography.Text bold className='text-13px' data-testid='kel-approval-headline'>
-        {headline(item, kind)}
-      </Typography.Text>
-      {item.target ? (
-        <div className='mt-6px text-12px rounded-6px px-8px py-6px break-all'
-          style={{ background: 'var(--color-fill-2)' }} data-testid='kel-approval-target'>
-          {item.target}
+      {pending ? <>
+        <div className='kel-approval-card__heading'>
+          <svg aria-hidden='true' className='kel-approval-card__shield' viewBox='0 0 16 16' fill='none'>
+            <path d='M8 1.5 13 3.3v4.1c0 3.2-2 5.5-5 7.1-3-1.6-5-3.9-5-7.1V3.3L8 1.5Z' stroke='currentColor' strokeWidth='1.3' strokeLinejoin='round' />
+          </svg>
+          <strong data-testid='kel-approval-headline'>
+            <span className='kel-approval-card__headline-desktop'>{headline(item, kind)}</span>
+            <span className='kel-approval-card__headline-mobile'>{kind === 'action' ? 'Kel needs your OK' : headline(item, kind)}</span>
+          </strong>
         </div>
-      ) : null}
-      <div className='mt-8px text-12px leading-18px text-t-secondary' data-testid='kel-approval-body'>
-        {kind === 'action' && item.summary ? <div>{`It wants to ${item.summary}.`}</div> : null}
-        {item.what ? <div className='mt-2px'>{item.what}</div> : null}
-        {item.why ? <div className='mt-2px' data-testid='kel-approval-why'>{item.why}</div> : null}
-        {pending ? <div className='mt-2px'>Kel is paused until you decide.</div> : null}
-      </div>
-      {pending ? (
-        <Space className='mt-10px' wrap size={6}>
+        <div className='kel-approval-card__body' data-testid='kel-approval-body'>
+          {kind === 'action' && item.summary ? <div>{actionDescription(item)}</div> : null}
+          {item.what ? <div>{item.what}</div> : null}
+          {item.why ? <div data-testid='kel-approval-why'>{item.why}</div> : null}
+        </div>
+        {target ? <div className='kel-approval-card__target' data-testid='kel-approval-target'>{target}</div> : null}
+        <div className='kel-approval-card__actions'>
+          <button className='kel-approval-card__details' type='button' data-testid='kel-approval-details'
+            onClick={() => setDetails(true)}>Details</button>
+          <div className='kel-approval-card__decisions'>
           {kind === 'access' ? (
             <>
-              <Button type='primary' size='small' disabled={busy} data-testid='kel-approval-allow-once'
+              <button type='button' disabled={busy} data-testid='kel-approval-allow-once'
                 onClick={() => void act(true, { grant_kind: 'once' })}>
                 Allow once
-              </Button>
-              <Button size='small' disabled={busy} data-testid='kel-approval-allow-project'
+              </button>
+              <button type='button' disabled={busy} data-testid='kel-approval-allow-project'
                 onClick={() => void act(true, { grant_kind: 'project' })}>
                 Allow for this project
-              </Button>
+              </button>
             </>
           ) : (
             <>
-              <Button type='primary' size='small' disabled={busy} data-testid='kel-approval-approve'
+              <button className='kel-approval-card__approve' type='button' disabled={busy} data-testid='kel-approval-approve'
                 onClick={() => void act(true)}>
                 Approve
-              </Button>
+              </button>
               {item.repeatable ? (
-                <Button size='small' disabled={busy} data-testid='kel-approval-remember'
+                <button className='kel-approval-card__remember' type='button' disabled={busy} data-testid='kel-approval-remember'
                   onClick={() => void act(true, { remember: true })}>
-                  Always allow for this project
-                </Button>
+                  <span className='kel-approval-card__remember-desktop'>Always allow for this project</span>
+                  <span className='kel-approval-card__remember-mobile'>Always allow here</span>
+                </button>
               ) : null}
             </>
           )}
-          <Button size='small' disabled={busy} data-testid='kel-approval-deny'
+          <button className='kel-approval-card__deny' type='button' disabled={busy} data-testid='kel-approval-deny'
             onClick={() => void act(false)}>
             Deny
-          </Button>
-          <Button size='small' type='text' data-testid='kel-approval-details'
-            onClick={() => setDetails(true)}>
-            Details
-          </Button>
-        </Space>
-      ) : (
-        <div className='mt-8px text-12px' data-testid='kel-approval-resolved'>
-          {resolvedWords(item)}
+          </button>
+          </div>
+        </div>
+      </> : (
+        <div className='kel-approval-card__settled'>
+          <span className='kel-approval-card__check' aria-hidden='true'>✓</span>
+          <strong data-testid='kel-approval-resolved'>{resolvedWords(item)}</strong>
+          <span className='kel-approval-card__status'>{item.state === 'denied' ? 'Denied' : item.state === 'expired' ? 'Expired' : item.state === 'approved' ? 'Approved' : 'Allowed'}</span>
         </div>
       )}
       {notice ? (

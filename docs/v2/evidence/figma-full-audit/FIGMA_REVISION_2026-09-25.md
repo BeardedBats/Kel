@@ -14,6 +14,7 @@
 - Desktop Tools overlay nodes `313:2923`, `313:3413`, `313:3911`, `313:4441`, and `313:4940` were read directly. Add and row menus, JSON, CLI import, report, and delete dialogs have source repairs. The CLI and report dialogs have scoped package captures; real import and report delivery were not invoked.
 - Current mobile Chat `299:11571`, drawer `299:11583`, and Tools `315:2842` show four bottom tabs: Chats, Ramble, Projects, Settings. The prior package and the still-present older mobile component variant use five tabs, including Kibble. The visible access path for Kibble in the new four-tab design needs Nick's product decision; the fifth tab remains until then.
 - Desktop Chat `185:4284` and mobile Chat/drawer were read and compared with a two-turn disposable package fixture. Mobile message width, reply actions, composer height, and drawer controls were repaired. [The scoped Chat record](CHAT_CURRENT_REVISION.md) shows captures and measured limits; desktop plan, project metrics, four-tab Kibble placement, and phone chrome remain open.
+- Desktop approval `273:1911` and mobile approval `299:11950` were read and compared with an isolated engine approval. The full-width pending card, command box, responsive actions, and settled strip have [scoped package evidence](CHAT_APPROVAL_CURRENT_REVISION.md). Approval resolution was covered by focused tests, not a packaged click.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
@@ -86,7 +87,7 @@
 | `273:10837` | Kel / Overlay — Ramble vetting answers | `/transcription` | New or replaced node; prior pair absent. | PENDING |
 | `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | New or replaced node; prior pair absent. | PENDING |
 | `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:1911` | Kel / Chat — Approval card | `/chat` | New or replaced node; prior pair absent. | PENDING |
+| `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
 | `273:12085` | Kel / State — Empty (Connections) | `/connections` | New or replaced node; prior pair absent. | PENDING |
 | `273:12291` | Kel / State — Loading (Activity) | `/activity` | New or replaced node; prior pair absent. | PENDING |
 | `273:12486` | Kel / State — Error (Providers) | `/providers` | New or replaced node; prior pair absent. | PENDING |
@@ -106,7 +107,7 @@
 | `299:11619` | M / Home | `/home` | Replaced page/node; prior pair absent. | PENDING |
 | `299:11692` | M / Chats | `/chat` | Replaced page/node; prior pair absent. | PENDING |
 | `299:11879` | M / Chats — Row actions | `/chat` | Replaced page/node; prior pair absent. | PENDING |
-| `299:11950` | M / Chat — Approval card | `/chat` | Replaced page/node; prior pair absent. | PENDING |
+| `299:11950` | M / Chat — Approval card | `/chat` | Current pending card compared in isolated package at 393 and 320px. | READ |
 | `299:12281` | M / Approval details | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12336` | M / Memory review | `shared shell / overlay` | Replaced page/node; prior pair absent. | PENDING |
 | `299:12372` | M / Model picker | `/settings/model` | Replaced page/node; prior pair absent. | PENDING |
