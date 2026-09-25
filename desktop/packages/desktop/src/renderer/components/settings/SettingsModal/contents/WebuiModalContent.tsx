@@ -406,10 +406,10 @@ const WebuiModalContent: React.FC = () => {
 
   // 提交新密码 / Submit new password
   const handleSetNewPassword = async () => {
+    const values = await form.validate().catch((): null => null);
+    if (!values) return;
+    setPasswordLoading(true);
     try {
-      const values = await form.validate();
-      setPasswordLoading(true);
-
       // changePassword goes through httpBridge; on 4xx/5xx it throws
       // BackendHttpError, caught below and translated via errorCodeMap.
       await webui.changePassword.invoke({
@@ -570,6 +570,8 @@ const WebuiModalContent: React.FC = () => {
     );
   }
 
+  const isDesktopRunning = isPageMode && isDesktop && status?.running === true;
+
   const webuiPanel = (
     <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
       <div className={isPageMode ? 'kel-shell-webui-panel' : 'space-y-12px px-[12px] md:px-[28px]'}>
@@ -577,7 +579,7 @@ const WebuiModalContent: React.FC = () => {
         {!isPageMode && <h2 className='text-20px font-500 text-t-primary m-0'>WebUI</h2>}
 
         {/* 描述说明 / Description */}
-        <div className='kel-shell-webui-intro space-y-6px'>
+        <div className={`kel-shell-webui-intro space-y-6px ${isDesktopRunning ? 'kel-phone-only' : ''}`}>
           <div className='kel-shell-webui-progress' aria-hidden='true'>
             {[1, 2, 3].map((step) => <span key={step} className={step === (!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3) ? 'is-active' : ''} />)}
           </div>
@@ -600,22 +602,22 @@ const WebuiModalContent: React.FC = () => {
         */}
 
         {/* WebUI 服务卡片 / WebUI Service Card */}
-        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
-          <ShellSourceCardHeader title='WebUI' />
+        <div className={`kel-shell-settings-card kel-shell-webui-service-card ${isDesktopRunning ? 'is-running' : ''} px-[12px] md:px-[28px] py-14px bg-2 rd-16px`}>
+          {isDesktopRunning ? <div className='kel-shell-webui-title-line'><ShellSourceCardHeader title='WebUI' /><span className='kel-shell-webui-running'>Running</span></div> : <ShellSourceCardHeader title='WebUI' />}
           <p className='kel-phone-only kel-shell-webui-mobile-intro'>Turn on WebUI to reach Kel from your phone or a browser.</p>
           {/* WebUI 引导提示 / WebUI hint */}
-          <div className='kel-desktop-only mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px'>
+          <div className={`kel-desktop-only kel-shell-webui-service-intro mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px ${isDesktopRunning ? 'is-hidden' : ''}`}>
             <img src={webuiActivityIcon} alt='' className='shrink-0' />
             <div className='text-12px text-t-secondary leading-relaxed'>Turn on WebUI to reach Kel from your phone or a browser.</div>
           </div>
 
           {/* 启用 WebUI / Enable WebUI */}
           <PreferenceRow
-            label={t('settings.webui.enable')}
+            label={isDesktopRunning ? 'Turn on WebUI' : t('settings.webui.enable')}
             extra={
               startLoading ? (
                 <span className='text-12px text-warning'>{t('settings.webui.starting')}</span>
-              ) : status?.running ? (
+              ) : status?.running && !isDesktopRunning ? (
                 <span className='text-12px text-success'>✓ {t('settings.webui.running')}</span>
               ) : null
             }
@@ -624,7 +626,10 @@ const WebuiModalContent: React.FC = () => {
           </PreferenceRow>
 
           {/* 访问地址（启用 WebUI 后即显示，不依赖后端 running 状态）/ Access URL (shown whenever WebUI is enabled, not tied to backend running state) */}
-          {webuiEnabled && (
+          {webuiEnabled && (isDesktopRunning ? <div className='kel-shell-webui-row kel-shell-preference-row kel-shell-webui-address'>
+            <div><div>Address</div><div className='kel-meta'>{getDisplayUrl()}</div></div>
+            <button type='button' onClick={() => handleCopy(getDisplayUrl())}>Copy</button>
+          </div> : (
             <PreferenceRow label={t('settings.webui.accessUrl')}>
               <div className='flex items-center gap-8px min-w-0'>
                 <button
@@ -643,31 +648,37 @@ const WebuiModalContent: React.FC = () => {
                 </Tooltip>
               </div>
             </PreferenceRow>
-          )}
+          ))}
 
           {/* 允许局域网访问 / Allow LAN Access */}
           <PreferenceRow
-            label={t('settings.webui.allowRemote')}
+            label={isDesktopRunning ? 'Allow access from other devices' : t('settings.webui.allowRemote')}
           >
             <Switch checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
           </PreferenceRow>
         </div>
 
         {/* 登录信息卡片 / Login Info Card */}
-        <div className='kel-shell-settings-card px-[12px] md:px-[28px] py-14px bg-2 rd-16px'>
-          <ShellSourceCardHeader title='Login Info' />
+        <div className={`kel-shell-settings-card kel-shell-webui-login-card ${isDesktopRunning ? 'is-running' : ''} px-[12px] md:px-[28px] py-14px bg-2 rd-16px`}>
+          <ShellSourceCardHeader title={isDesktopRunning ? 'Sign-in details' : 'Login Info'} />
 
-          <div className='kel-shell-webui-row kel-shell-preference-row'>
+          {isDesktopRunning ? <div className='kel-shell-webui-row kel-shell-preference-row kel-shell-webui-credential-row'>
+            <div><div>Username</div><div className='kel-meta'>{displayUsername}</div></div>
+            <button type='button' onClick={handleResetUsername}>Change</button>
+          </div> : <div className='kel-shell-webui-row kel-shell-preference-row'>
             <div><div>Username:</div></div>
             <button type='button' className='kel-shell-credential-field' onClick={handleResetUsername} aria-label='Edit username'>{displayUsername}</button>
-          </div>
-          <div className='kel-shell-webui-row kel-shell-preference-row'>
+          </div>}
+          {isDesktopRunning ? <div className='kel-shell-webui-row kel-shell-preference-row kel-shell-webui-credential-row'>
+            <div><div>Password</div><div className='kel-meta'>••••••••</div></div>
+            <button type='button' onClick={handleResetPassword}>Change</button>
+          </div> : <div className='kel-shell-webui-row kel-shell-preference-row'>
             <div><div>Initial Password:</div></div>
             <button type='button' className='kel-shell-credential-field' onClick={handleResetPassword} aria-label='Change password'>••••••</button>
-          </div>
+          </div>}
 
           {/* 二维码登录（仅服务器运行且允许远程访问时显示）/ QR Code Login (only when server running and remote access allowed) */}
-          {status?.running && status.allowRemote && (
+          {status?.running && status.allowRemote && !isDesktopRunning && (
             <>
               <div className='border-t border-line my-12px' />
               <div className='text-14px font-500 mb-4px text-t-primary'>{t('settings.webui.qrLogin')}</div>
@@ -730,6 +741,16 @@ const WebuiModalContent: React.FC = () => {
             </>
           )}
         </div>
+
+        {isDesktopRunning && status.allowRemote && <div className='kel-shell-settings-card kel-shell-webui-qr-card'>
+          <div className='kel-shell-webui-qr-head'><ShellSourceCardHeader title='Sign in with your phone' /><button type='button' disabled={qrLoading} onClick={() => void generateQRCode()}>New code</button></div>
+          <div className='kel-shell-webui-qr-body'>
+            <div className='kel-shell-webui-qr-image'>
+              {qrLoading ? <span>Loading…</span> : qrUrl ? <Suspense fallback={<span>Loading…</span>}><QRCodeSVGLazy value={qrUrl} size={118} level='M' /></Suspense> : <span>{t('settings.webui.qrGenerateFailed')}</span>}
+            </div>
+            <div><div>Scan to sign in on this network.</div>{qrExpiresAt && <div className='kel-meta'>Code expires at {formatExpiresAt(qrExpiresAt)}</div>}</div>
+          </div>
+        </div>}
       </div>
     </AionScrollArea>
   );
@@ -797,17 +818,20 @@ const WebuiModalContent: React.FC = () => {
       {/* 设置新密码弹窗 / Set New Password Modal */}
       <AionModal
         variant='standard'
-        className='kel-shell-webui-modal'
+        className='kel-shell-webui-modal kel-shell-webui-password-modal'
         visible={setPasswordModalVisible}
         onCancel={() => setSetPasswordModalVisible(false)}
         onOk={handleSetNewPassword}
         confirmLoading={passwordLoading}
-        title={t('settings.webui.setNewPassword')}
+        title={isDesktopRunning ? 'Change password' : t('settings.webui.setNewPassword')}
+        okText={isDesktopRunning ? 'Save password' : undefined}
         size='small'
+        style={isDesktopRunning ? { width: '460px', height: 'auto' } : undefined}
+        contentStyle={isDesktopRunning ? { padding: '10px 24px 4px' } : undefined}
       >
         <Form form={form} layout='vertical'>
           <Form.Item
-            label={t('settings.webui.newPassword')}
+            label={isDesktopRunning ? 'New password' : t('settings.webui.newPassword')}
             field='newPassword'
             rules={[
               { required: true, message: t('settings.webui.newPasswordRequired') },
@@ -816,8 +840,9 @@ const WebuiModalContent: React.FC = () => {
           >
             <Input.Password placeholder={t('settings.webui.newPasswordPlaceholder')} />
           </Form.Item>
+          {isDesktopRunning && <p className='kel-shell-webui-password-hint'>At least 8 characters.</p>}
           <Form.Item
-            label={t('settings.webui.confirmPassword')}
+            label={isDesktopRunning ? 'Type it again' : t('settings.webui.confirmPassword')}
             field='confirmPassword'
             rules={[
               { required: true, message: t('settings.webui.confirmPasswordRequired') },

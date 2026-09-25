@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Archived and enabled WebUI (2026-09-25)
+
+[Archived and Select](evidence/figma-full-audit/DESKTOP_ARCHIVED_CURRENT_REVISION.md) used a synthetic three-chat sidebar response in the disposable package. Group cards, selection, and Delete 2 confirmation passed at 1440 and 800px; the confirmation was canceled. [Enabled WebUI and Change password](evidence/figma-full-audit/DESKTOP_WEBUI_CURRENT_REVISION.md) used isolated configuration and data. Its service/sign-in/phone cards measured 670×209, 670×151, and 670×204 at 1440px. The password mismatch dialog measured x490/y239.7, 460×300; inline validation blocked the action without a technical toast. WebUI stopped and port 25808 had no listener afterward. Both routes had zero overflow and renderer errors. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.
+
 ## Desktop System, Restore, and About (2026-09-25)
 
 [Current System `314:3912`, Restore `314:4383`, and About `314:4871`](evidence/figma-full-audit/DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md) were compared with a disposable Windows package at 1440 and 800px. The 1440px System and About cards measured 670×183 and 670×282; the inspected-backup Restore confirmation measured x460/y219.7, 520×187. The folder picker closed behind confirmation, and **Keep current data** canceled it. Third-party notices opened. Both widths had zero document overflow or renderer errors. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.

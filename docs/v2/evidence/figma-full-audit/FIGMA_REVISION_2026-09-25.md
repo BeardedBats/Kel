@@ -72,10 +72,10 @@
 | `314:4383` | Kel / Settings — System — Restore | `/settings/system` | Real isolated backup inspection opened the compact confirmation; canceled without restore. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
 | `314:4871` | Kel / Settings — About | `/settings/about` | Header update action and four rows package-checked at 1440/800; notices opened. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
 | `314:5271` | Kel / Settings — Desktop Pet | `/settings/pet` | New or replaced node; prior pair absent. | PENDING |
-| `314:18314` | Kel / Settings — WebUI | `/settings/webui` | New or replaced node; prior pair absent. | PENDING |
-| `314:18753` | Kel / Settings — WebUI — Change password | `/settings/webui` | New or replaced node; prior pair absent. | PENDING |
-| `314:19219` | Kel / Settings — Archived | `/settings/archived` | New or replaced node; prior pair absent. | PENDING |
-| `314:19647` | Kel / Settings — Archived — Select | `/settings/archived` | New or replaced node; prior pair absent. | PENDING |
+| `314:18314` | Kel / Settings — WebUI | `/settings/webui` | Real isolated running and remote-enabled states package-checked at 1440/800. [Scoped evidence](DESKTOP_WEBUI_CURRENT_REVISION.md). | READ |
+| `314:18753` | Kel / Settings — WebUI — Change password | `/settings/webui` | Mismatch error and compact dialog package-checked; no password changed. [Scoped evidence](DESKTOP_WEBUI_CURRENT_REVISION.md). | READ |
+| `314:19219` | Kel / Settings — Archived | `/settings/archived` | Synthetic three-chat project grouping package-checked at 1440/800. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
+| `314:19647` | Kel / Settings — Archived — Select | `/settings/archived` | Two-row selection and delete confirmation package-checked and canceled. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
 | `273:595` | Kel / Overlay — Command palette | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:906` | Kel / Overlay — Fix Capture · Select | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1091` | Kel / Overlay — Fix Capture · Recording | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
