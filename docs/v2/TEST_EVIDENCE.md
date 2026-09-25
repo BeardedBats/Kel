@@ -12,6 +12,8 @@ The canonical App now packages source `8c67121`. The engine bundle gate matched 
 
 An additional packaged WebUI check used disposable data. Enabling WebUI moved the page to Step 2 of 3 and showed Running. The local page returned HTTP 200; an unauthenticated API request returned 401. Screenshots at 1440/800px showed no document overflow. WebUI was stopped before the app closed, and the temporary profile was removed. [The scoped record](evidence/figma-full-audit/DESKTOP_WEBUI_R57.md) separates this enabled runtime check from step-1 Figma parity.
 
+A packaged Desktop Pet check used disposable data. The enable action returned to `aria-checked=false`, showed the policy refusal, and remained off after reload. The profile and app were removed. The source policy constant is false under AUD-MINOR-008, so enabled-state parity is blocked by a product decision, not a missing test setup.
+
 ## Current packaged r29 checkpoint (2026-09-23)
 
 Source `41b2bf6` and staged candidate `C:\Users\Nick\KelV2Candidate.r29`: `cd desktop && npx vitest run tests/unit --reporter=dot` passed **43 files / 294 tests**. The earlier typecheck, focused tests, package build, and archive gate passed after the source change. Packaged local conversation opening had a 112.4 ms median. Switching between two disposable project contexts had a 114.9 ms median. Dark Appearance had no document overflow at 1440, 800, or 390px. The native colour popup saved two adjustments while open, kept the second after reload, and Reset restored the default. See [`CANDIDATE_R29.md`](evidence/v2-19/CANDIDATE_R29.md) for conditions and limits. Remote, live service, audio, and phone claims remain pending.

@@ -10,6 +10,8 @@ The canonical App's Tools failure and enabled Image Model states ran on disposab
 
 WebUI was enabled in an isolated packaged App. Its local page loaded and its API required login. This does not prove remote access, authenticated phone use, or a model response. The available FINAL frame shows step 1; step-2 pixel parity is not claimed.
 
+The installed App still refuses Desktop Pet enable. The switch returns off, shows a clear refusal, and stays off after reload. `petPolicy.ts` sets `KEL_PET_SUBSYSTEM_ENABLED = false` under V1.6 finding AUD-MINOR-008. Enabling it requires a product and safety decision; changing a Figma control alone cannot verify the enabled state.
+
 ## Current r29 acceptance limits (2026-09-23)
 
 Packaged local conversation opening, two disposable project contexts, Dark widths, and two native picker adjustments are verified in `docs/v2/evidence/v2-19/CANDIDATE_R29.md`. Remote load, first response, Google sign-in, and live personal services need a signed-in isolated candidate session and a model request. Fresh Muse audio needs a new recording; physical iPhone checks need the device. The web-host suite requires stopping all Kel instances, which is excluded while r20 runs. V2-20 promotion remains gated. Faint Light-mode labels remain outside this Dark pass.
