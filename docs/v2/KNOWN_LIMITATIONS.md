@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Desktop Appearance](evidence/figma-full-audit/DESKTOP_APPEARANCE_CURRENT_REVISION.md) now follows the current Theme, colors, text/zoom, and Add theme structure at 1440 and 800px. The tested Midnight theme had no custom CSS or color override, so its preview and values differ from Figma's illustrative edited theme. More colors and font Reset controls remain accessible. The Add theme dialog is 14px shorter than the scaled Figma sample. Canonical App still packages `8c67121`.
+
 [Desktop Assistants and Skills](evidence/figma-full-audit/DESKTOP_CATALOG_CURRENT_REVISION.md) have current Figma headings and row layouts. The isolated package contained one real assistant and no custom skills. It therefore cannot prove a three-row populated Skills state. Kel retains its actual stored description instead of Figma's sample copy. The canonical installed App still packages `8c67121`.
 
 ## Desktop Work and scheduled task detail (2026-09-25)

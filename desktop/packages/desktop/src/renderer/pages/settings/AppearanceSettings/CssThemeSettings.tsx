@@ -194,7 +194,7 @@ const CssThemeSettings: React.FC = () => {
     if (themes.length === 0) return themes;
     const systemCard: Theme = {
       id: SYSTEM_THEME_ID,
-      name: t('settings.cssTheme.followSystem'),
+      name: 'System',
       appearance: 'light',
       builtin: true,
       created_at: 0,
@@ -383,7 +383,7 @@ const CssThemeSettings: React.FC = () => {
       <div className='kel-shell-theme-gallery-actions flex items-start md:items-center justify-between gap-8px flex-wrap'>
         <span className='text-14px text-t-secondary leading-22px'>{t('settings.cssTheme.selectOrCustomize')}</span>
         <Button type='primary' size='small' className='!h-32px !rounded-8px !px-14px !m-0' onClick={handleAddTheme}>
-          {t('settings.cssTheme.addManually')}
+          Add theme
         </Button>
       </div>
 

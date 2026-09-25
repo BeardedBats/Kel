@@ -10,7 +10,7 @@ import { useThemeContext } from '@renderer/hooks/context/ThemeContext.tsx';
 import { iconColors } from '@renderer/styles/colors';
 import { Button, Input, Radio } from '@arco-design/web-react';
 import AionModal from '@renderer/components/base/AionModal.tsx';
-import { Plus, Delete } from '@icon-park/react';
+import { UploadOne, Delete } from '@icon-park/react';
 import CodeMirror from '@uiw/react-codemirror';
 import { css as cssLang } from '@codemirror/lang-css';
 import { EditorView } from '@codemirror/view';
@@ -68,7 +68,7 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
       setCss(theme.css || '');
       setAppearance(theme.appearance ?? 'light');
     } else {
-      setName('');
+      setName('Midnight');
       setCover('');
       setCss('');
       setAppearance(colorTheme === 'dark' ? 'dark' : 'light');
@@ -122,11 +122,11 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
       className='kel-shell-theme-modal'
       visible={visible}
       header={{
-        title: isEditing ? t('settings.cssTheme.editTheme') : t('settings.cssTheme.addToPreset'),
+        title: isEditing ? 'Edit theme' : 'Add theme',
         showClose: true,
       }}
       onCancel={onClose}
-      style={{ width: 600 }}
+      style={{ width: 560 }}
       unmountOnExit
       footer={{
         render: () => (
@@ -149,78 +149,44 @@ const CssThemeModal: React.FC<CssThemeModalProps> = ({ visible, theme, onClose, 
                 className='px-20px min-w-80px'
                 style={{ borderRadius: 8 }}
               >
-                {t('common.save')}
+                {isEditing ? 'Save changes' : 'Save theme'}
               </Button>
             </div>
           </div>
         ),
       }}
     >
-      <div className='space-y-20px'>
-        {/* 封面和名称行 / Cover and name row */}
-        <div className='flex gap-16px p-16px bg-[var(--fill-1)] rounded-12px'>
-          {/* 封面上传 / Cover upload */}
-          <div className='flex-shrink-0'>
-            <div className='text-13px text-t-secondary mb-8px'>{t('settings.cssTheme.previewCover')}</div>
-            <div
-              className='w-120px h-80px rounded-8px border border-dashed border-border-2 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-primary)] transition-colors overflow-hidden bg-[var(--fill-0)]'
-              role='button'
-              tabIndex={0}
-              aria-label='Upload background image'
-              onClick={handleCoverUpload}
-              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); void handleCoverUpload(); } }}
-            >
-              {cover ? (
-                <img src={cover} alt='cover' className='w-full h-full object-cover' />
-              ) : (
-                <>
-                  <Plus theme='outline' size='20' fill={iconColors.secondary} />
-                  <span className='text-12px text-t-secondary mt-4px'>{t('common.upload')}</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* 名称和外观 / Name and appearance */}
-          <div className='flex-1 flex flex-col gap-12px'>
-            <div>
-              <div className='text-13px text-t-secondary mb-8px'>
-                <span className='text-[var(--color-danger)]'>*</span>
-                {t('settings.cssTheme.name')}
-              </div>
-              <Input
-                value={name}
-                onChange={setName}
-                placeholder={t('settings.cssTheme.namePlaceholder')}
-                className='!bg-[var(--fill-0)]'
-              />
-            </div>
-            {/* 外观模式选择 / Appearance mode selector */}
-            <div>
-              <div className='text-13px text-t-secondary mb-8px'>{t('settings.cssTheme.appearance')}</div>
-              <Radio.Group value={appearance} onChange={(val: 'light' | 'dark') => setAppearance(val)}>
-                <Radio value='light'>{t('settings.lightMode')}</Radio>
-                <Radio value='dark'>{t('settings.darkMode')}</Radio>
-              </Radio.Group>
-            </div>
+      <div className='kel-shell-theme-form'>
+        <div className='kel-shell-theme-form-top'>
+          <label className='kel-shell-theme-form-name'>
+            <span>Name</span>
+            <Input value={name} onChange={setName} aria-label='Theme name' placeholder='Theme name' />
+          </label>
+          <div className='kel-shell-theme-form-base'>
+            <span>Based on</span>
+            <Radio.Group value={appearance} onChange={(val: 'light' | 'dark') => setAppearance(val)}>
+              <Radio value='light'>Light</Radio>
+              <Radio value='dark'>Dark</Radio>
+            </Radio.Group>
           </div>
         </div>
-
-        {/* CSS 代码编辑器 / CSS code editor */}
-        <div>
-          <div className='text-13px text-t-secondary mb-8px'>{t('settings.cssTheme.cssCode')}</div>
+        <button type='button' className='kel-shell-theme-form-upload' onClick={() => void handleCoverUpload()}>
+          <UploadOne theme='outline' size='16' fill={iconColors.secondary} />
+          {cover ? 'Change background image' : 'Add a background image (optional)'}
+        </button>
+        <label className='kel-shell-theme-form-css'>
+          <span>Custom CSS</span>
           <CodeMirror
             value={css}
             theme={colorTheme}
             extensions={[cssLang(), EditorView.lineWrapping]}
             onChange={setCss}
-            placeholder={`/* ${t('settings.customCssDesc') || 'Enter custom CSS styles here'} */`}
+            placeholder={'.kel-sidebar {\n  background: #140f33;\n}'}
             basicSetup={CODE_MIRROR_BASIC_SETUP}
-            style={{ ...CODE_MIRROR_STYLE, minHeight: '200px' }}
-            className='[&_.cm-editor]:rounded-[6px]'
-            height='200px'
+            style={CODE_MIRROR_STYLE}
+            height='80px'
           />
-        </div>
+        </label>
       </div>
     </AionModal>
   );
