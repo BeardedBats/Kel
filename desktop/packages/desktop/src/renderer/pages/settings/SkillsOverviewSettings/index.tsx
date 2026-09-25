@@ -1,6 +1,7 @@
 import { ipcBridge } from '@/common';
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 import emptyIcon from '@renderer/assets/figma/empty-skills.svg';
+import rowIcon from '@renderer/assets/figma/nav-skills.svg';
 import React from 'react';
 import useSWR from 'swr';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
@@ -14,7 +15,7 @@ const SkillsOverviewSettings: React.FC = () => {
   return <SettingsPageWrapper>
     <div className='kel-shell-catalog-stack' data-testid='kel-settings-skills'>
       <section className='kel-card kel-shell-catalog-card'>
-        <ShellSourceCardHeader title='My Skills' />
+        <ShellSourceCardHeader title='Your skills' />
         {isLoading ? <p className='kel-shell-catalog-status'>Loading skills…</p>
           : error ? <p className='kel-shell-catalog-status'>Skills are unavailable.</p>
           : mine.length === 0 ? <div className='kel-shell-catalog-empty'>
@@ -24,8 +25,9 @@ const SkillsOverviewSettings: React.FC = () => {
           </div>
           : <div className='kel-shell-catalog-list'>
             {mine.map((skill) => <div className='kel-shell-catalog-row' key={skill.name}>
-              <strong>{skill.name}</strong>
-              {skill.description && <span>{skill.description}</span>}
+              <img className='kel-shell-catalog-row-icon' src={rowIcon} alt='' />
+              <span className='kel-shell-catalog-row-copy'><strong>{skill.name}</strong>
+              {skill.description && <span>{skill.description}</span>}</span>
             </div>)}
           </div>}
       </section>
