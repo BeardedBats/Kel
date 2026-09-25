@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop System, Restore, and About (2026-09-25)
+
+[Current System `314:3912`, Restore `314:4383`, and About `314:4871`](evidence/figma-full-audit/DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md) were compared with a disposable Windows package at 1440 and 800px. The 1440px System and About cards measured 670×183 and 670×282; the inspected-backup Restore confirmation measured x460/y219.7, 520×187. The folder picker closed behind confirmation, and **Keep current data** canceled it. Third-party notices opened. Both widths had zero document overflow or renderer errors. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.
+
 ## Desktop Appearance and Add theme (2026-09-25)
 
 [Appearance `314:2863` and Add theme `314:3373`](evidence/figma-full-audit/DESKTOP_APPEARANCE_CURRENT_REVISION.md) now use the four-slot gallery, six primary color rows, and one Text size and zoom card. The package measured Theme 670×166, Theme colors 670×338, and Add theme x440/y103 560×362 at 1440px. The 800px layout had no color-row wrap or overflow. A separate isolated profile saved, selected, and reloaded a custom theme. No renderer errors appeared. TypeScript, **54 files / 401 tests**, focused theme tests, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.

@@ -68,9 +68,9 @@
 | `313:4940` | Kel / Settings — Tools — Delete server | `/settings/tools` | Read 460px danger dialog; source copy and style repaired; disposable package check passed. | READ |
 | `314:2863` | Kel / Settings — Appearance | `/settings/appearance` | Four-slot theme gallery, six primary colors, and text/zoom card package-checked at 1440/800. [Scoped evidence](DESKTOP_APPEARANCE_CURRENT_REVISION.md). | READ |
 | `314:3373` | Kel / Settings — Appearance — Add theme | `/settings/appearance` | Compact dialog package-checked; save/select/reload worked in an isolated profile. [Scoped evidence](DESKTOP_APPEARANCE_CURRENT_REVISION.md). | READ |
-| `314:3912` | Kel / Settings — System | `/settings/system` | New or replaced node; prior pair absent. | PENDING |
-| `314:4383` | Kel / Settings — System — Restore | `/settings/system` | New or replaced node; prior pair absent. | PENDING |
-| `314:4871` | Kel / Settings — About | `/settings/about` | New or replaced node; prior pair absent. | PENDING |
+| `314:3912` | Kel / Settings — System | `/settings/system` | Data and backup and General package-checked at 1440/800; real preference values retained. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
+| `314:4383` | Kel / Settings — System — Restore | `/settings/system` | Real isolated backup inspection opened the compact confirmation; canceled without restore. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
+| `314:4871` | Kel / Settings — About | `/settings/about` | Header update action and four rows package-checked at 1440/800; notices opened. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
 | `314:5271` | Kel / Settings — Desktop Pet | `/settings/pet` | New or replaced node; prior pair absent. | PENDING |
 | `314:18314` | Kel / Settings — WebUI | `/settings/webui` | New or replaced node; prior pair absent. | PENDING |
 | `314:18753` | Kel / Settings — WebUI — Change password | `/settings/webui` | New or replaced node; prior pair absent. | PENDING |

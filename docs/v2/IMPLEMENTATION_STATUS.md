@@ -4,7 +4,7 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 ## Desktop current-Figma continuation (2026-09-25)
 
-Desktop Appearance now reserves a fourth theme slot for a real saved theme, shows six primary colors, and groups Chat text, Code, and Zoom. Add theme uses the compact current Figma field order. A disposable Windows package checked both desktop widths, and an isolated custom theme survived selection and reload. Advanced colors remain available. System, Restore, About, and other desktop frames remain open. The canonical App remains on source `8c67121` until the desktop completion install.
+Desktop System, Restore, and About now follow current Figma cards and dialog geometry. A disposable Windows package checked 1440 and 800px, inspected a real isolated backup, canceled the confirmation, and opened Third-party notices. Desktop Appearance reserves a fourth theme slot for a real saved theme, shows six primary colors, and groups Chat text, Code, and Zoom. Add theme uses the compact current Figma field order. A separate isolated custom theme survived selection and reload. Advanced colors remain available. Other desktop frames remain open. The canonical App remains on source `8c67121` until the desktop completion install.
 
 Desktop Settings Assistants and Skills now render actual catalog rows with Figma's title, icon, name, description, and separator structure. Skills has the current desktop heading, and its extra Usage Tip card is hidden there. An isolated package checked the real Kel row and empty custom Skills at 1440 and 800px. Populated custom skills remain open; sample entries were not fabricated. The canonical installed App remains on source `8c67121` until the desktop completion install.
 

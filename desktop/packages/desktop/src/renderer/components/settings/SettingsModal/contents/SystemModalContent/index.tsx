@@ -27,6 +27,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 import { useSettingsViewMode } from '../../settingsViewContext';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import BrowserNotificationGrant from './BrowserNotificationGrant';
 import DevSettings from './DevSettings';
 import BrowserDataSection from './BrowserDataSection';
@@ -48,6 +49,8 @@ const SystemModalContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
+  const layout = useLayoutContext();
+  const isDesktopPage = isPageMode && !layout?.isMobile;
   const initializingRef = useRef(true);
 
   const [startOnBoot, setStartOnBoot] = useState<IStartOnBootStatus>({
@@ -497,6 +500,15 @@ const SystemModalContent: React.FC = () => {
     [systemInfo, form, saveDirConfigValidate, t]
   );
 
+  const desktopOrder = ['language', 'startOnBoot', 'closeToTray', 'hardwareAcceleration', 'crossSessionMessage', 'promptTimeout', 'agentIdleTimeout', 'previewTextSizeLimit'];
+  const desktopLabels: Record<string, string> = {
+    startOnBoot: 'Start on boot', closeToTray: 'Close to tray', hardwareAcceleration: 'Hardware acceleration',
+    crossSessionMessage: 'Messages between chats', promptTimeout: 'Prompt timeout',
+    agentIdleTimeout: 'Idle timeout', previewTextSizeLimit: 'Preview size limit',
+  };
+  const visiblePreferences = preferenceItems.filter((item) => item.key !== 'saveUploadToWorkspace');
+  if (isDesktopPage) visiblePreferences.sort((a, b) => desktopOrder.indexOf(a.key) - desktopOrder.indexOf(b.key));
+
   return (
     <div className='flex flex-col h-full w-full'>
       {modalContextHolder}
@@ -506,8 +518,8 @@ const SystemModalContent: React.FC = () => {
           <div className='kel-shell-settings-card kel-shell-system-general px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
             <ShellSourceCardHeader title='General' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
-              {preferenceItems.filter(item => item.key !== 'saveUploadToWorkspace').map((item) => (
-                <React.Fragment key={item.key}><PreferenceRow label={item.label}>
+              {visiblePreferences.map((item) => (
+                <React.Fragment key={item.key}><PreferenceRow label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}>
                   {item.component}
                 </PreferenceRow>{item.key === 'language' && <KelKeepAwakeCard compact />}</React.Fragment>
               ))}
