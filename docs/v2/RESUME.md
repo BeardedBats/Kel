@@ -4,7 +4,7 @@
 
 The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. The current Tools source has a [scoped disposable package check](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md).
 
-**Next item:** align CLI import `313:3911` and failed-server report `313:4441` with current Figma while preserving their handlers. Then continue the remaining current Figma frames before the long transcript check. Mobile Kibble placement awaits Nick's answer; keep its existing route. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
+**Next item:** compare populated desktop and mobile Chat frames with current Figma and shared component variants. Continue the remaining current frames before the long transcript check. The current Tools JSON, CLI, report, and delete dialogs have [scoped package evidence](evidence/figma-full-audit/TOOLS_CURRENT_REVISION.md). Mobile Kibble placement awaits Nick's answer; keep its existing route. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
 
 ---
 

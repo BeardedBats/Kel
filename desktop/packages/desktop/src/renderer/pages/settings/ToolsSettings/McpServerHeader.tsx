@@ -176,7 +176,13 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
         )}
       </div>
       <div className='kel-tools-mcp-actions' onClick={(e) => e.stopPropagation()}>
-        {isError && <FeedbackButton module='mcp-tools' label='Report issue' />}
+        {isError && (
+          <FeedbackButton
+            module='mcp-tools'
+            label='Report issue'
+            feedbackExtra={{ mcpServerName: server.name, mcpServerStatus: visualStatus }}
+          />
+        )}
         {!isReadOnly && needsLogin && onOAuthLogin && (
           <Button
             size='mini'
