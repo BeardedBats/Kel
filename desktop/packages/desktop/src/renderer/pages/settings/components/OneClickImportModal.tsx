@@ -14,7 +14,7 @@ type DetectedMcpServer = IMcpServer & {
 };
 
 const IMPORTABLE_AGENTS = [
-  { backend: 'claude', name: 'Claude' },
+  { backend: 'claude', name: 'Claude Code' },
   { backend: 'codex', name: 'Codex' },
 ] as const;
 
@@ -74,7 +74,8 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
   const [importedServers, setImportedServers] = useState<IMcpServer[]>([]);
   const [loadingImport, setLoadingImport] = useState(false);
   const [submittingImport, setSubmittingImport] = useState(false);
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(2);
+  const [selectedServerNames, setSelectedServerNames] = useState<Set<string>>(new Set());
   const existingNameSet = React.useMemo(() => new Set(existingServerNames), [existingServerNames]);
   const isEffectivelyImportable = React.useCallback(
     (server: DetectedMcpServer) =>
@@ -85,6 +86,10 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
     () => fetchedServers.filter((server) => isEffectivelyImportable(server) && !existingNameSet.has(server.name)),
     [existingNameSet, fetchedServers, isEffectivelyImportable]
   );
+  const selectedImportableServers = React.useMemo(
+    () => importableFetchedServers.filter((server) => selectedServerNames.has(server.name)),
+    [importableFetchedServers, selectedServerNames]
+  );
   const skippedFetchedServers = React.useMemo(
     () => fetchedServers.filter((server) => !isEffectivelyImportable(server) || existingNameSet.has(server.name)),
     [existingNameSet, fetchedServers, isEffectivelyImportable]
@@ -94,29 +99,6 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
     [importableFetchedServers, skippedFetchedServers]
   );
   const importedNameSet = React.useMemo(() => new Set(importedServers.map((server) => server.name)), [importedServers]);
-
-  const getFetchStatus = React.useCallback(
-    (server: DetectedMcpServer): ImportStatus => {
-      if (existingNameSet.has(server.name)) {
-        return {
-          color: 'gray' as const,
-          label: t('settings.mcpImportSkippedAlreadyExists'),
-        };
-      }
-      if (!isEffectivelyImportable(server)) {
-        return {
-          color: 'gray' as const,
-          label: t('settings.mcpImportSkipped'),
-          detail: getUnsupportedReasonDetail(server.import_skip_reason, t),
-        };
-      }
-      return {
-        color: 'arcoblue' as const,
-        label: t('settings.mcpStatusReady'),
-      };
-    },
-    [existingNameSet, isEffectivelyImportable, t]
-  );
 
   const getImportResultStatus = React.useCallback(
     (server: DetectedMcpServer): ImportStatus => {
@@ -155,16 +137,34 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
   };
 
   useEffect(() => {
-    if (visible) {
-      // 重置状态
-      setCurrentStep(1);
-      setSelectedAgent(IMPORTABLE_AGENTS[0].backend);
-      setFetchedServers([]);
-      setImportedServers([]);
-      setDetectedAgents([...IMPORTABLE_AGENTS]);
-      setLoadingImport(false);
-      setSubmittingImport(false);
-    }
+    if (!visible) return;
+    let cancelled = false;
+    setCurrentStep(2);
+    setSelectedAgent(IMPORTABLE_AGENTS[0].backend);
+    setFetchedServers([]);
+    setSelectedServerNames(new Set());
+    setImportedServers([]);
+    setDetectedAgents([...IMPORTABLE_AGENTS]);
+    setLoadingImport(true);
+    setSubmittingImport(false);
+    void mcpService.getAgentMcpConfigs
+      .invoke()
+      .then((mcpConfigs) => {
+        if (cancelled) return;
+        const servers = (mcpConfigs.find((config) => config.source === IMPORTABLE_AGENTS[0].backend)?.servers ??
+          []) as DetectedMcpServer[];
+        setFetchedServers(servers);
+        setSelectedServerNames(new Set(servers.map((server) => server.name)));
+      })
+      .catch((error) => {
+        if (!cancelled) console.error('Failed to import from CLI:', error);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingImport(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [visible]);
 
   const handleNextStep = async () => {
@@ -207,6 +207,7 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
       const selectedConfig = mcpConfigs.find((agentConfig) => agentConfig.source === selectedAgent);
       const allServers = (selectedConfig?.servers ?? []) as DetectedMcpServer[];
       setFetchedServers(allServers);
+      setSelectedServerNames(new Set(allServers.map((server) => server.name)));
     } catch (error) {
       console.error('Failed to import from CLI:', error);
       setFetchedServers([]);
@@ -217,7 +218,7 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
 
   const handleBatchImport = async () => {
     if (onBatchImport && fetchedServers.length > 0) {
-      const serversToImport = importableFetchedServers.map((server) => {
+      const serversToImport = selectedImportableServers.map((server) => {
         // 为CLI导入的服务器生成标准的JSON格式
         const serverConfig: Record<string, string | string[] | Record<string, string>> = {
           description: server.description,
@@ -288,35 +289,41 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
           </div>
         </div>
       ) : fetchedServers.length > 0 ? (
-        <div>
-          <div className='mb-3 flex items-center gap-2'>
-            <Check theme='filled' size={20} fill={iconColors.success} />
-            <span className='text-t-primary'>{t('settings.mcpToolsLoaded', { count: fetchedServers.length })}</span>
-          </div>
-          <div className='mb-3 flex flex-wrap gap-2'>
-            <Tag color='arcoblue'>{t('settings.mcpWillImportCount', { count: importableFetchedServers.length })}</Tag>
-            <Tag color='gray'>{t('settings.mcpSkippedCount', { count: skippedFetchedServers.length })}</Tag>
-          </div>
-          <div className='bg-base rounded-lg max-h-[320px] overflow-y-auto'>
-            {orderedFetchedServers.map((server, index) => {
-              const status = getFetchStatus(server);
-              return (
-                <div
-                  key={index}
-                  className='p-3'
-                  style={
-                    index < orderedFetchedServers.length - 1 ? { borderBottom: '1px solid var(--bg-3)' } : undefined
+        <div className='kel-tools-cli-list'>
+          {orderedFetchedServers.map((server) => {
+            const alreadyAdded = existingNameSet.has(server.name);
+            const selectable = isEffectivelyImportable(server) && !alreadyAdded;
+            const selected = selectable && selectedServerNames.has(server.name);
+            const needsAuth = normalizeImportSkipReason(server.import_skip_reason) === 'Needs authentication';
+            const status = alreadyAdded
+              ? 'Already added'
+              : !selectable
+                ? needsAuth
+                  ? 'Sign in to it in the CLI first'
+                  : getUnsupportedReasonDetail(server.import_skip_reason, t) || 'Cannot import'
+                : selected
+                  ? 'Will import'
+                  : 'Not selected';
+            return (
+              <label className='kel-tools-cli-row' key={server.id || server.name}>
+                <input
+                  type='checkbox'
+                  checked={selected}
+                  disabled={!selectable}
+                  onChange={(event) =>
+                    setSelectedServerNames((previous) => {
+                      const next = new Set(previous);
+                      if (event.target.checked) next.add(server.name);
+                      else next.delete(server.name);
+                      return next;
+                    })
                   }
-                >
-                  <div className='flex items-center justify-between gap-3'>
-                    <div className='font-medium text-t-primary'>{server.name}</div>
-                    {renderStatusTag(status)}
-                  </div>
-                  {server.description && <div className='text-sm text-t-secondary mt-1'>{server.description}</div>}
-                </div>
-              );
-            })}
-          </div>
+                />
+                <span className='kel-tools-cli-row__name'>{server.name}</span>
+                <strong data-state={selected ? 'selected' : needsAuth ? 'auth' : 'muted'}>{status}</strong>
+              </label>
+            );
+          })}
         </div>
       ) : (
         <div className='text-center py-8 text-t-secondary'>{t('settings.mcpNoServersFound')}</div>
@@ -367,7 +374,7 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
   if (!visible) return null;
 
   const renderFooter = () => (
-    <div className='flex justify-end gap-10px'>
+    <div className='kel-tools-cli-actions'>
       {currentStep === 1 && (
         <>
           <Button onClick={onCancel} className='min-w-100px' style={{ borderRadius: 8 }}>
@@ -386,18 +393,14 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
       )}
       {currentStep === 2 && (
         <>
-          <Button onClick={handlePrevStep} className='min-w-100px' style={{ borderRadius: 8 }}>
-            {t('settings.mcpPrevStep')}
-          </Button>
+          <Button onClick={handlePrevStep}>Back</Button>
           <Button
             type='primary'
             onClick={handleNextStep}
             loading={submittingImport}
-            disabled={loadingImport || submittingImport || importableFetchedServers.length === 0}
-            className='min-w-120px'
-            style={{ borderRadius: 8 }}
+            disabled={loadingImport || submittingImport || selectedImportableServers.length === 0}
           >
-            {t('settings.mcpImportButton')}
+            Import {selectedImportableServers.length}
           </Button>
         </>
       )}
@@ -412,30 +415,40 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({
   return (
     <AionModal
       variant='standard'
-      header={{ title: t('settings.mcpOneKeyImport'), showClose: true }}
+      className={currentStep === 2 ? 'kel-tools-cli-modal' : undefined}
+      header={{
+        title: currentStep === 2 ? 'Import from a CLI' : t('settings.mcpOneKeyImport'),
+        subtitle:
+          currentStep === 2 && !loadingImport
+            ? `Kel found ${fetchedServers.length} ${fetchedServers.length === 1 ? 'server' : 'servers'} in ${detectedAgents.find((agent) => agent.backend === selectedAgent)?.name || 'the CLI'}.`
+            : undefined,
+        showClose: currentStep !== 2,
+      }}
       visible={visible}
       onCancel={onCancel}
       footer={{ render: renderFooter }}
-      style={{ width: 680 }}
+      style={{ width: 600 }}
     >
       <div className='flex min-h-0 flex-col'>
-        <div className='mb-6 text-t-secondary text-sm'>{t('settings.mcpImportDescription')}</div>
+        {currentStep !== 2 && <div className='mb-6 text-t-secondary text-sm'>{t('settings.mcpImportDescription')}</div>}
 
-        <div className='mb-6'>
-          <AionSteps current={currentStep} size='small'>
-            <AionSteps.Step
-              title={t('settings.mcpStepSelectAgent')}
-              icon={currentStep > 1 ? <Check theme='filled' size={16} fill='#165dff' /> : undefined}
-            />
-            <AionSteps.Step
-              title={t('settings.mcpStepFetchTools')}
-              icon={currentStep > 2 ? <Check theme='filled' size={16} fill='#165dff' /> : undefined}
-            />
-            <AionSteps.Step title={t('settings.mcpStepImportSuccess')} />
-          </AionSteps>
-        </div>
+        {currentStep !== 2 && (
+          <div className='mb-6'>
+            <AionSteps current={currentStep} size='small'>
+              <AionSteps.Step
+                title={t('settings.mcpStepSelectAgent')}
+                icon={currentStep > 1 ? <Check theme='filled' size={16} fill='#165dff' /> : undefined}
+              />
+              <AionSteps.Step
+                title={t('settings.mcpStepFetchTools')}
+                icon={currentStep > 2 ? <Check theme='filled' size={16} fill='#165dff' /> : undefined}
+              />
+              <AionSteps.Step title={t('settings.mcpStepImportSuccess')} />
+            </AionSteps>
+          </div>
+        )}
 
-        <div className={`min-h-0 ${currentStep === 1 ? 'min-h-[60px]' : 'min-h-[180px]'}`}>
+        <div className={`min-h-0 ${currentStep === 1 ? 'min-h-[60px]' : ''}`}>
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}

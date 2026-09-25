@@ -109,11 +109,12 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   // ModalWrapper's internal focus lock has finished installing its traps.
   useEffect(() => {
     if (!visible) return;
+    if (defaultModule === 'mcp-tools' && feedbackExtra?.mcpServerStatus === 'Check failed') return;
     const id = window.setTimeout(() => {
       descriptionRef.current?.focus?.();
     }, 80);
     return () => window.clearTimeout(id);
-  }, [visible]);
+  }, [visible, defaultModule, feedbackExtra]);
 
   // Seed form with prefilled module + screenshots whenever the modal (re)opens.
   // Prefilled screenshots are auto-captured by the one-click feedback entry points
@@ -217,6 +218,10 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   ]);
 
   const isFormValid = module !== undefined && description.trim().length > 0;
+  const mcpServerName = typeof feedbackExtra?.mcpServerName === 'string' ? feedbackExtra.mcpServerName : null;
+  const mcpServerStatus = typeof feedbackExtra?.mcpServerStatus === 'string' ? feedbackExtra.mcpServerStatus : null;
+  const isMcpServerReport =
+    defaultModule === 'mcp-tools' && mcpServerName !== null && mcpServerStatus === 'Check failed';
 
   const appendScreenshotFiles = useCallback((files: File[]) => {
     setError('');
@@ -296,7 +301,11 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
   return (
     <AionModal
       variant='standard'
-      header={{ title: t('settings.bugReportTitle'), showClose: true }}
+      header={{
+        title: isMcpServerReport ? 'Report an issue' : t('settings.bugReportTitle'),
+        subtitle: isMcpServerReport ? `${mcpServerName} · ${mcpServerStatus}` : undefined,
+        showClose: !isMcpServerReport,
+      }}
       visible={visible}
       onCancel={handleCancel}
       onOk={handleSubmit}
@@ -307,10 +316,10 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
       alignCenter
       footer={{
         render: () => (
-          <div className='flex items-center justify-end gap-8px'>
+          <div className={isMcpServerReport ? 'kel-tools-report-actions' : 'flex items-center justify-end gap-8px'}>
             <div className='flex items-center gap-8px'>
               <Button onClick={handleCancel} className='px-20px min-w-80px' style={{ borderRadius: 8 }}>
-                {t('settings.bugReportCancel')}
+                {isMcpServerReport ? 'Cancel' : t('settings.bugReportCancel')}
               </Button>
               <Button
                 type='primary'
@@ -320,13 +329,14 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
                 className='px-20px min-w-80px'
                 style={{ borderRadius: 8 }}
               >
-                {t('settings.bugReportSubmit')}
+                {isMcpServerReport ? 'Send report' : t('settings.bugReportSubmit')}
               </Button>
             </div>
           </div>
         ),
       }}
-      className='w-[min(600px,calc(100vw-32px))] max-w-600px'
+      className={isMcpServerReport ? 'kel-tools-report-modal' : 'w-[min(600px,calc(100vw-32px))] max-w-600px'}
+      style={isMcpServerReport ? { width: 560 } : undefined}
       autoFocus={false}
       // The feedback modal is global and may be opened from inside another
       // AionModal (e.g. the Agent editor). Arco's default z-index stacks
@@ -337,89 +347,120 @@ const FeedbackReportModal: React.FC<FeedbackReportModalProps> = ({
       maskStyle={{ zIndex: 1050 }}
     >
       <div data-testid='feedback-report-scroll-body' className='overflow-x-hidden'>
-        <div className='flex flex-col gap-16px'>
-          {/* Description */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportDescriptionLabel')} <span className='text-red-500'>*</span>
-            </label>
+        {isMcpServerReport ? (
+          <div className='kel-tools-report-body'>
+            <label htmlFor='kel-tools-report-description'>What happened?</label>
             <Input.TextArea
+              id='kel-tools-report-description'
               ref={descriptionRef}
-              placeholder={t('settings.bugReportDescriptionPlaceholder')}
+              placeholder='Describe what happened.'
               value={description}
               onChange={(val) => {
                 setDescription(val);
                 setError('');
               }}
               maxLength={DESCRIPTION_MAX_LENGTH}
-              showWordLimit
-              autoSize={{ minRows: 3, maxRows: 6 }}
             />
+            <p className='kel-tools-report-attachments'>
+              <svg width='14' height='14' viewBox='0 0 14 14' fill='none' aria-hidden='true'>
+                <path
+                  d='M3 1.5h5l3 3v8H3v-11Zm5 0v3h3'
+                  stroke='currentColor'
+                  strokeWidth='1.2'
+                  strokeLinejoin='round'
+                />
+              </svg>
+              {screenshots.length > 0
+                ? 'A screenshot, system info and available logs will be attached.'
+                : 'System info and available logs will be attached. Screenshot capture was unavailable.'}
+            </p>
+            {error && <p className='kel-tools-report-error'>{error}</p>}
           </div>
-
-          {/* Module Select */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportModuleLabel')} <span className='text-red-500'>*</span>
-            </label>
-            <Select
-              placeholder={t('settings.bugReportModulePlaceholder')}
-              value={module}
-              onChange={(val) => {
-                setModule(val);
-                setError('');
-              }}
-            >
-              {FEEDBACK_MODULES.map((m) => (
-                <Select.Option key={m.tag} value={m.tag}>
-                  {t(m.i18nKey)}
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
-
-          {/* Screenshot Upload */}
-          <div className='flex flex-col gap-4px'>
-            <label className='text-13px text-t-secondary'>
-              {t('settings.bugReportScreenshotLabel')}
-              {screenshots.length > 0 && (
-                <span data-testid='feedback-report-screenshot-count'>
-                  {' '}
-                  {t('settings.bugReportScreenshotUploaded', { count: screenshots.length })}
-                </span>
-              )}
-            </label>
-            <div data-testid='feedback-report-upload-trigger'>
-              <Upload
-                listType='picture-card'
-                multiple
-                accept={ACCEPTED_IMAGE_TYPES}
-                autoUpload={false}
-                fileList={screenshots}
-                onChange={handleScreenshotChange}
-                limit={MAX_SCREENSHOTS}
-                imagePreview
+        ) : (
+          <div className='flex flex-col gap-16px'>
+            {/* Description */}
+            <div className='flex flex-col gap-4px'>
+              <label className='text-13px text-t-secondary'>
+                {t('settings.bugReportDescriptionLabel')} <span className='text-red-500'>*</span>
+              </label>
+              <Input.TextArea
+                ref={descriptionRef}
+                placeholder={t('settings.bugReportDescriptionPlaceholder')}
+                value={description}
+                onChange={(val) => {
+                  setDescription(val);
+                  setError('');
+                }}
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                showWordLimit
+                autoSize={{ minRows: 3, maxRows: 6 }}
               />
             </div>
-          </div>
 
-          {/* Auto-info Banner */}
-          <div className='flex'>
-            <div
-              data-testid='feedback-report-auto-info'
-              className='inline-flex max-w-full items-start gap-6px px-10px py-8px bg-fill-1 rd-8px text-12px leading-18px text-t-tertiary'
-            >
-              <Info theme='outline' size='14' className='mt-2px flex-shrink-0' />
-              <span>{t('settings.bugReportAutoInfo')}</span>
+            {/* Module Select */}
+            <div className='flex flex-col gap-4px'>
+              <label className='text-13px text-t-secondary'>
+                {t('settings.bugReportModuleLabel')} <span className='text-red-500'>*</span>
+              </label>
+              <Select
+                placeholder={t('settings.bugReportModulePlaceholder')}
+                value={module}
+                onChange={(val) => {
+                  setModule(val);
+                  setError('');
+                }}
+              >
+                {FEEDBACK_MODULES.map((m) => (
+                  <Select.Option key={m.tag} value={m.tag}>
+                    {t(m.i18nKey)}
+                  </Select.Option>
+                ))}
+              </Select>
             </div>
-          </div>
 
-          {error ? (
-            <div className='px-12px py-8px bg-red-50 dark:bg-red-900/20 rd-8px text-13px text-red-500 b-1px b-solid b-red-200 dark:b-red-800'>
-              {error}
+            {/* Screenshot Upload */}
+            <div className='flex flex-col gap-4px'>
+              <label className='text-13px text-t-secondary'>
+                {t('settings.bugReportScreenshotLabel')}
+                {screenshots.length > 0 && (
+                  <span data-testid='feedback-report-screenshot-count'>
+                    {' '}
+                    {t('settings.bugReportScreenshotUploaded', { count: screenshots.length })}
+                  </span>
+                )}
+              </label>
+              <div data-testid='feedback-report-upload-trigger'>
+                <Upload
+                  listType='picture-card'
+                  multiple
+                  accept={ACCEPTED_IMAGE_TYPES}
+                  autoUpload={false}
+                  fileList={screenshots}
+                  onChange={handleScreenshotChange}
+                  limit={MAX_SCREENSHOTS}
+                  imagePreview
+                />
+              </div>
             </div>
-          ) : null}
-        </div>
+
+            {/* Auto-info Banner */}
+            <div className='flex'>
+              <div
+                data-testid='feedback-report-auto-info'
+                className='inline-flex max-w-full items-start gap-6px px-10px py-8px bg-fill-1 rd-8px text-12px leading-18px text-t-tertiary'
+              >
+                <Info theme='outline' size='14' className='mt-2px flex-shrink-0' />
+                <span>{t('settings.bugReportAutoInfo')}</span>
+              </div>
+            </div>
+
+            {error ? (
+              <div className='px-12px py-8px bg-red-50 dark:bg-red-900/20 rd-8px text-13px text-red-500 b-1px b-solid b-red-200 dark:b-red-800'>
+                {error}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </AionModal>
   );

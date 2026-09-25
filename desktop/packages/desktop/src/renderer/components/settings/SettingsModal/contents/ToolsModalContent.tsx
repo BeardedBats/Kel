@@ -253,7 +253,11 @@ const ModalMcpManagementSection: React.FC<{
             >
               {testingServers[selectedServer.id] ? 'Checking' : 'Test again'}
             </button>
-            <FeedbackButton module='mcp-tools' label='Report issue' />
+            <FeedbackButton
+              module='mcp-tools'
+              label='Report issue'
+              feedbackExtra={{ mcpServerName: selectedServer.name, mcpServerStatus: selectedStatus }}
+            />
             {!selectedServer.builtin && (
               <button type='button' onClick={() => showDeleteConfirm(selectedServer.id)}>
                 Delete server
@@ -341,7 +345,9 @@ const ModalMcpManagementSection: React.FC<{
           render: () => (
             <div className='kel-tools-delete-modal__actions'>
               <Button onClick={hideDeleteConfirm}>Keep</Button>
-              <Button status='danger' onClick={() => void handleConfirmDelete()}>Delete server</Button>
+              <Button status='danger' onClick={() => void handleConfirmDelete()}>
+                Delete server
+              </Button>
             </div>
           ),
         }}
