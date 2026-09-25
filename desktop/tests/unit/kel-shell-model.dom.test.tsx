@@ -1,5 +1,6 @@
 import React from 'react';
 import { Message } from '@arco-design/web-react';
+import { MemoryRouter } from 'react-router-dom';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { KelDefaultModelCard } from '@renderer/components/kel/KelModelControl';
@@ -14,7 +15,7 @@ it('reads and saves the default model through authenticated browser transport', 
     requests.push({ url: String(url), body });
     return { ok: true, json: async () => ({ default: null, conversation: null, providers: [] }) };
   }));
-  render(<KelDefaultModelCard compact />);
+  render(<MemoryRouter><KelDefaultModelCard compact /></MemoryRouter>);
   const automatic = await screen.findByTestId('kel-default-auto');
   fireEvent.click(automatic);
   await waitFor(() => expect(requests).toContainEqual({ url: '/kel/api/model', body: { action: 'set_default', choice: null } }));
