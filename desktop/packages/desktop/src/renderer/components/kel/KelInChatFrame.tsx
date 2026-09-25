@@ -40,6 +40,7 @@ const projectGroups: Group[] = [
     { label: 'Activity', path: '/activity', icon: activityIcon, sourceIcon: true },
     { label: 'Permissions', path: '/autonomy', icon: permissionsIcon, sourceIcon: true },
     { label: 'Knowledge', path: '/projects/knowledge', icon: knowledgeIcon, sourceIcon: true },
+    { label: 'Recipes', path: '/projects/recipes', icon: recipesIcon, sourceIcon: true },
     { label: 'Scheduled tasks', path: '/scheduled', icon: scheduledIcon, sourceIcon: true },
     { label: 'Providers', path: '/providers', icon: providersIcon, sourceIcon: true },
     { label: 'Diagnostics', path: '/diagnostics', icon: diagnosticsIcon, sourceIcon: true },

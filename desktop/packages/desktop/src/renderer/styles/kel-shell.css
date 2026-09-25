@@ -2361,6 +2361,72 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-ramble-vetting-edit textarea { box-sizing: border-box; flex: 1; min-height: 180px; width: 100%; padding: 12px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); color: #edf2fa; font: 400 15px/24px 'SF Pro Text',sans-serif; }
 
 /* Current mobile Recipes list and expanded recipe use the existing engine actions. */
+.kel-v2-shell #project-recipes.kel-recipe-library-card { flex: none; align-self: stretch; gap: 0; }
+.kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head {
+  flex-direction: row; align-items: center; gap: 10px; min-height: 20px; padding-right: 0;
+}
+.kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head .kel-shell-source-card-actions {
+  position: static; align-self: center; margin: 0;
+}
+.kel-v2-shell #project-recipes .kel-recipe-count { color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-intro p { margin: 2px 0 0; color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-search {
+  box-sizing: border-box; display: flex; align-items: center; gap: 8px; flex: none; width: 240px; height: 34px;
+  padding: 0 12px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1);
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-search img { flex: none; width: 14px; height: 14px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-search input {
+  min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #edf2fa;
+  font: 400 13px/18px 'SF Pro Text',sans-serif;
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-search input::placeholder { color: #8fa9d6; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-tabs { display: flex; gap: 20px; max-width: 60%; overflow-x: auto; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-tabs button {
+  flex: none; height: 32px; padding: 0 4px; border: 0; border-bottom: 1px solid transparent;
+  background: transparent; color: #c4d4e8; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer;
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-tabs button[aria-selected='true'] { border-bottom-color: #fcac51; color: #ffb764; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-entry { border-bottom: 1px solid rgba(191,216,255,.08); }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-entry:last-child { border-bottom: 0; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-row { display: flex; align-items: center; gap: 12px; min-height: 50px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-star { display: grid; place-items: center; flex: none; width: 24px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-star img { width: 14px; height: 14px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-row span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-link { flex: none; border: 0; background: transparent; color: #c4d4e8; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-row .kel-btn,
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded-actions .kel-btn {
+  flex: none; min-height: 32px; height: 32px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5);
+  border-radius: 8px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0;
+  font: 600 13px/18px var(--kel-shell-heading); box-shadow: 0 4px 6px rgba(0,0,0,.25);
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded {
+  margin: 0 0 10px; padding: 12px 20px 16px; border: 1px solid rgba(159,218,255,.55);
+  border-radius: 12px; background: rgba(47,107,224,.14);
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded-label { margin-bottom: 10px; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded ol { margin: 0 0 10px; padding: 0; list-style: none; counter-reset: recipe-step; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded li { display: flex; gap: 12px; margin-bottom: 6px; color: #edf2fa; font: 400 13px/18px 'SF Pro Text',sans-serif; counter-increment: recipe-step; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded li::before { content: counter(recipe-step); color: #8fa9d6; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-history { display: grid; gap: 4px; margin: 10px 0; color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-history strong { margin-left: 12px; color: #a2eacb; font-weight: 600; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded-actions { display: flex; align-items: center; gap: 12px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded-actions button:not(.kel-btn) { border: 0; background: transparent; color: #c4d4e8; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-expanded-actions .kel-btn { margin-left: auto; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-run .kel-recipe-desktop-expanded-actions .kel-btn {
+  background: linear-gradient(#2e7939,#1f5e30);
+}
+.kel-v2-shell #project-recipes .kel-recipe-desktop-run > p { margin: 0 0 12px; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-fields { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-fields label { display: grid; gap: 6px; min-width: 180px; flex: 1; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-fields input:not([type='checkbox']),
+.kel-v2-shell #project-recipes .kel-recipe-desktop-fields select {
+  box-sizing: border-box; width: 100%; height: 34px; padding: 0 12px; border: 1px solid rgba(127,160,255,.4);
+  border-radius: 8px; background: rgba(47,107,224,.14); color: #edf2fa; font: 400 13px/18px 'SF Pro Text',sans-serif;
+}
+.kel-v2-shell #project-recipes #recipe-run-draft { display: none; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-list { display: none; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-list--open { display: block; margin-top: 20px; }
 .kel-v2-shell #project-recipes .kel-recipe-mobile-list { display: none; }
 @media (max-width: 767px) {
   .kel-v2-shell .kel-in-chat-frame__pane #kel-projects-main.kel-shell-recipe-library { padding-top: 8px !important; }
@@ -2370,6 +2436,10 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
     background: linear-gradient(rgba(221,233,255,.02),transparent 30%),linear-gradient(rgba(47,107,224,.12),rgba(47,107,224,.12)),rgba(15,45,100,.3);
     box-shadow: 0 10px 15px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.06);
   }
+  .kel-v2-shell #project-recipes .kel-recipe-count,
+  .kel-v2-shell #project-recipes .kel-recipe-desktop-current,
+  .kel-v2-shell #project-recipes .kel-recipe-desktop-list--open { display: none; }
+  .kel-v2-shell #project-recipes #recipe-run-draft { display: block; }
   .kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head { min-height: 18px; }
   .kel-v2-shell #project-recipes.kel-recipe-library-card > .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
   .kel-v2-shell #project-recipes .kel-recipe-desktop-list { display: none; }
