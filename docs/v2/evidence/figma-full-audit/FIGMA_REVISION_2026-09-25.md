@@ -58,8 +58,8 @@
 | `269:1419` | Kel / Connections — Run an action | `/connections` | Confirmation placement tested in DOM; no real mutating catalog action exists for package capture. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `311:2239` | Kel / Settings — Model | `/settings/model` | Default and populated custom-model rows with real actions package-checked at 1440/800; healthy remote response remains open. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
 | `311:2730` | Kel / Settings — Model — Add model | `/settings/model` | Compact multi-model dialog implemented and package-checked; blank credential differs from Figma's successful sample. [Scoped evidence](DESKTOP_MODEL_CURRENT_REVISION.md). | READ |
-| `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | New or replaced node; prior pair absent. | PENDING |
-| `311:3536` | Kel / Settings — Skills | `/settings/skills` | New or replaced node; prior pair absent. | PENDING |
+| `311:3140` | Kel / Settings — Assistants | `/settings/assistants` | Actual Kel row and single-card layout package-checked at 1440/800; sample extra assistants absent. [Scoped evidence](DESKTOP_CATALOG_CURRENT_REVISION.md). | READ |
+| `311:3536` | Kel / Settings — Skills | `/settings/skills` | Heading and catalog row source aligned; truthful empty package state checked at 1440/800. Populated custom-skill package state open. [Scoped evidence](DESKTOP_CATALOG_CURRENT_REVISION.md). | READ |
 | `313:2441` | Kel / Settings — Tools | `/settings/tools` | Replaces `188:1956`; four MCP status rows and image-off card confirmed. | READ |
 | `313:2923` | Kel / Settings — Tools — Add menu and row menu | `/settings/tools` | Read menu labels and actions; source now uses Paste JSON / Import from a CLI. | READ |
 | `313:3413` | Kel / Settings — Tools — Paste JSON | `/settings/tools` | Read 600px glass dialog, sample JSON, hint and buttons; source repaired and packaged at 1440px. | READ |

@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Desktop Assistants and Skills](evidence/figma-full-audit/DESKTOP_CATALOG_CURRENT_REVISION.md) have current Figma headings and row layouts. The isolated package contained one real assistant and no custom skills. It therefore cannot prove a three-row populated Skills state. Kel retains its actual stored description instead of Figma's sample copy. The canonical installed App still packages `8c67121`.
+
 ## Desktop Work and scheduled task detail (2026-09-25)
 
 [Work empty](evidence/figma-full-audit/DESKTOP_WORK_CURRENT_REVISION.md) matches Figma's three card bounds at 1440 and 800px. Populated Work and its actions remain open. [Scheduled tasks list](evidence/figma-full-audit/DESKTOP_SCHEDULED_LIST_CURRENT_REVISION.md) uses real saved execution modes, so it does not show Figma's illustrative “Queue” as an execution mode. Its setting controls open the edit dialog rather than an inline menu. [Scheduled task detail](evidence/figma-full-audit/DESKTOP_SCHEDULED_TASK_DETAIL_CURRENT_REVISION.md) matches the Details card dimensions and has tested controls. History rows were synthetic, not real runs. The scheduler has no project label or per-run outcome record, so the screen shows a dash for Project and only displays the latest task status on the latest run. The canonical installed App still packages `8c67121`.

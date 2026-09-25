@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Assistants and Skills (2026-09-25)
+
+[Assistants `311:3140` and Skills `311:3536`](evidence/figma-full-audit/DESKTOP_CATALOG_CURRENT_REVISION.md) now use Figma's catalog headings and actual-data row structure. A disposable Windows package showed the real Kel assistant at 1440/800px and a truthful empty Skills state at both widths. The desktop Skills Usage Tip card is gone. Neither page overflowed or reported a renderer error. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Populated custom skills remain unverified. Canonical App and Data were untouched.
+
 ## Desktop Providers and Model (2026-09-25)
 
 [Providers `189:3098`](evidence/figma-full-audit/DESKTOP_PROVIDERS_CURRENT_REVISION.md) now shows three truthful readiness rows in an isolated package. Its first card measured 670×171 at 1440px and 388×171 at 800px. The read-only preflight selected Claude without requesting a model reply. [Model `311:2239`](evidence/figma-full-audit/DESKTOP_MODEL_CURRENT_REVISION.md) now uses Figma's row structure with the real six-option catalog. Its default-model card measured x613/y183, 670×412 at 1440px and x371/y179, 388×412 at 800px. Selecting Claude Sonnet 4.6, restoring Automatic, and opening Providers through Set up worked with isolated data. Neither page overflowed or reported a renderer error. TypeScript, the desktop suite **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.

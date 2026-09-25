@@ -1455,12 +1455,20 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-shell-catalog-empty p { margin: 0; font: 600 15px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
 .kel-v2-shell .kel-shell-catalog-status { margin: auto; text-align: center; font: 400 14px/20px var(--kel-shell-body); color: var(--kel-text-2); }
 .kel-v2-shell .kel-shell-catalog-list { display: flex; flex-direction: column; }
-.kel-v2-shell .kel-shell-catalog-row { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-bottom: 1px solid rgba(191,216,255,.12); }
+.kel-v2-shell .kel-shell-catalog-row { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px 0; border-bottom: 1px solid rgba(191,216,255,.12); text-decoration: none; }
 .kel-v2-shell .kel-shell-catalog-row:last-child { border-bottom: 0; }
+.kel-v2-shell .kel-shell-catalog-row-icon { flex: 0 0 14px; width: 14px; height: 14px; opacity: .8; }
+.kel-v2-shell .kel-shell-catalog-row-copy { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; }
 .kel-v2-shell .kel-shell-catalog-row strong { font: 500 14px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
-.kel-v2-shell .kel-shell-catalog-row span { font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
+.kel-v2-shell .kel-shell-catalog-row-copy > span { overflow: hidden; font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); text-overflow: ellipsis; white-space: nowrap; }
 .kel-v2-shell .kel-shell-catalog-tip { min-height: 100px; }
 .kel-v2-shell .kel-shell-catalog-tip p { margin: 0; padding: 6px 12px; border: 1px solid rgba(191,216,255,.12); border-radius: 8px; background: rgba(47,107,224,.08); font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card:has(.kel-shell-catalog-list) { min-height: 0; padding-top: 18px; padding-bottom: 6px; gap: 4px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card .kel-shell-catalog-row { box-sizing: border-box; min-height: 58px; padding: 0 6px; border-color: rgba(191,216,255,.08); }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card .kel-shell-catalog-row-icon { margin-inline: 2px 6px; }
+  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-tip { display: none; }
+}
 
 .kel-v2-shell .kel-shell-ramble > aside { box-sizing: border-box; width: 256px; min-width: 256px; padding: 0 8px; }
 .kel-v2-shell .kel-shell-ramble > main { padding: 22px max(24px, calc((100vw - 1176px) / 2)) 24px; }
