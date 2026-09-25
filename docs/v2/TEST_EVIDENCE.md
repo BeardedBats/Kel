@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile four-tab and Kibble path check (2026-09-25)
+
+[The scoped navigation record](evidence/figma-full-audit/MOBILE_NAV_CURRENT_REVISION.md) verifies Figma's Chats, Ramble, Projects, Settings tab order at 393 and 320px. Nick's Settings → Tools → Kibble path opened the existing Kibble page and returned to Tools. Both widths had zero document overflow and no renderer error. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.
+
 ## Current mobile Knowledge package check (2026-09-25)
 
 [The scoped Knowledge record](evidence/figma-full-audit/KNOWLEDGE_CURRENT_REVISION.md) compares live mobile `299:14371` with a disposable package containing two engine proposals and five map sections. At 393px, suggestions measured x16/y114 361×265 and the map began y391, each 2px from Figma's sample bounds. At 320px, neither card overflowed. The isolated Not now action deferred a proposal, and Refresh reran the map. No renderer error appeared. TypeScript, the desktop suite with one updated source assertion, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

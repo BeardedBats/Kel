@@ -1,0 +1,7 @@
+# Current Figma four-tab navigation and Kibble access
+
+Nick chose **Settings → Tools → Kibble** for the existing mobile Kibble route. The live [Kel Design System](https://www.figma.com/design/BlpVvZGuc9j9HhxUojIiJI/Kel-Design-System) mobile Chat `299:11571` and Tools `315:2842` both show four bottom tabs: Chats, Ramble, Projects, Settings. The current mobile tab icons came directly from Figma's component set `213:3`.
+
+The disposable package showed exactly those four tabs on [Tools at 393px](MOBILE_FOUR_TABS_TOOLS_393.png) and [320px](MOBILE_FOUR_TABS_TOOLS_320.png). The [Kibble entry](MOBILE_KIBBLE_ENTRY_393.png) appears below the image controls. Selecting it opened the [existing Kibble page](MOBILE_KIBBLE_393.png); its back control returned to `/settings/tools`. At both widths, the entry was visible after scrolling and document overflow was zero. No renderer error appeared.
+
+The fifth mobile Kibble tab is gone. Desktop Kibble navigation remains. The new Tools entry is Nick's explicit product decision, not an element in the current Figma Tools sample; that additive row prevents the existing Kibble route from becoming inaccessible. The Kibble page has no current mobile Figma frame. Windows titlebar and font rendering still differ from iPhone chrome. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

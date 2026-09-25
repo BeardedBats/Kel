@@ -230,6 +230,7 @@ const DogfoodFixes: React.FC = () => {
         Skip to main content
       </a>
       <div className='kel-page'>
+        <button className='kel-dogfood-mobile-back' type='button' onClick={() => void navigate('/settings/tools')}>← Tools</button>
         <header className='kel-page__head'>
           <div><h1 className='kel-h1'>Kibble</h1>
           <p className='kel-sub'>
