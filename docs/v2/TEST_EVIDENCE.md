@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Activity package check (2026-09-25)
+
+[The scoped Activity record](evidence/figma-full-audit/ACTIVITY_CURRENT_REVISION.md) compares live mobile `299:14061` with a disposable package and one isolated engine Store job. At 393px, the three cards measured x16/y114 361×104, x16/y230 361×75, and x16/y317 361×75, matching Figma. They fit 320px with no overflow. The running job did not appear as a request for user action. The back control returned to Projects, with no renderer error. The fixture was cancelled and acknowledged, and its WAL checkpoint completed. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. No model worker ran. Canonical App and Data were untouched.
+
 ## Current mobile Work package check (2026-09-25)
 
 [The scoped Work record](evidence/figma-full-audit/WORK_CURRENT_REVISION.md) compares live mobile `299:13910` with an isolated zero-job package. At 393px, the three empty cards measured 361×75 at x16/y114, y201, and y288. Figma places the third near y289. At 320px, the cards fit with no document overflow. The back control returned to Projects. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Populated Work remains open. Canonical App and Data were untouched.

@@ -21,13 +21,16 @@ import { kelState, type KelContinuationCandidate, type KelJobRoute, type KelWork
 
 const TERMINAL = new Set(['CLOSED', 'CANCELLED']);
 
-function Row({ title, detail }: { title: string; detail: string }) {
+function Row({ title, detail, mobileDetail, state }: { title: string; detail: string; mobileDetail?: string; state?: string }) {
   return (
-    <div className='kel-attention__row'>
+    <div className='kel-attention__row kel-shell-activity__item'>
+      {state === 'RUNNING' && <span className='kel-shell-activity__dot' aria-hidden='true' />}
       <div className='kel-attention__text'>
         <strong>{title}</strong>
-        <span className='kel-meta'>{detail}</span>
+        <span className='kel-meta kel-shell-activity__desktop-detail'>{detail}</span>
+        <span className='kel-meta kel-shell-activity__mobile-detail'>{mobileDetail || detail}</span>
       </div>
+      {state === 'RUNNING' && <span className='kel-shell-activity__state'>Running</span>}
     </div>
   );
 }
@@ -71,7 +74,15 @@ const KelActivityPage: React.FC = () => {
   const all = jobs ?? [];
   const active = all.filter((job) => !TERMINAL.has(job.state));
   const finished = all.filter((job) => job.state === 'CLOSED').slice(0, 5);
-  const waiting = continuation.slice(0, 3);
+  const waiting = continuation.filter((candidate) => {
+    const state = candidate.state ?? candidate.job?.state;
+    if (state === 'AWAITING_USER' || state === 'PAUSED') return true;
+    if (state === 'WAITING_RESOURCE') {
+      const job = all.find((item) => item.id === candidate.job_id);
+      return !job?.route_block;
+    }
+    return state === 'CLOSED' && candidate.verdict !== 'VERIFIED';
+  }).slice(0, 3);
 
   return (
     <div className='kel-page kel-shell-activity'>
@@ -93,6 +104,8 @@ const KelActivityPage: React.FC = () => {
               key={job.id}
               title={workLabelFor(job.id, all)}
               detail={[jobStateText(job.state), routeSentence(routes[job.id])].filter(Boolean).join(' · ')}
+              mobileDetail={job.contract?.milestones?.find((item) => item.id && job.milestones?.[item.id]?.state === 'RUNNING')?.objective || job.contract?.milestones?.[0]?.objective || jobStateText(job.state)}
+              state={job.state}
             />
           ))
         )}
@@ -103,7 +116,7 @@ const KelActivityPage: React.FC = () => {
       >
         {waiting.length === 0 ? (
           <KelEmpty
-            title='All clear.'
+            title='Nothing needs you right now.'
             why='Approvals and offers to continue land here when they genuinely need a person.'
           />
         ) : (
@@ -126,7 +139,7 @@ const KelActivityPage: React.FC = () => {
         title='Recently finished'
       >
         {finished.length === 0 ? (
-          <KelEmpty title='All clear.' why='Completed work shows up here with its outcome.' />
+            <KelEmpty title='Nothing has finished yet.' why='Completed work shows up here with its outcome.' />
         ) : (
           finished.map((job) => (
             <Row
