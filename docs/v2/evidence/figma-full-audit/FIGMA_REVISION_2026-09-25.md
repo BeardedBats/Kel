@@ -20,7 +20,7 @@
 - Desktop reconnecting `273:12681` and mobile `299:12515` were read and compared with a disposable package. The composer notice matches 920×60 desktop and 361×48 mobile frame bounds. See [scoped reconnecting evidence](CHAT_RECONNECTING_CURRENT_REVISION.md). The renderer state was injected; no real engine restart was invoked.
 - Mobile model picker `299:12372` was read and compared with an isolated package. The 393×410 bottom sheet matches Figma's x0/y442 bounds, glass and 20px top radius. Per-chat choice and reset worked against an isolated engine record. See [scoped picker evidence](CHAT_MODEL_PICKER_CURRENT_REVISION.md). The model labels depend on live configuration; default-choice persistence remains open.
 - Mobile approval details `299:12281` was read and compared with an isolated pending approval. The 393×433 sheet matches Figma's x0/y419 bounds and x17/y723 Approve button. See [scoped details evidence](CHAT_APPROVAL_DETAILS_CURRENT_REVISION.md). The decision buttons were not clicked.
-- Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
+- Long Transcriptions frame `189:4032` remains on the new desktop page. Its populated document and four footer actions have a [scoped disposable package comparison](TRANSCRIPTIONS_CURRENT_REVISION.md) at 1440 and 800px. The selected text and audio are synthetic; live Muse content remains unverified.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
 ## Desktop FINAL frames
@@ -36,7 +36,7 @@
 | `189:2628` | Kel / Scheduled tasks | `/scheduled` | Retained node; inner revision not measured. | PENDING |
 | `189:3098` | Kel / Providers | `/providers` | Retained node; inner revision not measured. | PENDING |
 | `189:3564` | Kel / Diagnostics | `/diagnostics` | Retained node; inner revision not measured. | PENDING |
-| `189:4032` | Kel / Transcriptions | `/transcription/library` | Retained node; current long detail and footer read. | READ |
+| `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
 | `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
 | `194:1366` | Kel / Ramble | `/transcription` | Retained node; inner revision not measured. | PENDING |
 | `271:247` | Kel / Knowledge — Suggestions & map | `/projects/knowledge` | New or replaced node; prior pair absent. | PENDING |
@@ -166,4 +166,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect mobile Permission `299:12418`, then the populated Transcriptions frame `189:4032` and remaining component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** inspect mobile Permission `299:12418` with a runtime-capable isolated conversation, then current mobile Ramble and remaining component variants. Keep old evidence for history and label it superseded until refreshed.
