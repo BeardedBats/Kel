@@ -13,6 +13,7 @@
 - Mobile MCP detail `315:3004` is newly explicit: a status card, error note, tools list, and bottom Test again / Report issue / Delete server actions. Production now has a data-driven detail view. The synthetic server reported no tools, so populated tool rows remain unverified.
 - Desktop Tools overlay nodes `313:2923`, `313:3413`, `313:3911`, `313:4441`, and `313:4940` were read directly. Add and row menus, JSON, CLI import, report, and delete dialogs have source repairs. The CLI and report dialogs have scoped package captures; real import and report delivery were not invoked.
 - Current mobile Chat `299:11571`, drawer `299:11583`, and Tools `315:2842` show four bottom tabs: Chats, Ramble, Projects, Settings. The prior package and the still-present older mobile component variant use five tabs, including Kibble. The visible access path for Kibble in the new four-tab design needs Nick's product decision; the fifth tab remains until then.
+- Desktop Chat `185:4284` and mobile Chat/drawer were read and compared with a two-turn disposable package fixture. Mobile message width, reply actions, composer height, and drawer controls were repaired. [The scoped Chat record](CHAT_CURRENT_REVISION.md) shows captures and measured limits; desktop plan, project metrics, four-tab Kibble placement, and phone chrome remain open.
 - Long Transcriptions frame `189:4032` remains on the new desktop page. Its current screenshot shows a populated document, long transcript, and four footer actions. Content and geometry must be compared with a newly captured App state at 1440 and 800.
 - The live desktop page adds explicit overlay, error, loading, populated, startup, Connections, Recipes, and task-detail frames. The live mobile page likewise adds explicit row-action, approval, memory, model-picker, permission, error, reconnecting, Recipes, Connections, and populated Tools states. The old pair map had no direct frame for these states.
 
@@ -20,7 +21,7 @@
 
 | Current node | Frame | Production counterpart | Source delta against prior pair map | Status |
 | --- | --- | --- | --- | --- |
-| `185:4284` | Kel / Chat | `/chat` | Retained node; inner revision not measured. | PENDING |
+| `185:4284` | Kel / Chat | `/chat` | Retained node; current populated frame read and small-fixture comparison recorded. | READ |
 | `185:2658` | Kel / Home | `/home` | Retained node; inner revision not measured. | PENDING |
 | `189:907` | Kel / Work | `/work` | Retained node; inner revision not measured. | PENDING |
 | `189:1342` | Kel / Activity | `/activity` | Retained node; inner revision not measured. | PENDING |
@@ -159,4 +160,4 @@ Components board `145:10766` and mobile component page `213:3` still resolve. Th
 
 **Current implementation locations:** `desktop/packages/desktop/src/renderer/components/settings/SettingsModal/contents/ToolsModalContent.tsx`, `desktop/packages/desktop/src/renderer/pages/settings/ToolsSettings/`, and `desktop/packages/desktop/src/renderer/styles/kel-shell.css` for Tools. Other locations will be added after each source review.
 
-**Next verification:** inspect the remaining current desktop and mobile Chat states and component variants. Keep old evidence for history and label it superseded until refreshed.
+**Next verification:** inspect the current desktop and mobile Chat approval, tool-call, plan, error, and reconnecting states and relevant component variants. Keep old evidence for history and label it superseded until refreshed.

@@ -49,7 +49,7 @@ const SiderSearchEntry: React.FC<SiderSearchEntryProps> = ({
         <ConversationSearchPopover
           onSessionClick={onSessionClick}
           onConversationSelect={onConversationSelect}
-          label={t('conversation.historySearch.shortTitle')}
+          label={isMobile ? t('conversation.historySearch.mobileTitle', { defaultValue: 'Search chats' }) : t('conversation.historySearch.shortTitle')}
           fullWidth
           buttonClassName={classNames(isMobile && 'sider-action-btn-mobile')}
         />

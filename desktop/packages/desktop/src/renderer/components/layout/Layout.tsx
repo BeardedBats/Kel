@@ -106,7 +106,7 @@ const DESKTOP_COLLAPSED_WIDTH = 0;
 // 桌面侧栏连续可调：下限 200；低于此值拖拽即吸附收起（消灭旧 130 死区）。
 // 上限 = 窗口宽 50%（动态随窗口）。
 const SIDER_MIN_WIDTH = 200;
-const MOBILE_SIDER_WIDTH_RATIO = 0.78;
+const MOBILE_SIDER_WIDTH_RATIO = 0.79;
 const MOBILE_SIDER_MIN_WIDTH = 280;
 const MOBILE_SIDER_MAX_WIDTH = 420;
 

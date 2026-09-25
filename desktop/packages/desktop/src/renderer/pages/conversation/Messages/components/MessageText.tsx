@@ -265,6 +265,7 @@ const MessageText: React.FC<{
           <img src={thumbsDownIcon} alt='' width={16} height={16} />
         </button>
       </Tooltip>
+      {layout?.isMobile && copyButton}
       <Dropdown trigger='click' position='bl' droplist={<Menu>
         <Menu.Item key='copy' onClick={handleCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
         {showForkButton && <Menu.Item key='fork' onClick={() => void forkConversation(message.msg_id ?? message.id)}>{t('messages.fork.action')}</Menu.Item>}
@@ -403,17 +404,15 @@ const MessageText: React.FC<{
             {t('messages.delivery.pending', { defaultValue: 'Unread' })}
           </div>
         )}
-        {/* Hover-revealed copy + timestamp row. Mobile has no hover affordance,
-            so we drop the row entirely — system-level long-press still copies.
-            For AI replies split across several text messages, only the last text
-            of the turn shows this row (showCopyRow); user messages always do. */}
+        {/* Keep reply actions visible on mobile, where hover cannot reveal them.
+            For replies split across text messages, only the last shows the row. */}
         {showCopyRow && (
           <div
             className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
               'flex-row-reverse': isUserMessage,
             })}
           >
-            {!layout?.isMobile && !isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
+            {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
 
           </div>
         )}
