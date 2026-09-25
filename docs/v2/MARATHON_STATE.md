@@ -53,7 +53,7 @@ phases:
   V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
 
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
-  V2-19: partial     # r23-r62 packaged/UI evidence, r61 System, r62 Appearance; exact parity and live paths remain
+  V2-19: partial     # canonical full engine 1289 pass + 14 subtests and desktop 396 pass; exact visual parity and live paths remain
 
   V2-20: queued      # V2 release candidate
 

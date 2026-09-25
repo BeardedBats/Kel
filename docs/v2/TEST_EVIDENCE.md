@@ -2,6 +2,8 @@
 
 ## Canonical continuation (2026-09-24)
 
+The latest full engine regression on canonical `main` passed: `python -B -m pytest -q -p no:cacheprovider` from `runtime` reported **1,289 passed and 14 subtests passed** in 856.38 seconds. This supersedes the earlier 1,284-pass/4-failure run below. The four old `DISPATCHED` assertions were corrected before this full rerun. No engine test failed.
+
 The repository is now `C:\Users\Nick\Desktop\Kel\Kel` on `main`. Earlier candidate paths below are historical. For the cancelled Build Update and no-job submission changes, `python -B -m pytest -x -q tests/test_service_routing.py tests/test_v13_continuation_service.py tests/test_acp_host.py tests/test_v2_build_update.py` passed **53 tests**. Desktop `bun x tsc --noEmit --project tsconfig.json` passed. `bun x vitest run tests/unit --reporter=dot` passed **45 files / 298 tests** (the suite printed existing React `act` and CSS `NaN` warnings).
 
 A full engine `python -B -m pytest -q` run finished **1,284 passed, 4 failed, 14 subtests passed** in 922 seconds. Each failure asserted the old `DISPATCHED` state for an answered request with no job. Those assertions were updated. A focused run of all six affected engine files, including the read-only compatibility check for old submission rows, passed **71 tests**. The full suite was not repeated after this narrow test update. This is source-level regression evidence, not a fresh packaged app check.
