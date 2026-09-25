@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current Chat tool-call and plan package check (2026-09-25)
+
+[The current tool-call and plan record](evidence/figma-full-audit/CHAT_TOOL_PLAN_CURRENT_REVISION.md) compares live desktop `273:12914` and mobile `299:12459` with a disposable package. Three synthetic ACP rows measured 920px wide at 1440 and 361px at 393. The collapsed plan measured 920×51 and 361×37; Figma uses about 920×52 and 361×37. At 320px, both surfaces ended at x304 with no document overflow. The assistant actions remained visible before the tools. Row detail and plan expansion worked, with full neutral borders and no page errors. TypeScript, Electron Vite, disposable Windows packaging, and the full desktop suite passed **54 files / 400 tests**. This does not prove live model tools or real plan streaming. Canonical App and Data remained untouched.
+
 ## Current Chat approval package check (2026-09-25)
 
 [The current approval record](evidence/figma-full-audit/CHAT_APPROVAL_CURRENT_REVISION.md) compares live desktop `273:1911` and mobile `299:11950` with an isolated engine and disposable package. Pending geometry measured 920×169 at 1440px and 361×302 at 393px, about 1px from the frame bounds. At 320px, the 288px card did not overflow. Sampled card colors were within 3 RGB values. The packaged Details control opened, and the settled card had no live decision buttons. The engine's announcement stayed durable without duplicate host text. The engine approval suite passed **28 tests**; focused renderer approval tests passed **2 tests**; TypeScript, frozen engine build, Electron Vite, and disposable Windows packaging passed. No packaged decision was submitted. The canonical App and Data remained untouched.

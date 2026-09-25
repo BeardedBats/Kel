@@ -12,10 +12,10 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Compare current desktop and mobile Chat tool-call and plan frames, then error and reconnecting states; continue relevant component variants and remaining current Figma frames before transcript acceptance.
+next_item: Compare current desktop and mobile Chat error and reconnecting states, then relevant component variants and remaining current Figma frames before transcript acceptance.
 
 status: partial
-# Canonical App packages source 8c67121. Figma replaced desktop/mobile FINAL pages on 2026-09-25. Current Tools overlays, Chat/drawer, and Chat approval have scoped disposable package checks; installed App promotion waits for broader current-revision acceptance. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md, TOOLS_CURRENT_REVISION.md, CHAT_CURRENT_REVISION.md, and CHAT_APPROVAL_CURRENT_REVISION.md.
+# Canonical App packages source 8c67121. Figma replaced desktop/mobile FINAL pages on 2026-09-25. Current Tools overlays, Chat/drawer, Chat approval, and Chat tool-call/plan have scoped disposable package checks; installed App promotion waits for broader current-revision acceptance. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md, TOOLS_CURRENT_REVISION.md, CHAT_CURRENT_REVISION.md, CHAT_APPROVAL_CURRENT_REVISION.md, and CHAT_TOOL_PLAN_CURRENT_REVISION.md.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 deferred:

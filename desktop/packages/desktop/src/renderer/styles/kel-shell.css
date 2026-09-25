@@ -415,7 +415,69 @@
 .kel-v2-shell .kel-approval-card__check { color: #8fe3b4; font-size: 17px; }
 .kel-v2-shell .kel-approval-card__settled strong { color: #edf2fa; font: 700 14px/20px var(--kel-shell-heading); }
 .kel-v2-shell .kel-approval-card__status { margin-left: auto; color: #8fe3b4; font: 600 13px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-plan-bar {
+  box-sizing: border-box; min-width: 0; margin-bottom: 8px;
+  border: 1px solid rgba(191,216,255,.12); border-radius: 12px;
+  background: linear-gradient(90deg,#1b2d53,#19294d);
+  color: #c4d4e8;
+}
+.kel-v2-shell .kel-plan-bar__summary {
+  box-sizing: border-box; display: flex; align-items: center; gap: 12px;
+  width: 100%; height: 49px; padding: 0 14px; border: 0;
+  background: transparent; color: inherit; text-align: left; cursor: pointer;
+}
+.kel-v2-shell .kel-plan-bar__summary strong { flex: none; color: #ffc481; font: 700 13px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-plan-bar__count { flex: none; color: #8fa9d6; font: 400 13px/18px var(--kel-shell-body); }
+.kel-v2-shell .kel-plan-bar__current { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2fa; font: 400 14px/20px var(--kel-shell-body); }
+.kel-v2-shell .kel-plan-bar__meter { flex: none; width: 140px; height: 4px; border-radius: 4px; background: rgba(191,216,255,.2); }
+.kel-v2-shell .kel-plan-bar__meter > span { display: block; height: 100%; border-radius: inherit; background: #a8deff; }
+.kel-v2-shell .kel-plan-bar__expand { flex: none; color: #bcd8ff; font: 500 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell .kel-plan-bar__chevron { display: none; }
+.kel-v2-shell .kel-plan-bar__entries { max-height: min(22vh,180px); padding: 0 14px 12px; }
+.kel-v2-shell .tool-group-summary { display: flex; flex-direction: column; gap: 10px; width: 100%; margin: 0; }
+.kel-v2-shell .kel-tool-call {
+  box-sizing: border-box; width: 100%; min-width: 0; overflow: hidden;
+  border: 1px solid rgba(191,216,255,.14); border-radius: 10px;
+  background: linear-gradient(90deg,#1f3464,#1e3261);
+}
+.kel-v2-shell .kel-tool-call__summary {
+  box-sizing: border-box; display: flex; align-items: center; gap: 10px;
+  width: 100%; min-height: 54px; padding: 8px 14px; border: 0;
+  background: transparent; color: #c4d4e8; text-align: left; cursor: pointer;
+}
+.kel-v2-shell .kel-tool-call__summary:disabled { cursor: default; }
+.kel-v2-shell .kel-tool-call__icon { display: flex; align-items: center; flex: none; color: #bcd8ff; }
+.kel-v2-shell .kel-tool-call__copy { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 1px; }
+.kel-v2-shell .kel-tool-call__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell .kel-tool-call__title--mobile { display: none; }
+.kel-v2-shell .kel-tool-call__description { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); }
+.kel-v2-shell .kel-tool-call__status { flex: none; color: #bcd8ff; font: 700 13px/18px var(--kel-shell-heading); }
+.kel-v2-shell .kel-tool-call[data-status='completed'] .kel-tool-call__status { color: #8fe3b4; }
+.kel-v2-shell .kel-tool-call[data-status='error'] .kel-tool-call__status { color: #f9a3a3; }
+.kel-v2-shell .kel-tool-call__status--mobile { display: none; }
+.kel-v2-shell .kel-tool-call__chevron { flex: none; color: #8fa9d6; transition: transform .15s; }
+.kel-v2-shell .kel-tool-call__chevron--open { transform: rotate(180deg); }
+.kel-v2-shell .kel-tool-call .tool-detail-panel {
+  margin: 0 14px 12px; padding: 10px 12px; border: 1px solid rgba(191,216,255,.16);
+  border-radius: 8px; background: rgba(6,18,46,.35);
+}
 @media (max-width: 767px) {
+  .kel-v2-shell .tool-group-summary { transform: translateX(-8px); gap: 12px; }
+  .kel-v2-shell .kel-tool-call__summary { min-height: 52px; padding: 7px 12px; }
+  .kel-v2-shell .kel-tool-call__title--desktop,
+  .kel-v2-shell .kel-tool-call__status--desktop { display: none; }
+  .kel-v2-shell .kel-tool-call__title--mobile,
+  .kel-v2-shell .kel-tool-call__status--mobile { display: inline; }
+  .kel-v2-shell .kel-tool-call__chevron { display: none; }
+  .kel-v2-shell .kel-plan-bar { margin-bottom: 12px; }
+  .kel-v2-shell .kel-plan-bar__summary { gap: 10px; height: 35px; padding: 0 12px; }
+  .kel-v2-shell .kel-plan-bar__summary strong { font-size: 12px; }
+  .kel-v2-shell .kel-plan-bar__count { font-size: 12px; }
+  .kel-v2-shell .kel-plan-bar__current { font-size: 13px; }
+  .kel-v2-shell .kel-plan-bar__meter,
+  .kel-v2-shell .kel-plan-bar__expand { display: none; }
+  .kel-v2-shell .kel-plan-bar__chevron { display: block; flex: none; margin-left: auto; color: #bcd8ff; transition: transform .15s; }
+  .kel-v2-shell .kel-plan-bar__chevron--open { transform: rotate(180deg); }
   .kel-v2-shell .kel-approval-card--pending { gap: 10px; padding: 14px; }
   .kel-v2-shell .message-item.kel_approval { width: calc(100% + 6px); }
   .kel-v2-shell .kel-approval-card__target { padding-block: 12px; }

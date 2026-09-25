@@ -1,30 +1,38 @@
-import type { BadgeProps } from '@arco-design/web-react';
-import { Badge, Button, Message, Spin, Tooltip } from '@arco-design/web-react';
-import { IconDown, IconRight } from '@arco-design/web-react/icon';
-import { Checklist, Download, Right } from '@icon-park/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Message, Tooltip } from '@arco-design/web-react';
+import { IconDown } from '@arco-design/web-react/icon';
+import { Download } from '@icon-park/react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ipcBridge } from '@/common';
 import { getAcpImageFileName } from '@/common/chat/acpToolCallOutput';
-import type { NormalizedToolCall, NormalizedToolStatus, ToolMessage } from '@/common/chat/normalizeToolCall';
-import { normalizeToolMessages, hasRunningToolMessages } from '@/common/chat/normalizeToolCall';
+import type { NormalizedToolCall, ToolMessage } from '@/common/chat/normalizeToolCall';
+import { normalizeToolMessages } from '@/common/chat/normalizeToolCall';
 import LocalImageView from '@/renderer/components/media/LocalImageView';
 import { downloadFileFromPath } from '@/renderer/utils/file/download';
 import './MessageToolGroupSummary.css';
 
-const statusToBadge = (status: NormalizedToolStatus): BadgeProps['status'] => {
+const ToolIcon: React.FC<{ kind?: string }> = ({ kind }) => (
+  <svg aria-hidden='true' viewBox='0 0 16 16' fill='none' width='16' height='16'>
+    {kind === 'execute' || kind === 'exec' ? <>
+      <rect x='2' y='3' width='12' height='10' rx='1.5' stroke='currentColor' />
+      <path d='m4.5 6 2 2-2 2M8 10h3' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </> : kind === 'edit' ? <>
+      <path d='m3 11.5 7.9-7.9 1.5 1.5-7.9 7.9-2 .5.5-2Z' stroke='currentColor' strokeLinejoin='round' />
+      <path d='m10 4.5 1.5 1.5' stroke='currentColor' />
+    </> : <>
+      <circle cx='7' cy='7' r='4' stroke='currentColor' />
+      <path d='m10 10 3 3' stroke='currentColor' strokeLinecap='round' />
+    </>}
+  </svg>
+);
+
+const statusText = (status: NormalizedToolCall['status'], mobile = false): string => {
   switch (status) {
-    case 'completed':
-      return 'success';
-    case 'error':
-      return 'error';
-    case 'running':
-      return 'processing';
-    case 'canceled':
-      return 'default';
-    case 'pending':
-    default:
-      return 'default';
+    case 'completed': return 'Success';
+    case 'running': return mobile ? 'Running' : 'Executing';
+    case 'error': return 'Failed';
+    case 'canceled': return 'Stopped';
+    default: return 'Pending';
   }
 };
 
@@ -75,29 +83,21 @@ const ToolItemDetail: React.FC<{ item: NormalizedToolCall }> = ({ item }) => {
   };
 
   return (
-    <div className='flex flex-col'>
+    <div className='kel-tool-call' data-status={item.status}>
       {messageContext}
-      <div className='flex flex-row color-#86909C gap-12px items-center'>
-        <Badge status={statusToBadge(item.status)} className={item.status === 'running' ? 'badge-breathing' : ''} />
-        <span
-          className={
-            'flex-1 min-w-0' +
-            (expanded ? ' break-all' : ' truncate') +
-            (hasDetail ? ' cursor-pointer hover:color-#4E5969' : '')
-          }
-          onClick={hasDetail ? toggleExpanded : undefined}
-        >
-          <span className='font-medium text-13px'>{displayItem.name}</span>
-          {displayItem.description && displayItem.description !== displayItem.name && (
-            <span className='m-l-4px opacity-80 text-13px'>{displayItem.description}</span>
-          )}
+      <button className='kel-tool-call__summary' type='button' aria-expanded={hasDetail ? expanded : undefined}
+        disabled={!hasDetail} onClick={toggleExpanded}>
+        <span className='kel-tool-call__icon'><ToolIcon kind={item.kind} /></span>
+        <span className='kel-tool-call__copy'>
+          <span className='kel-tool-call__title kel-tool-call__title--desktop'>{displayItem.name}</span>
+          <span className='kel-tool-call__title kel-tool-call__title--mobile'>{displayItem.name.replace(/^Execute:\s*/i, '')}</span>
+          {displayItem.description && displayItem.description !== displayItem.name &&
+            <span className='kel-tool-call__description'>{displayItem.description}</span>}
         </span>
-        {hasDetail && (
-          <span className='flex-shrink-0 cursor-pointer hover:color-#4E5969 transition-colors' onClick={toggleExpanded}>
-            {expanded ? <IconDown style={{ fontSize: 12 }} /> : <IconRight style={{ fontSize: 12 }} />}
-          </span>
-        )}
-      </div>
+        <span className='kel-tool-call__status kel-tool-call__status--desktop'>{statusText(item.status)}</span>
+        <span className='kel-tool-call__status kel-tool-call__status--mobile'>{statusText(item.status, true)}</span>
+        {hasDetail && <IconDown className={`kel-tool-call__chevron${expanded ? ' kel-tool-call__chevron--open' : ''}`} style={{ fontSize: 12 }} />}
+      </button>
       {expanded && hasDetail && (
         <div className='tool-detail-panel m-l-20px m-t-4px'>
           {loadingFull && <div className='tool-detail-label'>Loading...</div>}
@@ -141,33 +141,11 @@ const ToolItemDetail: React.FC<{ item: NormalizedToolCall }> = ({ item }) => {
 };
 
 const MessageToolGroupSummary: React.FC<{ messages: ToolMessage[] }> = ({ messages }) => {
-  const hasRunning = hasRunningToolMessages(messages);
-  const [showMore, setShowMore] = useState(hasRunning);
-
-  useEffect(() => {
-    if (hasRunning) setShowMore(true);
-  }, [hasRunning]);
-
   const tools = useMemo(() => normalizeToolMessages(messages), [messages]);
 
   return (
     <div className='tool-group-summary'>
-      <div className='tool-group-summary__header' onClick={() => setShowMore(!showMore)}>
-        <span className='tool-group-summary__icon'>
-          {hasRunning ? <Spin size={12} /> : <Checklist theme='outline' size='14' />}
-        </span>
-        <span className='tool-group-summary__label'>View Steps {tools.length > 0 ? `· ${tools.length}` : ''}</span>
-        <span className={`tool-group-summary__arrow${showMore ? ' tool-group-summary__arrow--open' : ''}`}>
-          <Right theme='outline' size='12' />
-        </span>
-      </div>
-      {showMore && (
-        <div className='tool-group-summary__body'>
-          {tools.map((item) => (
-            <ToolItemDetail key={item.key} item={item} />
-          ))}
-        </div>
-      )}
+      {tools.map((item) => <ToolItemDetail key={item.key} item={item} />)}
     </div>
   );
 };
