@@ -1,12 +1,19 @@
 # RESUME — exact continuation
 
+## CURRENT FIGMA REVISION (2026-09-25, `main`)
+
+The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs and direct Tools findings. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision.
+
+**Next item:** implement and verify the current desktop and mobile Tools frames `313:2441` and `315:2842` against a built App. Continue the remaining current Figma states before resuming the long transcript check. Current Transcriptions frame `189:4032` still resolves, but its prior screenshot comparison is historical.
+
+---
+
 ## CURRENT CANONICAL CHECKPOINT (2026-09-24, `main`) — supersedes candidate checkpoints below
 
 Consolidation is complete at `docs/CONSOLIDATION_STATUS.md`. The only source is `C:\Users\Nick\Desktop\Kel\Kel` on `main`; `App`, `Data`, and `Tools` are its siblings. The installed app now packages source `8c67121`. The r61 System and r62 Appearance evidence is in `evidence/figma-full-audit/`; old rXX candidate locations and separate V2 data roots have been removed. Do not recreate them for ordinary development.
 
 V2-00 through V2-04, V2-06 through V2-14, and V2-17 are built. V2-05, V2-16, V2-18, and V2-19 remain partial. V2-15 and V2-20 remain planned. The first local source increment after consolidation fixed two measured V2-18 state defects: cancelled Build Update missions report `CANCELLED` with no candidate, and requests answered without a job settle as `SETTLED`. A follow-up corrected Kibble's candidate readout to use the engine's nested `evidence.verified` and `artifact_location`. The canonical App now includes these source changes.
 
-**Next item:** audit the remaining populated desktop Tools, chat, task, and transcript states against paired FINAL frames. Measure Light-mode label contrast. The canonical App at `8c67121` passed packaged 1440/800 checks for the failed-status glass popover and enabled Image Model with disposable data ([record](evidence/figma-full-audit/DESKTOP_TOOLS_STATUS_CANONICAL.md)). The long diagnostic still covers the heading at 800px. Exact product-wide parity is open. Live personal services, remote first response, Google sign-in, fresh Muse speech, enabled WebUI/Pet, and a physical iPhone need separate acceptance.
 **Next item:** audit the remaining populated desktop Tools, chat, task, and transcript states against paired FINAL frames. Measure Light-mode label contrast. The canonical App at `8c67121` passed packaged 1440/800 checks for the failed-status glass popover and enabled Image Model with disposable data ([record](evidence/figma-full-audit/DESKTOP_TOOLS_STATUS_CANONICAL.md)). An isolated WebUI run reached step 2; its local page returned 200 and its unauthenticated API returned 401. Pet enabling was refused by V1.6 policy AUD-MINOR-008. The full engine regression passed 1,289 tests and 14 subtests; desktop tests passed 396. The long Tools diagnostic still covers the heading at 800px. Exact product-wide parity is open. Live personal services, remote first response, Google sign-in, fresh Muse speech, and a physical iPhone need separate acceptance.
 
 ---

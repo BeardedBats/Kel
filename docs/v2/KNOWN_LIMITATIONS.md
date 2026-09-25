@@ -1,10 +1,14 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Latest Figma revision (2026-09-25)
+
+The live desktop and mobile FINAL pages were replaced. The old 23 desktop / 28 mobile pair audit is **SUPERSEDED BY FIGMA REVISION**. Current Figma has 75 desktop and 50 mobile frames. Desktop Tools and mobile Tools now show different explicit states and copy from the old audit. Production parity, including current components and all variants, is open. See the [current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md).
+
 ## Current canonical limits (2026-09-24)
 
 The older r29 limits below are historical. The canonical app and durable data paths are in `docs/CONSOLIDATION_STATUS.md`. r61 System and r62 Appearance have scoped packaged evidence. Exact Figma parity remains open, including Tools status and interactive states, populated and enabled states, Light labels, and real phone rendering. Live Google sign-in, personal services, remote first response, fresh Muse speech, and a physical iPhone remain unverified.
 
-The V2-18 cancelled Build Update reading and no-job `DISPATCHED` defect described later in this file were fixed in source during this continuation. Older stored submissions may still carry `DISPATCHED` with no job. No installed app update is claimed for this source increment.
+The V2-18 cancelled Build Update reading and no-job `DISPATCHED` defect described later in this file were fixed in source during this continuation. Older stored submissions may still carry `DISPATCHED` with no job. The canonical App includes these fixes at package source `8c67121`.
 
 The canonical App's Tools failure and enabled Image Model states ran on disposable data at 1440 and 800px. The status detail now has Components `156:159` ice-glass material. Its long diagnostic still covers the Tools heading and card title while open at 800px. The short Figma tooltip does not specify this longer runtime content. The Image Model field and menu match the measured Components `146:52` material, and the enabled switch persisted after reload. A fake key and loopback endpoint verified only local configuration. No real image generation, live MCP, or personal credential was used. Keyboard and assistive-technology checks remain open.
 

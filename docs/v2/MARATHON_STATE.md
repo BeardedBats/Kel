@@ -12,10 +12,10 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Audit the remaining populated desktop Tools, chat, task, and transcript states against paired FINAL frames; measure Light-mode label contrast, then repair only confirmed gaps.
+next_item: Refresh production against live Figma desktop page 319:2 and mobile page 319:3858, starting with Tools 313:2441 and 315:2842; package and verify before resuming the transcript queue.
 
 status: partial
-# Canonical App now packages source 8c67121. Tools status glass and enabled Image Model were checked at 1440/800 with disposable data. Live integrations and exact product-wide parity remain open.
+# Canonical App packages source 8c67121. Figma replaced the desktop/mobile FINAL pages on 2026-09-25. Earlier visual results are historical until recaptured against the current frames. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
 
 deferred:
