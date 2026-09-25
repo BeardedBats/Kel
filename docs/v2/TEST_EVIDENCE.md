@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Current mobile Work package check (2026-09-25)
+
+[The scoped Work record](evidence/figma-full-audit/WORK_CURRENT_REVISION.md) compares live mobile `299:13910` with an isolated zero-job package. At 393px, the three empty cards measured 361×75 at x16/y114, y201, and y288. Figma places the third near y289. At 320px, the cards fit with no document overflow. The back control returned to Projects. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Populated Work remains open. Canonical App and Data were untouched.
+
 ## Current mobile Projects package check (2026-09-25)
 
 [The scoped Projects record](evidence/figma-full-audit/PROJECTS_CURRENT_REVISION.md) compares live mobile `299:13686` with an isolated Windows package. A synthetic project supplied the heading. At 393px, the first card began at Figma's x16/y163 and measured 361×296; the second was 3px above the frame. At 320px, both cards and all rows fit without document overflow. Work and Recipes navigated to their existing routes. No renderer error appeared. TypeScript, the full desktop suite **54 files / 400 tests**, Electron Vite, and disposable Windows packaging passed. Canonical App and Data were untouched.

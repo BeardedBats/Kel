@@ -29,6 +29,7 @@ import mobileScheduledIcon from '@renderer/assets/figma/refresh/mobile-project-i
 import mobileProvidersIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconFile.svg';
 import mobileDiagnosticsIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconSparkle.svg';
 import mobileChevronIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconChevronDown.svg';
+import mobileProjectBackIcon from '@renderer/assets/figma/refresh/mobile-project-back.svg';
 
 type Item = { label: string; path: string; icon: string; sourceIcon?: boolean };
 type Group = { label: string; items: Item[] };
@@ -144,7 +145,7 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
     </header>
     <header className='kel-in-chat-frame__mobile-header'>
       <button type='button' aria-label={selectedMcpName ? 'Back to Tools' : mobileIndex ? 'Open chats' : `Back to ${heading}`} onClick={() => selectedMcpName ? void navigate('/settings/tools') : mobileIndex ? layout?.setSiderCollapsed(false) : void navigate(settings ? '/settings' : '/projects')}>
-        {mobileIndex && !settings ? <img src={mobileMenuIcon} alt='' width={22} height={22} /> : mobileIndex ? <span aria-hidden='true'>☰</span> : <span aria-hidden='true'>←</span>}
+        {mobileIndex && !settings ? <img src={mobileMenuIcon} alt='' width={22} height={22} /> : mobileIndex ? <span aria-hidden='true'>☰</span> : !settings ? <img src={mobileProjectBackIcon} alt='' width={20} height={20} /> : <span aria-hidden='true'>←</span>}
       </button>
       <h1>{mobileTitle}</h1>
     </header>
