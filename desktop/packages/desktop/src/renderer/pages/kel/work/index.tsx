@@ -439,7 +439,7 @@ const WorkCenter: React.FC = () => {
         <KelCard title="Waiting to continue">
           {continuation.length === 0 ? (
             <KelEmpty
-              title="Nothing."
+              title="Nothing is waiting."
               why="When a job pauses, is interrupted, or waits on you, it appears here with the exact reason."
             />
           ) : (
@@ -482,7 +482,7 @@ const WorkCenter: React.FC = () => {
         <KelCard title="Team assignments">
           {assignments.length === 0 ? (
             <KelEmpty
-              title="No specialist has been assigned yet."
+              title="No specialist is assigned yet."
               why="Kel assigns a specialist only when a milestone actually runs — there are never decorative specialists."
             />
           ) : (
