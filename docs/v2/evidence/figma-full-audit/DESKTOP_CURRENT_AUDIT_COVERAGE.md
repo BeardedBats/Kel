@@ -17,3 +17,5 @@ Runtime/Ramble, populated custom Skills, core Light labels, Light menus/shared d
 [Light Tools JSON/CLI/report/delete dialogs](DESKTOP_LIGHT_TOOLS_DIALOGS_SOURCE.md) now pass source checks. Larger milestone package proof remains pending.
 
 [Light scheduled task form](DESKTOP_LIGHT_TASK_FORM_SOURCE.md) now has source readability/geometry proof; full field/model parity remains open.
+
+[Source completion milestone package](DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae closes scoped package proof for Setup retention, Workspace/Light files, Light Ramble dialogs, populated Chat type, Light Tools and Light task form. Eight grouped probes passed both widths; full 63-file/443-test regression passed. Full frame acceptance remains partial.
