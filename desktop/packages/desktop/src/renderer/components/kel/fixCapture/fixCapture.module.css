@@ -188,3 +188,99 @@
   font-size: 11px;
   color: var(--kel-text-3);
 }
+
+.head { display: contents; }
+.liveLabel { margin: 0; }
+@media (max-width: 767px) {
+  .stop, .save { order: 0; }
+  .quiet, .retry { order: 1; }
+  .again { order: 2; }
+}
+
+/* Current desktop Figma capture states: 273:906, 273:1091, 273:1338. */
+@media (min-width: 768px) {
+  :global(body[data-kel-fix-capture='active']) :global(.arco-tooltip) { display: none !important; }
+  .overlay { background: rgba(10, 20, 48, 0.3); }
+  .highlight {
+    border: 2px solid #ffc481;
+    border-radius: 12px;
+    background: rgba(255, 196, 129, 0.08);
+    opacity: 1;
+  }
+  .hint, .panel {
+    border: 1px solid rgba(191, 216, 255, 0.14);
+    background: linear-gradient(180deg, rgba(191, 216, 255, 0.08), rgba(191, 216, 255, 0)), rgba(15, 45, 100, 0.4);
+    backdrop-filter: blur(24px);
+    color: #edf2fa;
+    font-family: 'Instrument Sans', sans-serif;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(191, 216, 255, 0.18);
+  }
+  .hint {
+    top: 24px;
+    left: calc(50% + 140px);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 500;
+    line-height: normal;
+    max-width: calc(100vw - 40px);
+    width: max-content;
+    white-space: nowrap;
+  }
+  .targetLabel {
+    position: fixed;
+    z-index: 452;
+    padding: 3px 8px;
+    max-width: 192px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 6px;
+    background: rgba(255, 196, 129, 0.9);
+    color: #3a2406;
+    font: 600 12px 'Instrument Sans', sans-serif;
+  }
+  .panel {
+    box-sizing: border-box;
+    width: 420px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 16px 18px;
+    border-radius: 14px;
+    gap: 12px;
+  }
+  .panel[data-phase='recording'], .panel[data-phase='stopping'] { width: 380px; }
+  .head { display: flex; align-items: center; gap: 8px; }
+  .heading { color: #edf2fa; font-size: 15px; line-height: 18px; }
+  .timer { margin-left: auto; color: #8fa9d6; font: 500 13px/16px 'Instrument Sans', sans-serif; letter-spacing: 0; }
+  .liveBox { padding: 10px 12px; border-radius: 10px; background: rgba(6, 18, 46, 0.4); display: flex; flex-direction: column; gap: 4px; }
+  .liveLabel { color: #9fc3ff; font-size: 12px; font-weight: 500; line-height: 15px; }
+  .live { min-height: 0; color: #edf2fa; font-family: var(--kel-font); font-size: 13px; font-weight: 400; line-height: 16px; overflow-wrap: anywhere; }
+  .target, .hintLine { display: none; }
+  .transcript, .transcript:focus {
+    box-sizing: border-box;
+    height: 96px;
+    min-height: 96px;
+    resize: none;
+    padding: 10px 12px;
+    border: 1px solid rgba(127, 160, 255, 0.7);
+    border-radius: 8px;
+    background: rgba(47, 107, 224, 0.18);
+    color: #edf2fa;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+  .note { color: #8fa9d6; font-family: var(--kel-font); font-size: 12px; font-weight: 400; line-height: 14px; }
+  .noteStrong { color: #edf2fa; }
+  .actions { gap: 10px; }
+  .primary, .secondary, .quiet { height: 34px; border-radius: 8px; font: 600 14px/20px 'Instrument Sans', sans-serif; white-space: nowrap; }
+  .secondary, .quiet { padding: 0 4px; background: transparent; border-color: transparent; color: #9fc3ff; }
+  .stop { order: 1; background: linear-gradient(#a6443f, #8b312d); color: #fff1f0; box-shadow: 0 2px 6px rgba(6, 18, 46, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+  .stop:hover:not(:disabled) { background: linear-gradient(#b54b45, #9a3732); }
+  .panel[data-phase='recording'] .actions, .panel[data-phase='stopping'] .actions { justify-content: flex-end; }
+  .again { order: 0; }
+  .retry { order: 1; }
+  .save { order: 2; margin-left: auto; border-color: rgba(140, 150, 167, 0.5); background: linear-gradient(#2e7939, #1f5e30); color: #fff1f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  .save:hover:not(:disabled) { background: linear-gradient(#368941, #246b37); }
+}

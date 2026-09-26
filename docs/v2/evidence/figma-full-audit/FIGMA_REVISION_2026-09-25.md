@@ -77,9 +77,9 @@
 | `314:19219` | Kel / Settings — Archived | `/settings/archived` | Synthetic three-chat project grouping package-checked at 1440/800. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
 | `314:19647` | Kel / Settings — Archived — Select | `/settings/archived` | Two-row selection and delete confirmation package-checked and canceled. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
 | `273:595` | Kel / Overlay — Command palette | `shared shell / overlay` | 640×429 package at both widths; focus/Escape/Capture action pass. Final focus-ring CSS has source-render proof. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
-| `273:906` | Kel / Overlay — Fix Capture · Select | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:1091` | Kel / Overlay — Fix Capture · Recording | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:1338` | Kel / Overlay — Fix Capture · Review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:906` | Kel / Overlay — Fix Capture · Select | `shared shell / overlay` | Scoped isolated 1440/800px package comparison; synthetic recording lifecycle. [Evidence](DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md). | READ |
+| `273:1091` | Kel / Overlay — Fix Capture · Recording | `shared shell / overlay` | Scoped isolated 1440/800px package comparison; synthetic recording lifecycle. [Evidence](DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md). | READ |
+| `273:1338` | Kel / Overlay — Fix Capture · Review | `shared shell / overlay` | Scoped isolated 1440/800px package comparison; synthetic recording lifecycle. [Evidence](DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md). | READ |
 | `273:1586` | Kel / Overlay — New scheduled task | `/scheduled` | Filled unsaved form matched x420/y70, 600×614 in disposable desktop package. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:2125` | Kel / Overlay — Approval details | `shared shell / overlay` | Synthetic pending approval opened real details; x440/y109.5, 560×401. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:8389` | Kel / Overlay — Memory review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |

@@ -279,7 +279,7 @@ const KelCommandPalette: React.FC = () => {
     return all
       .filter((item) => `${item.label} ${item.hint ?? ''}`.toLowerCase().includes(needle))
       .slice(0, 24);
-  }, [dynamic, mode, navigate, query]);
+  }, [dynamic, found, mode, navigate, query]);
 
   useEffect(() => {
     setActive(0);

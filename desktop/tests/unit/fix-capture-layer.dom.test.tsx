@@ -153,7 +153,7 @@ describe('Fix Capture — when transcription cannot produce the words', () => {
     // The retry sent the very same recording — no second take was ever asked for.
     expect(quickAudio).toEqual(['QUJD', 'QUJD']);
     expect(mic.stop).toHaveBeenCalledTimes(1);
-    expect(screen.queryByTestId('fix-capture-retry')).toBeNull();
+    expect((screen.getByTestId('fix-capture-retry') as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(false);
   });
 
@@ -203,8 +203,10 @@ describe('Fix Capture — the capture itself', () => {
     expect(screen.queryByTestId('fix-capture-overlay')).toBeNull();
     hotkey();
     await waitFor(() => expect(screen.getByTestId('fix-capture-overlay')).toBeTruthy());
+    expect(document.body.dataset.kelFixCapture).toBe('active');
     fireEvent.keyDown(window, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByTestId('fix-capture-overlay')).toBeNull());
+    expect(document.body.dataset.kelFixCapture).toBeUndefined();
     expect(findCall('save')).toBeUndefined();
     expect(findCall('stream_start')).toBeUndefined();
   });
@@ -218,7 +220,7 @@ describe('Fix Capture — the capture itself', () => {
     await waitFor(() => expect(findCall('stream_start')).toBeTruthy());
     const panel = await screen.findByTestId('fix-capture-panel');
     expect(panel.getAttribute('data-phase')).toBe('recording');
-    expect(screen.getByText('Recording fix…')).toBeTruthy();
+    expect(screen.getByText('Recording')).toBeTruthy();
     // PCM chunks flow through Kel's own transcription family.
     mic.onPcm?.('AAAA');
     await waitFor(() => expect(findCall('stream_chunk')).toBeTruthy());
