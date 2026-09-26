@@ -15,3 +15,5 @@ Runtime/Ramble, populated custom Skills, core Light labels, Light menus/shared d
 [Populated Chat type](DESKTOP_POPULATED_CHAT_TYPE_SOURCE.md) now has source proof in both themes/widths. Overall thread positioning/turn rhythm, populated sidebar and truthful footer facts remain open.
 
 [Light Tools JSON/CLI/report/delete dialogs](DESKTOP_LIGHT_TOOLS_DIALOGS_SOURCE.md) now pass source checks. Larger milestone package proof remains pending.
+
+[Light scheduled task form](DESKTOP_LIGHT_TASK_FORM_SOURCE.md) now has source readability/geometry proof; full field/model parity remains open.
