@@ -1,3 +1,7 @@
+## Desktop source completion milestone package checkpoint (2026-09-26)
+
+[Milestone package](evidence/figma-full-audit/DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae passes eight grouped 1440/800px probes: Setup retention, legacy Workspace, Light Workspace/File, Light Ramble key/Merge/Vetting, populated Chat type, Light Tools and Light task form. All 266 renderer files match; native rebuilding and full 63-file/443-test regression pass. Normal bundled renderer, no Vite/history interception. Scoped real isolated actions and injected/intercepted limits are recorded; settings/messages restored and apps closed. Canonical App remains 8c67121; Data untouched. Full Chat/task/icon acceptance, live journeys and V2-19 remain partial. Mobile paused.
+
 ## Desktop Light task form checkpoint (2026-09-26)
 
 [Light task form](evidence/figma-full-audit/DESKTOP_LIGHT_TASK_FORM_SOURCE.md) passes 1440/800px at 600px width/y70, 16px radius/24px blur, minimum sampled label contrast 5.39:1 and zero overflow/errors. Unsaved fields, Weekdays, skip switch, Cancel/reopen and Escape passed; no task/provider ran. TypeScript/build and 12 focused tests passed. Full task field/model parity and milestone package proof remain open. App/Data untouched; mobile paused.

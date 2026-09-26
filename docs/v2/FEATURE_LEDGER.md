@@ -1,3 +1,7 @@
+## Desktop source completion milestone package checkpoint (2026-09-26)
+
+[Milestone package](evidence/figma-full-audit/DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae passes eight grouped 1440/800px probes: Setup retention, legacy Workspace, Light Workspace/File, Light Ramble key/Merge/Vetting, populated Chat type, Light Tools and Light task form. All 266 renderer files match; native rebuilding and full 63-file/443-test regression pass. Normal bundled renderer, no Vite/history interception. Scoped real isolated actions and injected/intercepted limits are recorded; settings/messages restored and apps closed. Canonical App remains 8c67121; Data untouched. Full Chat/task/icon acceptance, live journeys and V2-19 remain partial. Mobile paused.
+
 # KEL V2.0 — FEATURE LEDGER
 
 ## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
