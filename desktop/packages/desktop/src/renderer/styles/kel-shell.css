@@ -3537,3 +3537,29 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
  .kel-v2-shell .kel-shell-kibble [class*='shotWrap'] { box-sizing: border-box; width: 280px; }
  .kel-v2-shell .kel-shell-kibble [class*='detailText'] .kel-meta { font: 400 12px/16px var(--kel-shell-body); }
 }
+
+/* Current desktop setup and setup-return frames 189:4492 / 273:13646. */
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-setup-progress { display: flex; gap: 6px; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-setup-progress button { flex: 1; height: 4px; padding: 0; border: 0; border-radius: 4px; background: rgba(191,216,255,.18); cursor: pointer; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-setup-progress button[data-visited='true'] { background: #8fe3b4; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-setup-progress button[aria-current='step'] { background: #2f6be0; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-setup-label { display: flex; justify-content: space-between; gap: 12px; margin: -2px 0 0; font: 400 12px/16px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-onboarding .kel-row { flex-wrap: wrap; }
+ .kel-v2-shell .kel-shell-onboarding .kel-row > div { min-width: 0; overflow-wrap: anywhere; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row { flex-wrap: wrap; gap: 8px; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-lead { display: none; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-name { font: 400 14px/20px var(--kel-shell-body); display: block; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-name > span { display: inline; margin-left: 4px; font: 400 12px/16px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-status { flex: 0 0 auto; margin-left: auto; }
+ .kel-v2-shell .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-action { flex: 0 0 auto; }
+ .kel-v2-shell .kel-setup-return { padding: 10px 14px; border-color: rgba(255,196,129,.4); background: rgba(255,196,129,.08); border-radius: 8px; margin-bottom: 16px; }
+ .kel-v2-shell .kel-setup-return-icon { margin-right: 10px; color: #ffc481; }
+ .kel-v2-shell .kel-setup-return button, .kel-v2-shell .kel-shell-onboarding .kel-page__head .kel-btn, .kel-v2-shell .kel-shell-onboarding .kel-btn--primary { background: linear-gradient(#6493f8,#2356b3); height: 34px; min-height: 34px; padding: 0 14px; color: #fff1f0; border: 1px solid rgba(140,150,167,.5); border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); }
+}
+
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding [data-testid='kel-default-model-card'] .kel-shell-default-model-row { min-height: 38px; height: auto; padding: 8px 0; }
+ .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-name { font: 400 14px/20px var(--kel-shell-body); }
+ .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-status { font: 700 13px/18px var(--kel-shell-heading); }
+}

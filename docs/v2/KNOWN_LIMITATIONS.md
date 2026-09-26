@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Desktop Setup (2026-09-26)
+
+[Desktop Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md) now uses actual model state, accessible progress, and real folder selection/composer handoff. Isolated model/config writes and 1440/800px source checks passed. The warm setup-return banner passed on Knowledge; Work remains gated until setup finishes. The native picker result was intercepted. TypeScript/build, four focused tests, and 62 files / 433 desktop tests passed. Setup policy selection and broader persistence/parity remain open. App/Data remain untouched.
+
 ## Desktop Kibble (2026-09-26)
 
 [Desktop Kibble](evidence/figma-full-audit/DESKTOP_KIBBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its panels, finding selection, direct status actions, and screenshot/quote details. Real isolated Mark fixed, Reopen, and selected prompt/Batched writes passed; fixtures were dismissed. TypeScript/source build, 35 focused tests, and the full 61-file/431-test suite passed. Running build/candidate presentation remains open. Canonical App and Data remain untouched; package proof waits for the next larger milestone.
