@@ -1,0 +1,64 @@
+.kel-memory-review__chevron { display: none; }
+.kel-slash-menu__group { display: none; }
+@media (min-width: 768px) {
+  html body :is(.kel-memory-review, .kel-slash-menu, .kel-permission-menu, .kel-attach-menu) {
+    box-sizing: border-box; border: 1px solid rgba(191,216,255,.14) !important; border-radius: 10px;
+    background: linear-gradient(180deg,rgba(191,216,255,.08),rgba(191,216,255,0)),rgba(15,45,100,.4) !important;
+    backdrop-filter: blur(24px) !important; box-shadow: inset 0 1px rgba(191,216,255,.18),0 20px 24px rgba(0,0,0,.35);
+  }
+  html[data-theme='dark'] body:has(.kel-v2-shell) .arco-dropdown-menu:is(.kel-attach-menu,.kel-permission-menu) { background: linear-gradient(180deg,rgba(191,216,255,.08),rgba(191,216,255,0)),rgba(15,45,100,.4) !important; border-radius: 10px; }
+  html body .kel-memory-popover:has(.kel-memory-review) { padding: 0; border: 0; background: transparent; box-shadow: none; }
+  html[data-theme='dark'] body .kel-memory-popover:has(.kel-memory-review) .arco-popover-content { padding: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html body .kel-memory-popover:has(.kel-memory-review) .arco-popover-arrow { display: none; }
+  html body .kel-memory-review { width: 440px; max-width: calc(100vw - 32px); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .kel-memory-review__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  html body .kel-memory-review__head > .arco-typography { margin: 0; color: #edf2fa; font: 600 15px/18px var(--kel-shell-heading); }
+  .kel-memory-review__count { flex: none; color: #8fa9d6; font: 500 12px/16px var(--kel-shell-heading); }
+  html body .kel-memory-review__lines { margin: 0; font: 400 13px/16px var(--kel-shell-body); color: #c4d4e8; overflow-wrap: anywhere; }
+  html body .kel-memory-review__label { color: #9fc3ff; font: 500 12px/15px var(--kel-shell-heading); }
+  html body .kel-memory-review__lines > .kel-memory-review__label:not(:first-child) { margin-top: 12px; }
+  html body .kel-memory-review__value { margin-top: 3px; padding: 0; background: transparent !important; border: 0; border-radius: 0; }
+  html body .kel-memory-review__value[data-testid='kel-memory-proposed'] { color: #edf2fa; }
+  html body .kel-memory-review__why { margin-top: 12px; display: flex; flex-direction: column; gap: 3px; color: #c4d4e8; }
+  html body .kel-memory-review__actions { margin: 0; width: 100%; gap: 10px !important; flex-wrap: wrap; }
+  html body .kel-memory-review__actions > .arco-space-item { margin-bottom: 0 !important; }
+  .kel-memory-review__actions > .arco-space-item:nth-child(4) { order: 0; margin-right: auto !important; }
+  .kel-memory-review__actions > .arco-space-item:nth-child(3) { order: 1; }
+  .kel-memory-review__actions > .arco-space-item:nth-child(2) { order: 2; }
+  .kel-memory-review__actions > .arco-space-item:nth-child(1) { order: 3; }
+  html body .kel-memory-review__actions .arco-btn { height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); box-shadow: none; }
+  html body .kel-memory-review__actions [data-testid='kel-memory-accept'] { padding: 0 14px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#2e7939,#1f5e30); color: #fff1f0; box-shadow: inset 0 1px rgba(255,255,255,.1),0 4px 6px rgba(0,0,0,.25); }
+  .kel-memory-review__more { display: none; }
+  html body [data-testid='kel-memory-pill'] { background: transparent !important; border: 0 !important; color: #ffb764 !important; padding: 5px 4px; font: 600 13px/18px var(--kel-shell-heading); }
+  .kel-memory-review__chevron { display: inline; font-size: 14px; }
+  html body .kel-slash-menu { width: 340px; max-width: 100%; padding: 6px; }
+  .kel-v2-shell .kel-guid-command-anchor { top: auto !important; bottom: calc(100% + 8px); left: 40px; right: auto; width: 340px; max-width: calc(100% - 40px); }
+  html body .kel-slash-menu > div:first-child:not([role='listbox']) { border: 0; background: transparent !important; padding: 8px 10px 4px; }
+  html body .kel-slash-menu > div:first-child > div { color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  html body .kel-slash-menu > div:first-child:not([role='listbox']) > div:nth-child(2) { display: none; }
+  html body .kel-slash-menu > [role='listbox'] { padding: 0; }
+  html body .kel-slash-menu__group { display: block; padding: 8px 10px 4px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  html body .kel-slash-menu__option { min-height: 32px !important; height: 32px; padding: 0 10px; border: 0; border-radius: 6px; margin-bottom: 2px; background: transparent !important; }
+  html body .kel-slash-menu__option[aria-selected='true'], html body .kel-slash-menu__option:hover { background: rgba(47,107,224,.22) !important; }
+  .kel-slash-menu__text { flex: 1; justify-content: space-between; align-items: center; }
+  html body .kel-slash-menu__text > div:first-child { color: #edf2fa; font: 500 14px/18px var(--kel-shell-heading); }
+  html body .kel-slash-menu__description { color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); }
+  html body .kel-permission-menu { width: 300px; max-width: calc(100vw - 32px); padding: 6px; height: auto !important; max-height: calc(100vh - 32px) !important; overflow-y: auto; }
+  html body .kel-permission-menu .arco-dropdown-menu-group { padding: 0; }
+  html body .kel-permission-menu .arco-dropdown-menu-group:first-child .arco-dropdown-menu-group-title { margin-top: 0; }
+  html body .kel-permission-menu :is(.arco-menu-item-group-title,.arco-dropdown-menu-group-title) { padding: 8px 10px 4px; color: #9fc3ff; font: 500 12px/15px var(--kel-shell-heading); }
+  html body .kel-permission-menu :is(.arco-menu-item,.arco-dropdown-menu-item) { height: auto; min-height: 47px; margin: 2px 0 0; padding: 7px 10px; border: 0; border-radius: 6px; line-height: normal; }
+  html body .kel-permission-menu .arco-dropdown-menu-item-inner { height: auto; min-height: 0; overflow: visible; }
+  html body .kel-permission-menu :is(.arco-menu-item,.arco-dropdown-menu-item):has([data-mode-current='true']), html body .kel-permission-menu :is(.arco-menu-item,.arco-dropdown-menu-item):hover { background: rgba(47,107,224,.22) !important; }
+  .kel-permission-menu__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: #edf2fa; font: 500 14px/17px var(--kel-shell-heading); }
+  .kel-permission-menu__description { display: block; color: #8fa9d6; font: 400 12px/14px var(--kel-shell-body); white-space: normal; }
+  .kel-permission-menu__mark { order: 2; color: #9fc3ff; }
+  html body .kel-attach-menu { width: 220px; max-width: calc(100vw - 32px); padding: 6px; border-radius: 10px !important; }
+  html body .kel-attach-menu > .px-6px { padding: 0; }
+  html body .kel-attach-menu :is(.arco-menu-item,.arco-dropdown-menu-item), html body .kel-attach-menu__item { min-height: 32px; height: 32px; margin: 0; padding: 0 10px; border: 0; border-radius: 6px; color: #edf2fa; font: 500 14px/18px var(--kel-shell-heading); }
+  html body .kel-attach-menu__item { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; text-align: left; cursor: pointer; }
+  .kel-attach-menu img { width: 14px; height: 14px; flex: none; }
+  html body .kel-attach-menu :is(.arco-menu-item,.arco-dropdown-menu-item):hover, html body .kel-attach-menu__item:hover { background: rgba(47,107,224,.22) !important; }
+  html body .kel-attach-menu :is(.arco-menu-item-inner,.arco-dropdown-menu-item-inner) { overflow: hidden; }
+}
+@media (max-width: 767px) { .kel-permission-menu__description { display: none; } }

@@ -314,7 +314,7 @@ const ChatConversation: React.FC<{
               acpAssistantId === 'kel' || !acpAssistantId ? (
                 <div className='flex items-center gap-8px min-w-0 flex-wrap'>
                   <KelToolsControl conversationId={conversation.id} />
-                  <KelMemoryProposalControl conversationId={conversation.id} />
+                  {isMobile && <KelMemoryProposalControl conversationId={conversation.id} />}
                 </div>
               ) : undefined
             }
@@ -332,6 +332,7 @@ const ChatConversation: React.FC<{
     cronJobId,
     resolvedHideSendBox,
     acpAssistantId,
+    isMobile,
   ]);
 
   const sliderTitle = useMemo(() => {
@@ -418,6 +419,7 @@ const ChatConversation: React.FC<{
 
   const headerExtraNode = (
     <div className='flex items-center gap-8px'>
+      {conversation && !isMobile && !isLegacyReadOnlyConversation && (acpAssistantId === 'kel' || !acpAssistantId) && <KelMemoryProposalControl conversationId={conversation.id} />}
       {conversation && acpAssistantId !== 'kel' && (
         <div className='shrink-0'>
           <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />

@@ -7,6 +7,7 @@
 import MentionMenuShell from '@/renderer/components/chat/MentionMenuShell';
 import classNames from 'classnames';
 import React from 'react';
+import '@renderer/components/kel/kel-desktop-chat-menus.css';
 
 export interface SlashCommandMenuItem {
   key: string;
@@ -14,6 +15,7 @@ export interface SlashCommandMenuItem {
   description?: string;
   badge?: string;
   highlightIndices?: number[];
+  source?: 'builtin' | 'acp' | 'skill';
 }
 
 interface SlashCommandMenuProps {
@@ -78,6 +80,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 
   return (
     <MentionMenuShell
+      className='kel-slash-menu'
       activeIndex={activeIndex}
       itemCount={items.length}
       label={title}
@@ -89,13 +92,15 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
       {!loading && items.length === 0 && <div className='px-10px py-12px text-13px text-t-secondary'>{emptyText}</div>}
       {!loading &&
         items.map((item, index) => (
+          <React.Fragment key={item.key}>
+          {item.source === 'skill' && items[index - 1]?.source !== 'skill' && <div className='kel-slash-menu__group'>Skills</div>}
           <button
             key={item.key}
             type='button'
             role='option'
             aria-selected={index === activeIndex}
             className={classNames(
-              'w-full text-start px-10px py-6px rounded-8px transition-all border border-solid outline-none cursor-pointer mb-2px last:mb-0',
+              'kel-slash-menu__option w-full text-start px-10px py-6px rounded-8px transition-all border border-solid outline-none cursor-pointer mb-2px last:mb-0',
               {
                 'border-[var(--color-border-2)]': index === activeIndex,
                 'border-transparent hover:bg-[var(--color-fill-1)]': index !== activeIndex,
@@ -110,7 +115,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
             onClick={() => onSelectItem(item)}
           >
             <div className='flex items-center justify-between gap-8px'>
-              <div className='min-w-0 flex items-baseline gap-10px'>
+              <div className='kel-slash-menu__text min-w-0 flex items-baseline gap-10px'>
                 <div
                   className={classNames(
                     'text-14px whitespace-nowrap',
@@ -119,7 +124,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
                 >
                   {renderLabel(item)}
                 </div>
-                {item.description && <div className='text-12px text-t-secondary truncate'>{item.description}</div>}
+                {item.description && <div className='kel-slash-menu__description text-12px text-t-secondary truncate'>{item.description}</div>}
               </div>
               {item.badge && (
                 <span
@@ -135,6 +140,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
               )}
             </div>
           </button>
+          </React.Fragment>
         ))}
     </MentionMenuShell>
   );

@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop chat menus (2026-09-26)
+
+[Memory, Permission, Slash, and Attach](evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md) pass source render checks at 1440/800px. Memory measures 440×236; Permission measures 300×286. Glass, padding, radius, screen bounds, Escape, review details, intercepted defer, native picker cancellation, and slash selection passed. TypeScript, source build, and nine focused tests across two files passed. The supplied permission catalog was injected. Current command availability and backend behavior were preserved. This batch awaits the larger desktop milestone package. App and durable Data were untouched.
+
 ## Desktop pending states (2026-09-26)
 
 [Activity loading and Providers error](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md) pass isolated package checks at 1440/800px. Injected bridge states prove loading, failure, disabled retry, actual diagnostics copy, and recovery through the real isolated catalog. Reduced motion stops the 1.4-second skeleton sweep. TypeScript, source build, Windows package, 29 focused tests, and the full 58-file / 417-test suite pass. All 265 archived renderer files match source `98387fc`. No overflow or renderer errors occurred. App and durable Data were untouched.

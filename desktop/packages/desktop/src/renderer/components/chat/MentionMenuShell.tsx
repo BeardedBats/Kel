@@ -31,6 +31,7 @@ type MentionMenuShellProps = {
   maxHeight?: string;
   /** Extra classes for the scroll region (e.g. `flex flex-col gap-2px`). */
   bodyClassName?: string;
+  className?: string;
   /** Fired when the scroll region nears its bottom, for cursor-paged menus.
    *  May fire repeatedly — the caller is expected to be idempotent while a page
    *  is already in flight. */
@@ -58,6 +59,7 @@ const MentionMenuShell: React.FC<MentionMenuShellProps> = ({
   hint,
   maxHeight = DEFAULT_MAX_HEIGHT,
   bodyClassName,
+  className,
   onReachEnd,
   children,
 }) => {
@@ -94,7 +96,7 @@ const MentionMenuShell: React.FC<MentionMenuShellProps> = ({
 
   return (
     <div
-      className='rounded-14px border border-solid shadow-[0_8px_24px_rgba(0,0,0,0.12)] overflow-hidden'
+      className={classNames('rounded-14px border border-solid shadow-[0_8px_24px_rgba(0,0,0,0.12)] overflow-hidden', className)}
       style={{
         borderColor: 'var(--color-border-2)',
         background: 'color-mix(in srgb, var(--color-bg-1) 78%, transparent)',

@@ -151,7 +151,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
         )}
         <UploadProgressBar source='sendbox' />
         {actionRow}
-        {slashCommandMenu && <div className='absolute start-0 end-0 top-[calc(100%+4px)] z-70'>{slashCommandMenu}</div>}
+        {slashCommandMenu && <div className='kel-guid-command-anchor absolute start-0 end-0 top-[calc(100%+4px)] z-70'>{slashCommandMenu}</div>}
       </div>
       <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote
         workspaceDir={workspaceDir}
