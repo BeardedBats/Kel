@@ -1,5 +1,10 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+## Desktop Ramble and complete frame inspection (2026-09-26)
+
+[Desktop Ramble](evidence/figma-full-audit/DESKTOP_RAMBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its transcript, connected-key replacement input, Merge list, and Vetting modal. Real isolated merge and preview rechecks passed; new recordings were cleaned up and the saved vetting transcript remained unchanged. TypeScript/source build, 35 runtime transcription tests, four transcription-policy tests, four Ramble DOM tests, and the final 60-file/428-test desktop suite passed. [Desktop Figma context inspection](evidence/figma-full-audit/DESKTOP_CURRENT_AUDIT_COVERAGE.md) covers 75/75 current frames; this is not accepted parity. Canonical App stays 8c67121, Data is untouched, and mobile stays paused.
+
+
 ## Desktop shared dialogs (2026-09-26)
 
 [Desktop Update available and task delete confirmation](evidence/figma-full-audit/DESKTOP_SHARED_DIALOGS_SOURCE.md) pass source checks at 1440/800px. Update uses actual versions/release notes and existing download authority. Delete now uses the Figma modal; Keep/Escape and intercepted deletion handoff passed. TypeScript, source build, and three update-policy tests passed. Stopped-engine inner surface styling was corrected and rechecked. These changes await the next larger package. Canonical App and Data remain untouched. Current desktop context coverage is 66 READ / 9 PENDING; READ does not mean complete parity.

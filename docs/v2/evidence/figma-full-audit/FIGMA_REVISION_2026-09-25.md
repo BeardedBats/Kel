@@ -41,15 +41,15 @@
 | `189:3098` | Kel / Providers | `/providers` | Real catalog and three truthful readiness rows package-checked; live model response remains open. [Scoped evidence](DESKTOP_PROVIDERS_CURRENT_REVISION.md). | READ |
 | `189:3564` | Kel / Diagnostics | `/diagnostics` | Data-driven cards package-checked; two maintenance actions remain disabled. [Scoped evidence](DESKTOP_DIAGNOSTICS_CURRENT_REVISION.md). | READ |
 | `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
-| `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
-| `194:1366` | Kel / Ramble | `/transcription` | Retained node; inner revision not measured. | PENDING |
+| `189:4492` | Kel / Set up Kel | `/onboarding` | [Context inspected](DESKTOP_CURRENT_AUDIT_COVERAGE.md); implementation comparison remains open. | READ |
+| `194:1366` | Kel / Ramble | `/transcription` | [Ramble source evidence](DESKTOP_RAMBLE_CURRENT_REVISION.md); package pending. | READ |
 | `271:247` | Kel / Knowledge — Suggestions & map | `/projects/knowledge` | [Source implementation and real engine actions at 1440/800px](DESKTOP_KNOWLEDGE_CURRENT_REVISION.md); milestone package pending. | READ |
 | `284:8148` | Kel / Recipes | `/recipes` | Current list implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `284:8489` | Kel / Recipes — Run | `/recipes` | Real input form implemented and compared in isolated package; no submission. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `284:8847` | Kel / Recipes — Preview | `/recipes` | Engine steps and history surface implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
-| `272:7932` | Kel / Sign in (remote) | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `272:7932` | Kel / Sign in (remote) | `shared shell / overlay` | [Context inspected](DESKTOP_CURRENT_AUDIT_COVERAGE.md); implementation comparison remains open. | READ |
 | `272:739` | Kel / Scheduled task — Detail | `/scheduled` | Details and History implemented and measured at 1440 and 800px. [Scoped evidence](DESKTOP_SCHEDULED_TASK_DETAIL_CURRENT_REVISION.md). | READ |
-| `272:1087` | Kel / Kibble | `/kibble` | New or replaced node; prior pair absent. | PENDING |
+| `272:1087` | Kel / Kibble | `/kibble` | [Context inspected](DESKTOP_CURRENT_AUDIT_COVERAGE.md); implementation comparison remains open. | READ |
 | `272:8149` | Kel / Startup — Starting up | `shared shell / overlay` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
 | `272:8364` | Kel / Startup — Engine not running | `shared shell / overlay` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
 | `269:5` | Kel / Connections | `/connections` | Populated Services rows measured in an isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
@@ -71,7 +71,7 @@
 | `314:3912` | Kel / Settings — System | `/settings/system` | Data and backup and General package-checked at 1440/800; real preference values retained. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
 | `314:4383` | Kel / Settings — System — Restore | `/settings/system` | Real isolated backup inspection opened the compact confirmation; canceled without restore. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
 | `314:4871` | Kel / Settings — About | `/settings/about` | Header update action and four rows package-checked at 1440/800; notices opened. [Scoped evidence](DESKTOP_SYSTEM_ABOUT_CURRENT_REVISION.md). | READ |
-| `314:5271` | Kel / Settings — Desktop Pet | `/settings/pet` | New or replaced node; prior pair absent. | PENDING |
+| `314:5271` | Kel / Settings — Desktop Pet | `/settings/pet` | [Context inspected](DESKTOP_CURRENT_AUDIT_COVERAGE.md); implementation comparison remains open. | READ |
 | `314:18314` | Kel / Settings — WebUI | `/settings/webui` | Real isolated running and remote-enabled states package-checked at 1440/800. [Scoped evidence](DESKTOP_WEBUI_CURRENT_REVISION.md). | READ |
 | `314:18753` | Kel / Settings — WebUI — Change password | `/settings/webui` | Mismatch error and compact dialog package-checked; no password changed. [Scoped evidence](DESKTOP_WEBUI_CURRENT_REVISION.md). | READ |
 | `314:19219` | Kel / Settings — Archived | `/settings/archived` | Synthetic three-chat project grouping package-checked at 1440/800. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
@@ -90,10 +90,10 @@
 | `273:9512` | Kel / Overlay — Project picker | `shared shell / overlay` | 320px search menu, select/clear, Escape, and injected browse result checked at 1440/800px. [Evidence](DESKTOP_PICKERS_CURRENT_REVISION.md). | READ |
 | `273:9737` | Kel / Overlay — Slash menu | `shared shell / overlay` | [340px source render; actual commands](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Labels now match; milestone package pending. | READ |
 | `273:9951` | Kel / Overlay — Attach menu | `shared shell / overlay` | [220px source render; both file paths](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Actual catalog controls retained; milestone package pending. | READ |
-| `273:10383` | Kel / Overlay — Ramble API key | `/transcription` | New or replaced node; prior pair absent. | PENDING |
+| `273:10383` | Kel / Overlay — Ramble API key | `/transcription` | [Ramble source evidence](DESKTOP_RAMBLE_CURRENT_REVISION.md); package pending. | READ |
 | `273:10168` | Kel / Overlay — Update available | `shared shell / overlay` | [Shared dialog source checks](DESKTOP_SHARED_DIALOGS_SOURCE.md); milestone package pending. | READ |
-| `273:10599` | Kel / Overlay — Ramble merge | `/transcription` | New or replaced node; prior pair absent. | PENDING |
-| `273:10837` | Kel / Overlay — Ramble vetting answers | `/transcription` | New or replaced node; prior pair absent. | PENDING |
+| `273:10599` | Kel / Overlay — Ramble merge | `/transcription` | [Ramble source evidence](DESKTOP_RAMBLE_CURRENT_REVISION.md); package pending. | READ |
+| `273:10837` | Kel / Overlay — Ramble vetting answers | `/transcription` | [Ramble source evidence](DESKTOP_RAMBLE_CURRENT_REVISION.md); package pending. | READ |
 | `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
 | `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | [Shared dialog source checks](DESKTOP_SHARED_DIALOGS_SOURCE.md); deletion handoff intercepted. | READ |
 | `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
@@ -105,7 +105,7 @@
 | `273:13090` | Kel / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
 | `273:13249` | Kel / Chat — Workspace panel | `/chat` project panel | Real SCM/search, folder actions, 28px rows and narrow composer checked at 1440/800px. [Evidence](DESKTOP_WORKSPACE_CURRENT_REVISION.md). | READ |
 | `273:13459` | Kel / Chat — File preview | `/chat` | 560px pane, real file tabs, read-only/split/edit/save/restore/attach checked at 1440/800px. [Evidence](DESKTOP_WORKSPACE_CURRENT_REVISION.md). | READ |
-| `273:13646` | Kel / State — Setup still open + toast | `/onboarding` | New or replaced node; prior pair absent. | PENDING |
+| `273:13646` | Kel / State — Setup still open + toast | `/onboarding` | [Context inspected](DESKTOP_CURRENT_AUDIT_COVERAGE.md); implementation comparison remains open. | READ |
 
 ## Mobile FINAL frames
 

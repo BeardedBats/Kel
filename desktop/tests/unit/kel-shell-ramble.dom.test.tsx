@@ -5,9 +5,12 @@ import { afterEach, expect, it, vi } from 'vitest';
 import Ramble from '@renderer/pages/kel/transcription';
 import { Message } from '@arco-design/web-react';
 
+// Ramble's shared modal reads theme context; persisted theme IO belongs to its own tests.
+vi.mock('@renderer/hooks/context/ThemeContext', () => ({ useThemeContext: () => ({ theme: 'dark' }) }));
+
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-function libraryTransport(transcripts: unknown[] = []) {
+function libraryTransport(transcripts: unknown[] = [], hasKey = false) {
   delete (window as unknown as { kelAPI?: unknown }).kelAPI;
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const folders: Array<{ id: string; name: string; created: number }> = [];
@@ -16,7 +19,7 @@ function libraryTransport(transcripts: unknown[] = []) {
     const body = JSON.parse(init?.body || '{}');
     requests.push({ url: String(url), body });
     let result: unknown = { folders: [...folders], transcripts };
-    if (body.action === 'status') result = { mode: 'practice', label: 'Muse', has_key: false };
+    if (body.action === 'status') result = { mode: 'practice', label: 'Muse', has_key: hasKey };
     if (body.action === 'folder_create') {
       const folder = { id: `folder-${folders.length}`, name: body.name, created: 1 };
       folders.push(folder);
@@ -85,4 +88,21 @@ it('Escape and blank names keep New Folder; failed renames preserve the draft', 
   await waitFor(() => expect(notify).toHaveBeenCalled());
   expect((screen.getByTestId('folder-rename') as HTMLInputElement).value).toBe('Keep draft');
   expect(transport.folders[0].name).toBe('New Folder');
+});
+
+
+it('lets a connected desktop key be replaced without saving a canceled draft', async () => {
+  const { requests } = libraryTransport([], true);
+  render(<MemoryRouter><Ramble /></MemoryRouter>);
+  await waitFor(() => expect(requests.some(r => r.body.action === 'status')).toBe(true));
+  fireEvent.click(screen.getByTestId('transcription-settings'));
+  const input = await screen.findByTestId('key-input');
+  fireEvent.change(input, { target: { value: 'synthetic-unsaved-key' } });
+  expect((screen.getByTestId('key-save') as HTMLButtonElement).disabled).toBe(false);
+  expect(screen.getByTestId('key-clear')).not.toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  fireEvent.click(screen.getByTestId('transcription-settings'));
+  expect((await screen.findByTestId('key-input') as HTMLInputElement).value).toBe('');
+  expect(requests.some(r => r.body.action === 'set_key')).toBe(false);
 });
