@@ -1,5 +1,10 @@
 # KEL V2.0 — FEATURE LEDGER
 
+## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
+
+[Workspace/Light source checks](evidence/figma-full-audit/DESKTOP_WORKSPACE_LIGHT_SOURCE.md) repair the legacy header/native-control overlap and narrow collapsed-panel width. Real titlebar collapse/reopen passed Dark/Light at 1440/800px. Light file tree, SCM tabs, heading menu, preview/code/status/action menu and read-only/split controls pass; 74 labels measured at least 5.39:1. TypeScript/build and 11 focused tests passed. Prior isolated panel preferences and Dark restored; no file mutation. Package by the next larger milestone. App/Data untouched; mobile paused.
+
+
 Latest desktop milestone (2026-09-26): [Kibble/Setup/Pet/Skills/Light package](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passed six Electron probes plus bundled sign-in presentation at both widths. Scope limits remain. App/Data stay unchanged; V2-16/18/19 remain partial; mobile stays paused.
 
 Desktop continuation (2026-09-26): current Kibble, Setup, Pet off/settings, and remote sign-in now have scoped source evidence. Runtime/Ramble has larger milestone package proof at `0b4a583`. Desktop inspection is 75/75 frames; accepted parity remains partial. V2-16/18/19 stay PARTIAL. Canonical App remains `8c67121`; mobile is paused. See current MARATHON_STATE for exact remaining items.

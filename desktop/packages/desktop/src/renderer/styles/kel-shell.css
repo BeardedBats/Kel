@@ -51,6 +51,10 @@
 
 /* Desktop Workspace panel 273:13249. A neutral separator is structural, never an accent rail. */
 @media (min-width: 768px) {
+  /* Legacy folder chats retain their existing tree and controls below the native titlebar. */
+  .kel-v2-shell .chat-layout-right-sider { box-sizing: border-box; padding-top: 48px; }
+  .kel-v2-shell .chat-layout-right-sider .workspace-panel-header { border-bottom: 0; }
+  .kel-legacy-workspace-title { color: var(--kel-text-1); font: 600 16px/20px var(--kel-shell-heading); }
   html body .kel-v2-shell [data-project-panel-host] { box-sizing: border-box; background: linear-gradient(rgba(47,107,224,.05),rgba(47,107,224,.05)), rgba(6,18,46,.4) !important; border-color: rgba(191,216,255,.12) !important; container-type: inline-size; container-name: kel-workspace; }
   .kel-desktop-workspace { color: #c4d4e8; }
   .kel-workspace-head { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 48px 16px 12px 20px; }
@@ -2213,7 +2217,7 @@ html[data-theme='dark'] body:has(.kel-v2-shell) .kel-tools-image-popup .arco-sel
 /* Keep desktop Tools controls readable between the phone and FINAL widths. */
 @media (min-width: 768px) and (max-width: 980px) {
   /* Keep both desktop rails while giving the page room for its labels and actions. */
-  .kel-v2-shell .layout-sider {
+  .kel-v2-shell .layout-sider:not(.chat-layout-right-sider) {
     width: 180px !important; min-width: 180px !important; flex-basis: 180px !important;
   }
   .kel-v2-shell .kel-in-chat-frame__card { grid-template-columns: 150px minmax(0,1fr); }
@@ -3731,4 +3735,18 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-stopped-engine-actions .kel-btn--primary { background: var(--kel-accent); color: var(--kel-accent-ink); border-color: var(--kel-accent); }
   html[data-theme='light'] body :is(.kel-update-available-actions, .kel-diagnostics-export-actions) .kel-btn--primary { background: var(--kel-ok-fg); color: var(--kel-text-inverse); border-color: var(--kel-ok-fg); }
   html[data-theme='light'] body .kel-task-delete-actions .kel-btn--primary { background: var(--kel-failed-fg); color: var(--kel-text-inverse); }
+}
+
+/* Desktop Light Workspace keeps the current Figma geometry and semantic state colors. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .kel-v2-shell [data-project-panel-host] { background: var(--kel-surface-1) !important; border-color: var(--kel-border-strong) !important; }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-desktop-workspace, .kel-workspace-head > h2) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-tabs > button, .kel-desktop-workspace .workspace-tree .arco-tree-node, .kel-workspace-open > .kel-workspace-open__label) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-tabs > button[aria-selected='true'], .kel-workspace-node-label--changed, .kel-desktop-workspace .workspace-tree .arco-tree-node-selected .arco-tree-node-title) { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body .kel-v2-shell .kel-workspace-tabs > button[aria-selected='true'] { background: var(--kel-wait-bg); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-head > button:hover, .kel-workspace-head > button[aria-pressed='true'], .kel-desktop-workspace .workspace-tree .arco-tree-node:hover) { background: var(--kel-accent-soft); }
+  html[data-theme='light'] body .kel-v2-shell .kel-desktop-workspace .workspace-tree .arco-tree-node-selected { background: var(--kel-accent-soft) !important; }
+  html[data-theme='light'] body .kel-v2-shell .kel-workspace-open__terminal { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-v2-shell .kel-workspace-open__explorer { background: var(--kel-accent); color: var(--kel-accent-ink); border-color: var(--kel-accent); box-shadow: var(--kel-shadow-card); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-head img, .kel-workspace-node-icon, .kel-workspace-chevron) { filter: brightness(0) saturate(100%) opacity(.68); }
 }

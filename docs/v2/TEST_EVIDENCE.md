@@ -1,5 +1,10 @@
 ## Desktop reply actions checkpoint (2026-09-26)
 
+## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
+
+[Workspace/Light source checks](evidence/figma-full-audit/DESKTOP_WORKSPACE_LIGHT_SOURCE.md) repair the legacy header/native-control overlap and narrow collapsed-panel width. Real titlebar collapse/reopen passed Dark/Light at 1440/800px. Light file tree, SCM tabs, heading menu, preview/code/status/action menu and read-only/split controls pass; 74 labels measured at least 5.39:1. TypeScript/build and 11 focused tests passed. Prior isolated panel preferences and Dark restored; no file mutation. Package by the next larger milestone. App/Data untouched; mobile paused.
+
+
 ## Desktop Setup retention checkpoint (2026-09-26)
 
 [Setup retention](evidence/figma-full-audit/DESKTOP_SETUP_RETENTION_SOURCE.md) passes real isolated folder-draft write/reload, canceled picker, Work setup-return banner and Chat gate at 1440/800px. Prior client preferences/history restored; zero overflow/errors. TypeScript/build, seven focused tests and full 63-file/443-test regression passed. Native picker intercepted; no provider/job/authority change. Package proof waits for the next larger milestone. Autonomy selection still awaits Nick. App/Data untouched; mobile paused.
