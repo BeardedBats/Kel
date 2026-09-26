@@ -1,3 +1,7 @@
+## Desktop Chat bottom inset checkpoint (2026-09-26)
+
+[Chat bottom inset](evidence/figma-full-audit/DESKTOP_CHAT_BOTTOM_INSET_SOURCE.md) passes exactly 24px in Dark/Light at 1440/800px. Short threads have no scrollbar; hover/focus/Copy remain accessible. Three-turn wheel access and mixed tool/plan/reply controls pass. Fixture messages/reaction restored; zero overflow/errors. TypeScript/build, six focused tests and combined full 63-file/443-test regression pass. Full Chat/sidebar/footer and task icons/glass/catalog remain open. Package at the next larger milestone; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop task field rhythm checkpoint (2026-09-26)
 
 [Task field rhythm](evidence/figma-full-audit/DESKTOP_TASK_FIELDS_SOURCE.md) now measures 600×614px at y70 in Dark/Light, 1440/800px. Label/field/prompt/gap metrics, unsaved Cancel/reopen, Dark Weekly and Light Advanced/Manual/Custom pass without overflow/errors. Light minimum sampled contrast 5.39:1. TypeScript/build and 12 focused tests pass. Two owned synthetic configuration records were removed after an enabled catalog probe failed; model choice is not accepted. Task icons/glass/disabled variants and live catalog remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
