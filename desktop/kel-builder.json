@@ -33,7 +33,7 @@
     "buildResources": "resources"
   },
   "electronDist": "node_modules/electron/dist",
-  "electronVersion": "44.3.0",
+  "electronVersion": "37.10.3",
   "win": {
     "target": [
       "nsis"
