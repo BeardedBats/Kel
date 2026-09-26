@@ -3755,6 +3755,34 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-head img, .kel-workspace-node-icon, .kel-workspace-chevron) { filter: brightness(0) saturate(100%) opacity(.68); }
 }
 
+/* Desktop task fields retain their native state and use the Light palette. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .arco-modal.kel-shell-task-modal {
+    position: fixed; left: 50%; top: 70px !important; margin: 0 !important; translate: -50% 0;
+    box-sizing: border-box; width: 600px !important; max-width: calc(100vw - 32px);
+    border: 1px solid var(--kel-border-strong); border-radius: 16px; background: var(--kel-surface-1) !important;
+    color: var(--kel-text-1); backdrop-filter: blur(24px); box-shadow: var(--kel-shadow-sheet);
+  }
+  html[data-theme='light'] body .kel-shell-task-modal :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content) { background: transparent !important; }
+  html[data-theme='light'] body .kel-shell-task-modal :is(.aionui-modal-std-header h3, .kel-shell-task-execution-label) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-shell-task-modal .arco-form-item-label,
+  html[data-theme='light'] body .kel-shell-task-modal .arco-form-item-label > label,
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-time::before { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-shell-task-execution-description { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-execution-option { background: var(--kel-surface-2); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-execution-option.arco-radio-checked { background: var(--kel-accent-soft); border-color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-shell-task-modal :is(.arco-input-wrapper, .arco-select-view, .arco-textarea, .arco-picker) { background: var(--kel-surface-2); border-color: var(--kel-border-strong); border-radius: 8px !important; color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-name .arco-input { border-radius: 8px; background: var(--kel-surface-2); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-shell-task-modal :is(.arco-input, .arco-select-view-value, .arco-picker-input input) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio { color: var(--kel-text-2); border-bottom-color: transparent; }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-checked { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-queue .arco-switch-checked { background: var(--kel-accent) !important; }
+  html[data-theme='light'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn { border: 0; background: transparent; color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn-primary { background: var(--kel-ok-fg); color: var(--kel-text-inverse); }
+  html[data-theme='light'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn-primary:not(:disabled):is(:hover, :active) { background: var(--kel-ok-fg); color: var(--kel-text-inverse); }
+  html[data-theme='light'] body:has(.kel-shell-task-modal) .arco-modal-mask { background: var(--kel-scrim); }
+}
+
 /* Desktop Tools dialogs retain Figma geometry and use semantic Light surfaces. */
 @media (min-width: 768px) {
   html[data-theme='light'] body .arco-modal:is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal) {
