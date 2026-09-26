@@ -6,6 +6,8 @@
  * behind the engine's `/api/transcription` action family, and transcripts can be sent to chat or
  * routed into a live Vetting Session through the existing ingestion service.
  */
+import AionModal from '@renderer/components/base/AionModal';
+import { KelButton } from '@renderer/components/kel/KelPrimitives';
 import { kelRequest as request } from '@renderer/components/kel/kelApi';
 import rambleBrand from '@renderer/assets/figma/kel-mark.png';
 import transcriptFileIcon from '@renderer/assets/figma/refresh/transcript-file.svg';
@@ -585,23 +587,24 @@ const saveName = useCallback(async () => {
       await transcription({ action: 'set_key', key });
       setKeyDraft('');
       setSettingsOpen(false);
-      Message.success('Muse is connected. New recordings and uploads use it.');
+      if (layout?.isMobile) Message.success('Muse is connected. New recordings and uploads use it.');
+      else { const readiness = await transcription<ProviderStatus>({ action: 'status' }); setStatus(readiness); Message.success(readiness.live_capable ? 'Key saved. Transcription is ready to test.' : `Key saved. ${readiness.detail}`); }
       await refresh();
     } catch (error) {
       Message.error(failMessage(error));
     }
-  }, [keyDraft, refresh]);
+  }, [keyDraft, refresh, layout?.isMobile]);
 
   const clearKey = useCallback(async () => {
     try {
       await transcription({ action: 'clear_key' });
       setSettingsOpen(false);
-      Message.success('Back to practice mode.');
+      Message.success(layout?.isMobile ? 'Back to practice mode.' : 'Kel’s saved key was removed.');
       await refresh();
     } catch (error) {
       Message.error(failMessage(error));
     }
-  }, [refresh]);
+  }, [refresh, layout?.isMobile]);
 
   const loadPreview = useCallback(async (text: string, mode: 'answers' | 'freethink') => {
     try {
@@ -805,7 +808,7 @@ const statusCopy =
             })}
           </div>
           <div className={styles.divider} />
-          <div className={`${styles.sectionTitle} kel-shell-ramble-recordings-label`}><span className='kel-shell-ramble-desktop-label'>Recent</span><span className='kel-shell-ramble-mobile-label'>Recordings</span></div>
+          <div className={`${styles.sectionTitle} kel-shell-ramble-recordings-label`}><span className='kel-shell-ramble-desktop-label'>Recordings</span><span className='kel-shell-ramble-mobile-label'>Recordings</span></div>
           <div className={`${styles.scrollArea} kel-shell-ramble-recordings`} data-testid='recent-list'>
             {recent.length === 0 && (
               <div className={styles.rowMeta} style={{ padding: '2px 8px' }}>
@@ -947,7 +950,10 @@ const statusCopy =
                   {/* Saved / recording state reads beside the title, as in the standalone app. */}
                   <span className={styles.grow} />
                   <span className={styles.documentStatus} data-testid='transcript-status'>
-                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy}<span className='kel-shell-ramble-mobile-duration'>{selected.duration_ms ? ` · ${selected.duration_ms >= 60000 ? Math.round(selected.duration_ms / 60000) + ' min' : formatDuration(selected.duration_ms)}` : ''}</span> <img src={transcriptSettingsIcon} alt='' width='14' height='14' />
+                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy}<span className='kel-shell-ramble-mobile-duration'>{selected.duration_ms ? ` · ${selected.duration_ms >= 60000 ? Math.round(selected.duration_ms / 60000) + ' min' : formatDuration(selected.duration_ms)}` : ''}</span> {layout?.isMobile || embedded ? <img src={transcriptSettingsIcon} alt='' width='14' height='14' /> : <details className='kel-ramble-desktop-document-menu'>
+                      <summary aria-label='Transcript actions'><img src={transcriptSettingsIcon} alt='' width='14' height='14' /></summary>
+                      <div><button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button><button type='button' onClick={() => void openReview('freethink')}>Vetting answers</button></div>
+                    </details>}
                   </span>
                 </div>
                 <p className={styles.transcriptText} data-testid='transcript-text'>
@@ -977,6 +983,7 @@ const statusCopy =
                   >
                     Combine
                   </Button>
+                  {!embedded && !layout?.isMobile && <Button className='kel-ramble-footer-record-more' icon={<img src={transcriptPlusIcon} alt='' width='16' height='16' />} disabled={recState !== 'idle' || selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)} data-testid='footer-record-more'>Record More</Button>}
                   {!embedded && <details className='kel-shell-ramble-more'>
                     <summary aria-label='More transcript actions'><img src={rambleMobileMoreIcon} alt='' /></summary>
                     <div>
@@ -1000,6 +1007,20 @@ const statusCopy =
 
       {/* The user's explicit decision: the standalone app's key sheet, in Kel's words — a plain
           "Meta API key" modal with no helper paragraph under the button. */}
+      {!layout?.isMobile ? <AionModal visible={settingsOpen} className='kel-ramble-key-modal' variant='standard'
+        header={{ title: 'Meta API key', subtitle: 'Ramble uses it to transcribe. It stays on this computer.', showClose: false }}
+        footer={null} closable={false} onCancel={() => { setSettingsOpen(false); setKeyDraft(''); }} focusLock autoFocus style={{ width: 480 }}>
+        <div className='kel-ramble-key-body'>
+          <Input.Password id='meta-api-key' value={keyDraft} onChange={setKeyDraft} placeholder='Paste your Meta Model API key' aria-label='Meta API key' data-testid='key-input' />
+          {status?.has_key && <p>A key is available. A new one replaces Kel’s saved key.</p>}
+          <div className='kel-ramble-dialog-actions'>
+            {status?.has_key && <button type='button' className='kel-btn kel-ramble-key-disconnect' onClick={() => void clearKey()} data-testid='key-clear'>Disconnect the key</button>}
+            <span className='kel-grow' />
+            <KelButton variant='quiet' onClick={() => { setSettingsOpen(false); setKeyDraft(''); }}>Cancel</KelButton>
+            <button type='button' className='kel-btn kel-btn--primary' disabled={!keyDraft.trim()} onClick={() => void saveKey()} data-testid='key-save'>Save and Verify</button>
+          </div>
+        </div>
+      </AionModal> : <>
       <Modal
         title='Meta API key'
         visible={settingsOpen}
@@ -1039,6 +1060,7 @@ const statusCopy =
           </div>
         )}
       </Modal>
+      </>}
       {layout?.isMobile && review.open && createPortal(
         <div className='kel-ramble-vetting-layer'>
           <button type='button' className='kel-ramble-vetting-scrim' aria-label='Close vetting answers' onClick={() => setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false })} />
@@ -1080,6 +1102,23 @@ const statusCopy =
         </div>, document.body
       )}
 
+      {!layout?.isMobile ? <AionModal visible={combineOpen} className='kel-ramble-merge-modal' variant='standard'
+        header={{ title: 'Merge a transcript into this one', showClose: false }} footer={null} closable={false}
+        onCancel={() => setCombineOpen(false)} focusLock autoFocus style={{ width: 520 }}>
+        <div className='kel-ramble-merge-body'>
+          <p>Choose a transcript</p>
+          <div className='kel-ramble-merge-list' role='radiogroup' aria-label='Choose a transcript'>
+            {library.transcripts.filter(row => row.id !== selected?.id).map(row => <button key={row.id} type='button' role='radio' aria-checked={combineSource === row.id} onKeyDown={(event) => { const direction = ['ArrowDown', 'ArrowRight'].includes(event.key) ? 1 : ['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 0; if (!direction) return; event.preventDefault(); const rows = library.transcripts.filter(item => item.id !== selected?.id); const next = (rows.findIndex(item => item.id === row.id) + direction + rows.length) % rows.length; setCombineSource(rows[next].id); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button')[next]?.focus(); }} onClick={() => setCombineSource(row.id)}>
+              <img src={transcriptMicIcon} alt='' /><span>{row.name || 'Untitled'}</span><small>{formatWhen(row.created)}{row.duration_ms ? ` · ${formatDuration(row.duration_ms)}` : ''}</small><span className='kel-ramble-merge-check' aria-hidden='true'>{combineSource === row.id ? '✓' : ''}</span>
+            </button>)}
+          </div>
+          <p>The chosen transcript’s text and audio are added to the end of this one. It then leaves the list.</p>
+          <div className='kel-ramble-dialog-actions'>
+            <KelButton variant='quiet' onClick={() => setCombineOpen(false)}>Cancel</KelButton>
+            <button type='button' className='kel-btn kel-btn--primary' disabled={!combineSource} onClick={() => void runCombine()} data-testid='combine-confirm'>Merge</button>
+          </div>
+        </div>
+      </AionModal> : <>
       <Modal
         title='Merge another transcript into this one'
         visible={combineOpen}
@@ -1108,12 +1147,15 @@ const statusCopy =
         </div>
       </Modal>
 
-      {!layout?.isMobile && <Modal
-        title='Use this transcript as vetting answers'
+      </>}
+      {!layout?.isMobile && <AionModal
+        className='kel-ramble-vetting-modal' variant='standard'
+        header={{ title: 'Use this transcript as vetting answers', subtitle: review.busy ? 'Checking the transcript…' : review.payload ? 'I pulled these answers from your transcript. Review them before applying.' : 'Open a design vetting session in chat to review this transcript.', showClose: false }}
+        closable={false} focusLock autoFocus
         visible={review.open}
         footer={null}
         onCancel={() => setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false })}
-        style={{ maxWidth: 640 }}
+        style={{ width: 620 }}
       >
         {review.busy && <p>Checking the transcript…</p>}
         {!review.busy && review.payload && (
@@ -1127,7 +1169,7 @@ const statusCopy =
               />
             ) : (
               <>
-                {review.payload.preview.length === 0 && (
+                {review.payload.preview.length === 0 && !(review.mode === 'freethink' && review.payload.buckets && Object.values(review.payload.buckets).some(lines => lines.length > 0)) && (
                   <p>
                     Kel did not find answers in this transcript yet. Try naming questions (“12: A”) or use Think
                     out loud.
@@ -1149,7 +1191,7 @@ const statusCopy =
                             </>
                           ) : null}
                           {line.confidence !== 'EXPLICIT' ? (
-                            <span className={styles.rowMeta}> (check this one)</span>
+                            <span className='kel-ramble-vetting-flag'>Check this one</span>
                           ) : null}
                         </li>
                       ))}
@@ -1172,8 +1214,8 @@ const statusCopy =
                     {(['requirements', 'concerns', 'unresolved'] as const).map(
                       (key) =>
                         review.payload!.buckets![key].length > 0 && (
-                          <div key={key} style={{ marginTop: 8 }}>
-                            <strong style={{ fontSize: 13 }}>
+                          <div key={key} className='kel-ramble-desktop-vetting-group'>
+                            <strong>
                               {key === 'requirements'
                                 ? 'Requirements heard'
                                 : key === 'concerns'
@@ -1182,7 +1224,7 @@ const statusCopy =
                             </strong>
                             <ul style={{ paddingLeft: 18 }}>
                               {review.payload!.buckets![key].map((line) => (
-                                <li key={line}>{line}</li>
+                                <li key={line}><span>{line}</span><button type='button' aria-label={`Edit transcript for: ${line}`} onClick={() => setReview(current => ({ ...current, editing: true }))}><img src={rambleMobileEditIcon} alt='' /></button></li>
                               ))}
                             </ul>
                           </div>
@@ -1192,35 +1234,15 @@ const statusCopy =
                 )}
               </>
             )}
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12, flexWrap: 'wrap' }}>
-              <Button onClick={() => setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false })}>
-                Close
-              </Button>
-              <Button onClick={() => setReview((current) => ({ ...current, editing: true }))} data-testid='review-edit'>
-                Edit
-              </Button>
-              {review.editing && (
-                <Button onClick={() => void loadPreview(review.text, review.mode)} data-testid='review-recheck'>
-                  Check again
-                </Button>
-              )}
-              <Button
-                onClick={() => void runReview({ acceptAll: true, thenProcess: false })}
-                data-testid='review-accept'
-              >
-                Accept all
-              </Button>
-              <Button
-                type='primary'
-                onClick={() => void runReview({ acceptAll: false, thenProcess: true })}
-                data-testid='review-process'
-              >
-                Process batch
-              </Button>
+            <div className='kel-ramble-desktop-vetting-actions'>
+              {!review.editing && !review.payload.buckets && <Button onClick={() => setReview(current => ({ ...current, editing: true }))} data-testid='review-edit'>Edit transcript</Button>}
+              <Button onClick={() => void loadPreview(review.text, review.mode)} data-testid='review-recheck'>Check again</Button>
+              <Button type='primary' onClick={() => void runReview({ acceptAll: false, thenProcess: true })} data-testid='review-process'>Process batch</Button>
+              <Button onClick={() => void runReview({ acceptAll: true, thenProcess: false })} data-testid='review-accept'>Accept all</Button>
             </div>
           </>
         )}
-      </Modal>}
+      </AionModal>}
     </div>
   );
 };
