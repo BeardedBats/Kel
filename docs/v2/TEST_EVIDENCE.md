@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop command palette and chat overlays (2026-09-25)
+
+[Command palette, Chat row menu, and Rename chat](evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md) received one coherent implementation batch. The isolated package measured 640×429, 232×227, and 440×168 at 1440/800px. Escape and Capture a fix passed; selection canceled without saving. An intercepted download probe captured complete synthetic chat Markdown. Rename was canceled. TypeScript, 37 focused tests, **54 files / 402 tests**, Electron Vite, and Windows packaging passed. No document overflow or renderer errors appeared. A final palette-input focus-ring CSS repair passed source-render checks and awaits the next batch's package. Canonical App and Data were untouched.
+
 ## Desktop new task and approval details overlays (2026-09-25)
 
 [Current Figma new task `273:1586` and approval details `273:2125`](evidence/figma-full-audit/DESKTOP_OVERLAYS_CURRENT_REVISION.md) were implemented as one desktop batch. A disposable Windows package measured the filled unsaved task dialog at x420/y70, 600×614 and the pending approval dialog at x440/y109.5, 560×401 at 1440px. Both also fit 800px with zero document overflow and renderer errors. The task's real Kel assistant and Weekdays state were selected; the skip switch was toggled. No task or approval was submitted. TypeScript, the focused approval tests, **54 files / 402 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.

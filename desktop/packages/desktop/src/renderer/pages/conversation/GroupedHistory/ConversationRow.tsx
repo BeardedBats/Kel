@@ -25,6 +25,12 @@ import {
   Timer,
 } from '@icon-park/react';
 import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
+import pinMenuIcon from '@renderer/assets/figma/chat-menu/pin.svg';
+import unreadMenuIcon from '@renderer/assets/figma/chat-menu/unread.svg';
+import renameMenuIcon from '@renderer/assets/figma/chat-menu/rename.svg';
+import scheduleMenuIcon from '@renderer/assets/figma/chat-menu/schedule.svg';
+import exportMenuIcon from '@renderer/assets/figma/chat-menu/export.svg';
+import archiveMenuIcon from '@renderer/assets/figma/chat-menu/archive.svg';
 import classNames from 'classnames';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -291,6 +297,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
             <Dropdown
               droplist={
                 <Menu
+                  className='kel-shell-chat-menu'
                   onClickMenuItem={(key) => {
                     if (key === 'pin') {
                       onTogglePin(conversation);
@@ -319,13 +326,15 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                 >
                   <Menu.Item key='pin'>
                     <div className='flex items-center gap-8px'>
-                      <Pushpin theme='outline' size='14' />
+                      <img className='kel-desktop-only kel-shell-chat-menu__icon' src={pinMenuIcon} alt='' />
+                      <Pushpin className='kel-phone-only' theme='outline' size='14' />
                       <span>{isPinned ? t('conversation.history.unpin') : t('conversation.history.pin')}</span>
                     </div>
                   </Menu.Item>
                   <Menu.Item key='toggleManualUnread'>
                     <div className='flex items-center gap-8px'>
-                      <Inbox theme='outline' size='14' />
+                      <img className='kel-desktop-only kel-shell-chat-menu__icon' src={unreadMenuIcon} alt='' />
+                      <Inbox className='kel-phone-only' theme='outline' size='14' />
                       <span>
                         {isManualUnread ? t('conversation.history.markAsRead') : t('conversation.history.markAsUnread')}
                       </span>
@@ -333,34 +342,38 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                   </Menu.Item>
                   <Menu.Item key='rename'>
                     <div className='flex items-center gap-8px'>
-                      <EditOne theme='outline' size='14' />
+                      <img className='kel-desktop-only kel-shell-chat-menu__icon' src={renameMenuIcon} alt='' />
+                      <EditOne className='kel-phone-only' theme='outline' size='14' />
                       <span>{t('conversation.history.rename')}</span>
                     </div>
                   </Menu.Item>
                   <Menu.Item key='createCronTask'>
                     <div className='flex items-center gap-8px'>
-                      <Timer theme='outline' size='14' />
+                      <img className='kel-desktop-only kel-shell-chat-menu__icon' src={scheduleMenuIcon} alt='' />
+                      <Timer className='kel-phone-only' theme='outline' size='14' />
                       <span>{t('conversation.history.createCronTask')}</span>
                     </div>
                   </Menu.Item>
                   {onExport && (
                     <Menu.Item key='export'>
                       <div className='flex items-center gap-8px'>
-                        <Export theme='outline' size='14' />
+                        <img className='kel-desktop-only kel-shell-chat-menu__icon' src={exportMenuIcon} alt='' />
+                        <Export className='kel-phone-only' theme='outline' size='14' />
                         <span>{t('conversation.history.export')}</span>
                       </div>
                     </Menu.Item>
                   )}
                   <Menu.Item key='archive'>
                     <div className='flex items-center gap-8px'>
-                      <FolderClose theme='outline' size='14' />
+                      <img className='kel-desktop-only kel-shell-chat-menu__icon' src={archiveMenuIcon} alt='' />
+                      <FolderClose className='kel-phone-only' theme='outline' size='14' />
                       <span>{t('conversation.history.archive')}</span>
                     </div>
                   </Menu.Item>
                 </Menu>
               }
               trigger='click'
-              position='br'
+              position='bl'
               popupVisible={menuVisible}
               onVisibleChange={(visible) => onMenuVisibleChange(conversation.id, visible)}
               getPopupContainer={() => document.body}
