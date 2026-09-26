@@ -53,6 +53,7 @@ export default function KelOnboardingPage() {
   const [workspace, setWorkspace] = useState(setupState?.workspace ?? '');
   const [workspaceBusy, setWorkspaceBusy] = useState(false);
   const [workspaceError, setWorkspaceError] = useState(false);
+  const [workspaceRememberError, setWorkspaceRememberError] = useState(false);
   const [providers, setProviders] = useState<
     Array<{ provider: string; label: string; status: string; auth_mode: string }>
   >([]);
@@ -62,6 +63,18 @@ export default function KelOnboardingPage() {
   const [engine, setEngine] = useState<string>('');
   const [error, setError] = useState<unknown>(null);
   const [finishError, setFinishError] = useState(false);
+
+  useEffect(() => {
+    if (isMobile) return;
+    let cancelled = false;
+    void configService.initialize().then(() => {
+      const saved = configService.get('kel.setupWorkspace_v1');
+      if (!cancelled && saved) setWorkspace(current => current || saved);
+    }).catch(() => {
+      if (!cancelled) setWorkspaceRememberError(true);
+    });
+    return () => { cancelled = true; };
+  }, [isMobile]);
 
   useEffect(() => {
     void (async () => {
@@ -112,12 +125,18 @@ export default function KelOnboardingPage() {
   const chooseWorkspace = async () => {
     setWorkspaceBusy(true);
     setWorkspaceError(false);
+    setWorkspaceRememberError(false);
     try {
       const folders = await ipcBridge.dialog.showOpen.invoke({ properties: ['openDirectory', 'createDirectory'] });
       const folder = folders?.[0];
       if (folder) {
         setWorkspace(folder);
         addRecentWorkspace(folder);
+        try {
+          await configService.set('kel.setupWorkspace_v1', folder);
+        } catch {
+          setWorkspaceRememberError(true);
+        }
         navigate('/onboarding', { replace: true, state: { ...setupState, workspace: folder, setupStep: step } });
       }
     } catch {
@@ -181,6 +200,7 @@ export default function KelOnboardingPage() {
         </KelCard>
 
         {workspaceError && <p className='kel-meta' role='alert'>The folder picker could not open. Try again.</p>}
+        {workspaceRememberError && <p className='kel-meta' role='alert'>Kel could not remember the folder. Your current selection still works. Try Change again.</p>}
 
         <KelCard title='How much Kel does on its own'>
           <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />

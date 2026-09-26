@@ -168,14 +168,14 @@ const Layout: React.FC<{
       } catch {
         completed = false;
       }
-      if (!completed && !setupRouteAllowed(location.pathname)) {
+      if (!completed && !setupRouteAllowed(location.pathname, !isMobile)) {
         navigate('/onboarding', { replace: true, state: { setupGate: true } });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, isMobile]);
   const workspaceAvailable =
     location.pathname.startsWith('/conversation/') || (TEAM_MODE_ENABLED && location.pathname.startsWith('/team/'));
   const toggleSider = useCallback(() => {
