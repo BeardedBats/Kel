@@ -3872,3 +3872,38 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-ramble-desktop-document-menu button:hover { background: var(--kel-accent-soft); }
   html[data-theme='light'] body:has(:is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal)) .arco-modal-mask { background: var(--kel-scrim); }
 }
+
+/* Desktop scheduled-task field rhythm from the current Figma modal. */
+@media (min-width: 768px) {
+  html[data-theme] body .arco-modal.kel-shell-task-modal .arco-modal-content { border: 0 !important; box-shadow: none; }
+  .kel-shell-task-modal .kel-shell-task-form { gap: 14px 12px; }
+  .kel-shell-task-modal .aionui-modal-std-header { height: auto; padding: 20px 24px 16px; align-items: flex-start; border: 0 !important; }
+  .kel-shell-task-modal .aionui-modal-std-header h3 { font: 600 18px/22px var(--kel-shell-heading); }
+  .kel-shell-task-modal .aionui-modal-std-body { padding: 0 24px; }
+  .kel-shell-task-modal .aionui-modal-std-footer { padding: 16px 24px 24px; border: 0 !important; }
+  .kel-shell-task-modal .aionui-modal-std-footer .arco-btn { height: 34px; }
+  .kel-shell-task-modal .arco-form-label-item { display: flex; padding: 0; margin-bottom: 6px; font: 500 12px/15px var(--kel-shell-heading); }
+  .kel-shell-task-modal .arco-form-label-item > label { font: 500 12px/15px var(--kel-shell-heading); color: #9fc3ff; }
+  html[data-theme='light'] body .kel-shell-task-modal .arco-form-label-item > label { color: var(--kel-accent); }
+  .kel-shell-task-modal .arco-form-item-symbol { display: none; }
+  .kel-shell-task-modal :is(.kel-shell-task-name .arco-input, .kel-shell-task-assistant .arco-select-view) { box-sizing: border-box; height: 34px; }
+  .kel-shell-task-modal :is(.arco-input, .arco-select-view-value) { font: 400 14px/20px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-execution .arco-radio-group { gap: 12px; }
+  .kel-shell-task-modal .kel-shell-task-execution-option { min-height: 58px; margin: 0 !important; padding: 10px 12px !important; border-radius: 10px; }
+  .kel-shell-task-modal .kel-shell-task-execution-option.arco-radio-checked { border-width: 2px; }
+  .kel-shell-task-modal .kel-shell-task-execution-option .arco-radio-text { gap: 3px; }
+  .kel-shell-task-modal .kel-shell-task-execution-label { font: 500 14px/17px var(--kel-shell-heading); }
+  .kel-shell-task-modal .kel-shell-task-execution-description { font: 400 12px/14px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-prompt .arco-textarea { height: 72px !important; min-height: 72px !important; padding: 10px 12px; font: 400 13px/18px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-frequency .arco-form-label-item { margin-bottom: 8px; }
+  .kel-shell-task-modal .kel-shell-task-frequency .arco-form-item-control { min-height: 28px; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options { gap: 18px; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio { height: 28px; padding: 0 4px; box-sizing: border-box; border: 0; display: inline-flex; align-items: center; }
+  .kel-shell-task-modal :is(.kel-shell-task-model > label, .kel-shell-task-time::before) { margin-bottom: 6px; line-height: 15px; }
+  .kel-shell-task-modal .kel-shell-task-queue { min-height: 0; padding: 6px 0; }
+  .kel-shell-task-modal .kel-shell-task-queue p:first-child { margin: 0; font: 500 14px/17px var(--kel-shell-heading); }
+  .kel-shell-task-modal .kel-shell-task-queue p:last-child { margin: 3px 0 0; font: 400 12px/14px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-advanced > .arco-btn { display: flex; min-height: 0; height: 17px !important; }
+  .kel-shell-task-modal .kel-shell-task-advanced > .arco-btn span { display: flex; align-items: center; font: 500 13px/17px var(--kel-shell-heading); }
+  html[data-theme='dark'] body .kel-shell-task-modal .arco-input-inner-wrapper .arco-input { min-height: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+}

@@ -23,3 +23,9 @@ Runtime/Ramble, populated custom Skills, core Light labels, Light menus/shared d
 [Chat turn rhythm](DESKTOP_CHAT_TURN_RHYTHM_SOURCE.md) now passes source short/long/mixed checks in both themes/widths. Full retained-control spacing/sidebar/footer parity and package proof for this increment remain open.
 
 [Task Model/Time row](DESKTOP_TASK_MODEL_ROW_SOURCE.md) now passes source placement in both themes/widths and Weekly without overlap. Full task type/spacing/height, enabled catalog state and package proof remain open.
+
+
+## Desktop task field rhythm checkpoint (2026-09-26)
+
+[Task field rhythm](DESKTOP_TASK_FIELDS_SOURCE.md) now measures 600×614px at y70 in Dark/Light, 1440/800px. Label/field/prompt/gap metrics, unsaved Cancel/reopen, Dark Weekly and Light Advanced/Manual/Custom pass without overflow/errors. Light minimum sampled contrast 5.39:1. TypeScript/build and 12 focused tests pass. Two owned synthetic configuration records were removed after an enabled catalog probe failed; model choice is not accepted. Task icons/glass/disabled variants and live catalog remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
+

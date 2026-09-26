@@ -1,3 +1,7 @@
+## Desktop task field rhythm checkpoint (2026-09-26)
+
+[Task field rhythm](evidence/figma-full-audit/DESKTOP_TASK_FIELDS_SOURCE.md) now measures 600Ã—614px at y70 in Dark/Light, 1440/800px. Label/field/prompt/gap metrics, unsaved Cancel/reopen, Dark Weekly and Light Advanced/Manual/Custom pass without overflow/errors. Light minimum sampled contrast 5.39:1. TypeScript/build and 12 focused tests pass. Two owned synthetic configuration records were removed after an enabled catalog probe failed; model choice is not accepted. Task icons/glass/disabled variants and live catalog remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop task Model/Time row checkpoint (2026-09-26)
 
 [Task Model/Time row](evidence/figma-full-audit/DESKTOP_TASK_MODEL_ROW_SOURCE.md) now uses the existing selector beside Time on desktop; mobile retains Advanced placement and edit guards stay unchanged. Dark/Light pass 1440/800px alignment, y70/600px bounds, zero overflow/errors and unsaved Cancel/reopen behavior. Weekly does not overlap. The isolated assistant has no model catalog; only the existing read-only Automatic fallback was verified. TypeScript/build and final 63-file/443-test regression pass. Full field type/spacing/height and enabled catalog state remain open. Package with the next larger milestone. App 8c67121/Data untouched; mobile paused.
@@ -18,11 +22,11 @@
 
 [Light Tools dialogs](evidence/figma-full-audit/DESKTOP_LIGHT_TOOLS_DIALOGS_SOURCE.md) pass JSON, CLI import, report and delete at 1440/800px with Figma geometry, 16px radius/24px blur, minimum sampled contrast 5.38:1 and zero overflow/errors. Valid input, selection/count, Back/Cancel and Keep passed; no import/report/delete/provider ran. TypeScript/build and seven focused tests passed. Package by the next larger milestone. App/Data untouched; mobile paused.
 
-# KEL V2.0 — MARATHON STATE
+# KEL V2.0 â€” MARATHON STATE
 
 ## Desktop populated Chat type checkpoint (2026-09-26)
 
-[Populated Chat type](evidence/figma-full-audit/DESKTOP_POPULATED_CHAT_TYPE_SOURCE.md) passes five list rows at 14px gaps, 13px/16px timestamps, 24px avatar slot/22×23 mark and last-turn wheel scroll at 1440/800px in Dark/Light. User alignment/390px width already matched. Native synthetic messages were journaled/restored; source legacy prefix intercepted. TypeScript/build and six focused tests passed. Full frame placement/rhythm/sidebar/footer facts remain open. Package by the next larger milestone. App/Data untouched; mobile paused.
+[Populated Chat type](evidence/figma-full-audit/DESKTOP_POPULATED_CHAT_TYPE_SOURCE.md) passes five list rows at 14px gaps, 13px/16px timestamps, 24px avatar slot/22Ã—23 mark and last-turn wheel scroll at 1440/800px in Dark/Light. User alignment/390px width already matched. Native synthetic messages were journaled/restored; source legacy prefix intercepted. TypeScript/build and six focused tests passed. Full frame placement/rhythm/sidebar/footer facts remain open. Package by the next larger milestone. App/Data untouched; mobile paused.
 
 
 ## Desktop Light Ramble dialogs checkpoint (2026-09-26)
@@ -45,7 +49,7 @@
 [Milestone package](evidence/figma-full-audit/DESKTOP_KIBBLE_LIGHT_CHAT_MILESTONE_PACKAGE.md) at `0b49b56` passed 1440/800px bundled-renderer checks for Kibble recovery, Light menus/dialogs, Chat plan/reply actions, error and reconnecting. All 266 renderer files matched; zero renderer errors/overflow. Real isolated pointer/reaction writes passed and were restored; runtime/mission states and clipboard were injected/intercepted. No worker/provider/restart/export/download/delete ran. Broader Chat/right-panel and Light Workspace/icon states remain open. The next Setup increment is not in this package. Canonical App remains `8c67121`; Data untouched. Mobile paused.
 
 
-Machine-readable-ish program state. A resume run reads `MARATHON_DIRECTIVE.md` → this file → `RESUME.md`
+Machine-readable-ish program state. A resume run reads `MARATHON_DIRECTIVE.md` â†’ this file â†’ `RESUME.md`
 and then continues the exact `current_item`. Update this file whenever a phase starts or closes.
 
 ```yaml
@@ -57,7 +61,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Desktop first: finish scheduled task per-field type/spacing/height (filled 633px Light/637px Dark versus reference 614px) and an enabled isolated model-catalog state. The missing Model/Time row now passes source checks. Then full Chat sidebar/footer/header/composer parity and retained-control bottom spacing (32px versus reference 24px); remaining Light/icons and Skills detail/history follow. Chat rhythm and Model row await the next larger milestone package. Latest package b8c84ae; App 8c67121 pending broader desktop acceptance; Data untouched. Setup Autonomy awaits Nick; Pet enable needs AUD-MINOR-008; live external acceptance needs credentials. Mobile paused.
+next_item: Desktop first: full Chat sidebar/footer/header/composer parity and retained-control bottom spacing (32px versus reference 24px). Task field rhythm/height now passes at 614px; task picker/assistant icons, glass fill/image, disabled variants and enabled runtime catalog remain open. Remaining Light/icons and Skills detail/history follow. Chat rhythm, Model row and task fields await the next larger milestone package. Latest package b8c84ae; App 8c67121; Data untouched. Setup Autonomy/Pet/live credentials need Nick; mobile paused.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.
@@ -69,7 +73,7 @@ status: partial
 # [Desktop Light labels](evidence/figma-full-audit/DESKTOP_LIGHT_LABELS_SOURCE.md) now pass eight source routes at 1440/800px with minimum measured enabled-label contrast 4.86:1, zero overflow/errors, seven theme tests, and a source build. Dark was restored in the isolated profile. Exact Light palette parity, icons/popups, and package proof remain open. App/Data remain untouched.
 # [Populated Skills](evidence/figma-full-audit/DESKTOP_SKILLS_POPULATED_SOURCE.md) pass real isolated import/list/reload and measured 1440/800px source checks. The desktop fill is repaired and long text wraps. Owned imports were removed. TypeScript/source build passed. Package proof and detail/import-history routes remain open. App/Data remain untouched.
 # [Kibble build variants](evidence/figma-full-audit/DESKTOP_KIBBLE_BUILD_VARIANTS_SOURCE.md) now have 1440/800px source checks for Running, Cancelled, and candidate review. Progress uses actual reported state/counts; details remain expandable. Intercepted Approve/Reject handoffs passed; no actual build or installation ran. TypeScript/build, seven focused tests, and the full 63-file/437-test suite passed. Worker execution, mission recovery, and package proof remain open. App/Data remain untouched.
-# [Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420×330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. App/Data remain untouched.
+# [Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420Ã—330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. App/Data remain untouched.
 # [Desktop Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md) now uses actual model state, accessible progress, and real folder selection/composer handoff. Isolated model/config writes and 1440/800px source checks passed. The warm setup-return banner passed on Knowledge; Work remains gated until setup finishes. The native picker result was intercepted. TypeScript/build, four focused tests, and 62 files / 433 desktop tests passed. Setup policy selection and broader persistence/parity remain open. App/Data remain untouched.
 # [Desktop Kibble](evidence/figma-full-audit/DESKTOP_KIBBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its panels, finding selection, direct status actions, and screenshot/quote details. Real isolated Mark fixed, Reopen, and selected prompt/Batched writes passed; fixtures were dismissed. TypeScript/source build, 35 focused tests, and the full 61-file/431-test suite passed. Running build/candidate presentation remains open. Canonical App and Data remain untouched; package proof waits for the next larger milestone.
 # [Runtime and Ramble milestone package](evidence/figma-full-audit/DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed seven packaged probes at 1440/800px, with zero renderer errors or overflow. All 265 renderer files match the archive. Real isolated restart, sanitized export, Merge, and Vetting preview passed; injected/intercepted limits are recorded. Canonical App stays `8c67121`; Data remains untouched. Desktop implementation and acceptance remain partial.
@@ -79,13 +83,13 @@ status: partial
 # [Desktop Knowledge and project recipes](evidence/figma-full-audit/DESKTOP_KNOWLEDGE_CURRENT_REVISION.md) now have 1440/800px source evidence. Proposal labels/order, row icons, card rhythm, map columns, saved-record scrolling, valid memory actions, and saved recipe links are implemented. Real isolated-engine mutations passed. TypeScript, ten focused Work/recipe tests, and 60 files / 427 desktop tests pass. The later combined milestone package passed; App and Data remain unchanged.
 # [Active/waiting Work and populated Permissions](evidence/figma-full-audit/DESKTOP_WORK_PERMISSIONS_STATES.md) pass real isolated-engine checks at 1440/800px. Job selection, current step, continuation instructions, wrapping, and scrolling are repaired. Answer request, Allow once, and Revoke passed through real engine routes. Auto Edit and Add a file labels match live Figma. TypeScript, source build, 19 Work/attention tests, and four menu DOM tests passed. App and Data were untouched. The later combined milestone package passed.
 # Populated canceled Work and project proposals/map now have 1440/800px source checks. Narrow desktop text and table overflow were repaired; keyboard scrolling passes. Active/waiting Work, populated permissions, saved knowledge, and project recipes remain open. See evidence/figma-full-audit/DESKTOP_POPULATED_LAYOUT_SOURCE.md.
-# Desktop Memory review, Permission, Slash, and Attach menus pass 1440/800px source-render checks, TypeScript, source build, and nine focused tests. Memory is 440×236; Permission is 300×286. Catalog availability and actions remain unchanged. Package proof waits for the larger milestone. See evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md.
+# Desktop Memory review, Permission, Slash, and Attach menus pass 1440/800px source-render checks, TypeScript, source build, and nine focused tests. Memory is 440Ã—236; Permission is 300Ã—286. Catalog availability and actions remain unchanged. Package proof waits for the larger milestone. See evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md.
 # Nick chose larger desktop milestones for packaging on 2026-09-26. Use source/render checks and focused tests between milestones. Commit and push verified source increments. Do not package each small component batch.
 # Desktop Activity loading and Providers error have final 1440/800px package checks at source 98387fc. Pending/error states were injected; retry recovered through the real isolated engine. Diagnostics copy and reduced motion passed. All 417 desktop tests passed. See evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md.
 # Desktop Workspace and File preview have final 1440/800px package checks at source e77f8bb. Real SCM/search, read-only mode, split, file attachment, save and restoration passed. All 415 desktop tests passed. Synthetic fixture deletion was policy-blocked. See evidence/figma-full-audit/DESKTOP_WORKSPACE_CURRENT_REVISION.md.
 # Desktop Model and Project pickers now have isolated 1440/800px package checks. Scope writes, preference restoration, project search/select/clear, Escape, and Add Model passed. Browse used an injected native dialog result. All 408 desktop tests passed. See evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md.
-# Desktop Fix Capture Select/Recording/Review now have isolated 1440/800px package checks. Recording measures 380×181 and Review 420×232. Synthetic audio drove retry, Record Again, and cancellation; no fix was saved. The palette focus ring and delayed search results also passed. See evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md.
-# Command palette, Chat row menu, and Rename chat now have isolated 1440/800px package checks. Their frames measure 640×429, 232×227, and 440×168. Escape and Capture a fix cancellation passed. Chat Markdown content passed an intercepted renderer probe; native save-dialog completion remains untested. The final palette-input focus-ring repair is source-render checked and awaits the next batch package. See evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md.
+# Desktop Fix Capture Select/Recording/Review now have isolated 1440/800px package checks. Recording measures 380Ã—181 and Review 420Ã—232. Synthetic audio drove retry, Record Again, and cancellation; no fix was saved. The palette focus ring and delayed search results also passed. See evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md.
+# Command palette, Chat row menu, and Rename chat now have isolated 1440/800px package checks. Their frames measure 640Ã—429, 232Ã—227, and 440Ã—168. Escape and Capture a fix cancellation passed. Chat Markdown content passed an intercepted renderer probe; native save-dialog completion remains untested. The final palette-input focus-ring repair is source-render checked and awaits the next batch package. See evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md.
 # Current Figma overlays New scheduled task 273:1586 and Approval details 273:2125 now have isolated 1440/800px package checks. The form was filled but not saved; the pending approval was opened but not decided. Bounds match their Figma frames. See evidence/figma-full-audit/DESKTOP_OVERLAYS_CURRENT_REVISION.md.
 # Nick prioritised complete desktop implementation on 2026-09-25. He will test desktop while mobile UI/UX implementation continues. Desktop Recipes list, Preview, and Run are implemented with isolated package evidence. Desktop Home, Work empty, Activity empty/running, Permissions empty, Projects empty, Scheduled tasks list/detail, Connections empty/populated/credential, Providers, Diagnostics, Model, Assistants, Skills, Appearance, System, Restore, About, Archived/Select, and enabled WebUI/Change password have current scoped package checks. Archived used synthetic sidebar rows; WebUI started and stopped with isolated data. System and About card bounds match scaled Figma at 1440px; a real isolated backup reached and canceled the Restore confirmation. Appearance's Add theme save/select/reload path passed with isolated data. Assistants uses its one actual Kel row. Skills showed a truthful empty state; populated custom skills remain open. Activity's separator-space correction was included in the later Projects package. Scheduled task detail has real toggle/pause/edit/confirmation checks and synthetic History layout. Scheduled list controls open the real edit dialog. Populated Work, Permissions, Projects, and Scheduled tasks remain open. Model has a compact Add model flow and populated custom-model rows package-checked with isolated fake configuration. Providers has three truthful readiness rows; a real model reply is untested. Diagnostics maintenance controls remain open because matching runtime operations do not exist. Connections mutating action confirmation is DOM-tested but has no packaged state because the engine catalogs read actions only. Package by coherent desktop feature groups instead of per Figma frame. Canonical App packages source 8c67121; promotion awaits desktop completion. Current Tools, selected Chat states, Transcriptions, and selected mobile states have scoped disposable package checks. Older visual results are historical. See evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md and its linked scoped records.
 # V2-04 (the Connection Framework) is closed; its two open needs are carried as V2-04a/V2-04b in FEATURE_LEDGER.md.
@@ -111,18 +115,18 @@ phases:
   V2-03: done        # Personal Connections: the eight services as data (migration 25, auth_prefix)
   V2-04: done        # framework, callable actions (04a), and OAuth flow (04b) built; real external sign-in pending
   V2-05: partial     # browser phone journeys proved; physical iPhone acceptance pending
-  V2-06: done        # Needs Your Attention 2.0 — attention rows on the existing Work surface (priority/age/reason/related/one direct action/grouping) + the row for a real ask answered in one action (D-50; journey J-ATTN)
-  V2-07: done        # Recipes 2.0 — the recipe library's own surfaces (search/favourites/recent/categories/history/last result/duplicate/project attachment/run again), migration 30 `v2-recipe-library` (D-50; journey J-RECIPE)
-  V2-08: done        # Activity 2.0 — /api/activity over the records the line already keeps (D-50; journey J-ACTIVITY)
-  V2-09: done        # Routing intelligence — decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
-  V2-10: done        # Learning 2.0 — evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
-  V2-11: done        # Long-running work 2.0 — runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
-  V2-12: done        # Adaptive staffing 2.0 — one bounded step of outcome-history advice on the existing staffing paths (advice recorded on every staffing.decided)
-  V2-13: done        # Local execution isolation — sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
-  V2-14: done        # Network permissions — modes + per-tool/per-Project rules behind the one seam, ask-before-a-new-domain, access history
+  V2-06: done        # Needs Your Attention 2.0 â€” attention rows on the existing Work surface (priority/age/reason/related/one direct action/grouping) + the row for a real ask answered in one action (D-50; journey J-ATTN)
+  V2-07: done        # Recipes 2.0 â€” the recipe library's own surfaces (search/favourites/recent/categories/history/last result/duplicate/project attachment/run again), migration 30 `v2-recipe-library` (D-50; journey J-RECIPE)
+  V2-08: done        # Activity 2.0 â€” /api/activity over the records the line already keeps (D-50; journey J-ACTIVITY)
+  V2-09: done        # Routing intelligence â€” decayed outcome evidence, evidence-aware Automatic ordering (floor-protected), read-back "Why this model?", tool requests become real work turns
+  V2-10: done        # Learning 2.0 â€” evidence-thresholded suggestions (existing proposal queue), off/on without deletion, explain, authority fence
+  V2-11: done        # Long-running work 2.0 â€” runtime fencing of abandoned runs (never re-played), the Work brief (shipped/open/why/next + needs_you)
+  V2-12: done        # Adaptive staffing 2.0 â€” one bounded step of outcome-history advice on the existing staffing paths (advice recorded on every staffing.decided)
+  V2-13: done        # Local execution isolation â€” sensitive-root refusal at the autonomous seams, disposable per-run sessions, secret-shape env scrub (no VM, no sandbox rewrite)
+  V2-14: done        # Network permissions â€” modes + per-tool/per-Project rules behind the one seam, ask-before-a-new-domain, access history
   V2-15: queued      # Real dogfood integration pass
   V2-16: partial     # Dark Settings/setup repaired; r29 local conversation-open median 112.4 ms, project switch median 114.9 ms; remote/first response pending
-  V2-17: done        # Manual upgrade reliability — inventory before/after, and the V2 state proved to survive backup→restore exactly (no updater infra)
+  V2-17: done        # Manual upgrade reliability â€” inventory before/after, and the V2 state proved to survive backupâ†’restore exactly (no updater infra)
 
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
   V2-19: partial     # canonical full engine 1289 pass + 14 subtests and desktop 396 pass; exact visual parity and live paths remain
@@ -130,7 +134,7 @@ phases:
   V2-20: queued      # V2 release candidate
 
 invariants:
-  - "one capable personal assistant with hidden orchestration — Nick never learns workers, leases, scopes, staffing graphs, runtime topology, routing internals, event streams, MCP plumbing or execution packets"
+  - "one capable personal assistant with hidden orchestration â€” Nick never learns workers, leases, scopes, staffing graphs, runtime topology, routing internals, event streams, MCP plumbing or execution packets"
   - "Fix Capture stays exactly as built (OPEN / BATCHED / FIXED / DISMISSED); it is not Jira and is never rebuilt"
   - "no second system of anything: no second memory, workflow, auth, permission or task database"
   - "never single-side colored borders or accent rails; typography, spacing, background tone, subtle full-perimeter neutral borders only"
@@ -143,17 +147,17 @@ temporary_worktrees: []
 The state below this line is historical phase evidence. Its old candidate, worktree, and data paths
 were removed during consolidation. Use the YAML above and `docs/CONSOLIDATION_STATUS.md` for current paths.
 
-## Integration line (2026-09-22) — historical
+## Integration line (2026-09-22) â€” historical
 
 `C:\Users\Nick\Desktop\Kel\kel-v2-integration` on branch `integration/v2` @ `fe5e6b7` merges
 `dev/v2` @ `7b18618` with Astra's committed Shell baseline `ux/v2-shell` @ `0052075` (verified from the
 merge's own second parent; the merge commit's own message still says `681e005`, which was her tip
-earlier in the turn — a pushed merge is never rewritten, so this section is the accurate record). One
+earlier in the turn â€” a pushed merge is never rewritten, so this section is the accurate record). One
 conflict was resolved in the web-host unit suite; see `docs/v2/evidence/integration/README.md`. The
 worktree exists because the packaged candidate must be built from the union, not from either line
 alone. Its `desktop/node_modules` is a junction to `dev/v2`'s (bun cannot resolve nested packages
 through it, so a real `bun install` is needed before any build there). Remove this worktree once the
-candidate is packaged and reviewed, or once Astra's line absorbs the merge — whichever comes first,
+candidate is packaged and reviewed, or once Astra's line absorbs the merge â€” whichever comes first,
 and record it here when it goes.
 
 ## V2-01 notes for the next run
@@ -169,7 +173,7 @@ and record it here when it goes.
   every field that phase needs; the missing piece is the request layer, the permission gate in front of
   it, and an honest result state (there is no test-result column yet).
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-01 block); engine 1085 OK; desktop 334 pass; `tsc` clean.
-- **No candidate was installed** for V2-01 — `C:\Users\Nick\KelV2Candidate` still does not exist.
+- **No candidate was installed** for V2-01 â€” `C:\Users\Nick\KelV2Candidate` still does not exist.
 
 ## V2-02 notes for the next run
 
@@ -181,7 +185,7 @@ and record it here when it goes.
 - **The rule to keep:** nothing calls a service except a click on Test connection. V2-14's network rules
   belong inside `perform_request`; do not add a second HTTP client, and do not add network code to the
   renderer.
-- **V2-03 starts from:** the eight personal services still need no code — a service is a Connection Nick
+- **V2-03 starts from:** the eight personal services still need no code â€” a service is a Connection Nick
   adds, and what Kel can *do* with it is a tool (V2-04). What V2-03 adds is a real, live check against
   each service and the smallest useful action for each; nothing about the model should change to make
   that possible.
@@ -197,36 +201,36 @@ and record it here when it goes.
   the form in.
 - **The rule to keep:** a service is data. No module, table, worker or workflow per service, no branching
   on a service id, and `connections.py` must stay free of service names (a test pins that). Anything Kel
-  *does* with a service is a tool — V2-04.
+  *does* with a service is a tool â€” V2-04.
 - **V2-04 starts from:** the Connection Framework and its three templates (API Key, OAuth, Bot/webhook),
   standardising credentials, authenticated requests, actions/tools, permissions, Test Connection, errors,
-  retries and tests. The OAuth template is what Google Drive needs — its entry knows the address, but the
+  retries and tests. The OAuth template is what Google Drive needs â€” its entry knows the address, but the
   account sign-in step does not exist yet, and its note says so. V2-14's network rules belong inside
   `perform_request` in `connections.py`.
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-03 block); engine 1110 OK; desktop 340 pass; `tsc` clean.
-- **Still not verified:** no installed-app check, and no real service has been contacted — that needs
+- **Still not verified:** no installed-app check, and no real service has been contacted â€” that needs
   Nick's credentials and stays V2-15's evidence.
 
 ## V2-04 closed, and V2-05 notes for the next run
 
-- **V2-04 is closed as the framework** — templates, one request path, data-declared actions, the
+- **V2-04 is closed as the framework** â€” templates, one request path, data-declared actions, the
   confirmation gate, honest errors, bounded retries, the access history, and the developer page
   `docs/v2/CONNECTION_FRAMEWORK.md`. Two things it needs are carried as follow-ups in
   `FEATURE_LEDGER.md` instead of being claimed: **V2-04a** (a tool the assistant could call an action
-  through — the bridge to the coding runtime the desktop agent runs; no Connections capability switch may
+  through â€” the bridge to the coding runtime the desktop agent runs; no Connections capability switch may
   be added before it exists) and **V2-04b** (the OAuth account sign-in flow).
 - **V2-05 is the iPhone Kel PWA V1** (login, history, create/continue a conversation, text/paste, voice
   through Muse, Project switching and routing, home showing running/recent/failed work and Needs Your
-  Attention, and answering/approving/denying/granting/reviewing/resuming/stopping — nothing else). The
+  Attention, and answering/approving/denying/granting/reviewing/resuming/stopping â€” nothing else). The
   gateway it grows already exists: the web-host serves the same renderer away from the desktop
   (session-gated, server-side bearer), so V2-05 is about the PWA surface and its journeys, not a second
   backend. No uploads, camera, share sheet, push, or native apps.
 - **Carry into V2-05:** the Connections work exposes `/api/connections` (list / get / save / remove /
   set_credential / delete_credential / test / run / actions / events / catalogue). If the PWA surfaces any
   of it, the mutating-confirmation rule and the one-request rule apply there too, and the credential stays
-  in the shell — a remote client never receives a value.
+  in the shell â€” a remote client never receives a value.
 - **Reconnaissance done (do not rebuild this):** installability already exists from the donor line and is
-  sound — `desktop/public/manifest.webmanifest` (name/short_name/display standalone/theme + background
+  sound â€” `desktop/public/manifest.webmanifest` (name/short_name/display standalone/theme + background
   colour, 192 and 512 icons), icons at `desktop/public/pwa/icon-180|192|512.png`, and a careful service
   worker at `desktop/public/sw.js` that never caches `/api/`, keeps script/style network-fresh with a
   content-type guard against the SPA fallback, is network-first for navigation, and is version-bumped with
@@ -242,34 +246,34 @@ and record it here when it goes.
   and Needs Your Attention usable one-handed with answer/approve/deny/grant/review/resume/stop, and voice
   through Muse from the phone on the existing transcription path. Verification is synthetic (a desktop
   browser at a phone viewport over the gateway) plus the installed-app tether check; real iOS Safari
-  behaviour can only be confirmed by Nick — recorded in `KNOWN_LIMITATIONS.md`.
+  behaviour can only be confirmed by Nick â€” recorded in `KNOWN_LIMITATIONS.md`.
 - **Layout audit done (so the next run does not go looking):** the shell already handles the notch and
-  home indicator — `viewport-fit=cover` is declared in the renderer shell and `env(safe-area-inset-*)` is
+  home indicator â€” `viewport-fit=cover` is declared in the renderer shell and `env(safe-area-inset-*)` is
   used in `styles/layout.css`, `styles/themes/base.css`, the guid page and the chat action sheet. The Kel
   surfaces' own CSS has no phone-breaking widths: `kel-tokens.css` contains one 132px element, one 560px
   max-width, and `min-width: 0` on the flex children (the pattern that stops a row overflowing). So the
-  remaining V2-05 work is **not** a CSS rescue: it is the phone *journeys* — a home screen that shows
+  remaining V2-05 work is **not** a CSS rescue: it is the phone *journeys* â€” a home screen that shows
   running/recent/failed work and Needs Your Attention one-handed with answer/approve/deny/grant/review/
-  resume/stop, and voice through Muse from the phone — and verifying them in a real browser at a phone
+  resume/stop, and voice through Muse from the phone â€” and verifying them in a real browser at a phone
   viewport against the built app (which needs a build + the gateway, so it is its own increment, not a
   quick check).
 
-## V2-05 send — closed; the phone sends for real (next: history, attention, routing)
+## V2-05 send â€” closed; the phone sends for real (next: history, attention, routing)
 
 - **The measured blocker is gone and the round trip is proved.** The phone profile had no assistant to
   choose because the `kel` assistant is seeded by the Electron main process (`initializeKel`) and the
   standalone `bun run webui` host never ran that path. The webui now performs the same integration at
-  start-up (register the Kel ACP agent in **module form** — `python -m kel.acp_host`; the script-path form
-  cannot resolve the ACP host's relative imports during `initialize` — create the single `kel` assistant,
+  start-up (register the Kel ACP agent in **module form** â€” `python -m kel.acp_host`; the script-path form
+  cannot resolve the ACP host's relative imports during `initialize` â€” create the single `kel` assistant,
   leave exactly it enabled). The desktop's source branch got the same module-form fix; its packed engine
   never hit this.
-- **Journey H now proves the positive path** (real browser 393x852 → gateway → aioncore → Kel engine
-  (ACP) → CLI model): one `kel` pill (auto-selected) → send enables → turn lands → real reply ("Phone
-  send check received.") → settle → second thumb-typed turn → second reply ("still here"); post-auth
+- **Journey H now proves the positive path** (real browser 393x852 â†’ gateway â†’ aioncore â†’ Kel engine
+  (ACP) â†’ CLI model): one `kel` pill (auto-selected) â†’ send enables â†’ turn lands â†’ real reply ("Phone
+  send check received.") â†’ settle â†’ second thumb-typed turn â†’ second reply ("still here"); post-auth
   watch clean (no failed reads, no dead sockets, no console errors). Evidence:
   `docs/v2/evidence/v2-05/` (findings-H.json, H1-H3 PNGs).
 - **Write-ups a next run needs:** assistant replies render markdown inside a shadow root (`ShadowView`),
-  so `innerText` cannot see them — read `.markdown-shadow-body` text explicitly; the conversation's send
+  so `innerText` cannot see them â€” read `.markdown-shadow-body` text explicitly; the conversation's send
   control read as disabled even when it accepted the next send (recorded, not gated on); a full-page load
   of `/conversation/<id>` on the phone rendered a blank body in one authed probe; tapping the home's
   recent entry text timed out once (try the drawer path first).
@@ -288,17 +292,17 @@ The assistant bridge's landing points, read from the tree:
   no capability row speaks of MCP (`runtime/tests/test_capabilities.py:40`). The bridge must ride the
   existing capability/tool plumbing, not a second MCP server.
 - **The capability layer already declares a tool surface.** `runtime/kel/capabilities.py` maps each
-  capability to the runtime's real tool names (≈43–52) and feeds `_TOOL_MAP` / `capability_for_tool`. Its
+  capability to the runtime's real tool names (â‰ˆ43â€“52) and feeds `_TOOL_MAP` / `capability_for_tool`. Its
   docstring carries the binding rule this bridge flips: *"Google Drive and Connected apps are
   deliberately absent: this release has no production effect path that could honour them, so they are not
-  offered as switches that could not be kept."* — the bridge lands first, the switch second.
+  offered as switches that could not be kept."* â€” the bridge lands first, the switch second.
 - **The action side is data and ready to call.** `runtime/kel/connection_actions.py`: `actions()` (121),
   `actions_for(service_id)` (126), `action(action_id)` (132); the mutating rule sits in the module header
-  (line 14: a mutating action is refused unless Nick confirmed — none ship yet). `runtime/kel/connections.py`
+  (line 14: a mutating action is refused unless Nick confirmed â€” none ship yet). `runtime/kel/connections.py`
   owns schema/run/history (migrations incl. `_add_actions_table` 134; `ensure_schema` 149).
 - **A mid-turn confirmation pathway exists.** `runtime/kel/acp_host.py` is poll-based
   (`Host(client, emit, poll_interval=.25)`: 156), emits `agent_message_chunk` (167), and already has
-  `_resurface()` (188) — *"After an interruption, bring the active vetting prompts back into view"* — a
+  `_resurface()` (188) â€” *"After an interruption, bring the active vetting prompts back into view"* â€” a
   user-prompt/vetting mechanism the bridge's confirmation can build on. `ServiceClient.call()` (129) is
   the engine transport (reads `desktop-session.json`).
 - **Open questions the next run must answer before designing:** the direction of `_TOOL_MAP` (does the
@@ -306,7 +310,7 @@ The assistant bridge's landing points, read from the tree:
   per-Project gating (V2-02), and how the access-history writer receives call facts (V2-04's
   connection/action/domain/status/duration shape).
 
-## Parallel-ownership change (2026-09-21) — V2-05-history deferred for shell integration
+## Parallel-ownership change (2026-09-21) â€” V2-05-history deferred for shell integration
 
 Astra is actively implementing the Figma Shell on `ux/v2-shell` and now owns the phone drawer/history
 presentation, the conversation shell, the composer, the responsive/mobile shell, Tools and Ramble/Kibble
@@ -314,7 +318,7 @@ presentation, and the global visual tokens. Implementing V2-05-history (the phon
 opening) now would collide with that work, so it is **temporarily deferred for shell integration**:
 
 - **V2-05 stays PARTIAL.** Its history/attention/routing requirements are kept in this record and in
-  `RESUME.md` — they are not dropped, and the phase is not marked complete.
+  `RESUME.md` â€” they are not dropped, and the phase is not marked complete.
 - The measured notes for the history increment (the blank `/conversation/<id>` deep load, the inert rail
   at phone width, the home-entry tap timeout, the drawer as the phone's real navigation) remain valid;
   they are recorded in `KNOWN_LIMITATIONS.md` and stay the checklist for the Shell integration pass.
@@ -324,21 +328,21 @@ opening) now would collide with that work, so it is **temporarily deferred for s
 - If a backend change needs a renderer contract Astra will eventually absorb, write it in
   `docs/v2/PARALLEL_SHELL_TOUCHES.md` instead of editing renderer files.
 
-## V2-04b — BUILT (2026-09-21)
+## V2-04b â€” BUILT (2026-09-21)
 
 The OAuth foundation is done: providers as data (`kel.connection_oauth`), the flow in `oauth_flows`
-(migration 28 — single-use state + PKCE verifier, never a token), the trade through
+(migration 28 â€” single-use state + PKCE verifier, never a token), the trade through
 `perform_request`, tokens in the same in-memory custody (`auth_state`/`auth_scopes`/`auth_expires`/
 `oauth_provider` on the row in plain words), the shell claims a finished sign-in once into the
 OS-backed custody, refresh on expiry (`needs_reconnect` when it fails), revoke through the provider.
 The only public route is `/oauth/callback`, protected by the single-use state (D-34, D-35). Google
-Drive is the reference (`gdrive-files`). Evidence: `docs/v2/evidence/v2-04b/README.md` — engine
+Drive is the reference (`gdrive-files`). Evidence: `docs/v2/evidence/v2-04b/README.md` â€” engine
 suite 10/10 incl. a real-HTTP lifecycle with a real S256 PKCE check, desktop 363 passed, tsc clean.
 Honest limits: real Google sign-in needs Nick's client ID + browser; the phone cannot finish a
 sign-in yet (loopback callback); the sign-in between callback and claim lives in engine memory only.
 `next_item` moves to Connection execution hardening, then routing intelligence.
 
-## V2-04 hardening — BUILT (2026-09-21)
+## V2-04 hardening â€” BUILT (2026-09-21)
 
 The choke point now carries its own rules (D-36): one opener built once; a bounded redirect chain;
 a service's `Retry-After` honoured but capped; the V2-14 network-rule seam asked **before** anything
@@ -347,12 +351,12 @@ an answer past the reading cap labelled as cut short; and a choke-point refusal 
 as its own sentence. Six new tests in `ExecutionHardeningTests` (all green). No rules are configured
 yet, so behaviour is unchanged until V2-14 fills the seam. `next_item` moves to routing intelligence.
 
-## V2-04a — BUILT and proved live (2026-09-21, `dev/v2` @ `d3bbf65`)
+## V2-04a â€” BUILT and proved live (2026-09-21, `dev/v2` @ `d3bbf65`)
 
 The assistant-callable Connection action bridge is done: the `connections` capability, the
 `kel.connection_tools` bridge, the `kel.conn` helper the runtime runs as a shell command, engine
 memory custody pushed by the shell (D-33), mutating confirmation through the existing approval rows
-(D-32), and `source` provenance (migration 27). Evidence: `docs/v2/evidence/v2-04a/README.md` —
+(D-32), and `source` provenance (migration 27). Evidence: `docs/v2/evidence/v2-04a/README.md` â€”
 the engine journey (16 tests) plus the **live** run where a real runtime found the connector, called
 `github-whoami`, used the bounded login, and the access history recorded `source: runtime`. The same
 run measured two honest limits: Claude Code is quota-blocked on this machine today (codex carried
@@ -361,14 +365,14 @@ phone only once the Shell's Work route exists (Journey J held, recorded in
 `KNOWN_LIMITATIONS.md`). It also found and fixed a real defect: the engine now exports
 `python -m kel` to its runtimes (`d3bbf65`). `next_item` moves to V2-04b (the OAuth foundation).
 
-## V2-04 build notes (historical — the phase is closed)
+## V2-04 build notes (historical â€” the phase is closed)
 
 - **Built:** `runtime/kel/connection_framework.py` (the three templates: labels, hints, credential field
   names, what a check does, plus the request policy's numbers) and bounded, honest retries inside
   `connections.perform_request` (retry a 429/5xx or a dropped connection; never a 401/403/404; bounded by
   the timeout and a budget; the record says how many tries). The renderer's own kind vocabulary was
-  deleted — labels, hints and credential field names come with the list.
-- **Not built, and not claimed:** (a) a chat tool that lets the assistant use a connection — the engine and
+  deleted â€” labels, hints and credential field names come with the list.
+- **Not built, and not claimed:** (a) a chat tool that lets the assistant use a connection â€” the engine and
   the surface can run an action when Nick asks, but nothing in conversation can (now carried as follow-up
   V2-04a, and the reason no Connections capability switch exists yet); (b) the OAuth account sign-in step,
   which is what Google Drive needs (its catalogue note says so; carried as follow-up V2-04b).
@@ -377,8 +381,8 @@ phone only once the Shell's Work route exists (Journey J held, recorded in
   leaves the payload nowhere and records the fact of the call (domain, status, duration) in
   `connection_events` (migration 26); `events()` reads that history back. Every catalogue action is a read,
   and a `mutating` action is refused unless Nick confirmed. The page has a "What Kel can do" card.
-- **If follow-up V2-04a is picked up:** expose an action as a tool the assistant can call — with the same
-  permission rule (mutating actions ask first) and the same one-request rule — and keep V2-14's network
+- **If follow-up V2-04a is picked up:** expose an action as a tool the assistant can call â€” with the same
+  permission rule (mutating actions ask first) and the same one-request rule â€” and keep V2-14's network
   rules inside `perform_request`. Add the capability switch only once that path can honour it.
 - **Evidence:** `docs/v2/TEST_EVIDENCE.md` (V2-04 blocks); engine 1126 OK; desktop 344 pass; `tsc` clean.
 - **Still not verified:** no installed-app check; no real service contacted; the retries are proven against
@@ -386,7 +390,7 @@ phone only once the Shell's Work route exists (Journey J held, recorded in
 
 ## Model preferences recorded at setup
 
-- Nick works from the iPhone for chat, voice, status, approvals, Project routing and stop/resume (§5 of
+- Nick works from the iPhone for chat, voice, status, approvals, Project routing and stop/resume (Â§5 of
   the directive); the desktop may remain on.
 - Real dogfood feedback from the stable candidate outranks synthetic tests and can change priorities;
   every priority change is recorded in `DOGFOOD_FINDINGS.md`.

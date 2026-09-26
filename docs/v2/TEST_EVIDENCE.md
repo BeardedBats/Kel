@@ -1,3 +1,7 @@
+## Desktop task field rhythm checkpoint (2026-09-26)
+
+[Task field rhythm](evidence/figma-full-audit/DESKTOP_TASK_FIELDS_SOURCE.md) now measures 600×614px at y70 in Dark/Light, 1440/800px. Label/field/prompt/gap metrics, unsaved Cancel/reopen, Dark Weekly and Light Advanced/Manual/Custom pass without overflow/errors. Light minimum sampled contrast 5.39:1. TypeScript/build and 12 focused tests pass. Two owned synthetic configuration records were removed after an enabled catalog probe failed; model choice is not accepted. Task icons/glass/disabled variants and live catalog remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop task Model/Time row checkpoint (2026-09-26)
 
 [Task Model/Time row](evidence/figma-full-audit/DESKTOP_TASK_MODEL_ROW_SOURCE.md) now uses the existing selector beside Time on desktop; mobile retains Advanced placement and edit guards stay unchanged. Dark/Light pass 1440/800px alignment, y70/600px bounds, zero overflow/errors and unsaved Cancel/reopen behavior. Weekly does not overlap. The isolated assistant has no model catalog; only the existing read-only Automatic fallback was verified. TypeScript/build and final 63-file/443-test regression pass. Full field type/spacing/height and enabled catalog state remain open. Package with the next larger milestone. App 8c67121/Data untouched; mobile paused.
