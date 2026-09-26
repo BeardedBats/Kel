@@ -24,3 +24,7 @@ All fixture proposals were settled; bounded fixture memory content was forgotten
 ![Saved records 800px](DESKTOP_KNOWLEDGE_RECORDS_SOURCE_800.png)
 ![Project recipes 1440px](DESKTOP_PROJECT_RECIPES_SOURCE_1440.png)
 ![Project recipes 800px](DESKTOP_PROJECT_RECIPES_SOURCE_800.png)
+
+## Later milestone package proof
+
+The combined disposable package at `f8e6d86` passed these 1440/800px checks. See [milestone package evidence](DESKTOP_COMPLETION_MILESTONE_PACKAGE.md) for actions, provenance, limits, and captures. Earlier package-pending statements above are superseded. Canonical App remains `8c67121`.

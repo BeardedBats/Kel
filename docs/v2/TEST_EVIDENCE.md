@@ -1,12 +1,17 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop milestone and runtime views (2026-09-26)
+
+[Combined desktop milestone](evidence/figma-full-audit/DESKTOP_COMPLETION_MILESTONE_PACKAGE.md) passed packaged 1440/800px checks at `f8e6d86`: Work, Permissions, Knowledge, saved recipes, and chat menus. [Starting, stopped engine, and diagnostics export](evidence/figma-full-audit/DESKTOP_RUNTIME_VIEWS_SOURCE.md) now pass source checks at both widths. Real isolated restart and sanitized local export passed. TypeScript, source build, 17 runtime diagnostics tests, and the final 60-file/427-test desktop suite passed. These latest runtime views await the next larger package. Canonical App remains `8c67121`; durable Data was untouched.
+
+
 ## Desktop Knowledge (2026-09-26)
 
-[Desktop Knowledge and project recipes](evidence/figma-full-audit/DESKTOP_KNOWLEDGE_CURRENT_REVISION.md) now have 1440/800px source evidence. Proposal labels/order, row icons, card rhythm, map columns, saved-record scrolling, valid memory actions, and saved recipe links are implemented. Real isolated-engine mutations passed. TypeScript, ten focused Work/recipe tests, and 60 files / 427 desktop tests pass. One combined milestone package is next; App and Data remain unchanged.
+[Desktop Knowledge and project recipes](evidence/figma-full-audit/DESKTOP_KNOWLEDGE_CURRENT_REVISION.md) now have 1440/800px source evidence. Proposal labels/order, row icons, card rhythm, map columns, saved-record scrolling, valid memory actions, and saved recipe links are implemented. Real isolated-engine mutations passed. TypeScript, ten focused Work/recipe tests, and 60 files / 427 desktop tests pass. The later combined milestone package passed; App and Data remain unchanged.
 
 ## Desktop Work and Permissions (2026-09-26)
 
-[Active/waiting Work and populated Permissions](evidence/figma-full-audit/DESKTOP_WORK_PERMISSIONS_STATES.md) pass real isolated-engine checks at 1440/800px. Job selection, current step, continuation instructions, wrapping, and scrolling are repaired. Answer request, Allow once, and Revoke passed through real engine routes. Auto Edit and Add a file labels match live Figma. TypeScript, source build, 19 Work/attention tests, and four menu DOM tests passed. App and Data were untouched. Milestone package proof remains pending.
+[Active/waiting Work and populated Permissions](evidence/figma-full-audit/DESKTOP_WORK_PERMISSIONS_STATES.md) pass real isolated-engine checks at 1440/800px. Job selection, current step, continuation instructions, wrapping, and scrolling are repaired. Answer request, Allow once, and Revoke passed through real engine routes. Auto Edit and Add a file labels match live Figma. TypeScript, source build, 19 Work/attention tests, and four menu DOM tests passed. App and Data were untouched. The later combined milestone package passed.
 
 Populated Figma frames are absent; existing components define their layout. Pause/Cancel were inspected, not clicked. Revoked lease history remains visible. Saved Knowledge, project recipes, and other desktop frames remain open. The mistakenly generated root-level packages/ renderer cache remains after policy blocked removal. Earlier empty-fixture and label limitations below are historical.
 

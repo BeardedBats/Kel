@@ -32,3 +32,7 @@ All new fixture jobs were canceled and acknowledged. Remaining requests were den
 ![Waiting Work at 800px](DESKTOP_WORK_WAITING_SOURCE_800.png)
 ![Populated Permissions at 1440px](DESKTOP_PERMISSIONS_POPULATED_SOURCE_1440.png)
 ![Populated Permissions at 800px](DESKTOP_PERMISSIONS_POPULATED_SOURCE_800.png)
+
+## Later milestone package proof
+
+The combined disposable package at `f8e6d86` passed these 1440/800px checks. See [milestone package evidence](DESKTOP_COMPLETION_MILESTONE_PACKAGE.md) for actions, provenance, limits, and captures. Earlier package-pending statements above are superseded. Canonical App remains `8c67121`.

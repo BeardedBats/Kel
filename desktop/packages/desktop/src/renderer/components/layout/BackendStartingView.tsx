@@ -6,6 +6,9 @@
 
 import { Spin, Typography } from '@arco-design/web-react';
 import React from 'react';
+import kelMark from '@renderer/assets/figma/kel-mark.png';
+import startupClock from '@renderer/assets/figma/refresh/desktop-startup-clock.svg';
+import startupLoader from '@renderer/assets/figma/refresh/desktop-startup-loader.svg';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -24,9 +27,18 @@ const BackendStartingView: React.FC = () => {
   const { t } = useTranslation();
 
   return (
+    <div className='kel-v2-shell kel-startup-screen' data-testid='backend-starting-view'>
+      <section className='kel-startup-desktop kel-startup-card' aria-label='Starting up' aria-live='polite'>
+        <div className='kel-startup-logo'><img src={kelMark} alt='' /><span>Kel</span></div>
+        <div className='kel-startup-titles'><h1>{t('common.backendStartup.pendingSlow.title')}</h1><p>This takes a few seconds.</p></div>
+        <div className='kel-startup-steps'>
+          <div><img src={startupClock} alt='' /><span>Local data</span><strong className='kel-startup-waiting'>Waiting</strong></div>
+          <div><img className='kel-startup-loader' src={startupLoader} alt='' /><span>Kel engine</span><strong className='kel-startup-starting'>Starting</strong></div>
+          <div><img src={startupClock} alt='' /><span>Chats</span><strong className='kel-startup-waiting'>Waiting</strong></div>
+        </div>
+      </section>
     <div
-      className='min-h-screen bg-bg-1 flex flex-col items-center justify-center gap-16px'
-      data-testid='backend-starting-view'
+      className='kel-startup-legacy min-h-screen bg-bg-1 flex flex-col items-center justify-center gap-16px'
     >
       <Spin size={28} />
       <div className='text-center px-24px max-w-480px'>
@@ -37,6 +49,7 @@ const BackendStartingView: React.FC = () => {
           {t('common.backendStartup.pendingSlow.description')}
         </Typography.Paragraph>
       </div>
+    </div>
     </div>
   );
 };
