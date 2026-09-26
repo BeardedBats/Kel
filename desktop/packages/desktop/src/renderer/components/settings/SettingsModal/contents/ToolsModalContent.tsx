@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import useConfigModelListWithImage from '@/renderer/hooks/agent/useConfigModelListWithImage';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import AionSelect from '@/renderer/components/base/AionSelect';
+import imageModelChevron from '@renderer/assets/figma/image-model/chevron-down.svg';
 import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
 import AddMcpServerModal from '@/renderer/pages/settings/components/AddMcpServerModal';
 import McpServerItem from '@/renderer/pages/settings/ToolsSettings/McpServerItem';
@@ -670,6 +671,7 @@ const ToolsModalContent: React.FC = () => {
                   >
                     <AionSelect
                       className={classNames(isImageModelMenuOpen && 'is-open')}
+                      arrowIcon={<img className='kel-tools-image-chevron' src={imageModelChevron} alt='' />}
                       onVisibleChange={setIsImageModelMenuOpen}
                       triggerProps={{ className: 'kel-tools-image-popup' }}
                       value={

@@ -115,7 +115,7 @@ export function classifyConfigSetError(error: unknown): AcpConfigSetErrorKind {
 
 type AcpConfigOptionsKey = readonly ['acp-config-options', string];
 
-const getRuntimeConfigOptionsKey = (conversation_id: string): AcpConfigOptionsKey =>
+export const getRuntimeConfigOptionsKey = (conversation_id: string): AcpConfigOptionsKey =>
   ['acp-config-options', conversation_id] as const;
 
 export function revalidateAcpConfigOptions(conversation_id: string): Promise<AcpConfigOptionDto[] | null | undefined> {

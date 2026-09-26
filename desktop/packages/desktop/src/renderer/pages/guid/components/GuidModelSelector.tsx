@@ -12,6 +12,7 @@ import type { AcpModelInfo } from '../types';
 import { getAvailableModels } from '../utils/modelUtils';
 import { Button, Dropdown, Menu, Tooltip } from '@arco-design/web-react';
 import { Brain, Down, Plus } from '@icon-park/react';
+import taskChevron from '@renderer/assets/figma/task/chevron-down.svg';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,7 @@ import {
 } from '@/renderer/components/agent/runtimeSelectorOptions';
 
 type GuidModelSelectorProps = {
+  fieldVariant?: boolean;
   // Gemini model state
   isGeminiMode: boolean;
   modelList: IProvider[];
@@ -53,6 +55,7 @@ const GuidModelSelector: React.FC<GuidModelSelectorProps> = ({
   setSelectedAcpModel,
   thoughtLevelOption,
   onThoughtLevelSelect,
+  fieldVariant = false,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -183,9 +186,9 @@ const GuidModelSelector: React.FC<GuidModelSelectorProps> = ({
           data-testid='guid-model-selector'
         >
           <span className='flex items-center gap-6px min-w-0'>
-            <Brain theme='outline' size='14' fill={iconColors.secondary} className='shrink-0' />
+            {!fieldVariant && <Brain theme='outline' size='14' fill={iconColors.secondary} className='shrink-0' />}
             <span className='guid-model-label'>{geminiButtonLabel}</span>
-            <Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />
+            {fieldVariant ? <img src={taskChevron} alt='' /> : <Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
           </span>
         </Button>
       </Dropdown>
@@ -258,9 +261,9 @@ const GuidModelSelector: React.FC<GuidModelSelectorProps> = ({
         >
           <Button className={'sendbox-model-btn guid-config-btn'} shape='round' size='small'>
             <span className='flex items-center gap-6px min-w-0'>
-              <Brain theme='outline' size='14' fill={iconColors.secondary} className='shrink-0' />
+              {!fieldVariant && <Brain theme='outline' size='14' fill={iconColors.secondary} className='shrink-0' />}
               <span className='guid-model-label'>{combinedAcpButtonLabel}</span>
-              <Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />
+              {fieldVariant ? <img src={taskChevron} alt='' /> : <Down theme='outline' size='12' fill={iconColors.secondary} className='shrink-0' />}
             </span>
           </Button>
         </Dropdown>

@@ -1,3 +1,7 @@
+## Desktop Chat/task/Tools batch (2026-09-26)
+
+[Batch evidence](DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
+
 # Desktop Dark Tools status — canonical review
 
 > **SUPERSEDED BY FIGMA REVISION (2026-09-25).** This record remains valid for its prior source and App checks. Live desktop Tools is now `313:2441`, and live mobile Tools is `315:2842`. It does not establish parity with those current frames. See [current inventory](FIGMA_REVISION_2026-09-25.md).

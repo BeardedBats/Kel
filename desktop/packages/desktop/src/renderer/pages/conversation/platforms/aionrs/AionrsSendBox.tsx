@@ -1,3 +1,4 @@
+import footerFolderIcon from '@renderer/assets/figma/chat-shell/folder.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -51,7 +52,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
 import { Button, Message, Tag } from '@arco-design/web-react';
-import { Brain, FolderClose, Lightning, MagicHat, Shield } from '@icon-park/react';
+import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { classifyConversationBusyError } from '../conversationBusyError';
@@ -888,7 +889,7 @@ const AionrsSendBox: React.FC<{
       />
       <div className='kel-shell-composer-footer'>
         {conversationContext?.workspace && <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
-          <FolderClose size={14} />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+          <img src={footerFolderIcon} alt='' />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
         </span>}
         <AgentModeSelector
               backend='aionrs'

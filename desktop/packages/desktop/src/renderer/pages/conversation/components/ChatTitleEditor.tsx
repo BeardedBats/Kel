@@ -17,6 +17,7 @@ type ChatTitleEditorProps = {
   conversation_id?: string;
   /** Optional leading icon (e.g. agent logo) rendered inside the hover region, just before the title */
   leading?: React.ReactNode;
+  subtitle?: React.ReactNode;
 };
 
 // Inline title display with click-to-edit rename support
@@ -32,6 +33,7 @@ const ChatTitleEditor: React.FC<ChatTitleEditorProps> = ({
   title,
   conversation_id,
   leading,
+  subtitle,
 }) => {
   const { t } = useTranslation();
 
@@ -126,6 +128,7 @@ const ChatTitleEditor: React.FC<ChatTitleEditorProps> = ({
           </span>
         </div>
       )}
+      {!editingTitle && subtitle}
       {!editingTitle && (
         <div className='w-0 flex items-center overflow-hidden opacity-0 transition-all duration-180 group-hover:w-40px group-hover:opacity-100 group-focus-within:w-40px group-focus-within:opacity-100'>
           <span className='h-16px w-1px shrink-0 rounded-full bg-[color:color-mix(in_srgb,var(--color-text-4)_44%,transparent)]' />

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { McpOAuthStatus } from '@/renderer/hooks/mcp/useMcpOAuth';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
 import { formatDateTime } from '@/renderer/services/i18n/format';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 
 /**
  * Human-visual repair: donor-era internal MCP ids stay for compatibility, but the UI speaks Kel —
@@ -133,6 +134,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   onOAuthLogin,
 }) => {
   const { t, i18n } = useTranslation();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
 
   const oauthCapable = supportsOAuth(server);
   const needsLogin = oauthCapable && oauthStatus?.needsLogin;
@@ -166,8 +168,8 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
       </div>
       <div className='kel-tools-mcp-status' data-status={statusKind}>
         {statusPopoverContent ? (
-          <Popover className='kel-tools-status-popover' content={statusPopoverContent} trigger='hover' position='top'>
-            <span>{visualStatus}</span>
+          <Popover className='kel-tools-status-popover' content={statusPopoverContent} trigger={['hover', 'focus']} position={isMobile ? 'top' : 'bottom'}>
+            <span tabIndex={0} aria-label={statusText}>{visualStatus}</span>
           </Popover>
         ) : (
           <Tooltip content={statusText} position='top'>

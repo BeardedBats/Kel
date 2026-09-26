@@ -1,4 +1,5 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import ShellConversationModeLabel from '@renderer/components/kel/ShellConversationModeLabel';
 import { AgentLogoIcon } from '@/renderer/components/agent/AgentBadge';
 import type { PresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -215,6 +216,7 @@ const ChatLayout: React.FC<{
           titleAreaMaxWidth={titleAreaMaxWidth}
           title={props.title}
           conversation_id={conversation_id}
+          subtitle={conversation_id && <ShellConversationModeLabel conversationId={conversation_id} />}
           leading={
             props.headerLeading ??
             ((backend || presetAssistant) && (

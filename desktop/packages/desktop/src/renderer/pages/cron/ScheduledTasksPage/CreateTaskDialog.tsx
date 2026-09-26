@@ -7,6 +7,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Input, Select, Message, TimePicker, Radio, Button, Switch } from '@arco-design/web-react';
+import taskChevron from '@renderer/assets/figma/task/chevron-down.svg';
 import AionModal from '@renderer/components/base/AionModal';
 import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
 import { Down, Robot } from '@icon-park/react';
@@ -498,10 +499,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const isCheckingTeamOwnership = teamOwnershipStatus === 'checking';
   const isTeamOwnedTask = teamOwnershipStatus === 'team';
   const isExecutionModeLocked = isCheckingTeamOwnership || isTeamOwnedTask;
+  const hasExistingConversation = Boolean(_conversation_id || editJob?.metadata.conversation_id);
   const canEditAgentConfig =
     !isExecutionModeLocked && !isOriginalExistingConversationTask && (!isEditMode || execution_mode !== 'existing');
   const modelSelector = (
     <GuidModelSelector
+      fieldVariant={!isMobile}
       isGeminiMode={isGeminiMode}
       modelList={filteredProviders}
       current_model={geminiCurrentModel}
@@ -654,6 +657,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           >
             <Select
               data-testid='cron-assistant-select'
+              arrowIcon={!isMobile ? <img src={taskChevron} alt='' /> : undefined}
               value={selectedAssistantId}
               placeholder={t('cron.page.form.assistantPlaceholder')}
               disabled={!canEditAgentConfig}
@@ -664,6 +668,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
                 const assistant = presetAssistants.find((item) => item.id === assistantId);
                 const name = resolveAssistantName(assistant, localeKey, assistantId);
+                if (!isMobile) return name;
                 const avatar = resolveAssistantAvatar(assistant?.avatar);
 
                 return (
@@ -725,6 +730,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   <Radio
                     key={option.value}
                     value={option.value}
+                    disabled={option.value === 'existing' && !hasExistingConversation}
                     className={`kel-shell-task-execution-option m-0 min-w-0 text-14px text-t-secondary ${isExecutionModeLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <span className='kel-shell-task-execution-label'>{option.label}</span>
@@ -938,7 +944,6 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           {showTimePicker && (
             <div className='kel-shell-task-time flex items-center gap-12px mb-16px'>
               <TimePicker
-                format='HH:mm'
                 value={dayjs(`2000-01-01 ${time}`)}
                 onChange={(_timeStr, pickedTime) => {
                   if (pickedTime) {
@@ -947,6 +952,8 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 }}
                 allowClear={false}
                 className='w-120px'
+                format={!isMobile ? 'h:mm A' : 'HH:mm'}
+                icons={!isMobile ? { inputSuffix: <img src={taskChevron} alt='' /> } : undefined}
               />
             </div>
           )}

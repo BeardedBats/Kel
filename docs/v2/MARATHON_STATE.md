@@ -1,3 +1,7 @@
+## Desktop Chat/task/Tools batch (2026-09-26)
+
+[Batch evidence](evidence/figma-full-audit/DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
+
 ## Desktop ACP Chat footer checkpoint (2026-09-26)
 
 [ACP Chat footer](evidence/figma-full-audit/DESKTOP_CHAT_FOOTER_SOURCE.md) now reads actual usage/window state and retains permission callbacks/availability guards. Dark/Light 1440/800px pass footer/chip bounds, missing values, populated turn/list/avatar checks, scrolling and 24px inset without overflow/errors. Sidebar bottom/icon sizing repaired. TypeScript/build, nine focused tests and full 64-file/446-test regression pass. Native fixture restored; no provider/send/permission change ran. Full sidebar status variants, Planning subtitle, exact icons/glass and live catalog/usage remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
@@ -69,7 +73,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Desktop first: remaining populated Chat sidebar status/pin variants and reference Planning subtitle; exact header/composer/icon/glass acceptance. ACP footer now uses real usage/window state and passes both widths; 24px Chat inset and 614px task rhythm pass. Task picker/assistant icons, glass fill/image, disabled variants and enabled runtime catalog remain open. Remaining Light/icons and Skills detail/history follow. Chat rhythm/Model/task fields/inset/footer await the next larger milestone package. Latest package b8c84ae; App 8c67121; Data untouched. Setup Autonomy/Pet/live credentials need Nick; mobile paused.
+next_item: Package the coherent desktop Chat/task/Tools milestone, verify bundled renderer, then finish explicit desktop frame dispositions before canonical App promotion. Credentials, Autonomy/Pet decisions and real worker/provider journeys remain separate. Mobile paused.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.
