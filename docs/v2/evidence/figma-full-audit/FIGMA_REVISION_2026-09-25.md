@@ -103,8 +103,8 @@
 | `273:12681` | Kel / State — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
 | `273:12914` | Kel / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 1440px. | READ |
 | `273:13090` | Kel / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |
-| `273:13249` | Kel / Chat — Workspace panel | `/work` | New or replaced node; prior pair absent. | PENDING |
-| `273:13459` | Kel / Chat — File preview | `/chat` | New or replaced node; prior pair absent. | PENDING |
+| `273:13249` | Kel / Chat — Workspace panel | `/chat` project panel | Real SCM/search, folder actions, 28px rows and narrow composer checked at 1440/800px. [Evidence](DESKTOP_WORKSPACE_CURRENT_REVISION.md). | READ |
+| `273:13459` | Kel / Chat — File preview | `/chat` | 560px pane, real file tabs, read-only/split/edit/save/restore/attach checked at 1440/800px. [Evidence](DESKTOP_WORKSPACE_CURRENT_REVISION.md). | READ |
 | `273:13646` | Kel / State — Setup still open + toast | `/onboarding` | New or replaced node; prior pair absent. | PENDING |
 
 ## Mobile FINAL frames
