@@ -46,4 +46,17 @@ describe('Kel approval card', () => {
     expect(screen.getByText('Approved', { exact: true })).toBeTruthy();
     expect(screen.queryByTestId('kel-approval-approve')).toBeNull();
   });
+
+  it('explains a command approval when the engine has no optional reason fields', async () => {
+    (window as unknown as { kelAPI: unknown }).kelAPI = {
+      conversation: vi.fn(async () => 'engine-conversation'),
+      request: vi.fn(async () => ({ items: [pending] })),
+    };
+    render(<KelApprovalCard kind='action' refId='approval-1' conversationId='host-conversation' />);
+    fireEvent.click(await screen.findByTestId('kel-approval-details'));
+    const details = await screen.findByTestId('kel-approval-details-body');
+    expect(details.textContent).toContain('To continue this work in Website Redesign.');
+    expect(details.textContent).toContain('A command can run project code, so Kel asks first.');
+    expect(details.textContent).toContain('This one command, this one time.');
+  });
 });

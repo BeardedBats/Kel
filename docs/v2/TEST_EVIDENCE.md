@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop new task and approval details overlays (2026-09-25)
+
+[Current Figma new task `273:1586` and approval details `273:2125`](evidence/figma-full-audit/DESKTOP_OVERLAYS_CURRENT_REVISION.md) were implemented as one desktop batch. A disposable Windows package measured the filled unsaved task dialog at x420/y70, 600×614 and the pending approval dialog at x440/y109.5, 560×401 at 1440px. Both also fit 800px with zero document overflow and renderer errors. The task's real Kel assistant and Weekdays state were selected; the skip switch was toggled. No task or approval was submitted. TypeScript, the focused approval tests, **54 files / 402 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.
+
 ## Desktop Archived and enabled WebUI (2026-09-25)
 
 [Archived and Select](evidence/figma-full-audit/DESKTOP_ARCHIVED_CURRENT_REVISION.md) used a synthetic three-chat sidebar response in the disposable package. Group cards, selection, and Delete 2 confirmation passed at 1440 and 800px; the confirmation was canceled. [Enabled WebUI and Change password](evidence/figma-full-audit/DESKTOP_WEBUI_CURRENT_REVISION.md) used isolated configuration and data. Its service/sign-in/phone cards measured 670×209, 670×151, and 670×204 at 1440px. The password mismatch dialog measured x490/y239.7, 460×300; inline validation blocked the action without a technical toast. WebUI stopped and port 25808 had no listener afterward. Both routes had zero overflow and renderer errors. TypeScript, **54 files / 401 tests**, Electron Vite, and Windows packaging passed. Canonical App and Data were untouched.

@@ -80,8 +80,8 @@
 | `273:906` | Kel / Overlay — Fix Capture · Select | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1091` | Kel / Overlay — Fix Capture · Recording | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1338` | Kel / Overlay — Fix Capture · Review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:1586` | Kel / Overlay — New scheduled task | `/scheduled` | New or replaced node; prior pair absent. | PENDING |
-| `273:2125` | Kel / Overlay — Approval details | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:1586` | Kel / Overlay — New scheduled task | `/scheduled` | Filled unsaved form matched x420/y70, 600×614 in disposable desktop package. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
+| `273:2125` | Kel / Overlay — Approval details | `shared shell / overlay` | Synthetic pending approval opened real details; x440/y109.5, 560×401. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:8389` | Kel / Overlay — Memory review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:8648` | Kel / Overlay — Chat row menu | `/chat` | New or replaced node; prior pair absent. | PENDING |
 | `273:8854` | Kel / Overlay — Rename chat | `/chat` | New or replaced node; prior pair absent. | PENDING |

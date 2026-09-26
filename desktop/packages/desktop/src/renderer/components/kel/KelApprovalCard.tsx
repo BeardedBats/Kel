@@ -315,15 +315,28 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
         </div>, document.body
       ) : null}
       {!mobile && <Modal
-        title={kind === 'access' ? 'Access request' : 'Approval request'}
+        className={kind === 'action' ? 'kel-shell-approval-details-modal' : undefined}
+        title={kind === 'access' ? 'Access request' : <span className='kel-shell-approval-details-title'><svg aria-hidden='true' viewBox='0 0 16 16' fill='none'><path d='M8 1.5 13 3.3v4.1c0 3.2-2 5.5-5 7.1-3-1.6-5-3.9-5-7.1V3.3L8 1.5Z' stroke='currentColor' strokeWidth='1.3' strokeLinejoin='round' /></svg>Approval request</span>}
         visible={details}
         footer={null}
         onCancel={() => setDetails(false)}
         autoFocus={false}
-        style={{ width: 440 }}
+        style={{ width: kind === 'action' ? 560 : 440 }}
         unmountOnExit
       >
-        <div className='text-12px leading-20px' data-testid='kel-approval-details-body'>
+        {kind === 'action' ? <div className='kel-shell-approval-details' data-testid='kel-approval-details-body'>
+          <p className='kel-shell-approval-details-subtitle'>Nothing happens until you decide.</p>
+          <div><strong>What Kel wants to do</strong><p>{approvalDetailAction(item, kind)}</p></div>
+          <div><strong>What for</strong><p>{item.what || `To continue this work${item.context_title ? ` in ${item.context_title}` : ''}.`}</p></div>
+          <div><strong>Why</strong><p>{item.why || (actionTarget(item) ? 'A command can run project code, so Kel asks first.' : 'This step needs your approval before Kel can continue.')}</p></div>
+          <div><strong>What approving allows</strong><p>{item.benefit || (actionTarget(item) ? 'This one command, this one time.' : 'This one step, this one time.')}</p></div>
+          <div><strong>If you say no</strong><p>{item.fallback || 'Kel stops this step and tells you what it could not check.'}</p></div>
+          {pending ? <div className='kel-shell-approval-details-actions'>
+            <button type='button' disabled={busy} onClick={() => void act(false)}>Deny</button>
+            {item.repeatable ? <button type='button' disabled={busy} onClick={() => void act(true, { remember: true })}>Always allow for this project</button> : null}
+            <button type='button' disabled={busy} onClick={() => void act(true)}>Approve</button>
+          </div> : null}
+        </div> : <div className='text-12px leading-20px' data-testid='kel-approval-details-body'>
           <Typography.Paragraph>
             <Typography.Text bold>
               {kind === 'access' ? 'What Kel wants access to' : 'What Kel wants to do'}
@@ -362,7 +375,7 @@ export const KelApprovalCard: React.FC<CardProps> = ({ kind, refId, conversation
               ? 'Nothing happens until you decide. Your choice applies everywhere in Kel.'
               : 'This decision is settled; the card stays here so history makes sense.'}
           </Typography.Paragraph>
-        </div>
+        </div>}
       </Modal>}
     </div>
   );
