@@ -91,11 +91,11 @@
 | `273:9737` | Kel / Overlay — Slash menu | `shared shell / overlay` | [340px source render; actual commands](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Labels now match; milestone package pending. | READ |
 | `273:9951` | Kel / Overlay — Attach menu | `shared shell / overlay` | [220px source render; both file paths](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Actual catalog controls retained; milestone package pending. | READ |
 | `273:10383` | Kel / Overlay — Ramble API key | `/transcription` | New or replaced node; prior pair absent. | PENDING |
-| `273:10168` | Kel / Overlay — Update available | `shared shell / overlay` | Fresh context inspected; desktop modal implementation next. | READ |
+| `273:10168` | Kel / Overlay — Update available | `shared shell / overlay` | [Shared dialog source checks](DESKTOP_SHARED_DIALOGS_SOURCE.md); milestone package pending. | READ |
 | `273:10599` | Kel / Overlay — Ramble merge | `/transcription` | New or replaced node; prior pair absent. | PENDING |
 | `273:10837` | Kel / Overlay — Ramble vetting answers | `/transcription` | New or replaced node; prior pair absent. | PENDING |
 | `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
-| `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | [Shared dialog source checks](DESKTOP_SHARED_DIALOGS_SOURCE.md); deletion handoff intercepted. | READ |
 | `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
 | `273:12085` | Kel / State — Empty (Connections) | `/connections` | Current empty card implemented and compared in isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `273:12291` | Kel / State — Loading (Activity) | `/activity` | [Isolated package checks](DESKTOP_PENDING_STATES_CURRENT_REVISION.md), source `98387fc`. | READ |

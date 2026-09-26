@@ -1,5 +1,10 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Desktop shared dialogs (2026-09-26)
+
+[Desktop Update available and task delete confirmation](evidence/figma-full-audit/DESKTOP_SHARED_DIALOGS_SOURCE.md) pass source checks at 1440/800px. Update uses actual versions/release notes and existing download authority. Delete now uses the Figma modal; Keep/Escape and intercepted deletion handoff passed. TypeScript, source build, and three update-policy tests passed. Stopped-engine inner surface styling was corrected and rechecked. These changes await the next larger package. Canonical App and Data remain untouched. Current desktop context coverage is 66 READ / 9 PENDING; READ does not mean complete parity.
+
+
 ## Desktop milestone and runtime views (2026-09-26)
 
 [Combined desktop milestone](evidence/figma-full-audit/DESKTOP_COMPLETION_MILESTONE_PACKAGE.md) passed packaged 1440/800px checks at `f8e6d86`: Work, Permissions, Knowledge, saved recipes, and chat menus. [Starting, stopped engine, and diagnostics export](evidence/figma-full-audit/DESKTOP_RUNTIME_VIEWS_SOURCE.md) now pass source checks at both widths. Real isolated restart and sanitized local export passed. TypeScript, source build, 17 runtime diagnostics tests, and the final 60-file/427-test desktop suite passed. These latest runtime views await the next larger package. Canonical App remains `8c67121`; durable Data was untouched.
