@@ -7,6 +7,7 @@
 import type { IConversationArtifact } from '@/common/adapter/ipcBridge';
 import type { IMessageAcpToolCall, IMessageToolCall, IMessageToolGroup, TMessage } from '@/common/chat/chatLib';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
+import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useConversationRuntimeView } from '@/renderer/pages/conversation/runtime/useConversationRuntimeView';
 import { getChatSurfaceWidthClass } from '@/renderer/pages/conversation/utils/chatSurfaceWidth';
 import { iconColors } from '@/renderer/styles/colors';
@@ -343,6 +344,7 @@ const MessageItem: React.FC<{
 );
 
 const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }> = ({ emptySlot }) => {
+  const layout = useLayoutContext();
   const list = useMessageList();
   const isMessageListLoading = useMessageListLoading();
   const pagination = useMessagePaginationState();
@@ -707,6 +709,10 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
       );
     }
     if ('type' in item && ['file_summary', 'tool_summary'].includes(item.type)) {
+      const previous = processedList[_index - 1];
+      const precedingReply = !layout?.isMobile && item.type === 'tool_summary' && previous?.type === 'text'
+        && previous.position === 'left' && !previous.content.teammateMessage && !previous.content.cronMeta
+        ? previous : undefined;
       return (
         <div
           key={item.id}
@@ -716,14 +722,20 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
         >
           {item.type === 'file_summary' && <MessageFileChanges diffsChanges={item.diffs} />}
           {item.type === 'tool_summary' && <MessageToolGroupSummary messages={item.messages}></MessageToolGroupSummary>}
+          {precedingReply && <MessageText message={precedingReply} actionsOnly
+            isLastMessage={precedingReply.id === lastMessageId}
+            hasForkAnchor={forkAnchoredIds.has(precedingReply.id)}
+            turnTexts={aiTurnTextsById.get(precedingReply.id)} />}
         </div>
       );
     }
     const message = item as TMessage;
     // A completed reply followed by tool rows already has a stable text body.
-    // Show its actions before the tools even while the tool turn is running.
+    // Desktop places the same reply actions after the adjacent tool group.
     const followedByTools = processedList[_index + 1]?.type === 'tool_summary';
-    const showCopyRow = message.position !== 'left' || message.type !== 'text' || aiCopyRowTextIds.has(message.id) || followedByTools;
+    const actionsAfterTools = !layout?.isMobile && followedByTools && message.type === 'text'
+      && message.position === 'left' && !message.content.teammateMessage && !message.content.cronMeta;
+    const showCopyRow = !actionsAfterTools && (message.position !== 'left' || message.type !== 'text' || aiCopyRowTextIds.has(message.id) || followedByTools);
     return (
       <MessageItem
         message={message}

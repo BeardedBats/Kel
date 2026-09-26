@@ -62,6 +62,54 @@ import { useTeammateColor } from '@/renderer/pages/team/identity/TeamIdentityCon
 
 const CODE_STYLE = { marginTop: 4, marginBlock: 4 };
 
+const ReplyActions: React.FC<{
+  messageId: string;
+  onCopy: () => void;
+  directCopy?: React.ReactNode;
+  onFork?: () => void;
+}> = ({ messageId, onCopy, directCopy, onFork }) => {
+  const { t } = useTranslation();
+  const [reaction, setReaction] = useState<'up' | 'down' | null>(() => {
+    try {
+      const saved = localStorage.getItem(`kel.chatReaction.${messageId}`);
+      return saved === 'up' || saved === 'down' ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+  const chooseReaction = (choice: 'up' | 'down') => {
+    const next = reaction === choice ? null : choice;
+    setReaction(next);
+    try {
+      if (next) localStorage.setItem(`kel.chatReaction.${messageId}`, next);
+      else localStorage.removeItem(`kel.chatReaction.${messageId}`);
+    } catch {
+      // Keep the visual choice when local storage is unavailable.
+    }
+  };
+  return <>
+    <Tooltip content='Mark helpful'>
+      <button type='button' aria-label='Mark helpful' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
+        <img src={thumbsUpIcon} alt='' width={16} height={16} />
+      </button>
+    </Tooltip>
+    <Tooltip content='Mark unhelpful'>
+      <button type='button' aria-label='Mark unhelpful' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
+        <img src={thumbsDownIcon} alt='' width={16} height={16} />
+      </button>
+    </Tooltip>
+    {directCopy}
+    <Dropdown trigger='click' position='bl' droplist={<Menu>
+      <Menu.Item key='copy' onClick={onCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
+      {onFork && <Menu.Item key='fork' onClick={onFork}>{t('messages.fork.action')}</Menu.Item>}
+    </Menu>}>
+      <button type='button' aria-label='More reply actions' className='kel-shell-message-action'>
+        <img src={moreIcon} alt='' width={16} height={16} />
+      </button>
+    </Dropdown>
+  </>;
+};
+
 type TeamContextResetNotice = {
   kind: 'context_reset';
   member_name: string;
@@ -104,10 +152,12 @@ const MessageText: React.FC<{
   showCopyRow?: boolean;
   isLastMessage?: boolean;
   hasForkAnchor?: boolean;
+  /** Render the existing actions after an adjacent desktop tool group. */
+  actionsOnly?: boolean;
   /** All text segments of this message's turn, in order — the copy button
    * copies the whole reply, not just the segment it happens to sit on. */
   turnTexts?: string[];
-}> = ({ message, showCopyRow = true, isLastMessage = false, hasForkAnchor = false, turnTexts }) => {
+}> = ({ message, showCopyRow = true, isLastMessage = false, hasForkAnchor = false, actionsOnly = false, turnTexts }) => {
   const logos = useAgentLogos();
   // Filter think tags from content before rendering
   // 在渲染前过滤 think 标签
@@ -130,14 +180,6 @@ const MessageText: React.FC<{
   const layout = useLayoutContext();
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const isUserMessage = message.position === 'right';
-  const [reaction, setReaction] = useState<'up' | 'down' | null>(() => {
-    try {
-      const saved = localStorage.getItem(`kel.chatReaction.${message.id}`);
-      return saved === 'up' || saved === 'down' ? saved : null;
-    } catch {
-      return null;
-    }
-  });
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
   // supporting backend (claude/codex). The message already reached the
   // server (it's rendered); this only answers "has the agent picked it up
@@ -180,6 +222,7 @@ const MessageText: React.FC<{
   const conversationContext = useConversationContextSafe();
   const forkConversation = useForkConversation(conversationContext?.conversation_id);
   const handleLocalFileLink = useLocalFilePreview(conversationContext?.workspace);
+  const teammateColor = useTeammateColor(isTeammateMessage ? senderConversationId : undefined);
   const resolvedFiles = useMemo(
     () => files.map((file_path) => resolveMessageFilePath(file_path, conversationContext?.workspace)),
     [conversationContext?.workspace, files]
@@ -220,17 +263,6 @@ const MessageText: React.FC<{
     </Tooltip>
   );
 
-  const chooseReaction = (choice: 'up' | 'down') => {
-    const next = reaction === choice ? null : choice;
-    setReaction(next);
-    try {
-      if (next) localStorage.setItem(`kel.chatReaction.${message.id}`, next);
-      else localStorage.removeItem(`kel.chatReaction.${message.id}`);
-    } catch {
-      // The visual choice still works when local storage is unavailable.
-    }
-  };
-
   // Fork entry point: only when the agent declares the capability, and only on
   // messages the backend can actually fork at (any message for at_turn/codex,
   // the last message otherwise) — see `isForkEnabled`.
@@ -254,38 +286,28 @@ const MessageText: React.FC<{
   ) : null;
 
   const kelReplyActions = (
-    <>
-      <Tooltip content='Mark helpful'>
-        <button type='button' aria-label='Mark helpful' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
-          <img src={thumbsUpIcon} alt='' width={16} height={16} />
-        </button>
-      </Tooltip>
-      <Tooltip content='Mark unhelpful'>
-        <button type='button' aria-label='Mark unhelpful' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
-          <img src={thumbsDownIcon} alt='' width={16} height={16} />
-        </button>
-      </Tooltip>
-      {layout?.isMobile && copyButton}
-      <Dropdown trigger='click' position='bl' droplist={<Menu>
-        <Menu.Item key='copy' onClick={handleCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
-        {showForkButton && <Menu.Item key='fork' onClick={() => void forkConversation(message.msg_id ?? message.id)}>{t('messages.fork.action')}</Menu.Item>}
-      </Menu>}>
-        <button type='button' aria-label='More reply actions' className='kel-shell-message-action'>
-          <img src={moreIcon} alt='' width={16} height={16} />
-        </button>
-      </Dropdown>
-    </>
+    <ReplyActions key={message.id} messageId={message.id} onCopy={handleCopy}
+      directCopy={layout?.isMobile ? copyButton : null}
+      onFork={showForkButton ? () => void forkConversation(message.msg_id ?? message.id) : undefined} />
   );
 
   const cronMeta = message.content.cronMeta;
   const displaySenderName = senderName === 'team_system' ? t('team.systemNotice.sender') : senderName;
   const fallbackBackendLogo = senderAgentType ? resolveAgentLogo(logos, { backend: senderAgentType }) : null;
-  // 团队 teammate 消息：按发送者会话取身份色，做气泡左色条 + 彩色发送者名；非团队场景为 undefined。
-  const teammateColor = useTeammateColor(isTeammateMessage ? senderConversationId : undefined);
+  const actionsRow = showCopyRow && (
+    <div
+      className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
+        'flex-row-reverse': isUserMessage,
+      })}
+      data-reply-message-id={message.id}
+    >
+      {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
+    </div>
+  );
 
   return (
     <>
-      <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
+      {actionsOnly ? actionsRow : <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
         {message.created_at && <div className='kel-shell-message-meta'>
           {!isUserMessage && !isTeammateMessage && <img src={kelMark} alt='Kel' width={22} height={22} />}
           <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at, !layout?.isMobile)}</time>
@@ -406,17 +428,8 @@ const MessageText: React.FC<{
         )}
         {/* Keep reply actions visible on mobile, where hover cannot reveal them.
             For replies split across text messages, only the last shows the row. */}
-        {showCopyRow && (
-          <div
-            className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
-              'flex-row-reverse': isUserMessage,
-            })}
-          >
-            {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
-
-          </div>
-        )}
-      </div>
+        {actionsRow}
+      </div>}
       {showCopyAlert && (
         <Alert
           type='success'

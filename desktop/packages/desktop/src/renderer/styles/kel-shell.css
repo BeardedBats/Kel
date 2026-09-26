@@ -3674,6 +3674,7 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
 
 /* Light Chat states use the existing semantic palette. */
 @media (min-width: 768px) {
+  html[data-theme='light'] body .kel-v2-shell .kel-shell-message-action img { filter: brightness(0) saturate(100%) opacity(.68); }
   html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call, .kel-plan-bar) { background: var(--kel-surface-2); border-color: var(--kel-border-strong); color: var(--kel-text-2); }
   html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call__title, .kel-plan-bar__current, .kel-chat-agent-error__body, .kel-chat-reconnecting__text strong) { color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call__description, .kel-tool-call__chevron, .kel-plan-bar__count, .kel-tool-call .tool-detail-label, .kel-chat-reconnecting__text small) { color: var(--kel-text-2); }
