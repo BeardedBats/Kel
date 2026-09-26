@@ -3563,3 +3563,29 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-name { font: 400 14px/20px var(--kel-shell-body); }
  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-status { font: 700 13px/18px var(--kel-shell-heading); }
 }
+
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-shell-pet-card { padding: 18px 20px !important; }
+ .kel-v2-shell .kel-shell-pet-card > .w-full { margin-top: 0 !important; }
+ .kel-v2-shell .kel-shell-pet-card .divide-y > div { min-height: 53px; box-sizing: border-box; }
+ .kel-v2-shell .kel-shell-pet-card .divide-y > div > div > div:first-child { font: 400 14px/20px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-pet-card .arco-radio-group { display: flex; gap: 24px; }
+ .kel-v2-shell .kel-shell-pet-card .arco-radio { padding: 0; margin: 0; font: 400 13px/18px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-pet-card .arco-radio-mask { display: none; }
+ .kel-v2-shell .kel-shell-pet-card .arco-radio-text { padding: 0; }
+ .kel-v2-shell .kel-shell-pet-card .arco-radio-checked { color: var(--kel-figma-color-text-warm,#ffb764); }
+}
+
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-shell-pet-card { padding: 18px 20px 6px !important; background: linear-gradient(rgba(47,107,224,.06),rgba(47,107,224,.06)),linear-gradient(rgba(6,18,46,.22),rgba(6,18,46,.22)) !important; border: 1px solid rgba(191,216,255,.12); }
+ .kel-v2-shell .kel-shell-pet-card .kel-shell-source-card-head { min-height: 18px; }
+ .kel-v2-shell .kel-shell-pet-card .divide-y > div { min-height: 53px; padding: 9px 0; }
+ .kel-v2-shell .kel-shell-pet-card .divide-y > div > div > div:first-child { font: 500 14px/18px var(--kel-shell-heading); }
+ [data-theme='light'] .kel-v2-shell .kel-shell-pet-card { background: #fff !important; border-color: var(--kel-border-strong); }
+}
+
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-shell-pet-card .divide-y > .kel-desktop-only { padding: 0; }
+ .kel-v2-shell .kel-shell-pet-card .divide-y > .kel-desktop-only > div { min-height: 53px; padding: 9px 0; box-sizing: border-box; }
+ .kel-v2-shell .kel-shell-pet-card .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
+}

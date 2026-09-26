@@ -1,3 +1,4 @@
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 /**
  * @license
@@ -17,6 +18,7 @@ import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import { useSettingsViewMode } from '@/renderer/components/settings/SettingsModal/settingsViewContext';
 
 const PetSettings: React.FC = () => {
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const [enabled, setEnabled] = useState(false);
   const [enabledResolved, setEnabledResolved] = useState(false);
   const [size, setSize] = useState(280);
@@ -138,9 +140,11 @@ const PetSettings: React.FC = () => {
   const preferenceItems = [
     {
       key: 'enabled',
-      label: t('pet.enable'),
+      label: isMobile ? t('pet.enable') : 'Show the pet',
       component: (
         <Switch
+          aria-label={isMobile ? t('pet.enable') : 'Show the pet'}
+          data-testid='pet-enabled'
           checked={enabled}
           loading={!enabledResolved}
           disabled={!enabledResolved}
@@ -150,26 +154,26 @@ const PetSettings: React.FC = () => {
     },
     {
       key: 'size',
-      label: t('pet.size'),
+      label: isMobile ? t('pet.size') : 'Size',
       component: (
-        <Radio.Group value={size} onChange={handleSizeChange} disabled={!enabled}>
-          <Radio value={200}>{t('pet.sizeSmall', { px: 200 })}</Radio>
-          <Radio value={280}>{t('pet.sizeMedium', { px: 280 })}</Radio>
-          <Radio value={360}>{t('pet.sizeLarge', { px: 360 })}</Radio>
+        <Radio.Group aria-label='Pet size' value={size} onChange={handleSizeChange} disabled={!enabled}>
+          <Radio value={200}>{isMobile ? t('pet.sizeSmall', { px: 200 }) : 'Small'}</Radio>
+          <Radio value={280}>{isMobile ? t('pet.sizeMedium', { px: 280 }) : 'Medium'}</Radio>
+          <Radio value={360}>{isMobile ? t('pet.sizeLarge', { px: 360 }) : 'Large'}</Radio>
         </Radio.Group>
       ),
     },
     {
       key: 'dnd',
-      label: t('pet.dnd'),
+      label: isMobile ? t('pet.dnd') : 'Do not disturb',
       description: t('pet.dndDescription'),
-      component: <Switch checked={dnd} onChange={handleDndChange} disabled={!enabled} />,
+      component: <Switch aria-label={isMobile ? t('pet.dnd') : 'Do not disturb'} data-testid='pet-dnd' checked={dnd} onChange={handleDndChange} disabled={!enabled} />,
     },
     {
       key: 'confirmBubble',
-      label: t('pet.confirmBubble'),
+      label: isMobile ? t('pet.confirmBubble') : 'Show approvals on the pet',
       description: t('pet.confirmBubbleDescription'),
-      component: <Switch checked={confirmEnabled} onChange={handleConfirmEnabledChange} disabled={!enabled} />,
+      component: <Switch aria-label={isMobile ? t('pet.confirmBubble') : 'Show approvals on the pet'} data-testid='pet-approvals' checked={confirmEnabled} onChange={handleConfirmEnabledChange} disabled={!enabled} />,
     },
   ];
 
@@ -178,7 +182,7 @@ const PetSettings: React.FC = () => {
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px'>
           <div className='kel-shell-settings-card kel-shell-pet-card px-[12px] md:px-[32px] py-16px bg-2 rd-16px space-y-12px'>
-            <ShellSourceCardHeader title='Desktop Pet' /><div className='w-full flex flex-col divide-y divide-border-2'>
+            <ShellSourceCardHeader title={isMobile ? 'Desktop Pet' : 'Pet'} /><div className='w-full flex flex-col divide-y divide-border-2'>
               {preferenceItems.map((item) => item.key === 'size' ? <React.Fragment key='size'>
                 <div className='kel-desktop-only'><PreferenceRow label={item.label}>{item.component}</PreferenceRow></div>
                 <select className='kel-phone-only kel-shell-pet-size' aria-label='Pet Size' value={size} disabled={!enabled} onChange={(event) => handleSizeChange(Number(event.target.value))}>

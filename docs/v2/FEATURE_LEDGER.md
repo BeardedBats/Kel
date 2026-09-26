@@ -1,5 +1,7 @@
 # KEL V2.0 — FEATURE LEDGER
 
+Desktop continuation (2026-09-26): current Kibble, Setup, Pet off/settings, and remote sign-in now have scoped source evidence. Runtime/Ramble has larger milestone package proof at `0b4a583`. Desktop inspection is 75/75 frames; accepted parity remains partial. V2-16/18/19 stay PARTIAL. Canonical App remains `8c67121`; mobile is paused. See current MARATHON_STATE for exact remaining items.
+
 Feature → state → evidence. "State" is what is actually true on disk right now; the baseline rows
 describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidence lives in that line's
 `docs/daily-driver/` and `docs/transcription/`), and the V2 rows are added as phases land.
