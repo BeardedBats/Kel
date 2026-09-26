@@ -598,7 +598,11 @@
 .kel-v2-shell[data-theme='dark'] .kel-shell-message-meta,
 [data-theme='dark'] .kel-v2-shell .kel-shell-message-meta { font: 500 13px/16px var(--kel-shell-heading); color: #cfe7ff; }
 @media (min-width: 768px) {
-  .kel-v2-shell .message-item .markdown-shadow { --kel-chat-list-line-height: 20px; --kel-chat-list-item-gap: 7px; --kel-chat-list-margin: 10px; --kel-chat-list-description-color: var(--kel-figma-color-text-muted); --kel-chat-list-primary-color: var(--kel-figma-color-text-primary); --kel-chat-list-title-font: var(--kel-shell-heading); --kel-chat-list-title-weight: 500; }
+  .kel-v2-shell .message-item .markdown-shadow { --kel-chat-list-line-height: 20px; --kel-chat-list-item-gap: 14px; --kel-chat-list-margin: 10px; --kel-chat-list-description-color: var(--kel-figma-color-text-muted); --kel-chat-list-primary-color: var(--kel-figma-color-text-primary); --kel-chat-list-title-font: var(--kel-shell-heading); --kel-chat-list-title-weight: 500; }
+  .kel-v2-shell .kel-shell-message-meta { font: 500 13px/16px var(--kel-shell-heading); letter-spacing: .1px; }
+  .kel-v2-shell [data-message-position='left'] .kel-shell-message-meta { gap: 10px; margin-bottom: 10px; padding-bottom: 2px; }
+  .kel-shell-message-avatar { display: flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; }
+  .kel-shell-message-avatar > img { display: block; object-fit: contain; }
   .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn { position: relative; }
   .kel-v2-shell [data-message-position='right'] .kel-shell-message-actions { position: absolute; right: 0; bottom: -32px; opacity: 0; pointer-events: none; }
   .kel-v2-shell [data-message-position='right'] .kel-shell-message-turn:hover .kel-shell-message-actions,
