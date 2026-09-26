@@ -1,3 +1,7 @@
+## Desktop ACP Chat footer checkpoint (2026-09-26)
+
+[ACP Chat footer](evidence/figma-full-audit/DESKTOP_CHAT_FOOTER_SOURCE.md) now reads actual usage/window state and retains permission callbacks/availability guards. Dark/Light 1440/800px pass footer/chip bounds, missing values, populated turn/list/avatar checks, scrolling and 24px inset without overflow/errors. Sidebar bottom/icon sizing repaired. TypeScript/build, nine focused tests and full 64-file/446-test regression pass. Native fixture restored; no provider/send/permission change ran. Full sidebar status variants, Planning subtitle, exact icons/glass and live catalog/usage remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop Chat bottom inset checkpoint (2026-09-26)
 
 [Chat bottom inset](evidence/figma-full-audit/DESKTOP_CHAT_BOTTOM_INSET_SOURCE.md) passes exactly 24px in Dark/Light at 1440/800px. Short threads have no scrollbar; hover/focus/Copy remain accessible. Three-turn wheel access and mixed tool/plan/reply controls pass. Fixture messages/reaction restored; zero overflow/errors. TypeScript/build, six focused tests and combined full 63-file/443-test regression pass. Full Chat/sidebar/footer and task icons/glass/catalog remain open. Package at the next larger milestone; App 8c67121/Data untouched; mobile paused.
@@ -65,7 +69,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Desktop first: full Chat sidebar/footer/header/composer parity. Chat bottom spacing now passes 24px and task field rhythm/height passes 614px. Task picker/assistant icons, glass fill/image, disabled variants and enabled runtime catalog remain open; configured synthetic names did not expose a selectable catalog. Remaining Light/icons and Skills detail/history follow. Chat rhythm/Model/task fields/inset await the next larger milestone package. Latest package b8c84ae; App 8c67121; Data untouched. Setup Autonomy/Pet/live credentials need Nick; mobile paused.
+next_item: Desktop first: remaining populated Chat sidebar status/pin variants and reference Planning subtitle; exact header/composer/icon/glass acceptance. ACP footer now uses real usage/window state and passes both widths; 24px Chat inset and 614px task rhythm pass. Task picker/assistant icons, glass fill/image, disabled variants and enabled runtime catalog remain open. Remaining Light/icons and Skills detail/history follow. Chat rhythm/Model/task fields/inset/footer await the next larger milestone package. Latest package b8c84ae; App 8c67121; Data untouched. Setup Autonomy/Pet/live credentials need Nick; mobile paused.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.
