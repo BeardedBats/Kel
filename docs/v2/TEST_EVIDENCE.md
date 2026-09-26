@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Kibble (2026-09-26)
+
+[Desktop Kibble](evidence/figma-full-audit/DESKTOP_KIBBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its panels, finding selection, direct status actions, and screenshot/quote details. Real isolated Mark fixed, Reopen, and selected prompt/Batched writes passed; fixtures were dismissed. TypeScript/source build, 35 focused tests, and the full 61-file/431-test suite passed. Running build/candidate presentation remains open. Canonical App and Data remain untouched; package proof waits for the next larger milestone.
+
 ## Runtime and Ramble packaged milestone (2026-09-26)
 
 [Runtime and Ramble milestone package](evidence/figma-full-audit/DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed seven packaged probes at 1440/800px, with zero renderer errors or overflow. All 265 renderer files match the archive. Real isolated restart, sanitized export, Merge, and Vetting preview passed; injected/intercepted limits are recorded. Canonical App stays `8c67121`; Data remains untouched. Desktop implementation and acceptance remain partial.

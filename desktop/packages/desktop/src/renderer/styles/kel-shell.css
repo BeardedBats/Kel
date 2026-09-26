@@ -3517,3 +3517,23 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
 .kel-ramble-desktop-vetting-actions .arco-btn { height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); }
 .kel-ramble-desktop-vetting-actions [data-testid='review-process'] { padding: 0 14px; background: linear-gradient(#6493f8,#2356b3); color: #fff1f0; }
 .kel-ramble-desktop-vetting-actions [data-testid='review-accept'] { padding: 0 14px; background: linear-gradient(#2e7939,#1f5e30); color: #fff1f0; }
+
+/* Desktop Kibble follows current frame 272:1087; live mission evidence stays visible. */
+@media (min-width: 768px) {
+ .kel-v2-shell .kel-shell-kibble .kel-kibble-intro { font: 400 14px/18px var(--kel-shell-body); margin: 0; color: var(--kel-text-2); }
+ .kel-v2-shell .kel-shell-kibble [class*='actionPanel'], .kel-v2-shell .kel-shell-kibble [class*='fixesPanel'] { box-sizing: border-box; background: linear-gradient(180deg,rgba(221,233,255,.02),transparent 30%),rgba(159,195,255,.05); border-color: rgba(221,233,255,.5); padding: 18px 20px; }
+ .kel-v2-shell .kel-shell-kibble [class*='actionPanel'] { min-height: 279px; gap: 10px; }
+ .kel-v2-shell .kel-shell-kibble .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); color: var(--kel-figma-color-text-warm,#ffc481); }
+ .kel-v2-shell .kel-shell-kibble .kel-card > .kel-sub { font: 400 12px/16px var(--kel-shell-body); margin: -6px 0 0; color: var(--kel-text-2); }
+ .kel-v2-shell .kel-shell-kibble [class*='explanation'] { font: 400 12px/16px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-kibble [class*='pickText'] .kel-strong, .kel-v2-shell .kel-shell-kibble [class*='fixText'] .kel-strong { font: 500 14px/18px var(--kel-shell-heading); }
+ .kel-v2-shell .kel-shell-kibble [class*='preview'] { font: 400 12px/16px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-kibble .kel-input { height: 34px; min-height: 34px; border-radius: 8px; padding: 0 12px; font: 400 13px/18px var(--kel-shell-body); box-sizing: border-box; }
+ .kel-v2-shell .kel-shell-kibble [class*='panelActions'] .kel-btn--primary { background: linear-gradient(#6493f8,#2356b3); border: 1px solid rgba(140,150,167,.5); color: #fff1f0; height: 34px; min-height: 34px; padding: 0 14px; font: 600 14px/20px var(--kel-shell-heading); border-radius: 8px; }
+ .kel-v2-shell .kel-shell-kibble .kel-tabs { gap: 18px; margin: 0; padding: 0; background: transparent; }
+ .kel-v2-shell .kel-shell-kibble .kel-tab { font: 500 13px/18px var(--kel-shell-heading); padding: 0 6px; height: 28px; border: 0; border-radius: 0; background: transparent; color: var(--kel-text-2); box-shadow: none; }
+ .kel-v2-shell .kel-shell-kibble .kel-tab--on { color: var(--kel-figma-color-text-warm,#ffb764); background: transparent; }
+ .kel-v2-shell .kel-shell-kibble [class*='detailText'] [class*='transcript'] { font: 400 13px/18px var(--kel-shell-body); }
+ .kel-v2-shell .kel-shell-kibble [class*='shotWrap'] { box-sizing: border-box; width: 280px; }
+ .kel-v2-shell .kel-shell-kibble [class*='detailText'] .kel-meta { font: 400 12px/16px var(--kel-shell-body); }
+}
