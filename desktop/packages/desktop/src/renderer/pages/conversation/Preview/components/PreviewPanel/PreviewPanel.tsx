@@ -63,6 +63,12 @@ import {
 import { usePreviewKeyboardShortcuts, useScrollSync, useTabOverflow, useThemeDetection } from '../../hooks';
 import { useTranslation } from 'react-i18next';
 import './preview.css';
+import './kel-file-preview.css';
+import { KelDesktopFileToolbar, KelDesktopFileStatus } from '@renderer/components/kel/KelDesktopFileToolbar';
+import { useCurrentConversation } from '../../../explorer/currentConversationStore';
+import { emitter } from '@/renderer/utils/emitter';
+import { chatFileRefPath, localFileRef } from '@/common/types/chatFile';
+import type { FileOrFolderItem } from '@/renderer/utils/file/fileTypes';
 
 /**
  * 预览面板主组件
@@ -108,6 +114,7 @@ const PreviewPanel: React.FC = () => {
     persistQuotaExceededAt,
   } = usePreviewContext();
   const layout = useLayoutContext();
+  const activeConversationId = useCurrentConversation();
 
   // 视图状态 / View states
   const [viewMode, setViewMode] = useState<'source' | 'preview'>('preview');
@@ -639,6 +646,7 @@ const PreviewPanel: React.FC = () => {
   };
   const isMarkdown = content_type === 'markdown';
   const isHTML = content_type === 'html';
+  const desktopFile = !layout?.isMobile && ['code', 'csv', 'markdown', 'html'].includes(content_type) && !metadata?.missingFile && !metadata?.oversized;
   const isEditable = metadata?.editable !== false; // 默认可编辑 / Default editable
 
   // 「在系统中打开」：有 file_path 或有 fileRef 都能打开。
@@ -1098,20 +1106,25 @@ const PreviewPanel: React.FC = () => {
       // 统一：始终可编辑的 CodeEditor（看=改）/ Unified: always-editable CodeEditor (view = edit)
       // csv 走同一分支：它本来就是纯文本，只是恰好有表格结构。
       // csv shares this branch: it is plain text that happens to be tabular.
-      return (
-        <div className='flex-1 overflow-hidden'>
+      const editor = (readOnly: boolean) => (
+        <div className='flex-1 min-w-0 overflow-hidden kel-file-code'>
           <CodeEditor
             key={activeTabId ?? undefined}
             value={content}
             onChange={handleContentChange}
             language={metadata?.language}
             fileName={metadata?.file_name}
-            readOnly={isEditable === false}
+            readOnly={readOnly}
             targetLine={metadata?.targetLine}
             targetColumn={metadata?.targetColumn}
           />
         </div>
       );
+      if (desktopFile && isSplitScreenEnabled) return <div className='flex flex-1 min-h-0 relative overflow-hidden kel-file-code-split'>
+        <div className='flex flex-col min-w-0 relative' style={{ width: `${splitRatio}%` }}>{editor(isEditable === false)}{createDragHandle({ className: 'absolute end-0 top-0 bottom-0' })}</div>
+        <div className='flex flex-col min-w-0' style={{ width: `${100 - splitRatio}%` }}>{editor(true)}</div>
+      </div>;
+      return editor(isEditable === false || (desktopFile && viewMode === 'preview'));
     } else if (content_type === 'pdf') {
       return (
         <PDFPreview
@@ -1189,7 +1202,7 @@ const PreviewPanel: React.FC = () => {
       {/* bg-1 是必需的：面板必须自己铺满底色，不能依赖外层容器
           bg-1 is required: the panel paints its own background rather than
           relying on an outer container, so no window backdrop shows through. */}
-      <div ref={panelRootRef} className='h-full flex flex-col bg-1'>
+      <div ref={panelRootRef} className={`h-full flex flex-col bg-1 ${!layout?.isMobile ? 'kel-file-preview' : ''}`}>
         {messageContextHolder}
 
         {/* 确认对话框 / Confirmation modals */}
@@ -1207,6 +1220,7 @@ const PreviewPanel: React.FC = () => {
         {/* Tab 栏 / Tab bar */}
         {/* eslint-disable-next-line max-len */}
         <PreviewTabs
+          desktopStyle={!layout?.isMobile}
           tabs={previewTabs}
           activeTabId={activeTabId}
           tabFadeState={tabFadeState}
@@ -1231,7 +1245,29 @@ const PreviewPanel: React.FC = () => {
 
         {/* 工具栏（URL / 浏览器 类型不显示工具栏，因为不需要下载/编辑等功能）
             Toolbar (hidden for URL and browser types — no download/edit needed) */}
-        {content_type !== 'url' && content_type !== 'browser' && !metadata?.missingFile && (
+        {desktopFile && <KelDesktopFileToolbar
+          viewMode={viewMode} split={isSplitScreenEnabled}
+          onViewMode={mode => { setViewMode(mode); setIsSplitScreenEnabled(false); }}
+          onSplit={() => setIsSplitScreenEnabled(!isSplitScreenEnabled)}
+          canAddToChat={Boolean(activeConversationId && (metadata?.fileRef || metadata?.file_path))}
+          onAddToChat={() => {
+            if (!activeConversationId) return;
+            const ref = metadata?.fileRef ?? (metadata?.file_path ? localFileRef(metadata.file_path) : undefined);
+            if (!ref) return;
+            const item: FileOrFolderItem = { path: chatFileRefPath(ref), name: metadata?.file_name || activeTab.title, isFile: true, chatRef: ref };
+            emitter.emit('acp.selected.file.append', [item], activeConversationId);
+            emitter.emit('codex.selected.file.append', [item], activeConversationId);
+            emitter.emit('aionrs.selected.file.append', [item], activeConversationId);
+          }}
+          actions={[
+            { label: 'Reload', onClick: handleRefreshClick, disabled: !isRefreshActionable(refreshState) },
+            ...(isEditable ? [{ label: 'Save', onClick: (): void => { void handleSaveActiveTab(); }, disabled: !activeTab.isDirty }] : []),
+            { label: 'Download', onClick: () => void handleDownload() },
+            ...(showOpenInSystemButton ? [{ label: 'Open in system app', onClick: handleOpenInSystem }] : []),
+            ...(isHTML ? [{ label: inspectMode ? 'Stop inspecting' : 'Inspect elements', onClick: () => setInspectMode(!inspectMode) }] : []),
+          ]}
+        />}
+        {!desktopFile && content_type !== 'url' && content_type !== 'browser' && !metadata?.missingFile && (
           <PreviewToolbar
             content_type={content_type}
             isMarkdown={isMarkdown}
@@ -1269,6 +1305,8 @@ const PreviewPanel: React.FC = () => {
 
         {/* 预览内容 / Preview content */}
         {renderContent()}
+        {desktopFile && <KelDesktopFileStatus path={previewTabPaths(activeTab).relative || metadata?.file_name || activeTab.title} content={content} dirty={Boolean(activeTab.isDirty)}
+          onReveal={canRevealInFolder(previewTabPaths(activeTab).absolute, isElectronDesktop()) ? () => handleRevealInFolder(activeTab.id) : undefined} />}
 
         {/* 浏览器层：常驻挂载，切 tab 不重新加载页面
             Browser layer: always mounted so tab switches don't reload pages */}

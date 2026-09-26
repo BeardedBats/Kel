@@ -1,6 +1,8 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
-[Desktop pickers](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. The engine catalog makes Model taller than Figma's sample. The no-accent-rail rule replaces the scope underline with warm text and subtle full fill. Folder browse used an injected OS-dialog result, not physical acceptance. No live model response was requested. The narrow Workspace header remains open for the next batch. Installed App still packages `8c67121`.
+Workspace and File preview retain native window controls, actual roots/sort, syntax highlighting, and truthful file attribution. Their desktop source checks pass. Final package checks are pending. The existing editor normalizes CRLF saves to LF; fixture cleanup restored original bytes. OS launches and folder reveal were intercepted; Add folder was canceled through an injected native dialog result. These are bridge checks, not physical OS acceptance.
+
+[Desktop pickers](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. The engine catalog makes Model taller than Figma's sample. The no-accent-rail rule replaces the scope underline with warm text and subtle full fill. Folder browse used an injected OS-dialog result, not physical acceptance. No live model response was requested. Workspace and File preview source/render checks now pass; final package verification is pending. Installed App still packages `8c67121`.
 
 [Desktop Fix Capture](evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) has isolated 1440/800px package evidence. Audio and transcription were synthetic; real microphone/Muse acceptance remains open. The real screenshot capture/discard path ran only against isolated data. No fix was saved. The palette focus-ring repair and asynchronous search refresh now have package proof. Installed App remains on `8c67121`.
 

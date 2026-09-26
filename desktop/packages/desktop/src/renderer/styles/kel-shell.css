@@ -49,6 +49,50 @@
 .kel-desktop-project-menu__search > input::placeholder { color: #8fa9d6; }
 .kel-desktop-project-menu__empty { margin: 0; padding: 8px 10px; color: #8fa9d6; font: 400 13px/18px var(--kel-shell-body); }
 
+/* Desktop Workspace panel 273:13249. A neutral separator is structural, never an accent rail. */
+@media (min-width: 768px) {
+  html body .kel-v2-shell [data-project-panel-host] { box-sizing: border-box; background: linear-gradient(rgba(47,107,224,.05),rgba(47,107,224,.05)), rgba(6,18,46,.4) !important; border-color: rgba(191,216,255,.12) !important; container-type: inline-size; container-name: kel-workspace; }
+  .kel-desktop-workspace { color: #c4d4e8; }
+  .kel-workspace-head { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 48px 16px 12px 20px; }
+  .kel-workspace-head > h2 { flex: 1; margin: 0; color: #edf2fa; font: 600 16px/20px var(--kel-shell-heading); }
+  .kel-workspace-heading-action { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+  .kel-workspace-action-menu { width: 220px; }
+  .kel-workspace-head > button { display: flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: pointer; }
+  .kel-workspace-head > button:hover, .kel-workspace-head > button[aria-pressed='true'] { background: rgba(47,107,224,.22); }
+  .kel-workspace-head > button:disabled { opacity: .5; cursor: default; }
+  .kel-workspace-tabs { display: flex; flex-shrink: 0; gap: 18px; padding: 0 16px 10px; }
+  .kel-workspace-tabs > button { height: 28px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: #c4d4e8; font: 500 13px/18px var(--kel-shell-heading); cursor: pointer; }
+  .kel-workspace-tabs > button[aria-selected='true'] { color: #ffb764; background: rgba(255,183,100,.08); }
+  .kel-desktop-workspace .workspace-tree { padding: 4px 10px !important; }
+  .kel-desktop-workspace .kel-workspace-search-tree { padding-inline: 0 !important; }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node { height: 28px; min-height: 28px; padding-inline-start: 10px; border-radius: 6px; color: #c4d4e8; font: 500 13px/18px var(--kel-shell-heading); }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node:hover { background: rgba(191,216,255,.06); }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node-selected { background: rgba(47,107,224,.22) !important; }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node-selected .arco-tree-node-title { color: #ffb764; }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node-title > span { gap: 8px; }
+  .kel-desktop-workspace .workspace-tree .arco-tree-node-switcher { width: 20px; }
+  .kel-workspace-node-icon, .kel-workspace-chevron { flex-shrink: 0; }
+  .kel-workspace-node-label--changed { color: #ffb764; }
+  .kel-v2-shell .sendbox-panel { container-type: inline-size; container-name: kel-composer; }
+  .kel-v2-shell .sendbox-inline-actions { flex-shrink: 0; }
+  @container kel-composer (max-width: 420px) {
+    .sendbox-input-row { flex-wrap: wrap; }
+    .sendbox-input-row .sendbox-highlight-container--single { order: -1; flex: 1 0 100% !important; margin-bottom: 4px !important; }
+    .sendbox-input-row .sendbox-inline-actions { margin-left: auto; }
+    .sendbox-inline-actions .kel-desktop-model-trigger { max-width: 84px; padding-inline: 6px; font-size: 12px; }
+    .sendbox-input-row .sendbox-left-tool-group button { width: 28px !important; min-width: 28px !important; height: 28px !important; padding: 0 !important; }
+  }
+  .kel-workspace-open { display: flex; align-items: center; flex-shrink: 0; gap: 8px; padding: 12px 16px 16px; }
+  .kel-workspace-open > .kel-workspace-open__label { flex: 1; height: auto; padding: 0; border: 0; background: transparent; text-align: left; color: #8fa9d6; font: 500 12px/16px var(--kel-shell-heading); white-space: nowrap; }
+  .kel-workspace-open > button { height: 34px; border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); white-space: nowrap; cursor: pointer; }
+  .kel-workspace-open__terminal { padding: 0 4px; border: 0; background: transparent; color: #9fc3ff; }
+  .kel-workspace-open__explorer { padding: 0 14px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#6493f8,#2356b3); color: #fff1f0; box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 4px 6px rgba(0,0,0,.25); }
+  @container kel-workspace (max-width: 310px) {
+    .kel-workspace-open { flex-wrap: wrap; }
+    .kel-workspace-open > .kel-workspace-open__label { flex-basis: 100%; }
+  }
+}
+
 .kel-tools-mcp-mobile-status,
 .kel-tools-mcp-mobile-action,
 .kel-tools-image-mobile-row { display: none; }

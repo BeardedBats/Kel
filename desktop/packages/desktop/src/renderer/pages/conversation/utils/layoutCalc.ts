@@ -6,7 +6,7 @@ export const MIN_CHAT_PANEL_PX = 360;
 export const MIN_PREVIEW_PANEL_PX = 340;
 export const MIN_WORKSPACE_PANEL_PX = 220;
 export const MAX_WORKSPACE_PANEL_PX = 500;
-export const DEFAULT_WORKSPACE_PANEL_PX = 260;
+export const DEFAULT_WORKSPACE_PANEL_PX = 340;
 /**
  * Horizontal chrome of the Layout-hoisted preview region (stage3 FULL / P4):
  * its `ml-8` + `mr-12` margins + `1px` border on each side, plus a small

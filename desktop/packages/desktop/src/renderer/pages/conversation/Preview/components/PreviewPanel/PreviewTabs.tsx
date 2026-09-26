@@ -10,6 +10,8 @@ import { IconFullscreen, IconFullscreenExit, IconShrink } from '@arco-design/web
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TabFadeState } from '../../hooks/useTabOverflow';
+import fileIcon from '@renderer/assets/figma/file-preview/file.svg';
+import closeIcon from '@renderer/assets/figma/file-preview/close.svg';
 
 /**
  * 单个 tab 的最大宽度。
@@ -95,6 +97,7 @@ export interface PreviewTab {
  * PreviewTabs component props
  */
 interface PreviewTabsProps {
+  desktopStyle?: boolean;
   /**
    * Tabs 列表
    * Tabs list
@@ -178,6 +181,7 @@ interface PreviewTabsProps {
  * Includes left/right gradient indicators to prompt users that more tabs can be scrolled
  */
 const PreviewTabs: React.FC<PreviewTabsProps> = ({
+  desktopStyle = false,
   tabs,
   activeTabId,
   tabFadeState,
@@ -195,16 +199,30 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
 
   return (
     <div
-      className='relative flex-shrink-0 bg-bg-2'
+      className={`relative flex-shrink-0 bg-bg-2 ${desktopStyle ? 'kel-file-tabs' : ''}`}
       style={{ minHeight: '36px', borderBottom: '1px solid var(--border-base)' }}
     >
       <div className='flex items-center h-36px w-full'>
         {/* Tabs 滚动区域 / Tabs scroll area */}
-        <div ref={tabsContainerRef} className='flex items-center h-full flex-1 overflow-x-auto'>
+        <div ref={tabsContainerRef} role='tablist' aria-label='Open files and pages' className='flex items-center h-full flex-1 overflow-x-auto'>
           {tabs.length > 0 ? (
             tabs.map((tab) => (
               <div
                 key={tab.id}
+                role='tab'
+                aria-label={tab.title}
+                aria-selected={tab.id === activeTabId}
+                tabIndex={tab.id === activeTabId ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSwitchTab(tab.id); return; }
+                  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+                  e.preventDefault();
+                  const index = tabs.findIndex(item => item.id === tab.id);
+                  const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (index + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                  onSwitchTab(tabs[next].id);
+                  (e.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[data-file-tab]')[next])?.focus();
+                }}
+                data-file-tab={tab.id}
                 className={`flex items-center gap-6px px-10px h-full cursor-pointer transition-colors flex-shrink-0 ${tab.id === activeTabId ? 'bg-bg-1 text-t-primary' : 'text-t-secondary hover:bg-bg-3'}`}
                 style={{ maxWidth: `${MAX_TAB_WIDTH_PX}px` }}
                 onClick={() => onSwitchTab(tab.id)}
@@ -235,6 +253,7 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
                     min-w-0 is what makes truncation possible: a flex child defaults
                     to its content width and refuses to shrink below it. */}
                 <span className='text-12px flex items-center gap-4px min-w-0'>
+                  {desktopStyle && !tab.favicon && <img src={fileIcon} width={13} height={13} alt='' />}
                   {/* 站点图标（浏览器 tab）/ Site icon (browser tabs) */}
                   {tab.favicon && (
                     <img
@@ -279,13 +298,17 @@ const PreviewTabs: React.FC<PreviewTabsProps> = ({
                     of box (16px — one step down from the plus's 24px since it lives inside
                     a tab) and trimming the glyph to 12px evens out their visual weight. */}
                 <span
+                  role='button'
+                  aria-label={`Close ${tab.title}`}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onCloseTab(tab.id); } }}
                   className='flex items-center justify-center w-16px h-16px rd-4px flex-shrink-0 hover:bg-bg-3 transition-colors'
                   onClick={(e) => {
                     e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
                 >
-                  <Close theme='outline' size='12' fill={iconColors.secondary} className='hover:fill-primary' />
+                  {desktopStyle ? <img src={closeIcon} width={12} height={12} alt='' /> : <Close theme='outline' size='12' fill={iconColors.secondary} className='hover:fill-primary' />}
                 </span>
               </div>
             ))
