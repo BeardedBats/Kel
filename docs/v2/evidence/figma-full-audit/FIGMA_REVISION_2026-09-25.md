@@ -50,8 +50,8 @@
 | `272:7932` | Kel / Sign in (remote) | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `272:739` | Kel / Scheduled task — Detail | `/scheduled` | Details and History implemented and measured at 1440 and 800px. [Scoped evidence](DESKTOP_SCHEDULED_TASK_DETAIL_CURRENT_REVISION.md). | READ |
 | `272:1087` | Kel / Kibble | `/kibble` | New or replaced node; prior pair absent. | PENDING |
-| `272:8149` | Kel / Startup — Starting up | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `272:8364` | Kel / Startup — Engine not running | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `272:8149` | Kel / Startup — Starting up | `shared shell / overlay` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
+| `272:8364` | Kel / Startup — Engine not running | `shared shell / overlay` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
 | `269:5` | Kel / Connections | `/connections` | Populated Services rows measured in an isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:501` | Kel / Connections — Add a service | `/connections` | Six main fields in two columns; extra options and taller card remain. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
 | `269:971` | Kel / Connections — Add credential | `/connections` | Inline editor captured in an isolated package; secure-store value never submitted. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
@@ -91,10 +91,10 @@
 | `273:9737` | Kel / Overlay — Slash menu | `shared shell / overlay` | [340px source render; actual commands](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Labels now match; milestone package pending. | READ |
 | `273:9951` | Kel / Overlay — Attach menu | `shared shell / overlay` | [220px source render; both file paths](DESKTOP_CHAT_MENUS_CURRENT_REVISION.md). Actual catalog controls retained; milestone package pending. | READ |
 | `273:10383` | Kel / Overlay — Ramble API key | `/transcription` | New or replaced node; prior pair absent. | PENDING |
-| `273:10168` | Kel / Overlay — Update available | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:10168` | Kel / Overlay — Update available | `shared shell / overlay` | Fresh context inspected; desktop modal implementation next. | READ |
 | `273:10599` | Kel / Overlay — Ramble merge | `/transcription` | New or replaced node; prior pair absent. | PENDING |
 | `273:10837` | Kel / Overlay — Ramble vetting answers | `/transcription` | New or replaced node; prior pair absent. | PENDING |
-| `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | New or replaced node; prior pair absent. | PENDING |
+| `273:11082` | Kel / Overlay — Export diagnostics | `/diagnostics` | [Runtime source checks](DESKTOP_RUNTIME_VIEWS_SOURCE.md); milestone package pending. | READ |
 | `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
 | `273:12085` | Kel / State — Empty (Connections) | `/connections` | Current empty card implemented and compared in isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
