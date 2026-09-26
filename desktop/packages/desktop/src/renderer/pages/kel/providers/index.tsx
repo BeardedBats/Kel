@@ -16,6 +16,8 @@ import {
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { KelSkeletonRows } from '@renderer/components/kel/KelDesktopPendingStates';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   kelCapabilities,
@@ -27,8 +29,10 @@ import {
 import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
 
 const Providers: React.FC = () => {
+  const desktop = !useLayoutContext()?.isMobile;
   const navigate = useNavigate();
   const [providers, setProviders] = useState<KelProviderStatus[] | null>(null);
+  const [loadingProviders, setLoadingProviders] = useState(false);
   const [capabilities, setCapabilities] = useState<KelCapabilityRow[] | null>(null);
   const [credentialRows, setCredentialRows] = useState<KelCredentialMetadata[]>([]);
   const [capability, setCapability] = useState('text');
@@ -58,6 +62,7 @@ const Providers: React.FC = () => {
   }, []);
 
   const load = useCallback(async () => {
+    setLoadingProviders(true);
     try {
       const started = performance.now();
       const [list, credentials, capabilityRows] = await Promise.all([
@@ -74,6 +79,8 @@ const Providers: React.FC = () => {
       setProviders([]);
       setRuntimeMs(null);
       setError(err);
+    } finally {
+      setLoadingProviders(false);
     }
   }, []);
 
@@ -158,7 +165,7 @@ const Providers: React.FC = () => {
       <a className="kel-skip" href="#kel-providers-main">
         Skip to main content
       </a>
-      <main className="kel-page" id="kel-providers-main" tabIndex={-1}>
+      <main className={`kel-page${error ? ' kel-provider-error' : ''}`} id="kel-providers-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
             <ShellWorkspaceLink /><h1 className="kel-h1">Providers</h1>
@@ -170,11 +177,12 @@ const Providers: React.FC = () => {
           </KelButton>
         </div>
 
-        {error && <KelFailureCard error={error} onRetry={() => void load()} />}
+        {error && <KelFailureCard className='kel-provider-failure' heading={desktop ? 'Kel couldn’t complete that' : undefined} context={desktop ? 'Kel could not load your providers.' : undefined} error={error} onRetry={() => void load()} retryDisabled={loadingProviders} />}
         {!error && providers === null && <KelLoading rows={4} />}
         {note && <p className="kel-meta">{note}</p>}
 
-        <KelCard title="Integrations">
+        <KelCard title="Integrations" className={error ? 'kel-provider-error-integrations' : undefined}>
+        {error && desktop && <><p>Shown when Kel answers again.</p><KelSkeletonRows rows={2} /></>}
         {!error &&
           (providers ?? []).map((provider) => {
             const view = presentProvider(provider);
@@ -274,7 +282,7 @@ const Providers: React.FC = () => {
 
         </KelCard>
 
-        <KelCard title="Readiness preflight" className="kel-shell-provider-preflight"
+        <KelCard title="Readiness preflight" className={`kel-shell-provider-preflight${error ? ' kel-provider-error-secondary' : ''}`}
           actions={<KelButton variant="quiet" onClick={() => setReadinessOptionsOpen(open => !open)} ariaLabel="Preflight options">Options</KelButton>}>
           <div className="kel-shell-provider-preflight-rows">
             <div className="kel-shell-provider-preflight-row"><span>Runtime reachable</span><span className="kel-meta">{runtimeMs === null ? 'local' : `local · ${runtimeMs} ms`}</span><span className={`kel-chip ${error ? 'kel-chip--wait' : 'kel-chip--ok'}`}>{error ? 'Unavailable' : runtimeMs === null ? 'Checking' : 'Pass'}</span></div>
@@ -334,7 +342,7 @@ const Providers: React.FC = () => {
           )}
         </KelCard>
 
-        <KelCard title="Credential metadata">
+        <KelCard title="Credential metadata" className={error ? 'kel-provider-error-secondary' : undefined}>
           {credentialRows.length === 0 ? (
             <KelEmpty
               title="No Kel-owned credential metadata yet."
