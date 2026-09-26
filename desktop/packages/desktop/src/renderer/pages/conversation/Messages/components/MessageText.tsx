@@ -309,7 +309,9 @@ const MessageText: React.FC<{
     <>
       {actionsOnly ? actionsRow : <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
         {message.created_at && <div className='kel-shell-message-meta'>
-          {!isUserMessage && !isTeammateMessage && <img src={kelMark} alt='Kel' width={22} height={22} />}
+          {!isUserMessage && !isTeammateMessage && (layout?.isMobile
+            ? <img src={kelMark} alt='Kel' width={22} height={22} />
+            : <span className='kel-shell-message-avatar'><img src={kelMark} alt='Kel' width={22} height={23} /></span>)}
           <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at, !layout?.isMobile)}</time>
         </div>}
         {cronMeta && <MessageCronBadge meta={cronMeta} />}

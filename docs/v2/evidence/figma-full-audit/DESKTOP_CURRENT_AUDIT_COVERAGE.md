@@ -11,3 +11,5 @@ Setup model/workspace/progress and Knowledge banner have source/package evidence
 Runtime/Ramble, populated custom Skills, core Light labels, Light menus/shared dialogs and Chat plan/reply/error/reconnecting states have scoped milestone package evidence. [Workspace header and Light file surfaces](DESKTOP_WORKSPACE_LIGHT_SOURCE.md) now pass source checks; their package proof waits for the next larger milestone. Populated Chat positioning/typography, remaining retained Tools/task states, Light dialogs/icons and full Light palette parity remain open. READ still does not mean accepted frame parity. External services, live provider/worker actions, V2-18 journeys and V2-19 regression remain partial. Mobile stays paused until desktop implementation is materially complete.
 
 [Light Ramble key/Merge/Vetting dialogs](DESKTOP_RAMBLE_LIGHT_DIALOGS_SOURCE.md) now pass scoped source checks. These and Setup/Workspace await the next larger milestone package.
+
+[Populated Chat type](DESKTOP_POPULATED_CHAT_TYPE_SOURCE.md) now has source proof in both themes/widths. Overall thread positioning/turn rhythm, populated sidebar and truthful footer facts remain open.

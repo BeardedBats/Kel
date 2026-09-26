@@ -1,5 +1,10 @@
 ## Desktop reply actions checkpoint (2026-09-26)
 
+## Desktop populated Chat type checkpoint (2026-09-26)
+
+[Populated Chat type](evidence/figma-full-audit/DESKTOP_POPULATED_CHAT_TYPE_SOURCE.md) passes five list rows at 14px gaps, 13px/16px timestamps, 24px avatar slot/22×23 mark and last-turn wheel scroll at 1440/800px in Dark/Light. User alignment/390px width already matched. Native synthetic messages were journaled/restored; source legacy prefix intercepted. TypeScript/build and six focused tests passed. Full frame placement/rhythm/sidebar/footer facts remain open. Package by the next larger milestone. App/Data untouched; mobile paused.
+
+
 ## Desktop Light Ramble dialogs checkpoint (2026-09-26)
 
 [Light Ramble dialogs](evidence/figma-full-audit/DESKTOP_RAMBLE_LIGHT_DIALOGS_SOURCE.md) pass API key, Merge and Vetting at 1440/800px with minimum sampled label contrast 4.76:1, zero overflow/errors. Key Cancel/reopen, radio/arrow controls and real preview rechecks passed. No key/merge/accept/process mutation occurred; owned synthetic recordings removed and saved transcript preserved. TypeScript/build and 14 focused tests passed. Package by the next larger milestone. App/Data untouched; mobile paused.
