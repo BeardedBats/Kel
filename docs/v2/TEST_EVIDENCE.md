@@ -778,3 +778,6 @@ Desktop Light enabled labels now pass measured contrast on eight routes at 1440/
 
 
 [Combined desktop milestone](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passes packaged Kibble/Setup/Pet/Skills/Light and archive-browser sign-in checks. Kibble mission recovery/extra sheen, Setup policy/folder/Work-banner gaps, Light icons/popups, real workers/auth remain open. App/Data remain unchanged.
+
+
+[Kibble recovery source increment](evidence/figma-full-audit/DESKTOP_KIBBLE_RECOVERY_SOURCE.md) passes navigation/reload and approved-state preservation at both widths, real isolated pointer persistence, ten focused tests, TypeScript/source build, and 63 files / 440 desktop tests. The extra sheen is repaired. Engine records were intercepted; real worker and new package proof remain open. App/Data remain untouched.

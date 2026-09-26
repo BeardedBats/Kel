@@ -448,3 +448,6 @@ message, and the candidate's evidence note describes the mission it belongs to. 
 real codex-code dispatch repaired the fixture inside the isolated `repositories/<job_id>` copy, the
 bounded tests ran green, the candidate carried the workspace revision with the baseline as an ancestor,
 a human review moved it to APPROVED, and the source checkout stayed clean throughout.
+
+
+[Kibble recovery source increment](evidence/figma-full-audit/DESKTOP_KIBBLE_RECOVERY_SOURCE.md) passes navigation/reload and approved-state preservation at both widths, real isolated pointer persistence, ten focused tests, TypeScript/source build, and 63 files / 440 desktop tests. The extra sheen is repaired. Engine records were intercepted; real worker and new package proof remain open. App/Data remain untouched.

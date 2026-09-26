@@ -12,6 +12,7 @@ import { KelButton, KelCard, KelEmpty, KelLoading, KelTabs, formatWhen } from '@
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { kelDogfood, type KelBuildCandidate, type KelBuildMission, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
 import styles from './index.module.css';
+import { configService } from '@/common/config/configService';
 import { kibbleBuildSummary } from '@renderer/components/kel/kibbleBuildSummary';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
@@ -42,6 +43,7 @@ const DogfoodFixes: React.FC = () => {
   // deliberately not offered here.
   const [sourceRoot, setSourceRoot] = useState('');
   const [mission, setMission] = useState<string | null>(null);
+  const [recoveringBuild, setRecoveringBuild] = useState(!isMobile);
   const [buildState, setBuildState] = useState<{
     mission: KelBuildMission;
     job: {
@@ -67,6 +69,31 @@ const DogfoodFixes: React.FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Persist only a pointer. Engine records remain authoritative for work and review.
+  useEffect(() => {
+    if (isMobile) return;
+    let cancelled = false;
+    void (async () => {
+      let saved: string | undefined;
+      try {
+        await configService.whenReady();
+        saved = configService.get('kel.kibbleLastMission');
+        if (cancelled || !saved?.trim()) return;
+        setMission(saved);
+        // Recovery reads state without starting work or assembling a candidate.
+        const state = await kelDogfood.buildUpdate.status(saved);
+        if (cancelled) return;
+        setBuildState(state);
+        setSourceRoot(state.mission.source_root ?? '');
+      } catch {
+        if (!cancelled && saved) setNote('Kel could not load the previous update. Refresh to try again.');
+      } finally {
+        if (!cancelled) setRecoveringBuild(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isMobile]);
 
   const fixes = useMemo(() => data?.fixes ?? [], [data]);
   const openFixes = useMemo(() => fixes.filter((fix) => fix.status === 'OPEN'), [fixes]);
@@ -186,13 +213,20 @@ const DogfoodFixes: React.FC = () => {
       setNote(
         `Development mission started for ${included.length} finding(s). Fix Capture statuses were not changed.`
       );
+      if (!isMobile) {
+        try {
+          await configService.set('kel.kibbleLastMission', started.mission.id);
+        } catch {
+          setNote('The update started, but Kel could not save its place. Keep this page open.');
+        }
+      }
     } catch (err) {
       Message.error('Kel could not start a development mission just now. Try again.');
       setError(err);
     } finally {
       setBusy(false);
     }
-  }, [included, sourceRoot]);
+  }, [included, sourceRoot, isMobile]);
 
   const reviewCandidate = useCallback(
     async (decision: 'approve' | 'reject') => {
@@ -233,7 +267,7 @@ const DogfoodFixes: React.FC = () => {
 <>
                   <KelButton
                     variant='primary'
-                    disabled={busy || !included.length || !sourceRoot.trim()}
+                    disabled={busy || recoveringBuild || !included.length || !sourceRoot.trim()}
                     onClick={() => void startBuildUpdate()}
                   >
                     {`Start update (${included.length})`}

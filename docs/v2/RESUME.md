@@ -2,9 +2,9 @@
 
 ## Latest desktop checkpoint — 2026-09-26
 
-Desktop first: restore Kibble mission state after navigation/reload and remove its extra panel sheen, then retained Tools/chat/task and Light popup/icon states. Setup policy selection/folder persistence/Work-banner integration remain open. The larger Kibble/Setup/Pet/Skills/Light milestone packages 41a73f5. Sign-in has archive-browser proof only. Canonical App remains 8c67121 pending broader acceptance. Mobile stays paused. Pet enable needs Nick's AUD-MINOR-008 decision; live services require credentials.
+Desktop first: complete retained Tools/chat/task and Light popup/icon states. Kibble recovery and panel sheen have source proof; package proof and real worker execution remain open. Setup policy selection/folder persistence/Work-banner integration remain open. The larger Kibble/Setup/Pet/Skills/Light milestone packages 41a73f5. Sign-in has archive-browser proof only. Canonical App remains 8c67121 pending broader acceptance. Mobile stays paused. Pet enable needs Nick's AUD-MINOR-008 decision; live services require credentials.
 
-The latest disposable package is `41a73f5`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, remote sign-in, populated Skills, and measured Light labels on eight routes. See MARATHON_STATE and their evidence records. The latest full desktop suite is 63 files / 437 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
+The latest disposable package is `41a73f5`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, remote sign-in, populated Skills, and measured Light labels on eight routes. See MARATHON_STATE and their evidence records. The latest full desktop suite is 63 files / 440 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
