@@ -1,5 +1,9 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+## Desktop Knowledge (2026-09-26)
+
+[Desktop Knowledge and project recipes](evidence/figma-full-audit/DESKTOP_KNOWLEDGE_CURRENT_REVISION.md) now have 1440/800px source evidence. Proposal labels/order, row icons, card rhythm, map columns, saved-record scrolling, valid memory actions, and saved recipe links are implemented. Real isolated-engine mutations passed. TypeScript, ten focused Work/recipe tests, and 60 files / 427 desktop tests pass. One combined milestone package is next; App and Data remain unchanged.
+
 ## Desktop Work and Permissions (2026-09-26)
 
 [Active/waiting Work and populated Permissions](evidence/figma-full-audit/DESKTOP_WORK_PERMISSIONS_STATES.md) pass real isolated-engine checks at 1440/800px. Job selection, current step, continuation instructions, wrapping, and scrolling are repaired. Answer request, Allow once, and Revoke passed through real engine routes. Auto Edit and Add a file labels match live Figma. TypeScript, source build, 19 Work/attention tests, and four menu DOM tests passed. App and Data were untouched. Milestone package proof remains pending.

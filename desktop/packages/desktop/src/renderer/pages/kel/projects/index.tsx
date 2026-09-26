@@ -1,3 +1,6 @@
+import knowledgeClockIcon from '@renderer/assets/figma/refresh/desktop-knowledge-clock.svg';
+import knowledgeSparkleIcon from '@renderer/assets/figma/refresh/desktop-knowledge-sparkle.svg';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import mobileMapIcon from '@renderer/assets/figma/refresh/mobile-map.svg';
 import mobileRecipeSearchIcon from '@renderer/assets/figma/refresh/mobile-recipe-search.svg';
@@ -50,6 +53,7 @@ const viewFromPath = (path: string): View => {
 
 export default function KelProjectsPage() {
   const { pathname } = useLocation();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const [work, setWork] = useState<KelWork | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -252,16 +256,17 @@ export default function KelProjectsPage() {
     || (desktopRecipeTab === 'Favourites' ? entry.favourite : entry.category === desktopRecipeTab));
   const libraryView = viewFromPath(pathname) === 'recipes';
   const projectRecipes = entries.filter((entry) => entry.source !== 'builtin');
+  const populatedKnowledge = !libraryView && (pathname.startsWith('/projects/knowledge') || proposals.length > 0);
 
   return (
     <div className="kel-scope">
       <a className="kel-skip" href="#kel-projects-main">
         Skip to main content
       </a>
-      <main className={`kel-page${libraryView ? ' kel-shell-recipe-library' : ''}`} id="kel-projects-main" tabIndex={-1}>
+      <main className={`kel-page${libraryView ? ' kel-shell-recipe-library' : populatedKnowledge ? ' kel-project-knowledge-populated' : ''}`} id="kel-projects-main" tabIndex={-1}>
         <div className="kel-page__head">
           <div>
-            <ShellWorkspaceLink /><h1 className="kel-h1">{libraryView ? 'Recipes' : 'Projects'}</h1>
+            <ShellWorkspaceLink /><h1 className="kel-h1">{libraryView ? 'Recipes' : !isMobile && populatedKnowledge ? 'Knowledge' : 'Projects'}</h1>
           </div>
           <span className="kel-grow" />
           {!libraryView && <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
@@ -282,9 +287,9 @@ export default function KelProjectsPage() {
                   why="Kel records what it learns while working — with its source and a trust score."
                 />
               ) : (
-                <div className="kel-project-table-scroll">
+                <><p className="kel-knowledge-trust-note">Trust ranks run from 1 (strongest) to 7.</p><div className="kel-project-table-scroll kel-knowledge-records-scroll" tabIndex={0} role="region" aria-label="Saved knowledge table">
                 <KelTable
-                  head={['Topic', 'Type', 'Trust', 'Status', 'Source', 'Updated', 'Actions']}
+                  head={['Topic', 'Type', isMobile ? 'Trust' : 'Trust rank', 'Status', 'Source', 'Updated', 'Actions']}
                   rows={records.map((record) => [
                     <span className="kel-strong" key={`${record.id}-topic`}>
                       {record.topic || record.summary.slice(0, 40)}
@@ -293,7 +298,7 @@ export default function KelProjectsPage() {
                       {record.type}
                     </span>,
                     <span key={`${record.id}-trust`}>
-                      {`${record.trust}/10`}
+                      {isMobile ? `${record.trust}/10` : `Rank ${record.trust}`}
                       {record.user_confirmed ? ' · confirmed' : ''}
                     </span>,
                     <span className="kel-meta" key={`${record.id}-status`}>
@@ -308,14 +313,14 @@ export default function KelProjectsPage() {
                     <span className="kel-row" key={`${record.id}-actions`}>
                       <KelButton
                         variant="quiet"
-                        disabled={busy !== null}
+                        disabled={busy !== null || record.status !== 'active' || record.trust === 7}
                         onClick={() => void act('Confirm', () => kelMemoryAction('confirm', record.id))}
                       >
                         Confirm
                       </KelButton>
                       <KelButton
                         variant="quiet"
-                        disabled={busy !== null}
+                        disabled={busy !== null || !['active', 'stale'].includes(record.status)}
                         onClick={() =>
                           void act('Retract', () =>
                             kelMemoryAction('retract', record.id, { reason: 'retracted from the Knowledge panel' })
@@ -334,7 +339,7 @@ export default function KelProjectsPage() {
                     </span>,
                   ])}
                 />
-                </div>
+                </div></>
               )}
             </KelCard>
             {proposals.length > 0 && (
@@ -343,16 +348,17 @@ export default function KelProjectsPage() {
                 chip={
                   <span className="kel-meta">
                     {proposals.length === 1
-                      ? 'one waiting for you'
-                      : `${proposals.length} waiting for you`}
+                      ? (isMobile ? 'one waiting for you' : '1 waiting')
+                      : `${proposals.length} waiting${isMobile ? ' for you' : ''}`}
                   </span>
                 }
               >
                 <p className="kel-sub">
-                  Kel only changes what it knows when you agree — nothing here applies by itself.
+                  {isMobile ? 'Kel only changes what it knows when you agree — nothing here applies by itself.' : 'Kel only changes what it knows when you agree.'}
                 </p>
                 {proposals.slice(0, 5).map((proposal) => (
                   <div className="kel-row kel-project-suggestion-row" key={proposal.id} style={{ alignItems: 'flex-start' }}>
+                    <span className="kel-knowledge-proposal-icon" aria-hidden="true"><img src={proposal.kind === 'stale' ? knowledgeClockIcon : knowledgeSparkleIcon} alt="" /></span>
                     <div className="kel-attention__text">
                       <strong>{proposal.summary || proposal.topic || 'A change Kel noticed'}</strong>
                       {proposal.why && <span className="kel-meta"><span className="kel-project-suggestion-why-prefix">Why: </span>{proposal.why}</span>}
@@ -365,7 +371,7 @@ export default function KelProjectsPage() {
                         void act('Accepted', () => kelMemoryAction('accept_proposal', proposal.id))
                       }
                     >
-                      <span className="kel-project-action-desktop">Use this</span><span className="kel-project-action-mobile">Accept</span>
+                      <span className="kel-project-action-desktop">Accept</span><span className="kel-project-action-mobile">Accept</span>
                     </KelButton>
                     <KelButton
                       variant="quiet"
@@ -387,7 +393,7 @@ export default function KelProjectsPage() {
                         )
                       }
                     >
-                      <span className="kel-project-action-desktop">No thanks</span><span className="kel-project-action-mobile">Reject</span>
+                      <span className="kel-project-action-desktop">Reject</span><span className="kel-project-action-mobile">Reject</span>
                     </KelButton>
                   </div>
                 ))}
@@ -413,12 +419,13 @@ export default function KelProjectsPage() {
             id="project-map"
             title="Project map"
             actions={<>
-              {work.map && <span className="kel-project-map-version">v{work.map.version}</span>}
+
               <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
                 <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
               </KelButton>
             </>}
           >
+            {work.map && <div className="kel-project-map-caption"><span>v{work.map.version} · built {formatWhen(work.map.updated)}</span><p>What Kel knows about how this project is built.</p></div>}
             {!work.map ? (
               <KelEmpty
                 title="No map built yet."
@@ -426,18 +433,15 @@ export default function KelProjectsPage() {
               />
             ) : (
               <>
-              <div className="kel-project-table-scroll kel-project-map-desktop">
+              <div className="kel-project-table-scroll kel-project-map-desktop" tabIndex={0} role="region" aria-label="Project map table">
               <KelTable
-                head={['Section', 'Trust', 'Freshness', 'Digest', 'Sources']}
+                head={['Section', 'Trust', 'Freshness', 'Sources']}
                 rows={sections.map((section) => [
                   <span className="kel-strong" key={`${section.name}-name`}>
-                    {section.name}
+                    <img src={mobileMapIcon} alt="" width={14} height={14} /> {section.name.replace(/(^|\s)\S/g, (letter) => letter.toUpperCase())}
                   </span>,
                   <span key={`${section.name}-trust`}>{section.trust}</span>,
-                  <span key={`${section.name}-fresh`}>{section.stale ? 'stale — refresh' : 'fresh'}</span>,
-                  <span className="kel-code" key={`${section.name}-digest`}>
-                    {String(section.digest).slice(0, 10)}
-                  </span>,
+                  <span className={section.stale ? 'kel-project-map-stale' : 'kel-project-map-fresh'} key={`${section.name}-fresh`}>{section.stale ? 'Stale' : 'Fresh'}</span>,
                   <span className="kel-meta" key={`${section.name}-sources`}>
                     {section.sources.slice(0, 2).join(', ') || '—'}
                   </span>,
@@ -464,7 +468,7 @@ export default function KelProjectsPage() {
           <KelCard id="project-recipes" title="Recipes" className={libraryView ? 'kel-recipe-library-card' : undefined}
             actions={libraryView ? <span className="kel-recipe-count">{entries.length} available here</span> : undefined}>
             {!libraryView ? (
-              <KelEmpty
+              !isMobile && projectRecipes.length > 0 ? <div className="kel-project-recipe-links">{projectRecipes.map((entry) => <div className="kel-row" key={entry.recipe_id ?? entry.id}><span className="kel-strong">{entry.name ?? entry.recipe_id}</span><span className="kel-grow" /><KelButton variant="quiet" onClick={() => navigate('/projects/recipes')}>Open Recipes</KelButton></div>)}</div> : <KelEmpty
                 title={projectRecipes.length === 0 ? 'No recipes in this project yet.' : `${projectRecipes.length} recipes in this project.`}
                 why="Open Recipes to search, preview, and run a workflow."
               />
