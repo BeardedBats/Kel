@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Populated desktop layout](evidence/figma-full-audit/DESKTOP_POPULATED_LAYOUT_SOURCE.md) has source proof for canceled Work jobs and project proposals/map sections. Current Figma supplies empty Work/Permissions/Projects frames, so no exact populated-frame match is claimed. The isolated host has no active permission leases, boundary requests, saved knowledge records, or scheduled tasks. Those states and live Work actions remain open. The combined package check is pending.
+
 [Desktop chat menus](evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md) have source render proof, with package proof deferred to the larger desktop milestone. Permission used an injected five-option catalog. Its existing formatter says Auto rather than Auto Edit. The actual slash catalog only exposes `/open`, whose existing description is Add File rather than Add a file. Attach retains actual Skills/MCP controls, making it taller than Figma's two-row example. Memory decisions and native file selection were intercepted; no live provider capability or user-memory mutation is claimed.
 
 [Desktop Activity loading and Providers error](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md) have package evidence at 1440/800px. Holds and failures were injected through the isolated desktop bridge; no live outage is claimed. Diagnostics contain actual isolated engine details rather than Figma's sample PID/heartbeat. Canonical App remains `8c67121`; desktop completion still gates its promotion.

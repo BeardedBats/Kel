@@ -4,6 +4,8 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 ## Desktop current-Figma continuation (2026-09-25)
 
+Populated Work and Projects now contain narrow desktop table overflow and keep proposal text readable beside its actions. Existing synthetic engine records drove 1440/800px source checks. The Work table also supports keyboard scrolling. These repairs preserve engine actions and phone styles. See [populated layout evidence](evidence/figma-full-audit/DESKTOP_POPULATED_LAYOUT_SOURCE.md); active Work and populated permission states remain open.
+
 Desktop Memory review, Permission, Slash, and Attach menus now use current Figma glass, spacing, typography, and action placement. Memory and Permission match their measured component dimensions at 1440/800px. Both file paths remain available, and actual skills get a command group. Nine focused tests, TypeScript, source build, and live source rendering passed. This batch awaits the larger milestone package. See [chat menu evidence](evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md) for remaining runtime-label and catalog differences.
 
 Desktop Activity loading and Providers error now use current Figma skeletons, cards, and actions. Final isolated package checks pass at 1440/800px. Retry and diagnostics work, and reduced motion disables the sweep. All 417 desktop tests passed. See [pending-state evidence](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md).

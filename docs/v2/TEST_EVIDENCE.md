@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop populated layout (2026-09-26)
+
+[Work and Projects](evidence/figma-full-audit/DESKTOP_POPULATED_LAYOUT_SOURCE.md) have source checks at 1440/800px using existing synthetic engine records. Narrow desktop suggestion text now uses its full row. Work contains table overflow in a named keyboard-scrollable region. Final checks report zero document/card overflow and no renderer errors. TypeScript and source build passed. Active Work actions and populated permission/knowledge/recipe states remain open. A larger milestone package is pending.
+
 ## Desktop chat menus (2026-09-26)
 
 [Memory, Permission, Slash, and Attach](evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md) pass source render checks at 1440/800px. Memory measures 440×236; Permission measures 300×286. Glass, padding, radius, screen bounds, Escape, review details, intercepted defer, native picker cancellation, and slash selection passed. TypeScript, source build, and nine focused tests across two files passed. The supplied permission catalog was injected. Current command availability and backend behavior were preserved. This batch awaits the larger desktop milestone package. App and durable Data were untouched.

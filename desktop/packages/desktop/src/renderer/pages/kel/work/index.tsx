@@ -257,6 +257,7 @@ const WorkCenter: React.FC = () => {
 
         {!error && jobs !== null && jobs.length > 0 && (
           <KelCard title="Jobs">
+            <div className="kel-work-table-scroll" tabIndex={0} role="region" aria-label="Jobs table">
             <KelTable
               head={['Job', 'State', 'Current step', 'Budget', 'Updated', 'Next']}
               rows={jobs.map((job) => [
@@ -296,6 +297,7 @@ const WorkCenter: React.FC = () => {
                 </span>,
               ])}
             />
+            </div>
           </KelCard>
         )}
 
