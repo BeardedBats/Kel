@@ -12,3 +12,7 @@ TypeScript and source build passed. Two focused files / 35 tests passed, includi
 
 ![Kibble 1440px source](DESKTOP_KIBBLE_SOURCE_1440.png)
 ![Kibble 800px source](DESKTOP_KIBBLE_SOURCE_800.png)
+
+## Later build-variant evidence
+
+[Build variants](DESKTOP_KIBBLE_BUILD_VARIANTS_SOURCE.md) now have injected/intercepted source proof for Running/Cancelled/candidate review. It supersedes presentation-pending statements above; actual execution and package proof remain open. Running details are now expandable and the compact short-copy panels replace the earlier 302px snapshot.

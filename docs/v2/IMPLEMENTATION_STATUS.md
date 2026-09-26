@@ -1,5 +1,9 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+## Desktop Kibble build variants (2026-09-26)
+
+[Kibble build variants](evidence/figma-full-audit/DESKTOP_KIBBLE_BUILD_VARIANTS_SOURCE.md) now have 1440/800px source checks for Running, Cancelled, and candidate review. Progress uses actual reported state/counts; details remain expandable. Intercepted Approve/Reject handoffs passed; no actual build or installation ran. TypeScript/build, seven focused tests, and the full 63-file/437-test suite passed. Worker execution, mission recovery, and package proof remain open. App/Data remain untouched.
+
 Latest prior increments: [Kibble](evidence/figma-full-audit/DESKTOP_KIBBLE_CURRENT_REVISION.md), [Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md), and [runtime/Ramble package](evidence/figma-full-audit/DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md). Historical package-pending statements below are superseded only for the tested runtime/Ramble frames.
 
 ## Desktop Pet and remote sign-in (2026-09-26)
