@@ -2495,6 +2495,14 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-task-form > .kel-shell-task-custom { order: 6; }
   .kel-shell-task-form > .kel-shell-task-time { grid-column: 1; order: 7; }
   .kel-shell-task-form > .kel-shell-task-weekday { grid-column: 2; order: 7; }
+  .kel-shell-task-form > .kel-shell-task-model { grid-column: 2; order: 7; }
+  .kel-shell-task-form:has(.kel-shell-task-model) > .kel-shell-task-weekday { grid-column: 1 / -1; }
+  .kel-shell-task-form:not(:has(.kel-shell-task-time)) > .kel-shell-task-model { grid-column: 1 / -1; }
+  .kel-shell-task-modal .kel-shell-task-model > label { margin-bottom: 5px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  .kel-shell-task-modal .kel-shell-task-model .guid-config-btn { width: 100%; min-height: 34px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); color: var(--kel-figma-color-text-primary); font: 400 14px/20px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-model .guid-config-btn > span { width: 100%; justify-content: space-between; }
+  .kel-shell-task-modal .kel-shell-task-model .i-icon-brain { display: none; }
+  .kel-shell-task-modal .kel-shell-task-model .guid-model-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .kel-shell-task-form > .kel-shell-task-queue { order: 8; }
   .kel-shell-task-form > .kel-shell-task-advanced { order: 9; }
   .kel-shell-task-modal .arco-form-item-label { margin-bottom: 5px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
@@ -2519,9 +2527,11 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-icon { display: none; }
   .kel-shell-task-modal .kel-shell-task-frequency-options :is(.arco-radio-mask-wrapper,.arco-radio-icon-hover) { display: none; }
   .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-text { margin: 0; color: inherit; font: 500 13px/18px var(--kel-shell-heading); }
-  .kel-shell-task-modal .kel-shell-task-time { margin: 0; }
+  .kel-shell-task-modal .kel-shell-task-time { margin: 0; flex-direction: column; align-items: stretch; gap: 0; }
   .kel-shell-task-modal .kel-shell-task-time::before { content: 'Time'; display: block; margin-bottom: 5px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
   .kel-shell-task-modal .kel-shell-task-time .arco-picker { width: 100% !important; }
+  .kel-shell-task-modal .kel-shell-task-time .arco-picker { min-height: 34px; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); }
+  .kel-shell-task-modal .kel-shell-task-time .arco-picker input { color: var(--kel-figma-color-text-primary); font: 400 14px/20px var(--kel-shell-body); }
   .kel-shell-task-modal .kel-shell-task-queue { min-height: 40px; align-items: center; padding: 0; border: 0; background: transparent; }
   .kel-shell-task-modal .kel-shell-task-queue p:first-child { font-size: 13px; }
   .kel-shell-task-modal .kel-shell-task-queue p:last-child { margin-top: 1px; }
@@ -3677,6 +3687,10 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
     background: rgba(159,195,255,.05) !important;
   }
 }
+@media (min-width: 768px) {
+  html[data-theme='dark'] body .arco-modal.kel-shell-task-modal { position: fixed; left: 50%; top: 70px !important; margin: 0 !important; translate: -50% 0; width: 600px !important; border-radius: 16px; backdrop-filter: blur(24px); }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-checked { border-bottom-color: transparent; }
+}
 
 /* Desktop plan geometry follows 273:13044; narrow windows retain the current step. */
 @media (min-width: 768px) {
@@ -3775,6 +3789,7 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-shell-task-modal :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content) { background: transparent !important; }
   html[data-theme='light'] body .kel-shell-task-modal :is(.aionui-modal-std-header h3, .kel-shell-task-execution-label) { color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-shell-task-modal .arco-form-item-label,
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-model > label,
   html[data-theme='light'] body .kel-shell-task-modal .arco-form-item-label > label,
   html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-time::before { color: var(--kel-accent); }
   html[data-theme='light'] body .kel-shell-task-execution-description { color: var(--kel-text-2); }
@@ -3782,6 +3797,7 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-execution-option.arco-radio-checked { background: var(--kel-accent-soft); border-color: var(--kel-accent); }
   html[data-theme='light'] body .kel-shell-task-modal :is(.arco-input-wrapper, .arco-select-view, .arco-textarea, .arco-picker) { background: var(--kel-surface-2); border-color: var(--kel-border-strong); border-radius: 8px !important; color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-name .arco-input { border-radius: 8px; background: var(--kel-surface-2); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-model .guid-config-btn { background: var(--kel-surface-2); border-color: var(--kel-border-strong); color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-shell-task-modal :is(.arco-input, .arco-select-view-value, .arco-picker-input input) { color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio { color: var(--kel-text-2); border-bottom-color: transparent; }
   html[data-theme='light'] body .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-checked { color: var(--kel-status-attention-text); }

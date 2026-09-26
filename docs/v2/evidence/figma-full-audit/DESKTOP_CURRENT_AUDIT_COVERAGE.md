@@ -21,3 +21,5 @@ Runtime/Ramble, populated custom Skills, core Light labels, Light menus/shared d
 [Source completion milestone package](DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae closes scoped package proof for Setup retention, Workspace/Light files, Light Ramble dialogs, populated Chat type, Light Tools and Light task form. Eight grouped probes passed both widths; full 63-file/443-test regression passed. Full frame acceptance remains partial.
 
 [Chat turn rhythm](DESKTOP_CHAT_TURN_RHYTHM_SOURCE.md) now passes source short/long/mixed checks in both themes/widths. Full retained-control spacing/sidebar/footer parity and package proof for this increment remain open.
+
+[Task Model/Time row](DESKTOP_TASK_MODEL_ROW_SOURCE.md) now passes source placement in both themes/widths and Weekly without overlap. Full task type/spacing/height, enabled catalog state and package proof remain open.
