@@ -3609,3 +3609,47 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
     padding-block: 9px;
   }
 }
+
+/* Desktop Light keeps Figma layout and uses the existing readable Light semantic palette. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .kel-v2-shell {
+    --kel-text-3: #5a6270;
+    --kel-figma-color-text-primary: var(--kel-text-1);
+    --kel-figma-color-text-secondary: var(--kel-text-2);
+    --kel-figma-color-text-muted: var(--kel-text-3);
+    --kel-figma-color-text-dim: var(--kel-text-3);
+    --kel-figma-color-text-section-label: var(--kel-accent);
+    --kel-figma-color-text-accent: var(--kel-accent);
+    --kel-figma-color-text-card-title: var(--kel-status-attention-text);
+    --kel-figma-color-text-warm: var(--kel-status-attention-text);
+    --kel-figma-color-status-success: var(--kel-ok-fg);
+  }
+  html[data-theme='light'] body .kel-v2-shell .kel-bottom-nav__item[data-section='settings']:not([aria-current='page']) { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body .kel-v2-shell .kel-in-chat-frame__pane :is(
+    .kel-shell-default-model-name > span, #project-suggestions > .kel-sub,
+    .kel-project-map-caption, .kel-tools-mcp-error-note
+  ) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell .kel-in-chat-frame__pane :is(
+    .kel-shell-default-model-action, .kel-shell-default-model-lead,
+    .kel-shell-default-model-row[aria-pressed='true'] .kel-shell-default-model-status,
+    .kel-tools-image-setup-row button
+  ) { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-v2-shell .kel-in-chat-frame__pane :is(
+    .kel-shell-default-model-status, .kel-tools-mcp-status[data-status='connected'], .kel-project-map-fresh
+  ) { color: var(--kel-ok-fg); }
+  html[data-theme='light'] body .kel-v2-shell .kel-in-chat-frame__pane :is(
+    .kel-project-map-stale, .kel-shell-default-model-status--wait, .kel-tools-mcp-status[data-status='attention']
+  ) { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body .kel-v2-shell .kel-in-chat-frame__pane :is(
+    .kel-tools-mcp-status[data-status='error'], .kel-tools-mcp-error-note > span:first-child
+  ) { color: var(--kel-failed-fg); }
+}
+
+@media (min-width: 768px) {
+  html[data-theme='light'] body .kel-v2-shell [data-testid='theme-colors-restore'].arco-btn { color: var(--kel-accent) !important; }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-shell-new-chat, .kel-btn--primary, .kel-btn--secondary, #project-map .kel-shell-source-card-actions .kel-btn) {
+    background: var(--kel-accent) !important;
+    color: var(--kel-accent-ink) !important;
+  }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-shell-new-chat, .kel-btn--primary, .kel-btn--secondary, #project-map .kel-shell-source-card-actions .kel-btn):hover { background: var(--kel-accent-hover) !important; }
+}

@@ -772,3 +772,6 @@ TypeScript, source build, Windows package, and the final full desktop suite pass
 
 
 Desktop populated Skills now have real isolated import/list/reload and 1440/800px source evidence. Panel fill matches current Figma; long text wraps without overflow. Owned imports were removed. Package proof and detail/import-history routes remain open. See [source record](evidence/figma-full-audit/DESKTOP_SKILLS_POPULATED_SOURCE.md). App/Data remain untouched.
+
+
+Desktop Light enabled labels now pass measured contrast on eight routes at 1440/800px; minimum 4.86:1, zero overflow/errors. Seven theme tests and source build passed. Figma provides Dark Foundations only, so exact Light color parity remains unverified. Icons/popups/custom colors/package proof remain open. See [record](evidence/figma-full-audit/DESKTOP_LIGHT_LABELS_SOURCE.md). App/Data remain untouched.

@@ -2,9 +2,9 @@
 
 ## Latest desktop checkpoint — 2026-09-26
 
-Desktop first: implement populated custom Skills and retained Tools/chat/task states, then measured Light label parity. Kibble worker execution/mission recovery, Setup policy selection/folder persistence/Work-banner integration remain open. Package one larger Kibble/Setup/Pet/sign-in milestone after related desktop implementation, before canonical App promotion. Mobile stays paused. Pet enable needs Nick’s AUD-MINOR-008 decision; live external acceptance requires credentials. Reference inspection is 75/75, not complete desktop acceptance.
+Desktop first: package one larger Kibble/Setup/Pet/Skills/Light milestone, then continue retained Tools/chat/task states and remaining Light popup/icon states. Kibble worker execution/mission recovery, Setup policy selection/folder persistence/Work-banner integration remain open. Canonical App promotion waits for broader desktop acceptance. Mobile stays paused. Pet enable needs Nick's AUD-MINOR-008 decision; live external acceptance requires credentials.
 
-The disposable runtime/Ramble package is `0b4a583`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, and remote sign-in. See MARATHON_STATE and their evidence records. The latest full desktop suite is 63 files / 437 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
+The disposable runtime/Ramble package is `0b4a583`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, remote sign-in, populated Skills, and measured Light labels on eight routes. See MARATHON_STATE and their evidence records. The latest full desktop suite is 63 files / 437 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
