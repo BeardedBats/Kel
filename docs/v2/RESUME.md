@@ -4,7 +4,7 @@
 
 The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, populated Transcriptions, mobile Ramble list/detail/vetting, mobile Projects, mobile Work empty state, mobile Activity running state, and mobile Permissions empty state have linked scoped package checks in the inventory.
 
-**Next item:** compare chat Permission `299:12418` with runtime-capable options. Nick's Settings → Tools → Kibble choice now has [four-tab package evidence](evidence/figma-full-audit/MOBILE_NAV_CURRENT_REVISION.md). Mobile Projects, Work, Activity, Permissions, and populated Knowledge have scoped checks. Continue remaining components and V2-18/19 acceptance before App promotion.
+**Next item:** desktop first. Model and Project pickers now have [isolated package evidence](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md). Implement Workspace panel `273:13249`, then populated desktop Work, Permissions, Projects, and Scheduled tasks. Batch related implementation and tests before one package pass. Keep mobile paused until desktop implementation is materially complete. Canonical App promotion follows desktop completion.
 
 ---
 

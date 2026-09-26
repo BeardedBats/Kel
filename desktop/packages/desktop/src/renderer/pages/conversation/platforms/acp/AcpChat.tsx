@@ -49,6 +49,7 @@ const AcpChat: React.FC<{
   promptCapability?: { image: boolean; audio: boolean };
   /** Batch 7 (finding 2): compact secondary controls attached to the composer (Kel lanes). */
   composerControls?: React.ReactNode;
+  composerModelControl?: React.ReactNode;
 }> = ({
   conversation_id,
   workspace,
@@ -67,6 +68,7 @@ const AcpChat: React.FC<{
   forkCapability,
   promptCapability,
   composerControls,
+  composerModelControl,
 }) => {
   useMessageLstCache(conversation_id);
   usePendingConfirmationsRecovery(conversation_id);
@@ -115,6 +117,7 @@ const AcpChat: React.FC<{
               teamSendMessage={teamSendMessage}
               teamRuntime={teamRuntime}
               composerControls={composerControls}
+              composerModelControl={composerModelControl}
             ></AcpSendBox>
           )}
         </div>

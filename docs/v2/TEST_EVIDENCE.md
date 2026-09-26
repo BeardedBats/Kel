@@ -704,3 +704,7 @@ tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed i
   hold no test files in this worktree (vitest says "No test files found"), and no
   `*.bun.test.ts` driver file is present. The Playwright e2e and phone journeys still need the Shell
   stack (gateway + built renderer) and stay pending.
+
+## Desktop Model and Project pickers — 2026-09-25
+
+TypeScript, source build, Windows package/native verification, and 55 desktop test files / 408 tests passed. Real isolated model scope writes and restoration, project search/select/clear, Escape, and Add Model passed at 1440/800px. Browse used an injected native folder-dialog result. Zero picker overflow and renderer errors. See [scoped evidence](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md). Canonical App and Data were untouched.

@@ -11,11 +11,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KelCard } from './KelPrimitives';
 import { kelRequest } from './kelApi';
+import { KelDesktopModelMenu } from './KelDesktopModelMenu';
 
-type Choice = { provider: string | null; model: string | null };
+export type Choice = { provider: string | null; model: string | null };
 type ModelOption = { id: string; label: string; available: boolean };
 type ProviderRow = { id: string; label: string; available: boolean; options: ModelOption[] };
-type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
+export type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
 
 const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
@@ -124,6 +125,13 @@ const availabilityLabel = (available: boolean) => (
 export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversationId }) => {
   const navigate = useNavigate();
   const { state, effectiveLabel, setDefault, setConversation } = useKelModelState(conversationId);
+  const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
+  const [popupVisible, setPopupVisible] = useState(false);
+  useEffect(() => {
+    const resize = () => setDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
 
   if (!state || !effectiveLabel) {
     return (
@@ -227,14 +235,20 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   );
 
   return (
-    <Dropdown droplist={items} trigger='click' position='bl' unmountOnExit={false}>
+    <Dropdown droplist={desktop ? <KelDesktopModelMenu state={state} hasConversation={!!conversationId}
+      onChoose={(choice, scope) => scope === 'conversation' ? setConversation(choice) : setDefault(choice)}
+      onClose={() => setPopupVisible(false)}
+      onAdd={() => { setPopupVisible(false); navigate('/settings/model?add=1'); }}
+      onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }} /> : items}
+      trigger='click' position={desktop ? 'tr' : 'bl'} unmountOnExit={desktop}
+      popupVisible={popupVisible} onVisibleChange={setPopupVisible}>
       <button
         type='button'
         data-testid='kel-model-pill'
-        className='flex items-center gap-4px text-12px px-8px h-24px rounded-12px cursor-pointer'
-        style={{ background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
+        className={desktop ? 'kel-desktop-model-trigger' : 'flex items-center gap-4px text-12px px-8px h-24px rounded-12px cursor-pointer'}
+        style={desktop ? undefined : { background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
       >
-        <span>Kel model: {effectiveLabel.label}</span>
+        <span>{desktop ? effectiveLabel.label : `Kel model: ${effectiveLabel.label}`}</span>
         <Down size={12} />
       </button>
     </Dropdown>

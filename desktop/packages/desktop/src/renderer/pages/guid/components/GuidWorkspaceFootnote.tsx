@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
+import { KelDesktopProjectMenu } from '@renderer/components/kel/KelDesktopProjectMenu';
 
 type GuidWorkspaceFootnoteProps = {
   workspaceDir: string;
@@ -56,6 +57,12 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
   const { t } = useTranslation();
   const recentWorkspaces = getRecentWorkspaces();
   const [open, setOpen] = useState(false);
+  const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
+  useEffect(() => {
+    const resize = () => { setDesktop(window.innerWidth >= 768); setOpen(false); };
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement | HTMLDivElement>(null);
@@ -94,10 +101,12 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
     // position above the trigger, aligned to left edge
     setDropdownStyle({
       position: 'fixed',
-      left: rect.left,
+      left: window.innerWidth >= 768 ? Math.max(20, Math.min(rect.left, window.innerWidth - 340)) : rect.left,
       bottom: window.innerHeight - rect.top + 6,
-      minWidth: 230,
-      zIndex: 9999,
+      minWidth: window.innerWidth >= 768 ? 320 : 230,
+      maxHeight: Math.max(120, rect.top - 26),
+      overflowY: 'auto',
+      zIndex: window.innerWidth >= 768 ? 440 : 9999,
     });
     setOpen(true);
     setTimeout(() => searchRef.current?.focus(), 50);
@@ -128,7 +137,9 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const keyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeDropdown(); };
+    document.addEventListener('keydown', keyDown);
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('keydown', keyDown); };
   }, [open, closeDropdown]);
 
   const filteredRecent = recentWorkspaces.filter((p) => {
@@ -143,7 +154,11 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
 
   const dropdownEl = open
     ? createPortal(
-        <div ref={dropdownRef} className={styles.wsDropdown} style={dropdownStyle}>
+        <div ref={dropdownRef} className={desktop ? 'kel-desktop-project-popover' : styles.wsDropdown} style={dropdownStyle}>
+          {desktop ? <KelDesktopProjectMenu paths={recentWorkspaces} selected={workspaceDir}
+            onSelect={handleSelectPath}
+            onClear={() => { onClearWorkspace(); closeDropdown(); }}
+            onBrowse={handleBrowseWorkspace} /> : <>
           <div className='mb-8px'>
             <AionInlineSearchInput
               className='w-full'
@@ -213,6 +228,7 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
               <span>{t('guid.workspace.noProject')}</span>
             </div>
           </>
+          </>}
         </div>,
         document.body
       )
@@ -259,7 +275,7 @@ const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
             ref={triggerRef as React.RefObject<HTMLButtonElement>}
             className={styles.workspaceEmptyBtn}
             data-testid='workspace-selector-btn'
-            onClick={recentWorkspaces.length > 0 ? toggleOpen : handleBrowseWorkspace}
+            onClick={desktop || recentWorkspaces.length > 0 ? toggleOpen : handleBrowseWorkspace}
           >
             <FolderIcon size={14} />
             <span>{t('guid.workspace.workInProject')}</span>

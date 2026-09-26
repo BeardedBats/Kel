@@ -23,6 +23,7 @@ import {
   Write,
 } from '@icon-park/react';
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/renderer/services/i18n/format';
 import AddModelModal from '@/renderer/pages/settings/components/AddModelModal';
@@ -109,6 +110,7 @@ const isModelEnabled = (platform: IProvider, model: string): boolean => {
 };
 
 const ModelModalContent: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
@@ -342,6 +344,13 @@ const ModelModalContent: React.FC = () => {
       });
     },
   });
+  useEffect(() => {
+    if (searchParams.get('add') !== '1') return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('add');
+    setSearchParams(next, { replace: true });
+    addPlatformModalCtrl.open();
+  }, [searchParams, setSearchParams, addPlatformModalCtrl]);
 
   // Consume pending deep-link data on mount (set by useDeepLink hook before navigation)
   useEffect(() => {

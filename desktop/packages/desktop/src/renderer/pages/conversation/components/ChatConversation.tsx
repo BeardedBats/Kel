@@ -309,10 +309,10 @@ const ChatConversation: React.FC<{
             assistantId={acpAssistantId}
             forkCapability={conversation.fork_capability}
             promptCapability={conversation.prompt_capability}
+            composerModelControl={acpAssistantId === 'kel' || !acpAssistantId ? <KelModelPill conversationId={conversation.id} /> : undefined}
             composerControls={
               acpAssistantId === 'kel' || !acpAssistantId ? (
                 <div className='flex items-center gap-8px min-w-0 flex-wrap'>
-                  <KelModelPill conversationId={conversation.id} />
                   <KelToolsControl conversationId={conversation.id} />
                   <KelMemoryProposalControl conversationId={conversation.id} />
                 </div>

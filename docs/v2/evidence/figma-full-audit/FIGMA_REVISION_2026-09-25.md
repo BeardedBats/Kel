@@ -86,8 +86,8 @@
 | `273:8648` | Kel / Overlay — Chat row menu | `/chat` | Six actual actions, 232×227 package; intercepted export-content probe. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:8854` | Kel / Overlay — Rename chat | `/chat` | 440×168 package, x500/y280 at 1440px; canceled at both widths. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:9098` | Kel / Overlay — Permission menu | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:9301` | Kel / Overlay — Model picker | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
-| `273:9512` | Kel / Overlay — Project picker | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:9301` | Kel / Overlay — Model picker | `chat composer` | 280px glass menu, scoped engine writes, Add Model, and Escape checked at 1440/800px. [Evidence](DESKTOP_PICKERS_CURRENT_REVISION.md). | READ |
+| `273:9512` | Kel / Overlay — Project picker | `shared shell / overlay` | 320px search menu, select/clear, Escape, and injected browse result checked at 1440/800px. [Evidence](DESKTOP_PICKERS_CURRENT_REVISION.md). | READ |
 | `273:9737` | Kel / Overlay — Slash menu | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:9951` | Kel / Overlay — Attach menu | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:10383` | Kel / Overlay — Ramble API key | `/transcription` | New or replaced node; prior pair absent. | PENDING |

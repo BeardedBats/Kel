@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Desktop pickers](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. The engine catalog makes Model taller than Figma's sample. The no-accent-rail rule replaces the scope underline with warm text and subtle full fill. Folder browse used an injected OS-dialog result, not physical acceptance. No live model response was requested. The narrow Workspace header remains open for the next batch. Installed App still packages `8c67121`.
+
 [Desktop Fix Capture](evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) has isolated 1440/800px package evidence. Audio and transcription were synthetic; real microphone/Muse acceptance remains open. The real screenshot capture/discard path ran only against isolated data. No fix was saved. The palette focus-ring repair and asynchronous search refresh now have package proof. Installed App remains on `8c67121`.
 
 [Desktop command palette and chat overlays](evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. Chat Export's content/download handoff passed an intercepted renderer probe; native save-dialog completion remains untested. Rename was opened and canceled. The final palette-input focus-ring repair now has package proof from the Fix Capture batch. Installed App remains on `8c67121`.
