@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import AionModal from '@renderer/components/base/AionModal';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -372,14 +373,14 @@ const TaskDetailPage: React.FC = () => {
           <span>Delete this task<small>Its conversations are deleted too.</small></span>
           <KelButton variant='primary' onClick={() => setConfirmDelete(true)}>Delete</KelButton>
         </div>
-        {confirmDelete && <div className='kel-task-detail-delete-confirm' role='alertdialog' aria-label='Delete scheduled task'>
-          <p>Delete this task and its conversations?</p>
-          <div className='kel-row'>
-            <span className='kel-grow' />
-            <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep task</KelButton>
-            <KelButton variant='primary' onClick={() => void handleDelete()}>Delete task and conversations</KelButton>
+        {confirmDelete && <AionModal visible className='kel-task-delete-modal' variant='standard'
+          header={{ title: 'Delete this scheduled task?', subtitle: 'Its conversations are deleted too. This can’t be undone.', showClose: false }}
+          footer={null} closable={false} onCancel={() => setConfirmDelete(false)} focusLock autoFocus style={{ width: 460 }}>
+          <div className='kel-task-delete-actions'>
+            <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep</KelButton>
+            <KelButton variant='primary' onClick={() => void handleDelete()}>Delete task</KelButton>
           </div>
-        </div>}
+        </AionModal>}
       </KelCard>
       <KelCard title='History' className='kel-task-detail-history' actions={conversations.length > 0 && (
         historyBatchMode ? <span className='kel-task-detail-history-actions'>

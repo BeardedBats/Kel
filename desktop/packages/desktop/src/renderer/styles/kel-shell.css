@@ -3402,7 +3402,7 @@ html body .arco-modal.kel-diagnostics-export-modal { position: fixed; left: 50%;
 
 html body .arco-modal.kel-stopped-engine-modal { position: fixed; left: 50%; top: 200px !important; margin: 0 !important; translate: -50% 0; box-sizing: border-box; width: 560px !important; max-width: calc(100vw - 32px); padding: 32px 32px 28px; border: 1px solid rgba(221,233,255,.5); border-radius: 16px; background-color: rgba(15,45,100,.94) !important; background-image: linear-gradient(rgba(159,195,255,.05),rgba(159,195,255,.05)) !important; box-shadow: 0 24px 32px rgba(5,13,36,.45); }
 body:has(.kel-stopped-engine-modal) .arco-modal-mask { background: linear-gradient(rgba(30,75,176,.1),rgba(30,75,176,.1)),url('../assets/figma/canvas.svg') center/cover; opacity: 1; }
-.kel-stopped-engine-modal :is(.arco-modal-content,.aionui-modal-wrapper,.aionui-modal-std-body) { background: transparent !important; padding: 0; }
+html[data-theme='dark'] body .kel-stopped-engine-modal :is(.arco-modal-content,.aionui-modal-wrapper,.aionui-modal-body-content) { background: transparent !important; padding: 0; }
 .kel-stopped-engine-modal .kel-startup-logo { color: #edf2fa; }
 .kel-stopped-engine-body { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
 .kel-stopped-engine-titles h1 { margin: 0 0 6px; color: #edf2fa; font: 600 22px/26px var(--kel-shell-heading); }
@@ -3414,3 +3414,34 @@ body:has(.kel-stopped-engine-modal) .arco-modal-mask { background: linear-gradie
 .kel-stopped-engine-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
 .kel-stopped-engine-actions .kel-btn { height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); }
 .kel-stopped-engine-actions .kel-btn--primary { padding: 0 14px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#6493f8,#2356b3); color: #fff1f0; }
+
+/* Desktop update offer uses the current Figma modal; download/install states retain their controls. */
+html[data-theme='dark'] body .arco-modal.kel-update-available-modal { position: fixed; left: 50%; top: 220px !important; margin: 0 !important; translate: -50% 0; width: 500px !important; max-width: calc(100vw - 32px); box-sizing: border-box; border: 1px solid rgba(221,233,255,.5); border-radius: 16px; background-color: rgba(15,45,100,.94) !important; background-image: linear-gradient(rgba(159,195,255,.05),rgba(159,195,255,.05)) !important; backdrop-filter: blur(24px); box-shadow: 0 24px 32px rgba(5,13,36,.55); }
+html[data-theme='dark'] body .kel-update-available-modal :is(.arco-modal-content,.aionui-modal-wrapper,.aionui-modal-body-content) { background: transparent !important; }
+.kel-update-available-modal .aionui-modal-std-header { padding: 20px 24px 0; border: 0 !important; text-align: left; }
+.kel-update-available-modal .aionui-modal-std-header h3 { margin: 0; color: #edf2fa; font: 600 18px/22px var(--kel-shell-heading); text-align: left; }
+.kel-update-available-modal .aionui-modal-std-header p { margin: 4px 0 0; color: #8fa9d6; font: 400 13px/16px var(--kel-shell-body); }
+.kel-update-available-modal .aionui-modal-std-body { padding: 16px 24px 24px; }
+.kel-update-available-body { display: flex; flex-direction: column; gap: 16px; }
+.kel-update-available-notes { padding: 12px 14px; border-radius: 10px; background: rgba(6,18,46,.4); max-height: min(320px,35vh); overflow: auto; color: #c4d4e8; font: 400 13px/16px var(--kel-shell-body); overflow-wrap: anywhere; }
+.kel-update-available-notes h2 { margin: 0 0 6px; color: #9fc3ff; font: 500 12px/15px var(--kel-shell-heading); }
+.kel-update-available-notes :is(p,ul,ol) { margin: 0; font: inherit; }
+.kel-update-available-notes :is(ul,ol) { padding-left: 13px; }
+.kel-update-available-notes li + li { margin-top: 6px; }
+.kel-update-available-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.kel-update-available-actions .kel-btn { height: 34px; padding: 0 4px; border: 0; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-update-available-actions .kel-btn--primary { padding: 0 14px; border: 1px solid rgba(120,195,178,.55); background: linear-gradient(#16715e,#064b3e); color: #d3ffed; }
+body:has(.kel-update-available-modal) .arco-modal-mask { background: rgba(10,20,48,.62); }
+
+html[data-theme='dark'] body .arco-modal.kel-task-delete-modal { position: fixed; left: 50%; top: 300px !important; margin: 0 !important; translate: -50% 0; width: 460px !important; max-width: calc(100vw - 32px); box-sizing: border-box; border: 1px solid rgba(221,233,255,.5); border-radius: 16px; background-color: rgba(15,45,100,.94) !important; background-image: linear-gradient(rgba(159,195,255,.05),rgba(159,195,255,.05)) !important; backdrop-filter: blur(24px); box-shadow: 0 24px 32px rgba(5,13,36,.55); }
+html[data-theme='dark'] body .kel-task-delete-modal :is(.arco-modal-content,.aionui-modal-wrapper,.aionui-modal-body-content) { background: transparent !important; }
+.kel-task-delete-modal .aionui-modal-std-header { padding: 20px 24px 0; border: 0 !important; text-align: left; }
+.kel-task-delete-modal .aionui-modal-std-header h3 { margin: 0; color: #edf2fa; font: 600 18px/22px var(--kel-shell-heading); text-align: left; }
+.kel-task-delete-modal .aionui-modal-std-header p { margin: 6px 0 0; color: #8fa9d6; font: 400 13px/20px var(--kel-shell-body); }
+.kel-task-delete-modal .aionui-modal-std-body { padding: 16px 24px 24px; }
+.kel-task-delete-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.kel-task-delete-actions .kel-btn { height: 34px; padding: 0 4px; border: 0; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-task-delete-actions .kel-btn--primary { padding: 0 14px; border: 0; background: linear-gradient(#a6443f,#8b312d); color: #fff1f0; box-shadow: inset 0 1px rgba(255,255,255,.2),0 2px 6px rgba(6,18,46,.3); }
+body:has(.kel-task-delete-modal) .arco-modal-mask { background: rgba(10,20,48,.62); }
+
+html[data-theme='dark'] body .kel-stopped-engine-modal .aionui-modal-wrapper { border: 0 !important; box-shadow: none !important; }

@@ -1,6 +1,6 @@
 # Desktop runtime views — source evidence, 2026-09-26
 
-Fresh Figma Starting `272:8149`, Engine not running `272:8364`, and Export diagnostics `273:11082` drove this implementation. Update available `273:10168` was also inspected; its implementation remains next. Source checks used the current renderer in the existing isolated packaged shell. These views are not yet included in a disposable package or canonical App.
+Fresh Figma Starting `272:8149`, Engine not running `272:8364`, and Export diagnostics `273:11082` drove this implementation. Update available `273:10168` and Delete confirmation have since gained [shared-dialog source evidence](DESKTOP_SHARED_DIALOGS_SOURCE.md). Source checks used the current renderer in the existing isolated packaged shell. These views are not yet included in a disposable package or canonical App.
 
 ## Starting
 

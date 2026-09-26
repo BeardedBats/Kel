@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import AionModal from '@renderer/components/base/AionModal';
+import { KelButton } from '@renderer/components/kel/KelPrimitives';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import ReactMarkdown from 'react-markdown';
+import { openExternalUrl } from '@renderer/utils/platform';
 import MarkdownView from '@/renderer/components/Markdown';
 import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { Button, Modal, Progress } from '@arco-design/web-react';
@@ -23,6 +28,7 @@ const renderNotificationLayer = (node: React.ReactElement) => {
 
 const UpdateNotificationCard: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const { state, versionLabel, actions } = useUpdateNotificationController();
   const { openFeedback } = useFeedback();
   const [releaseLogVisible, setReleaseLogVisible] = React.useState(false);
@@ -257,7 +263,23 @@ const UpdateNotificationCard: React.FC = () => {
 
   return renderNotificationLayer(
     <>
-      <section
+      {!isMobile && state.status === 'available' ? (
+        <AionModal visible className='kel-update-available-modal' variant='standard'
+          header={{ title: 'Update available', subtitle: `Kel ${versionLabel} is ready. You have ${state.currentVersion}.`, showClose: false }}
+          footer={null} closable={false} onCancel={() => actions.dismiss('later')} focusLock autoFocus
+          style={{ width: 500 }}>
+          <div className='kel-update-available-body'>
+            <section className='kel-update-available-notes' aria-label='What’s new'>
+              <h2>What’s new</h2>
+              {releaseNotes ? <ReactMarkdown components={{ a: ({ href, children }) => <a href={href} onClick={(event) => { event.preventDefault(); if (href && /^https?:/i.test(href)) void openExternalUrl(href); }}>{children}</a> }}>{releaseNotes}</ReactMarkdown> : <p>{state.releaseNotesStatus === 'failed' ? t('update.releaseNotesFailed') : t('update.releaseNotesLoading')}</p>}
+            </section>
+            <div className='kel-update-available-actions'>
+              <KelButton variant='quiet' onClick={() => actions.dismiss('later')}>{t('update.later')}</KelButton>
+              <KelButton variant='primary' disabled={!state.autoUpdateAvailable && !state.updateInfo?.recommendedAsset} onClick={actions.startDownload}>Download &amp; install</KelButton>
+            </div>
+          </div>
+        </AionModal>
+      ) : <section
         data-testid='update-notification-card'
         className='fixed end-24px bottom-24px z-1000 w-max min-w-300px max-w-[calc(100vw-32px)] bg-1 border border-border-2 rd-8px shadow-[0_2px_16px_rgba(0,0,0,0.12)] overflow-hidden'
       >
@@ -300,7 +322,7 @@ const UpdateNotificationCard: React.FC = () => {
             <div className='flex justify-start gap-8px px-16px pt-6px pb-12px'>{renderActions()}</div>
           </>
         )}
-      </section>
+      </section>}
       <Modal
         title={t('update.releaseLog')}
         visible={releaseLogVisible}
