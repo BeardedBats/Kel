@@ -1,3 +1,7 @@
+import { ipcBridge } from '@/common';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import { KelDefaultModelCard } from '@renderer/components/kel/KelModelControl';
+import { addRecentWorkspace } from '@renderer/components/workspace';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
  * Kel V1.4 first-run onboarding (docs/v1.4/KEL_V1.4_UX_SPEC.md §3).
@@ -16,7 +20,7 @@ import {
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 
-const STEPS = ['Welcome', 'Providers', 'Project', 'Autonomy', 'Ready'] as const;
+const STEPS = ['Welcome', 'Connect a model', 'Workspace', 'Autonomy', 'Ready'] as const;
 type Step = (typeof STEPS)[number];
 
 const STATUS_CHIP: Record<string, 'verified' | 'waiting' | 'uncertain' | 'failed' | 'queued'> = {
@@ -43,7 +47,12 @@ const STATUS_LABEL: Record<string, string> = {
 export default function KelOnboardingPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [step, setStep] = useState<Step>('Welcome');
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
+  const setupState = location.state as { setupGate?: boolean; workspace?: string; setupStep?: Step } | null;
+  const [step, setStep] = useState<Step>(setupState?.setupStep ?? 'Welcome');
+  const [workspace, setWorkspace] = useState(setupState?.workspace ?? '');
+  const [workspaceBusy, setWorkspaceBusy] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState(false);
   const [providers, setProviders] = useState<
     Array<{ provider: string; label: string; status: string; auth_mode: string }>
   >([]);
@@ -86,18 +95,37 @@ export default function KelOnboardingPage() {
         setFinishError(false);
         await configService.set('kel.onboardingCompleted_v1', true);
         // Useful work within moments: setup ends in the chat composer.
-        navigate('/guid', { replace: true });
+        navigate('/guid', { replace: true, state: !isMobile && workspace ? { workspace } : undefined });
       } catch (err) {
         console.error('Could not save Kel setup:', err);
         setFinishError(true);
       }
     },
-    [navigate]
+    [navigate, isMobile, workspace]
   );
 
   const index = STEPS.indexOf(step);
-  const next = () => setStep(STEPS[Math.min(index + 1, STEPS.length - 1)]);
-  const back = () => setStep(STEPS[Math.max(index - 1, 0)]);
+  const selectStep = (selected: Step) => {
+    setStep(selected);
+    navigate('/onboarding', { replace: true, state: { ...setupState, setupStep: selected, workspace } });
+  };
+  const chooseWorkspace = async () => {
+    setWorkspaceBusy(true);
+    setWorkspaceError(false);
+    try {
+      const folders = await ipcBridge.dialog.showOpen.invoke({ properties: ['openDirectory', 'createDirectory'] });
+      const folder = folders?.[0];
+      if (folder) {
+        setWorkspace(folder);
+        addRecentWorkspace(folder);
+        navigate('/onboarding', { replace: true, state: { ...setupState, workspace: folder, setupStep: step } });
+      }
+    } catch {
+      setWorkspaceError(true);
+    } finally {
+      setWorkspaceBusy(false);
+    }
+  };
 
   return (
     <div className='kel-scope'>
@@ -114,7 +142,8 @@ export default function KelOnboardingPage() {
           <KelButton onClick={() => navigate('/settings/model')}>Add Model</KelButton>
         </div>
 
-        <p className='kel-meta kel-shell-setup-label'>{`Step ${index + 1} of ${STEPS.length} · ${step}`}</p>
+        {!isMobile && <nav className='kel-shell-setup-progress' aria-label='Setup steps'>{STEPS.map((label, i) => <button key={label} type='button' aria-label={`Step ${i + 1}: ${label}`} aria-current={i === index ? 'step' : undefined} data-visited={i < index} onClick={() => selectStep(label)} />)}</nav>}
+        {isMobile ? <p className='kel-meta kel-shell-setup-label'>{`Step ${index + 1} of ${STEPS.length} · ${['Welcome', 'Providers', 'Project', 'Autonomy', 'Ready'][index]}`}</p> : <div className='kel-meta kel-shell-setup-label'><span>{`Step ${index + 1} of ${STEPS.length}`}</span><span>{step}</span></div>}
         {(location.state as { setupGate?: boolean } | null)?.setupGate && (
           <p className='kel-meta' role='status'>Finish setup before opening the main Kel pages. Settings and setup controls remain available.</p>
         )}
@@ -133,6 +162,7 @@ export default function KelOnboardingPage() {
           </div>
         </KelCard>
 
+        {!isMobile ? <KelDefaultModelCard compact title='Connect a model' /> : (
         <KelCard title='Connect a model' actions={<KelButton onClick={() => navigate('/providers')}>Open Providers</KelButton>}>
           {providers.length === 0 ? <p className='kel-meta'>No model is connected yet.</p> : providers.map(item => (
             <div className='kel-row' key={item.provider}>
@@ -141,13 +171,16 @@ export default function KelOnboardingPage() {
             </div>
           ))}
         </KelCard>
+        )}
 
         <KelCard title='Where work happens'>
           <div className='kel-row'>
-            <div><div>Workspace folder</div><div className='kel-meta'>{project === 'default' ? 'General' : project || 'Loading…'}</div></div>
-            <span className='kel-grow' /><KelButton onClick={() => navigate('/projects')}>Change</KelButton>
+            <div><div>Workspace folder</div><div className='kel-meta'>{isMobile ? (project === 'default' ? 'General' : project || 'Loading…') : workspace || 'No folder selected'}</div></div>
+            <span className='kel-grow' /><KelButton disabled={workspaceBusy} onClick={() => isMobile ? navigate('/projects') : void chooseWorkspace()}>Change</KelButton>
           </div>
         </KelCard>
+
+        {workspaceError && <p className='kel-meta' role='alert'>The folder picker could not open. Try again.</p>}
 
         <KelCard title='How much Kel does on its own'>
           <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />
@@ -156,7 +189,7 @@ export default function KelOnboardingPage() {
         </KelCard>
 
         <KelCard title="You're set">
-          <div className='kel-row'><KelButton onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
+          <div className='kel-row'><KelButton variant={isMobile ? 'secondary' : 'primary'} onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
         </KelCard>
 
       </main>

@@ -255,14 +255,14 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   );
 };
 
-export const KelDefaultModelCard: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }> = ({ compact = false, title = 'Default model' }) => {
   const navigate = useNavigate();
   const { state, setDefault } = useKelModelState();
   // Defensive: a payload without the provider listing must not take the page down with it.
   const providers = state?.providers ?? [];
 
   return (
-    <KelCard title='Default model' data-testid='kel-default-model-card'>
+    <KelCard title={title} data-testid='kel-default-model-card'>
       {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's

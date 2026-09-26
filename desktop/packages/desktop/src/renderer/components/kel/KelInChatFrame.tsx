@@ -182,7 +182,7 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
       </nav>}
       <div className='kel-in-chat-frame__pane'>
         {setupOpen && pathname !== '/onboarding' && <div className='kel-setup-return' role='status'>
-          <span>Setup is still open. Finish setup before starting a chat.</span>
+          <span>{layout?.isMobile ? 'Setup is still open. Finish setup before starting a chat.' : <><span className='kel-setup-return-icon' aria-hidden='true'>⚠</span>Setup is still open. Finish it before starting a chat.</>}</span>
           <button type='button' onClick={() => void navigate('/onboarding')}>Continue setup</button>
         </div>}
         {children}
