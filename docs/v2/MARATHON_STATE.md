@@ -1,3 +1,7 @@
+## Desktop Chat turn rhythm checkpoint (2026-09-26)
+
+[Chat turn rhythm](evidence/figma-full-audit/DESKTOP_CHAT_TURN_RHYTHM_SOURCE.md) passes 30px row gaps, short-thread bottom placement without scrollbar, long-thread wheel access and mixed tool/reply order in Dark/Light at 1440/800px. Native fixture messages/reaction restored; zero overflow/errors. TypeScript/build and six focused tests passed. The 32px retained-control bottom gap differs from Figma's 24px thread padding and remains open. Full Chat/sidebar/footer and task field/model parity remain open. Package by the next larger milestone. Latest disposable package b8c84ae; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop source completion milestone package checkpoint (2026-09-26)
 
 [Milestone package](evidence/figma-full-audit/DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae passes eight grouped 1440/800px probes: Setup retention, legacy Workspace, Light Workspace/File, Light Ramble key/Merge/Vetting, populated Chat type, Light Tools and Light task form. All 266 renderer files match; native rebuilding and full 63-file/443-test regression pass. Normal bundled renderer, no Vite/history interception. Scoped real isolated actions and injected/intercepted limits are recorded; settings/messages restored and apps closed. Canonical App remains 8c67121; Data untouched. Full Chat/task/icon acceptance, live journeys and V2-19 remain partial. Mobile paused.
@@ -49,7 +53,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Desktop first: finish full populated Chat placement/turn rhythm/sidebar/footer facts and task field/model presentation, then remaining Light/icon and Skills detail/history states. Setup retention, Workspace/Light files, Light Ramble dialogs, Chat type, Light Tools/task now have scoped b8c84ae milestone package proof. Canonical App remains 8c67121 pending broader desktop acceptance. Setup Autonomy awaits Nick; Pet enable needs AUD-MINOR-008; live external acceptance needs credentials. Mobile stays paused.
+next_item: Desktop first: finish task field/model presentation, then full Chat sidebar/footer/header/composer parity and the retained-control bottom spacing (32px versus reference 24px). Chat turn rhythm and short/long/mixed thread source checks now pass and await the next larger milestone package. Setup retention, Workspace/Light files, Light Ramble dialogs, Chat type, Light Tools/task have scoped b8c84ae package proof. App remains 8c67121 pending broader desktop acceptance. Remaining Light/icon and Skills detail/history states follow. Setup Autonomy awaits Nick; Pet enable needs AUD-MINOR-008; live external acceptance needs credentials. Mobile paused.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.

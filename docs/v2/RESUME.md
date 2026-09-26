@@ -1,3 +1,7 @@
+## Desktop Chat turn rhythm checkpoint (2026-09-26)
+
+[Chat turn rhythm](evidence/figma-full-audit/DESKTOP_CHAT_TURN_RHYTHM_SOURCE.md) passes 30px row gaps, short-thread bottom placement without scrollbar, long-thread wheel access and mixed tool/reply order in Dark/Light at 1440/800px. Native fixture messages/reaction restored; zero overflow/errors. TypeScript/build and six focused tests passed. The 32px retained-control bottom gap differs from Figma's 24px thread padding and remains open. Full Chat/sidebar/footer and task field/model parity remain open. Package by the next larger milestone. Latest disposable package b8c84ae; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop source completion milestone package checkpoint (2026-09-26)
 
 [Milestone package](evidence/figma-full-audit/DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae passes eight grouped 1440/800px probes: Setup retention, legacy Workspace, Light Workspace/File, Light Ramble key/Merge/Vetting, populated Chat type, Light Tools and Light task form. All 266 renderer files match; native rebuilding and full 63-file/443-test regression pass. Normal bundled renderer, no Vite/history interception. Scoped real isolated actions and injected/intercepted limits are recorded; settings/messages restored and apps closed. Canonical App remains 8c67121; Data untouched. Full Chat/task/icon acceptance, live journeys and V2-19 remain partial. Mobile paused.
