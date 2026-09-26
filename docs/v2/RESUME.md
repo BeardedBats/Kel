@@ -1,3 +1,7 @@
+## Desktop task Model/Time row checkpoint (2026-09-26)
+
+[Task Model/Time row](evidence/figma-full-audit/DESKTOP_TASK_MODEL_ROW_SOURCE.md) now uses the existing selector beside Time on desktop; mobile retains Advanced placement and edit guards stay unchanged. Dark/Light pass 1440/800px alignment, y70/600px bounds, zero overflow/errors and unsaved Cancel/reopen behavior. Weekly does not overlap. The isolated assistant has no model catalog; only the existing read-only Automatic fallback was verified. TypeScript/build and final 63-file/443-test regression pass. Full field type/spacing/height and enabled catalog state remain open. Package with the next larger milestone. App 8c67121/Data untouched; mobile paused.
+
 ## Desktop Chat turn rhythm checkpoint (2026-09-26)
 
 [Chat turn rhythm](evidence/figma-full-audit/DESKTOP_CHAT_TURN_RHYTHM_SOURCE.md) passes 30px row gaps, short-thread bottom placement without scrollbar, long-thread wheel access and mixed tool/reply order in Dark/Light at 1440/800px. Native fixture messages/reaction restored; zero overflow/errors. TypeScript/build and six focused tests passed. The 32px retained-control bottom gap differs from Figma's 24px thread padding and remains open. Full Chat/sidebar/footer and task field/model parity remain open. Package by the next larger milestone. Latest disposable package b8c84ae; App 8c67121/Data untouched; mobile paused.

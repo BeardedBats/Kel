@@ -28,6 +28,7 @@ import { resolveAssistantAvatar } from '@renderer/utils/model/assistantAvatar';
 import { resolveAssistantName } from '@renderer/utils/model/assistantDisplay';
 import { resolveCronAgentConfig } from './resolveCronAgentConfig';
 import { assistantRuntimeKey, isAionrsAssistant } from '@/common/types/agent/assistantTypes';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 const FormItem = Form.Item;
 const TextArea = Input.TextArea;
@@ -239,6 +240,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   conversation_title,
 }) => {
   const { t, i18n } = useTranslation();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const localeKey = resolveLocaleKey(i18n?.language ?? 'en-US');
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -491,13 +493,24 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const selectedExecutionModeOption =
     executionModeOptions.find((option) => option.value === execution_mode) ?? executionModeOptions[0];
   const showModelSelector = Boolean(resolvedBackend && (isGeminiMode || acpCachedModelInfo));
-  const advancedFieldCount = Number(showModelSelector) + 1;
+  const advancedFieldCount = Number(showModelSelector && isMobile) + 1;
   const isOriginalExistingConversationTask = isEditMode && editJob?.target.execution_mode === 'existing';
   const isCheckingTeamOwnership = teamOwnershipStatus === 'checking';
   const isTeamOwnedTask = teamOwnershipStatus === 'team';
   const isExecutionModeLocked = isCheckingTeamOwnership || isTeamOwnedTask;
   const canEditAgentConfig =
     !isExecutionModeLocked && !isOriginalExistingConversationTask && (!isEditMode || execution_mode !== 'existing');
+  const modelSelector = (
+    <GuidModelSelector
+      isGeminiMode={isGeminiMode}
+      modelList={filteredProviders}
+      current_model={geminiCurrentModel}
+      setCurrentModel={handleGeminiModelSelect}
+      currentAcpCachedModelInfo={acpCachedModelInfo}
+      selectedAcpModel={model_id ?? null}
+      setSelectedAcpModel={handleAcpModelSelect}
+    />
+  );
 
   const handleFrequencyChange = (value: FrequencyType) => {
     setFrequency(value);
@@ -938,6 +951,13 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             </div>
           )}
 
+          {!isMobile && canEditAgentConfig && (
+            <div className='kel-shell-task-model' data-testid='scheduled-task-model-field'>
+              <label className='block'>{t('cron.page.form.model')}</label>
+              {modelSelector}
+            </div>
+          )}
+
           {/* Weekday picker - shown for weekly */}
           {showWeekdayPicker && (
             <div className='kel-shell-task-weekday mb-16px'>
@@ -970,20 +990,12 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
               {advancedOpen && (
                 <div className='mt-12px grid gap-x-16px gap-y-16px md:grid-cols-2'>
-                  {showModelSelector && (
+                  {showModelSelector && isMobile && (
                     <div className='min-w-0'>
                       <label className='mb-8px block text-14px font-medium text-t-primary'>
                         {t('cron.page.form.model')}
                       </label>
-                      <GuidModelSelector
-                        isGeminiMode={isGeminiMode}
-                        modelList={filteredProviders}
-                        current_model={geminiCurrentModel}
-                        setCurrentModel={handleGeminiModelSelect}
-                        currentAcpCachedModelInfo={acpCachedModelInfo}
-                        selectedAcpModel={model_id ?? null}
-                        setSelectedAcpModel={handleAcpModelSelect}
-                      />
+                      {modelSelector}
                     </div>
                   )}
 

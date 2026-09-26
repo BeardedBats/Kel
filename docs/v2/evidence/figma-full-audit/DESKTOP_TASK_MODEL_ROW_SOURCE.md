@@ -1,0 +1,13 @@
+# Desktop task Model/Time row — 2026-09-26
+
+Current task frame `273:1586` places Model beside Time. Desktop now renders the existing GuidModelSelector there instead of inside Advanced settings. Mobile retains its prior Advanced placement. Both locations share the original state and selection callbacks; no model routing, task save, or edit authority changed. Locked existing-conversation/team-owned tasks retain the existing canEditAgentConfig guard. With no model catalog, the existing selector shows its read-only Automatic fallback rather than fabricated choices.
+
+Time now has its label above the native picker. The desktop Model field uses the existing selector and a 34px field. Weekly moves its weekday picker below the Time/Model row. Dark positioning now uses fixed y70; it no longer depends on dialog height. The frequency selection retains its text state without a colored underline. Light uses the existing semantic palette.
+
+Dark/Light source checks passed at 1440/800px: centered 600px modal at y70; Time and Model share a top coordinate and 55px field group height; radius 16px and blur 24px; zero overflow/errors. Light sampled labels pass at least 5.39:1. The real isolated Kel assistant exposes no model list, so the visible Automatic fallback remains read-only. Enabled model choice/save is not claimed. Unsaved input, Weekdays, skip switch, Cancel/reopen and Escape passed in both themes. Dark Weekly additionally passed both widths without overlap. No task/model/provider write ran; Dark was restored and all apps closed.
+
+The initial probe found no Model field because its old visibility rule required a model catalog. Desktop now exposes the existing fallback under the same edit guard; mobile keeps the old catalog condition. TypeScript, source build and the final full desktop regression passed: 63 files / 443 tests. The existing MaxListenersExceededWarning appeared without failures.
+
+This closes the missing desktop row, not complete task-frame parity. Current filled heights are 633px Light and 637px Dark; the prior Figma sample is 614px. Field type/spacing, required marks, and an enabled model-catalog state still need disposition. Package proof waits for the next larger milestone. The latest disposable package remains `b8c84ae` and predates this row and Chat rhythm. Canonical App remains `8c67121`; Data untouched. Mobile paused. `request_review` was unavailable; no independent review is claimed.
+
+Captures: Dark [1440](DESKTOP_TASK_MODEL_DARK_1440.png), [800](DESKTOP_TASK_MODEL_DARK_800.png); Light [1440](DESKTOP_TASK_MODEL_LIGHT_1440.png), [800](DESKTOP_TASK_MODEL_LIGHT_800.png).
