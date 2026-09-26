@@ -76,15 +76,15 @@
 | `314:18753` | Kel / Settings — WebUI — Change password | `/settings/webui` | Mismatch error and compact dialog package-checked; no password changed. [Scoped evidence](DESKTOP_WEBUI_CURRENT_REVISION.md). | READ |
 | `314:19219` | Kel / Settings — Archived | `/settings/archived` | Synthetic three-chat project grouping package-checked at 1440/800. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
 | `314:19647` | Kel / Settings — Archived — Select | `/settings/archived` | Two-row selection and delete confirmation package-checked and canceled. [Scoped evidence](DESKTOP_ARCHIVED_CURRENT_REVISION.md). | READ |
-| `273:595` | Kel / Overlay — Command palette | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
+| `273:595` | Kel / Overlay — Command palette | `shared shell / overlay` | 640×429 package at both widths; focus/Escape/Capture action pass. Final focus-ring CSS has source-render proof. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:906` | Kel / Overlay — Fix Capture · Select | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1091` | Kel / Overlay — Fix Capture · Recording | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1338` | Kel / Overlay — Fix Capture · Review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1586` | Kel / Overlay — New scheduled task | `/scheduled` | Filled unsaved form matched x420/y70, 600×614 in disposable desktop package. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:2125` | Kel / Overlay — Approval details | `shared shell / overlay` | Synthetic pending approval opened real details; x440/y109.5, 560×401. [Scoped evidence](DESKTOP_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:8389` | Kel / Overlay — Memory review | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
-| `273:8648` | Kel / Overlay — Chat row menu | `/chat` | New or replaced node; prior pair absent. | PENDING |
-| `273:8854` | Kel / Overlay — Rename chat | `/chat` | New or replaced node; prior pair absent. | PENDING |
+| `273:8648` | Kel / Overlay — Chat row menu | `/chat` | Six actual actions, 232×227 package; intercepted export-content probe. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
+| `273:8854` | Kel / Overlay — Rename chat | `/chat` | 440×168 package, x500/y280 at 1440px; canceled at both widths. [Evidence](DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md). | READ |
 | `273:9098` | Kel / Overlay — Permission menu | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:9301` | Kel / Overlay — Model picker | `/settings/model` | New or replaced node; prior pair absent. | PENDING |
 | `273:9512` | Kel / Overlay — Project picker | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |

@@ -117,6 +117,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     handleRenameConfirm,
     handleRenameCancel,
     handleTogglePin,
+    handleExport,
     handleMenuVisibleChange,
     handleOpenMenu,
     handleToggleManualUnread,
@@ -180,6 +181,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       onEditStart: handleEditStart,
       onCreateCronTask: handleCreateCronTask,
       onArchive: handleArchive,
+      onExport: handleExport,
       onTogglePin: handleTogglePin,
       onToggleManualUnread: handleToggleManualUnread,
       getJobStatus,
@@ -203,6 +205,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
       handleEditStart,
       handleCreateCronTask,
       handleArchive,
+      handleExport,
       handleTogglePin,
       handleToggleManualUnread,
       getJobStatus,
@@ -269,7 +272,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   return (
     <>
       <Modal
-        title={t('conversation.history.renameTitle')}
+        className='kel-shell-rename-chat-modal'
+        title={isMobile ? t('conversation.history.renameTitle') : 'Rename chat'}
         visible={renameModalVisible}
         onOk={handleRenameConfirm}
         onCancel={handleRenameCancel}
@@ -277,7 +281,6 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
         cancelText={t('conversation.history.cancelEdit')}
         confirmLoading={renameLoading}
         okButtonProps={{ disabled: !renameModalName.trim() }}
-        style={{ borderRadius: '12px' }}
         alignCenter
         getPopupContainer={() => document.body}
       >

@@ -106,13 +106,13 @@ describe('theme color hex field', () => {
 });
 
 describe('command palette surface (D2)', () => {
-  it('is opaque in Dark: its own class carries the Elevated surfaces token, not the page-card glass', () => {
+  it('uses the current desktop overlay glass instead of page-card glass', () => {
     const renderer = resolve(__dirname, '../../packages/desktop/src/renderer');
     const palette = readFileSync(resolve(renderer, 'components/kel/KelCommandPalette.tsx'), 'utf8');
     const css = readFileSync(resolve(renderer, 'styles/kel-shell.css'), 'utf8');
-    expect(palette).toContain("className='kel-card kel-palette'");
-    expect(css).toMatch(
-      /html:not\(\[data-theme='light'\]\) \.kel-v2-shell \.kel-palette\[role='dialog'\] \{ background: var\(--bg-2, #1b3568\) !important; \}/
-    );
+    expect(palette).toContain("className='kel-palette'");
+    expect(palette).not.toContain("className='kel-card kel-palette'");
+    expect(css).toMatch(/\.kel-palette\[role='dialog'\][^}]*rgba\(15,45,100,\.94\)/);
+    expect(css).toMatch(/\.kel-palette\[role='dialog'\][^}]*backdrop-filter: blur\(24px\)/);
   });
 });

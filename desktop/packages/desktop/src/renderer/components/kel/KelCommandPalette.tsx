@@ -7,22 +7,34 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ipcBridge } from '@/common';
 import { configService } from '@/common/config/configService';
 import { DARK_THEME_ID } from '@/common/theme/constants';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
 import { kelState, kelWork } from '@renderer/components/kel/kelApi';
+import searchIcon from '@renderer/assets/figma/palette/search.svg';
+import workIcon from '@renderer/assets/figma/palette/work.svg';
+import activityIcon from '@renderer/assets/figma/palette/activity.svg';
+import clockIcon from '@renderer/assets/figma/palette/clock.svg';
+import captureIcon from '@renderer/assets/figma/palette/capture.svg';
+import playIcon from '@renderer/assets/figma/palette/play.svg';
+import recipeIcon from '@renderer/assets/figma/palette/recipe.svg';
+import chatIcon from '@renderer/assets/figma/palette/chat.svg';
 
 type PaletteItem = {
   id: string;
   group: string;
   label: string;
   hint?: string;
+  icon?: string;
   run: () => void;
 };
 
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
-  { id: 'nav-new-chat', label: 'New Chat', hint: 'start a conversation', path: '/guid' },
   { id: 'nav-work', label: 'Work', hint: 'jobs and what needs you', path: '/work' },
+  { id: 'nav-activity', label: 'Activity', hint: 'recent work', path: '/activity' },
+  { id: 'nav-scheduled', label: 'Scheduled tasks', hint: 'recurring work', path: '/scheduled' },
+  { id: 'nav-new-chat', label: 'New Chat', hint: 'start a conversation', path: '/guid' },
   { id: 'nav-transcription', label: 'Ramble', hint: 'record, upload, transcripts', path: '/transcription' },
   { id: 'nav-settings', label: 'Settings', hint: 'models, appearance, system', path: '/settings/model' },
   { id: 'nav-settings-appearance', label: 'Settings · Appearance', hint: 'theme and colors', path: '/settings/appearance' },
@@ -79,9 +91,10 @@ const KelCommandPalette: React.FC = () => {
     loadedOnce.current = true;
     setLoading(true);
     try {
-      const [state, work] = await Promise.all([
+      const [state, work, sidebar] = await Promise.all([
         kelState().catch((): Awaited<ReturnType<typeof kelState>> => ({ jobs: [], providers: [], projects: [] })),
         kelWork('main').catch((): null => null),
+        ipcBridge.sidebar.get.invoke({ archived: false, limit: 5 }).catch((): null => null),
       ]);
       const items: PaletteItem[] = [];
       (state.jobs ?? []).forEach((job) => {
@@ -112,6 +125,17 @@ const KelCommandPalette: React.FC = () => {
           run: () => navigate('/projects/recipes'),
         });
       });
+      const seenChats = new Set<string>();
+      (sidebar?.groups ?? []).forEach((group) => group.items.forEach((item) => {
+        if (item.type !== 'conversation' || seenChats.has(item.conversation.id)) return;
+        seenChats.add(item.conversation.id);
+        items.push({
+          id: `chat-${item.conversation.id}`,
+          group: 'Chats',
+          label: item.conversation.name || 'New Chat',
+          run: () => navigate(`/conversation/${item.conversation.id}`),
+        });
+      }));
       setDynamic(items);
     } finally {
       setLoading(false);
@@ -121,6 +145,11 @@ const KelCommandPalette: React.FC = () => {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      if (event.key === 'Escape' && open) {
+        event.preventDefault();
+        close();
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && key === 'k') {
         event.preventDefault();
         setOpen((wasOpen) => {
@@ -139,12 +168,19 @@ const KelCommandPalette: React.FC = () => {
         void load();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [load]);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [close, load, open]);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (!open) return;
+    inputRef.current?.focus();
+    const keepFocus = (event: FocusEvent) => {
+      const dialog = document.querySelector('.kel-palette[role="dialog"]');
+      if (dialog && !dialog.contains(event.target as Node)) inputRef.current?.focus();
+    };
+    document.addEventListener('focusin', keepFocus);
+    return () => document.removeEventListener('focusin', keepFocus);
   }, [open]);
 
   useEffect(() => {
@@ -197,6 +233,7 @@ const KelCommandPalette: React.FC = () => {
       group: 'Go to',
       label: entry.label,
       hint: entry.hint,
+      icon: entry.id === 'nav-work' ? workIcon : entry.id === 'nav-activity' ? activityIcon : entry.id === 'nav-scheduled' ? clockIcon : undefined,
       run: () => navigate(entry.path),
     }));
     // Actions are real, verified behaviours: theme switch and a composer handoff that prefills
@@ -204,6 +241,10 @@ const KelCommandPalette: React.FC = () => {
     const activeThemeId = (configService.get('theme.activeId') as string | undefined) || DARK_THEME_ID;
     const otherTheme = activeThemeId === 'dark' ? 'Light' : 'Dark';
     const actions: PaletteItem[] = [
+      {
+        id: 'action-capture', group: 'Actions', label: 'Capture a fix', hint: 'Ctrl+Shift+F', icon: captureIcon,
+        run: () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true })),
+      },
       {
         id: 'action-theme',
         group: 'Actions',
@@ -218,6 +259,7 @@ const KelCommandPalette: React.FC = () => {
         group: 'Actions',
         label: 'Start design vetting',
         hint: 'prefills the chat',
+        icon: playIcon,
         run: () => {
           try {
             window.sessionStorage.setItem('kel.transcription.draft', 'start design vetting: ');
@@ -228,8 +270,11 @@ const KelCommandPalette: React.FC = () => {
         },
       },
     ];
-    const all = mode === 'command' ? [...actions, ...navigation, ...dynamic, ...found] : [...found, ...dynamic];
+    const preferred = navigation.slice(0, 3);
+    const rest = navigation.slice(3);
+    const all = mode === 'command' ? [...preferred, ...actions, ...dynamic, ...rest, ...found] : [...found, ...dynamic];
     const needle = query.trim().toLowerCase();
+    if (!needle && mode === 'command') return [...preferred, actions[0], actions[2], ...dynamic.filter((item) => item.group === 'Recipes').slice(0, 1), ...dynamic.filter((item) => item.group === 'Chats').slice(0, 2)].filter(Boolean);
     if (!needle) return all.slice(0, 24);
     return all
       .filter((item) => `${item.label} ${item.hint ?? ''}`.toLowerCase().includes(needle))
@@ -272,90 +317,66 @@ const KelCommandPalette: React.FC = () => {
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(20,22,26,.32)',
-        zIndex: 400,
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '12vh',
-      }}
-      onClick={close}
-    >
+    <div className='kel-palette-backdrop' onClick={close}>
       <div
         role='dialog'
         aria-modal='true'
         aria-label='Command palette'
-        className='kel-card kel-palette'
-        style={{ width: 620, maxWidth: '92vw', padding: 12, background: 'var(--kel-surface-1)' }}
+        className='kel-palette'
         onClick={(event) => event.stopPropagation()}
       >
-        <label className='kel-meta' htmlFor='kel-palette-input'>
-          {mode === 'search' ? 'Search your work and knowledge' : 'Search or jump to…'}
-        </label>
-        <input
-          id='kel-palette-input'
-          ref={inputRef}
-          className='kel-input'
-          style={{ width: '100%', marginTop: 6 }}
-          role='combobox'
-          aria-expanded='true'
-          aria-controls='kel-palette-list'
-          aria-activedescendant={items[active] ? `kel-palette-${items[active].id}` : undefined}
-          placeholder={mode === 'search' ? 'Search…' : 'Type to search…'}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={onInputKeyDown}
-        />
+        <div className='kel-palette__search'>
+          <img src={searchIcon} alt='' />
+          <input
+            id='kel-palette-input'
+            ref={inputRef}
+            role='combobox'
+            aria-label={mode === 'search' ? 'Search your work and knowledge' : 'Search or jump to'}
+            aria-expanded='true'
+            aria-controls='kel-palette-list'
+            aria-activedescendant={items[active] ? `kel-palette-${items[active].id}` : undefined}
+            placeholder={mode === 'search' ? 'Search…' : 'Search or jump to…'}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onInputKeyDown}
+          />
+          <kbd>Esc</kbd>
+        </div>
         <ul
           id='kel-palette-list'
           role='listbox'
           aria-label='Palette results'
-          style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, maxHeight: '48vh', overflowY: 'auto' }}
+          className='kel-palette__results'
         >
           {loading && items.length === 0 && (
-            <li className='kel-meta' style={{ padding: '8px 10px' }}>
+            <li className='kel-palette__empty'>
               Loading…
             </li>
           )}
           {!loading && items.length === 0 && (
-            <li className='kel-meta' style={{ padding: '8px 10px' }}>
+            <li className='kel-palette__empty'>
               Nothing matches “{query}”. Try a job, a topic, a recipe, a role — or an action like “new chat”.
             </li>
           )}
           {items.map((item, index) => (
-            <li
-              key={item.id}
-              id={`kel-palette-${item.id}`}
-              role='option'
-              aria-selected={index === active}
-              className='kel-row'
-              style={{
-                padding: '8px 10px',
-                borderRadius: 8,
-                cursor: 'pointer',
-                background: index === active ? 'var(--kel-surface-2)' : 'transparent',
-              }}
-              onMouseEnter={() => setActive(index)}
-              onClick={runActive}
-            >
-              <span className='kel-meta' style={{ width: 92, flexShrink: 0 }}>
-                {item.group}
-              </span>
-              <span className='kel-strong'>{item.label}</span>
-              <span className='kel-grow' />
-              {item.hint && <span className='kel-meta'>{item.hint}</span>}
-            </li>
+            <React.Fragment key={item.id}>
+              {(index === 0 || items[index - 1].group !== item.group) && <li className='kel-palette__group' role='presentation'>{item.group}</li>}
+              <li
+                id={`kel-palette-${item.id}`}
+                role='option'
+                aria-selected={index === active}
+                className='kel-palette__item'
+                onMouseEnter={() => setActive(index)}
+                onClick={() => { item.run(); close(); }}
+              >
+                <img src={item.icon ?? (item.group === 'Recipes' ? recipeIcon : item.group === 'Chats' ? chatIcon : item.group === 'Actions' ? playIcon : workIcon)} alt='' />
+                <span>{item.label}</span>
+                {index === active && <span className='kel-palette__key'>↵</span>}
+                {item.id === 'action-capture' && <span className='kel-palette__key'>Ctrl+Shift+F</span>}
+              </li>
+            </React.Fragment>
           ))}
         </ul>
-        <p className='kel-meta' style={{ marginTop: 10 }}>
-          Enter runs · Arrow keys move · Escape closes · <span className='kel-code'>Ctrl+K</span> opens ·
-          {' '}
-          <span className='kel-code'>/</span> searches
-        </p>
       </div>
     </div>
   );

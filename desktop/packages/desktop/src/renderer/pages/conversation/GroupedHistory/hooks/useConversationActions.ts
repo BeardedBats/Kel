@@ -10,6 +10,9 @@ import { requestConversationSendBoxPrefill } from '@/renderer/hooks/chat/useSend
 import { refreshConversationCache } from '@/renderer/pages/conversation/utils/conversationCache';
 import { isLegacyReadOnlyConversationType } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { emitter } from '@/renderer/utils/emitter';
+import { downloadTextContent } from '@/renderer/utils/file/download';
+import { sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
+import { loadAllConversationMessagesPaged } from '@/renderer/utils/chat/messagePagination';
 import { blockMobileInputFocus, blurActiveElement } from '@/renderer/utils/ui/focus';
 import { Message, Modal } from '@arco-design/web-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -17,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { isConversationPinned } from '../utils/groupingHelpers';
+import { buildConversationMarkdown } from '../utils/exportHelpers';
 
 type UseConversationActionsParams = {
   batchMode: boolean;
@@ -205,6 +209,17 @@ export const useConversationActions = ({
     [t]
   );
 
+  const handleExport = useCallback(async (conversation: TChatConversation) => {
+    setDropdownVisibleId(null);
+    try {
+      const messages = await loadAllConversationMessagesPaged(conversation.id, { contentMode: 'full' });
+      downloadTextContent(buildConversationMarkdown(conversation, messages), `${sanitizeFileName(conversation.name || 'Conversation')}.md`, 'text/markdown;charset=utf-8');
+    } catch (error) {
+      console.error('Failed to export conversation:', error);
+      Message.error('Could not export this chat.');
+    }
+  }, []);
+
   const handleMenuVisibleChange = useCallback((conversation_id: string, visible: boolean) => {
     setDropdownVisibleId(visible ? conversation_id : null);
   }, []);
@@ -329,6 +344,7 @@ export const useConversationActions = ({
     handleRenameConfirm,
     handleRenameCancel,
     handleTogglePin,
+    handleExport,
     handleMenuVisibleChange,
     handleOpenMenu,
     handleToggleManualUnread,
