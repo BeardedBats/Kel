@@ -3755,6 +3755,39 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-head img, .kel-workspace-node-icon, .kel-workspace-chevron) { filter: brightness(0) saturate(100%) opacity(.68); }
 }
 
+/* Desktop Tools dialogs retain Figma geometry and use semantic Light surfaces. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .arco-modal:is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal) {
+    position: fixed; left: 50%; margin: 0 !important; translate: -50% 0; box-sizing: border-box;
+    max-width: calc(100vw - 32px); border: 1px solid var(--kel-border-strong); border-radius: 16px;
+    background: var(--kel-surface-1) !important; color: var(--kel-text-1); backdrop-filter: blur(24px); box-shadow: var(--kel-shadow-sheet);
+  }
+  html[data-theme='light'] body .arco-modal:is(.kel-tools-json-modal, .kel-tools-cli-modal) { top: 110px !important; width: 600px !important; }
+  html[data-theme='light'] body .arco-modal.kel-tools-report-modal { top: 120px !important; width: 560px !important; }
+  html[data-theme='light'] body .arco-modal.kel-tools-delete-modal { top: 300px !important; width: 460px !important; }
+  html[data-theme='light'] body :is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal) :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content, .aionui-modal-std-body) { background: transparent !important; }
+  html[data-theme='light'] body :is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal) .aionui-modal-std-header h3 { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal) .aionui-modal-std-header p,
+  html[data-theme='light'] body :is(.kel-tools-json-modal__hint, .kel-tools-report-attachments, .kel-tools-cli-row strong) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-tools-json-modal .cm-editor { background: var(--kel-surface-2); color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-tools-json-modal :is(.cm-placeholder, .cm-gutters) { color: var(--kel-text-2); background: var(--kel-surface-2); }
+  html[data-theme='light'] body :is(.kel-tools-json-modal__copy.arco-btn, .kel-tools-cli-row__name) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-tools-cli-row { border-color: var(--kel-border); }
+  html[data-theme='light'] body .kel-tools-cli-row input { accent-color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-tools-cli-row input:disabled { border-color: var(--kel-border-strong); background: var(--kel-surface-2); }
+  html[data-theme='light'] body .kel-tools-cli-row strong[data-state='selected'] { color: var(--kel-ok-fg); }
+  html[data-theme='light'] body .kel-tools-cli-row strong[data-state='auth'] { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body :is(.kel-tools-json-modal__actions, .kel-tools-cli-actions, .kel-tools-report-actions, .kel-tools-delete-modal__actions) .arco-btn,
+  html[data-theme='light'] body .kel-tools-report-body label { color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-tools-json-modal__actions, .kel-tools-cli-actions, .kel-tools-report-actions) .arco-btn-primary { background: var(--kel-ok-fg); color: var(--kel-text-inverse); box-shadow: none; }
+  html[data-theme='light'] body :is(.kel-tools-json-modal__actions, .kel-tools-cli-actions, .kel-tools-report-actions) .arco-btn-primary:not(:disabled):is(:hover, :active) { background: var(--kel-ok-fg); color: var(--kel-text-inverse); }
+  html[data-theme='light'] body .kel-tools-delete-modal__actions .arco-btn-status-danger { background: var(--kel-failed-fg); color: var(--kel-text-inverse) !important; box-shadow: none; }
+  html[data-theme='light'] body .kel-tools-report-body .arco-textarea { background: var(--kel-surface-2) !important; border-color: var(--kel-border-strong) !important; color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-tools-report-body .arco-textarea:focus { border-color: var(--kel-accent) !important; }
+  html[data-theme='light'] body .kel-tools-report-error { color: var(--kel-failed-fg); }
+  html[data-theme='light'] body:has(:is(.kel-tools-json-modal, .kel-tools-cli-modal, .kel-tools-report-modal, .kel-tools-delete-modal)) .arco-modal-mask { background: var(--kel-scrim); }
+}
+
 /* Desktop Ramble dialogs share Figma dimensions with the existing Light palette. */
 @media (min-width: 768px) {
   html[data-theme='light'] body .arco-modal:is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal) {

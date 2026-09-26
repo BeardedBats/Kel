@@ -1,3 +1,7 @@
+## Desktop Light Tools dialogs checkpoint (2026-09-26)
+
+[Light Tools dialogs](evidence/figma-full-audit/DESKTOP_LIGHT_TOOLS_DIALOGS_SOURCE.md) pass JSON, CLI import, report and delete at 1440/800px with Figma geometry, 16px radius/24px blur, minimum sampled contrast 5.38:1 and zero overflow/errors. Valid input, selection/count, Back/Cancel and Keep passed; no import/report/delete/provider ran. TypeScript/build and seven focused tests passed. Package by the next larger milestone. App/Data untouched; mobile paused.
+
 ## Desktop reply actions checkpoint (2026-09-26)
 
 ## Desktop populated Chat type checkpoint (2026-09-26)
