@@ -1,5 +1,10 @@
 ## Desktop reply actions checkpoint (2026-09-26)
 
+## Desktop Light Ramble dialogs checkpoint (2026-09-26)
+
+[Light Ramble dialogs](evidence/figma-full-audit/DESKTOP_RAMBLE_LIGHT_DIALOGS_SOURCE.md) pass API key, Merge and Vetting at 1440/800px with minimum sampled label contrast 4.76:1, zero overflow/errors. Key Cancel/reopen, radio/arrow controls and real preview rechecks passed. No key/merge/accept/process mutation occurred; owned synthetic recordings removed and saved transcript preserved. TypeScript/build and 14 focused tests passed. Package by the next larger milestone. App/Data untouched; mobile paused.
+
+
 ## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
 
 [Workspace/Light source checks](evidence/figma-full-audit/DESKTOP_WORKSPACE_LIGHT_SOURCE.md) repair the legacy header/native-control overlap and narrow collapsed-panel width. Real titlebar collapse/reopen passed Dark/Light at 1440/800px. Light file tree, SCM tabs, heading menu, preview/code/status/action menu and read-only/split controls pass; 74 labels measured at least 5.39:1. TypeScript/build and 11 focused tests passed. Prior isolated panel preferences and Dark restored; no file mutation. Package by the next larger milestone. App/Data untouched; mobile paused.
