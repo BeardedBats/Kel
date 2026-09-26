@@ -3661,6 +3661,38 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   }
 }
 
+/* Desktop plan geometry follows 273:13044; narrow windows retain the current step. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-plan-bar { border-radius: 10px; }
+  .kel-v2-shell .kel-plan-bar__summary { height: 50px; }
+  .kel-v2-shell .kel-plan-bar__current { font-size: 13px; line-height: 18px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .kel-v2-shell .kel-plan-bar__meter { display: none; }
+  .kel-v2-shell .kel-plan-bar__summary { gap: 8px; }
+}
+
+/* Light Chat states use the existing semantic palette. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call, .kel-plan-bar) { background: var(--kel-surface-2); border-color: var(--kel-border-strong); color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call__title, .kel-plan-bar__current, .kel-chat-agent-error__body, .kel-chat-reconnecting__text strong) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call__description, .kel-tool-call__chevron, .kel-plan-bar__count, .kel-tool-call .tool-detail-label, .kel-chat-reconnecting__text small) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call__icon, .kel-tool-call__status, .kel-plan-bar__expand, .kel-chat-agent-error__model) { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-v2-shell .kel-tool-call[data-status='completed'] .kel-tool-call__status { color: var(--kel-ok-fg); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-tool-call[data-status='error'] .kel-tool-call__status, .kel-chat-agent-error__heading strong, .kel-chat-agent-error__heading .i-icon) { color: var(--kel-failed-fg); }
+  html[data-theme='light'] body .kel-v2-shell .kel-chat-agent-error__details > summary::after { color: var(--kel-failed-fg); }
+  html[data-theme='light'] body .kel-v2-shell .kel-plan-bar__summary strong { color: var(--kel-wait-fg); }
+  html[data-theme='light'] body .kel-v2-shell .kel-plan-bar__meter { background: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-v2-shell .kel-plan-bar__meter > span { background: var(--kel-accent); }
+  html[data-theme='light'] body .kel-v2-shell .kel-tool-call .tool-detail-panel { background: var(--kel-surface-1); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-v2-shell .kel-tool-call .tool-detail-content { background: var(--kel-surface-2); color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell .kel-chat-agent-error { background: var(--kel-failed-bg); border-color: var(--kel-failed-fg); color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-v2-shell .kel-chat-agent-error__diagnostics { background: var(--kel-surface-1); border-color: var(--kel-border-strong); color: var(--kel-text-2); box-shadow: var(--kel-shadow-sheet); }
+  html[data-theme='light'] body .kel-v2-shell :is(.kel-chat-agent-error__retry, .kel-chat-reconnecting button) { background: var(--kel-accent); color: var(--kel-accent-ink); border-color: var(--kel-accent); box-shadow: var(--kel-shadow-card); }
+  html[data-theme='light'] body .kel-v2-shell .kel-chat-reconnecting { background: var(--kel-wait-bg); border-color: var(--kel-wait-border); box-shadow: var(--kel-shadow-sheet); }
+  html[data-theme='light'] body .kel-v2-shell .kel-chat-reconnecting__spinner { border-color: var(--kel-wait-border); border-top-color: var(--kel-wait-fg); }
+}
+
 /* Light dialogs retain desktop geometry and use the existing semantic palette. */
 @media (min-width: 768px) {
   html[data-theme='light'] body .kel-startup-card { background: var(--kel-surface-1); border-color: var(--kel-border-strong); box-shadow: var(--kel-shadow-sheet); }
