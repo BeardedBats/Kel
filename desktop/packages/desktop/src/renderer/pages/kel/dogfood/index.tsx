@@ -12,6 +12,7 @@ import { KelButton, KelCard, KelEmpty, KelLoading, KelTabs, formatWhen } from '@
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { kelDogfood, type KelBuildCandidate, type KelBuildMission, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
 import styles from './index.module.css';
+import { kibbleBuildSummary } from '@renderer/components/kel/kibbleBuildSummary';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
@@ -217,6 +218,7 @@ const DogfoodFixes: React.FC = () => {
     [buildState?.candidate?.id, reviewNote]
   );
 
+  const buildSummary = kibbleBuildSummary(buildState?.job ?? null);
   const promptActions = (
 <KelButton
                   variant='primary'
@@ -311,7 +313,7 @@ const DogfoodFixes: React.FC = () => {
               title={isMobile ? 'Build Update' : 'Build an update'}
               actions={isMobile ? buildActions : undefined}
             >
-              {!isMobile && <p className='kel-sub'>Kel fixes the picked items in a copy of your repo, then asks you to review.</p>}
+              {!isMobile && <p className='kel-sub'>Kel fixes picked items in a copy of your repo, then asks for review.</p>}
               <p className={isMobile ? 'kel-sub' : styles.explanation}>
                 Kel fixes the selected findings in a copy of this repository and offers the result for
                 review. Fix Capture statuses stay exactly as they are, and nothing is installed.
@@ -332,6 +334,12 @@ const DogfoodFixes: React.FC = () => {
               )}
               {buildState && (
                 <div className={styles.buildState}>
+                  {!isMobile && <div className={styles.buildSummary} role='status'>
+                    {buildSummary.running && <svg className={styles.buildSpinner} viewBox='0 0 16 16' fill='none' stroke='currentColor' aria-hidden='true'><path d='M13.5 8a5.5 5.5 0 1 1-5.5-5.5' /></svg>}
+                    <span>{buildSummary.text}</span>{buildSummary.stage && <strong>{buildSummary.stage}</strong>}
+                  </div>}
+                  <details className={!isMobile ? styles.buildDetails : styles.mobileContents} open={isMobile || Boolean(buildState.candidate)}>
+                    {!isMobile && <summary>Build details</summary>}
                   <p className='kel-strong'>{`Mission ${buildState.mission.id.slice(0, 8)} · ${buildState.job?.state === 'CANCELLED' ? 'cancelled' : (buildState.mission.stage ?? 'OPEN').toLowerCase()}`}</p>
                   {buildState.job && (
                     <p className='kel-meta'>{`Job ${buildState.job.id.slice(0, 8)} · ${buildState.job.state ?? 'queued'}${buildState.job.verdict ? ` · ${buildState.job.verdict}` : ''}`}</p>
@@ -405,9 +413,10 @@ const DogfoodFixes: React.FC = () => {
                       ? 'This update was cancelled. No candidate was created.'
                       : 'No candidate yet — one appears when the mission settles.'}</p>
                   )}
+                  </details>
                 </div>
               )}
-              {note && <p className='kel-meta' role='status'>{note}</p>}
+              {isMobile && note && <p className='kel-meta' role='status'>{note}</p>}
               {!isMobile && <div className={styles.panelActions}>{buildActions}</div>}
             </KelCard>
             </div>
