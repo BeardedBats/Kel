@@ -1,0 +1,13 @@
+# Desktop Chat turn rhythm — 2026-09-26
+
+Current Chat `185:4284` specifies 30px turn gaps and a bottom-aligned thread. Desktop text turns now use 30px margins without extra vertical user padding. The content column fills the scroll viewport and ends short threads at its bottom. Rows do not shrink; longer threads grow normally. Mobile is unchanged. Existing asset, timestamp and Markdown geometry remains.
+
+The existing isolated conversation temporarily held the same three native text records as the preceding Chat type check, then one short user turn. Each run journaled and restored the original records in both native databases. The protected legacy-history prefix was intercepted only for that source-preview conversation. No provider or renderer-only message injection supplied the text. Canonical Data was untouched.
+
+Dark/Light at 1440/800px pass 30px measured row gaps, previous 14px list gaps/13px timestamps/avatar geometry, accessible last-turn wheel scrolling, zero overflow and zero renderer errors. The short fixture ends near the composer at y760 and has scrollHeight/clientHeight 692/692. An early 6px bottom padding left 16px of needless short-thread scrolling because native hover actions extended below the text. Reserving 22px inside the content removes that scrollbar without clipping the actions. The measured final text-to-scroller-end gap remains 32px; Figma's reference thread padding is 24px. That retained-control difference remains open and is not called exact full-frame parity.
+
+The existing mixed tool/reply probe also passed Dark/Light at both widths after the final padding change. Replies stay after tool rows, plan expansion works, original-message Copy is intercepted, and the real isolated reaction write is restored. No tool, provider, fork or clipboard write ran. The prior isolated Dark preference was restored and all apps closed. No active native-message restoration journal remains.
+
+TypeScript, source build and six focused tool/plan/menu tests across two files passed. The broader 63-file/443-test milestone regression precedes this presentation increment and was not repeated. Package proof for this new increment waits for the next larger milestone; the latest disposable package remains `b8c84ae`. Canonical App remains `8c67121`.
+
+Captures: three turns [Dark 1440](DESKTOP_CHAT_RHYTHM_DARK_1440.png), [800](DESKTOP_CHAT_RHYTHM_DARK_800.png); short turn [Light 1440](DESKTOP_CHAT_SHORT_LIGHT_1440.png), [800](DESKTOP_CHAT_SHORT_LIGHT_800.png). Full Chat sidebar/footer/header/composer parity, retained-control bottom spacing, and task field/model presentation remain open. Mobile stays paused. `request_review` was unavailable; no independent review is claimed.
