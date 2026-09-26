@@ -21,6 +21,8 @@ import { NeedsAttention } from '@renderer/components/kel/KelNeedsAttention';
 import { assignmentLine, staffingSummary } from '@renderer/components/kel/staffingLanguage';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLanguage';
+import { selectedWorkJob, currentWorkStep, workContinuationInstruction } from '@renderer/components/kel/workViewState';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import {
   kelArtifact,
   kelControl,
@@ -81,6 +83,7 @@ const DIRECT_LABEL: Record<string, string> = {
 };
 
 const WorkCenter: React.FC = () => {
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [routes, setRoutes] = useState<Record<string, KelJobRoute>>({});
   const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
@@ -194,7 +197,7 @@ const WorkCenter: React.FC = () => {
   // Design system §6: the same components switch to compact density above ten rows on table-first
   // views, rather than shrinking type below the scale.
   const dense = (jobs?.length ?? 0) + (assignments?.length ?? 0) > 10;
-  const activeJob = jobs?.find((job) => job.id === (selected ?? jobs[0]?.id)) ?? null;
+  const activeJob = selectedWorkJob(jobs ?? [], selected);
   const activeMilestones = activeJob
     ? Object.entries(activeJob.milestones ?? {}).map(([id, runtime]) => ({
         id,
@@ -261,12 +264,13 @@ const WorkCenter: React.FC = () => {
             <KelTable
               head={['Job', 'State', 'Current step', 'Budget', 'Updated', 'Next']}
               rows={jobs.map((job) => [
-                <span className="kel-strong" key={`${job.id}-id`}>
+                <button type="button" className="kel-work-job-select kel-strong" key={`${job.id}-id`}
+                  data-job-id={job.id} aria-pressed={activeJob?.id === job.id} onClick={() => setSelected(job.id)}>
                   {job.contract?.request ?? job.id}
-                </span>,
+                </button>,
                 <KelStatusChip key={`${job.id}-state`} status={statusFromDerived(job.state)} />,
                 <span key={`${job.id}-step`}>
-                  {job.contract?.milestones?.[0]?.objective ?? '—'}
+                  {currentWorkStep(job)}
                   {waitReason(job) ? (
                     <>
                       <br />
@@ -303,6 +307,7 @@ const WorkCenter: React.FC = () => {
 
         {activeJob && (
           <KelCard
+            className="kel-work-verification"
             title={`Verification — ${activeJob.contract?.request?.slice(0, 60) ?? activeJob.id}`}
             chip={<KelStatusChip status={statusFromDerived(activeJob.state)} />}
             actions={
@@ -388,6 +393,7 @@ const WorkCenter: React.FC = () => {
                 why="Kel reports work as it runs, and reports nothing as verified until the checks pass."
               />
             ) : (
+              <div className="kel-work-table-scroll" tabIndex={0} role="region" aria-label="Milestone table">
               <KelTable
                 head={['Milestone', 'Worker state', 'Attempts', 'Checks', 'Evidence']}
                 rows={activeMilestones.map((m) => [
@@ -428,6 +434,7 @@ const WorkCenter: React.FC = () => {
                   ),
                 ])}
               />
+              </div>
             )}
             {note && <p className="kel-meta">{note}</p>}
             {artifact && (
@@ -441,7 +448,7 @@ const WorkCenter: React.FC = () => {
         <KelCard title="Waiting to continue">
           {continuation.length === 0 ? (
             <KelEmpty
-              title="Nothing is waiting."
+              title={isMobile ? 'Nothing is waiting.' : 'Nothing.'}
               why="When a job pauses, is interrupted, or waits on you, it appears here with the exact reason."
             />
           ) : (
@@ -471,8 +478,7 @@ const WorkCenter: React.FC = () => {
                     <div className="kel-meta">
                       {verdictLabel ? `${verdictLabel} · ` : ''}
                       {reasons.length ? `${reasons.join(', ')} · ` : ''}
-                      To continue, reply “continue” (or pick a number) in the chat — Kel never resumes on its
-                      own.
+                      {workContinuationInstruction(related)}
                     </div>
                   </li>
                 );
