@@ -1,5 +1,10 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
+
+[Workspace/Light source checks](evidence/figma-full-audit/DESKTOP_WORKSPACE_LIGHT_SOURCE.md) repair the legacy header/native-control overlap and narrow collapsed-panel width. Real titlebar collapse/reopen passed Dark/Light at 1440/800px. Light file tree, SCM tabs, heading menu, preview/code/status/action menu and read-only/split controls pass; 74 labels measured at least 5.39:1. TypeScript/build and 11 focused tests passed. Prior isolated panel preferences and Dark restored; no file mutation. Package by the next larger milestone. App/Data untouched; mobile paused.
+
+
 ## Desktop combined milestone (2026-09-26)
 
 [Combined package](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passed six packaged Electron probes and archive-browser sign-in at 1440/800px. All 266 renderer files match. Populated Skills and Light labels now have source repairs and package proof. Actual isolated mutations and intercepted limits are recorded. Kibble mission recovery/panel sheen, Setup gaps, icons/popups, and live paths remain open. App remains 8c67121; Data remains untouched; mobile stays paused.

@@ -349,7 +349,7 @@ const ChatLayout: React.FC<{
               workspacePath={workspacePath}
               isTemporaryWorkspace={isTemporaryWorkspace}
             >
-              {props.siderTitle}
+              {isDesktop ? <span className='kel-legacy-workspace-title'>Workspace</span> : props.siderTitle}
             </WorkspacePanelHeader>
             <ArcoLayout.Content style={{ height: `calc(100% - ${WORKSPACE_HEADER_HEIGHT}px)` }}>
               {props.sider}
