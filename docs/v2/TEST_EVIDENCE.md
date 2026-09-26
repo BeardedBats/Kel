@@ -775,3 +775,6 @@ Desktop populated Skills now have real isolated import/list/reload and 1440/800p
 
 
 Desktop Light enabled labels now pass measured contrast on eight routes at 1440/800px; minimum 4.86:1, zero overflow/errors. Seven theme tests and source build passed. Figma provides Dark Foundations only, so exact Light color parity remains unverified. Icons/popups/custom colors/package proof remain open. See [record](evidence/figma-full-audit/DESKTOP_LIGHT_LABELS_SOURCE.md). App/Data remain untouched.
+
+
+[Combined desktop milestone](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passes packaged Kibble/Setup/Pet/Skills/Light and archive-browser sign-in checks. Kibble mission recovery/extra sheen, Setup policy/folder/Work-banner gaps, Light icons/popups, real workers/auth remain open. App/Data remain unchanged.

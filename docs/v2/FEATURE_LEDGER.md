@@ -1,5 +1,7 @@
 # KEL V2.0 — FEATURE LEDGER
 
+Latest desktop milestone (2026-09-26): [Kibble/Setup/Pet/Skills/Light package](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passed six Electron probes plus bundled sign-in presentation at both widths. Scope limits remain. App/Data stay unchanged; V2-16/18/19 remain partial; mobile stays paused.
+
 Desktop continuation (2026-09-26): current Kibble, Setup, Pet off/settings, and remote sign-in now have scoped source evidence. Runtime/Ramble has larger milestone package proof at `0b4a583`. Desktop inspection is 75/75 frames; accepted parity remains partial. V2-16/18/19 stay PARTIAL. Canonical App remains `8c67121`; mobile is paused. See current MARATHON_STATE for exact remaining items.
 
 Feature → state → evidence. "State" is what is actually true on disk right now; the baseline rows

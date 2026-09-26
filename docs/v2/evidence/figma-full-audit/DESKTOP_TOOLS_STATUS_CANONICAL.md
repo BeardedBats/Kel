@@ -21,3 +21,6 @@ No `ToolsSettings` source changed between r47 and canonical `main`. The r47 pack
 **Desktop continuation (2026-09-25):** [Fix Capture Select/Recording/Review](DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) now have scoped isolated package evidence at 1440/800px. This did not rerun the historical Tools popover or enabled Image Model checks above. Canonical installed App remains at `8c67121`; the new desktop batch awaits the desktop completion install.
 
 **Desktop continuation (2026-09-26):** [Runtime and Ramble milestone](DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) passed seven packaged checks at `0b4a583`. Canonical App remains `8c67121`; this did not repeat the historical failed-popover or Image Model checks.
+
+
+**2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.

@@ -20,3 +20,6 @@ TypeScript and final source build passed. All 11 donor-policy tests passed; the 
 ![Pet off 800px](DESKTOP_PET_OFF_SOURCE_800.png)
 ![Remote sign-in 1440px](DESKTOP_LOGIN_SOURCE_1440.png)
 ![Remote sign-in 800px](DESKTOP_LOGIN_SOURCE_800.png)
+
+
+**2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.

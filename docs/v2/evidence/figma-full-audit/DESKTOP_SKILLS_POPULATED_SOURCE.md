@@ -13,3 +13,6 @@ Three synthetic skills were imported through the real isolated host service. Eac
 Both widths had zero document overflow, zero name/description overflow, and zero renderer errors. The long-text case imported a fourth synthetic skill through the same real service. All four imports were deleted through that service after the check. Synthetic import history and source files remain inside the existing bounded temporary stack. No canonical App or Data request ran.
 
 TypeScript and the final Electron Vite source build passed. This CSS-only change used measured render checks; no new implementation-mirroring unit tests were added. The earlier 63-file/437-test suite remains evidence for the preceding Kibble increment, not a rerun for this change. Package proof waits for the larger desktop milestone. The Skills detail/import-history routes still redirect elsewhere; no detail interaction is claimed.
+
+
+**2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.
