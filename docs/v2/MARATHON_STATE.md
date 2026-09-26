@@ -1,5 +1,10 @@
 # KEL V2.0 — MARATHON STATE
 
+## Desktop Kibble recovery / Light / Chat package checkpoint (2026-09-26)
+
+[Milestone package](evidence/figma-full-audit/DESKTOP_KIBBLE_LIGHT_CHAT_MILESTONE_PACKAGE.md) at `0b49b56` passed 1440/800px bundled-renderer checks for Kibble recovery, Light menus/dialogs, Chat plan/reply actions, error and reconnecting. All 266 renderer files matched; zero renderer errors/overflow. Real isolated pointer/reaction writes passed and were restored; runtime/mission states and clipboard were injected/intercepted. No worker/provider/restart/export/download/delete ran. Broader Chat/right-panel and Light Workspace/icon states remain open. The next Setup increment is not in this package. Canonical App remains `8c67121`; Data untouched. Mobile paused.
+
+
 Machine-readable-ish program state. A resume run reads `MARATHON_DIRECTIVE.md` → this file → `RESUME.md`
 and then continues the exact `current_item`. Update this file whenever a phase starts or closes.
 
@@ -12,7 +17,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Desktop first: verify the larger Kibble recovery/Light menus/dialogs/Chat milestone package, then complete retained Tools/chat/task and Light Workspace/dialog states. Desktop reply-action order now passes source checks. Narrow plan and scoped Light chat states now pass source checks; broader icon and popup contrast remains open. Kibble mission recovery/panel sheen now pass source checks; real worker execution remains open. Setup policy selection/folder persistence/Work-banner integration remain open. Latest disposable package is 41a73f5 and predates recovery. Package next by larger milestone; canonical App promotion waits for broader acceptance. Mobile stays paused. Pet enable needs Nick's AUD-MINOR-008 decision; live external acceptance requires credentials.
+next_item: Desktop first: finish Setup folder retention and Work setup-return integration, then retained populated Chat/right-panel and Tools/task states plus Light Workspace/dialog/icon states. Latest disposable package 0b49b56 closes scoped Kibble recovery/Light menus/dialogs/Chat checks. Canonical App remains 8c67121 pending broader desktop acceptance. Setup Autonomy awaits Nick decision; Pet enable needs AUD-MINOR-008 decision; live external acceptance needs credentials. Mobile stays paused.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.

@@ -24,3 +24,5 @@ No `ToolsSettings` source changed between r47 and canonical `main`. The r47 pack
 
 
 **2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.
+
+**2026-09-26 Kibble recovery / Light / Chat milestone:** [Package record](DESKTOP_KIBBLE_LIGHT_CHAT_MILESTONE_PACKAGE.md) at `0b49b56` passes its scoped bundled-renderer states at both desktop widths. It does not repeat historical Tools popover/Image Model checks. Canonical App remains `8c67121`; Data untouched. Broader Tools/Chat/Light acceptance remains open.
