@@ -12,6 +12,8 @@ import { KelButton, KelCard, KelEmpty, KelLoading, KelTabs, formatWhen } from '@
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { kelDogfood, type KelBuildCandidate, type KelBuildMission, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
 import styles from './index.module.css';
+import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 const STATUS_COPY: Record<KelFixStatus, string> = {
   OPEN: 'Open',
@@ -24,6 +26,7 @@ const STATUS_ORDER: KelFixStatus[] = ['OPEN', 'BATCHED', 'FIXED', 'DISMISSED'];
 
 const DogfoodFixes: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const [data, setData] = useState<KelFixList | null>(null);
   const [tab, setTab] = useState<KelFixStatus>('OPEN');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -151,18 +154,8 @@ const DogfoodFixes: React.FC = () => {
 
   const tabs = STATUS_ORDER.map((status) => ({
     id: status,
-    label: `${STATUS_COPY[status]} (${data?.counts?.[status] ?? 0})`,
+    label: isMobile ? `${STATUS_COPY[status]} (${data?.counts?.[status] ?? 0})` : `${STATUS_COPY[status]} · ${data?.counts?.[status] ?? 0}`,
   }));
-
-  if (error && !data) {
-    return (
-      <div className='kel-scope'>
-        <div className='kel-page'>
-          <KelFailureCard error={error} onRetry={() => void load()} />
-        </div>
-      </div>
-    );
-  }
 
   const refreshBuild = useCallback(async (missionId: string) => {
     try {
@@ -224,38 +217,68 @@ const DogfoodFixes: React.FC = () => {
     [buildState?.candidate?.id, reviewNote]
   );
 
+  const promptActions = (
+<KelButton
+                  variant='primary'
+                  disabled={busy || !included.length}
+                  onClick={() => void preparePrompt()}
+                >
+                  {`${isMobile ? 'Prepare Fix Prompt' : 'Prepare prompt'} (${included.length})`}
+                </KelButton>
+  );
+
+  const buildActions = (
+<>
+                  <KelButton
+                    variant='primary'
+                    disabled={busy || !included.length || !sourceRoot.trim()}
+                    onClick={() => void startBuildUpdate()}
+                  >
+                    {`Start update (${included.length})`}
+                  </KelButton>
+                  {mission && (
+                    <KelButton variant='quiet' disabled={busy} onClick={() => void refreshBuild(mission)}>
+                      Refresh
+                    </KelButton>
+                  )}
+                </>
+  );
+
+  if (error && !data) {
+    return (
+      <div className='kel-scope'>
+        <div className='kel-page'>
+          <KelFailureCard error={error} onRetry={() => void load()} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='kel-scope'>
       <a className='kel-skip' href='#kel-dogfood-main'>
         Skip to main content
       </a>
-      <div className='kel-page'>
+      <div className={`kel-page ${!isMobile ? `kel-shell-kibble ${styles.desktop}` : ''}`}>
         <button className='kel-dogfood-mobile-back' type='button' onClick={() => void navigate('/settings/tools')}>← Tools</button>
         <header className='kel-page__head'>
-          <div><h1 className='kel-h1'>Kibble</h1>
-          <p className='kel-sub'>
-            What Ctrl+Shift+F captured while you were using Kel. Everything stays on this computer
-            until you deliberately prepare a fix prompt.
-          </p></div>
+          <div>{!isMobile && <ShellWorkspaceLink />}<h1 className='kel-h1'>Kibble</h1>
+          {isMobile && <p className='kel-sub'>What Ctrl+Shift+F captured while you were using Kel. Everything stays on this computer until you deliberately prepare a fix prompt.</p>}</div>
         </header>
+        {!isMobile && <p className='kel-sub kel-kibble-intro'>What you flagged with Ctrl+Shift+F. Everything stays on this computer.</p>}
 
         {data === null ? (
           <KelLoading rows={3} />
         ) : (
           <>
+            <div className={!isMobile ? styles.topPanels : styles.mobileContents}>
             <KelCard
-              title='Prepare a fix prompt'
-              actions={
-                <KelButton
-                  variant='primary'
-                  disabled={busy || !included.length}
-                  onClick={() => void preparePrompt()}
-                >
-                  {`Prepare Fix Prompt (${included.length})`}
-                </KelButton>
-              }
+              className={!isMobile ? styles.actionPanel : undefined}
+              title={isMobile ? 'Prepare a fix prompt' : 'Hand fixes to Kel'}
+              actions={isMobile ? promptActions : undefined}
             >
-              <p className='kel-sub'>
+              {!isMobile && <p className='kel-sub'>Pick fixes. Kel turns them into one prompt.</p>}
+              <p className={isMobile ? 'kel-sub' : styles.explanation}>
                 Open fixes are included by default. Preparing a prompt moves them to Batched — it never
                 starts development on its own.
               </p>
@@ -274,36 +297,22 @@ const DogfoodFixes: React.FC = () => {
                           }
                           data-testid={`fix-pick-${fix.id}`}
                         />
-                        <span className='kel-strong'>{fix.id}</span>
-                        <span className={styles.preview}>{preview(fix.transcript)}</span>
-                        <span className='kel-meta'>{fix.route || 'screen not recorded'}</span>
+                        {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span><span className='kel-meta'>{fix.route || 'screen not recorded'}</span></> : <span className={styles.pickText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span></span>}
                       </label>
                     </li>
                   ))}
                 </ul>
               )}
+              {!isMobile && <div className={styles.panelActions}>{promptActions}</div>}
             </KelCard>
 
             <KelCard
-              title='Build Update'
-              actions={
-                <>
-                  <KelButton
-                    variant='primary'
-                    disabled={busy || !included.length || !sourceRoot.trim()}
-                    onClick={() => void startBuildUpdate()}
-                  >
-                    {`Start update (${included.length})`}
-                  </KelButton>
-                  {mission && (
-                    <KelButton variant='quiet' disabled={busy} onClick={() => void refreshBuild(mission)}>
-                      Refresh
-                    </KelButton>
-                  )}
-                </>
-              }
+              className={!isMobile ? styles.actionPanel : undefined}
+              title={isMobile ? 'Build Update' : 'Build an update'}
+              actions={isMobile ? buildActions : undefined}
             >
-              <p className='kel-sub'>
+              {!isMobile && <p className='kel-sub'>Kel fixes the picked items in a copy of your repo, then asks you to review.</p>}
+              <p className={isMobile ? 'kel-sub' : styles.explanation}>
                 Kel fixes the selected findings in a copy of this repository and offers the result for
                 review. Fix Capture statuses stay exactly as they are, and nothing is installed.
               </p>
@@ -399,7 +408,9 @@ const DogfoodFixes: React.FC = () => {
                 </div>
               )}
               {note && <p className='kel-meta' role='status'>{note}</p>}
+              {!isMobile && <div className={styles.panelActions}>{buildActions}</div>}
             </KelCard>
+            </div>
 
             {prompt && (
               <KelCard
@@ -429,6 +440,8 @@ const DogfoodFixes: React.FC = () => {
               </KelCard>
             )}
 
+            <section className={!isMobile ? `kel-card ${styles.fixesPanel}` : styles.mobileContents} aria-label='Fixes'>
+            {!isMobile && <h2 className='kel-h2'>Fixes</h2>}
             <KelTabs
               tabs={tabs}
               active={tab}
@@ -447,23 +460,34 @@ const DogfoodFixes: React.FC = () => {
               <ul className={styles.list} data-testid='fix-list'>
                 {visible.map((fix) => (
                   <li key={fix.id} className={styles.item}>
+                    <div className={!isMobile ? styles.fixRow : undefined}>
                     <button
                       type='button'
                       className={styles.itemButton}
                       aria-expanded={fix.id === selectedId}
                       onClick={() => setSelectedId(fix.id === selectedId ? null : fix.id)}
                     >
-                      <span className='kel-strong'>{fix.id}</span>
-                      <span className={styles.preview}>{preview(fix.transcript)}</span>
-                      <span className='kel-meta'>
+                      {!isMobile && <svg className={styles.bugIcon} viewBox='0 0 16 16' fill='none' stroke='currentColor' aria-hidden='true'><path d='M5 5h6v5a3 3 0 0 1-6 0V5ZM6 5V3h4v2M2 7h3m6 0h3M2 10h3m6 0h3M4 13l2-2m4 0 2 2'/></svg>}
+                      {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span></> : <span className={styles.fixText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{`“${preview(fix.transcript)}”`}</span></span>}
+                      {isMobile && <span className='kel-meta'>
                         {STATUS_COPY[fix.status]} · {fix.route || 'screen not recorded'} ·{' '}
                         {formatWhen(fix.created)}
-                      </span>
+                      </span>}
                     </button>
+                    {!isMobile && <><span className={styles.surface}>{fix.page_title || fix.route || 'Screen not recorded'}</span><div className={styles.rowActions}>
+                      {fix.status !== 'DISMISSED' && <KelButton variant='quiet' disabled={busy} onClick={() => void act(fix, 'DISMISSED')}>Dismiss</KelButton>}
+                      {fix.status !== 'FIXED' && <button type='button' className={styles.markFixed} disabled={busy} onClick={() => void act(fix, 'FIXED')}>✓ Mark fixed</button>}
+                      {fix.status !== 'OPEN' && <KelButton variant='quiet' disabled={busy} onClick={() => void act(fix, 'OPEN')}>Reopen</KelButton>}
+                    </div></>}
+                    </div>
                     {fix.id === selectedId && (
                       <div className={styles.detail} data-testid={`fix-detail-${fix.id}`}>
-                        <p className={styles.transcript}>{fix.transcript}</p>
-                        <p className='kel-meta'>{detailLine(fix)}</p>
+                        <div className={isMobile ? styles.mobileContents : styles.detailText}>
+                          {!isMobile && <p className='kel-meta'>What you said</p>}
+                          <p className={styles.transcript}>{fix.transcript}</p>
+                          {!isMobile && <p className='kel-meta'>{formatWhen(fix.created)} · {fix.route || 'Screen not recorded'}</p>}
+                          <p className='kel-meta'>{detailLine(fix)}</p>
+                        </div>
                         {fix.has_screenshot && image && fix.element?.rect && fix.window?.width ? (
                           <ScreenshotWithTarget
                             src={image}
@@ -478,7 +502,7 @@ const DogfoodFixes: React.FC = () => {
                               : 'No screenshot was saved for this fix.'}
                           </p>
                         )}
-                        <div className='kel-row'>
+                        {isMobile && <div className='kel-row'>
                           {fix.status !== 'FIXED' && (
                             <KelButton variant='secondary' disabled={busy} onClick={() => void act(fix, 'FIXED')}>
                               Mark Fixed
@@ -494,13 +518,14 @@ const DogfoodFixes: React.FC = () => {
                               Reopen
                             </KelButton>
                           )}
-                        </div>
+                        </div>}
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
             )}
+            </section>
           </>
         )}
 

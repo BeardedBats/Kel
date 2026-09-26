@@ -144,3 +144,48 @@
   opacity: 0.6;
   pointer-events: none;
 }
+
+/* Current desktop Kibble frame 272:1087. Runtime state may grow these panels. */
+.desktop .topPanels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.desktop .actionPanel, .desktop .fixesPanel { min-width: 0; padding: 18px 20px; border: 1px solid var(--kel-figma-color-glass-edge-lit, var(--kel-border)); border-radius: 16px; background: var(--kel-shell-card-fill, var(--kel-surface-1)); }
+.desktop .actionPanel { display: flex; flex-direction: column; gap: 12px; min-height: 280px; }
+.desktop .actionPanel :global(.kel-row) { flex-wrap: wrap; }
+.desktop :global(.kel-h2) { color: var(--kel-warm, #ffc481); font-size: 15px; }
+.desktop :global(.kel-sub) { font-size: 12px; line-height: 16px; margin: -8px 0 0; }
+.desktop .explanation { font-size: 12px; line-height: 16px; color: var(--kel-text-2); margin: 0; }
+.desktop .pickList { gap: 0; }
+.desktop .pick { padding: 8px 0; gap: 12px; }
+.desktop .pickList li + li { border-top: 1px solid var(--kel-border); }
+.desktop .pick input { width: 16px; height: 16px; margin: 0 4px; flex-shrink: 0; accent-color: #2f6be0; }
+.pickText, .fixText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.desktop .pickText :global(.kel-strong), .desktop .fixText :global(.kel-strong) { font-size: 14px; font-weight: 500; }
+.desktop .preview { font-size: 12px; color: var(--kel-text-2); }
+.desktop .panelActions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: auto; padding-top: 10px; }
+.desktop .panelActions :global(.kel-btn--quiet) { margin-right: auto; }
+.desktop .fixesPanel { padding-bottom: 6px; }
+.desktop .fixesPanel :global(.kel-tabs) { flex-wrap: wrap; }
+.desktop .fixesPanel :global(.kel-tab) { font-size: 13px; }
+.desktop .list { border: 0; background: transparent; border-radius: 0; margin-top: 4px; }
+.desktop .fixRow { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.desktop .itemButton { display: flex; align-items: center; flex: 1; min-width: 0; gap: 12px; padding: 0; color: var(--kel-text-1); }
+.bugIcon { width: 14px; height: 14px; margin: 0 5px; flex-shrink: 0; color: var(--kel-warm, #ffc481); }
+.surface { width: 120px; flex-shrink: 0; color: var(--kel-text-3); font-size: 13px; overflow-wrap: anywhere; }
+.rowActions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.markFixed { height: 34px; padding: 0 14px; border: 1px solid rgba(140,150,167,.5); border-radius: 8px; background: linear-gradient(#2e7939,#1f5e30); color: #fff1f0; font: 600 14px var(--kel-font); box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.1); cursor: pointer; }
+.markFixed:disabled { opacity: .5; cursor: default; }
+.desktop .detail { flex-direction: row; gap: 16px; padding: 2px 0 14px 36px; border-top: 0; background: transparent; }
+.desktop .detailText { order: 1; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.desktop .detailText p { margin: 0 0 6px; }
+.desktop .shotWrap { width: 280px; flex-shrink: 0; border-radius: 10px; }
+.desktop .shotTarget { border-color: var(--kel-warm, #ffc481); background: transparent; opacity: 1; }
+@media (min-width: 769px) and (max-width: 1100px) {
+ .desktop .topPanels { grid-template-columns: minmax(0, 1fr); }
+ .desktop .fixRow { flex-wrap: wrap; }
+ .desktop .itemButton { flex-basis: calc(100% - 110px); }
+ .desktop .surface { width: 90px; }
+ .desktop .rowActions { width: 100%; }
+ .desktop .detail { flex-direction: column; padding-left: 0; }
+ .desktop .shotWrap { width: min(280px, 100%); }
+}
+
+.mobileContents { display: contents; }
