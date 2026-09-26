@@ -1,3 +1,7 @@
+## Desktop installed milestone (2026-09-26)
+
+[Installed milestone](DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
+
 ## Desktop Chat/task/Tools batch (2026-09-26)
 
 [Batch evidence](DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.

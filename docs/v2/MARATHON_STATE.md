@@ -1,3 +1,7 @@
+## Desktop installed milestone (2026-09-26)
+
+[Installed milestone](evidence/figma-full-audit/DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](evidence/figma-full-audit/DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
+
 ## Desktop Chat/task/Tools batch (2026-09-26)
 
 [Batch evidence](evidence/figma-full-audit/DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
@@ -73,7 +77,7 @@ setup_commit: 47eb3b49322a7cfbe85bbee7a0674c77037b127f   # V2 program initializa
 remote: https://github.com/BeardedBats/Kel
 
 phase: V2-19                # bounded product and Figma regression; release candidate still pending
-next_item: Package the coherent desktop Chat/task/Tools milestone, verify bundled renderer, then finish explicit desktop frame dispositions before canonical App promotion. Credentials, Autonomy/Pet decisions and real worker/provider journeys remain separate. Mobile paused.
+next_item: Nick decisions for Setup Autonomy and Pet, then one authorized desktop batch and live desktop acceptance. Installed App source 6b90dbe; main packaging alignment 9d5a1bf; Data hashes unchanged; mobile paused. See DESKTOP_INSTALLED_MILESTONE and DESKTOP_FRAME_DISPOSITIONS. Temporary cleanup policy-blocked.
 
 status: partial
 # [Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.
@@ -141,7 +145,7 @@ phases:
   V2-17: done        # Manual upgrade reliability â€” inventory before/after, and the V2 state proved to survive backupâ†’restore exactly (no updater infra)
 
   V2-18: partial     # Backend journeys and the F1 rechecks passed; J-REMOTE and Shell/phone journeys remain
-  V2-19: partial     # canonical full engine 1289 pass + 14 subtests and desktop 396 pass; exact visual parity and live paths remain
+  V2-19: partial     # canonical full engine 1289 pass + 14 subtests and desktop 448 pass; exact visual parity and live paths remain
 
   V2-20: queued      # V2 release candidate
 
