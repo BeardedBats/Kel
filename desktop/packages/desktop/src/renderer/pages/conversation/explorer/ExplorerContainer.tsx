@@ -18,7 +18,7 @@
 
 import { Button, Input, Message, Modal, Spin, Tooltip } from '@arco-design/web-react';
 import { FoldUpOne, FolderPlus, Refresh } from '@icon-park/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 
@@ -63,6 +63,9 @@ import { SearchPanel } from './search/SearchPanel';
 import type { SearchHit } from './search/searchModel';
 import { ScmPanel } from '../SourceControl/ScmPanel';
 import { rediscoverRepos, refreshAllRepos } from '../SourceControl/scmStore';
+import { useScm } from '../SourceControl/scmStore';
+import { KelDesktopWorkspaceHeader } from '@renderer/components/kel/KelDesktopWorkspaceHeader';
+import { dispatchWorkspaceToggleEvent } from '@/renderer/utils/workspace/workspaceEvents';
 
 export type ExplorerContainerProps = {
   /** Owning project id — scopes the store's fact cache + localStorage UI state. */
@@ -175,6 +178,15 @@ export const buildExplorerPreviewPayload = async (
 
 export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId }) => {
   const { t } = useTranslation();
+  const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
+  const [searching, setSearching] = useState(false);
+  const scm = useScm();
+  const changedFiles = useMemo(() => new Set(scm.projectId === projectId ? Object.values(scm.statuses).flatMap(status => status.resources.map(resource => peKey(resource.file.pe_id, resource.file.relative_path))) : []), [scm.projectId, scm.statuses, projectId]);
+  useEffect(() => {
+    const resize = () => setDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
   const { openPreview } = usePreviewContext();
   const activeConversationId = useCurrentConversation();
   const { data, isLoading, mutate } = useSWR(projectId ? `explorer-project/${projectId}` : null, (key: string) => {
@@ -521,7 +533,13 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
   );
 
   return (
-    <div className='h-full flex flex-col min-h-0'>
+    <div className={`h-full flex flex-col min-h-0${desktop ? ' kel-desktop-workspace' : ''}`} data-testid={desktop ? 'kel-desktop-workspace' : undefined}>
+      {desktop && <KelDesktopWorkspaceHeader tab={activeTab}
+        changeCount={scm.projectId === projectId && scm.loadState === 'ready' && scm.repositories.every(repo => scm.statuses[repo.repo_id]) ? new Set(Object.values(scm.statuses).flatMap(status => status.resources.map(resource => `${resource.file.pe_id}:${resource.file.relative_path}`))).size : undefined}
+        searching={searching} refreshing={refreshing} onTab={setActiveTab}
+        onAddFolder={() => void handleAddFolder()} onCollapseAll={collapseAll}
+        onSearch={() => { setActiveTab('files'); setSearching(value => !value); }}
+        onRefresh={() => void handleRefreshActiveTab()} onClose={dispatchWorkspaceToggleEvent} />}
       {/* Host component-switcher tab bar: 文件 = explorer, 变更 = source control.
           Tabs are left-aligned and scroll horizontally when they overflow; the
           attach + open-externally cluster is pinned right (flex-shrink-0) with
@@ -539,7 +557,7 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
           text / search icon / tree arrow) starts at 20px. 12px is not arbitrary —
           the sider's resize handle covers the leftmost 12px and sits above this
           content, so anything placed to its left cannot be clicked. */}
-      <div className='flex items-center gap-4px ps-12px pe-8px py-4px flex-shrink-0 border-b border-[var(--bg-3)]'>
+      {!desktop && <div className='flex items-center gap-4px ps-12px pe-8px py-4px flex-shrink-0 border-b border-[var(--bg-3)]'>
         <div className='flex items-center gap-2px overflow-x-auto flex-1 min-w-0'>
           {tabButton('files', t('conversation.explorer.tabs.files'))}
           {tabButton('changes', t('conversation.explorer.tabs.changes'))}
@@ -601,7 +619,7 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
             </Tooltip>
           )}
         </div>
-      </div>
+      </div>}
       {/* Files tab (explorer): kept mounted across tab switches so the tree + WS
           state survive (only hidden when the changes tab is active). */}
       {/* Search area is persistent at the top of the files tab; the tree renders
@@ -618,12 +636,15 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
           would push both off that baseline. */}
       <div className='flex-1 min-h-0' style={activeTab === 'files' ? undefined : { display: 'none' }}>
         <SearchPanel
+          searchVisible={!desktop || searching}
           roots={searchRoots}
           peNames={searchPeNames}
           onRevealHit={handleRevealHit}
           onAddHit={activeConversationId ? handleAddHit : undefined}
         >
           <ExplorerPanel
+            desktopStyle={desktop}
+            changedFiles={changedFiles}
             projectId={projectId}
             roots={roots}
             workspacePeId={workspacePeId}
@@ -642,11 +663,12 @@ export const ExplorerContainer: React.FC<ExplorerContainerProps> = ({ projectId 
           />
         </SearchPanel>
       </div>
-      {activeTab === 'changes' && (
-        <div className='flex-1 min-h-0'>
+      {(desktop || activeTab === 'changes') && (
+        <div className='flex-1 min-h-0' style={activeTab === 'changes' ? undefined : { display: 'none' }}>
           <ScmPanel projectId={projectId} />
         </div>
       )}
+      {desktop && workspacePath && <WorkspaceOpenButton workspacePath={workspacePath} isTemporary={false} desktopFooter />}
       <Modal
         title={nameDialog ? t(nameDialogTitleKey(nameDialog.mode)) : ''}
         visible={nameDialog !== null}

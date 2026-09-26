@@ -23,7 +23,7 @@
 
 import { Button, Input } from '@arco-design/web-react';
 import { Plus, Search } from '@icon-park/react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { DirRef } from '../explorerModel';
@@ -43,12 +43,14 @@ export type SearchPanelProps = {
   onAddHit?: (hit: SearchHit) => void;
   /** The Explorer tree — kept mounted underneath; shown only while the query is empty. */
   children: React.ReactNode;
+  searchVisible?: boolean;
 };
 
-export const SearchPanel: React.FC<SearchPanelProps> = ({ roots, peNames, onRevealHit, onAddHit, children }) => {
+export const SearchPanel: React.FC<SearchPanelProps> = ({ roots, peNames, onRevealHit, onAddHit, children, searchVisible = true }) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const { view, runSearch, cancel } = useFileSearch(PANEL_SEARCH_OWNER, roots);
+  useEffect(() => { if (!searchVisible) { setQuery(''); cancel(); } }, [searchVisible, cancel]);
 
   const active = query.trim().length > 0;
   // Render results only while this panel owns the shared stream. If the `@`
@@ -96,8 +98,9 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ roots, peNames, onReve
           12px inner padding would push the magnifier to 24px, so !ps-8px trims it to
           8px and lands the icon at 20px — the same line as the tab text and the tree
           arrow (see the baseline note in ExplorerContainer.tsx). */}
-      <div className='flex-shrink-0 ps-12px pe-8px pt-8px pb-4px'>
+      {searchVisible && <div className='flex-shrink-0 ps-12px pe-8px pt-8px pb-4px'>
         <Input
+          autoFocus={window.innerWidth >= 768}
           value={query}
           onChange={onQueryChange}
           allowClear
@@ -107,7 +110,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ roots, peNames, onReve
           placeholder={t('conversation.explorer.search.placeholder')}
           aria-label={t('conversation.explorer.search.placeholder')}
         />
-      </div>
+      </div>}
 
       {/* Tree slot — always mounted; hidden (not unmounted) only while THIS panel
           owns an active search. If the `@` mention took the stream, fall back to
@@ -119,7 +122,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({ roots, peNames, onReve
           ps-12px puts the tree's row boxes on the panel baseline; the arrow inside
           is then offset a further 8px by the .workspace-tree rules in
           arco-override.css, landing at 20px. */}
-      <div className='flex-1 min-h-0 overflow-auto ps-12px' style={active && owned ? { display: 'none' } : undefined}>
+      <div className='kel-workspace-search-tree flex-1 min-h-0 overflow-auto ps-12px' style={active && owned ? { display: 'none' } : undefined}>
         {children}
       </div>
 

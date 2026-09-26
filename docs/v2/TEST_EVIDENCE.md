@@ -708,3 +708,7 @@ tests/test_v16_sweep_fixes.py tests/test_workforce_schemas.py` → **93 passed i
 ## Desktop Model and Project pickers — 2026-09-25
 
 TypeScript, source build, Windows package/native verification, and 55 desktop test files / 408 tests passed. Real isolated model scope writes and restoration, project search/select/clear, Escape, and Add Model passed at 1440/800px. Browse used an injected native folder-dialog result. Zero picker overflow and renderer errors. See [scoped evidence](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md). Canonical App and Data were untouched.
+
+## Desktop Workspace and File preview source batch — 2026-09-26
+
+TypeScript and source build passed. The full suite passed 57 files / 414 tests before the final file-tab keyboard adjustment; final focused controls passed 7 tests. Source-render checks passed at 1440/800px for actual SCM/search, file content, read-only mode, split, attachment, real save, content restoration, and final original-byte restoration. No renderer errors or hidden pane/composer clipping remain in these checks. Final package verification is pending. See [scoped evidence](evidence/figma-full-audit/DESKTOP_WORKSPACE_CURRENT_REVISION.md). Canonical App and Data were untouched.

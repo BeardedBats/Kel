@@ -34,7 +34,7 @@ import { useResizableSplit } from '@renderer/hooks/ui/useResizableSplit';
 import { useProjectPreviewRegionWidth } from '@renderer/hooks/ui/useProjectPreviewRegionWidth';
 import { useProjectPanelCollapse } from '@renderer/hooks/ui/useProjectPanelCollapse';
 import { dispatchWorkspaceToggleEvent } from '@renderer/utils/workspace/workspaceEvents';
-import { MIN_PREVIEW_PANEL_PX } from '@renderer/pages/conversation/utils/layoutCalc';
+import { MIN_CHAT_PANEL_PX, MIN_PREVIEW_PANEL_PX, MIN_WORKSPACE_PANEL_PX, PREVIEW_REGION_CHROME_PX } from '@renderer/pages/conversation/utils/layoutCalc';
 import { PreviewPanel } from '@renderer/pages/conversation/Preview';
 import { LayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { NavigationHistoryProvider } from '@renderer/hooks/context/NavigationHistoryContext';
@@ -239,7 +239,7 @@ const Layout: React.FC<{
   );
   // P3: host-level collapse (project-scoped on desktop; overlay on mobile). The
   // explorer stays mounted (width 0) on collapse, so it is not remounted.
-  const { collapsed: explorerCollapsed } = useProjectPanelCollapse({
+  const { collapsed: requestedExplorerCollapsed } = useProjectPanelCollapse({
     projectId: currentProject,
     isMobile,
     active: Boolean(currentProject),
@@ -253,10 +253,14 @@ const Layout: React.FC<{
   // conversations so it is structurally persistent (no remount on same-project
   // switches). ChatLayout renders chat only in that case (previewHosted).
   const previewRegionActive = Boolean(currentProject) && !isMobile && isPreviewOpen;
+  // Temporarily hide the file tree when three desktop columns cannot fit.
+  // Keep the saved preference and mounted tree; restore them when preview closes.
+  const explorerCollapsed = requestedExplorerCollapsed || (previewRegionActive && mainRowWidth > 0 &&
+    mainRowWidth < MIN_CHAT_PANEL_PX + MIN_PREVIEW_PANEL_PX + MIN_WORKSPACE_PANEL_PX + PREVIEW_REGION_CHROME_PX);
   // 最大化：隐藏聊天区、让预览铺满它腾出的空间；左侧边栏与右侧资源管理器列均不动。
   // Maximized: hide the chat area and let the preview fill the space it vacated;
   // the left sidebar and the right explorer column are both left untouched.
-  const previewMaximized = previewRegionActive && isPreviewMaximized;
+  const previewMaximized = previewRegionActive && (isPreviewMaximized || (mainRowWidth > 0 && mainRowWidth < 240 + MIN_PREVIEW_PANEL_PX));
   const { widthPx: previewWidthPx, createDragHandle: createPreviewRegionDragHandle } = useProjectPreviewRegionWidth(
     mainRowWidth,
     explorerCollapsed ? 0 : explorerWidthPx,
@@ -541,7 +545,7 @@ const Layout: React.FC<{
                       ? // 最大化时聊天区隐藏（保持挂载不卸载，还原后即刻恢复）
                         // Hidden while maximized (kept mounted so restoring is instant)
                         { display: 'none' }
-                      : undefined
+                      : previewRegionActive ? { minWidth: '240px' } : undefined
                 }
               >
                 <KelEngineNotice />

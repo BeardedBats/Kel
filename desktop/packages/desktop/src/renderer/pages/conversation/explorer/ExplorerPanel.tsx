@@ -21,6 +21,9 @@ import { useTranslation } from 'react-i18next';
 
 // File-tree icons (catppuccin file-icon theme), now owned by the explorer.
 import FileTypeIcon from './fileIcon/FileTypeIcon';
+import folderIcon from '@renderer/assets/figma/workspace-panel/folder.svg';
+import fileIcon from '@renderer/assets/figma/workspace-panel/file.svg';
+import chevronIcon from '@renderer/assets/figma/workspace-panel/chevron.svg';
 
 import { getFilesFromDropEvent } from '@/renderer/services/FileService';
 import { isMacOS } from '@/renderer/utils/platform';
@@ -42,6 +45,8 @@ import { initExplorerRuntime } from './monitorTransport';
 import { useExplorerView } from './useExplorerView';
 
 export type ExplorerPanelProps = {
+  desktopStyle?: boolean;
+  changedFiles?: ReadonlySet<string>;
   projectId: string;
   roots: RootRef[];
   /** pe_id of the workspace root — its remove action is disabled (immutable). */
@@ -104,6 +109,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   onCopyAbsolutePath,
   onImportFiles,
   onTransfer,
+  desktopStyle = false,
+  changedFiles,
 }) => {
   const view = useExplorerView();
   const { t } = useTranslation();
@@ -292,9 +299,9 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           {...dragProps}
           {...dropProps}
         >
-          <FileTypeIcon node={{ name, relativePath: keyToRef(key).relative_path, isFile }} expanded={isExpanded} />
+          {desktopStyle ? <img src={isFile ? fileIcon : folderIcon} alt='' className='kel-workspace-node-icon' /> : <FileTypeIcon node={{ name, relativePath: keyToRef(key).relative_path, isFile }} expanded={isExpanded} />}
           {/* File names are code-like; bidi-neutral leading dots (.claude) must not flip under RTL. */}
-          <span dir='ltr' className='overflow-hidden text-ellipsis whitespace-nowrap'>
+          <span dir='ltr' className={`overflow-hidden text-ellipsis whitespace-nowrap${desktopStyle && changedFiles?.has(key) ? ' kel-workspace-node-label--changed' : ''}`}>
             {name}
           </span>
           {degraded && <Caution theme='outline' size='14' className='flex-shrink-0' />}
@@ -446,6 +453,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       dragOverKey,
       workspacePeId,
       t,
+      desktopStyle,
+      changedFiles,
       view.expanded,
     ]
   );
@@ -547,6 +556,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
         onExpand={handleExpand}
         onSelect={handleSelect}
         renderTitle={renderTitle}
+        icons={desktopStyle ? { switcherIcon: <img src={chevronIcon} alt='' className='kel-workspace-chevron' /> } : undefined}
       />
     </div>
   );

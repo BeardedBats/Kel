@@ -30,7 +30,7 @@ import {
 } from '@/renderer/pages/conversation/utils/layoutCalc';
 import { useResizableSplit } from '@/renderer/hooks/ui/useResizableSplit';
 
-const DEFAULT_PREVIEW_REGION_PX = 480;
+const DEFAULT_PREVIEW_REGION_PX = 560;
 const MAX_PREVIEW_REGION_PX = 1200;
 
 export function useProjectPreviewRegionWidth(availableWidth: number, explorerWidthPx: number, active: boolean) {

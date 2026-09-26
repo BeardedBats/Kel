@@ -34,6 +34,7 @@ interface WorkspaceOpenButtonProps {
    * itself stays, showing only Browser.
    */
   isTemporary: boolean;
+  desktopFooter?: boolean;
 }
 
 const STORAGE_KEY = 'workspace-open-preference';
@@ -46,7 +47,7 @@ const isExternalTool = (tool: ToolType): tool is ExternalToolType => tool !== 'b
  * Covers VS Code / Terminal / File Explorer (external programs) plus the in-app
  * browser, and remembers the user's last choice so the main button repeats it.
  */
-const WorkspaceOpenButton: React.FC<WorkspaceOpenButtonProps> = ({ workspacePath, isTemporary }) => {
+const WorkspaceOpenButton: React.FC<WorkspaceOpenButtonProps> = ({ workspacePath, isTemporary, desktopFooter = false }) => {
   const { t } = useTranslation();
   /**
    * 预览上下文是可选的：本组件主要负责拉起外部程序，浏览器只是附带的一项。
@@ -200,6 +201,12 @@ const WorkspaceOpenButton: React.FC<WorkspaceOpenButtonProps> = ({ workspacePath
       ))}
     </div>
   );
+
+  if (desktopFooter && !isTemporary) return <div className='kel-workspace-open'>
+    <Dropdown trigger='click' position='tl' popupVisible={dropdownOpen} onVisibleChange={setDropdownOpen} droplist={dropdownList}><button type='button' className='kel-workspace-open__label' aria-label='Open workspace with another tool' aria-haspopup='menu'>Open with</button></Dropdown>
+    <button type='button' className='kel-workspace-open__terminal' onClick={() => void handleOpenWith('terminal')}>Terminal</button>
+    <button type='button' className='kel-workspace-open__explorer' onClick={() => void handleOpenWith('explorer')}>File Explorer</button>
+  </div>;
 
   return (
     <div className='workspace-open-button flex items-center'>

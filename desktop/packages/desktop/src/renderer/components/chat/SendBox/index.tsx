@@ -2104,7 +2104,7 @@ const SendBox: React.FC<{
         </div>
         <UploadProgressBar source='sendbox' />
         <div
-          className={isSingleLine ? 'flex items-center gap-2 w-full min-w-0 overflow-hidden' : 'w-full overflow-hidden'}
+          className={isSingleLine ? 'sendbox-input-row flex items-center gap-2 w-full min-w-0 overflow-hidden' : 'w-full overflow-hidden'}
         >
           {isSingleLine && (
             <div
@@ -2204,7 +2204,7 @@ const SendBox: React.FC<{
             ></Input.TextArea>
           </div>
           {isSingleLine && (
-            <div className='flex items-center gap-1'>
+            <div className='sendbox-inline-actions flex items-center gap-1'>
               {!isMobileCompact && renderedRightTools}
               {renderedSpeechButton}
               {sendButtonPrefix}
