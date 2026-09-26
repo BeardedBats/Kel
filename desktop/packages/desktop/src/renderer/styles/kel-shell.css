@@ -3224,3 +3224,17 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-scheduled-detail-desktop { display: none; }
   .kel-v2-shell .kel-scheduled-detail-legacy { display: block; }
 }
+@media (min-width: 768px) and (max-width: 1100px) {
+  .kel-v2-shell .kel-work-table-scroll,
+  .kel-v2-shell .kel-project-table-scroll { max-width: 100%; overflow-x: auto; }
+  .kel-v2-shell .kel-work-table-scroll .kel-table { min-width: 650px; }
+  .kel-v2-shell .kel-project-table-scroll .kel-table { min-width: 560px; }
+  .kel-v2-shell #project-suggestions .kel-project-suggestion-row {
+    display: grid; grid-template-columns: auto auto auto 1fr; gap: 8px;
+    padding: 8px 0;
+  }
+  .kel-v2-shell #project-suggestions .kel-project-suggestion-row .kel-attention__text {
+    grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere;
+  }
+  .kel-v2-shell #project-suggestions .kel-project-suggestion-row .kel-grow { display: none; }
+}
