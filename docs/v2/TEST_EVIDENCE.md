@@ -1,3 +1,7 @@
+## Desktop Light dialogs checkpoint (2026-09-26)
+
+[Desktop Light startup/shared dialogs](evidence/figma-full-audit/DESKTOP_LIGHT_DIALOGS_SOURCE.md) pass five states at 1440/800px with minimum measured label contrast 4.86:1, no overflow/errors, ten focused tests, and source build. Update/Delete geometry and stopped-engine surfaces are repaired. Startup/failure/update/task records were injected/intercepted. No restart/export/download/delete ran. Package proof remains open; App/Data remain untouched.
+
 ## Desktop Light menus checkpoint (2026-09-26)
 
 [Desktop Light menus](evidence/figma-full-audit/DESKTOP_LIGHT_MENUS_SOURCE.md) pass six menus at 1440/800px, with zero overflow/clipping/errors. Minimum measured word contrast is 4.81:1; marks 4.76:1. Gradient-backed Accept and pixel-level icon contrast are excluded. Source build passed. Memory/catalog/native picker actions were intercepted; no live provider ran. Package proof waits for the larger milestone. App/Data remain untouched.

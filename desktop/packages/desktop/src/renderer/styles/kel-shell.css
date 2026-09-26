@@ -3660,3 +3660,42 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
     background: rgba(159,195,255,.05) !important;
   }
 }
+
+/* Light dialogs retain desktop geometry and use the existing semantic palette. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .kel-startup-card { background: var(--kel-surface-1); border-color: var(--kel-border-strong); box-shadow: var(--kel-shadow-sheet); }
+  html[data-theme='light'] body :is(.kel-startup-card .kel-startup-logo, .kel-startup-titles h1, .kel-startup-steps span) { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-startup-titles p, .kel-startup-waiting) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-startup-starting { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-startup-steps > div { border-color: var(--kel-border); }
+  html[data-theme='light'] body .kel-startup-steps img { filter: brightness(0) saturate(100%) opacity(.68); }
+  html[data-theme='light'] body .arco-modal:is(.kel-stopped-engine-modal, .kel-update-available-modal, .kel-task-delete-modal, .kel-diagnostics-export-modal) {
+    background: var(--kel-surface-1) !important;
+    border: 1px solid var(--kel-border-strong);
+    border-radius: 16px;
+    color: var(--kel-text-1);
+    backdrop-filter: blur(24px);
+    box-shadow: var(--kel-shadow-sheet);
+  }
+  html[data-theme='light'] body :is(.kel-stopped-engine-modal, .kel-update-available-modal, .kel-task-delete-modal, .kel-diagnostics-export-modal) :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content, .aionui-modal-std-header) {
+    background: transparent !important;
+  }
+  html[data-theme='light'] body .kel-stopped-engine-modal .aionui-modal-wrapper { border: 0 !important; box-shadow: none !important; }
+  html[data-theme='light'] body .kel-stopped-engine-modal :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content) { padding: 0; }
+  html[data-theme='light'] body .arco-modal:is(.kel-update-available-modal, .kel-task-delete-modal) {
+    position: fixed; left: 50%; margin: 0 !important; translate: -50% 0; box-sizing: border-box; max-width: calc(100vw - 32px);
+  }
+  html[data-theme='light'] body .arco-modal.kel-update-available-modal { top: 220px !important; width: 500px !important; }
+  html[data-theme='light'] body .arco-modal.kel-task-delete-modal { top: 300px !important; width: 460px !important; }
+  html[data-theme='light'] body:has(:is(.kel-stopped-engine-modal, .kel-update-available-modal, .kel-task-delete-modal, .kel-diagnostics-export-modal)) .arco-modal-mask { background: var(--kel-scrim); }
+  html[data-theme='light'] body :is(.kel-stopped-engine-modal .kel-startup-logo, .kel-stopped-engine-titles h1, .kel-update-available-modal .aionui-modal-std-header h3, .kel-task-delete-modal .aionui-modal-std-header h3, .kel-diagnostics-export-modal .aionui-modal-std-header h3, .kel-diagnostics-export-heading h2) { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-stopped-engine-titles p, .kel-stopped-engine-code pre, .kel-update-available-modal .aionui-modal-std-header p, .kel-task-delete-modal .aionui-modal-std-header p, .kel-update-available-notes, .kel-diagnostics-export-modal .aionui-modal-std-header p, .kel-diagnostics-export-heading p, .kel-diagnostics-export-receipt p, .kel-diagnostics-export-details, .kel-diagnostics-export-result) { color: var(--kel-text-2); }
+  html[data-theme='light'] body :is(.kel-stopped-engine-body summary, .kel-stopped-engine-code button, .kel-update-available-notes h2, .kel-diagnostics-export-details summary, .kel-diagnostics-export-note, .kel-stopped-engine-actions .kel-btn, .kel-update-available-actions .kel-btn, .kel-task-delete-actions .kel-btn, .kel-diagnostics-export-actions .kel-btn) { color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-stopped-engine-code, .kel-update-available-notes, .kel-diagnostics-export-receipt section) { background: var(--kel-surface-2); border-color: var(--kel-border); }
+  html[data-theme='light'] body .kel-diagnostics-export-receipt h3 { color: var(--kel-ok-fg); }
+  html[data-theme='light'] body .kel-diagnostics-export-receipt section:last-child h3 { color: var(--kel-failed-fg); }
+  html[data-theme='light'] body .kel-diagnostics-export-note textarea { background: var(--kel-surface-1); color: var(--kel-text-1); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-stopped-engine-actions .kel-btn--primary { background: var(--kel-accent); color: var(--kel-accent-ink); border-color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-update-available-actions, .kel-diagnostics-export-actions) .kel-btn--primary { background: var(--kel-ok-fg); color: var(--kel-text-inverse); border-color: var(--kel-ok-fg); }
+  html[data-theme='light'] body .kel-task-delete-actions .kel-btn--primary { background: var(--kel-failed-fg); color: var(--kel-text-inverse); }
+}
