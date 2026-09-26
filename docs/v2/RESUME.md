@@ -16,11 +16,11 @@
 
 # RESUME — exact continuation
 
-## Latest desktop checkpoint — 2026-09-26
+## Desktop Kibble recovery / Light / Chat package checkpoint (2026-09-26)
 
-Desktop first: complete retained Tools/chat/task and Light popup/icon states. Kibble recovery and panel sheen have source proof; package proof and real worker execution remain open. Setup policy selection/folder persistence/Work-banner integration remain open. The larger Kibble/Setup/Pet/Skills/Light milestone packages 41a73f5. Sign-in has archive-browser proof only. Canonical App remains 8c67121 pending broader acceptance. Mobile stays paused. Pet enable needs Nick's AUD-MINOR-008 decision; live services require credentials.
+[Milestone package](evidence/figma-full-audit/DESKTOP_KIBBLE_LIGHT_CHAT_MILESTONE_PACKAGE.md) at `0b49b56` passed 1440/800px bundled-renderer checks for Kibble recovery, Light menus/dialogs, Chat plan/reply actions, error and reconnecting. All 266 renderer files matched; zero renderer errors/overflow. Real isolated pointer/reaction writes passed and were restored; runtime/mission states and clipboard were injected/intercepted. No worker/provider/restart/export/download/delete ran. Broader Chat/right-panel and Light Workspace/icon states remain open. The next Setup increment is not in this package. Canonical App remains `8c67121`; Data untouched. Mobile paused.
 
-The latest disposable package is `41a73f5`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, remote sign-in, populated Skills, and measured Light labels on eight routes. See MARATHON_STATE and their evidence records. The latest full desktop suite is 63 files / 440 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
+Desktop first: finish Setup folder retention/Work setup-return, then populated Chat/right-panel and retained Tools/task and Light Workspace/dialog/icon states. Latest disposable package is `0b49b56`. Latest full desktop suite is 63 files / 440 tests. Canonical App stays `8c67121`; Data untouched. Mobile stays paused. Autonomy selection awaits Nick; Pet enable needs AUD-MINOR-008; live services need credentials.
 
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
