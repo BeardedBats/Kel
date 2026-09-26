@@ -118,7 +118,8 @@ const AcpSendBox: React.FC<{
   /** Batch 7 (finding 2): the conversation's secondary controls (model / tools / memory),
    *  rendered as a compact row attached to the composer — never a detached header island. */
   composerControls?: React.ReactNode;
-}> = ({ conversation_id, backend, session_mode, agent_name, messageState, teamSendMessage, teamRuntime, composerControls }) => {
+  composerModelControl?: React.ReactNode;
+}> = ({ conversation_id, backend, session_mode, agent_name, messageState, teamSendMessage, teamRuntime, composerControls, composerModelControl }) => {
   const {
     aiProcessing,
     setAiProcessing,
@@ -885,6 +886,7 @@ Please check your local CLI tool authentication status`,
         }
         rightTools={
           <div className='flex items-center gap-8px min-w-0'>
+            {!isMobile && composerModelControl}
             {showModeSelector && (
               <AgentModeSelector
                 backend={backend}
