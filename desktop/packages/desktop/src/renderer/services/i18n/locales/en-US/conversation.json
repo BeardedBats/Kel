@@ -367,6 +367,7 @@
     "createNewConversation": "Create new chat in current project",
     "search.empty": "The search result is empty",
     "addFile": "Add File",
+    "addFileCommand": "Add a file",
     "refresh": "Refresh",
     "temporarySpace": "Temporary Space",
     "dragOverlayTitle": "Drop to import",

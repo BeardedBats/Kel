@@ -42,6 +42,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import styles from './index.module.css';
 
 type GuidNavigationState = {
@@ -56,6 +57,7 @@ type GuidNavigationState = {
 };
 
 const GuidPage: React.FC = () => {
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -189,12 +191,12 @@ const GuidPage: React.FC = () => {
     () => [
       {
         name: 'open',
-        description: t('conversation.workspace.addFile', { defaultValue: 'Add File' }),
+        description: isMobile ? t('conversation.workspace.addFile') : t('conversation.workspace.addFileCommand', { defaultValue: t('conversation.workspace.addFile') }),
         kind: 'builtin',
         source: 'builtin',
       },
     ],
-    [t]
+    [t, isMobile]
   );
   const guidSlashCommands = useMemo(
     () =>

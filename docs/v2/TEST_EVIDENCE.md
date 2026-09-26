@@ -1,5 +1,11 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Work and Permissions (2026-09-26)
+
+[Active/waiting Work and populated Permissions](evidence/figma-full-audit/DESKTOP_WORK_PERMISSIONS_STATES.md) pass real isolated-engine checks at 1440/800px. Job selection, current step, continuation instructions, wrapping, and scrolling are repaired. Answer request, Allow once, and Revoke passed through real engine routes. Auto Edit and Add a file labels match live Figma. TypeScript, source build, 19 Work/attention tests, and four menu DOM tests passed. App and Data were untouched. Milestone package proof remains pending.
+
+Populated Figma frames are absent; existing components define their layout. Pause/Cancel were inspected, not clicked. Revoked lease history remains visible. Saved Knowledge, project recipes, and other desktop frames remain open. The mistakenly generated root-level packages/ renderer cache remains after policy blocked removal. Earlier empty-fixture and label limitations below are historical.
+
 ## Desktop populated layout (2026-09-26)
 
 [Work and Projects](evidence/figma-full-audit/DESKTOP_POPULATED_LAYOUT_SOURCE.md) have source checks at 1440/800px using existing synthetic engine records. Narrow desktop suggestion text now uses its full row. Work contains table overflow in a named keyboard-scrollable region. Final checks report zero document/card overflow and no renderer errors. TypeScript and source build passed. Active Work actions and populated permission/knowledge/recipe states remain open. A larger milestone package is pending.

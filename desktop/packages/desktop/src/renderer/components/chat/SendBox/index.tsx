@@ -599,7 +599,7 @@ const SendBox: React.FC<{
     if (onSlashBuiltinCommand) {
       commands.push({
         name: 'open',
-        description: t('conversation.workspace.addFile', { defaultValue: 'Add File' }),
+        description: isMobile ? t('conversation.workspace.addFile') : t('conversation.workspace.addFileCommand', { defaultValue: t('conversation.workspace.addFile') }),
         kind: 'builtin',
         source: 'builtin',
       });
@@ -617,7 +617,7 @@ const SendBox: React.FC<{
       // kept intact for a future per-platform re-enable.
     }
     return commands;
-  }, [conversationContext?.conversation_id, enableBtw, onSlashBuiltinCommand, t]);
+  }, [conversationContext?.conversation_id, enableBtw, onSlashBuiltinCommand, t, isMobile]);
 
   // Skills loaded into this conversation are also invokable via slash. We reuse
   // the global skills index (shared SWR key `skills-index`) purely to attach a

@@ -135,6 +135,7 @@ export default function KelAutonomyPage() {
                 why=""
               />
             ) : (
+              <div className="kel-permission-table-scroll" tabIndex={0} role="region" aria-label="Active permissions table">
               <KelTable
                 head={['Work', 'State', 'Expires', 'Scope', 'Actions']}
                 rows={leases.map((lease) => [
@@ -167,6 +168,7 @@ export default function KelAutonomyPage() {
                   </KelButton>,
                 ])}
               />
+              </div>
             )}
           </KelCard>
         )}
@@ -181,7 +183,7 @@ export default function KelAutonomyPage() {
             ) : (
               pending.map((request) => (
                 <div className="kel-card" key={request.request_id}>
-                  <div className="kel-row">
+                  <div className="kel-row kel-permission-request-heading">
                     <span className="kel-strong">{`${request.scope}: ${request.target}`}</span>
                     <span className={STATE_CLASS[request.status] ?? 'kel-chip'}>waiting on you</span>
                   </div>
@@ -190,7 +192,7 @@ export default function KelAutonomyPage() {
                   {request.benefit && <p className="kel-meta">{`Benefit: ${request.benefit}`}</p>}
                   {request.fallback && <p className="kel-meta">{`If denied: ${request.fallback}`}</p>}
                   {request.risk && <p className="kel-meta">{`Risk: ${request.risk}`}</p>}
-                  <div className="kel-row">
+                  <div className="kel-row kel-permission-actions">
                     <KelButton
                       variant="primary"
                       disabled={busy}
