@@ -3750,3 +3750,35 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   html[data-theme='light'] body .kel-v2-shell .kel-workspace-open__explorer { background: var(--kel-accent); color: var(--kel-accent-ink); border-color: var(--kel-accent); box-shadow: var(--kel-shadow-card); }
   html[data-theme='light'] body .kel-v2-shell :is(.kel-workspace-head img, .kel-workspace-node-icon, .kel-workspace-chevron) { filter: brightness(0) saturate(100%) opacity(.68); }
 }
+
+/* Desktop Ramble dialogs share Figma dimensions with the existing Light palette. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body .arco-modal:is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal) {
+    position: fixed; left: 50%; margin: 0 !important; translate: -50% 0; box-sizing: border-box;
+    max-width: calc(100vw - 32px); border: 1px solid var(--kel-border-strong); border-radius: 16px;
+    background: var(--kel-surface-1) !important; color: var(--kel-text-1); backdrop-filter: blur(24px); box-shadow: var(--kel-shadow-sheet);
+  }
+  html[data-theme='light'] body .arco-modal.kel-ramble-key-modal { top: 240px !important; width: 480px !important; }
+  html[data-theme='light'] body .arco-modal.kel-ramble-merge-modal { top: 200px !important; width: 520px !important; }
+  html[data-theme='light'] body .arco-modal.kel-ramble-vetting-modal { top: 70px !important; width: 620px !important; max-height: calc(100vh - 100px); }
+  html[data-theme='light'] body :is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal) :is(.arco-modal-content, .aionui-modal-wrapper, .aionui-modal-body-content) { background: transparent !important; }
+  html[data-theme='light'] body :is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal) .aionui-modal-std-header h3 { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal) .aionui-modal-std-header p,
+  html[data-theme='light'] body :is(.kel-ramble-key-body > p, .kel-ramble-merge-body > p, .kel-ramble-merge-list small) { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-ramble-key-body .arco-input-wrapper { background: var(--kel-surface-2); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-ramble-key-body .arco-input-wrapper:focus-within { outline-color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-ramble-key-body .arco-input, .kel-ramble-merge-list > button, .kel-ramble-vetting-modal ul) { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-ramble-merge-list > button[aria-checked='true'] { background: var(--kel-accent-soft); border-color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-ramble-merge-check, .kel-ramble-dialog-actions .kel-btn, .kel-ramble-desktop-vetting-actions .arco-btn) { color: var(--kel-accent); }
+  html[data-theme='light'] body :is(.kel-ramble-dialog-actions .kel-btn--primary, .kel-ramble-desktop-vetting-actions [data-testid='review-accept']) { background: var(--kel-ok-fg); color: var(--kel-text-inverse); }
+  html[data-theme='light'] body .kel-ramble-dialog-actions .kel-ramble-key-disconnect { background: var(--kel-failed-fg); color: var(--kel-text-inverse); }
+  html[data-theme='light'] body .kel-ramble-desktop-vetting-actions [data-testid='review-process'] { background: var(--kel-accent); color: var(--kel-accent-ink); }
+  html[data-theme='light'] body :is(.kel-ramble-desktop-vetting-group > strong, .kel-ramble-vetting-flag) { color: var(--kel-status-attention-text); }
+  html[data-theme='light'] body .kel-ramble-vetting-modal li::marker { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-ramble-vetting-modal .arco-textarea { background: var(--kel-surface-2); border-color: var(--kel-border-strong); color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-ramble-merge-list img, .kel-ramble-desktop-vetting-group li button img) { filter: brightness(0) saturate(100%) opacity(.68); }
+  html[data-theme='light'] body .kel-ramble-desktop-document-menu > div { background: var(--kel-surface-1); border-color: var(--kel-border-strong); box-shadow: var(--kel-shadow-sheet); }
+  html[data-theme='light'] body .kel-ramble-desktop-document-menu button { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-ramble-desktop-document-menu button:hover { background: var(--kel-accent-soft); }
+  html[data-theme='light'] body:has(:is(.kel-ramble-key-modal, .kel-ramble-merge-modal, .kel-ramble-vetting-modal)) .arco-modal-mask { background: var(--kel-scrim); }
+}
