@@ -36,3 +36,7 @@ Canonical App still packages `8c67121`; durable Data was untouched. The bounded 
 ![ramble-merge at 800px](DESKTOP_RAMBLE_MERGE_SOURCE_800.png)
 ![ramble-vetting at 1440px](DESKTOP_RAMBLE_VETTING_SOURCE_1440.png)
 ![ramble-vetting at 800px](DESKTOP_RAMBLE_VETTING_SOURCE_800.png)
+
+## Later packaged evidence
+
+The [runtime and Ramble milestone](DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed at 1440/800px. It supersedes package-pending statements above. Injected/intercepted and live action limits remain explicit. Canonical App and Data remain unchanged.
