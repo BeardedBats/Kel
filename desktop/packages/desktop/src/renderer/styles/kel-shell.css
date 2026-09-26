@@ -3589,3 +3589,23 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
  .kel-v2-shell .kel-shell-pet-card .divide-y > .kel-desktop-only > div { min-height: 53px; padding: 9px 0; box-sizing: border-box; }
  .kel-v2-shell .kel-shell-pet-card .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
 }
+
+/* Desktop Skills uses the current Figma panel material and keeps imported text readable. */
+@media (min-width: 768px) {
+  html[data-theme='dark']:not([style*='--kel-shell-custom-panel']) body .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-settings-skills'] .kel-shell-catalog-card {
+    background: linear-gradient(rgba(47,107,224,.06), rgba(47,107,224,.06)), rgba(6,18,46,.22) !important;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-settings-skills'] .kel-shell-catalog-row strong {
+    overflow-wrap: anywhere;
+  }
+  .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-settings-skills'] .kel-shell-catalog-row-copy > span {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-settings-skills'] .kel-shell-catalog-row {
+    padding-block: 9px;
+  }
+}

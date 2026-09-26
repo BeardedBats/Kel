@@ -501,3 +501,6 @@ blank-body deep link — below), job-driven attention actions, conversational pr
 - **The remote journey's "unauthenticated request" assertion is on the API, not the page.** `/` answers
   200 so the sign-in surface can load; the gate is `401 {"success":false,"error":"Authentication
   required","code":"UNAUTHORIZED"}` on API routes. The renderer half of §9 stays Astra's.
+
+
+Desktop populated Skills now have real isolated import/list/reload and 1440/800px source evidence. Panel fill matches current Figma; long text wraps without overflow. Owned imports were removed. Package proof and detail/import-history routes remain open. See [source record](evidence/figma-full-audit/DESKTOP_SKILLS_POPULATED_SOURCE.md). App/Data remain untouched.
