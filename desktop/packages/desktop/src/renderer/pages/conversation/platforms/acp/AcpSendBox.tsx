@@ -4,6 +4,7 @@ import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { isSideQuestionSupported } from '@/common/chat/sideQuestion';
 import { parseError, uuid } from '@/common/utils';
 import AgentModeSelector from '@/renderer/components/agent/AgentModeSelector';
+import ShellComposerMetrics from '@/renderer/components/kel/ShellComposerMetrics';
 import ContextUsageIndicator from '@/renderer/components/agent/ContextUsageIndicator';
 import CommandQueuePanel from '@/renderer/components/chat/CommandQueuePanel';
 import MobileActionSheet, {
@@ -47,7 +48,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import type { ChatFileRef } from '@/common/types/chatFile';
 import { Button, Message, Tag } from '@arco-design/web-react';
-import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
+import { Brain, FolderClose, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -812,8 +813,25 @@ Please check your local CLI tool authentication status`,
   );
   const sendBoxWidthClass = getChatSurfaceWidthClass();
 
+  const modeControl = showModeSelector && (
+    <AgentModeSelector
+      backend={backend}
+      conversation_id={conversation_id}
+      compact
+      initialMode={session_mode}
+      compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
+      modeLabelFormatter={(mode) => t(`agentMode.${!isMobile && mode.value === 'auto' && mode.label === 'Auto Edit' ? 'autoEdit' : mode.value}`, { defaultValue: mode.label })}
+      compactLabelPrefix={t('agentMode.permission')}
+      hideCompactLabelPrefixOnMobile
+      onModeChanged={isLeaderInTeam ? teamPermission?.propagateMode : undefined}
+      beforeRuntimeSync={prepareRuntimeConfig}
+      beforeRuntimeSet={teamPermission?.warmupSession}
+      configOptionsPort={teamPermission?.configOptionsPort}
+    />
+  );
+
   return (
-    <div className={`${sendBoxWidthClass} flex flex-col mt-auto mb-16px`}>
+    <div className={`${sendBoxWidthClass} kel-shell-acp-composer flex flex-col mt-auto mb-16px`}>
       <CommandQueuePanel
         items={queuedCommands}
         mode={queueMode}
@@ -887,22 +905,7 @@ Please check your local CLI tool authentication status`,
         rightTools={
           <div className='flex items-center gap-8px min-w-0'>
             {!isMobile && composerModelControl}
-            {showModeSelector && (
-              <AgentModeSelector
-                backend={backend}
-                conversation_id={conversation_id}
-                compact
-                initialMode={session_mode}
-                compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
-                modeLabelFormatter={(mode) => t(`agentMode.${!isMobile && mode.value === 'auto' && mode.label === 'Auto Edit' ? 'autoEdit' : mode.value}`, { defaultValue: mode.label })}
-                compactLabelPrefix={t('agentMode.permission')}
-                hideCompactLabelPrefixOnMobile
-                onModeChanged={isLeaderInTeam ? teamPermission?.propagateMode : undefined}
-                beforeRuntimeSync={prepareRuntimeConfig}
-                beforeRuntimeSet={teamPermission?.warmupSession}
-                configOptionsPort={teamPermission?.configOptionsPort}
-              />
-            )}
+            {isMobile && modeControl}
           </div>
         }
         prefix={
@@ -980,6 +983,17 @@ Please check your local CLI tool authentication status`,
             : t('conversation.commandQueue.addToQueue', { defaultValue: 'Save to Draft box' })
         }
       ></SendBox>
+      {!isMobile && (
+        <div className='kel-shell-composer-footer' data-testid='acp-composer-footer'>
+          {conversationContext?.workspace && (
+            <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
+              <FolderClose size={14} />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+            </span>
+          )}
+          {modeControl}
+          <ShellComposerMetrics usage={tokenUsage} contextLimit={context_limit} />
+        </div>
+      )}
       {isMobile && (
         <>
           {isKelAssistant && <KelMobileModelPicker conversationId={conversation_id} open={isKelModelSheetOpen} onClose={() => setIsKelModelSheetOpen(false)} />}

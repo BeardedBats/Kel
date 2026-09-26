@@ -1,3 +1,7 @@
+## Desktop ACP Chat footer checkpoint (2026-09-26)
+
+[ACP Chat footer](evidence/figma-full-audit/DESKTOP_CHAT_FOOTER_SOURCE.md) now reads actual usage/window state and retains permission callbacks/availability guards. Dark/Light 1440/800px pass footer/chip bounds, missing values, populated turn/list/avatar checks, scrolling and 24px inset without overflow/errors. Sidebar bottom/icon sizing repaired. TypeScript/build, nine focused tests and full 64-file/446-test regression pass. Native fixture restored; no provider/send/permission change ran. Full sidebar status variants, Planning subtitle, exact icons/glass and live catalog/usage remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.
+
 ## Desktop Chat bottom inset checkpoint (2026-09-26)
 
 [Chat bottom inset](evidence/figma-full-audit/DESKTOP_CHAT_BOTTOM_INSET_SOURCE.md) passes exactly 24px in Dark/Light at 1440/800px. Short threads have no scrollbar; hover/focus/Copy remain accessible. Three-turn wheel access and mixed tool/plan/reply controls pass. Fixture messages/reaction restored; zero overflow/errors. TypeScript/build, six focused tests and combined full 63-file/443-test regression pass. Full Chat/sidebar/footer and task icons/glass/catalog remain open. Package at the next larger milestone; App 8c67121/Data untouched; mobile paused.

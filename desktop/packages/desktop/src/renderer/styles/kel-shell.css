@@ -3908,3 +3908,24 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
   .kel-shell-task-modal .kel-shell-task-advanced > .arco-btn span { display: flex; align-items: center; font: 500 13px/17px var(--kel-shell-heading); }
   html[data-theme='dark'] body .kel-shell-task-modal .arco-input-inner-wrapper .arco-input { min-height: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; }
 }
+
+/* Desktop shared footer chips follow the populated Chat reference. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-acp-composer { margin-bottom: 12px; }
+  .kel-v2-shell .kel-bottom-nav { padding-bottom: 16px; }
+  .kel-v2-shell .kel-bottom-nav__icon { display: flex; align-items: center; justify-content: center; }
+  .kel-v2-shell .kel-bottom-nav__icon img { width: 15px; height: 15px; }
+  .kel-v2-shell .kel-shell-context-track { border-radius: 999px; }
+  html[data-theme='dark'] body .kel-v2-shell .kel-shell-context-track { background: rgba(191,216,255,.14); }
+  html[data-theme='dark'] body .kel-v2-shell .kel-shell-context-track > span { background: #fcac51; }
+  html[data-theme='dark'] body .kel-v2-shell .kel-shell-composer-metrics > span:last-child { color: var(--kel-figma-color-text-muted); }
+  .kel-v2-shell .kel-shell-composer-metrics { gap: 16px; font: 400 13px/20px var(--kel-shell-body); }
+  .kel-v2-shell .kel-shell-composer-metrics > span { box-sizing: border-box; height: 28px; padding: 0 8px; border-radius: 6px; }
+  .kel-v2-shell .kel-shell-chat-workspace { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/16px var(--kel-shell-heading); letter-spacing: .1px; }
+  .kel-v2-shell .kel-shell-chat-workspace > span { flex: none; }
+}
+@media (min-width: 768px) and (max-width: 1200px) {
+  .kel-v2-shell .kel-shell-composer-footer { height: auto; min-height: 36px; flex-wrap: wrap; gap: 4px 16px; }
+  .kel-v2-shell .kel-shell-composer-metrics { width: 100%; margin-left: 0; justify-content: space-between; gap: 0; }
+  .kel-v2-shell .kel-shell-composer-metrics > span { padding: 0 4px; }
+}
