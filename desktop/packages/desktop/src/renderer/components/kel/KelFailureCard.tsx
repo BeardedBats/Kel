@@ -17,9 +17,12 @@ export interface KelFailureCardProps {
   onRetry?: () => void;
   retryLabel?: string;
   className?: string;
+  heading?: string;
+  context?: string;
+  retryDisabled?: boolean;
 }
 
-export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, retryLabel = 'Try again', className }) => {
+export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, retryLabel = 'Try again', className, heading, context, retryDisabled }) => {
   const raw = useMemo(
     () => (error instanceof Error ? `${error.name}: ${error.message}` : String(error ?? '')),
     [error]
@@ -55,11 +58,11 @@ export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, 
 
   return (
     <section className={`kel-failure${className ? ` ${className}` : ''}`} role='alert'>
-      <h2 className='kel-failure__title'>{copy.title}</h2>
-      <p className='kel-failure__detail'>{copy.detail}</p>
+      <h2 className='kel-failure__title'>{heading || copy.title}</h2>
+      <p className='kel-failure__detail'>{context ? `${context} ${copy.detail}` : copy.detail}</p>
       <div className='kel-failure__actions'>
         {onRetry && (
-          <KelButton variant='primary' onClick={onRetry}>
+          <KelButton variant='primary' onClick={onRetry} disabled={retryDisabled}>
             {retryLabel}
           </KelButton>
         )}

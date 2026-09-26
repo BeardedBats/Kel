@@ -15,6 +15,7 @@ import {
   formatWhen,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { KelActivityLoading } from '@renderer/components/kel/KelDesktopPendingStates';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
 import { VERDICT_TEXT, jobStateText, routeSentence } from '@renderer/components/kel/workLanguage';
 import { kelState, type KelContinuationCandidate, type KelJobRoute, type KelWorkJob } from '@renderer/components/kel/kelApi';
@@ -69,7 +70,7 @@ const KelActivityPage: React.FC = () => {
     );
   }
 
-  if (jobs === null) return <KelLoading />;
+  if (jobs === null) return <KelActivityLoading />;
 
   const all = jobs ?? [];
   const active = all.filter((job) => !TERMINAL.has(job.state));
