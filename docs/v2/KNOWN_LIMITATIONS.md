@@ -1,5 +1,10 @@
 ## Desktop reply actions checkpoint (2026-09-26)
 
+## Desktop Setup retention checkpoint (2026-09-26)
+
+[Setup retention](evidence/figma-full-audit/DESKTOP_SETUP_RETENTION_SOURCE.md) passes real isolated folder-draft write/reload, canceled picker, Work setup-return banner and Chat gate at 1440/800px. Prior client preferences/history restored; zero overflow/errors. TypeScript/build, seven focused tests and full 63-file/443-test regression passed. Native picker intercepted; no provider/job/authority change. Package proof waits for the next larger milestone. Autonomy selection still awaits Nick. App/Data untouched; mobile paused.
+
+
 ## Desktop Kibble recovery / Light / Chat package checkpoint (2026-09-26)
 
 [Milestone package](evidence/figma-full-audit/DESKTOP_KIBBLE_LIGHT_CHAT_MILESTONE_PACKAGE.md) at `0b49b56` passed 1440/800px bundled-renderer checks for Kibble recovery, Light menus/dialogs, Chat plan/reply actions, error and reconnecting. All 266 renderer files matched; zero renderer errors/overflow. Real isolated pointer/reaction writes passed and were restored; runtime/mission states and clipboard were injected/intercepted. No worker/provider/restart/export/download/delete ran. Broader Chat/right-panel and Light Workspace/icon states remain open. The next Setup increment is not in this package. Canonical App remains `8c67121`; Data untouched. Mobile paused.
