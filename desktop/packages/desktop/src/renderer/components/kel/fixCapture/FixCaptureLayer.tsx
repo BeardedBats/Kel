@@ -10,12 +10,15 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { isPrimaryApplicationShortcut } from '@renderer/utils/ui/keyboardShortcuts';
 import type { Rect } from './captureTarget';
-import { panelPlacement } from './captureTarget';
+import { desktopPanelPlacement, panelPlacement } from './captureTarget';
+import recordingDot from '@renderer/assets/figma/fix-capture/recording-dot.svg';
 import { useFixCapture } from './useFixCapture';
 import styles from './fixCapture.module.css';
 
 const PANEL_SIZE = { width: 340, height: 250 };
 const ACTIVE_PHASES = new Set(['recording', 'stopping', 'review', 'saving']);
+const captureElement = (element: Element | null): Element | null =>
+  element?.closest('button, a, input, textarea, select, [role="button"]') || element;
 
 const rectOf = (element: Element | null): Rect | null => {
   if (!element?.getBoundingClientRect) return null;
@@ -25,7 +28,7 @@ const rectOf = (element: Element | null): Rect | null => {
 };
 
 const clock = (seconds: number): string =>
-  `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
 const FixCaptureLayer: React.FC = () => {
   const location = useLocation();
@@ -46,7 +49,30 @@ const FixCaptureLayer: React.FC = () => {
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const [hover, setHover] = useState<Rect | null>(null);
+  const [hoverLabel, setHoverLabel] = useState('');
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const desktop = viewport.width >= 768;
+  const [panelHeight, setPanelHeight] = useState(PANEL_SIZE.height);
+  useEffect(() => {
+    const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+  useEffect(() => {
+    if (!desktop || phase === 'idle' || phase === 'saved') return;
+    document.body.dataset.kelFixCapture = 'active';
+    return () => { delete document.body.dataset.kelFixCapture; };
+  }, [desktop, phase]);
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    setPanelHeight(panel.getBoundingClientRect().height);
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => setPanelHeight(panel.getBoundingClientRect().height));
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [phase]);
 
   // Ctrl+Shift+F begins a capture, or stops one that is recording; Esc always cancels.
   //
@@ -81,14 +107,16 @@ const FixCaptureLayer: React.FC = () => {
       return;
     }
     const onMove = (event: MouseEvent) => {
-      setHover(rectOf(document.elementFromPoint(event.clientX, event.clientY)));
+      const element = captureElement(document.elementFromPoint(event.clientX, event.clientY));
+      setHover(rectOf(element));
+      setHoverLabel(element?.getAttribute('aria-label') || element?.textContent?.trim().slice(0, 90) || element?.tagName.toLowerCase() || '');
     };
     const onClick = (event: MouseEvent) => {
       // The overlay is transparent to the pointer, so the event target is the element the person
       // clicked; elementFromPoint stays as a fallback for synthetic events.
-      const element =
+      const element = captureElement(
         (event.target instanceof Element ? event.target : null) ??
-        document.elementFromPoint(event.clientX, event.clientY);
+        document.elementFromPoint(event.clientX, event.clientY));
       if (!element) return;
       event.preventDefault();
       event.stopPropagation();
@@ -140,26 +168,28 @@ const FixCaptureLayer: React.FC = () => {
   }, [phase]);
 
   const placement = state.target
-    ? panelPlacement(
+    ? (desktop ? desktopPanelPlacement : panelPlacement)(
         state.target.rect,
-        { width: window.innerWidth, height: window.innerHeight },
-        PANEL_SIZE
+        viewport,
+        { width: desktop ? (phase === 'recording' || phase === 'stopping' ? 380 : 420) : PANEL_SIZE.width, height: panelHeight },
+        desktop ? (phase === 'recording' || phase === 'stopping' ? 51 : 90) : 12
       )
     : null;
   const targetLabel = state.target?.label || state.target?.text || state.target?.tag || '';
 
   return (
     <>
-      {phase === 'selecting' &&
+      {(phase === 'selecting' || (desktop && ACTIVE_PHASES.has(phase))) &&
         createPortal(
           <div className={styles.overlay} aria-hidden data-testid='fix-capture-overlay'>
-            {hover && (
+            {(hover || state.target?.rect) && (
               <div
                 className={styles.highlight}
-                style={{ top: hover.y, left: hover.x, width: hover.width, height: hover.height }}
+                style={{ top: (hover || state.target!.rect).y - (desktop ? 6 : 0), left: (hover || state.target!.rect).x - (desktop ? 6 : 0), width: (hover || state.target!.rect).width + (desktop ? 12 : 0), height: (hover || state.target!.rect).height + (desktop ? 12 : 0) }}
               />
             )}
-            <div className={styles.hint}>Click the part of Kel that bothered you — Esc cancels</div>
+            {phase === 'selecting' && <div className={styles.hint}>Click the part of Kel that bothers you. Esc cancels.</div>}
+            {phase === 'selecting' && desktop && hover && hoverLabel && <div className={styles.targetLabel} style={{ top: Math.max(4, hover.y - 29), left: Math.max(8, Math.min(hover.x - 19, viewport.width - 200)) }}>{hoverLabel}</div>}
           </div>,
           document.body
         )}
@@ -178,26 +208,28 @@ const FixCaptureLayer: React.FC = () => {
           >
             {phase === 'recording' || phase === 'stopping' ? (
               <>
-                <p className={styles.heading}>
-                  {phase === 'recording' ? 'Recording fix…' : 'Finishing the transcript…'}
-                </p>
-                <p className={styles.timer}>{clock(state.seconds)}</p>
-                <p className={styles.live} data-testid='fix-capture-live'>
-                  {state.live || (phase === 'recording' ? 'Listening…' : 'One moment…')}
-                </p>
+                <div className={styles.head}>
+                  {desktop && <img src={recordingDot} alt='' />}
+                  <p className={styles.heading}>{phase === 'recording' ? (desktop ? 'Recording' : 'Recording fix…') : 'Finishing the transcript…'}</p>
+                  <p className={styles.timer}>{clock(state.seconds)}</p>
+                </div>
+                <div className={styles.liveBox}>
+                  {desktop && <p className={styles.liveLabel}>{phase === 'recording' ? 'Listening' : 'Transcribing'}</p>}
+                  <p className={styles.live} data-testid='fix-capture-live'>{state.live || (phase === 'recording' ? 'Listening…' : 'One moment…')}</p>
+                </div>
                 {targetLabel && <p className={styles.target}>on “{targetLabel}”</p>}
                 <div className={styles.actions}>
+                  <button type='button' className={styles.quiet} onClick={() => cancel()}>
+                    Cancel
+                  </button>
                   <button
                     type='button'
-                    className={styles.primary}
+                    className={`${styles.primary} ${styles.stop}`}
                     onClick={() => stop()}
                     disabled={phase !== 'recording'}
                     data-testid='fix-capture-stop'
                   >
                     Stop
-                  </button>
-                  <button type='button' className={styles.quiet} onClick={() => cancel()}>
-                    Cancel
                   </button>
                 </div>
                 <p className={styles.hintLine}>
@@ -224,7 +256,10 @@ const FixCaptureLayer: React.FC = () => {
               </>
             ) : (
               <>
-                <p className={styles.heading}>What went wrong?</p>
+                <div className={styles.head}>
+                  <p className={styles.heading}>What went wrong?</p>
+                  {desktop && <p className={styles.timer}>{clock(state.seconds)}</p>}
+                </div>
                 {targetLabel && <p className={styles.target}>on “{targetLabel}”</p>}
                 <textarea
                   className={styles.transcript}
@@ -234,6 +269,7 @@ const FixCaptureLayer: React.FC = () => {
                   rows={4}
                   data-testid='fix-capture-transcript'
                 />
+                {desktop && <p className={styles.note}>Kel saves the screenshot, the spot you clicked and this note.</p>}
                 {state.note && (
                   <p
                     className={state.retryable ? styles.noteStrong : styles.note}
@@ -245,30 +281,31 @@ const FixCaptureLayer: React.FC = () => {
                 <div className={styles.actions}>
                   <button
                     type='button'
-                    className={styles.primary}
-                    onClick={() => void save()}
-                    disabled={!state.draft.trim()}
-                    data-testid='fix-capture-save'
-                  >
-                    Save Fix
-                  </button>
-                  {state.retryable && (
-                    <button
-                      type='button'
-                      className={styles.secondary}
-                      onClick={() => void retry()}
-                      data-testid='fix-capture-retry'
-                    >
-                      Retry Transcription
-                    </button>
-                  )}
-                  <button
-                    type='button'
-                    className={styles.secondary}
+                    className={`${styles.secondary} ${styles.again}`}
                     onClick={() => again()}
                     data-testid='fix-capture-again'
                   >
                     Record Again
+                  </button>
+                  {(state.retryable || desktop) && (
+                    <button
+                      type='button'
+                      className={`${styles.secondary} ${styles.retry}`}
+                      onClick={() => void retry()}
+                      disabled={!state.retryable}
+                      data-testid='fix-capture-retry'
+                    >
+                      {desktop ? 'Retry transcription' : 'Retry Transcription'}
+                    </button>
+                  )}
+                  <button
+                    type='button'
+                    className={`${styles.primary} ${styles.save}`}
+                    onClick={() => void save()}
+                    disabled={!state.draft.trim()}
+                    data-testid='fix-capture-save'
+                  >
+                    {desktop ? 'Save fix' : 'Save Fix'}
                   </button>
                 </div>
                 <p className={styles.hintLine}>Esc or clicking outside cancels — nothing is saved</p>

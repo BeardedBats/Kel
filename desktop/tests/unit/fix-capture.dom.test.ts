@@ -13,6 +13,7 @@ import {
   buildSelector,
   collapse,
   describeElement,
+  desktopPanelPlacement,
   elementLabel,
   elementText,
   imageRect,
@@ -268,6 +269,24 @@ describe('Fix Capture — reading the clicked element', () => {
     expect(shortPreview('  a\n\nb   c  ')).toBe('a b c');
     expect(shortPreview('x'.repeat(200)).length).toBeLessThanOrEqual(90);
     expect(collapse(undefined)).toBe('');
+  });
+
+  it('keeps both desktop panel widths above lower targets and inside the viewport', () => {
+    const figmaTarget = { x: 1249, y: 792, width: 48, height: 48 };
+    expect(desktopPanelPlacement(figmaTarget, { width: 1440, height: 900 }, { width: 380, height: 181 }, 51)).toEqual({ left: 1040, top: 560, side: 'above' });
+    expect(desktopPanelPlacement(figmaTarget, { width: 1440, height: 900 }, { width: 420, height: 232 }, 90)).toEqual({ left: 1000, top: 470, side: 'above' });
+    for (const width of [1440, 800]) {
+      for (const panelWidth of [380, 420]) {
+        const target = { x: width - 191, y: 792, width: 48, height: 48 };
+        const panel = { width: panelWidth, height: 282 };
+        const position = desktopPanelPlacement(target, { width, height: 900 }, panel);
+        expect(position.side).toBe('above');
+        expect(position.left).toBeGreaterThanOrEqual(20);
+        expect(position.left + panel.width).toBeLessThanOrEqual(width - 20);
+        expect(position.top + panel.height).toBeLessThan(target.y);
+      }
+    }
+    expect(desktopPanelPlacement({ x: 30, y: 30, width: 48, height: 48 }, { width: 800, height: 900 }, { width: 420, height: 282 }).side).toBe('right');
   });
 });
 

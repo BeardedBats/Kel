@@ -152,3 +152,14 @@ export function panelPlacement(
     side: 'above',
   };
 }
+
+/** Desktop capture panels sit above lower targets, with the Figma canvas inset. */
+export function desktopPanelPlacement(target: Rect, viewport: { width: number; height: number }, panel: { width: number; height: number }, gap = 40) {
+  if (target.y < viewport.height / 2) return panelPlacement(target, viewport, panel);
+  const inset = 20;
+  return {
+    left: Math.max(inset, Math.min(target.x, viewport.width - panel.width - inset)),
+    top: Math.max(inset, Math.min(target.y - panel.height - gap, viewport.height - panel.height - inset)),
+    side: 'above' as const,
+  };
+}

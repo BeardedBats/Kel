@@ -16,3 +16,5 @@ TypeScript, 37 focused tests, the full desktop suite (54 files / 402 tests), Ele
 ![Chat menu at 800px](DESKTOP_CHAT_MENU_PACKAGE_800.png)
 ![Rename chat at 1440px](DESKTOP_RENAME_CHAT_PACKAGE_1440.png)
 ![Rename chat at 800px](DESKTOP_RENAME_CHAT_PACKAGE_800.png)
+
+**Follow-up:** the [Fix Capture batch](DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) confirmed the palette-input focus-ring repair in a package at both widths. Delayed asynchronous search results now refresh without another keystroke.

@@ -1,6 +1,8 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
-[Desktop command palette and chat overlays](evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. Chat Export's content/download handoff passed an intercepted renderer probe; native save-dialog completion remains untested. Rename was opened and canceled. The final palette-input focus-ring repair has source-render proof and awaits the next Fix Capture package. Installed App remains on `8c67121`.
+[Desktop Fix Capture](evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) has isolated 1440/800px package evidence. Audio and transcription were synthetic; real microphone/Muse acceptance remains open. The real screenshot capture/discard path ran only against isolated data. No fix was saved. The palette focus-ring repair and asynchronous search refresh now have package proof. Installed App remains on `8c67121`.
+
+[Desktop command palette and chat overlays](evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. Chat Export's content/download handoff passed an intercepted renderer probe; native save-dialog completion remains untested. Rename was opened and canceled. The final palette-input focus-ring repair now has package proof from the Fix Capture batch. Installed App remains on `8c67121`.
 
 [Desktop new task and approval details](evidence/figma-full-audit/DESKTOP_OVERLAYS_CURRENT_REVISION.md) match the current overlay bounds at 1440px and fit 800px. The new-task capture used unsaved sample inputs, and no task ran. The approval was a pending isolated engine record; no decision was submitted. Action approvals do not supply the specific purpose and reason pictured in Figma. The dialog uses truthful generic explanations until the engine can provide specific ones. Mobile layout was not audited in this desktop batch. Canonical App still packages `8c67121`.
 

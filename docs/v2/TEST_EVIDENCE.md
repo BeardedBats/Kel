@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop Fix Capture (2026-09-25)
+
+[Desktop Fix Capture](evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) received one coherent implementation batch and a package repair for the 800px hint and underlying tooltip. Recording and Review measure 380×181 and 420×232 at both widths. Synthetic audio/transcription drove the real capture lifecycle; no fix was saved. All audio tracks ended and temporary screenshots were discarded. Palette focus-ring and delayed-search checks passed. TypeScript, 48 focused tests, **54 files / 403 tests**, source build, and Windows packaging passed. Final package captures have no style injection, overflow, or renderer errors. Canonical App and Data were untouched.
+
 ## Desktop command palette and chat overlays (2026-09-25)
 
 [Command palette, Chat row menu, and Rename chat](evidence/figma-full-audit/DESKTOP_CHAT_OVERLAYS_CURRENT_REVISION.md) received one coherent implementation batch. The isolated package measured 640×429, 232×227, and 440×168 at 1440/800px. Escape and Capture a fix passed; selection canceled without saving. An intercepted download probe captured complete synthetic chat Markdown. Rename was canceled. TypeScript, 37 focused tests, **54 files / 402 tests**, Electron Vite, and Windows packaging passed. No document overflow or renderer errors appeared. A final palette-input focus-ring CSS repair passed source-render checks and awaits the next batch's package. Canonical App and Data were untouched.
