@@ -98,8 +98,8 @@
 | `273:11796` | Kel / Overlay — Confirm delete | `shared shell / overlay` | New or replaced node; prior pair absent. | PENDING |
 | `273:1911` | Kel / Chat — Approval card | `/chat` | Current pending and settled shapes compared in isolated package at 1440px. | READ |
 | `273:12085` | Kel / State — Empty (Connections) | `/connections` | Current empty card implemented and compared in isolated package at 1440 and 800px. [Scoped evidence](DESKTOP_CONNECTIONS_CURRENT_REVISION.md). | READ |
-| `273:12291` | Kel / State — Loading (Activity) | `/activity` | New or replaced node; prior pair absent. | PENDING |
-| `273:12486` | Kel / State — Error (Providers) | `/providers` | New or replaced node; prior pair absent. | PENDING |
+| `273:12291` | Kel / State — Loading (Activity) | `/activity` | [Isolated package checks](DESKTOP_PENDING_STATES_CURRENT_REVISION.md), source `98387fc`. | READ |
+| `273:12486` | Kel / State — Error (Providers) | `/providers` | [Isolated package checks](DESKTOP_PENDING_STATES_CURRENT_REVISION.md), source `98387fc`. | READ |
 | `273:12681` | Kel / State — Reconnecting | `/chat` | Current composer notice read and scoped package comparison recorded. | READ |
 | `273:12914` | Kel / Chat — Tool calls and plan | `/chat` | Three tool rows and compact plan compared in isolated package at 1440px. | READ |
 | `273:13090` | Kel / Chat — Agent error | `/chat` | Current timeout card read and scoped package comparison recorded. | READ |

@@ -1,5 +1,7 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+[Desktop Activity loading and Providers error](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md) have package evidence at 1440/800px. Holds and failures were injected through the isolated desktop bridge; no live outage is claimed. Diagnostics contain actual isolated engine details rather than Figma's sample PID/heartbeat. Canonical App remains `8c67121`; desktop completion still gates its promotion.
+
 Workspace and File preview retain native window controls, actual roots/sort, syntax highlighting, and truthful file attribution. Their final desktop package checks pass. The existing editor normalizes CRLF saves to LF; the check restored original bytes. Fixture deletion was rejected by automatic approval review as blocked by policy. Its synthetic files remain inside the existing temporary audit stack. OS launches and folder reveal were intercepted; Add folder was canceled through an injected native dialog result. These are bridge checks, not physical OS acceptance.
 
 [Desktop pickers](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md) have isolated 1440/800px package evidence. The engine catalog makes Model taller than Figma's sample. The no-accent-rail rule replaces the scope underline with warm text and subtle full fill. Folder browse used an injected OS-dialog result, not physical acceptance. No live model response was requested. Workspace and File preview now have final package checks. Installed App still packages `8c67121`.

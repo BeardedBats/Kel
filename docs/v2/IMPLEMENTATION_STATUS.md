@@ -4,6 +4,8 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 ## Desktop current-Figma continuation (2026-09-25)
 
+Desktop Activity loading and Providers error now use current Figma skeletons, cards, and actions. Final isolated package checks pass at 1440/800px. Retry and diagnostics work, and reduced motion disables the sweep. All 417 desktop tests passed. See [pending-state evidence](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md).
+
 Desktop Workspace and File preview now use current Figma surfaces, local assets, file tabs, toolbar, real file actions, and truthful details. Final isolated package checks pass at 1440/800px, including narrow composer and pane clipping repairs. All 415 desktop tests passed. See [Workspace and File preview](evidence/figma-full-audit/DESKTOP_WORKSPACE_CURRENT_REVISION.md).
 
 Desktop Model and Project pickers now use current Figma glass menus, local icons, scope tabs, model actions, and project search. The model control sits inside the composer's right side. Real isolated preference writes and restoration passed; project browse used an injected native dialog result. All 408 desktop tests and 1440/800px package checks passed. See [Desktop pickers](evidence/figma-full-audit/DESKTOP_PICKERS_CURRENT_REVISION.md). Workspace and File preview now have final package checks. Activity loading and Providers error are the next batch. Mobile remains paused.

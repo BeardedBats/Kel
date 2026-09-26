@@ -1,5 +1,9 @@
 # KEL V2.0 — TEST EVIDENCE
 
+## Desktop pending states (2026-09-26)
+
+[Activity loading and Providers error](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md) pass isolated package checks at 1440/800px. Injected bridge states prove loading, failure, disabled retry, actual diagnostics copy, and recovery through the real isolated catalog. Reduced motion stops the 1.4-second skeleton sweep. TypeScript, source build, Windows package, 29 focused tests, and the full 58-file / 417-test suite pass. All 265 archived renderer files match source `98387fc`. No overflow or renderer errors occurred. App and durable Data were untouched.
+
 ## Desktop Fix Capture (2026-09-25)
 
 [Desktop Fix Capture](evidence/figma-full-audit/DESKTOP_FIX_CAPTURE_CURRENT_REVISION.md) received one coherent implementation batch and a package repair for the 800px hint and underlying tooltip. Recording and Review measure 380×181 and 420×232 at both widths. Synthetic audio/transcription drove the real capture lifecycle; no fix was saved. All audio tracks ended and temporary screenshots were discarded. Palette focus-ring and delayed-search checks passed. TypeScript, 48 focused tests, **54 files / 403 tests**, source build, and Windows packaging passed. Final package captures have no style injection, overflow, or renderer errors. Canonical App and Data were untouched.
