@@ -43,7 +43,7 @@
 | `189:4032` | Kel / Transcriptions | `/transcription/library` | Current populated panel and four footer actions compared in isolated package. | READ |
 | `189:4492` | Kel / Set up Kel | `/onboarding` | Retained node; inner revision not measured. | PENDING |
 | `194:1366` | Kel / Ramble | `/transcription` | Retained node; inner revision not measured. | PENDING |
-| `271:247` | Kel / Knowledge — Suggestions & map | `/projects/knowledge` | New or replaced node; prior pair absent. | PENDING |
+| `271:247` | Kel / Knowledge — Suggestions & map | `/projects/knowledge` | [Source implementation and real engine actions at 1440/800px](DESKTOP_KNOWLEDGE_CURRENT_REVISION.md); milestone package pending. | READ |
 | `284:8148` | Kel / Recipes | `/recipes` | Current list implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `284:8489` | Kel / Recipes — Run | `/recipes` | Real input form implemented and compared in isolated package; no submission. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
 | `284:8847` | Kel / Recipes — Preview | `/recipes` | Engine steps and history surface implemented and compared in isolated package. [Scoped evidence](DESKTOP_RECIPES_CURRENT_REVISION.md). | READ |
