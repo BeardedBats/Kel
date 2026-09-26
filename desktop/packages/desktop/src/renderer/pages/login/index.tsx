@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import loginLogo from '@renderer/assets/logos/brand/app.png';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,13 @@ const LoginPage: React.FC = () => {
     ((location.state as { from?: string } | null)?.from) || pendingLoginReturnTo() || '/guid';
   const { status, login } = useAuth();
 
+  const [desktopViewport, setDesktopViewport] = useState(() => window.innerWidth >= 768);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)');
+    const update = () => setDesktopViewport(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -194,6 +202,24 @@ const LoginPage: React.FC = () => {
     [login, navigate, password, rememberMe, showMessage, t, username]
   );
 
+  const languageControl = (
+<label className='login-page__lang-select-wrapper' htmlFor='lang-select'>
+          <select
+            id='lang-select'
+            className='login-page__lang-select'
+            aria-label={t('login.languageToggle')}
+            value={i18n.language}
+            onChange={handleLanguageChange}
+          >
+            {supportedLanguages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </label>
+  );
+
   if (status === 'checking') {
     return <AppLoader />;
   }
@@ -207,20 +233,7 @@ const LoginPage: React.FC = () => {
       </div> */}
 
       <div className='login-page__card'>
-        <label className='login-page__lang-select-wrapper' htmlFor='lang-select'>
-          <select
-            id='lang-select'
-            className='login-page__lang-select'
-            value={i18n.language}
-            onChange={handleLanguageChange}
-          >
-            {supportedLanguages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {desktopViewport ? createPortal(languageControl, document.body) : languageControl}
 
         <div className='login-page__header'>
           <div className='login-page__logo'>
@@ -319,7 +332,7 @@ const LoginPage: React.FC = () => {
               checked={rememberMe}
               onChange={(event) => setRememberMe(event.target.checked)}
             />
-            <label htmlFor='remember-me'>{t('login.rememberMe')}</label>
+            <label htmlFor='remember-me'><span className='login-page__desktop-copy'>{t('login.keepSignedIn', { defaultValue: 'Keep me signed in' })}</span><span className='login-page__mobile-copy'>{t('login.rememberMe')}</span></label>
           </div>
 
           <button type='submit' className='login-page__submit' disabled={loading}>
@@ -338,7 +351,7 @@ const LoginPage: React.FC = () => {
                 />
               </svg>
             )}
-            <span>{loading ? t('login.submitting') : t('login.submit')}</span>
+            <span className='login-page__desktop-copy'>{loading ? t('login.submitting') : t('login.desktopSubmit', { defaultValue: 'Sign in' })}</span><span className='login-page__mobile-copy'>{loading ? t('login.submitting') : t('login.submit')}</span>
           </button>
 
           <div

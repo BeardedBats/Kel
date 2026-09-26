@@ -1,5 +1,11 @@
 # RESUME — exact continuation
 
+## Latest desktop checkpoint — 2026-09-26
+
+Desktop first: finish Kibble running build/candidate variants, populated Skills and retained Tools/chat/task variants, and measured Light label parity. Setup policy selection, broader folder persistence, and Work-banner integration remain open. Then package one larger Kibble/Setup/Pet/sign-in milestone and verify before canonical App promotion. Mobile stays paused. Pet enable needs Nick’s AUD-MINOR-008 decision; actual external sign-in/provider acceptance requires credentials. Reference inspection is 75/75, not complete desktop acceptance.
+
+The disposable runtime/Ramble package is `0b4a583`; canonical App stays `8c67121`. Latest source checks cover Kibble, Setup, Pet off/settings, and remote sign-in. See MARATHON_STATE and their evidence records. The latest full desktop suite is 62 files / 433 tests. App/Data are untouched. Only the canonical repo/main is used. No mobile work resumed.
+
 ## CURRENT FIGMA REVISION (2026-09-25, `main`)
 
 The live Kel Figma now uses desktop page `319:2` with 75 frames and mobile page `319:3858` with 50 frames. The old FINAL pages and most old frame IDs no longer resolve. [The current inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) records the replacement IDs. All older Figma parity screenshots are **SUPERSEDED BY FIGMA REVISION** until compared with current frames. The canonical App still packages `8c67121`; do not cite it as proof for the new revision. Current Tools, Chat/drawer, approval, tool-call/plan, error, reconnecting, mobile model picker, mobile approval details, populated Transcriptions, mobile Ramble list/detail/vetting, mobile Projects, mobile Work empty state, mobile Activity running state, and mobile Permissions empty state have linked scoped package checks in the inventory.

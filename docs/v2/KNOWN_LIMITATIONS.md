@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Desktop Pet and remote sign-in (2026-09-26)
+
+[Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420×330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. App/Data remain untouched.
+
 ## Desktop Setup (2026-09-26)
 
 [Desktop Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md) now uses actual model state, accessible progress, and real folder selection/composer handoff. Isolated model/config writes and 1440/800px source checks passed. The warm setup-return banner passed on Knowledge; Work remains gated until setup finishes. The native picker result was intercepted. TypeScript/build, four focused tests, and 62 files / 433 desktop tests passed. Setup policy selection and broader persistence/parity remain open. App/Data remain untouched.

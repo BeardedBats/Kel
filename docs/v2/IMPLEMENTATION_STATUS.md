@@ -1,5 +1,11 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+Latest prior increments: [Kibble](evidence/figma-full-audit/DESKTOP_KIBBLE_CURRENT_REVISION.md), [Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md), and [runtime/Ramble package](evidence/figma-full-audit/DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md). Historical package-pending statements below are superseded only for the tested runtime/Ramble frames.
+
+## Desktop Pet and remote sign-in (2026-09-26)
+
+[Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420×330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. App/Data remain untouched.
+
 ## Desktop Ramble and complete frame inspection (2026-09-26)
 
 [Desktop Ramble](evidence/figma-full-audit/DESKTOP_RAMBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its transcript, connected-key replacement input, Merge list, and Vetting modal. Real isolated merge and preview rechecks passed; new recordings were cleaned up and the saved vetting transcript remained unchanged. TypeScript/source build, 35 runtime transcription tests, four transcription-policy tests, four Ramble DOM tests, and the final 60-file/428-test desktop suite passed. [Desktop Figma context inspection](evidence/figma-full-audit/DESKTOP_CURRENT_AUDIT_COVERAGE.md) covers 75/75 current frames; this is not accepted parity. Canonical App stays 8c67121, Data is untouched, and mobile stays paused.
