@@ -18,3 +18,6 @@ TypeScript, final source build, seven focused tests, and the full desktop suite 
 ![desktop-kibble-review_reject-source-800](DESKTOP_KIBBLE_REVIEW_REJECT_SOURCE_800.png)
 ![desktop-kibble-running-source-1440](DESKTOP_KIBBLE_RUNNING_SOURCE_1440.png)
 ![desktop-kibble-running-source-800](DESKTOP_KIBBLE_RUNNING_SOURCE_800.png)
+
+
+**2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.

@@ -1,5 +1,9 @@
 # KEL V2.0 — IMPLEMENTATION STATUS
 
+## Desktop combined milestone (2026-09-26)
+
+[Combined package](evidence/figma-full-audit/DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 passed six packaged Electron probes and archive-browser sign-in at 1440/800px. All 266 renderer files match. Populated Skills and Light labels now have source repairs and package proof. Actual isolated mutations and intercepted limits are recorded. Kibble mission recovery/panel sheen, Setup gaps, icons/popups, and live paths remain open. App remains 8c67121; Data remains untouched; mobile stays paused.
+
 ## Desktop Kibble build variants (2026-09-26)
 
 [Kibble build variants](evidence/figma-full-audit/DESKTOP_KIBBLE_BUILD_VARIANTS_SOURCE.md) now have 1440/800px source checks for Running, Cancelled, and candidate review. Progress uses actual reported state/counts; details remain expandable. Intercepted Approve/Reject handoffs passed; no actual build or installation ran. TypeScript/build, seven focused tests, and the full 63-file/437-test suite passed. Worker execution, mission recovery, and package proof remain open. App/Data remain untouched.

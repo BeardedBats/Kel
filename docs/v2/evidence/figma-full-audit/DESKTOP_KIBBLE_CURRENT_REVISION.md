@@ -16,3 +16,6 @@ TypeScript and source build passed. Two focused files / 35 tests passed, includi
 ## Later build-variant evidence
 
 [Build variants](DESKTOP_KIBBLE_BUILD_VARIANTS_SOURCE.md) now have injected/intercepted source proof for Running/Cancelled/candidate review. It supersedes presentation-pending statements above; actual execution and package proof remain open. Running details are now expandable and the compact short-copy panels replace the earlier 302px snapshot.
+
+
+**2026-09-26 combined milestone:** [Package record](DESKTOP_KIBBLE_SETUP_LIGHT_MILESTONE_PACKAGE.md) at 41a73f5 closes package proof only for its tested states. Sign-in is archive-browser proof with intercepted auth. Exact Kibble panel-material parity, mission recovery, Setup gaps, broader Light states, and live acceptance remain open. Canonical App remains 8c67121; Data was untouched. Historical Tools popover/Image Model checks were not repeated.
