@@ -14,7 +14,7 @@ All four menus use the full neutral 14% border, blue glass gradient over `rgba(1
 
 At both widths, all four menus have zero document overflow, zero internal horizontal overflow, and no clipped screen bounds. No renderer errors occurred. Escape and slash keyboard selection passed. Review details opened and closed; defer was intercepted before any memory mutation. Add files reached an injected canceled native dialog. The full underlying chat is not a pixel-parity claim.
 
-TypeScript and nine focused tests passed across two files. Tests cover supplied modes, local mode selection, review-only behavior, busy action blocking, both file paths, and uploaded file delivery without a chat turn. Canonical App and durable Data were untouched. Mobile remains paused. The isolated test app closed; the bounded renderer server remains available during desktop implementation. Previously policy-blocked temporary fixtures remain.
+TypeScript, source build, and nine focused tests passed across two files. Tests cover supplied modes, local mode selection, review-only behavior, busy action blocking, both file paths, and uploaded file delivery without a chat turn. Canonical App and durable Data were untouched. Mobile remains paused. The isolated test app and bounded renderer server closed after checks. Previously policy-blocked temporary fixtures remain.
 
 ![Memory source render at 1440px](DESKTOP_MEMORY_REVIEW_SOURCE_1440.png)
 ![Memory source render at 800px](DESKTOP_MEMORY_REVIEW_SOURCE_800.png)
