@@ -612,19 +612,20 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   return (
     <AionModal
       variant='standard'
-      header={{ title: isEditMode ? t('cron.page.editTask') : t('cron.page.createTask'), showClose: true }}
+      header={{ title: isEditMode ? t('cron.page.editTask') : <><span className='kel-desktop-only'>New scheduled task</span><span className='kel-phone-only'>{t('cron.page.createTask')}</span></>, showClose: true }}
       visible={visible}
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={submitting}
-      okText={t('cron.page.save')}
+      okText={isEditMode ? t('cron.page.save') : <><span className='kel-desktop-only'>Create task</span><span className='kel-phone-only'>{t('cron.page.save')}</span></>}
       cancelText={t('cron.page.cancel')}
-      className='kel-shell-task-modal w-[min(560px,calc(100vw-32px))] max-w-560px'
+      className='kel-shell-task-modal w-[min(600px,calc(100vw-32px))] max-w-600px'
       unmountOnExit
     >
       <div>
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout='vertical' className='kel-shell-task-form'>
           <FormItem
+            className='kel-shell-task-name'
             label={t('cron.page.form.name')}
             field='name'
             rules={[{ required: true, message: t('cron.page.form.nameRequired') }]}
@@ -633,6 +634,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           </FormItem>
 
           <FormItem
+            className='kel-shell-task-assistant'
             label={t('cron.page.form.assistant')}
             field='assistant'
             rules={canEditAgentConfig ? [{ required: true, message: t('cron.page.form.assistantRequired') }] : []}
@@ -698,7 +700,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             )}
           </FormItem>
 
-          <FormItem label={t('cron.page.form.executionMode')}>
+          <FormItem label={<><span className='kel-desktop-only'>Each run starts</span><span className='kel-phone-only'>{t('cron.page.form.executionMode')}</span></>} className='kel-shell-task-execution'>
             <Radio.Group
               value={execution_mode}
               disabled={isExecutionModeLocked}
@@ -710,14 +712,16 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   <Radio
                     key={option.value}
                     value={option.value}
-                    className={`m-0 min-w-0 text-14px text-t-secondary ${isExecutionModeLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`kel-shell-task-execution-option m-0 min-w-0 text-14px text-t-secondary ${isExecutionModeLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <span className='ps-4px text-14px font-medium text-t-primary'>{option.label}</span>
+                    <span className='kel-shell-task-execution-label'>{option.label}</span>
+                    <span className='kel-shell-task-execution-description kel-phone-only'>{option.description}</span>
+                    <span className='kel-shell-task-execution-description kel-desktop-only'>{option.value === 'new_conversation' ? 'A clean chat every time' : 'Adds to the same chat'}</span>
                   </Radio>
                 );
               })}
             </Radio.Group>
-            <div className='mt-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px'>
+            <div className='kel-shell-task-execution-help mt-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px'>
               <p className='m-0 text-12px leading-18px text-t-primary'>{selectedExecutionModeOption.description}</p>
             </div>
             {isTeamOwnedTask && (
@@ -728,24 +732,25 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           </FormItem>
 
           <FormItem
-            label={t('cron.page.form.prompt')}
+            className='kel-shell-task-prompt'
+            label={<><span className='kel-desktop-only'>Instructions</span><span className='kel-phone-only'>{t('cron.page.form.prompt')}</span></>}
             field='prompt'
             rules={[{ required: true, message: t('cron.page.form.promptRequired') }]}
           >
             <TextArea placeholder={t('cron.page.form.promptPlaceholder')} autoSize={{ minRows: 3, maxRows: 8 }} />
           </FormItem>
 
-          <div className='mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
+          <div className='kel-shell-task-queue mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
             <div className='min-w-0'>
-              <p className='m-0 text-14px font-medium text-t-primary'>{t('cron.page.form.queue')}</p>
-              <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>{t('cron.page.form.queueHint')}</p>
+              <p className='m-0 text-14px font-medium text-t-primary'><span className='kel-desktop-only'>Skip if still running</span><span className='kel-phone-only'>{t('cron.page.form.queue')}</span></p>
+              <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'><span className='kel-desktop-only'>Skip a run if the last one is still going.</span><span className='kel-phone-only'>{t('cron.page.form.queueHint')}</span></p>
             </div>
             <Switch checked={queueEnabled} onChange={setQueueEnabled} />
           </div>
 
           {/* Frequency */}
-          <FormItem label={t('cron.page.form.frequency')}>
-            <Select data-testid='cron-frequency-select' value={frequency} onChange={handleFrequencyChange}>
+          <FormItem label={t('cron.page.form.frequency')} className='kel-shell-task-frequency'>
+            <Select className='kel-shell-task-frequency-select' data-testid='cron-frequency-select' value={frequency} onChange={handleFrequencyChange}>
               <Option value='manual'>{t('cron.page.freq.manual')}</Option>
               <Option value='hourly'>{t('cron.page.freq.hourly')}</Option>
               <Option value='daily'>{t('cron.page.freq.daily')}</Option>
@@ -753,10 +758,15 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               <Option value='weekly'>{t('cron.page.freq.weekly')}</Option>
               <Option value='custom'>{t('cron.page.freq.custom')}</Option>
             </Select>
+            <Radio.Group className='kel-shell-task-frequency-options kel-desktop-only' value={frequency} onChange={(value) => handleFrequencyChange(value as FrequencyType)}>
+              {(['manual', 'hourly', 'daily', 'weekdays', 'weekly', 'custom'] as FrequencyType[]).map((value) => (
+                <Radio key={value} value={value}>{t(`cron.page.freq.${value}`)}</Radio>
+              ))}
+            </Radio.Group>
           </FormItem>
 
           {frequency === 'custom' && (
-            <div className='mb-16px rounded-12px border border-solid border-[var(--color-border-2)] p-14px'>
+            <div className='kel-shell-task-custom mb-16px rounded-12px border border-solid border-[var(--color-border-2)] p-14px'>
               <FormItem label={t('cron.page.custom.modeLabel')}>
                 <Select
                   data-testid='custom-frequency-mode'
@@ -913,7 +923,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
           {/* Time picker - shown for daily/weekdays/weekly */}
           {showTimePicker && (
-            <div className='flex items-center gap-12px mb-16px'>
+            <div className='kel-shell-task-time flex items-center gap-12px mb-16px'>
               <TimePicker
                 format='HH:mm'
                 value={dayjs(`2000-01-01 ${time}`)}
@@ -930,7 +940,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
           {/* Weekday picker - shown for weekly */}
           {showWeekdayPicker && (
-            <div className='mb-16px'>
+            <div className='kel-shell-task-weekday mb-16px'>
               <Select value={weekday} onChange={setWeekday}>
                 {WEEKDAYS.map((d) => (
                   <Option key={d.value} value={d.value}>
@@ -942,7 +952,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
           )}
 
           {canEditAgentConfig && (
-            <div className='mt-16px'>
+            <div className='kel-shell-task-advanced mt-16px'>
               <Button
                 type='text'
                 onClick={() => setAdvancedOpen((open) => !open)}

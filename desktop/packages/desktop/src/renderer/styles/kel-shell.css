@@ -2339,6 +2339,80 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 
 /* Desktop Appearance dialog follows the same Dark modal, field, and button roles. */
 @media (min-width: 768px) {
+  html[data-theme='dark'] body .arco-modal.kel-shell-task-modal { max-width: min(600px, calc(100vw - 32px)) !important; background: linear-gradient(180deg,rgba(159,195,255,.08),transparent 45%),#1b376b !important; }
+  html[data-theme='dark'] body .arco-modal.kel-shell-task-modal .arco-modal-content { background: transparent !important; }
+  html[data-theme='dark'] body:has(.kel-shell-task-modal) .arco-modal-mask,
+  html[data-theme='dark'] body:has(.kel-shell-approval-details-modal) .arco-modal-mask { background: rgba(10,20,48,.62) !important; }
+  .kel-shell-task-modal .aionui-modal-std-header,
+  .kel-shell-task-modal .aionui-modal-std-footer { border-color: transparent !important; }
+  .kel-shell-task-modal button[aria-label='Close'],
+  .kel-shell-approval-details-modal button[aria-label='Close'],
+  .kel-shell-approval-details-modal .arco-modal-close-icon { display: none !important; }
+  .kel-shell-task-modal .kel-shell-task-form { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 7px 8px; }
+  .kel-shell-task-form > * { box-sizing: border-box; grid-column: 1 / -1; min-width: 0; margin: 0 !important; }
+  .kel-shell-task-form > .kel-shell-task-name { grid-column: 1; width: 100% !important; order: 1; }
+  .kel-shell-task-form > .kel-shell-task-assistant { grid-column: 2; width: 100% !important; order: 2; }
+  .kel-shell-task-form > .kel-shell-task-execution { order: 3; }
+  .kel-shell-task-form > .kel-shell-task-prompt { order: 4; }
+  .kel-shell-task-form > .kel-shell-task-frequency { order: 5; }
+  .kel-shell-task-form > .kel-shell-task-custom { order: 6; }
+  .kel-shell-task-form > .kel-shell-task-time { grid-column: 1; order: 7; }
+  .kel-shell-task-form > .kel-shell-task-weekday { grid-column: 2; order: 7; }
+  .kel-shell-task-form > .kel-shell-task-queue { order: 8; }
+  .kel-shell-task-form > .kel-shell-task-advanced { order: 9; }
+  .kel-shell-task-modal .arco-form-item-label { margin-bottom: 5px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  .kel-shell-task-modal .aionui-modal-std-header { box-sizing: border-box; height: 52px; min-height: 0; padding: 0 24px; display: flex; align-items: center; }
+  .kel-shell-task-modal .aionui-modal-std-body { padding-top: 12px; }
+  .kel-shell-task-modal .kel-shell-task-execution .arco-radio-group { display: flex; gap: 10px; flex-wrap: nowrap !important; }
+  .kel-shell-task-modal .kel-shell-task-execution-option { box-sizing: border-box; display: flex; flex: 1; min-height: 58px; padding: 8px 10px !important; border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1); }
+  .kel-shell-task-modal .kel-shell-task-execution-option.arco-radio-checked { border-color: #9fc3ff; background: rgba(47,107,224,.2); }
+  .kel-shell-task-modal .kel-shell-task-execution-option .arco-radio-icon { display: none; }
+  .kel-shell-task-modal .kel-shell-task-execution-option :is(.arco-radio-mask-wrapper,.arco-radio-icon-hover) { display: none; }
+  .kel-shell-task-modal .kel-shell-task-execution-option .arco-radio-text { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+  .kel-shell-task-modal .kel-shell-task-execution-option .kel-desktop-only { display: block; }
+  .kel-shell-task-modal .kel-shell-task-execution-option .kel-phone-only { display: none; }
+  .kel-shell-task-execution-label { color: #edf2fa; font: 500 13px/18px var(--kel-shell-heading); }
+  .kel-shell-task-execution-description { color: #8fa3c4; font: 400 11px/15px var(--kel-shell-body); }
+  .kel-shell-task-modal .kel-shell-task-execution-help { display: none; }
+  .kel-shell-task-modal .kel-shell-task-prompt .arco-textarea { min-height: 74px; }
+  .kel-shell-task-modal .kel-shell-task-frequency-select { display: none; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio { margin: 0; padding: 0 1px 6px; border-bottom: 2px solid transparent; color: #c4d4e8; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-checked { border-color: #ffc481; color: #ffc481; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-icon { display: none; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options :is(.arco-radio-mask-wrapper,.arco-radio-icon-hover) { display: none; }
+  .kel-shell-task-modal .kel-shell-task-frequency-options .arco-radio-text { margin: 0; color: inherit; font: 500 13px/18px var(--kel-shell-heading); }
+  .kel-shell-task-modal .kel-shell-task-time { margin: 0; }
+  .kel-shell-task-modal .kel-shell-task-time::before { content: 'Time'; display: block; margin-bottom: 5px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+  .kel-shell-task-modal .kel-shell-task-time .arco-picker { width: 100% !important; }
+  .kel-shell-task-modal .kel-shell-task-queue { min-height: 40px; align-items: center; padding: 0; border: 0; background: transparent; }
+  .kel-shell-task-modal .kel-shell-task-queue p:first-child { font-size: 13px; }
+  .kel-shell-task-modal .kel-shell-task-queue p:last-child { margin-top: 1px; }
+  .kel-shell-task-modal .kel-shell-task-queue .arco-switch-checked { background: #2f6be0 !important; }
+  html[data-theme='dark'] body .kel-shell-task-modal .aionui-modal-std-footer .arco-btn-primary { background: linear-gradient(180deg,#367f49,#216538); color: #fff; }
+  html[data-theme='dark'] body .arco-modal.kel-shell-approval-details-modal { box-sizing: border-box; border: 1px solid rgba(255,196,129,.35); border-radius: 16px; background: linear-gradient(180deg,rgba(47,107,224,.14),rgba(47,107,224,.14)),#183765 !important; box-shadow: 0 24px 32px rgba(5,13,36,.55); backdrop-filter: blur(24px); }
+  html[data-theme='dark'] body .arco-modal.kel-shell-approval-details-modal :is(.arco-modal-content,.arco-modal-header) { background: transparent !important; }
+  .kel-shell-approval-details-modal .arco-modal-header { border: 0; padding-bottom: 2px; }
+  .kel-shell-approval-details-modal .arco-modal-content { padding-top: 0; }
+  .kel-shell-approval-details-title { display: inline-flex; align-items: center; gap: 10px; color: #ffc481; font: 700 17px/22px var(--kel-shell-heading); }
+  .kel-shell-approval-details-title svg { width: 17px; height: 17px; }
+  .kel-shell-approval-details { color: #edf2fa; font: 400 13px/19px var(--kel-shell-body); }
+  .kel-shell-approval-details-subtitle { margin: 0 0 14px; color: #8fa3c4; }
+  .kel-shell-approval-details > div:not(.kel-shell-approval-details-actions) { margin-bottom: 12px; }
+  .kel-shell-approval-details strong { color: #9fc3ff; font: 500 12px/17px var(--kel-shell-heading); }
+  .kel-shell-approval-details p { margin: 2px 0 0; }
+  .kel-shell-approval-details-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 10px; }
+  .kel-shell-approval-details-actions button { min-height: 34px; padding: 0 14px; border: 1px solid rgba(191,216,255,.24); border-radius: 8px; background: transparent; color: #bcd8ff; font: 500 13px/18px var(--kel-shell-heading); cursor: pointer; }
+  .kel-shell-approval-details-actions button:first-child { border-color: transparent; }
+  .kel-shell-approval-details-actions button:nth-child(2):not(:last-child) { background: linear-gradient(180deg,#5d8ee8,#305db7); color: #fff; }
+  .kel-shell-approval-details-actions button:last-child { background: linear-gradient(180deg,#367f49,#216538); color: #fff; }
+  .kel-shell-approval-details-actions button:disabled { opacity: .5; cursor: default; }
+}
+@media (min-width: 768px) and (min-height: 800px) {
+  html body .arco-modal.kel-shell-task-modal { top: -73px !important; }
+  html body .arco-modal.kel-shell-approval-details-modal { top: -140px !important; }
+}
+@media (min-width: 768px) {
   .kel-v2-shell [data-testid='theme-colors-restore'].arco-btn { height: 34px !important; }
   html[data-theme='dark'] body .arco-modal.kel-shell-theme-modal {
     box-sizing: border-box; border: 1px solid rgba(191,216,255,.16) !important; border-radius: 16px;
