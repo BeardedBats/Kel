@@ -769,3 +769,6 @@ TypeScript, source build, Windows package/native verification, and 55 desktop te
 ## Desktop Workspace and File preview package batch — 2026-09-26
 
 TypeScript, source build, Windows package, and the final full desktop suite passed: 57 files / 415 tests. Both final package checks passed at 1440/800px for actual SCM/search, content, read-only mode, split, attachment, real save, restoration, and final original-byte restoration. All 263 archived renderer files match the source build at e77f8bb. No renderer errors or hidden pane/composer clipping remained. OS folder/tool requests were intercepted; Add folder used an injected canceled native dialog. Fixture deletion was policy-blocked. See [scoped evidence](evidence/figma-full-audit/DESKTOP_WORKSPACE_CURRENT_REVISION.md). Canonical App and Data were untouched.
+
+
+Desktop populated Skills now have real isolated import/list/reload and 1440/800px source evidence. Panel fill matches current Figma; long text wraps without overflow. Owned imports were removed. Package proof and detail/import-history routes remain open. See [source record](evidence/figma-full-audit/DESKTOP_SKILLS_POPULATED_SOURCE.md). App/Data remain untouched.
