@@ -28,3 +28,7 @@ TypeScript and final source build passed. The runtime diagnostics tests passed 1
 ![stopped-engine at 800px](DESKTOP_RUNTIME_STOPPED_ENGINE_SOURCE_800.png)
 ![diagnostics-export at 1440px](DESKTOP_RUNTIME_DIAGNOSTICS_EXPORT_SOURCE_1440.png)
 ![diagnostics-export at 800px](DESKTOP_RUNTIME_DIAGNOSTICS_EXPORT_SOURCE_800.png)
+
+## Later packaged evidence
+
+The [runtime and Ramble milestone](DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed at 1440/800px. It supersedes package-pending statements above. Injected/intercepted and live action limits remain explicit. Canonical App and Data remain unchanged.

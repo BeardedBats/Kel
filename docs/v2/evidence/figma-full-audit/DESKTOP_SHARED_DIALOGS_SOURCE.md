@@ -24,3 +24,7 @@ The stopped-engine source surface also received a scoped style correction: its i
 ![update at 800px](DESKTOP_UPDATE_SOURCE_800.png)
 ![delete at 1440px](DESKTOP_DELETE_SOURCE_1440.png)
 ![delete at 800px](DESKTOP_DELETE_SOURCE_800.png)
+
+## Later packaged evidence
+
+The [runtime and Ramble milestone](DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed at 1440/800px. It supersedes package-pending statements above. Injected/intercepted and live action limits remain explicit. Canonical App and Data remain unchanged.

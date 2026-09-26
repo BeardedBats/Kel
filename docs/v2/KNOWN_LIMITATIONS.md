@@ -1,5 +1,9 @@
 # KEL V2.0 — KNOWN LIMITATIONS
 
+## Runtime and Ramble packaged milestone (2026-09-26)
+
+[Runtime and Ramble milestone package](evidence/figma-full-audit/DESKTOP_RUNTIME_RAMBLE_MILESTONE_PACKAGE.md) at `0b4a583` passed seven packaged probes at 1440/800px, with zero renderer errors or overflow. All 265 renderer files match the archive. Real isolated restart, sanitized export, Merge, and Vetting preview passed; injected/intercepted limits are recorded. Canonical App stays `8c67121`; Data remains untouched. Desktop implementation and acceptance remain partial.
+
 ## Desktop Ramble and complete frame inspection (2026-09-26)
 
 [Desktop Ramble](evidence/figma-full-audit/DESKTOP_RAMBLE_CURRENT_REVISION.md) now has current 1440/800px source evidence for its transcript, connected-key replacement input, Merge list, and Vetting modal. Real isolated merge and preview rechecks passed; new recordings were cleaned up and the saved vetting transcript remained unchanged. TypeScript/source build, 35 runtime transcription tests, four transcription-policy tests, four Ramble DOM tests, and the final 60-file/428-test desktop suite passed. [Desktop Figma context inspection](evidence/figma-full-audit/DESKTOP_CURRENT_AUDIT_COVERAGE.md) covers 75/75 current frames; this is not accepted parity. Canonical App stays 8c67121, Data is untouched, and mobile stays paused.
