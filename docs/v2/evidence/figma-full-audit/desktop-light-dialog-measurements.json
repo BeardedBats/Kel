@@ -1,0 +1,1074 @@
+[
+  {
+    "state": "startup",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Kel",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Starting up",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "This takes a few seconds.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Local data",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Waiting",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Kel engine",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Starting",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Chats",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Waiting",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "startup",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Kel",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Starting up",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "This takes a few seconds.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Local data",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Waiting",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Kel engine",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Starting",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Chats",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Waiting",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "stopped-engine",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Kel",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel\u2019s engine stopped",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Your chats and files are safe. Kel tried to restart it 2 times.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Technical details",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Kel diagnostics \u2014 Kel\u2019s engine stopped\ntime: 2026-09-26T16:50:25.670Z\n",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Copy",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Send report",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Restart engine",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "stopped-engine",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Kel",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel\u2019s engine stopped",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Your chats and files are safe. Kel tried to restart it 2 times.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Technical details",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Kel diagnostics \u2014 Kel\u2019s engine stopped\ntime: 2026-09-26T16:50:25.670Z\n",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Copy",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Send report",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Restart engine",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "update",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Update available",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel 2.1.0 is ready. You have 2.0.4.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "What\u2019s new",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Connections: add a service and its credential in one place",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Fix Capture: record what bothers you with Ctrl+Shift+F",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Desktop refinements",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Later",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Download & install",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          20,
+          83,
+          45
+        ],
+        "ratio": 9.11,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "update",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Update available",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel 2.1.0 is ready. You have 2.0.4.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "What\u2019s new",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Connections: add a service and its credential in one place",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Fix Capture: record what bothers you with Ctrl+Shift+F",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Desktop refinements",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Later",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Download & install",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          20,
+          83,
+          45
+        ],
+        "ratio": 9.11,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "diagnostics-export",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Export and issue report",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel removes keys, paths and chat text before anything leaves this comp",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Included",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Engine version and counts",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Runtime state and retention",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Performance summary",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Excluded",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.92,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 API keys and credentials",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 File contents and workspace paths",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 Chat and transcript text",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Full export receipt",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Included: counts \u00b7 database \u00b7 engine_version \u00b7 jobs \u00b7 performance \u00b7 pr",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Excluded: prompts and message bodies \u00b7 conversation transcripts \u00b7 file",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "What happened? (optional)",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Kel restarted twice while I was renaming chats.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Write local draft",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Export sanitized diagnostics",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          20,
+          83,
+          45
+        ],
+        "ratio": 9.11,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "diagnostics-export",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Export and issue report",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Kel removes keys, paths and chat text before anything leaves this comp",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Included",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Engine version and counts",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Runtime state and retention",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u2713 Performance summary",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Excluded",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.92,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 API keys and credentials",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 File contents and workspace paths",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "\u00d7 Chat and transcript text",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Full export receipt",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Included: counts \u00b7 database \u00b7 engine_version \u00b7 jobs \u00b7 performance \u00b7 pr",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Excluded: prompts and message bodies \u00b7 conversation transcripts \u00b7 file",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "What happened? (optional)",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Kel restarted twice while I was renaming chats.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Write local draft",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Export sanitized diagnostics",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          20,
+          83,
+          45
+        ],
+        "ratio": 9.11,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "delete",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Delete this scheduled task?",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Its conversations are deleted too. This can\u2019t be undone.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Keep",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Delete task",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          180,
+          35,
+          24
+        ],
+        "ratio": 6.57,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "state": "delete",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Delete this scheduled task?",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 18.11,
+        "gradient": false
+      },
+      {
+        "text": "Its conversations are deleted too. This can\u2019t be undone.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Keep",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Delete task",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          180,
+          35,
+          24
+        ],
+        "ratio": 6.57,
+        "gradient": false
+      }
+    ]
+  }
+]
