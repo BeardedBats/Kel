@@ -4,9 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import Kibble from '@renderer/pages/kel/dogfood';
 
+const config = vi.hoisted(() => ({ mission: undefined as string | undefined, save: vi.fn() }));
+vi.mock('@/common/config/configService', () => ({ configService: { whenReady: async () => {}, get: () => config.mission, set: config.save } }));
+
 vi.mock('@renderer/hooks/context/LayoutContext', () => ({ useLayoutContext: () => ({ isMobile: false }) }));
 vi.mock('@renderer/components/kel/KelFailureCard', () => ({ KelFailureCard: ({ onRetry }: { onRetry: () => void }) => <button onClick={onRetry}>Retry load</button> }));
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { config.mission = undefined; config.save.mockReset(); cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 function transport(failFirst = false) {
   delete (window as unknown as { kelAPI?: unknown }).kelAPI;
@@ -53,4 +56,55 @@ it('recovers a failed initial load without changing hook order', async () => {
   transport(true); open();
   fireEvent.click(await screen.findByRole('button', { name: 'Retry load' }));
   expect(await screen.findByTestId('fix-list')).toBeTruthy();
+});
+
+it('restores a reviewed update without starting or assembling work', async () => {
+  config.mission = 'kbm_saved';
+  const { requests } = transport(); const original = fetch;
+  vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+    const body = JSON.parse(init?.body as string || '{}');
+    if (body.action === 'build_update') {
+      requests.push(body);
+      return { ok: true, json: async () => ({ mission: { id: 'kbm_saved', source_root: 'C:/saved-workspace' }, job: { id: 'saved-job', state: 'CLOSED' }, candidate: { id: 'saved-candidate', review_state: 'APPROVED', limitations: [] } }) };
+    }
+    return original(url, init);
+  }));
+  open(); await screen.findByText('Reviewed: approved.');
+  expect((screen.getByTestId('build-source-root') as HTMLInputElement).value).toBe('C:/saved-workspace');
+  expect(requests.filter(r => r.action === 'build_update')).toEqual([{ action: 'build_update', op: 'status', mission: 'kbm_saved' }]);
+  expect(config.save).not.toHaveBeenCalled();
+});
+it('keeps fixes available when previous-update recovery fails', async () => {
+  config.mission = 'kbm_offline'; transport(); const original = fetch;
+  vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+    const body = JSON.parse(init?.body as string || '{}');
+    if (body.action === 'build_update') throw new Error('Offline');
+    return original(url, init);
+  }));
+  open(); await screen.findByText('Kel could not load the previous update. Refresh to try again.');
+  expect(screen.getByTestId('fix-list')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Refresh', exact: true })).toBeTruthy();
+});
+
+it('keeps a started update visible when saving its resume pointer fails', async () => {
+  const { requests } = transport(); const original = fetch;
+  config.save.mockRejectedValue(new Error('Settings unavailable'));
+  vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+    const body = JSON.parse(init?.body as string || '{}');
+    if (body.action === 'build_update') {
+      requests.push(body);
+      return { ok: true, json: async () => ({ mission: { id: 'kbm_started' }, job: 'started-job' }) };
+    }
+    return original(url, init);
+  }));
+  open(); await screen.findByTestId('fix-list');
+  fireEvent.change(screen.getByTestId('build-source-root'), { target: { value: 'C:/fixture-workspace' } });
+  const start = screen.getByRole('button', { name: 'Start update (2)' });
+  await waitFor(() => expect((start as HTMLButtonElement).disabled).toBe(false));
+  fireEvent.click(start);
+  await screen.findByText('The update started, but Kel could not save its place. Keep this page open.');
+  expect(config.save).toHaveBeenCalledWith('kel.kibbleLastMission', 'kbm_started');
+  expect(requests.filter(r => r.action === 'build_update')).toHaveLength(1);
+  expect(requests.find(r => r.action === 'build_update')?.op).toBe('start');
+  expect(screen.getByRole('button', { name: 'Refresh', exact: true })).toBeTruthy();
 });
