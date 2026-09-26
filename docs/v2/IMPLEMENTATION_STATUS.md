@@ -4,6 +4,8 @@ What is actually built, as distinct from what is planned. Updated as phases land
 
 ## Desktop current-Figma continuation (2026-09-25)
 
+Desktop Memory review, Permission, Slash, and Attach menus now use current Figma glass, spacing, typography, and action placement. Memory and Permission match their measured component dimensions at 1440/800px. Both file paths remain available, and actual skills get a command group. Nine focused tests, TypeScript, source build, and live source rendering passed. This batch awaits the larger milestone package. See [chat menu evidence](evidence/figma-full-audit/DESKTOP_CHAT_MENUS_CURRENT_REVISION.md) for remaining runtime-label and catalog differences.
+
 Desktop Activity loading and Providers error now use current Figma skeletons, cards, and actions. Final isolated package checks pass at 1440/800px. Retry and diagnostics work, and reduced motion disables the sweep. All 417 desktop tests passed. See [pending-state evidence](evidence/figma-full-audit/DESKTOP_PENDING_STATES_CURRENT_REVISION.md).
 
 Desktop Workspace and File preview now use current Figma surfaces, local assets, file tabs, toolbar, real file actions, and truthful details. Final isolated package checks pass at 1440/800px, including narrow composer and pane clipping repairs. All 415 desktop tests passed. See [Workspace and File preview](evidence/figma-full-audit/DESKTOP_WORKSPACE_CURRENT_REVISION.md).

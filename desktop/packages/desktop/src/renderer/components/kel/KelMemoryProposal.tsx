@@ -8,6 +8,8 @@
  */
 import { Button, Message, Modal, Popover, Space, Typography } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import './kel-desktop-chat-menus.css';
 
 export type MemoryProposal = {
   id: string;
@@ -71,30 +73,35 @@ type ReviewProps = {
   proposal: MemoryProposal;
   busy: boolean;
   onAct: (act: 'accept' | 'reject' | 'defer') => void;
+  total?: number;
 };
 
-export const MemoryProposalReview: React.FC<ReviewProps> = ({ proposal, busy, onAct }) => {
+export const MemoryProposalReview: React.FC<ReviewProps> = ({ proposal, busy, onAct, total = 1 }) => {
+  const desktop = !useLayoutContext()?.isMobile;
   const [details, setDetails] = useState(false);
   const [visible, setVisible] = useState(false);
   return (
-    <div className='w-360px max-w-[84vw] hairline-border rounded-8px p-12px bg-[var(--color-bg-2)]' data-testid='kel-memory-proposal'>
+    <div className='kel-memory-review w-360px max-w-[84vw] hairline-border rounded-8px p-12px bg-[var(--color-bg-2)]' data-testid='kel-memory-proposal'>
+      <div className='kel-memory-review__head'>
       <Typography.Text bold className='text-13px'>
         {headlineWords(proposal.kind)}
       </Typography.Text>
-      <div className='mt-8px text-12px leading-18px'>
-        <div className='text-t-secondary'>Current</div>
-        <div className='mt-2px rounded-6px px-8px py-6px' style={{ background: 'var(--color-fill-2)' }} data-testid='kel-memory-current'>
+      {desktop && <span className='kel-memory-review__count'>1 of {total}</span>}
+      </div>
+      <div className='kel-memory-review__lines mt-8px text-12px leading-18px'>
+        <div className='kel-memory-review__label text-t-secondary'>Current</div>
+        <div className='kel-memory-review__value mt-2px rounded-6px px-8px py-6px' style={{ background: 'var(--color-fill-2)' }} data-testid='kel-memory-current'>
           {currentWords(proposal)}
         </div>
-        <div className='mt-8px text-t-secondary'>Proposed</div>
-        <div className='mt-2px rounded-6px px-8px py-6px' style={{ background: 'var(--color-fill-2)' }} data-testid='kel-memory-proposed'>
+        <div className='kel-memory-review__label mt-8px text-t-secondary'>Proposed</div>
+        <div className='kel-memory-review__value mt-2px rounded-6px px-8px py-6px' style={{ background: 'var(--color-fill-2)' }} data-testid='kel-memory-proposed'>
           {proposal.summary}
         </div>
-        <div className='mt-8px text-t-secondary' data-testid='kel-memory-why'>
-          Why: {proposal.why}
+        <div className='kel-memory-review__why mt-8px text-t-secondary' data-testid='kel-memory-why'>
+          <span className='kel-memory-review__label'>{desktop ? 'Why' : 'Why: '}</span><span>{proposal.why}</span>
         </div>
       </div>
-      <Space className='mt-10px' wrap size={6}>
+      <Space className='kel-memory-review__actions mt-10px' wrap size={6}>
         <Button type='primary' size='small' disabled={busy} data-testid='kel-memory-accept' onClick={() => onAct('accept')}>
           Accept
         </Button>
@@ -102,7 +109,7 @@ export const MemoryProposalReview: React.FC<ReviewProps> = ({ proposal, busy, on
           Reject
         </Button>
         <Button size='small' disabled={busy} data-testid='kel-memory-defer' onClick={() => onAct('defer')}>
-          Defer
+          {desktop ? 'Not now' : 'Defer'}
         </Button>
         <Button size='small' type='text' data-testid='kel-memory-details' onClick={() => setDetails(true)}>
           Review details
@@ -147,6 +154,7 @@ export const MemoryProposalReview: React.FC<ReviewProps> = ({ proposal, busy, on
 };
 
 export const KelMemoryProposalControl: React.FC<{ conversationId?: string }> = ({ conversationId }) => {
+  const desktop = !useLayoutContext()?.isMobile;
   const [rows, setRows] = useState<MemoryProposal[] | null>(null);
   const [cid, setCid] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -222,15 +230,16 @@ export const KelMemoryProposalControl: React.FC<{ conversationId?: string }> = (
 
   return (
     <Popover
+      className='kel-memory-popover'
       trigger='click'
-      position='bl'
+      position={desktop ? 'br' : 'bl'}
       popupVisible={visible}
       onVisibleChange={setVisible}
       content={
         <div>
-          <MemoryProposalReview proposal={first} busy={busy} onAct={(kind) => void act(first, kind)} />
+          <MemoryProposalReview proposal={first} total={rows.length} busy={busy} onAct={(kind) => void act(first, kind)} />
           {extra > 0 ? (
-            <div className='mt-6px text-11px text-t-secondary' data-testid='kel-memory-more'>
+            <div className='kel-memory-review__more mt-6px text-11px text-t-secondary' data-testid='kel-memory-more'>
               and {extra} more waiting for review in Work
             </div>
           ) : null}
@@ -244,6 +253,7 @@ export const KelMemoryProposalControl: React.FC<{ conversationId?: string }> = (
         style={{ background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
       >
         <span>{`Review · ${rows.length}`}</span>
+        <span className='kel-memory-review__chevron' aria-hidden='true'>⌄</span>
       </button>
     </Popover>
   );

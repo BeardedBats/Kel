@@ -677,6 +677,7 @@ const SendBox: React.FC<{
         label: `/${command.name}`,
         description: command.description,
         badge: command.hint,
+        source: command.source,
         highlightIndices: slashController.query
           ? getFuzzyMatchIndices(command.name, slashController.query)?.map((index) => index + 1)
           : undefined,

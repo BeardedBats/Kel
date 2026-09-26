@@ -18,6 +18,10 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
+import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import fileIcon from '@renderer/assets/figma/chat-menus/file.svg';
+import uploadIcon from '@renderer/assets/figma/chat-menus/upload.svg';
+import '@renderer/components/kel/kel-desktop-chat-menus.css';
 
 interface FileAttachButtonProps {
   openFileSelector: () => void;
@@ -35,10 +39,12 @@ const MenuItem: React.FC<{
   className?: string;
   title?: string;
 }> = ({ icon, label, description, suffix, onClick, className = '', title }) => (
-  <div
-    className={`flex items-center gap-10px px-12px py-9px rounded-8px cursor-pointer hover:bg-fill-2 transition-colors text-14px text-t-primary select-none ${className}`}
+  <button
+    type='button'
+    className={`kel-attach-menu__item flex items-center gap-10px px-12px py-9px rounded-8px cursor-pointer hover:bg-fill-2 transition-colors text-14px text-t-primary select-none ${className}`}
     onClick={onClick}
     title={title}
+    style={{ border: 0, background: 'transparent', width: '100%', textAlign: 'left' }}
   >
     <span className='flex-shrink-0 inline-flex items-center justify-center text-t-tertiary w-18px leading-none'>
       {icon}
@@ -48,7 +54,7 @@ const MenuItem: React.FC<{
       {description ? <span className='mt-4px block text-12px leading-16px text-t-secondary'>{description}</span> : null}
     </span>
     {suffix}
-  </div>
+  </button>
 );
 
 const MCP_STATUS_CLASS_NAME: Record<IConversationMcpStatusKind, string> = {
@@ -79,6 +85,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   loadedMcpStatuses,
 }) => {
   const conversationContext = useConversationContextSafe();
+  const isMobile = Boolean(useLayoutContext()?.isMobile);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +139,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   const hasMcpServers = mcpStatuses.length > 0;
   const plusIcon = <Plus theme='outline' size='14' strokeWidth={2} fill={iconColors.primary} />;
 
-  if (isDesktop && !hasSkills && !hasMcpServers) {
+  if (isMobile && isDesktop && !hasSkills && !hasMcpServers) {
     return (
       <Button
         type='secondary'
@@ -222,7 +229,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   );
 
   const menu = (
-    <div style={cardStyle} onClick={(e) => e.stopPropagation()}>
+    <div className={isMobile ? undefined : 'kel-attach-menu'} style={cardStyle} onClick={(e) => e.stopPropagation()}>
       {/* Loaded items stay above file actions so the session snapshot is visible */}
       {(hasMcpServers || hasSkills) && (
         <>
@@ -278,9 +285,17 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
 
       {/* 文件操作最常用，在最下（离 + 最近） */}
       <div className='px-6px'>
-        {!isDesktop && (
+        <MenuItem
+          icon={isMobile ? <Paperclip theme='outline' size={15} strokeWidth={2.5} /> : <img src={fileIcon} alt='' width={14} height={14} />}
+          label={t('common.fileAttach.addFiles', { defaultValue: 'Add files' })}
+          onClick={() => {
+            openFileSelector();
+            setOpen(false);
+          }}
+        />
+        {(!isDesktop || (!isMobile && onLocalFilesAdded)) && (
           <MenuItem
-            icon={<FolderOpen theme='outline' size={15} strokeWidth={2.5} />}
+            icon={isMobile ? <FolderOpen theme='outline' size={15} strokeWidth={2.5} /> : <img src={uploadIcon} alt='' width={14} height={14} />}
             label={t('common.fileAttach.myDevice', { defaultValue: 'Upload from device' })}
             onClick={() => {
               fileInputRef.current?.click();
@@ -288,14 +303,6 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
             }}
           />
         )}
-        <MenuItem
-          icon={<Paperclip theme='outline' size={15} strokeWidth={2.5} />}
-          label={t('common.fileAttach.addFiles', { defaultValue: 'Add files' })}
-          onClick={() => {
-            openFileSelector();
-            setOpen(false);
-          }}
-        />
       </div>
     </div>
   );
@@ -318,6 +325,7 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           loading={uploading}
           disabled={uploading}
           data-testid='aionrs-attach-folder-btn'
+          aria-label='Attach files and tools'
         />
       </Trigger>
       <input

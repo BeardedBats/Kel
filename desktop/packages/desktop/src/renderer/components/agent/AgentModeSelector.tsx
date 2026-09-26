@@ -17,6 +17,7 @@ import { Down } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import RuntimeSelectorPill from './RuntimeSelectorPill';
+import '@renderer/components/kel/kel-desktop-chat-menus.css';
 
 const configErrorMessageKey = (error: unknown) => {
   const errorKind = classifyConfigSetError(error);
@@ -240,13 +241,14 @@ const AgentModeSelector: React.FC<AgentModeSelectorProps> = ({
 
   // Dropdown menu (shared between compact and full mode)
   const dropdownMenu = (
-    <Menu onClickMenuItem={(key) => void handleModeChange(key)}>
-      <Menu.ItemGroup title={t('agentMode.switchMode', { defaultValue: 'Switch Mode' })}>
+    <Menu className={isMobile ? undefined : 'kel-permission-menu'} onClickMenuItem={(key) => void handleModeChange(key)}>
+      <Menu.ItemGroup title={isMobile ? t('agentMode.switchMode', { defaultValue: 'Switch Mode' }) : t('agentMode.permission', { defaultValue: 'Permission' })}>
         {modes.map((mode: AgentModeOption) => (
           <Menu.Item key={mode.value} className={current_mode === mode.value ? '!bg-2' : ''}>
             <div
               className='flex items-center gap-8px'
               data-mode-value={mode.value}
+              data-mode-current={current_mode === mode.value}
               data-testid={`aionrs-mode-option-${mode.value}`}
             >
               {/* Fixed-width marker slot, three states now: ✓ = in force, ⏱ = accepted
@@ -254,10 +256,10 @@ const AgentModeSelector: React.FC<AgentModeSelectorProps> = ({
                   trailing badge is deliberate — the menu is ~260px and its labels already
                   truncate, so a right-hand "下一轮生效" would overflow. The two markers
                   are mutually exclusive by construction. */}
-              <span aria-hidden='true' className='w-16px shrink-0 text-primary'>
+              <span aria-hidden='true' className='kel-permission-menu__mark w-16px shrink-0 text-primary'>
                 {current_mode === mode.value ? '✓' : pendingMode === mode.value ? '⏱' : ''}
               </span>
-              {mode.description ? (
+              {!isMobile ? <span className='kel-permission-menu__text'><span>{getDisplayModeLabel(mode)}</span>{mode.description && <span className='kel-permission-menu__description'>{mode.description}</span>}</span> : mode.description ? (
                 <Tooltip content={mode.description} position='right'>
                   <span className='min-w-0 truncate'>{getDisplayModeLabel(mode)}</span>
                 </Tooltip>

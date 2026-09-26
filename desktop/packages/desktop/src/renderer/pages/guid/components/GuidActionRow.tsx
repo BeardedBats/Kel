@@ -38,6 +38,9 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
 import sendIcon from '@renderer/assets/figma/send.svg';
+import fileIcon from '@renderer/assets/figma/chat-menus/file.svg';
+import uploadIcon from '@renderer/assets/figma/chat-menus/upload.svg';
+import '@renderer/components/kel/kel-desktop-chat-menus.css';
 
 /**
  * Shared shell for the skills / MCP submenu popups: an optional pinned search
@@ -432,7 +435,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
 
   const menuContent = (
     <Menu
-      className='min-w-200px'
+      className={isMobile ? 'min-w-200px' : 'kel-attach-menu'}
       onClickMenuItem={(key) => {
         if (key === 'file') {
           ipcBridge.dialog.showOpen
@@ -450,17 +453,17 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
         }
       }}
     >
-      {isWebUI ? (
+      {isWebUI || !isMobile ? (
         <>
           <Menu.Item key='file'>
             <div className='flex items-center gap-8px'>
-              <UploadOne theme='outline' size='16' fill={iconColors.secondary} style={{ lineHeight: 0 }} />
+              <img src={fileIcon} alt='' width={14} height={14} />
               <span>{t('common.fileAttach.addFiles')}</span>
             </div>
           </Menu.Item>
           <Menu.Item key='device'>
             <div className='flex items-center gap-8px'>
-              <UploadOne theme='outline' size='16' fill={iconColors.secondary} style={{ lineHeight: 0 }} />
+              <img src={uploadIcon} alt='' width={14} height={14} />
               <span>{t('common.fileAttach.myDevice')}</span>
             </div>
           </Menu.Item>
@@ -613,7 +616,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
               </span>
             </Dropdown>
           )}
-          {isWebUI && (
+          {(isWebUI || !isMobile) && (
             <input
               ref={fileInputRef}
               type='file'
