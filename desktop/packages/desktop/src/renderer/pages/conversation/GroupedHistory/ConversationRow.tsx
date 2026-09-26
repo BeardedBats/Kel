@@ -104,7 +104,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     // avatar), and always in the collapsed rail, where it is the row's only
     // visible content (visual batch 5; findings 03 §4 / 04 §4.2).
     if (leadingMark.decorative && !collapsed) {
-      return <span className={`kel-shell-history-dot ${hasUnread ? 'is-unread' : ''}`} aria-label={hasUnread ? 'Unread' : 'Read'} />;
+      return <span className={classNames('kel-shell-history-dot', composedClass, { 'is-unread': hasUnread })} aria-label={hasUnread ? 'Unread' : 'Read'} />;
     }
     if (leadingMark.kind === 'emoji') {
       return (
@@ -234,7 +234,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
                 data-testid={`conversation-waiting-confirmation-${conversation.id}`}
               />
             ) : isGenerating && !batchMode ? (
-              <Spin size={16} />
+              isMobile || collapsed ? <Spin size={16} /> : <span className='kel-shell-history-dot is-working' aria-label='Working' />
             ) : (
               leadingMarkNode
             )}

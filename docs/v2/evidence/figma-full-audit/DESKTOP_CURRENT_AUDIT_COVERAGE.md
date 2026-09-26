@@ -1,3 +1,7 @@
+## Desktop Chat/task/Tools batch (2026-09-26)
+
+[Batch evidence](DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
+
 # Desktop Figma context coverage â€” 2026-09-26
 
 All 75 desktop frames in the current inventory have now been inspected through current Figma design context. The last five were Setup `189:4492`, Remote Sign-in `272:7932`, Kibble `272:1087`, Desktop Pet `314:5271`, and Setup still open `273:13646`. Their reference screenshots and generated geometry were inspected. No production screenshot or runtime action is claimed for those five in this record.

@@ -1,3 +1,7 @@
+## Desktop Chat/task/Tools batch (2026-09-26)
+
+[Batch evidence](evidence/figma-full-audit/DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
+
 ## Desktop task Model/Time row checkpoint (2026-09-26)
 
 [Task Model/Time row](evidence/figma-full-audit/DESKTOP_TASK_MODEL_ROW_SOURCE.md) now uses the existing selector beside Time on desktop; mobile retains Advanced placement and edit guards stay unchanged. Dark/Light pass 1440/800px alignment, y70/600px bounds, zero overflow/errors and unsaved Cancel/reopen behavior. Weekly does not overlap. The isolated assistant has no model catalog; only the existing read-only Automatic fallback was verified. TypeScript/build and final 63-file/443-test regression pass. Full field type/spacing/height and enabled catalog state remain open. Package with the next larger milestone. App 8c67121/Data untouched; mobile paused.

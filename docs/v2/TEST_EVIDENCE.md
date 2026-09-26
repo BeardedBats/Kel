@@ -1,3 +1,7 @@
+## Desktop Chat/task/Tools batch (2026-09-26)
+
+[Batch evidence](evidence/figma-full-audit/DESKTOP_FINAL_IMPLEMENTATION_BATCH.md) closes scoped source checks for sidebar variants, confirmed Planning subtitle, Chat artwork/material, task picker/glass/disabled variants, failed-status detail and enabled Image Model selection. Dark/Light 1440/800px passed; TypeScript/build and 65 files / 448 tests passed. Supplied runtime/task catalogs are presentation evidence; real isolated Image Model selection/enable/reload was restored. One larger package is next. App remains 8c67121; Data untouched; mobile paused.
+
 ## Desktop ACP Chat footer checkpoint (2026-09-26)
 
 [ACP Chat footer](evidence/figma-full-audit/DESKTOP_CHAT_FOOTER_SOURCE.md) now reads actual usage/window state and retains permission callbacks/availability guards. Dark/Light 1440/800px pass footer/chip bounds, missing values, populated turn/list/avatar checks, scrolling and 24px inset without overflow/errors. Sidebar bottom/icon sizing repaired. TypeScript/build, nine focused tests and full 64-file/446-test regression pass. Native fixture restored; no provider/send/permission change ran. Full sidebar status variants, Planning subtitle, exact icons/glass and live catalog/usage remain open. Package with the next larger milestone; App 8c67121/Data untouched; mobile paused.

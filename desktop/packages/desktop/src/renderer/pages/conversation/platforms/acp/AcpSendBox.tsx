@@ -1,3 +1,6 @@
+import footerModeIcon from '@renderer/assets/figma/chat-shell/mode.svg';
+import footerModeChevron from '@renderer/assets/figma/chat-shell/mode-chevron.svg';
+import footerFolderIcon from '@renderer/assets/figma/chat-shell/folder.svg';
 import { ipcBridge } from '@/common';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
@@ -48,7 +51,7 @@ import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/f
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
 import type { ChatFileRef } from '@/common/types/chatFile';
 import { Button, Message, Tag } from '@arco-design/web-react';
-import { Brain, FolderClose, Lightning, MagicHat, Shield } from '@icon-park/react';
+import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -819,9 +822,10 @@ Please check your local CLI tool authentication status`,
       conversation_id={conversation_id}
       compact
       initialMode={session_mode}
-      compactLeadingIcon={<Shield theme='outline' size='14' fill={iconColors.secondary} />}
-      modeLabelFormatter={(mode) => t(`agentMode.${!isMobile && mode.value === 'auto' && mode.label === 'Auto Edit' ? 'autoEdit' : mode.value}`, { defaultValue: mode.label })}
-      compactLabelPrefix={t('agentMode.permission')}
+      compactLeadingIcon={!isMobile ? <img src={footerModeIcon} alt='' /> : <Shield theme='outline' size='14' fill={iconColors.secondary} />}
+      compactTrailingIcon={!isMobile ? <img src={footerModeChevron} alt='' /> : undefined}
+      modeLabelFormatter={(mode) => !isMobile && mode.value === 'plan' ? 'Planning' : t(`agentMode.${!isMobile && mode.value === 'auto' && mode.label === 'Auto Edit' ? 'autoEdit' : mode.value}`, { defaultValue: mode.label })}
+      compactLabelPrefix={isMobile ? t('agentMode.permission') : undefined}
       hideCompactLabelPrefixOnMobile
       onModeChanged={isLeaderInTeam ? teamPermission?.propagateMode : undefined}
       beforeRuntimeSync={prepareRuntimeConfig}
@@ -987,7 +991,7 @@ Please check your local CLI tool authentication status`,
         <div className='kel-shell-composer-footer' data-testid='acp-composer-footer'>
           {conversationContext?.workspace && (
             <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
-              <FolderClose size={14} />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+              <img src={footerFolderIcon} alt='' />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
             </span>
           )}
           {modeControl}
