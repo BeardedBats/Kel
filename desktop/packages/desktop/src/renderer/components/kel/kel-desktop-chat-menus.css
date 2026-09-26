@@ -62,3 +62,27 @@
   html body .kel-attach-menu :is(.arco-menu-item-inner,.arco-dropdown-menu-item-inner) { overflow: hidden; }
 }
 @media (max-width: 767px) { .kel-permission-menu__description { display: none; } }
+
+/* Light uses the existing semantic palette; menu geometry and behavior stay shared. */
+@media (min-width: 768px) {
+  html[data-theme='light'] body :is(.kel-memory-review, .kel-slash-menu, .kel-permission-menu, .kel-attach-menu, .kel-desktop-picker) {
+    background: var(--kel-surface-1) !important;
+    border-color: var(--kel-border-strong) !important;
+    color: var(--kel-text-1);
+    box-shadow: 0 8px 24px rgba(20,22,26,.12);
+  }
+  html[data-theme='light'] body .kel-memory-popover:has(.kel-memory-review) .arco-popover-content { padding: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html[data-theme='light'] body :is(.kel-memory-review__head > .arco-typography, .kel-memory-review__value[data-testid='kel-memory-proposed'], .kel-slash-menu__text > div:first-child, .kel-permission-menu__text, .kel-attach-menu__item, .kel-desktop-picker__row, .kel-desktop-project-menu__search > input) { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-memory-review__count, .kel-memory-review__lines, .kel-memory-review__why, .kel-slash-menu__description, .kel-permission-menu__description, .kel-desktop-picker__row > small, .kel-desktop-project-menu__empty) { color: var(--kel-text-2); }
+  html[data-theme='light'] body :is(.kel-memory-review__label, .kel-memory-review__actions .arco-btn, .kel-slash-menu > div:first-child > div, .kel-slash-menu__group, .kel-permission-menu .arco-dropdown-menu-group-title, .kel-permission-menu .arco-menu-item-group-title, .kel-permission-menu__mark, .kel-desktop-model-menu__scope > button, .kel-desktop-project-menu__label) { color: var(--kel-accent); }
+  html[data-theme='light'] body .kel-memory-review__actions [data-testid='kel-memory-accept'] { color: var(--kel-text-inverse); }
+  html[data-theme='light'] body [data-testid='kel-memory-pill'] { color: var(--kel-status-attention-text) !important; }
+  html[data-theme='light'] body .kel-attach-menu :is(.arco-menu-item, .arco-dropdown-menu-item) { color: var(--kel-text-1); }
+  html[data-theme='light'] body :is(.kel-slash-menu__option[aria-selected='true'], .kel-slash-menu__option:hover, .kel-attach-menu__item:hover, .kel-attach-menu .arco-dropdown-menu-item:hover, .kel-permission-menu .arco-dropdown-menu-item:hover, .kel-permission-menu .arco-dropdown-menu-item:has([data-mode-current='true']), .kel-desktop-picker__row:hover, .kel-desktop-picker__row[aria-pressed='true']) { background: var(--kel-accent-soft) !important; }
+  html[data-theme='light'] body .kel-desktop-model-menu__scope > button[aria-selected='true'] { color: var(--kel-status-attention-text); background: var(--kel-wait-bg); }
+  html[data-theme='light'] body .kel-desktop-picker__divider { background: var(--kel-border); }
+  html[data-theme='light'] body .kel-desktop-project-menu__search { background: var(--kel-surface-1); border-color: var(--kel-border-strong); }
+  html[data-theme='light'] body .kel-desktop-project-menu__search input::placeholder { color: var(--kel-text-2); }
+  html[data-theme='light'] body .kel-v2-shell .kel-desktop-model-trigger { color: var(--kel-accent); background: var(--kel-accent-soft); }
+  html[data-theme='light'] body :is(.kel-attach-menu img, .kel-v2-shell .kel-in-chat-frame__nav-icon img, .kel-v2-shell .kel-bottom-nav__icon img, .kel-v2-shell .kel-shell-catalog-row-icon) { filter: brightness(0) saturate(100%) opacity(.68); }
+}

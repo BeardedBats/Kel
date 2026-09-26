@@ -1,3 +1,7 @@
+## Desktop Light menus checkpoint (2026-09-26)
+
+[Desktop Light menus](evidence/figma-full-audit/DESKTOP_LIGHT_MENUS_SOURCE.md) pass six menus at 1440/800px, with zero overflow/clipping/errors. Minimum measured word contrast is 4.81:1; marks 4.76:1. Gradient-backed Accept and pixel-level icon contrast are excluded. Source build passed. Memory/catalog/native picker actions were intercepted; no live provider ran. Package proof waits for the larger milestone. App/Data remain untouched.
+
 # KEL V2.0 — TEST EVIDENCE
 
 ## Desktop Kibble build variants (2026-09-26)
