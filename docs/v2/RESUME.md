@@ -1,3 +1,7 @@
+## Desktop reply actions checkpoint (2026-09-26)
+
+[Desktop reply actions](evidence/figma-full-audit/DESKTOP_REPLY_ACTIONS_SOURCE.md) now follow tool rows at 1440/800px in Dark/Light. Original-message clipboard handoff and real isolated reaction writes passed; prior reaction was restored. TypeScript/build and full 63-file/440-test regression passed. No provider/fork/tool execution ran. Package proof and broader populated Chat remain open; App/Data untouched.
+
 ## Desktop Chat plan and Light states checkpoint (2026-09-26)
 
 [Desktop Chat plan/Light states](evidence/figma-full-audit/DESKTOP_CHAT_PLAN_LIGHT_STATES_SOURCE.md) pass tool/plan collapsed/expanded in Dark/Light and Light error/reconnecting at 1440/800px. Plan geometry and narrow current-step space are repaired. Minimum measured Light label contrast is 4.86:1; zero overflow/errors. Fourteen focused tests and source build passed. Legacy prefix and runtime states were intercepted/injected. Package proof, reply-action order, broader Chat/right-panel states remain open. App/Data untouched.
