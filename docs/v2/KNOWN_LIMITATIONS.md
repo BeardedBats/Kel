@@ -1,3 +1,7 @@
+## Desktop Chat plan and Light states checkpoint (2026-09-26)
+
+[Desktop Chat plan/Light states](evidence/figma-full-audit/DESKTOP_CHAT_PLAN_LIGHT_STATES_SOURCE.md) pass tool/plan collapsed/expanded in Dark/Light and Light error/reconnecting at 1440/800px. Plan geometry and narrow current-step space are repaired. Minimum measured Light label contrast is 4.86:1; zero overflow/errors. Fourteen focused tests and source build passed. Legacy prefix and runtime states were intercepted/injected. Package proof, reply-action order, broader Chat/right-panel states remain open. App/Data untouched.
+
 ## Desktop Light dialogs checkpoint (2026-09-26)
 
 [Desktop Light startup/shared dialogs](evidence/figma-full-audit/DESKTOP_LIGHT_DIALOGS_SOURCE.md) pass five states at 1440/800px with minimum measured label contrast 4.86:1, no overflow/errors, ten focused tests, and source build. Update/Delete geometry and stopped-engine surfaces are repaired. Startup/failure/update/task records were injected/intercepted. No restart/export/download/delete ran. Package proof remains open; App/Data remain untouched.

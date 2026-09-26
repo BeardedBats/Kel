@@ -1,0 +1,1302 @@
+[
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".tool-group-summary",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Execute: npm run build",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Auto-approved \u00b7 14 s",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Patch Applied",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "3 file changes",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Web Search",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "lighthouse score hero image size",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Executing",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".kel-plan-bar",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Plan",
+        "color": "rgb(138, 75, 18)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 6.11,
+        "gradient": false
+      },
+      {
+        "text": "3/5",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Expand plan",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".tool-group-summary",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Execute: npm run build",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Auto-approved \u00b7 14 s",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Input",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "{\n  \"command\": \"npm run build\"\n}",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Patch Applied",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "3 file changes",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Web Search",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "lighthouse score hero image size",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Executing",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".kel-plan-bar",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Plan",
+        "color": "rgb(138, 75, 18)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 6.11,
+        "gradient": false
+      },
+      {
+        "text": "3/5",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Expand plan",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Review the brief",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Draft the layout",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Run the build",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(0, 0, 0)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 18.91,
+        "gradient": false
+      },
+      {
+        "text": "Summarize result",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".tool-group-summary",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Execute: npm run build",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Auto-approved \u00b7 14 s",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Patch Applied",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "3 file changes",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Web Search",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "lighthouse score hero image size",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Executing",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".kel-plan-bar",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Plan",
+        "color": "rgb(138, 75, 18)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 6.11,
+        "gradient": false
+      },
+      {
+        "text": "3/5",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Expand plan",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".tool-group-summary",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Execute: npm run build",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Auto-approved \u00b7 14 s",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Input",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "{\n  \"command\": \"npm run build\"\n}",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Patch Applied",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "3 file changes",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Success",
+        "color": "rgb(20, 83, 45)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 8.21,
+        "gradient": false
+      },
+      {
+        "text": "Web Search",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "lighthouse score hero image size",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Executing",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-chat-plan-final.log",
+    "selector": ".kel-plan-bar",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Plan",
+        "color": "rgb(138, 75, 18)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 6.11,
+        "gradient": false
+      },
+      {
+        "text": "3/5",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 5.54,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 16.31,
+        "gradient": false
+      },
+      {
+        "text": "Expand plan",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 4.86,
+        "gradient": false
+      },
+      {
+        "text": "Review the brief",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Draft the layout",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Run the build",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      },
+      {
+        "text": "Check the build output",
+        "color": "rgb(0, 0, 0)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 18.91,
+        "gradient": false
+      },
+      {
+        "text": "Summarize result",
+        "color": "rgb(69, 77, 95)",
+        "bg": [
+          242,
+          243,
+          245
+        ],
+        "ratio": 7.63,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-1440.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-1440.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-1440.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-800.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 800,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-800.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 800,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-error-800.log",
+    "selector": ".kel-chat-agent-error",
+    "width": 800,
+    "labels": [
+      {
+        "text": "The agent could not reply",
+        "color": "rgb(180, 35, 24)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 6.05,
+        "gradient": false
+      },
+      {
+        "text": "The model took too long. Try again or pick another model.",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 16.66,
+        "gradient": false
+      },
+      {
+        "text": "Try again",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      },
+      {
+        "text": "Pick another model",
+        "color": "rgb(47, 111, 159)",
+        "bg": [
+          254,
+          243,
+          242
+        ],
+        "ratio": 4.96,
+        "gradient": false
+      },
+      {
+        "text": "Retryable",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      },
+      {
+        "text": "Error code: USER_LLM_PROVIDER_TIMEOUT\nTest timeout detail",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          255,
+          255,
+          255
+        ],
+        "ratio": 6.15,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-reconnect-1440.log",
+    "selector": ".kel-chat-reconnecting",
+    "width": 1440,
+    "labels": [
+      {
+        "text": "Kel is reconnecting",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          253,
+          240,
+          227
+        ],
+        "ratio": 16.17,
+        "gradient": false
+      },
+      {
+        "text": "Your chat is safe. Messages send when Kel is back.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          253,
+          240,
+          227
+        ],
+        "ratio": 5.49,
+        "gradient": false
+      },
+      {
+        "text": "Restart engine",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      }
+    ]
+  },
+  {
+    "source": "desktop-light-chat-reconnect-800.log",
+    "selector": ".kel-chat-reconnecting",
+    "width": 800,
+    "labels": [
+      {
+        "text": "Kel is reconnecting",
+        "color": "rgb(20, 22, 26)",
+        "bg": [
+          253,
+          240,
+          227
+        ],
+        "ratio": 16.17,
+        "gradient": false
+      },
+      {
+        "text": "Your chat is safe. Messages send when Kel is back.",
+        "color": "rgb(90, 98, 112)",
+        "bg": [
+          253,
+          240,
+          227
+        ],
+        "ratio": 5.49,
+        "gradient": false
+      },
+      {
+        "text": "Restart engine",
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          47,
+          111,
+          159
+        ],
+        "ratio": 5.39,
+        "gradient": false
+      }
+    ]
+  }
+]
