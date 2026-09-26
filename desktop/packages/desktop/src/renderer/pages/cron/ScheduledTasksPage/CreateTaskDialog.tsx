@@ -984,7 +984,7 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     fill='currentColor'
                     className={`shrink-0 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
                   />
-                  <span>{t('cron.page.form.advancedSettings')}</span>
+                  <span>{isMobile ? t('cron.page.form.advancedSettings') : 'Advanced settings'}</span>
                 </span>
               </Button>
 
