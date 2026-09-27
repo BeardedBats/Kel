@@ -36,6 +36,7 @@ const KelResumptionBrief: React.FC = () => {
               id: entry.provider,
               label: entry.label,
               status: entry.status,
+              note: entry.note,
             })),
             restore: state.restore ?? null,
           })
