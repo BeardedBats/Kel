@@ -13,15 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./pwa/icon-180.png" />
     <title>Kel</title>
-    <script>
-      // Synchronously restore theme appearance from localStorage to prevent theme flash
-      (function () {
-        try {
-          var theme = localStorage.getItem('__aionui_theme');
-          if (theme) document.documentElement.setAttribute('data-theme', theme);
-        } catch (e) {}
-      })();
-    </script>
+    <script src="./theme-boot.js"></script>
     <style>
       html,
       body,
@@ -35,13 +27,7 @@
     </style>
   </head>
   <body arco-theme="dark">
-    <script>
-      // Set arco-theme on body synchronously
-      try {
-        var t = localStorage.getItem('__aionui_theme');
-        if (t) document.body.setAttribute('arco-theme', t);
-      } catch (e) {}
-    </script>
+    <script src="./theme-boot-body.js"></script>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>

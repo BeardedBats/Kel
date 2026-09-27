@@ -17,7 +17,7 @@ import { captureBackendStartupFailure, initSentry, scheduleStartupLogReport, set
 initSentry();
 
 import './process/utils/configureConsoleLog';
-import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session, shell } from 'electron';
 import fixPath from 'fix-path';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -79,6 +79,9 @@ import {
   setIsQuitting,
 } from './process/utils/tray';
 import { readCloseToTraySetting } from './process/utils/closeToTraySetting';
+import { debugPortRefusal } from './process/utils/debugPortPolicy';
+import { configureSenderGuard } from './common/senderGuard';
+import { installWebContentsSecurity } from './process/utils/windowSecurity';
 // @ts-expect-error - electron-squirrel-startup doesn't have types
 import electronSquirrelStartup from 'electron-squirrel-startup';
 
@@ -101,6 +104,28 @@ app.on('will-quit', () => kelBoot('app event: will-quit'));
 app.on('quit', () => kelBoot('app event: quit'));
 kelBoot(`index.ts module load; argv=${JSON.stringify(process.argv.slice(1))} isPackaged=${app.isPackaged}`);
 // ============ [KEL-BOOT] end helper ============
+
+// CP-13: a packaged Kel never runs with a remote debugging port unless KEL_ALLOW_DEBUG_PORT=1.
+const debugRefusal = debugPortRefusal({ isPackaged: app.isPackaged, argv: process.argv, env: process.env });
+if (debugRefusal) {
+  console.error(debugRefusal);
+  app.exit(1);
+}
+
+// CP-13: privileged IPC trusts the dev server (http://localhost) only in a development build.
+configureSenderGuard({ devServerPermitted: !app.isPackaged });
+
+// CP-13: every window and webview Kel creates keeps to Kel's own pages; web links open in the
+// person's browser, and preview webviews get no Node, no preload and a sandbox.
+app.on('web-contents-created', (_event, contents) => {
+  installWebContentsSecurity(contents, {
+    isPackaged: app.isPackaged,
+    devServerUrl: process.env['ELECTRON_RENDERER_URL'] ?? null,
+    openExternal: (url) => {
+      void shell.openExternal(url).catch((): undefined => undefined);
+    },
+  });
+});
 const skipSingleInstanceLock = isE2ETestMode || process.env.AIONUI_MULTI_INSTANCE === '1';
 const deepLinkFromArgv = process.argv.find((arg) => arg.startsWith(`${PROTOCOL_SCHEME}://`));
 const gotTheLock = skipSingleInstanceLock ? true : app.requestSingleInstanceLock({ deepLinkUrl: deepLinkFromArgv });

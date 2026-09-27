@@ -6,6 +6,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import UnoCSS from 'unocss/vite';
 import unoConfig from '../../uno.config.ts';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { injectContentSecurityPolicy } from './src/common/security/contentSecurityPolicy';
 
 // Read the real AionUi version from the repo-root package.json.
 // `packages/desktop/package.json` is a workspace-internal placeholder pinned
@@ -48,6 +49,18 @@ function iconParkPlugin() {
       );
       if (transformedSource !== source) return { code: transformedSource, map: null } as { code: string; map: null };
       return null;
+    },
+  };
+}
+
+// CP-13: the built renderer page carries a strict Content Security Policy. The dev server (hot
+// reload injects inline scripts) runs without it.
+function contentSecurityPolicyPlugin() {
+  return {
+    name: 'kel-content-security-policy',
+    apply: 'build' as const,
+    transformIndexHtml(html: string) {
+      return injectContentSecurityPolicy(html);
     },
   };
 }
@@ -234,6 +247,7 @@ export default defineConfig(({ mode }) => {
       plugins: [
         UnoCSS(unoConfig),
         iconParkPlugin(),
+        contentSecurityPolicyPlugin(),
         ...(enableSentrySourceMaps ? [sentryVitePlugin(sentryPluginOptions)] : []),
       ],
       build: {
