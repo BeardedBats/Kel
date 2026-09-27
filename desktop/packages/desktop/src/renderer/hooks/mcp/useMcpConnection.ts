@@ -122,6 +122,15 @@ const formatThrownMcpErrorMessage = (t: TFunction, error: unknown): string => {
   return error instanceof Error ? error.message : t('settings.mcpError');
 };
 
+const MCP_DISPLAY_NAMES: Record<string, string> = { 'aionui-browser': 'Kel Browser' };
+
+/** ST-14: one plain sentence — which server, that the check failed, and why. */
+export const plainFailureToast = (serverName: string, reason: string): string => {
+  const name = MCP_DISPLAY_NAMES[serverName] ?? serverName;
+  const why = reason.trim().replace(/[.\s]+$/, '');
+  return why ? `${name} didn't pass its check: ${why}.` : `${name} didn't pass its check.`;
+};
+
 /**
  * MCP连接测试管理Hook
  * 处理MCP服务器的连接测试和状态更新
@@ -134,6 +143,18 @@ export const useMcpConnection = (
 ) => {
   const { t } = useTranslation();
   const [testingServers, setTestingServers] = useState<Record<string, boolean>>({});
+  // ST-14: the plain reason each server's last check failed, shown inline under its row.
+  const [lastErrors, setLastErrors] = useState<Record<string, string>>({});
+  const recordError = useCallback((serverId: string, reason: string | null) => {
+    setLastErrors((prev) => {
+      if (reason === null) {
+        if (!(serverId in prev)) return prev;
+        const { [serverId]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [serverId]: reason };
+    });
+  }, []);
 
   type TestOptions = {
     notify?: boolean;
@@ -188,6 +209,7 @@ export const useMcpConnection = (
         }
 
         if (result.success) {
+          recordError(server.id, null);
           // Record the latest successful availability test in local UI state.
           await updateServerStatus('connected', {
             tools: result.tools?.map((tool) => ({
@@ -212,18 +234,13 @@ export const useMcpConnection = (
         } else {
           // Record the latest failed availability test in local UI state.
           await updateServerStatus('error');
-          const errorMsg = truncateErrorMessage(formatMcpErrorMessage(t, result));
+          const reason = formatMcpErrorMessage(t, result);
+          recordError(server.id, reason);
+          const errorMsg = truncateErrorMessage(reason, 220);
           if (notify) {
             await globalMessageQueue.add(() => {
               try {
-                message.error({
-                  content: t('settings.mcpTestConnectionFailedWithHint', {
-                    name: server.name,
-                    error: errorMsg,
-                    defaultValue: `${server.name}: ${errorMsg}. Please review the MCP JSON configuration and test again.`,
-                  }),
-                  duration: 5000,
-                });
+                message.error({ content: plainFailureToast(server.name, errorMsg), duration: 6000 });
               } catch {
                 // ELECTRON-1A1: host component unmounted, Arco message context is gone — drop silently.
               }
@@ -233,18 +250,13 @@ export const useMcpConnection = (
       } catch (error) {
         // Record the latest failed availability test in local UI state.
         await updateServerStatus('error');
-        const errorMsg = truncateErrorMessage(formatThrownMcpErrorMessage(t, error));
+        const reason = formatThrownMcpErrorMessage(t, error);
+        recordError(server.id, reason);
+        const errorMsg = truncateErrorMessage(reason, 220);
         if (notify) {
           await globalMessageQueue.add(() => {
             try {
-              message.error({
-                content: t('settings.mcpTestConnectionFailedWithHint', {
-                  name: server.name,
-                  error: errorMsg,
-                  defaultValue: `${server.name}: ${errorMsg}. Please review the MCP JSON configuration and test again.`,
-                }),
-                duration: 5000,
-              });
+              message.error({ content: plainFailureToast(server.name, errorMsg), duration: 6000 });
             } catch {
               // ELECTRON-1A1: host component unmounted, Arco message context is gone — drop silently.
             }
@@ -254,7 +266,7 @@ export const useMcpConnection = (
         setTestingServers((prev) => ({ ...prev, [server.id]: false }));
       }
     },
-    [setMcpServers, message, t, onAuthRequired, onAuthResolved]
+    [setMcpServers, message, t, onAuthRequired, onAuthResolved, recordError]
   );
 
   const handleTestMcpConnections = useCallback(
@@ -281,6 +293,7 @@ export const useMcpConnection = (
 
   return {
     testingServers,
+    lastErrors,
     handleTestMcpConnection,
     handleTestMcpConnections,
   };

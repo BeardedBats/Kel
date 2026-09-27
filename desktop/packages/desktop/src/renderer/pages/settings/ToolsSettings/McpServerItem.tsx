@@ -18,6 +18,10 @@ interface McpServerItemProps {
   onEditServer: (server: IMcpServer) => void;
   onDeleteServer: (serverId: string) => void;
   onOAuthLogin?: (server: IMcpServer) => void;
+  onToggleEnabled?: (server: IMcpServer, enabled: boolean) => void;
+  isToggling?: boolean;
+  /** ST-14: the plain reason the last check failed, when this session ran it. */
+  lastError?: string;
 }
 
 const McpServerItem: React.FC<McpServerItemProps> = ({
@@ -32,6 +36,9 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   onEditServer,
   onDeleteServer,
   onOAuthLogin,
+  onToggleEnabled,
+  isToggling,
+  lastError,
 }) => {
   const checkedAt = server.updated_at
     ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
@@ -59,6 +66,8 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
               onEditServer={onEditServer}
               onDeleteServer={onDeleteServer}
               onOAuthLogin={onOAuthLogin}
+              onToggleEnabled={onToggleEnabled}
+              isToggling={isToggling}
             />
           }
           name='1'
@@ -78,7 +87,9 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
         <div className='kel-tools-mcp-error-detail'>
           <div className='kel-tools-mcp-error-note'>
             <span aria-hidden='true'>⚠</span>
-            <span>Configuration may be incorrect. Review the MCP JSON and test again.</span>
+            <span data-testid='mcp-error-reason'>
+              {lastError || 'Configuration may be incorrect. Review the MCP JSON and test again.'}
+            </span>
           </div>
           {checkedAt && <span className='kel-tools-mcp-checked'>Checked {checkedAt}</span>}
         </div>

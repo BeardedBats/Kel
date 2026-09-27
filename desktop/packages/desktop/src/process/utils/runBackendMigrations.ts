@@ -16,6 +16,7 @@ import {
   type ImageGenerationMcpEnvResolveResult,
 } from '@/common/config/imageGenerationMcpEnv';
 import { BUILTIN_IMAGE_GEN_NAME, type IMcpServer, type IProvider } from '@/common/config/storage';
+import { CHROME_DEVTOOLS_MCP_VERSION } from '@process/resources/builtinMcp/browserServerPort';
 import { getBuiltinMcpScriptPath, type ProcessConfig as ProcessConfigType } from './initStorage';
 import { migrateAssistantsToBackend } from './migrateAssistants';
 
@@ -200,10 +201,31 @@ function buildBuiltinBrowserServer(): McpImportServer {
   };
 }
 
+const CHROME_DEVTOOLS_PACKAGE = 'chrome-devtools-mcp';
+const PINNED_CHROME_DEVTOOLS_SPEC = `${CHROME_DEVTOOLS_PACKAGE}@${CHROME_DEVTOOLS_MCP_VERSION}`;
+
+/**
+ * ST-06: the chrome-devtools default used `chrome-devtools-mcp@latest`. Returns the args with an
+ * unpinned (`@latest`, `@next` or bare) package spec replaced by the pinned version, or `null`
+ * when nothing needs to change (already pinned — including a version the person chose themselves).
+ */
+export function pinChromeDevtoolsArgs(args: string[] | undefined): string[] | null {
+  if (!args) return null;
+  let changed = false;
+  const next = args.map((arg) => {
+    if (arg === CHROME_DEVTOOLS_PACKAGE || /^chrome-devtools-mcp@(latest|next)$/.test(arg)) {
+      changed = true;
+      return PINNED_CHROME_DEVTOOLS_SPEC;
+    }
+    return arg;
+  });
+  return changed ? next : null;
+}
+
 function buildDefaultMcpServers(): McpImportServer[] {
   const chromeConfig = {
     command: 'npx',
-    args: ['-y', 'chrome-devtools-mcp@latest'],
+    args: ['-y', PINNED_CHROME_DEVTOOLS_SPEC],
   };
 
   return [
@@ -251,7 +273,7 @@ async function ensureBuiltinChromeDevtoolsAvailability(server?: IMcpServer): Pro
     server.name !== BUILTIN_CHROME_DEVTOOLS_NAME ||
     server.transport.type !== 'stdio' ||
     server.transport.command !== 'npx' ||
-    // Disabled by default; checking it downloads chrome-devtools-mcp@latest for nothing.
+    // Disabled by default; checking it downloads chrome-devtools-mcp for nothing.
     !server.enabled
   ) {
     return;
@@ -267,6 +289,31 @@ async function ensureBuiltinChromeDevtoolsAvailability(server?: IMcpServer): Pro
   } catch (error) {
     console.warn('[Migration] chrome-devtools MCP preflight failed', error);
   }
+}
+
+/**
+ * ST-15: returns the update that points an existing image-generation server at the current script
+ * path (keeping its env), or `null` when the command and args already match.
+ */
+export function repairImageServerScriptPath(
+  existing: Pick<IMcpServer, 'transport'>,
+  desired: Pick<IMcpServer, 'transport'>
+): Pick<IMcpServer, 'transport' | 'original_json'> | null {
+  if (existing.transport.type !== 'stdio' || desired.transport.type !== 'stdio') return null;
+  if (
+    existing.transport.command === desired.transport.command &&
+    areStringArraysEqual(existing.transport.args, desired.transport.args)
+  ) {
+    return null;
+  }
+  const env = existing.transport.env || {};
+  const transport = { ...existing.transport, command: desired.transport.command, args: desired.transport.args, env };
+  const original_json = JSON.stringify(
+    { mcpServers: { [BUILTIN_IMAGE_GEN_NAME]: { command: transport.command, args: transport.args || [], env } } },
+    null,
+    2
+  );
+  return { transport, original_json };
 }
 
 function buildOriginalJsonFromTransport(server: Pick<IMcpServer, 'name' | 'description' | 'transport'>): string {
@@ -338,6 +385,22 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
     });
   }
 
+  if (existingChromeDevtools && existingChromeDevtools.transport.type === 'stdio') {
+    const pinnedArgs = pinChromeDevtoolsArgs(existingChromeDevtools.transport.args);
+    if (pinnedArgs) {
+      const transport = { ...existingChromeDevtools.transport, args: pinnedArgs };
+      console.info('[Migration] pinning chrome-devtools MCP to %s', PINNED_CHROME_DEVTOOLS_SPEC);
+      await mcpService.updateServer.invoke({
+        id: existingChromeDevtools.id,
+        data: {
+          builtin: true,
+          transport,
+          original_json: buildOriginalJsonFromTransport({ ...existingChromeDevtools, transport }),
+        },
+      });
+    }
+  }
+
   const refreshedServers = await mcpService.listServers.invoke();
   const chromeDevtoolsServer = refreshedServers.find((server) => server.name === BUILTIN_CHROME_DEVTOOLS_NAME);
   await ensureBuiltinChromeDevtoolsAvailability(chromeDevtoolsServer);
@@ -395,6 +458,14 @@ async function ensureBootstrapMcpServersInDb(configFile: ConfigFile): Promise<vo
       existingImageServer.id,
       imageEnvResolution.reason
     );
+    // ST-15: the script path still has to follow the app (same self-heal as the browser server
+    // below). Keep the existing env untouched — only the command and script path are corrected.
+    const repaired = repairImageServerScriptPath(existingImageServer, imageServer);
+    if (repaired) {
+      console.info('[Migration] image MCP script path drifted, server id: %s', existingImageServer.id);
+      await mcpService.updateServer.invoke({ id: existingImageServer.id, data: repaired });
+      imageServerUpdated = true;
+    }
   }
 
   /**

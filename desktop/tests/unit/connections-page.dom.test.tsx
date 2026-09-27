@@ -357,7 +357,8 @@ describe('Connections — the central management surface', () => {
     // The name can appear twice now — once as the service, once as where an action lives.
     expect((await screen.findAllByText('Stripe')).length).toBeGreaterThan(0);
     expect(screen.getByText('Pitcher List')).toBeTruthy();
-    expect(screen.getByText('Ready')).toBeTruthy();
+    // ST-07: the row states the recorded check, so an untested credential says so.
+    expect(screen.getByText('Ready — not tested')).toBeTruthy();
     expect(screen.getByText(/Needs a credential/)).toBeTruthy();
     expect(screen.getByText('1 ready · 1 needing a credential')).toBeTruthy();
   });
@@ -516,6 +517,19 @@ describe('Connections — the central management surface', () => {
     expect(await screen.findByText(/Working — checked/)).toBeTruthy();
     expect(await screen.findByText(/The service answered 200\./)).toBeTruthy();
     expect(document.body.innerHTML).not.toContain('sk_live_4242');
+  });
+
+  it('ST-07: shows the recorded result on the row and keeps Test off until a credential exists', async () => {
+    rows = [
+      row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'], can_test: true, test_endpoint: 'https://api.stripe.com/v1/account' }),
+      row('github', 'GitHub', { has_credentials: false, can_test: true, test_endpoint: 'https://api.github.com/user' }),
+    ];
+    stored = ['connection:stripe:api_key=sk_live_4242'];
+    renderPage();
+    const tests = await screen.findAllByText('Test');
+    expect(tests.map((button) => (button.closest('button') as HTMLButtonElement).disabled)).toEqual([false, true]);
+    fireEvent.click(tests[0]);
+    await waitFor(() => expect(screen.getAllByTestId('connection-row-status')[0].textContent).toBe('Working'));
   });
 
   it('offers no check for a connection with no address to call', async () => {

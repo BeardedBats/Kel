@@ -34,15 +34,15 @@ function libraryTransport(transcripts: unknown[] = [], hasKey = false) {
   return { requests, folders, failRename: () => { failRename = true; } };
 }
 
-it('opens the newest saved transcript in the embedded desktop library', async () => {
+it('ST-20: the old library route opens the one Ramble screen with its library', async () => {
   libraryTransport([
-    { id: 'older', name: 'Older note', text: 'A: First note', created: 1, updated: 1, folder_id: null, source_type: 'upload', source_filename: null, duration_ms: 1000, status: 'complete', has_audio: true },
     { id: 'newer', name: 'Latest note', text: 'A: Current note', created: 2, updated: 2, folder_id: null, source_type: 'upload', source_filename: null, duration_ms: 1000, status: 'complete', has_audio: true },
   ]);
   render(<MemoryRouter initialEntries={['/transcription/library']}><Ramble /></MemoryRouter>);
-  expect((await screen.findByTestId('transcript-name')).textContent).toBe('Latest note');
-  expect(screen.getByTestId('transcript-text').textContent).toBe('A: Current note');
-  expect(screen.queryByText('Your transcripts live here')).toBeNull();
+  expect(await screen.findByRole('heading', { name: 'Ramble' })).toBeTruthy();
+  expect(screen.getByRole('complementary', { name: 'Transcript library' })).toBeTruthy();
+  expect((await screen.findAllByText('Latest note')).length).toBeGreaterThan(0);
+  expect(screen.queryByRole('heading', { name: 'Transcriptions' })).toBeNull();
 });
 
 it('creates a persisted New Folder with its name selected, then saves one inline rename', async () => {
@@ -63,7 +63,7 @@ it('creates a persisted New Folder with its name selected, then saves one inline
   expect(requests.filter(r => r.body.action === 'folder_rename')).toHaveLength(1);
 });
 
-it('Escape and blank names keep New Folder; failed renames preserve the draft', async () => {
+it('ST-18: Escape cancels naming a new folder; blank names keep New Folder; failed renames preserve the draft', async () => {
   const transport = libraryTransport();
   render(<MemoryRouter><Ramble /></MemoryRouter>);
   await waitFor(() => expect(transport.requests.some(r => r.body.action === 'library')).toBe(true));
@@ -72,6 +72,19 @@ it('Escape and blank names keep New Folder; failed renames preserve the draft', 
   fireEvent.change(input, { target: { value: 'Discard' } });
   fireEvent.keyDown(input, { key: 'Escape' });
   expect(screen.queryByTestId('folder-rename')).toBeNull();
+  // The folder "+" made is gone again, in the view and in the engine.
+  expect(screen.queryByRole('button', { name: 'Rename New Folder' })).toBeNull();
+  await waitFor(() => expect(transport.requests.filter(r => r.body.action === 'folder_delete')).toHaveLength(1));
+  transport.folders.splice(0);
+  fireEvent.click(screen.getByTestId('folder-create'));
+  input = await screen.findByTestId('folder-rename');
+  fireEvent.keyDown(input, { key: 'Enter' });
+  await waitFor(() => expect(screen.queryByTestId('folder-rename')).toBeNull());
+  // Escape while renaming an existing folder only stops editing.
+  fireEvent.click(screen.getByRole('button', { name: 'Rename New Folder' }));
+  input = screen.getByTestId('folder-rename');
+  fireEvent.keyDown(input, { key: 'Escape' });
+  expect(screen.getByRole('button', { name: 'Rename New Folder' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Rename New Folder' }));
   input = screen.getByTestId('folder-rename');
   fireEvent.change(input, { target: { value: '   ' } });

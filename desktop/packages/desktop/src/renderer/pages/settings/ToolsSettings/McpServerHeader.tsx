@@ -1,5 +1,5 @@
 import type { IMcpServer } from '@/common/config/storage';
-import { Button, Dropdown, Menu, Popover, Tooltip } from '@arco-design/web-react';
+import { Button, Dropdown, Menu, Popover, Switch, Tooltip } from '@arco-design/web-react';
 import { Write, DeleteFour, Login, Plug, More } from '@icon-park/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +25,40 @@ interface McpServerHeaderProps {
   onEditServer: (server: IMcpServer) => void;
   onDeleteServer: (serverId: string) => void;
   onOAuthLogin?: (server: IMcpServer) => void;
+  /** ST-06: turn the server on or off for Kel's chats. Omitted for read-only servers. */
+  onToggleEnabled?: (server: IMcpServer, enabled: boolean) => void;
+  isToggling?: boolean;
 }
+
+/**
+ * ST-06: a passed manual check is not a live connection. The label says when the last check
+ * passed ("Last check passed 3:42 PM", or the date when it was not today).
+ */
+export const formatLastCheckTime = (timestamp: number, now: Date = new Date()): string => {
+  const when = new Date(timestamp);
+  const sameDay =
+    when.getFullYear() === now.getFullYear() && when.getMonth() === now.getMonth() && when.getDate() === now.getDate();
+  return sameDay
+    ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(when)
+    : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(when);
+};
+
+export const getMcpVisualStatus = (
+  server: Pick<IMcpServer, 'enabled' | 'last_test_status' | 'last_connected' | 'updated_at'>,
+  flags: { isTesting?: boolean; needsLogin?: boolean; isChecking?: boolean; isAuthenticated?: boolean } = {},
+  now?: Date
+): { label: string; kind: 'error' | 'attention' | 'connected' | 'muted' } => {
+  if (flags.isTesting || flags.isChecking) return { label: 'Checking', kind: 'muted' };
+  if (server.last_test_status === 'error') return { label: 'Check failed', kind: 'error' };
+  if (flags.needsLogin) return { label: 'Sign in needed', kind: 'attention' };
+  if (!server.enabled) return { label: 'Off', kind: 'muted' };
+  if (server.last_test_status === 'connected') {
+    const at = server.last_connected || server.updated_at;
+    return { label: at ? `Last check passed ${formatLastCheckTime(at, now)}` : 'Last check passed', kind: 'connected' };
+  }
+  if (flags.isAuthenticated) return { label: 'Signed in', kind: 'connected' };
+  return { label: 'Not tested', kind: 'muted' };
+};
 
 const formatStatusTimestamp = (timestamp: number | undefined, locale: string): string | null => {
   if (!timestamp) {
@@ -132,6 +165,8 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   onEditServer,
   onDeleteServer,
   onOAuthLogin,
+  onToggleEnabled,
+  isToggling,
 }) => {
   const { t, i18n } = useTranslation();
   const isMobile = Boolean(useLayoutContext()?.isMobile);
@@ -142,29 +177,19 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   const statusPopoverContent = getStatusPopoverContent(server, i18n.language, t);
 
   const isError = server.last_test_status === 'error';
-  const visualStatus =
-    isTestingConnection || oauthStatus?.isChecking
-      ? 'Checking'
-      : isError || needsLogin
-        ? isError
-          ? 'Check failed'
-          : 'Sign in needed'
-        : server.last_test_status === 'connected' || oauthStatus?.isAuthenticated
-          ? 'Connected'
-          : 'Not tested';
-  const statusKind = isError
-    ? 'error'
-    : needsLogin
-      ? 'attention'
-      : visualStatus === 'Connected'
-        ? 'connected'
-        : 'muted';
+  const { label: visualStatus, kind: statusKind } = getMcpVisualStatus(server, {
+    isTesting: isTestingConnection,
+    isChecking: oauthStatus?.isChecking,
+    needsLogin: Boolean(needsLogin),
+    isAuthenticated: oauthStatus?.isAuthenticated,
+  });
+  const displayName = MCP_DISPLAY_NAMES[server.name] ?? server.name;
 
   return (
     <div className='kel-tools-mcp-header flex items-center justify-between group'>
       <div className='kel-tools-mcp-name flex items-center gap-2'>
         <Plug className='kel-tools-mcp-plug' size='14' />
-        <span>{MCP_DISPLAY_NAMES[server.name] ?? server.name}</span>
+        <span>{displayName}</span>
       </div>
       <div className='kel-tools-mcp-status' data-status={statusKind}>
         {statusPopoverContent ? (
@@ -182,8 +207,18 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
           <FeedbackButton
             module='mcp-tools'
             label='Report issue'
-            reportTitle={`MCP server "${MCP_DISPLAY_NAMES[server.name] ?? server.name}" failed its check`}
+            reportTitle={`MCP server "${displayName}" failed its check`}
             feedbackExtra={{ mcpServerName: server.name, mcpServerStatus: statusText, transport: server.transport.type }}
+          />
+        )}
+        {!isReadOnly && onToggleEnabled && (
+          <Switch
+            size='small'
+            className='kel-tools-mcp-switch'
+            checked={server.enabled}
+            loading={isToggling}
+            aria-label={`Use ${displayName}`}
+            onChange={(checked) => onToggleEnabled(server, checked)}
           />
         )}
         {!isReadOnly && needsLogin && onOAuthLogin && (

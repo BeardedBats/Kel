@@ -583,7 +583,7 @@ const WebuiModalContent: React.FC = () => {
               ) : null
             }
           >
-            <Switch checked={webuiEnabled} loading={startLoading} onChange={handleToggle} />
+            <Switch aria-label='Turn on WebUI' checked={webuiEnabled} loading={startLoading} onChange={handleToggle} />
           </PreferenceRow>
 
           {/* 访问地址（启用 WebUI 后即显示，不依赖后端 running 状态）/ Access URL (shown whenever WebUI is enabled, not tied to backend running state) */}
@@ -615,7 +615,7 @@ const WebuiModalContent: React.FC = () => {
           <PreferenceRow
             label={isDesktopRunning ? 'Allow access from other devices' : t('settings.webui.allowRemote')}
           >
-            <Switch checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
+            <Switch aria-label='Allow access from other devices' checked={allowRemotePreference} onChange={handleAllowRemoteChange} />
           </PreferenceRow>
         </div>
 

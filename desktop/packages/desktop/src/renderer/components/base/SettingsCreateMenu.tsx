@@ -15,7 +15,7 @@
 import { Button, Dropdown, Menu } from '@arco-design/web-react';
 import { Down } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 export type SettingsCreateExtraAction = {
   key: string;
@@ -56,8 +56,22 @@ const SettingsCreateMenu: React.FC<SettingsCreateMenuProps> = ({
   className,
   ['data-testid']: testId,
 }) => {
+  // ST-18: the menu is controlled so Escape closes it (Arco's click-triggered Dropdown ignores it).
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [open]);
+
   const handleSelect = useCallback(
     (key: string) => {
+      setOpen(false);
       if (key === CHAT_KEY) {
         onChat?.();
       } else if (key === MANUAL_KEY) {
@@ -90,12 +104,14 @@ const SettingsCreateMenu: React.FC<SettingsCreateMenuProps> = ({
   );
 
   return (
-    <Dropdown trigger='click' droplist={droplist} position='br'>
+    <Dropdown trigger='click' droplist={droplist} position='br' popupVisible={open} onVisibleChange={setOpen}>
       <Button
         type={type}
         size={size}
         className={classNames('!h-32px !rounded-8px !px-14px', className)}
         data-testid={testId}
+        aria-haspopup='menu'
+        aria-expanded={open}
       >
         <span className='flex items-center gap-6px'>
           {label}

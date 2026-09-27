@@ -39,8 +39,16 @@ export const initializeZoomFactor = (factor: number | undefined): number => {
 };
 
 // 在新建窗口时应用最近一次缩放值 / Apply stored zoom to a newly created window
+//
+// ST-09: a zoom factor set before the page loads is dropped when the renderer navigates, so the saved
+// zoom only appeared after the first Ctrl +/-. Re-apply it every time a page finishes loading
+// (first load and reloads); `currentZoomFactor` is read at that moment, so a zoom restored from
+// config after the window was created still wins.
 export const applyZoomToWindow = (win: BrowserWindow): void => {
   win.webContents.setZoomFactor(currentZoomFactor);
+  win.webContents.on('did-finish-load', () => {
+    if (!win.isDestroyed()) win.webContents.setZoomFactor(currentZoomFactor);
+  });
 };
 
 // 将缩放同步到所有窗口，保持多窗口一致 / Sync zoom factor across all BrowserWindows

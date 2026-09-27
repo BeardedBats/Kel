@@ -1,6 +1,6 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
 import { rendererKelRequestRefusal } from './kelRequestGuard';
-import { applyWorkspaceRepairs, planWorkspaceRepairs } from './repairWorkspacePaths';
+import { applyWorkspaceRepairs, listConversationsForRepair, planWorkspaceRepairs } from './repairWorkspacePaths';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
@@ -393,8 +393,10 @@ export async function initializeKel(port: number): Promise<void> {
   console.log('[KEL-BOOT] initializeKel engine state ok');
   const catalog = await core('/api/conversations?page_size=200');
   // Re-home Kel scratch folders that point at a missing or moved data root (e.g. the removed
-  // KelV2Runs root) so those chats open instead of failing with a workspace-path error.
-  const workspaceRepairs = await applyWorkspaceRepairs(planWorkspaceRepairs(catalog.items || [], root), (id, workspace) =>
+  // KelV2Runs root) so those chats open instead of failing with a workspace-path error. Archived
+  // chats are included, and every active chat is read (the catalog above is capped at 20 rows).
+  const repairCandidates = await listConversationsForRepair((route) => core(route));
+  const workspaceRepairs = await applyWorkspaceRepairs(planWorkspaceRepairs(repairCandidates, root), (id, workspace) =>
     core('/api/conversations/' + encodeURIComponent(id), { extra: { workspace }, merge_extra: true }, 'PATCH')
   );
   if (workspaceRepairs.length) console.log('[KEL-BOOT] re-homed chat folders: ' + workspaceRepairs.length);

@@ -5,6 +5,13 @@
  */
 
 /**
+ * The one pinned chrome-devtools-mcp version (never `@latest`: that re-resolves over the network,
+ * fails offline and lets an uncontrolled upstream swap the code that drives a signed-in browser).
+ * Used by the in-app browser server and by the optional `chrome-devtools` default server (ST-06).
+ */
+export const CHROME_DEVTOOLS_MCP_VERSION = '0.16.0';
+
+/**
  * 解析应用内浏览器 MCP 该连接的 CDP 地址。
  *
  * 单独成文件是为了可测试：browserServer.ts 是个有顶层副作用的启动脚本（会 spawn
