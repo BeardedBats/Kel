@@ -4,6 +4,8 @@
 import os
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_data_files
+
 BASE = Path(SPECPATH).resolve()
 
 a = Analysis(
@@ -15,8 +17,10 @@ a = Analysis(
         (str(BASE / 'kel' / 'native_claude.mjs'), 'kel'),
         (str(BASE / 'kel' / 'native_group.py'), 'kel'),
         (str(BASE / 'kel' / 'host_claude.mjs'), 'kel'),
-    ],
-    hiddenimports=[],
+    # D-57: IANA time zone data for scheduled tasks (Windows has no system zoneinfo database;
+    # without it the engine falls back to the computer's own zone). See runtime/requirements.txt.
+    ] + collect_data_files('tzdata'),
+    hiddenimports=['zoneinfo', 'tzdata'],
     hookspath=[],
     hooksconfig=dict(),
     runtime_hooks=[],

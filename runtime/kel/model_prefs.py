@@ -116,7 +116,16 @@ class ModelPrefs:
     # -- execution-side resolution -------------------------------------------------------------
     @staticmethod
     def resolve_for_job(store, job_id):
-        """(provider, model) the execution should favour for this job, or None for Auto."""
+        """(provider, model) the execution should favour for this job, or None for Auto.
+
+        D-57: a scheduled run prefers the model its schedule names; the conversation's own choice is
+        never rewritten by it."""
+        try:
+            scheduled = ((store.get(job_id).get('contract') or {}).get('schedule') or {}).get('model')
+        except Exception:
+            scheduled = None
+        if isinstance(scheduled, dict) and scheduled.get('provider'):
+            return {'provider': scheduled['provider'], 'model': scheduled.get('model')}
         cid = None
         try:
             import contextlib as _contextlib
