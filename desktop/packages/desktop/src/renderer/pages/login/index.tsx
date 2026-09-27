@@ -1,8 +1,6 @@
-import { createPortal } from 'react-dom';
 import loginLogo from '@renderer/assets/logos/brand/app.png';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { changeLanguage } from '@/renderer/services/i18n';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppLoader from '@renderer/components/layout/AppLoader';
 import { useAuth } from '../../hooks/context/AuthContext';
@@ -14,11 +12,16 @@ type MessageState = {
   text: string;
 };
 
-const REMEMBER_ME_KEY = 'rememberMe';
-const REMEMBERED_USERNAME_KEY = 'rememberedUsername';
-const REMEMBERED_PASSWORD_KEY = 'rememberedPassword';
+export const REMEMBER_ME_KEY = 'rememberMe';
+export const REMEMBERED_USERNAME_KEY = 'rememberedUsername';
+/**
+ * CP-12: older builds kept the password in local storage (only lightly scrambled). The password is
+ * never stored now — "Keep me signed in" asks the server for a longer session cookie instead — and
+ * any copy an older build left behind is deleted when this page opens.
+ */
+export const LEGACY_REMEMBERED_PASSWORD_KEY = 'rememberedPassword';
 
-// Simple obfuscation for stored credentials (not cryptographically secure, but prevents plain text storage)
+// Light obfuscation for the remembered username (not a secret; keeps it out of plain sight).
 const obfuscate = (text: string): string => {
   const encoded = btoa(encodeURIComponent(text));
   return encoded.split('').toReversed().join('');
@@ -34,7 +37,7 @@ const deobfuscate = (text: string): string => {
 };
 
 const LoginPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   // V2-05: a deep link that landed here keeps its destination through sign-in. The guard in
@@ -44,13 +47,6 @@ const LoginPage: React.FC = () => {
     ((location.state as { from?: string } | null)?.from) || pendingLoginReturnTo() || '/guid';
   const { status, login } = useAuth();
 
-  const [desktopViewport, setDesktopViewport] = useState(() => window.innerWidth >= 768);
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 768px)');
-    const update = () => setDesktopViewport(media.matches);
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -73,16 +69,11 @@ const LoginPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = i18n.language;
-  }, [i18n.language]);
-
-  useEffect(() => {
+    localStorage.removeItem(LEGACY_REMEMBERED_PASSWORD_KEY);
     const isRememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
     if (isRememberMe) {
       const storedUsername = localStorage.getItem(REMEMBERED_USERNAME_KEY);
-      const storedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
       if (storedUsername) setUsername(deobfuscate(storedUsername));
-      if (storedPassword) setPassword(deobfuscate(storedPassword));
       setRememberMe(true);
     }
     window.setTimeout(() => {
@@ -121,30 +112,6 @@ const LoginPage: React.FC = () => {
     [clearMessageLater]
   );
 
-  const supportedLanguages = useMemo<{ code: string; label: string }[]>(
-    () => [
-      { code: 'zh-CN', label: '简体中文' },
-      { code: 'zh-TW', label: '繁體中文' },
-      { code: 'ja-JP', label: '日本語' },
-      { code: 'ko-KR', label: '한국어' },
-      { code: 'tr-TR', label: 'Türkçe' },
-      { code: 'uk-UA', label: 'Українська' },
-      { code: 'pt-BR', label: 'Português (BR)' },
-      { code: 'de-DE', label: 'Deutsch' },
-      { code: 'es-ES', label: 'Español' },
-      { code: 'fa-IR', label: 'فارسی' },
-      { code: 'en-US', label: 'English' },
-    ],
-    []
-  );
-
-  const handleLanguageChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    const nextLanguage = event.target.value;
-    changeLanguage(nextLanguage).catch((error: Error) => {
-      console.error('Failed to change language:', error);
-    });
-  }, []);
-
   const handleSubmit = useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
@@ -164,11 +131,9 @@ const LoginPage: React.FC = () => {
         if (rememberMe) {
           localStorage.setItem(REMEMBER_ME_KEY, 'true');
           localStorage.setItem(REMEMBERED_USERNAME_KEY, obfuscate(trimmedUsername));
-          localStorage.setItem(REMEMBERED_PASSWORD_KEY, obfuscate(password));
         } else {
           localStorage.removeItem(REMEMBER_ME_KEY);
           localStorage.removeItem(REMEMBERED_USERNAME_KEY);
-          localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
         }
 
         const successText = t('login.success');
@@ -202,24 +167,6 @@ const LoginPage: React.FC = () => {
     [login, navigate, password, rememberMe, showMessage, t, username]
   );
 
-  const languageControl = (
-<label className='login-page__lang-select-wrapper' htmlFor='lang-select'>
-          <select
-            id='lang-select'
-            className='login-page__lang-select'
-            aria-label={t('login.languageToggle')}
-            value={i18n.language}
-            onChange={handleLanguageChange}
-          >
-            {supportedLanguages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </label>
-  );
-
   if (status === 'checking') {
     return <AppLoader />;
   }
@@ -233,8 +180,6 @@ const LoginPage: React.FC = () => {
       </div> */}
 
       <div className='login-page__card'>
-        {desktopViewport ? createPortal(languageControl, document.body) : languageControl}
-
         <div className='login-page__header'>
           <div className='login-page__logo'>
             <img src={loginLogo} alt={t('login.brand')} />
@@ -332,7 +277,7 @@ const LoginPage: React.FC = () => {
               checked={rememberMe}
               onChange={(event) => setRememberMe(event.target.checked)}
             />
-            <label htmlFor='remember-me'><span className='login-page__desktop-copy'>{t('login.keepSignedIn', { defaultValue: 'Keep me signed in' })}</span><span className='login-page__mobile-copy'>{t('login.rememberMe')}</span></label>
+            <label htmlFor='remember-me'>{t('login.rememberMe')}</label>
           </div>
 
           <button type='submit' className='login-page__submit' disabled={loading}>
@@ -351,7 +296,7 @@ const LoginPage: React.FC = () => {
                 />
               </svg>
             )}
-            <span className='login-page__desktop-copy'>{loading ? t('login.submitting') : t('login.desktopSubmit', { defaultValue: 'Sign in' })}</span><span className='login-page__mobile-copy'>{loading ? t('login.submitting') : t('login.submit')}</span>
+            <span>{loading ? t('login.submitting') : t('login.submit')}</span>
           </button>
 
           <div
@@ -366,9 +311,7 @@ const LoginPage: React.FC = () => {
 
         <div className='login-page__footer'>
           <div className='login-page__footer-content'>
-            <span>{t('login.footerPrimary')}</span>
-            <span className='login-page__footer-divider'>•</span>
-            <span>{t('login.footerSecondary')}</span>
+            <span>{t('login.footer')}</span>
           </div>
         </div>
       </div>
