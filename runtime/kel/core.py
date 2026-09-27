@@ -693,25 +693,29 @@ class Store:
 
     def control(self, job_id, action):
         with self.transaction() as db:
-            job = self._get(db, job_id)
-            active = db.execute("SELECT * FROM runs WHERE job_id=? AND state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')", (job_id,)).fetchall()
-            if action=='pause' and job['state'] in ('CANCELLING','CANCELLED','PAUSING','PAUSED'):
-                return [r['id'] for r in active]
-            if action=='cancel' and job['state'] in ('CANCELLING','CANCELLED'):
-                return [r['id'] for r in active]
-            if action == 'resume':
-                if job['state'] != 'PAUSED':
-                    raise PolicyError("Only a paused job can resume")
-                job['state'] = 'READY'
-            elif action in ('cancel', 'pause'):
-                job['state'] = ('CANCELLING' if action == 'cancel' else 'PAUSING') if active else ('CANCELLED' if action == 'cancel' else 'PAUSED')
-                for r in active:
-                    db.execute("UPDATE runs SET state='CANCEL_REQUESTED' WHERE id=?", (r['id'],))
-                db.execute("UPDATE approvals SET status='CANCELLED' WHERE job_id=? AND status='PENDING'", (job_id,))
-            else:
-                raise PolicyError("Unknown control")
-            self._save(db, job, 'job.'+action)
+            return self._control(db, job_id, action)
+
+    def _control(self, db, job_id, action):
+        """`control` inside a caller's transaction (a hand-off restart cancels and relinks at once)."""
+        job = self._get(db, job_id)
+        active = db.execute("SELECT * FROM runs WHERE job_id=? AND state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')", (job_id,)).fetchall()
+        if action=='pause' and job['state'] in ('CANCELLING','CANCELLED','PAUSING','PAUSED'):
             return [r['id'] for r in active]
+        if action=='cancel' and job['state'] in ('CANCELLING','CANCELLED'):
+            return [r['id'] for r in active]
+        if action == 'resume':
+            if job['state'] != 'PAUSED':
+                raise PolicyError("Only a paused job can resume")
+            job['state'] = 'READY'
+        elif action in ('cancel', 'pause'):
+            job['state'] = ('CANCELLING' if action == 'cancel' else 'PAUSING') if active else ('CANCELLED' if action == 'cancel' else 'PAUSED')
+            for r in active:
+                db.execute("UPDATE runs SET state='CANCEL_REQUESTED' WHERE id=?", (r['id'],))
+            db.execute("UPDATE approvals SET status='CANCELLED' WHERE job_id=? AND status='PENDING'", (job_id,))
+        else:
+            raise PolicyError("Unknown control")
+        self._save(db, job, 'job.'+action)
+        return [r['id'] for r in active]
 
     def acknowledge_stop(self, run_id, epoch):
         with self.transaction() as db:

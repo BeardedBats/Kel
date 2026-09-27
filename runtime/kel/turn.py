@@ -23,26 +23,40 @@ already running (see running_work; describe its state honestly and never call un
 unverified work done). If you are unsure whether they want work done, ask one short clarifying
 question with "reply".
 
+Ask before you start, never after: if the request is missing a detail that would change the
+result (who it is for, which of two things they mean, a scope or format that matters), use "reply"
+and ask one short question first. Do not start work you would have to redo.
+
 Use "start_background_work" when they ask you to produce or change something, or when it needs
 tools, files, code, commands, current web information, or more than a minute of focused effort:
 writing a document or plan, building or fixing code, researching, analyzing material in depth,
 running a command or a connected service.
 
+Use "amend_background_work" when the latest message changes, adds to or corrects work in
+running_work that can still be changed ("can_amend": true). Kel stops that work and restarts it
+with the change; it never starts a second copy. Put that item's work_id in "work_id" and the
+complete request with the change applied in "amended_request".
+
 {"action":"reply","text":"<plain, concise answer; do not claim you performed any action>"}
 {"action":"start_background_work","title":"<3-8 word name for the work>",
  "acknowledgement":"<what you say now>","related_topic":"<one short related topic>"}
+{"action":"amend_background_work","work_id":"<work_id from running_work>",
+ "amended_request":"<the whole request with the change applied>","title":"<3-8 word name>"}
 
 The acknowledgement is warm and brief: one to three short sentences, no headings or lists. Say
-plainly that it's started and running in the background, and that you'll post the result here
-once it has been checked. Then offer, as a question, to keep talking about one specific related
-topic that would genuinely help: a decision they'll need to make, a detail that would improve
-the result, or a closely related question. Never say or imply the work is done, ready, verified or
-successful. Never invent results, findings, file names or numbers. Never promise a time. Do not
-repeat their request back word for word.
-Example: "Great — that's getting taken care of; I'll post it here once it's been checked. While
-that runs, want to talk through who the plan is for, so it lands right?"'''
+plainly that you're starting on it now in the background, and that you'll post the result here
+once it has been checked. Then offer, as a question, to keep talking about one related next step
+that does not change the work you just started: how they'll use the result, a decision that comes
+after it, or a closely related question. Never ask for a detail that would change the work (if one
+is missing, you should have asked first with "reply"). Never say you added, folded in, updated or
+incorporated anything. Never say or imply the work is done, ready, verified or successful. Never
+invent results, findings, file names or numbers. Never promise a time. Do not repeat their request
+back word for word.
+Example: "Great — I'm starting on that now in the background; I'll post it here once it's been
+checked. While it runs, want to talk through how you'll roll the plan out?"'''
 
-FORCED_SUFFIX = 'Work for this message has already been started. Respond with "start_background_work".'
+FORCED_SUFFIX = ('This message must be handled as work. Respond with "start_background_work", or with '
+                 '"amend_background_work" if it changes work in running_work that can still be changed.')
 
 # An acknowledgement may never claim the work is finished, checked or delivered.
 COMPLETION_CLAIM = re.compile(
@@ -51,12 +65,44 @@ COMPLETION_CLAIM = re.compile(
     r"|\b(i'?ve|i have)\s+(finished|completed|written|built|fixed|made|created)\b"
     r"|\bverified\b|\bpassed\b",
     re.IGNORECASE)
+# D-55: nothing Kel says may claim a change was folded into work unless that work was actually
+# restarted with it (the amendment path writes its own acknowledgement and never passes here).
+CHANGE_CLAIM = re.compile(
+    r"\b(?:i'?ve|i have|i'?ll|i will|i'?m|i am|we'?ve|we have|we'?ll|we will|kel(?:'s| has| will| is))\s+"
+    r"(?:also\s+|now\s+|just\s+|already\s+|gone ahead and\s+|go ahead and\s+)?"
+    r"(?:fold(?:ed|ing)?|incorporat(?:e|ed|ing)|add(?:ed|ing)?|updat(?:e|ed|ing)(?!\s+you)|includ(?:e|ed|ing)"
+    r"|factor(?:ed|ing)?|roll(?:ed|ing)?|adjust(?:ed|ing)?|amend(?:ed|ing)?|tweak(?:ed|ing)?"
+    r"|chang(?:e|ed|ing)|modif(?:y|ied|ying)|merg(?:e|ed|ing)|appl(?:y|ied|ying))\b"
+    r"|\b(?:has|have|was|were|is|are|'s|'re)\s+(?:been\s+)?(?:now\s+|also\s+)?"
+    r"(?:folded|incorporated|added|updated|included|factored|rolled|amended|merged|applied)\s+(?:in|into|to)\b"
+    r"|\b(?:folded|worked|rolled|factored|baked)\s+(?:it|that|this|them|those)\s+in(?:to)?\b",
+    re.IGNORECASE)
+# D-55: once work is handed off, the acknowledgement offers a next step; it never asks for a detail
+# that would change the work that just started.
+DETAIL_QUESTION = re.compile(
+    r"\b(?:should (?:i|it|we|the \w+)|do you want (?:me|it) to|would you like (?:me|it) to|shall i"
+    r"|want me to)\s+(?:also\s+)?(?:include|add|use|cover|focus|make|change|mention|skip|leave out|be|"
+    r"target|aim|write|go with|stick)\b"
+    r"|\b(?:let me know|tell me)\s+(?:which|what|whether|if|how)\b",
+    re.IGNORECASE)
+# A claim that the work already exists or runs is false before the job is created (the
+# acknowledgement is written first); "starting" is the truthful word.
+STARTED_CLAIM = re.compile(
+    r"\b(?:it'?s|it is|that'?s|that is|this is|work is|now)\s+(?:already\s+)?(?:running|underway|in progress)\b"
+    r"|\b(?:i'?ve|i have)\s+(?:already\s+)?(?:started|kicked off|begun|launched)\b",
+    re.IGNORECASE)
 # Markdown structure has no place in a two-sentence acknowledgement.
 MARKDOWN_STRUCTURE = re.compile(r'^\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>\s|```)', re.MULTILINE)
 
 ACK_LIMIT = 600
 TOPIC_LIMIT = 80
+REQUEST_LIMIT = 20000
 PROMPT_BUDGET = 30000
+# What a reply says instead of a change it did not make (D-55).
+NO_CHANGE_WITH_WORK = ("I haven't changed the work that's already running. If you want that change, "
+                       "tell me and I'll restart it with the change.")
+NO_CHANGE = ("I haven't changed anything — I can only make changes by starting work on them. Tell me "
+             "what you'd like done and I'll start on it.")
 
 
 def _clean_topic(topic):
@@ -66,7 +112,7 @@ def _clean_topic(topic):
     topic = ' '.join(topic.split()).strip().strip('"\'').rstrip('.?!;:, ')
     if not topic or len(topic) > TOPIC_LIMIT or MARKDOWN_STRUCTURE.search(topic) or '`' in topic:
         return None
-    if COMPLETION_CLAIM.search(topic):
+    if COMPLETION_CLAIM.search(topic) or CHANGE_CLAIM.search(topic):
         return None
     return topic
 
@@ -85,15 +131,49 @@ def guard_ack(ack, related_topic=None):
     """The model's acknowledgement when it is safe to show, otherwise the template.
 
     Safe means: a short plain paragraph (at most 600 characters, no markdown lists or headings),
-    and no claim that the work is done, ready, delivered, verified or passed.
+    no claim that the work is done, ready, delivered, verified or passed, no claim that a change
+    was folded in (D-55), no claim that it is already running (the job does not exist yet), and no
+    question about a detail that would change the work that just started (D-55).
     """
     if not isinstance(ack, str):
         return template_ack(related_topic)
     text = ack.strip()
     if (not text or len(text) > ACK_LIMIT or MARKDOWN_STRUCTURE.search(text)
-            or COMPLETION_CLAIM.search(text)):
+            or COMPLETION_CLAIM.search(text) or CHANGE_CLAIM.search(text)
+            or STARTED_CLAIM.search(text) or DETAIL_QUESTION.search(text)):
         return template_ack(related_topic)
     return text
+
+
+def guard_reply(text, running_work=None):
+    """A direct reply, unless it claims a change was made to work (D-55): no reply changes work."""
+    if not isinstance(text, str) or not CHANGE_CLAIM.search(text):
+        return text
+    return NO_CHANGE_WITH_WORK if amendable(running_work) else NO_CHANGE
+
+
+def amendable(running_work):
+    """The running_work entries a new message may still change (starting or running hand-offs)."""
+    return [item for item in running_work or [] if isinstance(item, dict) and item.get('can_amend')
+            and item.get('work_id')]
+
+
+def amend_ack(title, stopped_a_run=True):
+    """What Kel says when it restarts work with a change (D-55) — the only change claim it makes."""
+    name = ' '.join(str(title or '').split()).strip()
+    lead = 'Restarting “' + name + '” with that change' if name else 'Restarting with that change'
+    if stopped_a_run:
+        return lead + " — I stopped the earlier run, and I'll post the result here once it's been checked."
+    return lead + " before it gets going. I'll post the result here once it's been checked."
+
+
+def _amended_request(value, target, text):
+    """The whole amended request: the model's, when it is plain and bounded, else original + change."""
+    if isinstance(value, str) and value.strip() and len(value.strip()) <= REQUEST_LIMIT:
+        return value.strip()
+    original = str((target or {}).get('request') or '').strip()
+    combined = (original + '\n\nChange: ' + str(text).strip()).strip() if original else str(text).strip()
+    return combined[:REQUEST_LIMIT]
 
 
 def title_for(text, model_title=None):
@@ -179,12 +259,27 @@ def _work(text, title=None, ack=None, topic=None):
             'acknowledgement': guard_ack(ack, topic), 'related_topic': _clean_topic(topic)}
 
 
-def decide(model, packet, text, running_work, forced=False, images=None):
+def _amend(value, running_work, text):
+    """An amendment of work that can still change, or None when there is nothing to amend."""
+    candidates = amendable(running_work)
+    wanted = value.get('work_id')
+    target = next((item for item in candidates if item['work_id'] == wanted), None)
+    if target is None and len(candidates) == 1:
+        target = candidates[0]
+    if target is None:
+        return None
+    request = _amended_request(value.get('amended_request'), target, text)
+    return {'action': 'amend_background_work', 'work_id': target['work_id'],
+            'amended_request': request, 'title': title_for(request, value.get('title') or target.get('title'))}
+
+
+def decide(model, packet, text, running_work, forced=False, images=None, cancel=None):
     """Ask the turn model how to handle `text`.
 
-    Returns {"action":"reply","text"} or {"action":"start_background_work","title",
-    "acknowledgement","related_topic"}; None when the model could not be reached (the caller then
-    uses its deterministic keyword gate). In forced mode the answer is always background work.
+    Returns {"action":"reply","text"}, {"action":"start_background_work","title",
+    "acknowledgement","related_topic"} or {"action":"amend_background_work","work_id",
+    "amended_request","title"}; None when the model could not be reached (the caller then uses its
+    deterministic keyword gate). In forced mode the answer is always work (new or an amendment).
     """
     if model is None:
         return None
@@ -202,6 +297,8 @@ def decide(model, packet, text, running_work, forced=False, images=None):
         prompt = system + '\n\n' + body
     if images and 'images' in params:
         kwargs['images'] = images
+    if cancel is not None and 'cancel' in params:
+        kwargs['cancel'] = cancel
     try:
         result = model.execute(prompt, **kwargs)
     except Exception:
@@ -211,14 +308,21 @@ def decide(model, packet, text, running_work, forced=False, images=None):
     raw = result.get('text') or ''
     value = _parse(raw)
     action = (value or {}).get('action')
+    if action == 'amend_background_work':
+        amended = _amend(value, running_work, text)
+        if amended:
+            return amended
+        # Nothing it could change is still running: the amended request is new work.
+        request = _amended_request(value.get('amended_request'), None, text)
+        return dict(_work(request, value.get('title')), request=request)
     if action == 'start_background_work' or (forced and value is not None):
         value = value or {}
         return _work(text, value.get('title'), value.get('acknowledgement'), value.get('related_topic'))
     if forced:
         return _work(text)
     if action == 'reply' and isinstance(value.get('text'), str) and value['text'].strip():
-        return {'action': 'reply', 'text': value['text'].strip()}
+        return {'action': 'reply', 'text': guard_reply(value['text'].strip(), running_work)}
     # Unparseable (or an unknown shape): the model answered in prose; that prose is the reply.
     if raw.strip() and value is None:
-        return {'action': 'reply', 'text': raw.strip()}
+        return {'action': 'reply', 'text': guard_reply(raw.strip(), running_work)}
     return None
