@@ -620,3 +620,42 @@ the rest. *Forbids:* an acknowledgement that claims the work is done, ready, ver
 work card or result that says "done and checked" for anything but a VERIFIED verdict; the composer's
 Stop cancelling handed-off work (the card's Stop does that, after a confirmation); and a second
 acknowledgement on retry.
+
+## D-54 — "Projects" is the one term; the header chip is the Project switcher
+
+**Decided by Nick 2026-09-27** (explicit instruction outranks the Figma "Workspace" label, handoff
+§36). The product uses **Projects** everywhere a user sees the context boundary. The header chip is
+a Project switcher backed by the engine (not per-device renderer state); new chats are created in
+the active project; Work, Activity, Knowledge, Recipes and Scheduled read the active project (with
+an "All projects" view). There is one Projects list (open, rename, folder, test command). The word
+"Workspace" leaves the user interface; the sidebar item that opened Set up Kel no longer carries
+that name. Figma geometry and styling still apply; only the label differs.
+
+## D-55 — Kel asks before it starts, never after
+
+**Decided 2026-09-27** (Nick asked for the recommendation that best fits the goal). If a request is
+missing a detail that would change the result, Kel asks one short question *before* starting work.
+Once work is handed off, the acknowledgement offers a related next-step topic, never a detail that
+would change the running work. If Nick nevertheless sends a change for running work, Kel restarts
+that work with the change and says so plainly ("Restarting with that change"). *Forbids:* claiming a
+change was "folded in"/"added"/"updated" unless the running work was actually restarted with it; a
+second independent job created from an amendment.
+
+## D-56 — No consumer updater and no Desktop Pet
+
+**Decided by Nick 2026-09-27.** Remove every update surface (About "Check for updates", update card
+and dialog, tray and menu items, auto-updater start-up, prerelease channel) per handoff §26; About
+shows version and build only. Remove the Desktop Pet page, route, tray submenu and nav item (§34).
+The Figma "Update available" and "Settings — Desktop Pet" frames are retired.
+
+## D-57 — Scheduled tasks become scheduled Recipes in the engine
+
+**Decided by Nick 2026-09-27.** Scheduled work runs through the engine's existing job/recipe path
+(one workflow system, handoff §13/§35) so it appears in Activity, Needs you and Work. The donor
+aioncore cron scheduler is retired once existing tasks are migrated.
+
+## D-58 — Data and repository clean-up approved
+
+**Decided by Nick 2026-09-27.** Delete the empty engine conversations created at launch and the four
+practice Kibble fixes (FIX-0001..FIX-0004) from the real Data root (after a backup); move evidence
+screenshots out of the tracked tree; keep the SF Pro fonts.
