@@ -9,6 +9,7 @@
  * reachable, so a route or a palette entry cannot quietly disappear.
  */
 import { readFileSync } from 'node:fs';
+import { rendererKelRequestRefusal } from '@/process/services/kel/kelRequestGuard';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -214,7 +215,9 @@ describe('the Connections surface is wired and reachable (V2-01)', () => {
 
   it('lets the shell ask the engine about connections', () => {
     // One alternation added to the existing allowlist — nothing else about the route surface moved.
-    expect(kelService).toMatch(/\|capabilities\|connections\|data-path\|/);
+    expect(rendererKelRequestRefusal('/api/connections', { action: 'list' })).toBeNull();
+    // …but credential-bearing actions stay main-process only (D-33/D-34).
+    expect(rendererKelRequestRefusal('/api/connections', { action: 'oauth-claim', id: 'c' })).not.toBeNull();
     expect(preload).toContain("ipcRenderer.invoke('kel:credential-connection-status')");
     // The providers view stays about model providers: connection fields are excluded there.
     expect(custody).toContain('provider === CONNECTION_NAMESPACE) continue');

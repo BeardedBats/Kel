@@ -1,4 +1,5 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
+import { rendererKelRequestRefusal } from './kelRequestGuard';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
@@ -571,12 +572,9 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.removeHandler('kel:request');
   ipcMain.handle('kel:request', async (event, route: string, body?: unknown) => {
     assertTrustedSender(event, { allowDevServer: true });
-    if (
-      !/^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*))?|work\?conversation=[a-zA-Z0-9-]+|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
-        route
-      )
-    )
-      throw new Error('Unknown Kel action');
+    // Route allowlist plus body check: credential-bearing actions are main-process only (D-33/D-34).
+    const refusal = rendererKelRequestRefusal(route, body);
+    if (refusal) throw new Error(refusal);
     return kelRequest(route, body);
   });
   // Batch 6 (findings 16/17): the shell's honest view of the engine link, plus the support

@@ -11,7 +11,7 @@ import { useEffect, useRef } from 'react';
 import { ipcBridge } from '@/common';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import { collectAttention, type AttentionItem } from '@renderer/components/kel/needsAttention';
-import { kelAutonomy, kelProviders, kelState, type KelWorkJob } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import {
   diffAttentionEvents,
   diffFinishedEvents,
@@ -42,7 +42,7 @@ export const useKelAttentionNotification = (): void => {
     const tick = async (): Promise<void> => {
       try {
         const [state, boundary, providers] = await Promise.all([
-          kelState(),
+          kelState(KEL_ALL_CONVERSATIONS),
           kelAutonomy.requests(),
           kelProviders.list().catch((): null => null),
         ]);
