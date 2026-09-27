@@ -1,4 +1,5 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
+import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
 import thumbsUpIcon from '@renderer/assets/figma/chat/thumbs-up.svg';
 import thumbsDownIcon from '@renderer/assets/figma/chat/thumbs-down.svg';
 import moreIcon from '@renderer/assets/figma/chat/more.svg';
@@ -180,6 +181,7 @@ const MessageText: React.FC<{
   const layout = useLayoutContext();
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const isUserMessage = message.position === 'right';
+  const engineFailure = !isUserMessage && typeof message.content.content === 'string' ? parseEngineFailure(message.content.content) : null;
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
   // supporting backend (claude/codex). The message already reached the
   // server (it's rendered); this only answers "has the agent picked it up
@@ -402,7 +404,9 @@ const MessageText: React.FC<{
           }}
         >
           {/* JSON 内容使用折叠组件 Use CollapsibleContent for JSON content */}
-          {shouldRenderPlainText ? (
+          {engineFailure ? (
+            <KelEngineFailureCard reason={engineFailure} messageId={message.id} conversationId={message.conversation_id} />
+          ) : shouldRenderPlainText ? (
             <div className='whitespace-pre-wrap [overflow-wrap:anywhere]' data-testid='message-text-content'>
               {renderedText}
             </div>
