@@ -10,8 +10,8 @@ No deviations from the shapes below; these pin down what the doc left open. Migr
 `v2-projects`** is confirmed free (31 = `v2-handoff-and-conversation-indexes`).
 - **Project row** (every action that returns a project): `{id, name, root, has_folder, test_command,
   kind, archived, archived_at, conversations, open_work, needs_you, updated, last_active, context}` —
-  `has_folder` = root set and the folder exists; `archived` is a boolean (`archived_at` the time or
-  null); `test_command` an argv list or null; `conversations` counts real chats (not `main`, not the
+  `has_folder` = root set and the folder exists; `archived` is the time it was archived (epoch
+  seconds) or null — truthy means archived (`archived_at` repeats it); `test_command` an argv list or null; `conversations` counts real chats (not `main`, not the
   hidden Recipe-runs chat); `open_work`/`needs_you` count jobs via `job_projects`.
 - `/api/project {action}` returns: `list` → `{projects:[row], active}` (General first, then most
   recently active; `include_archived`/`include_system` booleans); `create`/`update`/`for_folder`/
@@ -28,6 +28,10 @@ No deviations from the shapes below; these pin down what the doc left open. Migr
   each carrying `project_id`; `/api/recipes` `list`/`search` return built-ins plus each live
   project's own recipes labelled `project_id`/`project_name`; `/api/map` refuses with "Choose a
   project to see its map."; `/api/work?project=*` has `memory:null`, `map:null`.
+- Real-data dry run of migration 32 (a copy of `Data\engine\kel.sqlite3`, classified with the real
+  engine root): 8 projects → 1 general, 1 user (the greenfield app, kept live), 6 system archived;
+  31 chats moved to General (26 from `Temp`, 1 each from `work` and four `acp-temp-*`), 31 rows in
+  `project_moves`, nothing deleted (76 chats, 15 messages, 2 jobs before and after); active = `'*'`.
 
 ## Settled questions
 1. The default project is shown as **General** (the engine's real name). "No project" is not used.

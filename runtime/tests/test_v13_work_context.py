@@ -161,6 +161,9 @@ class WorkContextTests(unittest.TestCase):
                                                 'inputs': {'bug': 'x'}})
         self.assertTrue(preview.get('needs_project'))
         self.assertIn('test command', preview['message'].lower())
+        # D-54: the preview names the project and what it lacks ("Set project folder").
+        self.assertEqual(preview['project_id'], 'default')
+        self.assertEqual(preview['missing'], ['folder', 'test_command'])
 
     def test_recipe_run_document_kind_without_project(self):
         preview = self.service._recipes_action({'action': 'preview', 'conversation': self.cid,

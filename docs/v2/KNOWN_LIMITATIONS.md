@@ -594,3 +594,10 @@ Desktop Light enabled labels now pass measured contrast on eight routes at 1440/
 
 
 [Kibble recovery source increment](evidence/figma-full-audit/DESKTOP_KIBBLE_RECOVERY_SOURCE.md) passes navigation/reload and approved-state preservation at both widths, real isolated pointer persistence, ten focused tests, TypeScript/source build, and 63 files / 440 desktop tests. The extra sheen is repaired. Engine records were intercepted; real worker and new package proof remain open. App/Data remain untouched.
+
+
+**Projects (D-54): chats started by a schedule land in the active project.** A donor cron chat has no
+project binding of its own until scheduled Recipes carry a project id (D-57), so the engine creates it
+in the active project (General when All projects is active). Moving an existing chat between projects
+is out of scope; the six plumbing projects the donor shell created are archived by migration 32, never
+deleted (their 31 chats now live in General, each move logged in `project_moves`).

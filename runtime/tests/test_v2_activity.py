@@ -94,6 +94,19 @@ class TimelineTests(Base):
         since = timeline(self.store, since=time.time() + 60)['entries']
         self.assertEqual(since, [], 'a future window returns nothing')
 
+    def test_a_job_counts_in_its_chat_project_and_its_contract_project(self):
+        # D-54: a greenfield job started from one project's chat names the new project in its
+        # contract; Activity (like Work) shows it under both, and names the project in scope.
+        contract = compile_document('Write the acceptance note with enough text to pass.', required=[])
+        contract['project_id'] = self.other
+        job_id = self.store.create(contract, conversation=self.conversation)
+        for project in (self.project, self.other):
+            rows = [row for row in timeline(self.store, project_id=project)['entries'] if row['job_id'] == job_id]
+            self.assertTrue(rows, project)
+            self.assertEqual({row['project_id'] for row in rows}, {project})
+        counts = {item['project_id']: item['count'] for item in timeline(self.store)['projects']}
+        self.assertTrue(counts.get(self.project) and counts.get(self.other))
+
     def test_the_timeline_never_copies_a_payload_into_a_row(self):
         job_id = self.a_job('Write the secret-bearing request text with enough length to matter.')
         for row in timeline(self.store, project_id=self.project)['entries']:

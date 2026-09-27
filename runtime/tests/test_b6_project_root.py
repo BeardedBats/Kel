@@ -83,7 +83,8 @@ class ProjectRootRoutingTests(unittest.TestCase):
         state, jobs, msgs = self.plan("fix the login bug in the auth module")
         self.assertEqual(state, 'SETTLED')
         self.assertEqual(jobs, [])
-        self.assertTrue(any('no project is selected' in m for m in msgs), msgs)
+        # D-54 copy: the chat's project has no folder yet; the person is told where to set it.
+        self.assertTrue(any('this project has no folder yet' in m and 'Open Projects' in m for m in msgs), msgs)
 
     def test_existing_project_coding_uses_the_selected_root(self):
         state, jobs, msgs = self.plan("fix the login bug in the auth module", rooted=True)

@@ -380,8 +380,10 @@ class ACPHost:
         session = params['sessionId']
         cid, baseline, exists = self.session(session)
         if not exists:
-            # ST-04: the reserved chat becomes a real conversation with its first message.
-            self.client.call('/api/conversation', {'project': 'default', 'id': cid})
+            # ST-04: the reserved chat becomes a real conversation with its first message. D-54: the
+            # engine decides its project (the shell's binding for this chat, else the active one).
+            donor = os.environ.get('AIONUI_CONVERSATION_ID')
+            self.client.call('/api/conversation', dict({'donor': donor} if donor else {}, id=cid))
             with self.lock:
                 self.reserved.discard(cid)
         with self.lock:
