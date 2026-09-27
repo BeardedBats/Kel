@@ -160,7 +160,7 @@ const ModalMcpManagementSection: React.FC<{
     [handleBatchImportMcpServers, handleTestMcpConnections]
   );
 
-  const [importMode, setImportMode] = useState<'json' | 'oneclick'>('json');
+  const [importMode, setImportMode] = useState<'json' | 'cli'>('json');
 
   useEffect(() => {
     const httpServers = mcpServers.filter(
@@ -193,10 +193,10 @@ const ModalMcpManagementSection: React.FC<{
             },
           },
           {
-            key: 'oneclick',
+            key: 'cli',
             label: 'Import from a CLI',
             onClick: () => {
-              setImportMode('oneclick');
+              setImportMode('cli');
               showAddMcpModal();
             },
           },
