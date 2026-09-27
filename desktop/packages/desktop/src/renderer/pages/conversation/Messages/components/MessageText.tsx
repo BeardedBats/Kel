@@ -1,5 +1,7 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
+import { KelMessageDetails, KelMessageNote } from './KelMessageDetails';
+import { isKelNoteMeta } from '@/common/chat/kelMessageMeta';
 import thumbsUpIcon from '@renderer/assets/figma/chat/thumbs-up.svg';
 import thumbsDownIcon from '@renderer/assets/figma/chat/thumbs-down.svg';
 import moreIcon from '@renderer/assets/figma/chat/more.svg';
@@ -236,6 +238,13 @@ const MessageText: React.FC<{
     return null;
   }
 
+  // CH-3/D-55: "You stopped this reply." and "Restarting … with that change" are notes about the
+  // conversation, shown as one quiet line rather than as a Kel reply with its actions.
+  const kelMeta = isUserMessage ? undefined : message.content.kel_meta;
+  if (kelMeta && isKelNoteMeta(kelMeta)) {
+    return actionsOnly ? null : <KelMessageNote text={renderedText} />;
+  }
+
   const handleCopy = () => {
     const baseText = shouldRenderPlainText ? renderedText : json ? JSON.stringify(data, null, 2) : renderedText;
     const fileList = files.length ? `Files:\n${files.map((path) => `- ${path}`).join('\n')}\n\n` : '';
@@ -428,6 +437,8 @@ const MessageText: React.FC<{
             </div>
           )}
         </div>
+        {/* CP-14: who answered and what the checks found, only when the person asks. */}
+        {kelMeta && !engineFailure && <KelMessageDetails meta={kelMeta} />}
         {isPendingDelivery && (
           <div className='text-12px text-t-secondary mt-4px select-none' data-testid='message-status-badge'>
             {t('messages.delivery.pending', { defaultValue: 'Unread' })}

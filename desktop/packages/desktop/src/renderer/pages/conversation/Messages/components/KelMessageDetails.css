@@ -1,0 +1,54 @@
+/* CH-2/CP-14: a result's details stay behind a Link-style "Details" disclosure. */
+.kel-message-details {
+  margin-top: 8px;
+}
+
+.kel-message-details > summary {
+  width: fit-content;
+  list-style: none;
+  color: var(--kel-accent, var(--kel-figma-color-text-accent));
+  font: 500 13px/18px var(--kel-shell-heading, inherit);
+  cursor: pointer;
+}
+
+.kel-message-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.kel-message-details > summary:hover,
+.kel-message-details > summary:focus-visible {
+  text-decoration: underline;
+}
+
+.kel-message-details > dl {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.kel-message-details__row {
+  display: grid;
+  grid-template-columns: minmax(88px, max-content) 1fr;
+  column-gap: 12px;
+  color: var(--kel-text-2);
+  font: 400 13px/18px var(--kel-shell-body, inherit);
+}
+
+.kel-message-details__row > dt {
+  margin: 0;
+}
+
+.kel-message-details__row > dd {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  color: var(--kel-text-1);
+  overflow-wrap: anywhere;
+}
+
+/* A stopped reply or a restart with a change: a quiet system line, not a message bubble. */
+.kel-message-note {
+  color: var(--kel-text-2);
+  font: 400 13px/18px var(--kel-shell-body, inherit);
+}

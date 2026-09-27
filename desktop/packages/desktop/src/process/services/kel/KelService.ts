@@ -5,7 +5,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { ensureWorkCards, recoverHistory, type HistoryMessage } from './reconcileHistory';
+import { ensureWorkCards, historyRow, recoverHistory, type HistoryMessage, type KelMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import { conversationCounts, knownEmpty } from './conversationCounts';
@@ -421,18 +421,10 @@ export async function initializeKel(port: number): Promise<void> {
       type: 'acp',
       name: conversation.title,
       assistant: { id: 'kel' },
-      extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: conversation.id },
+      extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: conversation.id, kel_project_id: conversation.project_id },
     });
     mapping[donor.id] = conversation.id;
-    history[donor.id] = existing.messages.map((message: { seq: number; at: number; role: string; text: string }) => ({
-      id: 'kel-history-' + message.seq,
-      msg_id: 'kel-history-' + message.seq,
-      type: 'text',
-      position: message.role === 'user' ? 'right' : 'left',
-      conversation_id: donor.id,
-      created_at: message.at * 1000,
-      content: { content: message.text },
-    }));
+    history[donor.id] = existing.messages.map((message: KelMessage) => historyRow(donor.id, message));
     for (const [file, value] of [
       [mapPath, mapping],
       [historyPath, history],
@@ -565,6 +557,8 @@ export async function initializeKel(port: number): Promise<void> {
     if (typeof query !== 'string' || query.trim().length < 1) return [];
     return Object.values(history)
       .flat()
+      // A details overlay repeats a streamed row that the chat's own search already finds.
+      .filter((row) => !(row as HistoryMessage).kel_overlay)
       .filter((row) =>
         String((row as { content: { content?: string } }).content.content || '')
           .toLocaleLowerCase()
