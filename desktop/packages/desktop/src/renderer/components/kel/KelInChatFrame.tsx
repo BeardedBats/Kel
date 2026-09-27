@@ -3,9 +3,6 @@ import { activeProjectLabel, useProjects } from './activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ShellWorkspaceLink from './ShellWorkspaceLink';
 import ShellSettingsIcon from './ShellSettingsIcon';
-import { useExtensionSettingsTabs } from '@renderer/hooks/system/useExtensionSettingsTabs';
-import { useExtI18n } from '@renderer/hooks/system/useExtI18n';
-import { resolveExtensionAssetUrl } from '@renderer/utils/platform';
 import { configService } from '@/common/config/configService';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import workIcon from '@renderer/assets/figma/refresh/work.svg';
@@ -65,7 +62,6 @@ const mobileKelItems: Item[] = [
 const settingsGroups: Group[] = [
   { label: 'Kel', items: [
     { label: 'Model', path: '/settings/model', icon: 'model' },
-    { label: 'Assistants', path: '/settings/assistants', icon: 'assistants' },
     { label: 'Tools', path: '/settings/tools', icon: 'tools' },
     { label: 'Skills', path: '/settings/skills', icon: 'skills' },
     { label: 'Connections', path: '/connections', icon: 'connections' },
@@ -98,8 +94,6 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const layout = useLayoutContext();
-  const extensionTabs = useExtensionSettingsTabs();
-  const { resolveExtTabName } = useExtI18n();
   // D-54: Set up Kel lives with the Settings pages (JR-14).
   const settings = pathname.startsWith('/settings') || pathname === '/connections' || pathname === '/onboarding';
   const mobileIndex = pathname === '/settings' || pathname === '/projects';
@@ -124,11 +118,9 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const selectedMcpName = pathname === '/settings/tools' && new URLSearchParams(search).has('mcp')
     ? new URLSearchParams(search).get('name')
     : null;
-  const mobileTitle = selectedMcpName || (mobileIndex ? heading : pathname === '/onboarding' ? 'Set up Kel' : pathname === '/connections' ? 'Connections' : pathname === '/projects/map' ? 'Project map' : pathname === '/settings/skills' ? 'Skills Hub' : pathname === '/settings/webui' ? 'WebUI' : activeItem?.label || heading);
-  const groups = settings ? [...settingsGroups, ...(extensionTabs.length ? [{ label: 'Extensions', items: extensionTabs.map(tab => {
-    const icon = resolveExtensionAssetUrl(tab.icon) || tab.icon;
-    return { label: resolveExtTabName(tab), path: `/settings/ext/${tab.id}`, icon: icon || 'tools', sourceIcon: Boolean(icon) };
-  }) }] : [])] : projectGroups;
+  const mobileTitle = selectedMcpName || (mobileIndex ? heading : pathname === '/onboarding' ? 'Set up Kel' : pathname === '/connections' ? 'Connections' : pathname === '/projects/map' ? 'Project map' : pathname === '/settings/skills' ? 'Skills' : pathname === '/settings/webui' ? 'WebUI' : activeItem?.label || heading);
+  // D-60: Settings list only what Kel has built — no assistant catalog and no extension tabs.
+  const groups = settings ? settingsGroups : projectGroups;
 
   return <div className='kel-in-chat-frame' data-kind={settings ? 'settings' : 'projects'} data-mobile-index={mobileIndex}>
     <header className='kel-in-chat-frame__header'>

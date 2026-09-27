@@ -53,8 +53,6 @@ describe('Kel shell navigation', () => {
 
 // D-54: Projects replace Workspaces. The sidebar keeps no "Workspaces" slot, the Projects card nav
 // gains "All projects", and "Set up Kel" lives with the Settings pages.
-vi.mock('@renderer/hooks/system/useExtensionSettingsTabs', () => ({ useExtensionSettingsTabs: () => [] }));
-vi.mock('@renderer/hooks/system/useExtI18n', () => ({ useExtI18n: () => ({ resolveExtTabName: (tab: { name: string }) => tab.name }) }));
 vi.mock('@/common/config/configService', () => ({ configService: { initialize: async () => undefined, get: () => true } }));
 
 describe('Kel projects navigation (D-54)', () => {
@@ -86,6 +84,8 @@ describe('Kel projects navigation (D-54)', () => {
     expect(document.querySelector('.kel-in-chat-frame__header h1')?.textContent).toBe('Set up Kel');
     const settingsNav = screen.getByRole('navigation', { name: 'Set up Kel pages' });
     expect(settingsNav.textContent).toContain('Appearance');
+    // D-60: Kel is the only assistant; there is no catalog and no extension group.
+    expect(settingsNav.textContent).not.toMatch(/Assistants|Extensions/);
     expect(within(settingsNav).getByRole('button', { name: 'Set up Kel' }).getAttribute('aria-current')).toBe('page');
     delete (window as unknown as { kelAPI?: unknown }).kelAPI;
   });

@@ -6,9 +6,7 @@ import {
   SettingsTabNavigateProvider,
   SettingsViewModeProvider,
 } from '@/renderer/components/settings/SettingsModal/settingsViewContext';
-import { isElectronDesktop, resolveExtensionAssetUrl } from '@/renderer/utils/platform';
-import { type IExtensionSettingsTab } from '@/common/adapter/ipcBridge';
-import { useExtensionSettingsTabs } from '@/renderer/hooks/system/useExtensionSettingsTabs';
+import { isElectronDesktop } from '@/renderer/utils/platform';
 import {
   Communication,
   Computer,
@@ -17,15 +15,18 @@ import {
   Info,
   LinkCloud,
   Puzzle,
-  Robot,
   System,
   Toolkit,
 } from '@icon-park/react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useExtI18n } from '@/renderer/hooks/system/useExtI18n';
-import { BUILTIN_TAB_IDS, LEGACY_ANCHOR_REMAP } from './SettingsSider';
 import './settings.css';
+
+/**
+ * Settings tab ids in display order (must match router paths). D-60: only what Kel has built —
+ * no assistant catalog and no extension tabs.
+ */
+export const BUILTIN_TAB_IDS = ['model', 'tools', 'skills', 'appearance', 'webui', 'system', 'archived', 'about'] as const;
 
 interface SettingsPageWrapperProps {
   children: React.ReactNode;
@@ -38,14 +39,8 @@ type NavItem = { label: string; icon: React.ReactElement; path: string; id: stri
 type TranslateFn = (key: string, options?: { defaultValue?: string }) => string;
 
 export function getBuiltinSettingsNavItems(isDesktop: boolean, t: TranslateFn): NavItem[] {
-  const builtinMap: Record<string, NavItem> = {
+  const builtinMap: Record<(typeof BUILTIN_TAB_IDS)[number], NavItem> = {
     model: { id: 'model', label: t('settings.model'), icon: <LinkCloud theme='outline' size='16' />, path: 'model' },
-    assistants: {
-      id: 'assistants',
-      label: t('settings.assistants', { defaultValue: 'Assistants' }),
-      icon: <Robot theme='outline' size='16' />,
-      path: 'assistants',
-    },
     tools: {
       id: 'tools',
       label: t('settings.tools', { defaultValue: 'Tools' }),
@@ -91,69 +86,7 @@ const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, cla
   const { t } = useTranslation();
   const isDesktop = isElectronDesktop();
 
-  const extensionTabs = useExtensionSettingsTabs();
-
-  const { resolveExtTabName } = useExtI18n();
-
-  const menuItems = React.useMemo(() => {
-    const builtins = getBuiltinSettingsNavItems(isDesktop, t);
-
-    // Insert extension tabs before system (unanchored default) or at anchor position
-    const result = [...builtins];
-    const unanchored: IExtensionSettingsTab[] = [];
-    const beforeMap = new Map<string, IExtensionSettingsTab[]>();
-    const afterMap = new Map<string, IExtensionSettingsTab[]>();
-
-    for (const tab of extensionTabs) {
-      if (!tab.position) {
-        unanchored.push(tab);
-        continue;
-      }
-      const { relativeTo: rawAnchor, placement } = tab.position;
-      const anchor = LEGACY_ANCHOR_REMAP[rawAnchor] ?? rawAnchor;
-      if (!result.some((item) => item.id === anchor)) {
-        unanchored.push(tab);
-        continue;
-      }
-      const map = placement === 'before' ? beforeMap : afterMap;
-      let list = map.get(anchor);
-      if (!list) {
-        list = [];
-        map.set(anchor, list);
-      }
-      list.push(tab);
-    }
-
-    const toNavItem = (tab: IExtensionSettingsTab): NavItem => {
-      const resolvedIcon = resolveExtensionAssetUrl(tab.icon) || tab.icon;
-      return {
-        id: tab.id,
-        label: resolveExtTabName(tab),
-        icon: resolvedIcon ? (
-          <img src={resolvedIcon} alt='' className='w-16px h-16px object-contain' />
-        ) : (
-          <Puzzle theme='outline' size='16' />
-        ),
-        path: `ext/${tab.id}`,
-      };
-    };
-
-    for (let i = result.length - 1; i >= 0; i--) {
-      const id = result[i].id;
-      const afters = afterMap.get(id);
-      if (afters) result.splice(i + 1, 0, ...afters.map(toNavItem));
-      const befores = beforeMap.get(id);
-      if (befores) result.splice(i, 0, ...befores.map(toNavItem));
-    }
-
-    if (unanchored.length > 0) {
-      const sysIdx = result.findIndex((item) => item.id === 'system');
-      const idx = sysIdx >= 0 ? sysIdx : result.length;
-      result.splice(idx, 0, ...unanchored.map(toNavItem));
-    }
-
-    return result;
-  }, [isDesktop, t, extensionTabs, resolveExtTabName]);
+  const menuItems = React.useMemo(() => getBuiltinSettingsNavItems(isDesktop, t), [isDesktop, t]);
 
   // Keep only horizontal padding on the scroll container — vertical padding is
   // moved to the content layer below. A sticky header inside a scroll container
@@ -206,7 +139,7 @@ const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, cla
           <div className={contentClass}>
             <header className='kel-shell-settings-header'>
               <p>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/about') ? 'Other' : /\/(model|tools|webui)$/.test(pathname) ? 'Settings' : pathname.endsWith('/archived') ? 'History' : 'Application'}</p>
-              <h1>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/skills') ? <><span className='kel-desktop-only'>Skills</span><span className='kel-phone-only'>Skills Hub</span></> : pathname.endsWith('/webui') ? 'WebUI' : pathname.endsWith('/archived') ? <><span className='kel-desktop-only'>Archived</span><span className='kel-phone-only'>Archived conversations</span></> : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
+              <h1>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/skills') ? 'Skills' : pathname.endsWith('/webui') ? 'WebUI' : pathname.endsWith('/archived') ? <><span className='kel-desktop-only'>Archived</span><span className='kel-phone-only'>Archived conversations</span></> : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
             </header>
             {pathname.endsWith('/model') && <p className='kel-shell-model-description'>Kel uses this model for normal conversations. A chat can still pick its own model from the chat header, and Automatic keeps Kel's routing across every available provider.</p>}
             {children}

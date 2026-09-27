@@ -1953,103 +1953,13 @@ interface IBridgeResponse<D = {}> {
 }
 
 // ---------------------------------------------------------------------------
-// Extensions API
+// Extensions API — D-60: Kel has no extension store or extension settings pages. Only the two reads
+// that older surfaces still make remain (both return nothing when no extension is installed).
 // ---------------------------------------------------------------------------
-
-export interface IExtensionInfo {
-  name: string;
-  display_name: string;
-  version: string;
-  description?: string;
-  source: string;
-  enabled: boolean;
-}
-
-export interface IExtensionPermissionSummary {
-  name: string;
-  description: string;
-  level: 'safe' | 'moderate' | 'dangerous';
-  granted: boolean;
-}
-
-export interface IExtensionSettingsTab {
-  id: string;
-  label: string;
-  icon?: string;
-  url: string;
-  position?: { relativeTo: string; placement: 'before' | 'after' };
-  order: number;
-  extensionName: string;
-}
-
-export interface IExtensionWebuiContribution {
-  extensionName: string;
-  apiRoutes: Array<{ path: string; auth: boolean }>;
-  staticAssets: Array<{ urlPrefix: string; directory: string }>;
-}
-
-export type AgentActivityState = 'idle' | 'writing' | 'researching' | 'executing' | 'syncing' | 'error';
-
-export interface IExtensionAgentActivityEvent {
-  conversationId: string;
-  at: number;
-  kind: 'status' | 'tool' | 'message';
-  text: string;
-}
-
-export interface IExtensionAgentActivityItem {
-  id: string;
-  backend: string;
-  agentName: string;
-  state: AgentActivityState;
-  runtimeStatus: 'pending' | 'running' | 'finished' | 'unknown';
-  conversations: number;
-  activeConversations: number;
-  lastActiveAt: number;
-  lastStatus?: string;
-  currentTask?: string;
-  recentEvents: IExtensionAgentActivityEvent[];
-}
-
-export interface IExtensionAgentActivitySnapshot {
-  generatedAt: number;
-  totalConversations: number;
-  runningConversations: number;
-  agents: IExtensionAgentActivityItem[];
-}
 
 export const extensions = {
   getThemes: httpGet<ICssTheme[], void>('/api/extensions/themes'),
-  getLoadedExtensions: httpGet<IExtensionInfo[], void>('/api/extensions'),
-  getAssistants: httpGet<Record<string, unknown>[], void>('/api/extensions/assistants'),
-  getAgents: httpGet<Record<string, unknown>[], void>('/api/extensions/agents'),
   getAcpAdapters: httpGet<Record<string, unknown>[], void>('/api/extensions/acp-adapters'),
-  getMcpServers: httpGet<Record<string, unknown>[], void>('/api/extensions/mcp-servers'),
-  getSkills: httpGet<Array<{ name: string; description: string; location: string }>, void>('/api/extensions/skills'),
-  getSettingsTabs: httpGet<IExtensionSettingsTab[], void>('/api/extensions/settings-tabs'),
-  getWebuiContributions: httpGet<IExtensionWebuiContribution[], void>('/api/extensions/webui'),
-  getAgentActivitySnapshot: httpGet<IExtensionAgentActivitySnapshot, void>('/api/extensions/agent-activity'),
-  getExtI18nForLocale: httpPost<Record<string, unknown>, { locale: string }>('/api/extensions/i18n'),
-  enableExtension: httpPost<void, { name: string }>('/api/extensions/enable'),
-  disableExtension: httpPost<void, { name: string; reason?: string }>('/api/extensions/disable'),
-  getPermissions: httpPost<IExtensionPermissionSummary[], { name: string }>('/api/extensions/permissions'),
-  getRiskLevel: httpPost<string, { name: string }>('/api/extensions/risk-level'),
-  stateChanged: wsEmitter<{ name: string; enabled: boolean; reason?: string }>('extensions.state-changed'),
-};
-
-// ---------------------------------------------------------------------------
-// Agent Hub API — routed to /api/hub/*
-// ---------------------------------------------------------------------------
-
-import type { HubExtensionStatus, IHubAgentItem } from '@/common/types/agent/hub';
-export const hub = {
-  getExtensionList: httpGet<IHubAgentItem[], void>('/api/hub/extensions'),
-  install: httpPost<void, { name: string }>('/api/hub/install'),
-  uninstall: httpPost<void, { name: string }>('/api/hub/uninstall'),
-  retryInstall: httpPost<void, { name: string }>('/api/hub/retry-install'),
-  checkUpdates: httpPost<{ name: string }[], void>('/api/hub/check-updates'),
-  update: httpPost<void, { name: string }>('/api/hub/update'),
-  onStateChanged: wsEmitter<{ name: string; status: HubExtensionStatus; error?: string }>('hub.state-changed'),
 };
 
 // ---------------------------------------------------------------------------

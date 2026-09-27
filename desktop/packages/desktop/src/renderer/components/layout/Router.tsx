@@ -5,27 +5,18 @@ import DocumentTitle from '@renderer/components/layout/DocumentTitle';
 import { useCrossSessionRateLimitNotice } from '@/renderer/hooks/system/useCrossSessionRateLimitNotice';
 import { useAuth } from '@renderer/hooks/context/AuthContext';
 import { clearLoginReturnTo, pendingLoginReturnTo, rememberLoginReturnTo } from '@renderer/utils/loginReturnTo';
-import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 const Conversation = React.lazy(() => import('@renderer/pages/conversation'));
 const Guid = React.lazy(() => import('@renderer/pages/guid'));
-const AgentSettings = React.lazy(() => import('@renderer/pages/settings/AgentSettings'));
-const AgentRepairPage = React.lazy(() => import('@renderer/pages/settings/AgentSettings/AgentRepairPage'));
-const AssistantSettings = React.lazy(() => import('@renderer/pages/settings/AssistantSettings'));
-const AssistantsOverviewSettings = React.lazy(() => import('@renderer/pages/settings/AssistantsOverviewSettings'));
-const SkillsSettings = React.lazy(() => import('@renderer/pages/settings/SkillsSettings/SkillsHubSettings'));
 const SkillsOverviewSettings = React.lazy(() => import('@renderer/pages/settings/SkillsOverviewSettings'));
-const SkillDetailPage = React.lazy(() => import('@renderer/pages/settings/SkillsSettings/SkillDetailPage'));
 const ToolsSettings = React.lazy(() => import('@renderer/pages/settings/ToolsSettings'));
 const AppearanceSettings = React.lazy(() => import('@renderer/pages/settings/AppearanceSettings'));
 const ModeSettings = React.lazy(() => import('@renderer/pages/settings/ModeSettings'));
 const SystemSettings = React.lazy(() => import('@renderer/pages/settings/SystemSettings'));
 const WebuiSettings = React.lazy(() => import('@renderer/pages/settings/WebuiSettings'));
 const ArchivedSettings = React.lazy(() => import('@renderer/pages/settings/ArchivedSettings'));
-const ExtensionSettingsPage = React.lazy(() => import('@renderer/pages/settings/ExtensionSettingsPage'));
 const LoginPage = React.lazy(() => import('@renderer/pages/login'));
 const ScheduledTasksPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage'));
 const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage/TaskDetailPage'));
-const TeamIndex = React.lazy(() => import('@renderer/pages/team'));
 const KelWorkCenter = React.lazy(() => import('@renderer/pages/kel/work'));
 const KelTranscription = React.lazy(() => import('@renderer/pages/kel/transcription'));
 const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
@@ -56,14 +47,10 @@ const CapabilitiesRedirect: React.FC = () => {
 };
 
 /**
- * Kel V1.2: the donor shell ships AionUI's multi-agent settings surfaces
- * (assistants, agent management, skills, tools, model, team). Kel is a
- * single-assistant product, so navigation to those surfaces is redirected to
- * the home screen. The page components stay in the bundle (their dynamic
- * imports are kept in the ternaries below) — capabilities are hidden, not
- * deleted. Flip this back to `false` to restore the donor surfaces.
+ * D-60: Kel is the only assistant and has no marketplace. The donor's assistant catalog, agent
+ * management, skills hub, team mode and extension pages are gone; their old links land somewhere
+ * real (the chat, or the Settings page that now holds what is left) instead of a dead page.
  */
-const HIDE_DONOR_AGENT_SURFACES = true;
 
 /**
  * Human-visual repair (HV-12): the Office/Roster/Studio workforce surface exposes Kel's internal
@@ -147,49 +134,25 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route index element={<Navigate to='/guid' replace />} />
           <Route path='/guid' element={withRouteFallback(Guid)} />
           <Route path='/conversation/:id' element={withRouteFallback(Conversation)} />
-          <Route
-            path='/team/:id'
-            element={
-              HIDE_DONOR_AGENT_SURFACES || !TEAM_MODE_ENABLED ? (
-                <Navigate to='/guid' replace />
-              ) : (
-                withRouteFallback(TeamIndex)
-              )
-            }
-          />
+          <Route path='/team/:id' element={<Navigate to='/guid' replace />} />
           <Route
             path='/settings/model'
             element={<ModeSettings />}
           />
-          <Route
-            path='/assistants'
-            element={HIDE_DONOR_AGENT_SURFACES ? <Navigate to='/guid' replace /> : withRouteFallback(AssistantSettings)}
-          />
-          <Route path='/settings/assistants' element={withRouteFallback(AssistantsOverviewSettings)} />
-          <Route
-            path='/settings/agent'
-            element={<Navigate to='/team/roster' replace />}
-          />
-          <Route
-            path='/settings/agent/:id/repair'
-            element={<Navigate to='/team/roster' replace />}
-          />
+          <Route path='/assistants' element={<Navigate to='/guid' replace />} />
+          <Route path='/settings/assistants' element={<Navigate to='/settings/model' replace />} />
+          <Route path='/settings/agent' element={<Navigate to='/settings/model' replace />} />
+          <Route path='/settings/agent/:id/repair' element={<Navigate to='/settings/model' replace />} />
           <Route path='/settings/skills' element={withRouteFallback(SkillsOverviewSettings)} />
-          <Route
-            path='/settings/skills/import-history'
-            element={<Navigate to='/team/roster' replace />}
-          />
-          <Route
-            path='/settings/skills/detail/:skillName'
-            element={<Navigate to='/team/roster' replace />}
-          />
+          <Route path='/settings/skills/import-history' element={<Navigate to='/settings/skills' replace />} />
+          <Route path='/settings/skills/detail/:skillName' element={<Navigate to='/settings/skills' replace />} />
           {/* Kel V1.6 visual fix (finding S1-1): a real Tools settings page exists and was already
               imported here, so redirecting away to /autonomy only ejected the user from the Settings
               shell. Render the page the label promises instead. */}
           <Route path='/settings/tools' element={withRouteFallback(ToolsSettings)} />
-          <Route path='/settings/capabilities' element={<Navigate to='/team/roster' replace />} />
-          <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/team/roster' replace />} />
-          <Route path='/settings/skills-hub' element={<Navigate to='/team/roster' replace />} />
+          <Route path='/settings/capabilities' element={<CapabilitiesRedirect />} />
+          <Route path='/settings/capabilities/skills/import-history' element={<Navigate to='/settings/skills' replace />} />
+          <Route path='/settings/skills-hub' element={<Navigate to='/settings/skills' replace />} />
           <Route path='/settings/appearance' element={withRouteFallback(AppearanceSettings)} />
           <Route path='/settings/display' element={<Navigate to='/settings/appearance' replace />} />
           <Route path='/settings/webui' element={withRouteFallback(WebuiSettings)} />
@@ -197,7 +160,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/archived' element={withRouteFallback(ArchivedSettings)} />
           <Route path='/settings/system' element={withRouteFallback(SystemSettings)} />
           <Route path='/settings/about' element={withRouteFallback(SystemSettings)} />
-          <Route path='/settings/ext/:tabId' element={withRouteFallback(ExtensionSettingsPage)} />
+          <Route path='/settings/ext/:tabId' element={<Navigate to='/settings/system' replace />} />
           <Route path='/settings' element={<MobileRootRoute desktopPath='/settings/appearance' />} />
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
           <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
