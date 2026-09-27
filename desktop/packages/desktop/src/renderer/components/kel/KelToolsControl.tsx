@@ -45,7 +45,8 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
   const refresh = useCallback(async (target?: string | null) => {
     const resolved = target ?? cid;
     try {
-      setRows(await request<CapabilityRow[]>({ action: 'get', conversation: resolved ?? undefined }));
+      const next = await request<unknown>({ action: 'get', conversation: resolved ?? undefined });
+      setRows(Array.isArray(next) ? (next as CapabilityRow[]) : null);
     } catch {
       setRows(null);
     }
@@ -77,8 +78,10 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
     async (capability: string, choice: 'default' | 'on' | 'off', label: string) => {
       setBusy(true);
       try {
-        const next = await request<CapabilityRow[]>({ action: 'set', conversation: cid ?? undefined, capability, state: choice });
-        setRows(next);
+        // The engine answers a change with the new state, not the rows: re-read the rows so the menu
+        // never holds a non-list (which crashed the whole window).
+        await request<unknown>({ action: 'set', conversation: cid ?? undefined, capability, state: choice });
+        await refresh();
         Message.success(
           choice === 'default'
             ? `${label} follows your usual setting here again.`
@@ -100,7 +103,8 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
     async (capability: string, label: string) => {
       setBusy(true);
       try {
-        setRows(await request<CapabilityRow[]>({ action: 'allow_once', conversation: cid ?? undefined, capability }));
+        await request<unknown>({ action: 'allow_once', conversation: cid ?? undefined, capability });
+        await refresh();
         Message.success(`${label} is allowed for your next request only.`);
       } catch {
         Message.error('Kel could not allow that just now.');
@@ -108,20 +112,21 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
         setBusy(false);
       }
     },
-    [cid]
+    [cid, refresh]
   );
 
   const resetAll = useCallback(async () => {
     setBusy(true);
     try {
-      setRows(await request<CapabilityRow[]>({ action: 'reset', conversation: cid ?? undefined }));
+      await request<unknown>({ action: 'reset', conversation: cid ?? undefined });
+      await refresh();
       Message.success('This conversation follows your usual settings again.');
     } catch {
       Message.error('Kel could not reset that just now.');
     } finally {
       setBusy(false);
     }
-  }, [cid]);
+  }, [cid, refresh]);
 
   const changed = useMemo(() => (rows ?? []).filter((row) => row.override !== 'default').length, [rows]);
 
