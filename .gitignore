@@ -63,3 +63,15 @@ credentials.json
 App/
 Data/
 Temp/
+
+# D-58: evidence screenshots/recordings stay on disk, out of git (they can contain real data).
+docs/**/*.png
+docs/**/*.jpg
+docs/**/*.jpeg
+docs/**/*.gif
+docs/**/*.webm
+docs/**/*.mp4
+docs/**/*.webp
+
+# Stray renderer cache created by running a build from the repo root.
+/packages/
