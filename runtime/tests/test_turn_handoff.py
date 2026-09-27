@@ -650,7 +650,7 @@ class HandoffServiceTests(unittest.TestCase):
             self.service._project_of('not-a-conversation')
         for _ in range(2):
             self.assertEqual(self.service.action('/api/conversation', {'project': 'default', 'id': reserved}),
-                             {'id': reserved})
+                             {'id': reserved, 'project_id': 'default'})
         rows = [c for c in self.service.state(reserved)['conversations'] if c['id'] == reserved]
         self.assertEqual(len(rows), 1)
         with self.assertRaises(PolicyError):

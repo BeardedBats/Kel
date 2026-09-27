@@ -13,6 +13,7 @@ import json
 import time
 
 from .core import PolicyError
+from .projects import job_projects, primary_project
 
 # Event type → the person's kind. Types that are not listed here are reported as 'other' rather than
 # hidden: an activity surface that quietly drops rows is worse than one that says "other".
@@ -135,9 +136,13 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
         aggregate = event.get('aggregate_id') or ''
         job = jobs.get(aggregate)
         row_project = None
+        row_projects = set()
         if job:
-            row_project = conversations.get(job.get('conversation'))
-        if project_id and row_project != project_id:
+            # D-54: a job belongs to its chat's project and to the project its contract names — the
+            # same rule Work uses, so both pages count the same jobs for a project.
+            row_projects = job_projects(job, conversations)
+            row_project = project_id if project_id in row_projects else primary_project(job, conversations)
+        if project_id and project_id not in row_projects:
             continue
         payload = event.get('payload')
         if isinstance(payload, str):
@@ -170,8 +175,8 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
         if needle and needle not in what.lower():
             continue
         counts[row_kind] = counts.get(row_kind, 0) + 1
-        if row_project:
-            projects[row_project] = projects.get(row_project, 0) + 1
+        for counted in (row_projects or ({row_project} if row_project else set())):
+            projects[counted] = projects.get(counted, 0) + 1
         entries.append({'at': at, 'kind': row_kind, 'type': event_type, 'what': what,
                         'project_id': row_project, 'job_id': aggregate if job else None,
                         'state': state, 'verdict': verdict, 'failed': failed,

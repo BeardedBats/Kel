@@ -48,6 +48,10 @@ BUSY_TICK=.2
 IDLE_TICK=2.0
 # CH-3: the one plain note the chat gets when the person stops a reply.
 STOPPED_NOTE='You stopped this reply.'
+# D-54: what a coding request hears when its project cannot be coded in yet.
+NO_FOLDER_NOTE=('This looks like a code change, but this project has no folder yet. Open Projects, choose this '
+                'project and set its folder and test command — or ask me to create a new project.')
+NO_TEST_COMMAND_NOTE='This project needs a test command. Set it in Projects before coding.'
 
 
 def fallback_line(choice):
@@ -188,6 +192,9 @@ class Service:
         ensure_delegation_schema(self.store)
         ensure_parallel_schema(self.store)
         Connections(self.store)
+        # D-54: projects are the one context boundary (migration 32 runs here, once).
+        from .projects import Projects
+        self.projects=Projects(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -477,7 +484,7 @@ class Service:
                 # Coding intent with no selected project and no explicit
                 # greenfield request: ask instead of guessing or silently
                 # adopting a temp/donor workspace as the project root.
-                self._say(sid,cid,'This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.')
+                self._say(sid,cid,NO_FOLDER_NOTE)
             else:
                 # D-53 floors: these messages are work no matter what the turn model says.
                 forced=bool(needs_work(text) or file_action(text) or kind in ('research','coding') or lower.startswith(RESEARCH_PREFIXES)
@@ -692,13 +699,13 @@ class Service:
                          'commit','--allow-empty','-m','Initial empty project (created by Kel)'],
                         capture_output=True,check=False)
                 tests=['python','smoke_test.py']
-                project_id=self.context.project(slug,str(root),'Created by Kel for: '+text[:120])
-                with self.store.transaction() as db:
-                    db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(project_id,encode(tests)))
+                # D-54: a project Kel makes for the person is theirs (a user project), folder and test set.
+                project_id=self.projects.create(slug,root=str(root),test_command=tests,
+                                                context='Created by Kel for: '+text[:120])['id']
             else:
                 with contextlib.closing(self.store.connect()) as db:
                     row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(packet['project']['id'],)).fetchone()
-                if not row:raise PolicyError('This project needs a test command. Set it in Project context before coding.')
+                if not row:raise PolicyError(NO_TEST_COMMAND_NOTE)
                 project_id=packet['project']['id'];tests=json.loads(row['command'])
             contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
@@ -798,24 +805,39 @@ class Service:
             row=db.execute('SELECT project_id FROM conversations WHERE id=?',(cid,)).fetchone()
         if not row:
             # ST-04: a chat opened in the app has a reserved id and no row until its first message;
-            # until then it belongs where it will be created (the default project).
+            # until then it belongs where it will be created (D-54: its binding, else the active project).
             import uuid
             try:
                 uuid.UUID(str(cid))
             except ValueError:
                 raise PolicyError('Conversation missing') from None
-            return 'default'
+            return self.projects.pending_project(str(cid))
         return row['project_id']
 
-    def _work(self,cid):
-        """Compact project work context for the shell's Work panel."""
+    def _scope(self,data,write=False):
+        """D-54: the project a Knowledge/Map/Recipes/brief/Activity call acts in ('*' = every project,
+        reads only)."""
+        return self.projects.scope(data,write,self._project_of)
+
+    def _work(self,cid,project=None):
+        """Compact project work context for the shell's Work panel.
+
+        D-54: with `project` (an id or '*') the jobs are every job in that scope, not one chat's;
+        for '*' the memory and map blocks are None (they belong to one project)."""
         from .memory import Memory
         from .projectmap import ProjectMap
         from .recipes import RecipeLibrary
-        project_id=self._project_of(cid)
+        from .projects import ALL,job_projects,primary_project,recipes_everywhere
+        if project not in (None,''):
+            project_id=self._scope({'project':project})
+        else:
+            project=None
+            project_id=self._project_of(cid)
         memory=Memory(self.store)
+        everywhere=project_id==ALL
         data={'schema':1,'project_id':project_id,
-              'memory':{'records':[{'id':r['id'],'type':r['type'],'topic':r['topic'],
+              'memory':None if everywhere else
+                       {'records':[{'id':r['id'],'type':r['type'],'topic':r['topic'],
                                     'summary':r['summary'],'value':r['value'],'trust':r['trust'],
                                     'status':r['status'],'user_confirmed':r['user_confirmed'],
                                     'source_type':r['source_type'],'source_ref':r['source_ref'],
@@ -824,8 +846,9 @@ class Service:
                         'proposals':memory.proposals(project_id,state='open'),
                         'conflicts':memory.conflicts(project_id)},
               'map':None,
-              'recipes':{'entries':RecipeLibrary(self.store).entries(project_id=project_id)}}
-        latest=ProjectMap(self.store).get(project_id)
+              'recipes':{'entries':recipes_everywhere(self.projects) if everywhere else
+                         RecipeLibrary(self.store).entries(project_id=project_id)}}
+        latest=None if everywhere else ProjectMap(self.store).get(project_id)
         if latest:
             data['map']={'version':latest['version'],'fingerprint':latest['fingerprint'],
                          'updated':latest['updated'],'note':latest['note'],
@@ -850,8 +873,13 @@ class Service:
                 "SELECT job_id,id FROM approvals WHERE status='PENDING'")}
             submission_of={row['job_id']:row['id'] for row in db.execute(
                 "SELECT job_id,id FROM submissions WHERE job_id IS NOT NULL")}
-            # CP-2: the last activity of this conversation's jobs only, not of the whole event log.
-            mine=[job for job in self.store.list_jobs() if job['conversation']==cid]
+            # CP-2: the last activity of this scope's jobs only, not of the whole event log.
+            conv_map={r['id']:r['project_id'] for r in db.execute('SELECT id,project_id FROM conversations')}
+            if project is None:
+                mine=[job for job in self.store.list_jobs() if job['conversation']==cid]
+            else:
+                mine=[job for job in self.store.list_jobs()
+                      if everywhere or project_id in job_projects(job,conv_map)]
             last={}
             ids=[job['id'] for job in mine]
             for start in range(0,len(ids),400):
@@ -863,15 +891,17 @@ class Service:
             replaced=handoff.replaced_jobs(db)
         jobs=[]
         needs=0
-        closed_shown=0
+        closed_shown={}
         for job in mine:
-            if job['conversation']!=cid or job['id'] in replaced:
+            if (project is None and job['conversation']!=cid) or job['id'] in replaced:
                 continue
             active=job['state'] not in ('CLOSED','CANCELLED')
             if not active:
-                if closed_shown>=3 or (last.get(job['id']) or 0)<now-86400:
+                # At most three recently settled jobs per chat (a project scope spans many chats).
+                shown=closed_shown.get(job['conversation'],0)
+                if shown>=3 or (last.get(job['id']) or 0)<now-86400:
                     continue
-                closed_shown+=1
+                closed_shown[job['conversation']]=shown+1
             milestones=job.get('milestones') or {}
             brief=cont.resume_brief(job['id'])
             created=job.get('created') or now
@@ -931,7 +961,8 @@ class Service:
                 direct=None
             entry.update(priority=priority,age_seconds=int(max(0,now-created)),
                          reason=entry['why'],
-                         related={'project_id':project_id,'conversation':cid,
+                         related={'project_id':primary_project(job,conv_map) if everywhere else project_id,
+                                  'conversation':job['conversation'],
                                   'approvals':approval_count,'milestones':len(milestones)},
                          direct=direct)
             if entry['needs_you']:
@@ -962,10 +993,12 @@ class Service:
 
     def _memory_action(self,data):
         from .memory import Memory
-        cid=data.get('conversation','main')
-        project_id=self._project_of(cid)
-        memory=Memory(self.store)
+        from .projects import ALL,MEMORY_READS,memory_everywhere
         action=data.get('action')
+        project_id=self._scope(data,write=action not in MEMORY_READS)
+        if project_id==ALL:
+            return memory_everywhere(self.projects,action,data)
+        memory=Memory(self.store)
         memory_id=data.get('id')
         if action=='confirm':
             self._owned_memory(project_id,memory_id)
@@ -1035,10 +1068,11 @@ class Service:
 
     def _map_action(self,data):
         from .projectmap import ProjectMap
-        cid=data.get('conversation','main')
-        project_id=self._project_of(cid)
-        maps=ProjectMap(self.store)
         action=data.get('action')
+        project_id=self._scope(data,write=action=='refresh')
+        if project_id=='*':
+            raise PolicyError('Choose a project to see its map.')
+        maps=ProjectMap(self.store)
         if action=='refresh':
             latest=maps.refresh(project_id,force=bool(data.get('force')),reason='work-context')
             return {'version':latest['version'],'fingerprint':latest['fingerprint'],
@@ -1049,15 +1083,21 @@ class Service:
 
     def _recipes_action(self,data):
         from .recipes import RecipeLibrary, compile_recipe
-        cid=data.get('conversation','main')
-        project_id=self._project_of(cid)
-        library=RecipeLibrary(self.store)
+        from .projects import ALL,recipe_writes,recipes_everywhere
         action=data.get('action')
+        project_id=self._scope(data,write=recipe_writes(data))
+        everywhere=project_id==ALL
+        if everywhere and action in ('list','search'):
+            return {'entries':recipes_everywhere(self.projects,query=data.get('query') if action=='search' else None)}
+        if everywhere:
+            project_id=''  # the built-in library: '*' reads never name a project that is not there
+        library=RecipeLibrary(self.store)
         if action=='list':
             return {'entries':library.entries(project_id=project_id)}
         if action=='get':
             info=library.get(data.get('recipe_id',''),project_id=project_id)
-            library.mark(project_id,info['recipe']['recipe_id'],opened=True)
+            if not everywhere:
+                library.mark(project_id,info['recipe']['recipe_id'],opened=True)
             return {'recipe':info['recipe'],'scope':info['scope'],'version':info['version'],
                     'digest':info['digest']}
         # V2-07: the library's own surfaces — search, favourites, recent, categories, duplicate,
@@ -1098,7 +1138,10 @@ class Service:
             try:
                 contract=compile_recipe(recipe,data.get('inputs') or {},project_id,root=root,tests=tests)
             except PolicyError as exc:
-                return {'needs_project':True,'message':str(exc)}
+                # D-54: say which project and what it lacks, so the page can offer "Set project folder".
+                missing=([] if root else ['folder'])+([] if tests else ['test_command'])
+                return {'needs_project':True,'message':str(exc),'project_id':project_id or None,
+                        'missing':missing}
             return {'request':contract['request'],'kind':contract['kind'],
                     'milestones':[{'id':m['id'],'objective':m['objective'],
                                    'depends_on':m['depends_on'],'checks':m['checks']}
@@ -1108,12 +1151,16 @@ class Service:
                     'budget':contract['budget'],'recipe':contract['recipe']}
         if action=='run':
             info=library.get(data.get('recipe_id',''),project_id=project_id)
+            cid=data.get('conversation') or 'main'
+            if data.get('project') not in (None,'') and (not data.get('conversation') or self._project_of(cid)!=project_id):
+                # D-54: a run started from the Projects page lands in that project's hidden chat.
+                cid=self.projects.utility_conversation(project_id)
             library.mark(project_id,info['recipe']['recipe_id'],run=True)
             sid=self.submit({'text':'Run recipe '+info['recipe']['name'],'conversation':cid,
                              'kind':'recipe',
                              'recipe':{'recipe_id':data.get('recipe_id'),
                                        'inputs':data.get('inputs') or {}}})
-            return {'submission':sid}
+            return {'submission':sid,'conversation':cid}
         if action=='propose_from_job':
             return library.propose_from_job(data.get('job_id',''))
         if action=='save':
@@ -1167,7 +1214,8 @@ class Service:
             self.store.add_message('There is no unfinished work in this project to continue. New requests start fresh work.','assistant',cid)
         return None
 
-    def state(self,cid='main'):
+    def state(self,cid='main',project=None):
+        from .projects import ALL,job_projects
         with contextlib.closing(self.store.connect()) as db:
             projects=[dict(r) for r in db.execute('SELECT * FROM projects ORDER BY name')]
             for p in projects:
@@ -1204,8 +1252,17 @@ class Service:
         # every project's continuation candidates, and no per-conversation messages or submissions.
         everywhere=cid==ALL_CONVERSATIONS
         project_id=next((c['project_id'] for c in conversations if c['id']==cid),None)
+        # D-54: each project says what it is (general/user/system, archived); `project` narrows jobs
+        # and continuation to one project ('*' or None: no narrowing).
+        kinds=self.projects.kinds()
+        for p in projects:
+            p.update(kinds.get(p['id']) or {'kind':'user','archived':None})
+        utility=self.projects.utility_ids()
+        for c in conversations:
+            if c['id'] in utility:c['utility']=True
+        narrow=project if project not in (None,'',ALL) else None
         continuation=[]
-        scopes=[p['id'] for p in projects] if everywhere else ([project_id] if project_id else [])
+        scopes=[narrow] if narrow else [p['id'] for p in projects] if everywhere else ([project_id] if project_id else [])
         if scopes:
             from .continuation import Continuation
             for scope in scopes:
@@ -1214,6 +1271,9 @@ class Service:
                 except Exception:
                     pass  # the Work surface must render even if continuation state is unavailable
         jobs=[j for j in self.store.list_jobs() if (everywhere or j['conversation']==cid) and j['id'] not in replaced]
+        if narrow:
+            conv_map={c['id']:c['project_id'] for c in conversations}
+            jobs=[j for j in jobs if narrow in job_projects(j,conv_map)]
         # D12 — the routing decision behind each active run (why this provider/model). The engine
         # already records it on run.claimed; user surfaces translate it into plain language.
         # CP-2: only the active jobs' run.claimed events are read (indexed by job), never the whole
@@ -1222,7 +1282,8 @@ class Service:
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
-                'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation'}
+                'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation',
+                'project':project or None,'active_project':self.projects.active()}
 
     def rename_conversation(self,cid,title):
         """POST /api/conversation-title (CH-9): the name the person gave a chat, kept by the engine.
@@ -1235,8 +1296,8 @@ class Service:
         with self.store.transaction() as db:
             renamed=db.execute('UPDATE conversations SET title=? WHERE id=?',(title,str(cid))).rowcount
         if not renamed:
-            self._project_of(cid)  # refuses anything that is not a reserved chat id
-            cid=self.context.conversation('default',title=title,conversation_id=cid)
+            project=self._project_of(cid)  # refuses anything that is not a reserved chat id
+            cid=self.context.conversation(project,title=title,conversation_id=cid)
             with self.store.transaction() as db:
                 db.execute('UPDATE conversations SET title=? WHERE id=?',(title,cid))
         return {'id':str(cid),'title':title}
@@ -1266,9 +1327,11 @@ class Service:
                 'SELECT conversation_id,COUNT(*) AS n FROM messages GROUP BY conversation_id')}
             jobs={r['c']:r['n'] for r in db.execute(
                 "SELECT json_extract(data,'$.conversation') AS c,COUNT(*) AS n FROM jobs GROUP BY c")}
+        utility=self.projects.utility_ids()
         for row in rows:
             row['message_count']=messages.get(row['id'],0)
             row['job_count']=jobs.get(row['id'],0)
+            if row['id'] in utility:row['utility']=True
         return {'conversations':rows}
 
     def handoff_view(self,cid,sid):
@@ -1364,7 +1427,8 @@ class Service:
             from .activity import timeline
             scope=data.get('project_id')
             if scope is None and not data.get('all_projects'):
-                scope=self._project_of(data.get('conversation','main'))
+                scope=self._scope(data)
+            if scope=='*':scope=None
             return timeline(self.store,project_id=scope,since=data.get('since'),
                             until=data.get('until'),kind=data.get('kind'),
                             failures_only=bool(data.get('failures')),query=data.get('query'),
@@ -1386,17 +1450,15 @@ class Service:
                 self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],packet,row['kind'])
             return {'id':row['id']}
         if path=='/api/conversation':
-            return {'id':self.context.conversation(data.get('project','default'),conversation_id=data.get('id'))}
+            # D-54: explicit project → the shell's binding for its chat (`donor`) → active → General.
+            # An id the ACP host reserved (ST-04) that already exists keeps its own project.
+            return self.projects.create_conversation(self.context,data)
         if path=='/api/conversation-title':
             return self.rename_conversation(self._required(data,'conversation','Pick a chat to rename first.'),
                                             data.get('title'))
         if path=='/api/project':
-            pid=self.context.project(data['name'],data.get('root') or None,data.get('context',''),data.get('id'))
-            command=data.get('test_command')
-            if command:
-                if not isinstance(command,list) or not all(isinstance(s,str) and s for s in command):raise PolicyError('Test command must be a list of arguments')
-                with self.store.transaction() as db:db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(pid,encode(command)))
-            return {'id':pid}
+            if data.get('action'):return self.projects.apply(data)
+            return self.projects.legacy_save(self.context,data)  # compat: create-or-overwrite
         if path=='/api/attach':return {'id':self.context.attach(data['conversation'],data['name'],base64.b64decode(data['content'],validate=True),data.get('mime','text/plain'))}
         if path=='/api/control':
             self.engine.control(self._required(data,'job','Pick a request first.'),
@@ -1421,7 +1483,12 @@ class Service:
         if path=='/api/revoke':self.context.revoke(data['project']);return {'ok':True}
         if path=='/api/brief':
             from .solution import SolutionBriefs
-            payload=dict(data);payload.setdefault('project_id',self._project_of(data.get('conversation','main')))
+            payload=dict(data)
+            if 'project_id' not in payload:
+                payload['project_id']=self._scope(data,write=data.get('action') not in ('get','list'))
+            if payload['project_id']=='*' and data.get('action')=='list':
+                return {'briefs':[dict(brief,project_id=pid) for pid in self.projects.live_ids()
+                                  for brief in SolutionBriefs(self.store).list(pid)]}
             return SolutionBriefs(self.store).apply(payload)
         if path=='/api/team':
             from .team import Team
@@ -2014,8 +2081,8 @@ def serve(root,port=0):
                 if not self.authorized():self.reply(403,{'error':'Local session authorization required'});return
                 try:
                     query=parse_qs(parsed.query)
-                    if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
-                    if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
+                    if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
                     if parsed.path=='/api/conversations':self.reply(200,service.conversations());return
                     if parsed.path=='/api/health':
                         # CP-2: the desktop's 5 s liveness ping — no database work at all.
@@ -2029,7 +2096,7 @@ def serve(root,port=0):
                         def _first(name):
                             return (query.get(name) or [None])[0]
                         self.reply(200,timeline(service.store,
-                                                project_id=_first('project'),
+                                                project_id=None if _first('project')=='*' else _first('project'),
                                                 since=_first('since'),until=_first('until'),
                                                 kind=_first('kind'),
                                                 failures_only=_first('failures') in ('1','true','yes'),

@@ -90,12 +90,22 @@ class ACPHostTests(unittest.TestCase):
         # defaults to the unrooted project.
         result = self.host.dispatch('session/new', {'cwd': str(self.root)})
         cid = result['sessionId'][4:]
-        # ST-04: opening a chat writes nothing; the conversation is created (unrooted, in the
-        # default project) with its first message.
+        # ST-04: opening a chat writes nothing; the conversation is created with its first message.
+        # D-54: the host never names a project — the engine resolves it (binding, active, General).
         self.assertEqual(self.requests, [])
         self.host.dispatch('session/load', {'sessionId': result['sessionId']})
-        self.host.prompt({'sessionId': result['sessionId'], 'prompt': [{'type': 'text', 'text': 'hello'}]})
-        self.assertEqual(self.requests[0], ('/api/conversation', {'project': 'default', 'id': cid}))
+        with patch.dict(os.environ):
+            os.environ.pop('AIONUI_CONVERSATION_ID', None)
+            self.host.prompt({'sessionId': result['sessionId'], 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.assertEqual(self.requests[0], ('/api/conversation', {'id': cid}))
+
+    def test_first_prompt_forwards_the_shell_chat_as_donor(self):
+        with patch.dict(os.environ, {'AIONUI_CONVERSATION_ID': 'donor-chat-7'}):
+            result = self.host.dispatch('session/new', {'cwd': str(self.root)})
+            cid = result['sessionId'][4:]
+            self.host.prompt({'sessionId': result['sessionId'], 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.assertEqual(self.requests[0], ('/api/conversation', {'donor': 'donor-chat-7', 'id': cid}))
+        self.assertNotIn('project', self.requests[0][1])
 
     def test_an_unknown_session_is_still_refused(self):
         with self.assertRaises(ValueError):
