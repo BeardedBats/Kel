@@ -29,7 +29,8 @@ export type SlashCommandCompletionBehavior = 'normal' | 'neutral_tip_on_empty';
  * - `builtin`: Built into the application
  * - `skill`: A skill loaded into the current conversation
  */
-export type SlashCommandSource = 'acp' | 'builtin' | 'skill';
+/** `recipe`: a Kel Recipe of the active project (CH-7), run by the composer, not sent as text. */
+export type SlashCommandSource = 'acp' | 'builtin' | 'skill' | 'recipe';
 
 /**
  * Live ACP available_commands payload as it appears on the websocket stream.

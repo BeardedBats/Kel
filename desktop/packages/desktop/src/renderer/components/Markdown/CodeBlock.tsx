@@ -16,7 +16,10 @@ import MermaidBlock from './MermaidBlock';
 import WavedromBlock from './WavedromBlock';
 import { formatCode, getDiffLineStyle } from './markdownUtils';
 
-const PREVIEW_LINES = 3;
+// CH polish: a short block (up to 12 lines) is shown whole; only longer blocks collapse, and then
+// to a preview long enough to read what the code is.
+export const COLLAPSE_AFTER_LINES = 12;
+const PREVIEW_LINES = 8;
 // code span: font-size 13px, line-height 20px (per ShadowView injection)
 const CODE_LINE_HEIGHT = 20;
 // SyntaxHighlighter pre padding: 0.5em top + 0.5em bottom ≈ 13px each side
@@ -109,7 +112,7 @@ function CodeBlock(props: CodeBlockProps) {
   const isDiff = language === 'diff';
   const formattedContent = formatCode(children);
   const totalLines = formattedContent.split('\n').length;
-  const canCollapse = totalLines > PREVIEW_LINES;
+  const canCollapse = totalLines > COLLAPSE_AFTER_LINES;
   const codeTheme = currentTheme === 'dark' ? vs2015 : vs;
   const diffLines = isDiff ? formattedContent.split('\n') : [];
   const isDark = currentTheme === 'dark';

@@ -5,7 +5,7 @@
  * recorded unless Save Fix is pressed. These tests hold that contract, plus the capture helpers that
  * turn a clicked element into context a coding session can use.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -43,9 +43,6 @@ const engine = read('runtime/kel/dogfood.py');
 const engineService = read('runtime/kel/service.py');
 const dogfoodIpc = read('desktop/packages/desktop/src/process/services/kel/kelDogfoodIpc.ts');
 const hook = read('desktop/packages/desktop/src/renderer/components/kel/fixCapture/useFixCapture.ts');
-const searchPopover = read(
-  'desktop/packages/desktop/src/renderer/pages/conversation/GroupedHistory/ConversationSearchPopover.tsx'
-);
 const bridgeService = read('desktop/packages/desktop/src/process/services/kel/KelService.ts');
 const preload = read('desktop/packages/desktop/src/preload/main.ts');
 const kelApiSource = read('desktop/packages/desktop/src/renderer/components/kel/kelApi.ts');
@@ -78,18 +75,15 @@ describe('Fix Capture — the hotkey', () => {
   });
 });
 
-describe('Fix Capture — the hotkey conflict, resolved deliberately', () => {
-  it('claims Ctrl+Shift+F in the capture phase, ahead of the donor conversation search', () => {
-    // Both bind the chord. Fix Capture listens on window in the capture phase and stops the event,
-    // so the search handler (document capture) never sees it; the search keeps its own trigger and
-    // the Ctrl+K palette path. Its raw binding stays in the source — that is the documented trade.
+describe('Fix Capture — owns Ctrl+Shift+F', () => {
+  it('claims the chord in the capture phase; the donor search that also bound it is gone (CH-17)', () => {
     expect(layer).toContain("window.addEventListener('keydown', onKeyDown, true);");
     expect(layer).toContain('event.stopPropagation();');
-    expect(searchPopover).toContain(
-      "document.addEventListener('keydown', handleGlobalSearchShortcut, true);"
-    );
-    expect(searchPopover).toContain("key: 'f',");
-    expect(searchPopover).toContain('shiftKey: true,');
+    expect(
+      existsSync(
+        path.join(repoRoot, 'desktop/packages/desktop/src/renderer/pages/conversation/GroupedHistory/ConversationSearchPopover.tsx')
+      )
+    ).toBe(false);
   });
 });
 

@@ -5,8 +5,7 @@
  */
 
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
-import { dispatchChatMessageJump, dispatchChatSearchPanelOpen } from '@/renderer/utils/chat/chatMinimapEvents';
-import { IconSearch } from '@arco-design/web-react/icon';
+import { dispatchChatMessageJump } from '@/renderer/utils/chat/chatMinimapEvents';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +15,6 @@ import { useConversationAnchors } from './useConversationAnchors';
 import {
   needsScroll,
   resolveScrollTopForIndex,
-  resolveSearchButtonTop,
   resolveStackTop,
   resolveTickIndexAtOffset,
   resolveViewportHeight,
@@ -128,8 +126,6 @@ const MessageAnchorRail: React.FC = () => {
   const viewportHeight = resolveViewportHeight(railHeight, anchors.length);
   const scrollable = needsScroll(railHeight, anchors.length);
   const stackTop = resolveStackTop(railHeight, anchors.length);
-  // The button leads the stack, so it travels with it rather than pinning to the top edge.
-  const searchTop = resolveSearchButtonTop(railHeight, anchors.length);
 
   // Follow the conversation: when a new turn arrives, bring it into view so the
   // newest anchor is always reachable without scrolling the rail by hand.
@@ -145,11 +141,6 @@ const MessageAnchorRail: React.FC = () => {
     followedCountRef.current = anchors.length;
     viewport.scrollTop = resolveScrollTopForIndex(anchors.length - 1, anchors.length, viewportHeight);
   }, [anchors.length, scrollable, viewportHeight]);
-
-  const openSearchPanel = useCallback(() => {
-    if (!conversationId) return;
-    dispatchChatSearchPanelOpen({ conversation_id: conversationId });
-  }, [conversationId]);
 
   // Last known pointer position, in viewport-local coordinates. Scrolling has to
   // re-run the magnet against this: the pointer has not moved, but a different
@@ -302,20 +293,8 @@ const MessageAnchorRail: React.FC = () => {
         </div>
       )}
 
-      {/* Search entry, sitting at the head of the stack so it reads as the first
-          anchor. Lives outside the hover zone so hovering it cannot
-          magnet-select a tick, and so a click never doubles as a jump. */}
-      <button
-        type='button'
-        className={styles.searchButton}
-        style={{ top: searchTop }}
-        data-testid='message-anchor-rail-search'
-        aria-label={t('messages.anchorRail.searchAria')}
-        title={t('messages.anchorRail.searchAria')}
-        onClick={openSearchPanel}
-      >
-        <IconSearch className={styles.searchIcon} />
-      </button>
+      {/* CH-17: no unlabeled search icon here — search is the header button / Ctrl+K, and
+          Ctrl+F still finds text inside this chat. */}
 
       {activeAnchor && (
         <div

@@ -16,7 +16,7 @@ import { sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
 import { loadAllConversationMessagesPaged } from '@/renderer/utils/chat/messagePagination';
 import { blockMobileInputFocus, blurActiveElement } from '@/renderer/utils/ui/focus';
 import { Message, Modal } from '@arco-design/web-react';
-import { useCallback, useEffect, useState } from 'react';
+import { createElement, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -215,13 +215,23 @@ export const useConversationActions = ({
 
   const handleExport = useCallback(async (conversation: TChatConversation) => {
     setDropdownVisibleId(null);
-    try {
-      const messages = await loadAllConversationMessagesPaged(conversation.id, { contentMode: 'full' });
-      downloadTextContent(buildConversationMarkdown(conversation, messages), `${sanitizeFileName(conversation.name || 'Conversation')}.md`, 'text/markdown;charset=utf-8');
-    } catch (error) {
-      console.error('Failed to export conversation:', error);
-      Message.error('Could not export this chat.');
-    }
+    // CH polish: say what is about to happen, with the file name, before the save starts.
+    const fileName = `${sanitizeFileName(conversation.name || 'Conversation')}.md`;
+    Modal.confirm({
+      title: 'Export this chat?',
+      content: `Kel saves every message as “${fileName}” (a Markdown file). You choose where it goes next.`,
+      okText: 'Export',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          const messages = await loadAllConversationMessagesPaged(conversation.id, { contentMode: 'full' });
+          downloadTextContent(buildConversationMarkdown(conversation, messages), fileName, 'text/markdown;charset=utf-8');
+        } catch (error) {
+          console.error('Failed to export conversation:', error);
+          Message.error('Could not export this chat.');
+        }
+      },
+    });
   }, []);
 
   const handleMenuVisibleChange = useCallback((conversation_id: string, visible: boolean) => {
@@ -326,7 +336,32 @@ export const useConversationActions = ({
       try {
         await ipcBridge.sidebar.archive.invoke({ item_type: 'conversation', item_id: conversation.id });
         emitter.emit('chat.history.refresh');
-        Message.success(t('conversation.history.archiveSuccess'));
+        // CH polish: the archive toast offers Undo (the same unarchive the Archived page uses).
+        const toastId = `archive-${conversation.id}`;
+        const undo = async () => {
+          try {
+            await ipcBridge.sidebar.unarchive.invoke({ item_type: 'conversation', item_id: conversation.id });
+            emitter.emit('chat.history.refresh');
+            Message.success({ id: toastId, content: 'Moved back to your chats.' });
+          } catch (error) {
+            console.error('Failed to undo archive:', error);
+            Message.error({ id: toastId, content: 'Kel could not undo that. Find the chat in Settings > Archived.' });
+          }
+        };
+        Message.success({
+          id: toastId,
+          duration: 6000,
+          content: createElement(
+            'span',
+            { className: 'kel-toast-with-action' },
+            'Archived. ',
+            createElement(
+              'button',
+              { type: 'button', className: 'kel-toast-action', 'data-testid': 'archive-undo', onClick: (): void => void undo() },
+              'Undo'
+            )
+          ),
+        });
       } catch (error) {
         console.error('Failed to archive conversation:', error);
         Message.error(t('conversation.history.archiveFailed'));

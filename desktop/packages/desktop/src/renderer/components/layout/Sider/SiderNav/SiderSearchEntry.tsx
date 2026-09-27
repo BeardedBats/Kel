@@ -5,10 +5,9 @@
  */
 
 import React from 'react';
-import { Tooltip } from '@arco-design/web-react';
-import { useTranslation } from 'react-i18next';
+import { Search } from '@icon-park/react';
 import classNames from 'classnames';
-import ConversationSearchPopover from '@renderer/pages/conversation/GroupedHistory/ConversationSearchPopover';
+import { openKelCommandPalette } from '@renderer/components/kel/KelCommandPalette';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 
 interface SiderSearchEntryProps {
@@ -19,42 +18,31 @@ interface SiderSearchEntryProps {
   onSessionClick?: () => void;
 }
 
-const SiderSearchEntry: React.FC<SiderSearchEntryProps> = ({
-  isMobile,
-  collapsed,
-  siderTooltipProps,
-  onConversationSelect,
-  onSessionClick,
-}) => {
-  const { t } = useTranslation();
-
-  if (collapsed) {
-    return (
-      <Tooltip {...siderTooltipProps} content={t('conversation.historySearch.tooltip')} position='right'>
-        <div className='w-full'>
-          <ConversationSearchPopover
-            onSessionClick={onSessionClick}
-            onConversationSelect={onConversationSelect}
-            label={t('conversation.historySearch.shortTitle')}
-            buttonClassName='!w-full !h-32px !py-0 !px-0 !justify-center !rd-8px !hover:bg-fill-3 !active:bg-fill-4'
-          />
-        </div>
-      </Tooltip>
-    );
-  }
-
+/**
+ * CH-17: the phone sidebar's search entry opens the same search as the header button and
+ * Ctrl+K (the command palette in search mode). Picking a chat there navigates to it, so the
+ * sidebar is closed first to leave the result visible.
+ */
+const SiderSearchEntry: React.FC<SiderSearchEntryProps> = ({ isMobile, collapsed, onConversationSelect }) => {
+  const label = isMobile ? 'Search chats' : 'Search';
   return (
-    <Tooltip {...siderTooltipProps} content={t('conversation.historySearch.tooltip')} position='right'>
-      <div className='w-full'>
-        <ConversationSearchPopover
-          onSessionClick={onSessionClick}
-          onConversationSelect={onConversationSelect}
-          label={isMobile ? t('conversation.historySearch.mobileTitle', { defaultValue: 'Search chats' }) : t('conversation.historySearch.shortTitle')}
-          fullWidth
-          buttonClassName={classNames(isMobile && 'sider-action-btn-mobile')}
-        />
-      </div>
-    </Tooltip>
+    <button
+      type='button'
+      className={classNames(
+        'w-full flex items-center gap-8px border-none bg-transparent cursor-pointer text-t-primary',
+        collapsed ? 'justify-center h-32px rd-8px' : 'px-12px py-8px',
+        isMobile && 'sider-action-btn-mobile'
+      )}
+      aria-label={label}
+      data-testid='sider-search-entry'
+      onClick={() => {
+        onConversationSelect();
+        openKelCommandPalette('search');
+      }}
+    >
+      <Search theme='outline' size={16} fill='currentColor' />
+      {!collapsed && <span>{label}</span>}
+    </button>
   );
 };
 

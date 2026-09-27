@@ -15,7 +15,7 @@ export interface SlashCommandMenuItem {
   description?: string;
   badge?: string;
   highlightIndices?: number[];
-  source?: 'builtin' | 'acp' | 'skill';
+  source?: 'builtin' | 'acp' | 'skill' | 'recipe';
 }
 
 interface SlashCommandMenuProps {
@@ -94,6 +94,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
         items.map((item, index) => (
           <React.Fragment key={item.key}>
           {item.source === 'skill' && items[index - 1]?.source !== 'skill' && <div className='kel-slash-menu__group'>Skills</div>}
+          {item.source === 'recipe' && items[index - 1]?.source !== 'recipe' && <div className='kel-slash-menu__group'>Recipes</div>}
           <button
             key={item.key}
             type='button'

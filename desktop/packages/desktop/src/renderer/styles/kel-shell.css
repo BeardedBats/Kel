@@ -4519,3 +4519,6 @@ html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble .kel-shell-ramble-
 .kel-shell-backup-folder { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 .kel-shell-backup-folder .arco-input { flex: 1; min-width: 0; }
 .kel-shell-restore-confirm-copy p + p { margin-top: 8px; }
+/* CH polish: an inline action inside a toast (Archive → Undo). */
+.kel-toast-with-action { display: inline-flex; align-items: center; gap: 6px; }
+.kel-toast-action { padding: 0 4px; border: 0; background: transparent; color: #9fdaff; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
