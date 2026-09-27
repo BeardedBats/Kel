@@ -25,7 +25,11 @@ export const isTerminalPhase = (phase: KelHandoffPhase | undefined): boolean =>
 /** The card's headline for one phase — plain words, never a claim the records do not support.
  *  Settled phases use the shared state words (workLanguage.ts), so the card, Work, Activity and
  *  Home all describe one job the same way. */
+/** CP-3: the work finished and its result was checked, but the checks failed — not "not fully checked". */
+export const FAILED_CHECKS_HEADLINE = "Finished, but didn't pass its checks";
+
 export const workHeadline = (view: Pick<KelHandoff, 'phase' | 'accepted' | 'total' | 'verdict'>): string => {
+  if ((view.phase === 'needs_look' || view.phase === 'done') && view.verdict === 'FAILED') return FAILED_CHECKS_HEADLINE;
   switch (view.phase) {
     case 'starting':
       return 'Getting started…';
@@ -38,7 +42,7 @@ export const workHeadline = (view: Pick<KelHandoff, 'phase' | 'accepted' | 'tota
     case 'done':
       return workWords({ state: 'CLOSED', verdict: view.verdict }).label;
     case 'needs_look':
-      return view.verdict === 'FAILED' ? WORK_WORDS.FAILED.label : WORK_WORDS.UNCHECKED.label;
+      return WORK_WORDS.UNCHECKED.label;
     case 'stopped':
       return WORK_WORDS.CANCELLED.label;
     case 'failed_to_start':

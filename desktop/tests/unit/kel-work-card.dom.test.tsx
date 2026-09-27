@@ -94,9 +94,34 @@ describe('Kel work card', () => {
     expect(screen.queryByText('Done and checked')).toBeNull();
     expect(workHeadline({ phase: 'done', accepted: 1, total: 1, verdict: 'UNCERTAIN' })).toBe(
       'Finished — not fully checked');
-    expect(workHeadline({ phase: 'done', accepted: 0, total: 1, verdict: 'FAILED' })).toBe("Didn't pass its checks");
+    expect(workHeadline({ phase: 'done', accepted: 0, total: 1, verdict: 'FAILED' })).toBe("Finished, but didn't pass its checks");
     expect(workHeadline({ phase: 'needs_you', accepted: 0, total: 1, verdict: null })).toBe('Waiting for your OK');
     expect(workHeadline({ phase: 'stopped', accepted: 0, total: 1, verdict: null })).toBe('Stopped');
+  });
+
+  it('says a failed result finished but did not pass its checks', async () => {
+    install(async () => ({ ...base, phase: 'needs_look', state: 'CLOSED', verdict: 'FAILED', can_stop: false,
+      why: 'The result did not pass its checks.' }));
+    renderCard();
+    expect(await screen.findByText("Finished, but didn't pass its checks")).toBeTruthy();
+    expect(screen.queryByText(/not fully/)).toBeNull();
+  });
+
+  it('keeps one card through a restart with a change and follows the new title (D-55)', async () => {
+    const views: KelHandoff[] = [
+      base,
+      { ...base, title: 'Garden plan for spring, with tomatoes', phase: 'starting', job_id: null, state: null,
+        submission_state: 'PLANNING', accepted: 0, total: 0, can_stop: false },
+      { ...base, title: 'Garden plan for spring, with tomatoes', job_id: 'job-2', accepted: 0 },
+    ];
+    let index = 0;
+    install(async () => views[Math.min(index++, views.length - 1)]);
+    renderCard();
+    expect((await screen.findByTestId('kel-work-title')).textContent).toBe('Garden plan for spring');
+    await waitFor(() => expect(screen.getByTestId('kel-work-title').textContent).toBe('Garden plan for spring, with tomatoes'));
+    expect(await screen.findByText('Working on it · 0 of 3 parts checked')).toBeTruthy();
+    expect(screen.getAllByTestId('kel-work-card')).toHaveLength(1);
+    expect(screen.getByTestId('kel-work-title').textContent).toBe('Garden plan for spring, with tomatoes');
   });
 
   it('asks before stopping and then cancels through the engine control route', async () => {
