@@ -472,7 +472,13 @@ function applyDebugBackendStartupFailure(failure: BackendStartupFailureInfo): vo
 
 const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): void => {
   console.log('[Kel] Creating main window...');
-  const { x: windowX, y: windowY, width: windowWidth, height: windowHeight } = resolveInitialBounds();
+  const {
+    x: windowX,
+    y: windowY,
+    width: windowWidth,
+    height: windowHeight,
+    maximized: startMaximized,
+  } = resolveInitialBounds();
 
   // Get app icon for development mode (Windows/Linux need icon in BrowserWindow)
   // In production, icons are set via forge.config.ts packagerConfig
@@ -531,7 +537,9 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     const showWindow = () => {
       if (!mainWindow.isDestroyed() && !mainWindow.isVisible()) {
         console.log('[Kel] Showing main window');
-        mainWindow.show();
+        // maximize() also shows the window, so it replaces show() here.
+        if (startMaximized) mainWindow.maximize();
+        else mainWindow.show();
         mainWindow.focus();
       }
     };

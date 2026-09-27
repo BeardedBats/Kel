@@ -21,15 +21,16 @@ export type WindowBounds = {
   y?: number;
   width: number;
   height: number;
+  /** Whether the window was maximized when last closed. Absent on bounds saved by older builds. */
+  maximized?: boolean;
 };
 
 export const MIN_WINDOW_WIDTH = 400;
 export const MIN_WINDOW_HEIGHT = 600;
 
-// Default window fills 80% of the primary display horizontally and 95%
-// vertically. The tall aspect ratio favors chat / long-form content and
-// avoids the cramped strip shape that a square would have on ultrawide
-// monitors.
+// First launch opens maximized; the restored (un-maximized) size fills 90% of
+// the active display's work area so un-maximizing never shrinks to a small strip.
+const DEFAULT_WORK_AREA_FRACTION = 0.9;
 
 // Disk writes are debounced so dragging the window doesn't trigger dozens
 // of ProcessConfig.set calls per second.
@@ -47,14 +48,17 @@ export const resolveInitialBounds = (): WindowBounds => {
   const primary = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   const { width: screenWidth, height: screenHeight } = primary.workAreaSize;
   const defaults: WindowBounds = {
-    width: Math.min(1440, screenWidth - 64),
-    height: Math.min(960, screenHeight - 64),
+    width: Math.max(MIN_WINDOW_WIDTH, Math.round(screenWidth * DEFAULT_WORK_AREA_FRACTION)),
+    height: Math.max(MIN_WINDOW_HEIGHT, Math.round(screenHeight * DEFAULT_WORK_AREA_FRACTION)),
+    maximized: true,
   };
 
   if (!cachedBounds) return defaults;
   if (cachedBounds.width < MIN_WINDOW_WIDTH || cachedBounds.height < MIN_WINDOW_HEIGHT) return defaults;
   if (!boundsOverlapAnyDisplay(cachedBounds)) return defaults;
-  return cachedBounds;
+  // Bounds saved before maximize state was tracked open maximized once; the
+  // next save records the user's real choice.
+  return { ...cachedBounds, maximized: cachedBounds.maximized ?? true };
 };
 
 /**
@@ -80,9 +84,9 @@ const boundsOverlapAnyDisplay = (bounds: WindowBounds): boolean => {
 
 /**
  * Wire up resize/move/close listeners on a window so its size and position
- * round-trip through ProcessConfig. Skips persisting while the window is
- * maximized, fullscreen, or minimized — those are transient states whose
- * bounds would misrepresent the user's preferred "normal" size.
+ * round-trip through ProcessConfig. Maximized windows persist their normal
+ * (restore) bounds plus `maximized: true`; fullscreen and minimized are
+ * transient and skipped.
  *
  * Each write is registered with persistOnQuit so a resize immediately
  * followed by ⌘Q still flushes to disk before the app exits — otherwise the
@@ -108,8 +112,9 @@ export const attachWindowBoundsPersistence = (
 
   const saveNow = (): void => {
     if (win.isDestroyed()) return;
-    if (win.isMaximized() || win.isFullScreen() || win.isMinimized()) return;
-    fireWrite(win.getNormalBounds());
+    if (win.isFullScreen() || win.isMinimized()) return;
+    // getNormalBounds() is the restore size even while maximized.
+    fireWrite({ ...win.getNormalBounds(), maximized: win.isMaximized() });
   };
 
   const scheduleSave = () => {
@@ -119,6 +124,8 @@ export const attachWindowBoundsPersistence = (
 
   win.on('resize', scheduleSave);
   win.on('move', scheduleSave);
+  win.on('maximize', scheduleSave);
+  win.on('unmaximize', scheduleSave);
   win.on('close', () => {
     if (saveTimer) {
       clearTimeout(saveTimer);

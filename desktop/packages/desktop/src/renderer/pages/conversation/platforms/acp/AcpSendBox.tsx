@@ -76,6 +76,12 @@ const useAcpSendBoxDraft = getSendBoxDraftHook('acp', {
   uploadFile: [],
 });
 
+// Auto-created scratch folders (e.g. `acp-temp-c28d2d90`) are internal ids, not project names.
+const displayWorkspaceName = (workspace: string, scratchLabel: string): string => {
+  const folderName = workspace.split(/[\\/]/).filter(Boolean).pop() ?? '';
+  return /-temp-[0-9a-z]+$/i.test(folderName) ? scratchLabel : folderName;
+};
+
 const EMPTY_AT_PATH: Array<string | FileOrFolderItem> = [];
 const EMPTY_UPLOAD_FILES: string[] = [];
 
@@ -859,11 +865,6 @@ Please check your local CLI tool authentication status`,
         onRetryStart={teamRuntime?.onRetryStart ? () => void teamRuntime.onRetryStart?.() : undefined}
       />
       <CrossSessionDisabledBanner />
-      {composerControls && !isMobile && (
-        <div className='flex items-center gap-8px mb-8px flex-wrap min-w-0' data-kel-composer-controls>
-          {composerControls}
-        </div>
-      )}
       <SendBox
         onMobilePlusClick={isMobile ? () => setIsMobileSheetOpen(true) : undefined}
         value={content}
@@ -991,10 +992,17 @@ Please check your local CLI tool authentication status`,
         <div className='kel-shell-composer-footer' data-testid='acp-composer-footer'>
           {conversationContext?.workspace && (
             <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
-              <img src={footerFolderIcon} alt='' />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+              <img src={footerFolderIcon} alt='' />
+              {displayWorkspaceName(conversationContext.workspace, t('kel.composer.noProject', { defaultValue: 'No project' }))}
             </span>
           )}
           {modeControl}
+          {/* Kel: per-chat Tools live in the footer beside mode, not in an extra row above the composer. */}
+          {composerControls && (
+            <span className='kel-shell-composer-tools' data-kel-composer-controls>
+              {composerControls}
+            </span>
+          )}
           <ShellComposerMetrics usage={tokenUsage} contextLimit={context_limit} />
         </div>
       )}
