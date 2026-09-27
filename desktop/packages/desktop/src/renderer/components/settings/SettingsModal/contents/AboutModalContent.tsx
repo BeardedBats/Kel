@@ -138,11 +138,11 @@ const AboutModalContent: React.FC = () => {
 
   return (
     <div className='kel-shell-about'>
-      <KelCard title='Kel' actions={isElectron ? <Button className='kel-shell-about-update kel-desktop-only' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
+      <KelCard title='Kel' actions={isElectron ? <Button type='primary' className='kel-shell-about-update kel-desktop-only' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>
         {updateLabel}
       </Button> : undefined}>
         <div className='kel-shell-preference-row'><span>Version</span><span><span className='kel-desktop-only'>v{__APP_VERSION__}</span><span className='kel-phone-only'>{__APP_VERSION__.replace(/-/, ' · ')}</span></span></div>
-        <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'}<span className='kel-shell-about-runtime-detail'>{` · React ${React.version.split('.')[0]} · Arco Design`}</span></span></div>
+        <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'}<span className='kel-shell-about-runtime-detail'>{` · React ${React.version.split('.')[0]}`}</span></span></div>
         <div className='kel-shell-preference-row kel-shell-about-data-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
         <div className='kel-shell-preference-row kel-desktop-only kel-shell-about-notices-inline'><span>Third-party notices</span><button type='button' onClick={() => setShowNotices(true)}>View</button></div>
         {isElectron && <Button className='kel-shell-about-update kel-phone-only' loading={checking || updateReadyState.preparing} disabled={updateReadyState.preparing} onClick={() => void checkUpdate()}>{updateLabel}<Right theme='outline' size='16' /></Button>}

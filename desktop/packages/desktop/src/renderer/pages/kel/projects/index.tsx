@@ -269,7 +269,7 @@ export default function KelProjectsPage() {
             <ShellWorkspaceLink /><h1 className="kel-h1">{libraryView ? 'Recipes' : !isMobile && populatedKnowledge ? 'Knowledge' : 'Projects'}</h1>
           </div>
           <span className="kel-grow" />
-          {!libraryView && <KelButton variant="secondary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
+          {!libraryView && <KelButton variant="primary" disabled={proposals.length === 0} onClick={() => document.getElementById('project-suggestions')?.scrollIntoView({ block: 'center' })}>
             Kel suggests
           </KelButton>}
         </div>
@@ -420,7 +420,7 @@ export default function KelProjectsPage() {
             title="Project map"
             actions={<>
 
-              <KelButton variant="secondary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
+              <KelButton variant="primary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
                 <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
               </KelButton>
             </>}

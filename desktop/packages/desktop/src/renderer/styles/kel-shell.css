@@ -693,12 +693,44 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
   --success: var(--kel-figma-color-status-success); --warning: var(--kel-figma-color-accent-amber); --danger: #f27d7d;
   --kel-font-display: var(--kel-shell-heading);
 }
-.kel-v2-shell .arco-btn:not(.send-button-custom):not([data-testid='file-upload-btn']):not(.arco-btn-text) {
-  border: 1px solid var(--kel-figma-color-glass-button-edge); border-radius: 8px; min-height: 34px; padding: 0 14px;
-  color: var(--kel-text-1); background: linear-gradient(rgba(71,122,233,.1),rgba(71,122,233,.1)), rgba(15,45,100,.34); font-family: var(--kel-shell-heading); box-shadow: var(--kel-shell-button-shadow);
+/* ===== Kel button system (Figma Button v2, node 136:28) =====
+   Arco buttons and KelButton map onto one set of variants. Page-specific rules later in this file may
+   still refine a variant; icon-only buttons (composer, toolbars) are excluded and styled where they live.
+   Primary = page/card CTA · Secondary = glass boxed action · Link = inline/row action
+   Danger = destructive (once per page) · Confirm = approve/save in modals */
+.kel-v2-shell :is(.arco-btn:not(.arco-btn-icon-only):not(.send-button-custom):not([data-testid='file-upload-btn']), .kel-btn) {
+  align-items: center; justify-content: center; gap: 8px;
+  min-height: 34px; padding: 0 14px; border-radius: 8px; font-family: var(--kel-shell-heading);
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.kel-v2-shell .arco-btn:not(.arco-btn-text):not(:disabled):hover { border-color: rgba(183,198,220,.6); }
-.kel-v2-shell .arco-btn:disabled { opacity: .4; }
+.kel-v2-shell :is(.arco-btn:is(.arco-btn-secondary, .arco-btn-default, .arco-btn-outline):not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom):not([data-testid='file-upload-btn']), .kel-btn.kel-btn--secondary, .kel-btn:not([class*='kel-btn--'])) {
+  border: 1px solid var(--kel-figma-color-glass-button-edge, rgba(140,150,167,.5));
+  background: linear-gradient(rgba(71,122,233,.1),rgba(71,122,233,.1)), rgba(15,45,100,.34);
+  box-shadow: var(--kel-shell-button-shadow); color: var(--kel-figma-color-text-button, #e4dccf); font-weight: 500; font-size: 14px; line-height: 20px;
+}
+.kel-v2-shell :is(.arco-btn:is(.arco-btn-secondary, .arco-btn-default, .arco-btn-outline):not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom):not([data-testid='file-upload-btn']), .kel-btn.kel-btn--secondary, .kel-btn:not([class*='kel-btn--'])):not(:disabled):not(.arco-btn-disabled):hover { border-color: rgba(183,198,220,.6); background: linear-gradient(rgba(71,122,233,.16),rgba(71,122,233,.16)), rgba(15,45,100,.4); }
+.kel-v2-shell :is(.arco-btn:is(.arco-btn-secondary, .arco-btn-default, .arco-btn-outline):not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom):not([data-testid='file-upload-btn']), .kel-btn.kel-btn--secondary, .kel-btn:not([class*='kel-btn--'])):not(:disabled):not(.arco-btn-disabled):active { background: linear-gradient(rgba(71,122,233,.04),rgba(71,122,233,.04)), rgba(6,18,46,.5); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
+.kel-v2-shell :is(.arco-btn.arco-btn-primary:not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom), .kel-btn.kel-btn--primary) {
+  border: 1px solid rgba(140,150,167,.5); background: linear-gradient(180deg,#6493f8,#2356b3);
+  box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1); color: #fff1f0; font-weight: 600; font-size: 14px; line-height: 20px;
+}
+.kel-v2-shell :is(.arco-btn.arco-btn-primary:not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom), .kel-btn.kel-btn--primary):not(:disabled):not(.arco-btn-disabled):hover { background: linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.08)), linear-gradient(180deg,#6493f8,#2356b3); color: #fff1f0; border-color: rgba(140,150,167,.5); }
+.kel-v2-shell :is(.arco-btn.arco-btn-primary:not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom), .kel-btn.kel-btn--primary):not(:disabled):not(.arco-btn-disabled):active { background: linear-gradient(rgba(10,20,48,.18),rgba(10,20,48,.18)), linear-gradient(180deg,#6493f8,#2356b3); }
+.kel-v2-shell .kel-btn.kel-btn--confirm { border: 1px solid rgba(140,150,167,.5); background: linear-gradient(180deg,#2e7939,#1f5e30); box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1); color: #fff1f0; font-weight: 600; font-size: 14px; }
+.kel-v2-shell .kel-btn.kel-btn--confirm:not(:disabled):hover { background: linear-gradient(180deg,#358846,#246b37); }
+.kel-v2-shell .kel-btn.kel-btn--confirm:not(:disabled):active { background: linear-gradient(180deg,#276a31,#1a5129); }
+.kel-v2-shell :is(.arco-btn.arco-btn-status-danger:not(.arco-btn-text):not(.arco-btn-icon-only), .kel-btn.kel-btn--danger) {
+  border: 0; background: linear-gradient(180deg,#a6443f,#8b312d); box-shadow: 0 2px 6px rgba(6,18,46,.3), inset 0 1px 0 rgba(255,255,255,.2); color: #fff1f0; font-weight: 600; font-size: 14px;
+}
+.kel-v2-shell :is(.arco-btn.arco-btn-status-danger:not(.arco-btn-text):not(.arco-btn-icon-only), .kel-btn.kel-btn--danger):not(:disabled):not(.arco-btn-disabled):hover { background: linear-gradient(180deg,#b24c48,#963733); color: #fff1f0; }
+.kel-v2-shell :is(.arco-btn.arco-btn-status-danger:not(.arco-btn-text):not(.arco-btn-icon-only), .kel-btn.kel-btn--danger):not(:disabled):not(.arco-btn-disabled):active { background: linear-gradient(180deg,#8b312d,#752622); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
+.kel-v2-shell :is(.arco-btn.arco-btn-text:not(.arco-btn-icon-only), .kel-btn.kel-btn--quiet, .kel-btn.kel-btn--link) { min-height: 34px; padding: 0 4px; border: 0; background: transparent; box-shadow: none; color: #9fc3ff; font-weight: 600; font-size: 14px; line-height: 20px; }
+.kel-v2-shell :is(.arco-btn.arco-btn-text:not(.arco-btn-icon-only), .kel-btn.kel-btn--quiet, .kel-btn.kel-btn--link):not(:disabled):not(.arco-btn-disabled):hover { background: transparent; color: #edf2fa; text-decoration: underline; }
+.kel-v2-shell :is(.arco-btn.arco-btn-text:not(.arco-btn-icon-only), .kel-btn.kel-btn--quiet, .kel-btn.kel-btn--link):not(:disabled):not(.arco-btn-disabled):active { background: transparent; color: #7fa0ff; box-shadow: none; }
+.kel-v2-shell .arco-btn.arco-btn-text.arco-btn-status-danger:not(.arco-btn-icon-only) { color: #f9a3a3; }
+.kel-v2-shell :is(.arco-btn, .kel-btn):is(:disabled, .arco-btn-disabled) { opacity: .45; box-shadow: none; cursor: not-allowed; }
+.kel-v2-shell :is(.arco-btn.arco-btn-status-danger, .kel-btn--danger, .arco-btn-text, .kel-btn--quiet):is(:disabled, .arco-btn-disabled) { opacity: .4; }
+.kel-v2-shell :is(.arco-btn, .kel-btn):focus-visible { outline: 2px solid #9fc3ff; outline-offset: 2px; box-shadow: none; }
 .kel-v2-shell .kel-shell-ramble [data-testid='record-button'] { background: linear-gradient(var(--kel-figma-color-danger-top),var(--kel-figma-color-danger-bottom)); }
 .kel-v2-shell .arco-empty-image { display: none; }
 .kel-v2-shell .arco-empty { padding: 16px 10px; text-align: left; }
@@ -748,7 +780,8 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
   .kel-shell-ramble-folders, .kel-shell-ramble [data-testid='recent-list'] { flex: none; max-height: none; overflow: visible; }
 }
 [data-theme='light'] .kel-v2-shell :is(.kel-shell-settings-card, .settings-page-content .kel-card) { background: var(--bg-1,#fff) !important; border-color: var(--kel-border-strong); }
-[data-theme='light'] .kel-v2-shell .arco-btn:not(.send-button-custom):not(.arco-btn-text) { background: var(--kel-surface-1); color: var(--kel-text-1); border-color: var(--kel-border-strong); box-shadow: none; }
+[data-theme='light'] .kel-v2-shell :is(.arco-btn:is(.arco-btn-secondary, .arco-btn-default, .arco-btn-outline):not(.arco-btn-icon-only):not(.arco-btn-status-danger):not(.send-button-custom):not([data-testid='file-upload-btn']), .kel-btn.kel-btn--secondary, .kel-btn:not([class*='kel-btn--'])) { background: var(--kel-surface-1); color: var(--kel-text-1); border-color: var(--kel-border-strong); box-shadow: none; }
+[data-theme='light'] .kel-v2-shell :is(.arco-btn.arco-btn-text:not(.arco-btn-icon-only), .kel-btn.kel-btn--quiet, .kel-btn.kel-btn--link) { color: var(--kel-accent); }
 [data-theme='light'] .kel-v2-shell :is(.kel-shell-ramble .arco-input, .settings-page-content .arco-input-wrapper, .settings-page-content .arco-select-view) { background: var(--bg-1); border-color: var(--kel-border); }
 html[style*='--kel-shell-custom-panel'] .kel-v2-shell .kel-shell-settings-card { background: var(--kel-shell-custom-panel) !important; }
 html[style*='--kel-shell-custom-elevated'] :is(.arco-modal, .arco-drawer-content, .arco-dropdown-menu, .arco-select-popup) { background: var(--kel-shell-custom-elevated) !important; }
@@ -857,7 +890,6 @@ html[data-theme='dark'] .kel-shell-model-modal .arco-input { background: transpa
 .kel-v2-shell .kel-shell-settings-card > .text-14px:first-child,
 .kel-v2-shell .kel-shell-settings-card > div:first-child > .text-14px:first-child { font: 700 15px/20px var(--kel-shell-heading); color: var(--kel-figma-color-text-card-title); }
 .kel-v2-shell :is(.kel-shell-theme-color-row > .w-160px, .kel-shell-preference-row, .kel-row > label) { font: 500 14px/20px var(--kel-shell-heading); }
-.kel-v2-shell .arco-btn:not(.send-button-custom) { font: 500 14px/20px var(--kel-shell-heading); color: var(--kel-figma-color-text-button); }
 .kel-v2-shell .kel-shell-ramble [data-testid='record-button'] { font-weight: 600; color: var(--kel-figma-color-danger-text); }
 .kel-v2-shell .kel-shell-ramble [data-testid='transcript-text'] { font: 400 15px/26px var(--kel-shell-body); }
 .kel-v2-shell .kel-shell-composer .sendbox-model-btn { font: 600 14px/20px var(--kel-shell-heading); color: var(--kel-figma-color-text-accent); }
@@ -1452,7 +1484,6 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header { margin: 0 0 24px; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header p { display: none; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header h1 { font: 600 20px/26px var(--kel-shell-heading); }
-.kel-v2-shell .kel-in-chat-frame__pane .kel-btn { box-shadow: none; backdrop-filter: contrast(1.55) saturate(1.25); }
 .kel-v2-shell .kel-in-chat-frame__pane :is(.kel-shell-model-description, [data-testid='tools-header']) { display: none; }
 .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] { gap: 0; margin-bottom: 0; }
 .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > .kel-shell-source-card-head { margin-bottom: 10px; }
@@ -4039,12 +4070,6 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
 .kel-shell-composer-tools > * > button { height: 24px; padding: 0 4px !important; border: 0 !important; background: transparent !important; color: var(--kel-text-2) !important; font: 400 12px/16px var(--kel-shell-body); }
 .kel-shell-composer-tools > * > button:hover { color: var(--kel-text-1); }
 
-/* Primary Kel button (Figma "Add a service" / "Set up"): the base rule was only defined per page, so bare
-   .kel-btn--primary rendered as secondary. Page-specific variants above still win by specificity. */
-.kel-v2-shell .kel-btn--primary, .kel-workspace-form .kel-btn--primary { border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#6493f8,#2356b3); color: #fff; box-shadow: inset 0 1px rgba(255,255,255,.1), 0 4px 6px rgba(0,0,0,.25); }
-.kel-v2-shell .kel-btn--primary:hover, .kel-workspace-form .kel-btn--primary:hover { background: linear-gradient(#739ef9,#2a60c2); border-color: rgba(183,198,220,.6); }
-.kel-v2-shell .kel-btn--primary:active, .kel-workspace-form .kel-btn--primary:active { background: linear-gradient(#4f7fe6,#1d4a9c); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
-
 /* Header workspace switcher (portal to body, so styles are not scoped under .kel-v2-shell). */
 .kel-workspace-menu { width: 300px; }
 .kel-workspace-menu__label { margin: 4px 10px 6px; color: #8fa9d6; font: 500 12px/16px var(--kel-shell-heading); }
@@ -4129,3 +4154,34 @@ body:has(.kel-v2-shell) .arco-popconfirm .arco-popconfirm-title-text { color: #e
 body:has(.kel-v2-shell) .arco-popconfirm .arco-popover-arrow { display: none !important; }
 body:has(.kel-v2-shell) .arco-popconfirm .arco-btn-primary { border: 1px solid rgba(140,150,167,.5) !important; background: linear-gradient(#6493f8,#2356b3) !important; color: #fff1f0 !important; }
 body:has(.kel-v2-shell) .arco-popconfirm .arco-btn-secondary { border: 0 !important; background: transparent !important; color: #9fc3ff !important; }
+.kel-workspace-form .kel-btn--primary { border: 1px solid rgba(140,150,167,.5); background: linear-gradient(180deg,#6493f8,#2356b3); color: #fff1f0; box-shadow: 0 4px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.1); }
+.kel-workspace-form .kel-btn--primary:not(:disabled):hover { background: linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.08)), linear-gradient(180deg,#6493f8,#2356b3); }
+
+/* Sidebar (Figma Home 185:2658): active bottom-nav item is warm text with no pill; Settings is not
+   highlighted on other pages; rows are 28px on a 32px pitch with 500 weight labels. */
+.kel-v2-shell .kel-bottom-nav__item[aria-current='page'] { background: transparent; border-color: transparent; color: #ffd497; }
+.kel-v2-shell .kel-bottom-nav__item[data-section='settings']:not([aria-current='page']) { color: var(--kel-text-2); }
+html[data-theme='light'] body .kel-v2-shell .kel-bottom-nav__item[data-section='settings']:not([aria-current='page']) { color: var(--kel-text-2); }
+html[data-theme='light'] body .kel-v2-shell .kel-bottom-nav__item[aria-current='page'] { color: var(--kel-status-attention-text); }
+.kel-v2-shell .sider-section-title { color: var(--kel-figma-color-text-section-label, #9fc3ff); }
+.kel-v2-shell .conversation-item { margin-bottom: 4px; }
+.kel-v2-shell .conversation-item .chat-history__item-name { font-weight: 500; line-height: 20px; }
+/* Row "⋮" trigger: no grey square over the title; just the icon on hover/selected. */
+.kel-v2-shell .conversation-item :is(.arco-btn, button):is([aria-haspopup], .arco-dropdown-popup-visible, [class*='more'], [class*='menu']) { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+/* Toast v2 values (Figma component): glass, 14px medium text, 10px radius. */
+body:has(.kel-v2-shell) .arco-message {
+  padding: 8px 14px 8px 12px !important; border-color: rgba(191,216,255,.14) !important;
+  background: linear-gradient(180deg, rgba(191,216,255,.08), transparent), rgba(15,45,100,.4) !important;
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  box-shadow: 0 20px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(191,216,255,.18) !important; font: 500 14px/20px var(--kel-shell-heading) !important;
+}
+html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message { border-color: rgba(191,216,255,.14) !important; background: linear-gradient(180deg, rgba(191,216,255,.08), transparent), rgba(15,45,100,.4) !important; }
+
+/* Composer controls per Figma: model trigger 600 weight; mic 28×28; send 36×36 r10 with 22px icons. */
+.kel-v2-shell .kel-desktop-model-trigger { height: 28px; padding: 0 8px 0 10px; border-radius: 8px; font-weight: 600; }
+.kel-v2-shell .kel-desktop-model-trigger > svg { width: 16px; height: 16px; }
+.kel-v2-shell :is(.sendbox-inline-actions, .kel-shell-composer-submit) [aria-label='Record a message'] { width: 28px; min-width: 28px; height: 28px; padding: 0; justify-content: center; border-radius: 8px; }
+.kel-v2-shell :is(.sendbox-inline-actions, .kel-shell-composer-submit) [aria-label='Record a message'] svg { width: 20px; height: 20px; }
+.kel-v2-shell :is(.sendbox-send-tooltip-anchor, .kel-shell-composer-submit) .arco-btn:not(.sendbox-stop-button) { width: 36px !important; min-width: 36px !important; height: 36px !important; border-radius: 10px !important; }
+.kel-v2-shell .sendbox-send-tooltip-anchor { width: 36px; height: 36px; }

@@ -456,7 +456,7 @@ const ArchivedSettings: React.FC = () => {
             onClick={() => handleDelete(row)}
           ><span className='kel-desktop-only'>Delete</span></Button>
           <Button
-            type='secondary'
+            type='primary'
             size='mini'
             className='kel-shell-archive-unarchive !h-28px !rounded-8px !px-10px'
             onClick={() => void handleRestore(row)}

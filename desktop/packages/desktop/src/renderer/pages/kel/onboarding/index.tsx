@@ -195,7 +195,7 @@ export default function KelOnboardingPage() {
         <KelCard title='Where work happens'>
           <div className='kel-row'>
             <div><div>Workspace folder</div><div className='kel-meta'>{isMobile ? (project === 'default' ? 'General' : project || 'Loading…') : workspace || 'No folder selected'}</div></div>
-            <span className='kel-grow' /><KelButton disabled={workspaceBusy} onClick={() => isMobile ? navigate('/projects') : void chooseWorkspace()}>Change</KelButton>
+            <span className='kel-grow' /><KelButton variant="primary" disabled={workspaceBusy} onClick={() => isMobile ? navigate('/projects') : void chooseWorkspace()}>Change</KelButton>
           </div>
         </KelCard>
 

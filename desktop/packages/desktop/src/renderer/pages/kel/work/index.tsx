@@ -242,7 +242,7 @@ const WorkCenter: React.FC = () => {
             <ShellWorkspaceLink /><h1 className="kel-h1">Work</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" disabled={!activeJob || busy} onClick={() => activeJob && void act('Recipe draft', async () => { setRecipeDraft(await kelRecipePropose(activeJob.id)); })}>
+          <KelButton variant="primary" disabled={!activeJob || busy} onClick={() => activeJob && void act('Recipe draft', async () => { setRecipeDraft(await kelRecipePropose(activeJob.id)); })}>
             Save as a recipe
           </KelButton>
         </div>

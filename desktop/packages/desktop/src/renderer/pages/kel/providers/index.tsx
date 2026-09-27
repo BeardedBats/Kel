@@ -172,7 +172,7 @@ const Providers: React.FC = () => {
 
           </div>
           <span className="kel-grow" />
-          <KelButton variant="secondary" onClick={() => void runReadiness()} disabled={busy}>
+          <KelButton variant="primary" onClick={() => void runReadiness()} disabled={busy}>
             {busy ? "Checking…" : "Run preflight"}
           </KelButton>
         </div>

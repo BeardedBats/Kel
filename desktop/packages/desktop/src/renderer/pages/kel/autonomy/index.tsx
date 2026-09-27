@@ -113,7 +113,7 @@ export default function KelAutonomyPage() {
             <ShellWorkspaceLink /><h1 className="kel-h1">Permissions</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton onClick={() => setAdvanced(value => !value)}>Run check</KelButton>
+          <KelButton variant="primary" onClick={() => setAdvanced(value => !value)}>Run check</KelButton>
         </div>
 
         {stopArmed && (
