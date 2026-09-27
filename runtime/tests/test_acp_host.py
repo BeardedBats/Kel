@@ -42,6 +42,17 @@ class ACPHostTests(unittest.TestCase):
                                 'reply': 'Okay - %s follows your choice in this conversation.' % body.get('capability', 'it')})
                     return
                 owner.requests.append((self.path, body))
+                if self.path == '/api/cancel':
+                    # CH-3: the engine stops a reply still being answered and posts one note.
+                    sub = next(s for s in owner.state['submissions'] if s['id'] == body['id'])
+                    if sub.get('ack_seq') or sub.get('job_id') or sub['state'] != 'PLANNING':
+                        self.reply({'cancelled': False, 'handed_off': bool(sub.get('ack_seq')), 'state': sub['state']})
+                        return
+                    sub.update(state='CANCELLED')
+                    seq = len(owner.state['messages']) + 100
+                    owner.state['messages'].append({'seq': seq, 'role': 'assistant', 'text': 'You stopped this reply.'})
+                    self.reply({'cancelled': True, 'message_seq': seq, 'state': 'CANCELLED'})
+                    return
                 if self.path == '/api/send':
                     # Keep one row per submission id; concurrent prompts share the engine.
                     subs = [s for s in owner.state['submissions'] if s['id'] != body['id']]
@@ -236,6 +247,36 @@ class ACPHostTests(unittest.TestCase):
         result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
         self.assertEqual(result['stopReason'], 'cancelled')
         self.assertFalse(any(path == '/api/control' for path, _ in self.requests))
+        # CH-3: the engine is told to stop the in-flight reply, and the chat says so once.
+        sid = [body for path, body in self.requests if path == '/api/send'][0]['id']
+        self.assertIn(('/api/cancel', {'id': sid, 'conversation': 'c1'}), self.requests)
+        texts = [e['params']['update']['content']['text'] for e in self.events
+                 if e['params']['update'].get('sessionUpdate') == 'agent_message_chunk']
+        self.assertEqual(texts, ['You stopped this reply.\n\n'])
+
+    def test_a_stopped_reply_never_streams_into_the_next_turn(self):
+        def planning(state):
+            state['submissions'][-1].update(state='PLANNING')
+            state['messages'].clear()
+            self.host.dispatch('session/cancel', {'sessionId': 'kel:c1'})
+        self.send_hook = planning
+        self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.events.clear()
+        self.send_hook = None
+        result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'next'}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        texts = [e['params']['update']['content']['text'] for e in self.events
+                 if e['params']['update'].get('sessionUpdate') == 'agent_message_chunk']
+        self.assertEqual(texts, ['Real HTTP reply\n\n'])
+
+    def test_stop_after_the_reply_landed_shows_that_reply(self):
+        def answered(state):
+            state['submissions'][0].update(state='SETTLED')
+            self.host.dispatch('session/cancel', {'sessionId': 'kel:c1'})
+        self.send_hook = answered
+        result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        self.assertIn('Real HTTP reply', self.events[0]['params']['update']['content']['text'])
 
     def test_stop_never_cancels_handed_off_work(self):
         def acknowledged(state):

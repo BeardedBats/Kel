@@ -39,6 +39,10 @@ PLAIN_STATES = {
 }
 
 
+# CH-3: what the chat shows when the person stops a reply (the engine posts the same note).
+STOPPED_NOTE = 'You stopped this reply.'
+
+
 def _plain_state(status):
     return PLAIN_STATES.get(str(status), 'Kel is working on it')
 
@@ -383,6 +387,7 @@ class ACPHost:
             seen = {m['seq'] for m in baseline['messages']}
             last_status = None
             cancelled_job = None
+            stop_sent = False
             while not self.closed.is_set():
                 state = self.client.state(cid)
                 submission = next((s for s in state['submissions'] if s['id'] == sid), None)
@@ -403,10 +408,28 @@ class ACPHost:
                                           'status': 'pending', 'rawInput': {'submission_id': sid}})
                     self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
-                if active['cancel'].is_set() and not submission.get('job_id'):
-                    # Stop ends this reply only. Work Kel has already started keeps running; its own
-                    # card is where it can be stopped.
+                if submission['state'] == 'CANCELLED':
+                    # Stopped (here or from another window): the engine dropped the reply and
+                    # posted its own note, which the loop above has already streamed.
                     return {'stopReason': 'cancelled'}
+                if active['cancel'].is_set() and not submission.get('job_id') and not stop_sent:
+                    # CH-3: Stop ends this reply only, and really ends it: the engine stops the
+                    # in-flight answer and drops whatever it returns later, so no late reply can
+                    # surface in the next turn. Work already handed off keeps running; its card is
+                    # where it can be stopped (D-53).
+                    stop_sent = True
+                    try:
+                        stopped = self.client.call('/api/cancel', {'id': sid, 'conversation': cid})
+                    except Exception:
+                        stopped = None
+                    if stopped is None:
+                        return {'stopReason': 'cancelled'}  # an older engine: end the turn as before
+                    if stopped.get('cancelled'):
+                        seen.add(stopped.get('message_seq'))
+                        self.text(session, STOPPED_NOTE + '\n\n')
+                        return {'stopReason': 'cancelled'}
+                    # Already answered or handed off: the next poll shows that answer or the card.
+                    continue
                 if submission['state'] in ('FAILED', 'INTERRUPTED'):
                     self.text(session, 'Kel could not plan this request: ' + (submission.get('error') or submission['state']))
                     self._resurface(session, cid)
