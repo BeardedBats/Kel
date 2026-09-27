@@ -16,7 +16,12 @@ import * as path from 'path';
 
 export type WorkspaceDonorConversation = {
   id: string;
-  extra?: { workspace?: unknown; custom_workspace?: unknown; is_temporary_workspace?: unknown } | null;
+  extra?: {
+    workspace?: unknown;
+    custom_workspace?: unknown;
+    is_temporary_workspace?: unknown;
+    kel_conversation_id?: unknown;
+  } | null;
 };
 
 export type WorkspaceRepair = { id: string; from: string; to: string };

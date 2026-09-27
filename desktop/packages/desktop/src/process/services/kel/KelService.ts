@@ -392,17 +392,17 @@ export async function initializeKel(port: number): Promise<void> {
       Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
   const saved = await kelRequest('/api/state');
   console.log('[KEL-BOOT] initializeKel engine state ok');
-  const catalog = await core('/api/conversations?page_size=200');
   // Re-home Kel scratch folders that point at a missing or moved data root (e.g. the removed
   // KelV2Runs root) so those chats open instead of failing with a workspace-path error. Archived
-  // chats are included, and every active chat is read (the catalog above is capped at 20 rows).
+  // chats are included, and every active chat is read (a plain catalog read is capped at 20 rows).
   const repairCandidates = await listConversationsForRepair((route) => core(route));
   const workspaceRepairs = await applyWorkspaceRepairs(planWorkspaceRepairs(repairCandidates, root), (id, workspace) =>
     core('/api/conversations/' + encodeURIComponent(id), { extra: { workspace }, merge_extra: true }, 'PATCH')
   );
   if (workspaceRepairs.length) console.log('[KEL-BOOT] re-homed chat folders: ' + workspaceRepairs.length);
-  for (const donor of catalog.items || [])
-    if (donor.extra?.kel_conversation_id) mapping[donor.id] = donor.extra.kel_conversation_id;
+  // The same full list feeds the chat mapping, so chats past the first 20 keep their engine link.
+  for (const donor of repairCandidates)
+    if (typeof donor.extra?.kel_conversation_id === 'string') mapping[donor.id] = donor.extra.kel_conversation_id;
   const mapped = new Set(Object.values(mapping));
   // ST-23: one grouped engine query says which conversations are empty, so start-up never reads
   // each empty chat's full state. An older engine without the route falls back to reading each.
