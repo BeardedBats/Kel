@@ -1079,6 +1079,9 @@ export interface KelJobRoute {
   at?: number;
 }
 
+/** `/api/state` scope for every conversation's work (Work, Activity, Permissions, Needs you, palette). */
+export const KEL_ALL_CONVERSATIONS = '*';
+
 export const kelState = (conversation = 'main') =>
   call<{
     jobs: KelWorkJob[];

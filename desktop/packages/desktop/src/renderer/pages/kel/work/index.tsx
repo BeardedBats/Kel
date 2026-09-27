@@ -23,7 +23,7 @@ import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLanguage';
 import { selectedWorkJob, currentWorkStep, workContinuationInstruction } from '@renderer/components/kel/workViewState';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
-import {
+import { KEL_ALL_CONVERSATIONS,
   kelArtifact,
   kelControl,
   kelApproval,
@@ -103,7 +103,7 @@ const WorkCenter: React.FC = () => {
   const load = useCallback(async () => {
     try {
       const [state, team, providers] = await Promise.all([
-        kelState(),
+        kelState(KEL_ALL_CONVERSATIONS),
         kelTeam.office('default'),
         // D19: the route sentence names providers the way a person knows them, so the inventory
         // of names is read alongside the state (never the engine's raw ids).

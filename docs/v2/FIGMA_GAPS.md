@@ -1,5 +1,20 @@
 # Active Figma gaps after audit 2
 
+## Desktop inferences — 2026-09-26 (UI unification pass)
+
+States Nick asked for that have no Figma frame. Each reuses the nearest component family; none is claimed as exact parity.
+
+| State | Nearest Figma source | Inference | Implementation |
+| --- | --- | --- | --- |
+| Working / thinking indicator | Chat turn meta row (K mark + 13px heading type) in `185:4284` | Pulsing Kel mark + shimmering "Thinking…" + muted elapsed seconds, no card or spinner; reduced motion stops animation. Replaces the donor "Processing" bar. | `KelThinkingIndicator.tsx`, `ThoughtDisplay.tsx`, `MessageThinking.tsx` |
+| Header Workspace menu | Header `Workspace ⌄` chip; Project picker `273:9512` | The chip opens a project-picker-style menu: engine Projects (plumbing projects for scratch/temp/data folders hidden), active check, "No workspace", "New workspace" (name + optional folder), "Open Projects". Workspace = engine Project; no new abstraction. Chip label shows the active name. | `ShellWorkspaceLink.tsx`, `activeWorkspace.ts` |
+| Per-chat Tools control | Composer footer crumbs in `185:4284` | Moved from an extra row above the composer into the footer beside mode, styled as a footer crumb. | `AcpSendBox.tsx` |
+| Draft button | none | Shown only while Kel is busy; Ctrl+Enter still drafts any time. Styled like the plain + button. | `SendBox/index.tsx` |
+| Scratch-folder footer label | Footer project crumb | Auto-created `*-temp-*` folders read "No project" (JR-17). | `AcpSendBox.tsx` |
+| Donor toasts / notifications / confirm dialogs | Toast in `273:13646`; Confirm delete `273:11796` | All Arco Message/Notification/Modal.confirm/Popconfirm take the Toast v2 and modal values in both themes; toasts sit bottom-centre above the composer. | `kel-shell.css` |
+| Engine start failure in chat | Chat — Agent error `273:13090` | Plain-text engine failures render as the agent-error card with a plain reason, Pick another model, Try again, raw reason under Details. | `KelEngineFailureCard.tsx` |
+| Background work card | Tool-call rows `273:12914` | D-53 hand-off card: live phase, View in Activity, confirmed Stop. | `KelWorkCard.tsx` |
+
 ## Current revision gaps (2026-09-25)
 
 The live desktop page is `319:2`; the live mobile page is `319:3858`. The older source IDs and findings below are **SUPERSEDED BY FIGMA REVISION** where they describe presentation. Keep them as history. The [current frame inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) tracks the new source.
