@@ -4,8 +4,10 @@ No VM, no container platform, no rewritten sandbox — the directive's §18 list
 Kel already has:
 
 * `assert_usable_root` — Kel refuses to snapshot or modify sensitive locations: Windows and Program
-  Files, the user's credential folders, anything inside Kel's own data root, and any extra paths the
-  environment protects through `KEL_PROTECTED_PATHS` (the desktop sets its stable-app folders there).
+  Files, the user's credential folders, anything inside Kel's own data (the engine root and, in the
+  installed layout, the whole `Data` tree), the installed app it runs from, and any extra paths the
+  environment protects through `KEL_PROTECTED_PATHS`. `kel.authorize` applies the same check to
+  every write, so Full access (D-64) can never reach them either.
 * `session_dir` / `cleanup_session` — one disposable temp directory per run, pointed at by
   TMP/TEMP/TMPDIR for the child and removed when the run's transport returns.
 * `scrub_secrets` — the child environment keeps the credentials it needs and loses every
@@ -57,6 +59,40 @@ def _protected_roots():
     return [Path(part.strip()) for part in raw.split(';') if part.strip()]
 
 
+def data_roots(store=None):
+    """Kel's own durable data: the engine root and, in the installed layout, the whole Data tree.
+
+    The installed app keeps one tree beside App — `Data\\{engine,store,host}` — with the engine at
+    `Data\\engine`. The shell also names its folders through AIONUI_DATA_DIR / KEL_HOST_DATA_DIR.
+    Every one of them is Kel's own state, never a work target (D-64 keeps handoff §21 intact).
+    """
+    roots = []
+    if store is not None:
+        engine = Path(store.root)
+        roots.append(engine)
+        parent = engine.parent
+        if engine.name.lower() == 'engine' and any((parent / name).is_dir() for name in ('store', 'host')):
+            roots.append(parent)
+    for key in ('KEL_DATA_DIR', 'AIONUI_DATA_DIR', 'KEL_HOST_DATA_DIR'):
+        value = os.environ.get(key)
+        if value:
+            roots.append(Path(value))
+    return roots
+
+
+def app_roots():
+    """The installed Kel app: when the engine runs frozen inside it, the folder holding Kel.exe."""
+    import sys
+    roots = []
+    if getattr(sys, 'frozen', False):
+        here = Path(sys.executable).resolve().parent
+        for candidate in (here, *here.parents):
+            if (candidate / 'Kel.exe').exists():
+                roots.append(candidate)
+                break
+    return roots
+
+
 def _inside(target, root):
     try:
         resolved = Path(root).resolve()
@@ -80,11 +116,12 @@ def sensitive_reason(path, store=None):
     for root in _credential_roots():
         if _inside(target, root):
             return 'your credentials folder'
-    for root in _protected_roots():
+    for root in _protected_roots() + app_roots():
         if _inside(target, root):
             return 'a protected app folder'
-    if store is not None and _inside(target, store.root):
-        return "Kel's own data folder"
+    for root in data_roots(store):
+        if _inside(target, root):
+            return "Kel's own data folder"
     return None
 
 

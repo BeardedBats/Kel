@@ -24,6 +24,7 @@ import urllib.request
 from pathlib import Path
 from unittest import mock
 
+from kel import authority
 from kel import connection_actions
 from kel import service as kel_service
 from kel.autonomy import Autonomy
@@ -108,6 +109,8 @@ class BridgeJourney(unittest.TestCase):
         self.addCleanup(self._cleanup)
         self.root = Path(self.tmp.name) / 'engine'
         self.root.mkdir(parents=True)
+        # The confirmation flow is the Ask first path (D-64 made Full access the default).
+        authority.set_mode(Store(str(self.root)), 'ask')
         self.stub = LocalService()
         self.addCleanup(self.stub.stop)
         self.engine = threading.Thread(target=kel_service.serve,

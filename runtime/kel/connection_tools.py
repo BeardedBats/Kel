@@ -211,7 +211,16 @@ def call(store, action_id, params=None, connection_id=None, job=None, run=None,
                          'before it can use it.' % connection['name'])}
 
     confirmed = False
-    if row.get('mutating'):
+    from . import authority
+    if row.get('mutating') and authority.is_full(store):
+        # D-64 Full access: a Connection write goes ahead without an OK. When it runs inside a
+        # piece of work the approval is recorded on that job (actor full-access) for Activity;
+        # the call itself is recorded in the connection's access history either way.
+        if job:
+            authority.auto_approve(store, job, run, _action_record(connection, row, clean),
+                                   source='connection')
+        confirmed = True
+    elif row.get('mutating'):
         action_record = _action_record(connection, row, clean)
         if confirmation in (None, '', False):
             mode, approval_id = _ask_for_confirmation(store, action_record, job, run)

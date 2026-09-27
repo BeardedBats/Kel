@@ -198,6 +198,9 @@ class Service:
         # D-57: scheduled tasks fire from supervision (migration 33 runs here, once).
         from .schedules import Scheduler
         self.schedules=Scheduler(self)
+        # D-64: Full access by default (migration 34 runs here, once).
+        from .authority import ensure_schema as ensure_authority_schema
+        ensure_authority_schema(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -689,6 +692,9 @@ class Service:
             # Greenfield intent ("create me an app") always wins, even when the
             # active project already has a root such as a desktop temp workspace.
             greenfield=bool(greenfield_flag) or not bool(root)
+            if not greenfield:
+                from .projects import ensure_folder
+                ensure_folder(self.store,root)  # D-62: General's default folder is made when work needs it
             if greenfield:
                 # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
                 # workspace: a fresh git repo under Documents/Kel Projects with a
@@ -1175,6 +1181,8 @@ class Service:
                     project=db.execute('SELECT root FROM projects WHERE id=?',(project_id,)).fetchone()
                     row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(project_id,)).fetchone()
                 root=project['root'] if project else None
+                from .projects import ensure_folder
+                ensure_folder(self.store,root)  # D-62
                 tests=json.loads(row['command']) if row else None
             try:
                 contract=compile_recipe(recipe,data.get('inputs') or {},project_id,root=root,tests=tests)
@@ -1547,6 +1555,10 @@ class Service:
             return Providers(self.store,runnable=self._runnable_provider).apply(data)
         if path=='/api/autonomy':
             from .autonomy import Autonomy
+            if data.get('action') in ('mode','set_mode'):
+                # D-64: Full access (default) or Ask first; only the person's own request changes it.
+                from . import authority
+                return authority.apply(self.store,dict(data,actor='user'))
             # Lease issuance is Kel's decision; the shell can inspect, resolve, and revoke only.
             if data.get('action') not in ('leases','requests','guardrails','decisions','check','revoke','resolve','emergency_stop'):
                 raise PolicyError("Lease issuance is Kel's decision; this action is not available through the shell")
@@ -1693,8 +1705,8 @@ class Service:
         raise PolicyError('Unknown vetting action')
 
     def _backup_action(self,data):
-        # Local backup/restore of the engine data. Credentials never leave the machine and are
-        # stripped from the copied database; restore stages files and applies on the next start.
+        # Local backup/restore of the whole Data tree (engine, chat store, host config; ST-01).
+        # Credentials never leave the machine; restore stages files and applies on the next start.
         from .backup import Backup
         action=data.get('action')
         backup=Backup(self.store)
@@ -1704,8 +1716,8 @@ class Service:
             return backup.inspect(data.get('source'))
         if action=='inventory':
             # V2-17: the manual-upgrade before/after — every table with its row count.
-            from .backup import table_inventory
-            return table_inventory(self.store.db_path)
+            # ST-01: plus `summary`, in the backup's words (chats counted from the chat store).
+            return backup.inventory()
         if action=='restore':
             return backup.stage_restore(data.get('source'))
         raise PolicyError('Unknown backup action')

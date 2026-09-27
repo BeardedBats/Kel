@@ -30,6 +30,9 @@ from .core import PolicyError, encode, uid
 
 MIGRATION_VERSION = 32
 MIGRATION_NAME = 'v2-projects'
+# D-62: General gets a default folder (migration 35; 33 is schedules, 34 is Full access).
+GENERAL_FOLDER_VERSION = 35
+GENERAL_FOLDER_NAME = 'v2-general-folder'
 
 GENERAL = 'default'
 ALL = '*'
@@ -127,18 +130,75 @@ def _owns(db, project_id):
     return found
 
 
-def ensure_schema(store):
-    """Migration 32 through the ledger: side tables, then one pass over existing projects.
+def default_general_root():
+    """General's default folder (D-62): `%USERPROFILE%/Documents/Kel Projects/General`.
 
-    Every project gets a meta row. A `system` (plumbing) project that owns nothing has its chats
-    moved to General (each move logged in `project_moves`) and is archived; one that owns something
-    is only flagged and archived. Nothing is deleted. The active project starts as All projects.
+    `KEL_GENERAL_ROOT` overrides it (a path), or turns it off (`none`) — the engine test suite does
+    that so no test ever creates a folder in the real Documents folder.
+    """
+    override = os.environ.get('KEL_GENERAL_ROOT')
+    if override is not None:
+        if override.strip().lower() in ('', 'none', 'off'):
+            return None
+        return Path(os.path.expandvars(os.path.expanduser(override.strip())))
+    home = Path(os.environ.get('USERPROFILE') or Path.home())
+    return home / 'Documents' / 'Kel Projects' / 'General'
+
+
+def ensure_folder(store, root):
+    """Create General's default folder the first time work needs it; return `root` unchanged.
+
+    Only that one folder is ever created here, and only when it is still General's folder: a
+    folder the person chose is theirs and is never created or touched.
+    """
+    default = default_general_root()
+    if not root or default is None:
+        return root
+    try:
+        if os.path.normcase(str(Path(root))) != os.path.normcase(str(default)) or Path(root).is_dir():
+            return root
+        with contextlib.closing(store.connect()) as db:
+            row = db.execute('SELECT root FROM projects WHERE id=?', (GENERAL,)).fetchone()
+        if row and row['root'] and os.path.normcase(row['root']) == os.path.normcase(str(default)):
+            Path(root).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass  # the work that needs it says plainly that the folder cannot be used
+    return root
+
+
+def _general_folder(db, now):
+    """Migration 35 body: give General its default folder when it has none (never replace one)."""
+    default = default_general_root()
+    note = {'set': False}
+    if default is not None:
+        row = db.execute('SELECT root FROM projects WHERE id=?', (GENERAL,)).fetchone()
+        if row is None:
+            db.execute('INSERT INTO projects VALUES(?,?,?,?,?)', (GENERAL, 'General', str(default), '', now))
+            note['set'] = True
+        elif not (row['root'] or '').strip():
+            db.execute('UPDATE projects SET root=? WHERE id=?', (str(default), GENERAL))
+            note['set'] = True
+    db.execute('INSERT OR IGNORE INTO schema_migrations(version, name, applied, note) VALUES(?,?,?,?)',
+               (GENERAL_FOLDER_VERSION, GENERAL_FOLDER_NAME, now, json.dumps(note, sort_keys=True)))
+
+
+def ensure_schema(store):
+    """Migrations 32 and 35 through the ledger.
+
+    32: side tables, then one pass over existing projects. Every project gets a meta row. A `system`
+    (plumbing) project that owns nothing has its chats moved to General (each move logged in
+    `project_moves`) and is archived; one that owns something is only flagged and archived. Nothing
+    is deleted. The active project starts as All projects.
+    35 (D-62): General gets its default folder when it has none.
     """
     with store.transaction() as db:
         db.execute('CREATE TABLE IF NOT EXISTS schema_migrations('
                    'version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied REAL NOT NULL, note TEXT)')
         for statement in filter(None, (part.strip() for part in DDL.split(';'))):
             db.execute(statement)
+        if not db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
+                          (GENERAL_FOLDER_VERSION,)).fetchone():
+            _general_folder(db, time.time())
         if db.execute('SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone():
             return False
         now = time.time()
@@ -197,7 +257,8 @@ class Projects:
         # A plain read first: once migrated, constructing this per request takes no write lock.
         with contextlib.closing(store.connect()) as db:
             ready = _table(db, 'schema_migrations') and _table(db, 'project_meta') and db.execute(
-                'SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone()
+                'SELECT COUNT(*) FROM schema_migrations WHERE version IN (?,?)',
+                (MIGRATION_VERSION, GENERAL_FOLDER_VERSION)).fetchone()[0] == 2
         if not ready:
             ensure_schema(store)
 

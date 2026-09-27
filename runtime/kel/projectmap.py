@@ -280,6 +280,8 @@ class ProjectMap:
         project = self._project(project_id)
         if not project.get('root'):
             raise PolicyError('Project has no root to inspect')
+        from .projects import ensure_folder
+        ensure_folder(self.store, project['root'])  # D-62: General's default folder, on first use
         root = Path(project['root'])
         if not root.is_dir():
             raise PolicyError('Project root is not readable')

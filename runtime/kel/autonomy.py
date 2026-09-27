@@ -348,6 +348,45 @@ class Autonomy:
         return {'request_id': request_id, 'status': 'GRANTED', 'grant_kind': grant_kind,
                 'scope': row['scope'], 'target': row['target']}
 
+    def grant_on_behalf(self, lease_id, scope, target, request_id=None, what='', why='',
+                        actor='full-access'):
+        """Full access (D-64): record a boundary grant the person's standing choice already made.
+
+        The same rows a person's "Allow for this project" writes — a GRANTED request and a scope row
+        on the lease — with the actor saying who granted it, so the grant stays inspectable.
+        A pending request for the same target is settled instead of filing a second one.
+        """
+        if scope not in ('root', 'repo', 'domain', 'tool', 'external'):
+            raise PolicyError('Unknown boundary scope')
+        target = _text(target, 'target')
+        if scope in ('root', 'repo'):
+            if _frozen(target) or _system(target):
+                raise PolicyError('That location is outside every Kel project')
+            try:
+                target = str(Path(target).resolve())
+            except OSError:
+                raise PolicyError('That location cannot be read') from None
+        now = time.time()
+        with self.store.transaction() as db:
+            if not self._lease(db, lease_id):
+                raise PolicyError('Unknown lease')
+            if request_id:
+                db.execute("UPDATE boundary_expansion_requests SET status='GRANTED', grant_kind='project', "
+                           "actor=?, resolved_at=? WHERE request_id=? AND status='PENDING'",
+                           (actor, now, request_id))
+            else:
+                request_id = uid()
+                db.execute('INSERT INTO boundary_expansion_requests VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                           (request_id, lease_id, scope, target, what, why, '', '', '',
+                            'GRANTED', 'project', now, now, actor))
+            db.execute('INSERT OR REPLACE INTO lease_scope VALUES(?,?,?,?,?)',
+                       (lease_id, scope, target, -1, 0))
+            self._event(db, lease_id, 'expansion.granted',
+                        {'request_id': request_id, 'scope': scope, 'target': target,
+                         'grant_kind': 'project', 'actor': actor})
+        return {'request_id': request_id, 'status': 'GRANTED', 'grant_kind': 'project',
+                'scope': scope, 'target': target, 'actor': actor}
+
     def requests(self, lease_id=None):
         with contextlib.closing(self.store.connect()) as db:
             rows = (db.execute('SELECT * FROM boundary_expansion_requests WHERE lease_id=? '

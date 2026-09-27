@@ -759,6 +759,11 @@ class Connections:
             raise PolicyError('%s is an action for %s, not for %s.'
                               % (row['name'], row['service'], connection['name']))
         if row['mutating'] and not confirmed:
+            # D-64: under Full access a change in a connected service needs no separate OK; the
+            # call is still recorded in this connection's access history below.
+            from .authority import is_full
+            confirmed = is_full(self.store)
+        if row['mutating'] and not confirmed:
             raise PolicyError('%s changes something in %s, so Kel asks first.'
                               % (row['name'], connection['name']))
         lacking = missing_scopes(connection, row.get('scopes') or ())

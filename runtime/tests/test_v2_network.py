@@ -20,6 +20,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from kel import authority  # noqa: E402
 from kel import network_policy  # noqa: E402
 from kel.connections import network_rule, perform_request  # noqa: E402
 from kel.core import PolicyError, Store  # noqa: E402
@@ -30,6 +31,8 @@ class Base(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._cleanup)
         self.store = Store(Path(self.tmp.name) / 'data')
+        # The approved-domains ask is the Ask first path (D-64 made Full access the default).
+        authority.set_mode(self.store, 'ask')
 
     def _cleanup(self):
         try:

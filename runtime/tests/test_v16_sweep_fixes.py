@@ -54,7 +54,7 @@ class BackupCredentialTests(unittest.TestCase):
 
     def test_a_backup_never_captures_the_credentials_file(self):
         result = Backup(_Store(self.root)).create(self.dest)
-        names = {entry.name for entry in Path(result['folder']).iterdir()}
+        names = {entry.name for entry in (Path(result['folder']) / 'engine').iterdir()}
         self.assertNotIn('kel-credentials.json', names)
         self.assertIn('notes.txt', names)
         self.assertIn('kel-credentials.json', result['skipped'])

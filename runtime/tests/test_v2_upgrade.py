@@ -119,10 +119,10 @@ class BackupSurvivalTests(Base):
         credentials = self.data / 'kel-credentials.json'
         credentials.write_text(json.dumps({'OPENAI_API_KEY': 'probe'}), encoding='utf-8')
         folder = Path(self.create_backup())
-        self.assertFalse((folder / 'kel-credentials.json').exists(),
+        self.assertFalse((folder / 'engine' / 'kel-credentials.json').exists(),
                          'credentials never travel in a backup')
         Backup(self.store).inspect(str(folder))  # the description is readable
-        with contextlib.closing(__import__('sqlite3').connect(str(folder / 'kel.sqlite3'))) as db:
+        with contextlib.closing(__import__('sqlite3').connect(str(folder / 'engine' / 'kel.sqlite3'))) as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM connections').fetchone()[0], 1)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM memories').fetchone()[0], 1)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM network_policy').fetchone()[0], 1)

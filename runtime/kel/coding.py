@@ -134,6 +134,19 @@ class CodingAdapter:
             if not action['changes']:action['unrepeatable_request']=params.get('itemId')
         pid=job['contract'].get('project_id','default')
         if self.context.allowed(pid,action):return True
+        from . import authority
+        if authority.is_full(self.store):
+            # D-64 Full access: go ahead without a prompt; the approval is still recorded
+            # (actor full-access) and the job gets an Activity line saying what Kel did. Kel's own
+            # app/data and credential folders stay out of reach (refused and recorded).
+            with contextlib.closing(self.store.connect()) as db:
+                ws=db.execute('SELECT path FROM code_workspaces WHERE job_id=?',(job['id'],)).fetchone()
+            reason=authority.protected_hit(self.store,action,ws['path'] if ws else None)
+            if reason:
+                authority.refuse(self.store,job['id'],run['id'],action,reason,source='coding')
+                return False
+            authority.auto_approve(self.store,job['id'],run['id'],action,source='coding')
+            return True
         with contextlib.closing(self.store.connect()) as db:
             prior=db.execute('SELECT a.id FROM approvals a JOIN approval_actions x ON x.approval_id=a.id WHERE a.run_id=? AND x.action=? ORDER BY a.rowid DESC LIMIT 1',(run['id'],encode(action))).fetchone()
         if prior:aid=prior['id']
