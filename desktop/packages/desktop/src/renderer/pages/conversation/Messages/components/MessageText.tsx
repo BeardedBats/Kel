@@ -2,8 +2,6 @@ import kelMark from '@renderer/assets/figma/kel-mark.png';
 import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
 import { KelMessageDetails, KelMessageNote } from './KelMessageDetails';
 import { isKelNoteMeta } from '@/common/chat/kelMessageMeta';
-import thumbsUpIcon from '@renderer/assets/figma/chat/thumbs-up.svg';
-import thumbsDownIcon from '@renderer/assets/figma/chat/thumbs-down.svg';
 import moreIcon from '@renderer/assets/figma/chat/more.svg';
 /**
  * @license
@@ -65,43 +63,15 @@ import { useTeammateColor } from '@/renderer/pages/team/identity/TeamIdentityCon
 
 const CODE_STYLE = { marginTop: 4, marginBlock: 4 };
 
+// D-59: replies carry Copy (and Fork when available) only; the old thumbs up/down wrote to local
+// storage and changed nothing, so they are gone.
 const ReplyActions: React.FC<{
-  messageId: string;
   onCopy: () => void;
   directCopy?: React.ReactNode;
   onFork?: () => void;
-}> = ({ messageId, onCopy, directCopy, onFork }) => {
+}> = ({ onCopy, directCopy, onFork }) => {
   const { t } = useTranslation();
-  const [reaction, setReaction] = useState<'up' | 'down' | null>(() => {
-    try {
-      const saved = localStorage.getItem(`kel.chatReaction.${messageId}`);
-      return saved === 'up' || saved === 'down' ? saved : null;
-    } catch {
-      return null;
-    }
-  });
-  const chooseReaction = (choice: 'up' | 'down') => {
-    const next = reaction === choice ? null : choice;
-    setReaction(next);
-    try {
-      if (next) localStorage.setItem(`kel.chatReaction.${messageId}`, next);
-      else localStorage.removeItem(`kel.chatReaction.${messageId}`);
-    } catch {
-      // Keep the visual choice when local storage is unavailable.
-    }
-  };
   return <>
-    {/* CP-14: reactions stay on this device; the engine never sees them, so they promise nothing. */}
-    <Tooltip content='Helpful — only you see this'>
-      <button type='button' aria-label='Mark helpful (only you see this)' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
-        <img src={thumbsUpIcon} alt='' width={16} height={16} />
-      </button>
-    </Tooltip>
-    <Tooltip content='Not helpful — only you see this'>
-      <button type='button' aria-label='Mark unhelpful (only you see this)' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
-        <img src={thumbsDownIcon} alt='' width={16} height={16} />
-      </button>
-    </Tooltip>
     {directCopy}
     <Dropdown trigger='click' position='bl' droplist={<Menu>
       <Menu.Item key='copy' onClick={onCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
@@ -298,7 +268,7 @@ const MessageText: React.FC<{
   ) : null;
 
   const kelReplyActions = (
-    <ReplyActions key={message.id} messageId={message.id} onCopy={handleCopy}
+    <ReplyActions key={message.id} onCopy={handleCopy}
       directCopy={layout?.isMobile ? copyButton : null}
       onFork={showForkButton ? () => void forkConversation(message.msg_id ?? message.id) : undefined} />
   );
