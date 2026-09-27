@@ -7,6 +7,7 @@ import Providers from '@renderer/pages/kel/providers';
 
 const api = vi.hoisted(() => ({ state: vi.fn(), list: vi.fn(), credentials: vi.fn() }));
 vi.mock('@renderer/components/kel/kelApi', () => ({
+  KEL_ALL_CONVERSATIONS: '*',
   kelState: api.state,
   kelProviders: { list: api.list, credentials: api.credentials },
   kelCapabilities: vi.fn(async () => []),

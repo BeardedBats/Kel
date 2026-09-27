@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { rendererKelRequestRefusal } from '@/process/services/kel/kelRequestGuard';
 import {
   buildSelector,
   collapse,
@@ -189,21 +190,18 @@ describe('Fix Capture — the preload exposes what the client calls', () => {
 
 describe('Fix Capture — the desktop bridge admits the route', () => {
   it('accepts every dogfood route the client uses, and nothing more', () => {
-    // The main process keeps a route allowlist for `kel:request`; a new family has to be let in.
-    // This pin reads the shipped regex itself and tries the routes the client actually sends.
-    const allowSource = bridgeService.match(/!\/\^\\\/api\\\/\(([\s\S]*?)\)\$\/\.test\(/)?.[1];
-    expect(allowSource, 'the kel:request allowlist must be findable').toBeTruthy();
-    expect(allowSource).toContain('dogfood');
-    const allow = new RegExp(`^/api/(${allowSource})$`);
+    // The main process keeps a route allowlist for `kel:request` (kelRequestGuard.ts); a new
+    // family has to be let in. This pin runs the shipped guard on the routes the client sends.
+    expect(bridgeService).toContain('rendererKelRequestRefusal(route, body)');
     for (const route of [
       '/api/dogfood',
       '/api/dogfood?status=OPEN',
       '/api/dogfood?action=get&id=FIX-0007',
     ]) {
-      expect(allow.test(route), `${route} must pass the bridge allowlist`).toBe(true);
+      expect(rendererKelRequestRefusal(route), `${route} must pass the bridge allowlist`).toBeNull();
     }
-    expect(allow.test('/api/dogfood?action=save')).toBe(false);
-    expect(allow.test('/api/secret')).toBe(false);
+    expect(rendererKelRequestRefusal('/api/dogfood?action=save')).not.toBeNull();
+    expect(rendererKelRequestRefusal('/api/secret')).not.toBeNull();
   });
 });
 

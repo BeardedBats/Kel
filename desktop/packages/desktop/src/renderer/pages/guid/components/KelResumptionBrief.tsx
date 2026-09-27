@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import statusCheck from '@renderer/assets/figma/status-check.svg';
-import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 import { buildResumptionBrief, type ResumptionBrief } from '@renderer/components/kel/resumptionBrief';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 
@@ -21,7 +21,7 @@ const KelResumptionBrief: React.FC = () => {
     void (async () => {
       try {
         const [state, boundary, providers] = await Promise.all([
-          kelState(),
+          kelState(KEL_ALL_CONVERSATIONS),
           kelAutonomy.requests(),
           // A failed read never invents lines; setup needs simply stay out of this brief.
           kelProviders.list().catch((): null => null),

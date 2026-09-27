@@ -109,6 +109,8 @@ export default function ShellWorkspaceLink() {
             <NewWorkspaceForm
               onCancel={() => setCreating(false)}
               onCreated={(workspace) => {
+                // Add it to the list first: the keep-in-step effect clears an active id it can't find.
+                setProjects((prev) => [...(prev ?? []).filter((p) => p.id !== workspace.id), workspace]);
                 choose(workspace);
                 void load();
               }}
