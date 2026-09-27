@@ -725,3 +725,24 @@ model, version and reasoning level, the steps done and in progress, review findi
 The detail view is read-only apart from "Talk to Kel about this". Staff are spawned on demand; the
 same role may run several times at once (no fixed roster or bench). Everything shown must be real
 engine state (truth over convenience) — no decorative workers.
+
+## D-67 — Starting model for each staff role; the "Council" is the Oracle
+
+**Decided by Nick 2026-09-27.** The "Council to review decisions" Nick described is the Oracle:
+Independent Assurance's fresh, read-only second opinion (intent doc §9, handoff §16), not a new role.
+Starting model per role (Preferred mode — each row stays changeable in Settings, and Automatic
+routing may still fall back on health/availability, truthfully shown):
+
+| Role | Starting model |
+|---|---|
+| Kel (Commander) | ChatGPT Luna · Auto |
+| Discovery (research) | Claude Sonnet |
+| Designer | Claude Fable 5.1 |
+| Builder (coding) | Claude Opus 5.5, falling back to Codex |
+| Verifier | GPT-6 Astra |
+| Oracle (Independent Assurance) | GPT-6 Astra |
+| Utility work | DeepSeek Flash |
+
+Verifier and Oracle deliberately sit in a different model family from the Builder (independence,
+handoff §16). The detail view (D-66) shows each staff member's model, version and reasoning level.
+Architect, Sentinel and Release have no stated preference yet and start on Automatic.
