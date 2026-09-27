@@ -208,6 +208,23 @@ const getDraft = <K extends DraftConversationType>(
 };
 
 /**
+ * Plain-text access to a draft outside a SendBox (the Home composer keeps its unsent text here
+ * under its own id, so it survives navigation and restart like a conversation draft — CH-6).
+ * An empty text removes the draft.
+ */
+export const readDraftText = (draft_id: string): string => getDraft('acp', draft_id)?.content ?? '';
+
+export const writeDraftText = (draft_id: string, content: string): void => {
+  const current = getDraft('acp', draft_id);
+  if (!content) {
+    if (current) setDraft('acp', draft_id, undefined);
+    return;
+  }
+  if (current?.content === content) return;
+  setDraft('acp', draft_id, { _type: 'acp', atPath: [], uploadFile: [], ...current, content });
+};
+
+/**
  * 获得一种类型下的会话草稿操作的 React Hook
  */
 export const getSendBoxDraftHook = <K extends DraftConversationType>(

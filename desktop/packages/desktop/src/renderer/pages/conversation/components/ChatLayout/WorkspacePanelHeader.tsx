@@ -36,7 +36,8 @@ const WorkspacePanelHeader: React.FC<WorkspaceHeaderProps> = ({
       <button
         type='button'
         className='workspace-header__toggle me-4px'
-        aria-label='Toggle workspace'
+        aria-label={collapsed ? 'Expand the side panel' : 'Collapse the side panel'}
+        aria-expanded={!collapsed}
         onClick={onToggle}
       >
         {collapsed ? <ExpandRight size={16} /> : <ExpandLeft size={16} />}
@@ -50,7 +51,7 @@ const WorkspacePanelHeader: React.FC<WorkspaceHeaderProps> = ({
     )}
 
     {showToggle && togglePlacement === 'right' && (
-      <button type='button' className='workspace-header__toggle' aria-label='Toggle workspace' onClick={onToggle}>
+      <button type='button' className='workspace-header__toggle' aria-label={collapsed ? 'Expand the side panel' : 'Collapse the side panel'} aria-expanded={!collapsed} onClick={onToggle}>
         {collapsed ? <ExpandRight size={16} /> : <ExpandLeft size={16} />}
       </button>
     )}

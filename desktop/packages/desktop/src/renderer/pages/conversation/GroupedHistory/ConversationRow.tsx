@@ -37,12 +37,13 @@ import { useTranslation } from 'react-i18next';
 
 import type { ConversationRowProps } from './types';
 import { isConversationPinned } from './utils/groupingHelpers';
+import { useKelLiveWork } from '@/renderer/components/kel/useKelLiveWork';
 
 const ConversationRow: React.FC<ConversationRowProps> = (props) => {
   const {
     conversation,
-    isGenerating,
-    isWaitingConfirmation,
+    isGenerating: turnGenerating,
+    isWaitingConfirmation: turnWaiting,
     hasUnread,
     collapsed,
     tooltipEnabled,
@@ -71,6 +72,13 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
     getJobStatus,
   } = props;
   const { t } = useTranslation();
+  // CH-11: a chat whose request was handed off to background work (D-53) stays marked as working
+  // (or waiting on you) while that work runs, not only while a reply streams.
+  const kelConversationId =
+    (conversation.extra as { kel_conversation_id?: string } | undefined)?.kel_conversation_id ?? conversation.id;
+  const liveWork = useKelLiveWork(kelConversationId);
+  const isWaitingConfirmation = turnWaiting || liveWork === 'waiting';
+  const isGenerating = turnGenerating || liveWork === 'working';
   const { info: assistantInfo } = usePresetAssistantInfo(conversation);
   const isPinned = isConversationPinned(conversation);
   // Fork-lineage badge: present only on forked conversations (extra.fork is

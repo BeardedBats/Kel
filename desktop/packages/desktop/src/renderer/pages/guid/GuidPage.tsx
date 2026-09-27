@@ -15,7 +15,7 @@ import { resolveLocaleKey } from '@/common/utils';
 import type { AssistantDetail } from '@/common/types/agent/assistantTypes';
 
 import { useInputFocusRing } from '@/renderer/hooks/chat/useInputFocusRing';
-import { appendPromptToDraft } from '@/renderer/hooks/chat/useSendBoxDraft';
+import { appendPromptToDraft, readDraftText } from '@/renderer/hooks/chat/useSendBoxDraft';
 import { getFuzzyMatchIndices, useSlashCommandController } from '@/renderer/hooks/chat/useSlashCommandController';
 import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/components/chat/SlashCommandMenu';
 import AssistantSelectionArea from './components/AssistantSelectionArea';
@@ -25,7 +25,7 @@ import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import KelResumptionBrief from './components/KelResumptionBrief';
 import GuidModelSelector from './components/GuidModelSelector';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
-import { useGuidInput } from './hooks/useGuidInput';
+import { HOME_DRAFT_ID, useGuidInput } from './hooks/useGuidInput';
 import { useGuidModelSelection } from './hooks/useGuidModelSelection';
 import { useGuidSend } from './hooks/useGuidSend';
 import { useTypewriterPlaceholder } from './hooks/useTypewriterPlaceholder';
@@ -536,7 +536,8 @@ const GuidPage: React.FC = () => {
       // the seeded input instead of clearing it.
       skipNextClearRef.current = false;
     } else {
-      guidInput.setInput('');
+      // CH-6: the unsent Home text is a durable draft now — restore it rather than wiping it.
+      guidInput.setInput(readDraftText(HOME_DRAFT_ID));
       guidInput.setFiles([]);
     }
     guidInput.setLoading(false);

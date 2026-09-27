@@ -20,7 +20,8 @@ export type ModelState = { default: Choice | null; conversation: Choice | null; 
 
 const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
-const choiceLabel = (state: ModelState | null, choice: Choice | null): string => {
+/** The plain name of a model choice ('Automatic' when Kel picks). */
+export const choiceLabel = (state: ModelState | null, choice: Choice | null): string => {
   if (!choice || !choice.provider) return 'Automatic';
   const provider = (state?.providers ?? []).find((entry) => entry.id === choice.provider);
   const option = provider?.options.find((entry) => entry.id === choice.model);

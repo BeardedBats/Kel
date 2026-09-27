@@ -3,7 +3,7 @@ import { Message } from '@arco-design/web-react';
 import check from '@renderer/assets/figma/chat-pickers/model-check.svg';
 import plus from '@renderer/assets/figma/chat-pickers/model-plus.svg';
 import settings from '@renderer/assets/figma/chat-pickers/model-settings.svg';
-import type { Choice, ModelState } from './KelModelControl';
+import { choiceLabel, type Choice, type ModelState } from './KelModelControl';
 
 type Scope = 'conversation' | 'default';
 
@@ -31,7 +31,9 @@ export const KelDesktopModelMenu: React.FC<{
       <button type='button' role='tab' aria-selected={scope === 'default'} disabled={pending} onClick={() => setScope('default')}>Default for new chats</button>
     </div>
     <button type='button' className='kel-desktop-picker__row' aria-pressed={!selected?.provider} disabled={pending} onClick={() => void choose(null)}>
-      <span>Automatic</span><small>{scope === 'conversation' && state.default?.provider ? 'Uses default' : 'Kel picks'}</small>
+      {scope === 'conversation'
+        ? <span>{`Use default (${choiceLabel(state, state.default)})`}</span>
+        : <><span>Automatic</span><small>Kel picks</small></>}
       {!selected?.provider && <img src={check} alt='' />}
     </button>
     {state.providers.flatMap(provider => provider.options.map(option => {

@@ -10,7 +10,11 @@ import { useDragUpload } from '@/renderer/hooks/file/useDragUpload';
 import { usePasteService } from '@/renderer/hooks/file/usePasteService';
 import { allSupportedExts, type FileMetadata } from '@/renderer/services/FileService';
 import { measureCaretTop, scrollCaretToLastLine } from '../utils/caretUtils';
+import { readDraftText, writeDraftText } from '@/renderer/hooks/chat/useSendBoxDraft';
 import { useCallback, useEffect, useState } from 'react';
+
+/** The Home (new chat) composer's draft id in the shared draft store (CH-6, JR-43). */
+export const HOME_DRAFT_ID = 'kel-home-new-chat';
 
 export type GuidInputResult = {
   input: string;
@@ -43,7 +47,12 @@ type UseGuidInputOptions = {
  * Hook that manages input state, file handling, and drag/paste for the Guid page.
  */
 export const useGuidInput = ({ locationState }: UseGuidInputOptions): GuidInputResult => {
-  const [input, setInput] = useState('');
+  // CH-6: unsent Home text survives navigation and restart; sending clears the input, which clears
+  // the stored draft with it.
+  const [input, setInput] = useState(() => readDraftText(HOME_DRAFT_ID));
+  useEffect(() => {
+    writeDraftText(HOME_DRAFT_ID, input);
+  }, [input]);
   const [files, setFiles] = useState<ChatFileRef[]>([]);
   const activeWorkspace = useActiveWorkspace();
   const [dir, setDir] = useState<string>(() => readActiveWorkspace()?.root ?? '');
