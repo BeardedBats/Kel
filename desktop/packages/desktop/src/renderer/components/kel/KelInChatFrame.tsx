@@ -73,7 +73,6 @@ const settingsGroups: Group[] = [
   { label: 'Application', items: [
     { label: 'Appearance', path: '/settings/appearance', icon: 'appearance' },
     { label: 'System', path: '/settings/system', icon: 'system' },
-    { label: 'Desktop Pet', path: '/settings/pet', icon: 'pet' },
     { label: 'Remote / WebUI', path: '/settings/webui', icon: 'webui' },
   ] },
   { label: 'Data', items: [
