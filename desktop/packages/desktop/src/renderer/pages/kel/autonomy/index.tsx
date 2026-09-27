@@ -18,6 +18,7 @@ import {
   formatUntil,
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { KelAuthorityCard } from '@renderer/components/kel/KelAuthorityCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
@@ -138,6 +139,9 @@ export default function KelAutonomyPage() {
             work is not undone — choose Yes to confirm, or Keep going to leave everything as it is.
           </p>
         )}
+
+        {/* D-64: the mode first — Full access by default, one switch back to Ask first. */}
+        <KelAuthorityCard />
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && leases === null && <KelLoading rows={3} />}

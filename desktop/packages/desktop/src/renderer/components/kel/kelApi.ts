@@ -1065,6 +1065,32 @@ export const kelAutonomy = {
     }),
 };
 
+/**
+ * D-64: how much Kel does without asking. `full` (the default Nick chose) lets Kel act without
+ * approval prompts; `ask` brings the prompts back. Only the person's own request changes it.
+ */
+export type KelAuthorityMode = 'full' | 'ask';
+export interface KelAuthorityState {
+  mode?: string;
+  /** Tolerated alias; the engine answers with `mode`. */
+  authority_mode?: string;
+  label?: string;
+  description?: string;
+  updated?: number | null;
+  changed_by_you?: boolean;
+}
+
+/** The mode in an engine answer, or null when the answer carries none (an engine without D-64). */
+export const authorityModeOf = (state: KelAuthorityState | null | undefined): KelAuthorityMode | null => {
+  const value = state?.mode ?? state?.authority_mode;
+  return value === 'full' || value === 'ask' ? value : null;
+};
+
+export const kelAuthority = {
+  get: () => call<KelAuthorityState>('/api/autonomy', { action: 'mode' }),
+  set: (mode: KelAuthorityMode) => call<KelAuthorityState>('/api/autonomy', { action: 'set_mode', mode }),
+};
+
 export interface KelDiagnosticsSnapshot {
   engine_version: string;
   counts: { jobs: number; runs: number };

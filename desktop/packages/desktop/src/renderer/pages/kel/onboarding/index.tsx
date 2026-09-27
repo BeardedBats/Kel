@@ -2,6 +2,7 @@ import { ipcBridge } from '@/common';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { KelDefaultModelCard } from '@renderer/components/kel/KelModelControl';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import { KelAuthorityCard } from '@renderer/components/kel/KelAuthorityCard';
 import { announceProjectsChanged, setActiveProject, useProjects } from '@renderer/components/kel/activeProject';
 /**
  * Kel V1.4 first-run onboarding (docs/v1.4/KEL_V1.4_UX_SPEC.md §3).
@@ -190,11 +191,8 @@ export default function KelOnboardingPage() {
 
         {folderError && <p className='kel-meta' role='alert'>{folderError}</p>}
 
-        <KelCard title='How much Kel does on its own'>
-          <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />
-            <KelButton onClick={() => navigate('/autonomy')}>Ask before edits</KelButton>
-          </div>
-        </KelCard>
+        {/* D-64 settles the Autonomy step: Full access by default, with the same switch as Settings. */}
+        <KelAuthorityCard />
 
         <KelCard title="You're set">
           <div className='kel-row'><KelButton variant={isMobile ? 'secondary' : 'primary'} onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
