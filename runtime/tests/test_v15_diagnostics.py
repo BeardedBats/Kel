@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from kel import authority
 from kel.authorize import POLICY_VERSION, Authorizer
 from kel.autonomy import Autonomy
 from kel.coding import compile_coding, git
@@ -32,6 +33,8 @@ class DiagnosticsSurfaceTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         base = Path(self.tmp.name)
         self.store = Store(base / 'data')
+        # The rollup counts a refusal, which is the Ask first path (D-64 made Full access the default).
+        authority.set_mode(self.store, 'ask')
         self.project = make_project(base, 'proj')
         self.other = make_project(base, 'other')
         self.job = self.store.create(compile_coding('Touch app.txt.', self.project,

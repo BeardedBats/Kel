@@ -21,7 +21,8 @@ class RoutingTests(unittest.TestCase):
             os.environ['KEL_SKIP_TELEMETRY'] = '1'
             os.environ['KEL_REVIEWER'] = 'none'
             os.environ['KEL_TURN_MODEL'] = 'none'  # D-53: deterministic keyword gate
-            self.service = Service(self.tmp.name)
+            # Kel's data folder beside the person's folders, never around them (D-64 protected paths).
+            self.service = Service(Path(self.tmp.name) / 'data')
 
     def tearDown(self):
         self.service.shutdown()

@@ -15,6 +15,7 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import patch
 
+from kel import authority
 from kel import guardrails
 from kel.authorize import (Authorizer, authorize, block_job, decisions, ensure_job_lease,
                            resume_after_grant)
@@ -42,6 +43,8 @@ class AuthorizeBase(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.base = Path(self.tmp.name)
         self.store = Store(self.base / 'data')
+        # These tests pin the Ask first path (D-64 made Full access the default).
+        authority.set_mode(self.store, 'ask')
         self.project = make_project(self.base, 'proj')
         self.other = make_project(self.base, 'other')
         self.job = self.store.create(compile_coding('Change app.txt.', self.project,

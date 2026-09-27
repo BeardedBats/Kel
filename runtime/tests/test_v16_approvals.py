@@ -22,6 +22,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from kel import authority
 from kel import chat_approvals
 from kel.authorize import Authorizer, block_job, resume_after_grant
 from kel.autonomy import Autonomy
@@ -48,6 +49,8 @@ class ApprovalBase(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.base = Path(self.tmp.name)
         self.store = Store(self.base / 'data')
+        # In-chat approvals exist on the Ask first path (D-64 made Full access the default).
+        authority.set_mode(self.store, 'ask')
         CodingAdapter(self.store)  # schema only; owns approval_actions (Service does this too)
         Context(self.store).project('General', project_id='default')
         self.project = make_project(self.base, 'proj')

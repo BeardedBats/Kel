@@ -27,6 +27,7 @@ import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
+from kel import authority
 from kel.connection_actions import action, actions, actions_for
 from kel.connection_framework import request_policy, template, templates
 from kel.connection_services import catalogue, entry
@@ -501,6 +502,8 @@ class ActionTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._cleanup_tmp)
         self.store = Store(self.tmp.name)
+        # "Waits for Nick" is the Ask first path (D-64 made Full access the default).
+        authority.set_mode(self.store, 'ask')
         self.pauses = []
         self.connections = Connections(self.store, attempts=2, sleep=self.pauses.append)
         self.service = LocalService()

@@ -7,7 +7,8 @@ already exposes (asked before anything leaves the computer and again for a redir
 closed if the rule source errors) — this module is the rule source, never a second path.
 
 With no policy rows the default is `full`: behaviour is exactly as before until a person chooses a
-mode. An `approved` host is matched exactly or as a parent domain (`api.github.com` matches an
+mode. Under Full access (D-64, `kel.authority`) an `approved` scope does not ask about a new host —
+the call goes ahead and is recorded — while `none` still blocks. An `approved` host is matched exactly or as a parent domain (`api.github.com` matches an
 approved `github.com`; approving `api.github.com` also covers its own subdomains). A new host in
 `approved` is not sent: it is recorded as a pending request and refused with one plain sentence
 naming the one action that fixes it (approve it in Connections, or change the scope's mode).
@@ -192,6 +193,13 @@ def decide(store, host, *, tool=None, project=None):
         _record(store, host, tool, project, scope, 'allowed', 'on the approved list (%s)' % matched)
         return {'allowed': True, 'mode': mode, 'scope': scope, 'host': host,
                 'reason': '', 'matched': matched}
+    from .authority import is_full
+    if is_full(store):
+        # D-64 Full access: a new host is reached without an ask, and recorded as such. The approved
+        # list itself is never changed on the person's behalf; "no internet" above still blocks.
+        _record(store, host, tool, project, scope, 'allowed', 'full access (not on the approved list)')
+        return {'allowed': True, 'mode': mode, 'scope': scope, 'host': host, 'reason': '',
+                'authority': 'full'}
     existing = _row(store, "SELECT * FROM network_requests WHERE host=? AND state='pending'"
                            " AND scope=? AND IFNULL(tool,'')=IFNULL(?,'')"
                            " ORDER BY created DESC LIMIT 1",

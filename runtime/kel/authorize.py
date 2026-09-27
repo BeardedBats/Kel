@@ -169,6 +169,14 @@ class Authorizer:
                                'Frozen releases and their manifests are read-only')
             if guardrails.system_path(target):
                 return _result('DENY', 'system-path', 'System locations are outside every Kel project')
+            # Kel never edits its own installed app, its Data root, or a credential folder (handoff
+            # §21, D-64): a constitution rule, so no mode, lease or grant below can reach them.
+            if target.strip():
+                from .containment import sensitive_reason
+                protected = sensitive_reason(target, store=self.store)
+                if protected:
+                    return _result('DENY', 'protected-path',
+                                   'Kel does not change %s.' % protected)
         if kind in ('write', 'repo', 'destructive', 'browser') and not target.strip():
             return _result('DENY', 'target-required', 'An effect needs an explicit target')
         if kind in ('tool', 'external') and not (tool.strip() or target.strip()):
@@ -223,10 +231,13 @@ class Authorizer:
             if not allowed:
                 return _result('DENY', 'role-policy',
                                'Role %s does not allow tool %s' % (role, tool))
-        # 5. Destructive actions additionally require an explicit approved approval.
+        # 5. Destructive actions additionally require an explicit approved approval — unless the
+        #    person chose Full access (D-64); the snapshot requirement above still applies.
+        from . import authority
+        full = authority.is_full(self.store)
         if kind == 'destructive':
             approval_id = intent.get('approval_id')
-            if not self._approval_ok(approval_id, intent):
+            if not full and not self._approval_ok(approval_id, intent):
                 return _result('REQUIRES_USER_APPROVAL', 'destructive-approval',
                                'This destructive action needs explicit user approval',
                                approval_id=approval_id)
@@ -260,7 +271,7 @@ class Authorizer:
                 outcome = 'EXPIRED_LEASE' if rule == 'lease-expired' else 'REVOKED_LEASE'
                 return _result(outcome, rule, check.get('reason') or '', lease_id=lease['lease_id'])
             if rule == 'lease-scope':
-                return self._expansion(intent, lease, kind, tool, target)
+                return self._expansion(intent, lease, kind, tool, target, full=full)
             return _result('DENY', rule or 'lease-denied',
                            check.get('reason') or 'Denied by lease policy',
                            lease_id=lease['lease_id'])
@@ -293,8 +304,12 @@ class Authorizer:
             return False  # an approval for another job is not this job's approval
         return True
 
-    def _expansion(self, intent, lease, kind, tool, target):
-        """Outside the leased scope: reuse a pending request, honor a denial, or ask once."""
+    def _expansion(self, intent, lease, kind, tool, target, full=False):
+        """Outside the leased scope: reuse a pending request, honor a denial, or ask once.
+
+        Under Full access (D-64) the grant is recorded on the person's behalf instead of asking;
+        an explicit earlier "no" from the person still stands.
+        """
         scope = KIND_SCOPE.get(kind, 'root')
         value = (tool or target) if kind in ('tool', 'external') else target
         with contextlib.closing(self.store.connect()) as db:
@@ -302,12 +317,15 @@ class Authorizer:
                 'SELECT * FROM boundary_expansion_requests WHERE lease_id=? AND scope=? AND target=?'
                 ' ORDER BY created DESC', (lease['lease_id'], scope, value))]
         pending = [r for r in prior if r['status'] == 'PENDING']
+        denied = [r for r in prior if r['status'] == 'DENIED']
+        if full and not denied:
+            return self._grant_full(intent, lease, kind, tool, target, scope, value,
+                                    pending[0]['request_id'] if pending else None)
         if pending:
             return _result('REQUIRES_BOUNDARY_EXPANSION', 'lease-scope',
                            'Outside the leased scope; a boundary request is already waiting for you',
                            lease_id=lease['lease_id'],
                            boundary_request_id=pending[0]['request_id'])
-        denied = [r for r in prior if r['status'] == 'DENIED']
         if denied:
             return _result('DENY', 'boundary-denied',
                            'You denied this boundary request; Kel will not re-ask for it',
@@ -327,6 +345,30 @@ class Authorizer:
                        'Outside the leased scope; Kel recorded a boundary request for you',
                        lease_id=lease['lease_id'],
                        boundary_request_id=created['request_id'])
+
+    def _grant_full(self, intent, lease, kind, tool, target, scope, value, request_id):
+        """Record the boundary grant Full access makes, then re-check it through the lease."""
+        meta = intent.get('metadata') or {}
+        try:
+            granted = self.autonomy.grant_on_behalf(
+                lease['lease_id'], scope, str(value), request_id=request_id,
+                what=str(meta.get('what') or ''), why=str(meta.get('why') or ''))
+        except PolicyError as exc:
+            return _result('DENY', 'lease-scope', str(exc), lease_id=lease['lease_id'])
+        from . import authority
+        authority.record_boundary_grant(self.store, intent.get('job') or lease.get('job_id'), scope,
+                                        granted['target'])
+        check = self.autonomy.check(lease['lease_id'], kind, target, tool,
+                                    destructive_snapshot=str(intent.get('snapshot_ref') or ''),
+                                    consume=bool(intent.get('consume', True)))
+        if not check.get('allowed'):
+            return _result('DENY', check.get('rule') or 'lease-scope',
+                           check.get('reason') or 'Denied by lease policy',
+                           lease_id=lease['lease_id'], boundary_request_id=granted['request_id'])
+        return _result('ALLOW', 'full-access',
+                       'Full access: Kel went ahead and recorded the grant',
+                       lease_id=lease['lease_id'], scope=check.get('scope'),
+                       boundary_request_id=granted['request_id'])
 
     # ---- durable record ------------------------------------------------------
     def _record(self, intent, decision):

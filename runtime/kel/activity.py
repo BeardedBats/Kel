@@ -30,6 +30,9 @@ KIND_BY_TYPE = {
     'connection.called': 'connections', 'connection.denied': 'connections',
     'network.decided': 'network', 'network.requested': 'network',
     'staffing.decided': 'staffing', 'proposal.queued': 'staffing',
+    # D-64 Full access: what Kel went ahead with (or refused) instead of asking.
+    'approval.auto_granted': 'work', 'approval.refused': 'work',
+    'authorization.auto_granted': 'work', 'authority.changed': 'other',
 }
 KINDS = ('work', 'attention', 'learning', 'recipes', 'connections', 'network', 'staffing',
          'recovery', 'scheduled', 'other')
@@ -98,6 +101,21 @@ def sentence_for(event_type, payload):
         return 'A network decision was recorded (%s).' % event_type.split('.', 1)[1]
     if event_type.startswith('staffing.'):
         return 'Kel adjusted who does the work.'
+    if event_type == 'approval.auto_granted':
+        summary = _snippet(detail.get('summary'), 120)
+        return ('Full access: Kel went ahead to %s.' % summary if summary
+                else 'Full access: Kel went ahead without asking.')
+    if event_type == 'approval.refused':
+        summary = _snippet(detail.get('summary'), 120)
+        return ('Kel did not %s: it would have touched %s.' % (summary or 'take that step',
+                                                               _snippet(detail.get('reason'), 60)
+                                                               or 'a protected folder'))
+    if event_type == 'authorization.auto_granted':
+        summary = _snippet(detail.get('summary'), 120)
+        return 'Full access: Kel went ahead to %s.' % (summary or 'continue')
+    if event_type == 'authority.changed':
+        return ('Full access is on: Kel acts without asking.' if detail.get('mode') == 'full'
+                else 'Ask first is on: Kel asks before it acts.')
     if event_type.startswith('schedule.'):
         return _schedule_sentence(event_type.split('.', 1)[1], detail)
     if event_type.startswith('approval.'):
