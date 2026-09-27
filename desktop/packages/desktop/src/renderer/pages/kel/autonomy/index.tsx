@@ -1,8 +1,9 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
- * Kel V1.4 Autonomy — capability leases, boundary decisions, and the locked guardrail block.
- * Everything is read from `/api/autonomy`; only the user resolves a boundary request, and the
- * guardrail block is presented read-only by design.
+ * Kel Permissions — what Kel may do right now, the access requests waiting on you, and (behind
+ * "Details") the checker, the emergency stop, and the locked safety rules.
+ * Everything is read from `/api/autonomy`; only the user resolves an access request. The default
+ * view speaks in plain access words (JR-18) — ids, digests and rule tables stay behind Details.
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -20,6 +21,7 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
+import { accessLabel } from '@renderer/components/kel/workLanguage';
 
 const STATE_CLASS: Record<string, string> = {
   ACTIVE: 'kel-chip kel-chip--ok',
@@ -31,11 +33,23 @@ const STATE_CLASS: Record<string, string> = {
 
 const CHECK_KINDS = ['write', 'repo', 'browser', 'tool', 'destructive'];
 
+const CHECK_KIND_LABEL: Record<string, string> = {
+  write: 'Change files',
+  repo: 'Repository',
+  browser: 'Website',
+  tool: 'Tool',
+  destructive: 'Delete files',
+};
+
 const STATE_TEXT: Record<string, string> = {
   ACTIVE: 'Active',
-  REVOKED: 'Revoked',
+  REVOKED: 'Turned off',
   PENDING: 'Waiting',
 };
+
+/** A permission's access, in plain words, one line per kind of access. */
+const leaseAccess = (lease: KelLease): string =>
+  Array.from(new Set(lease.scope.map((entry) => accessLabel(entry.kind, entry.value)))).join(' · ') || 'No access yet';
 
 export default function KelAutonomyPage() {
   const [leases, setLeases] = useState<KelLease[] | null>(null);
@@ -87,7 +101,7 @@ export default function KelAutonomyPage() {
       setNote(null);
       try {
         await fn();
-        setNote(`${label} recorded.`);
+        setNote(`${label} — done.`);
         await load();
       } catch (err) {
         setNote(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
@@ -113,7 +127,9 @@ export default function KelAutonomyPage() {
             <ShellWorkspaceLink /><h1 className="kel-h1">Permissions</h1>
           </div>
           <span className="kel-grow" />
-          <KelButton variant="primary" onClick={() => setAdvanced(value => !value)}>Run check</KelButton>
+          <KelButton variant="quiet" ariaLabel={advanced ? 'Hide permission details' : 'Show permission details'} onClick={() => setAdvanced(value => !value)}>
+            {advanced ? 'Hide details' : 'Details'}
+          </KelButton>
         </div>
 
         {stopArmed && (
@@ -137,13 +153,9 @@ export default function KelAutonomyPage() {
             ) : (
               <div className="kel-permission-table-scroll" tabIndex={0} role="region" aria-label="Active permissions table">
               <KelTable
-                head={['Work', 'State', 'Expires', 'Scope', 'Actions']}
+                head={['Work', 'State', 'Expires', 'Access', '']}
                 rows={leases.map((lease) => [
-                  <span
-                    className="kel-strong"
-                    key={`${lease.lease_id}-job`}
-                    title={`Work reference: ${lease.job_id}`}
-                  >
+                  <span className="kel-strong" key={`${lease.lease_id}-job`}>
                     {workLabelFor(lease.job_id, jobs)}
                   </span>,
                   <span className={STATE_CLASS[lease.state] ?? 'kel-chip'} key={`${lease.lease_id}-st`}>
@@ -153,18 +165,15 @@ export default function KelAutonomyPage() {
                     {lease.expired ? 'Expired' : formatUntil(lease.expires_at)}
                   </span>,
                   <span className="kel-meta" key={`${lease.lease_id}-scope`}>
-                    {lease.scope
-                      .map((entry) => `${entry.kind}: ${entry.value}`)
-                      .join(' · ')
-                      .slice(0, 120)}
+                    {leaseAccess(lease)}
                   </span>,
                   <KelButton
                     key={`${lease.lease_id}-act`}
                     variant="quiet"
                     disabled={busy || lease.state !== 'ACTIVE'}
-                    onClick={() => void act('Revoke', () => kelAutonomy.revoke(lease.lease_id, 'revoked from Autonomy'))}
+                    onClick={() => void act('Turned off', () => kelAutonomy.revoke(lease.lease_id, 'revoked from Permissions'))}
                   >
-                    Revoke
+                    Turn off
                   </KelButton>,
                 ])}
               />
@@ -184,8 +193,8 @@ export default function KelAutonomyPage() {
               pending.map((request) => (
                 <div className="kel-card" key={request.request_id}>
                   <div className="kel-row kel-permission-request-heading">
-                    <span className="kel-strong">{`${request.scope}: ${request.target}`}</span>
-                    <span className={STATE_CLASS[request.status] ?? 'kel-chip'}>waiting on you</span>
+                    <span className="kel-strong">{accessLabel(request.scope, request.target)}</span>
+                    <span className={STATE_CLASS[request.status] ?? 'kel-chip'}>Waiting on you</span>
                   </div>
                   {request.what && <p className="kel-sub">{request.what}</p>}
                   {request.why && <p className="kel-meta">{`Why: ${request.why}`}</p>}
@@ -231,11 +240,13 @@ export default function KelAutonomyPage() {
           </KelCard>
         )}
 
-        <KelCard title="Permission check">
-          <p className="kel-sub kel-permission-check-desktop">Locked guardrails · digest {digest ? digest.slice(0, 12) : 'loading…'}</p>
+        <KelCard title="Safety rules">
+          <p className="kel-sub kel-permission-check-desktop">
+            Kel checks every action against safety rules that projects, repositories and web content can't change.
+          </p>
           <button type="button" className="kel-permission-check-mobile" aria-expanded={advanced} onClick={() => setAdvanced(value => !value)}>
-            <span>Locked guardrails</span>
-            <span>{digest ? digest.slice(0, 8) : 'loading…'}</span>
+            <span>Safety rules</span>
+            <span>{advanced ? 'Hide details' : 'Details'}</span>
           </button>
         </KelCard>
 
@@ -276,18 +287,17 @@ export default function KelAutonomyPage() {
           at its next safe check. It does not undo work that already finished.
         </p>
             <p className="kel-meta">
-              Changes apply immediately — revoking a permission stops the next step, even while work is
+              Changes apply immediately — turning off a permission stops the next step, even while work is
               running, and nothing widens on its own: extra access only follows an access request you approve.
             </p>
-            <KelCard title="Check a scope">
+            <KelCard title="Check what Kel may do">
           <p className="kel-sub">
-            Test what Kel's permission checker would decide for a scope before any work runs. It refuses
-            anything outside what you approved, work on locked or frozen targets, and anything it cannot
-            verify.
+            Ask whether Kel would be allowed to do something before any work runs. Kel refuses anything
+            outside what you approved, anything locked, and anything it cannot verify.
           </p>
           <div className="kel-row">
             <KelTabs
-              tabs={CHECK_KINDS.map((entry) => ({ id: entry, label: entry }))}
+              tabs={CHECK_KINDS.map((entry) => ({ id: entry, label: CHECK_KIND_LABEL[entry] ?? entry }))}
               active={kind}
               onSelect={setKind}
             />
@@ -296,8 +306,8 @@ export default function KelAutonomyPage() {
             <input
               className="kel-input"
               value={target}
-              placeholder={kind === 'tool' ? 'tool name, e.g. run_tests' : 'path, domain, or target'}
-              aria-label="Scope target"
+              placeholder={kind === 'tool' ? 'Tool name, e.g. run_tests' : kind === 'browser' ? 'Website, e.g. example.com' : 'Folder or file'}
+              aria-label="What to check"
               onChange={(event) => setTarget(event.target.value)}
             />
             <KelButton
@@ -313,23 +323,21 @@ export default function KelAutonomyPage() {
                 })
               }
             >
-              Check scope
+              Check
             </KelButton>
           </div>
           {decision && (
             <p className="kel-sub">
-              {decision.allowed
-                ? `Allowed — rule ${decision.rule}: ${decision.reason}`
-                : `Refused — rule ${decision.rule}: ${decision.reason}`}
+              {decision.allowed ? `Allowed — ${decision.reason}` : `Not allowed — ${decision.reason}`}
             </p>
           )}
-          {!firstLeaseId && <p className="kel-meta">Grant a permission first; the check needs a scope to test against.</p>}
+          {!firstLeaseId && <p className="kel-meta">Nothing to check against yet — this works once Kel has a permission for some work.</p>}
         </KelCard>
 
         {leases !== null && leases.length > 0 && (
           <KelCard title="Work references">
             <p className="kel-meta">
-              Support detail — the identifiers behind the Work column, kept out of the normal view.
+              Support detail — the references behind the Work column, for troubleshooting only.
             </p>
             <KelTable
               head={['Work', 'Job id', 'Lease id']}
@@ -347,14 +355,14 @@ export default function KelAutonomyPage() {
         )}
 
         {rules.length > 0 && (
-          <KelSection title={`Locked guardrails · digest ${digest.slice(0, 12)}`}>
+          <KelSection title="Safety rules (locked)">
             <p className="kel-sub">
               These safety rules are locked and cannot be changed by projects, repositories, or web content;
               Kel refuses work that tries to change them. Every action is checked against them before it
               runs, and every decision is recorded.
             </p>
             <KelTable
-              head={['Rule', 'What it means', 'Covered by test']}
+              head={['Rule', 'What it means', 'Checked by']}
               rows={rules.map((rule) => [
                 <span className="kel-strong" key={`${rule.rule}-id`}>
                   {rule.rule}
@@ -365,6 +373,7 @@ export default function KelAutonomyPage() {
                 </span>,
               ])}
             />
+            {digest && <p className="kel-meta">{`Rule set fingerprint ${digest.slice(0, 12)}`}</p>}
           </KelSection>
             )}
           </>

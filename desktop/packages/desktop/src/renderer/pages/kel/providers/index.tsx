@@ -27,6 +27,7 @@ import {
   type KelProviderStatus,
 } from '@renderer/components/kel/kelApi';
 import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
+import '@renderer/styles/kel-work.css';
 
 const Providers: React.FC = () => {
   const desktop = !useLayoutContext()?.isMobile;
@@ -150,14 +151,14 @@ const Providers: React.FC = () => {
         const status = await window.kelAPI?.credentials?.status();
         if (status) setSecure(status);
         await load();
-        setNote(`Removed the stored key and its engine metadata for ${provider}.`);
+        setNote(`Removed the stored key for ${nameOf(provider)}.`);
       } catch (err) {
-        setNote(`Couldn't remove the key for ${provider}. ${failureSentence(err, 'The engine did not answer — try again.')}`);
+        setNote(`Couldn't remove the key for ${nameOf(provider)}. ${failureSentence(err, 'Kel did not answer — try again.')}`);
       } finally {
         setBusy(false);
       }
     },
-    [load]
+    [load, nameOf]
   );
 
   return (
@@ -286,7 +287,7 @@ const Providers: React.FC = () => {
           actions={<KelButton variant="quiet" onClick={() => setReadinessOptionsOpen(open => !open)} ariaLabel="Preflight options">Options</KelButton>}>
           <div className="kel-shell-provider-preflight-rows">
             <div className="kel-shell-provider-preflight-row"><span>Runtime reachable</span><span className="kel-meta">{runtimeMs === null ? 'local' : `local · ${runtimeMs} ms`}</span><span className={`kel-chip ${error ? 'kel-chip--wait' : 'kel-chip--ok'}`}>{error ? 'Unavailable' : runtimeMs === null ? 'Checking' : 'Pass'}</span></div>
-            <div className="kel-shell-provider-preflight-row"><span>Default model responds</span><span className="kel-meta">Automatic</span><span className="kel-chip kel-chip--wait">Not tested</span></div>
+            <div className="kel-shell-provider-preflight-row" data-testid="preflight-model-row"><span>A model can take work</span><span className="kel-meta">{readiness ? (readiness.chosen ? readiness.chosen.label : 'None available') : 'Run preflight to check'}</span><span className={`kel-chip ${readiness?.chosen ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{readiness ? (readiness.chosen ? 'Pass' : 'Unavailable') : 'Not checked'}</span></div>
             <div className="kel-shell-provider-preflight-row"><span>Credential store</span><span className="kel-meta">OS-backed keychain</span><span className={`kel-chip ${secure?.available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{secure?.available ? 'Available' : 'Unavailable'}</span></div>
           </div>
           {readinessOptionsOpen && <div className="kel-shell-provider-preflight-options">
@@ -343,6 +344,8 @@ const Providers: React.FC = () => {
         </KelCard>
 
         <KelCard title="Credential metadata" className={error ? 'kel-provider-error-secondary' : undefined}>
+          <details className="kel-work-details" data-testid="credential-details">
+          <summary>Details</summary>
           {credentialRows.length === 0 ? (
             <KelEmpty
               title="No Kel-owned credential metadata yet."
@@ -353,7 +356,7 @@ const Providers: React.FC = () => {
               head={['Provider', 'Fields', 'Reference', 'Updated']}
               rows={credentialRows.map((row) => [
                 <span className="kel-strong" key={`${row.provider}-p`}>
-                  {row.provider}
+                  {nameOf(row.provider)}
                 </span>,
                 <span className="kel-meta" key={`${row.provider}-f`}>
                   {(row.fields ?? []).join(', ')}
@@ -367,6 +370,7 @@ const Providers: React.FC = () => {
               ])}
             />
           )}
+          </details>
         </KelCard>
 
       </main>

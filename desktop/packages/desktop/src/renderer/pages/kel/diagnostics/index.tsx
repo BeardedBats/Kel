@@ -2,8 +2,8 @@ import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import Modal from '@renderer/components/base/AionModal';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 /**
- * Kel V1.4 Diagnostics — health, measured performance, process ownership, maintenance, and a
- * sanitized export that never leaves the machine.
+ * Kel V1.4 Diagnostics — health, measured performance, process ownership, maintenance, and one
+ * sanitized issue report that is saved on this computer (never sent anywhere).
  *
  * Everything is read from `/api/diagnostics`; where a value is not measured the surface says so.
  */
@@ -20,6 +20,8 @@ import {
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { kelDiagnostics, type KelDiagnosticsSnapshot } from '@renderer/components/kel/kelApi';
+import { shortPlace } from '@renderer/components/kel/workLanguage';
+import '@renderer/styles/kel-work.css';
 
 interface Span {
   at: number;
@@ -42,6 +44,9 @@ const bytes = (value: number | undefined): string => {
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };
+
+/** Controls the engine cannot perform yet say so in visible words, not only in a tooltip. */
+const NOT_AVAILABLE = 'Not available in this version yet.';
 
 const Diagnostics: React.FC = () => {
   const isMobile = Boolean(useLayoutContext()?.isMobile);
@@ -84,7 +89,7 @@ const Diagnostics: React.FC = () => {
   }, [load]);
 
   useEffect(() => {
-    if (!exportOpen || isMobile) return;
+    if (!exportOpen) return;
     let canceled = false;
     setReceipt(null);
     setExportPreviewError(null);
@@ -92,7 +97,7 @@ const Diagnostics: React.FC = () => {
       if (!canceled && payload.receipt) setReceipt(payload.receipt as { included: string[]; excluded: string[] });
     }).catch((err: unknown) => { if (!canceled) setExportPreviewError(err); });
     return () => { canceled = true; };
-  }, [exportOpen, isMobile, exportPreviewVersion]);
+  }, [exportOpen, exportPreviewVersion]);
 
   const run = useCallback(
     async (label: string, fn: () => Promise<unknown>) => {
@@ -100,7 +105,8 @@ const Diagnostics: React.FC = () => {
       setMessage(null);
       try {
         const result = await fn();
-        setMessage(isMobile ? `${label}: ${JSON.stringify(result).slice(0, 220)}` : label === 'Export sanitized diagnostics' ? 'Sanitized diagnostics were written locally.' : 'Local draft was written.');
+        void result;
+        setMessage('Report saved on this computer.');
         await load();
       } catch (err) {
         setMessage(`${label} failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
@@ -108,8 +114,20 @@ const Diagnostics: React.FC = () => {
         setBusy(null);
       }
     },
-    [load, isMobile]
+    [load]
   );
+
+  const saveReport = (): void =>
+    void run('Saving the report', async () => {
+      const result = await kelDiagnostics.report(note);
+      setReport({ path: result.path, redacted: result.redacted, bytes: result.bytes });
+      return result;
+    });
+
+  // No full paths (JR-16): the file name and where it lives, in words.
+  const reportLine = report
+    ? `Saved ${shortPlace(report.path)} (${bytes(report.bytes)}) in the diagnostics folder of your Kel data${report.redacted ? ' · secret-looking text in your note was hidden' : ''}.`
+    : null;
 
   return (
     <div className='kel-scope'>
@@ -132,77 +150,41 @@ const Diagnostics: React.FC = () => {
             {!spans.length && <p className='kel-meta'>No startup span recorded yet for this session.</p>}
           </KelCard>
           <KelCard title='Maintenance'>
-            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p></div><button className='kel-btn kel-btn--danger' type='button' disabled title='This source control has no matching runtime operation yet.'>Clear</button></div>
-            <div className='kel-shell-preference-row'><div><div>Restart runtime</div><p className='kel-meta'>Restarts the local runtime without closing Kel.</p></div><button className='kel-btn kel-btn--primary' type='button' disabled title='This source control has no matching runtime operation yet.'>Restart</button></div>
+            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p><p className='kel-meta kel-work-why-disabled' id='kel-diag-clear-why'>{NOT_AVAILABLE}</p></div><button className='kel-btn kel-btn--danger' type='button' disabled aria-describedby='kel-diag-clear-why'>Clear</button></div>
+            <div className='kel-shell-preference-row'><div><div>Restart Kel's engine</div><p className='kel-meta'>Restarts Kel's engine without closing the app.</p><p className='kel-meta kel-work-why-disabled' id='kel-diag-restart-why'>{NOT_AVAILABLE}</p></div><button className='kel-btn kel-btn--primary' type='button' disabled aria-describedby='kel-diag-restart-why'>Restart</button></div>
           </KelCard>
         </>}
         <Modal className={isMobile ? undefined : 'kel-diagnostics-export-modal'} variant={isMobile ? undefined : 'standard'}
-          title='Export and issue report' header={isMobile ? undefined : { title: 'Export and issue report', subtitle: 'Kel removes keys, paths and chat text before anything leaves this computer.', showClose: false }}
+          title='Export and issue report' header={isMobile ? undefined : { title: 'Export and issue report', subtitle: 'Kel leaves out keys, file paths and chat text. The report is saved on this computer — nothing is sent.', showClose: false }}
           visible={exportOpen} onCancel={() => setExportOpen(false)} footer={null} alignCenter={isMobile ? undefined : false}
           style={isMobile ? undefined : { width: 560, top: 0, marginTop: 120 }} autoFocus focusLock>
           {isMobile ? (
-            <KelCard
-              title='Export and issue report'
-              actions={
-                <KelButton
-                  variant='secondary'
-                  disabled={busy !== null}
-                  onClick={() =>
-                    void run('Export sanitized diagnostics', async () => {
-                      const payload = (await kelDiagnostics.export()) as {
-                        receipt?: { included: string[]; excluded: string[] };
-                      };
-                      if (payload.receipt) setReceipt(payload.receipt);
-                      return payload.receipt ?? payload;
-                    })
-                  }
-                >
-                  Export sanitized diagnostics
-                </KelButton>
-              }
-            >
+            <KelCard title='Export and issue report'>
               <p className='kel-sub'>
-                The export is built from an allowlist, not by filtering a dump: credentials, tokens and API
-                keys, prompts, transcripts of unrelated conversations, personal files and environment dumps
-                are excluded by construction.
+                The report is built from an allowlist, not by filtering a dump: credentials, tokens and API
+                keys, prompts, unrelated chats, personal files and environment details are left out. It is
+                saved on this computer; nothing is sent.
               </p>
               {receipt && (
-                <KelSection title='Receipt'>
+                <KelSection title='What the report includes'>
                   <p className='kel-meta'>Included: {receipt.included.join(' · ') || '—'}</p>
-                  <p className='kel-meta'>Excluded: {receipt.excluded.join(' · ') || '—'}</p>
+                  <p className='kel-meta'>Left out: {receipt.excluded.join(' · ') || '—'}</p>
                 </KelSection>
               )}
               <div className='kel-row'>
                 <input
                   className='kel-input'
                   aria-label='Issue report note'
-                  placeholder='What went wrong? (this file stays on your machine)'
+                  placeholder='What went wrong? (optional)'
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                 />
-                <KelButton
-                  variant='primary'
-                  disabled={busy !== null}
-                  onClick={() =>
-                    void run('Write issue report', async () => {
-                      const result = await kelDiagnostics.report(note);
-                      setReport({ path: result.path, redacted: result.redacted, bytes: result.bytes });
-                      return result;
-                    })
-                  }
-                >
-                  Write local draft
+                <KelButton variant='primary' disabled={busy !== null} onClick={saveReport}>
+                  Save report
                 </KelButton>
               </div>
-              {report && (
-                <p className='kel-meta'>
-                  Wrote {report.path} ({bytes(report.bytes)})
-                  {report.redacted
-                    ? ' · secret-shaped text in your note was redacted before writing'
-                    : ' · nothing secret-shaped found in your note'}
-                  .
-                </p>
-              )}
+              {message && <p className='kel-meta' role='status'>{busy ? 'Working…' : message}</p>}
+              {reportLine && <p className='kel-meta'>{reportLine}</p>}
             </KelCard>
           ) : (
             <div className='kel-diagnostics-export-body'>
@@ -219,20 +201,11 @@ const Diagnostics: React.FC = () => {
               </>}
               <label className='kel-diagnostics-export-note'><span>What happened? (optional)</span><textarea rows={2} aria-label='Issue report note' value={note} onChange={(event) => setNote(event.target.value)} /></label>
               <div className='kel-diagnostics-export-actions'>
-                <KelButton variant='quiet' disabled={busy !== null} onClick={() => void run('Write issue report', async () => {
-                  const result = await kelDiagnostics.report(note);
-                  setReport({ path: result.path, redacted: result.redacted, bytes: result.bytes });
-                  return result;
-                })}>Write local draft</KelButton>
-                <KelButton variant='primary' disabled={busy !== null || !receipt} onClick={() => void run('Export sanitized diagnostics', async () => {
-                  const result = await kelDiagnostics.report('');
-                  setReport({ path: result.path, redacted: result.redacted, bytes: result.bytes });
-                  return { path: result.path };
-
-                })}>Export sanitized diagnostics</KelButton>
+                <KelButton variant='quiet' disabled={busy !== null} onClick={() => setExportOpen(false)}>Close</KelButton>
+                <KelButton variant='primary' disabled={busy !== null || !receipt} onClick={saveReport}>Save report</KelButton>
               </div>
               {message && <p className='kel-diagnostics-export-result' role='status'>{busy ? 'Working…' : message}</p>}
-              {report && <p className='kel-diagnostics-export-result'>Wrote {report.path} ({bytes(report.bytes)}){report.redacted ? ' · secret-shaped text was redacted' : ''}.</p>}
+              {reportLine && <p className='kel-diagnostics-export-result'>{reportLine}</p>}
             </div>
           )}
         </Modal>
