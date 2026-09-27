@@ -3,7 +3,7 @@ import { Message } from '@arco-design/web-react';
 import check from '@renderer/assets/figma/chat-pickers/model-check.svg';
 import plus from '@renderer/assets/figma/chat-pickers/model-plus.svg';
 import settings from '@renderer/assets/figma/chat-pickers/model-settings.svg';
-import { choiceLabel, type Choice, type ModelState } from './KelModelControl';
+import { choiceLabel, unavailableNote, type Choice, type ModelState } from './KelModelControl';
 
 type Scope = 'conversation' | 'default';
 
@@ -38,8 +38,11 @@ export const KelDesktopModelMenu: React.FC<{
     </button>
     {state.providers.flatMap(provider => provider.options.map(option => {
       const active = selected?.provider === provider.id && selected.model === option.id;
-      return <button type='button' key={`${provider.id}:${option.id}`} className='kel-desktop-picker__row' aria-pressed={active} disabled={pending} onClick={() => void choose({ provider: provider.id, model: option.id })}>
-        <span>{option.label}</span>{active ? <img src={check} alt='' /> : !option.available && <small>Needs setup</small>}
+      // CH-2: an option Kel cannot answer with says why ("Not supported for chat yet", "Needs setup")
+      // and cannot be picked; Add Model and model settings stay the way to set one up.
+      const note = unavailableNote(option, provider);
+      return <button type='button' key={`${provider.id}:${option.id}`} className='kel-desktop-picker__row' aria-pressed={active} disabled={pending || !!note} onClick={() => void choose({ provider: provider.id, model: option.id })}>
+        <span>{option.label}</span>{note ? <small>{note}</small> : active && <img src={check} alt='' />}
       </button>;
     }))}
     <div className='kel-desktop-picker__divider' />

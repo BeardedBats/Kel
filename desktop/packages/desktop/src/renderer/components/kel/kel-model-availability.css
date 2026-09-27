@@ -1,0 +1,3 @@
+/* CH-2: a model Kel cannot answer with stays visible with its reason but cannot be picked. */
+.kel-mobile-model-picker__choice:disabled { cursor: default; }
+.kel-mobile-model-picker__choice:disabled strong { opacity: .5; }

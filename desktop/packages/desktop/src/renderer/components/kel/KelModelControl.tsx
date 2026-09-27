@@ -14,11 +14,19 @@ import { kelRequest } from './kelApi';
 import { KelDesktopModelMenu } from './KelDesktopModelMenu';
 
 export type Choice = { provider: string | null; model: string | null };
-type ModelOption = { id: string; label: string; available: boolean };
-type ProviderRow = { id: string; label: string; available: boolean; options: ModelOption[] };
+/** `note` says, in plain words, why an option cannot answer in chat (CH-2), e.g. "Not supported for chat yet". */
+type ModelOption = { id: string; label: string; available: boolean; note?: string | null };
+type ProviderRow = { id: string; label: string; available: boolean; note?: string | null; options: ModelOption[] };
 export type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
 
 const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
+
+/** Why an option cannot be picked, in the engine's plain words; null when it can answer in chat. */
+export const unavailableNote = (option: ModelOption, provider?: Pick<ProviderRow, 'note'>): string | null =>
+  option.available ? null : option.note || provider?.note || 'Needs setup';
+
+/** A provider Kel has no way to run yet cannot be fixed from Providers, so it offers no "Set up". */
+export const NOT_SUPPORTED_NOTE = 'Not supported for chat yet';
 
 /** The plain name of a model choice ('Automatic' when Kel picks). */
 export const choiceLabel = (state: ModelState | null, choice: Choice | null): string => {
@@ -129,10 +137,8 @@ export const useKelModelState = (conversationId?: string) => {
   return { state, cid, effectiveLabel, refresh, setDefault, setConversation };
 };
 
-const availabilityLabel = (available: boolean) => (
-  <span className={`ms-auto kel-chip ${available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>
-    {available ? 'Available' : 'Needs setup'}
-  </span>
+const availabilityLabel = (note: string | null) => (
+  <span className={`ms-auto kel-chip ${note ? 'kel-chip--wait' : 'kel-chip--ok'}`}>{note ?? 'Available'}</span>
 );
 
 export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversationId }) => {
@@ -175,7 +181,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
             provider.options.map((option) => (
               <Menu.Item
                 key={'chat-' + provider.id + '-' + option.id}
-                disabled={false}
+                disabled={!option.available}
                 onClick={() => {
                   if (state.conversation?.provider === provider.id && state.conversation?.model === option.id) {
                     void setConversation(null);
@@ -192,7 +198,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                   {state.conversation?.provider === provider.id && state.conversation?.model === option.id ? (
                     <span className='ms-auto text-12px'>Current</span>
                   ) : (
-                    availabilityLabel(option.available)
+                    availabilityLabel(unavailableNote(option, provider))
                   )}
                 </span>
               </Menu.Item>
@@ -216,7 +222,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
           provider.options.map((option) => (
             <Menu.Item
               key={'default-' + provider.id + '-' + option.id}
-              disabled={false}
+              disabled={!option.available}
               onClick={() => {
                 void setDefault({ provider: provider.id, model: option.id });
               }}
@@ -229,7 +235,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
                 {state.default?.provider === provider.id && state.default?.model === option.id ? (
                   <span className='ms-auto text-12px'>Current</span>
                 ) : (
-                  availabilityLabel(option.available)
+                  availabilityLabel(unavailableNote(option, provider))
                 )}
               </span>
             </Menu.Item>
@@ -301,14 +307,18 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
           {providers.map((provider) =>
             provider.options.map((option) => {
               const current = state.default?.provider === provider.id && state.default?.model === option.id;
+              const note = unavailableNote(option, provider);
+              // CH-2: an option Kel cannot answer with is never picked here; one that setup can fix
+              // leads to Providers, one Kel cannot run yet says so and does nothing.
+              const settable = note !== NOT_SUPPORTED_NOTE;
               return (
                 <button
                   key={provider.id + '-' + option.id}
                   type='button'
-                  disabled={false}
+                  disabled={!settable}
                   data-testid={'kel-default-' + provider.id + '-' + option.id}
                   aria-pressed={current}
-                  onClick={() => option.available ? void setDefault({ provider: provider.id, model: option.id }) : navigate('/providers')}
+                  onClick={() => (!note ? void setDefault({ provider: provider.id, model: option.id }) : navigate('/providers'))}
                   className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
                   style={{
                     background: current ? 'var(--kel-surface-2)' : 'transparent',
@@ -317,10 +327,10 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
                 >
                   <span className='kel-shell-default-model-lead' aria-hidden='true'>⌁</span>
                   <span className='kel-shell-default-model-name'>{option.label}<span>{provider.label}</span></span>
-                  <span className={`kel-shell-default-model-status${!option.available ? ' kel-shell-default-model-status--wait' : ''}`}>
-                    {current ? 'Current' : option.available ? 'Available' : 'Needs setup'}
+                  <span className={`kel-shell-default-model-status${note ? ' kel-shell-default-model-status--wait' : ''}`}>
+                    {current && !note ? 'Current' : note ?? 'Available'}
                   </span>
-                  <span className='kel-shell-default-model-action'>{current ? '' : option.available ? 'Use' : 'Set up'}</span>
+                  <span className='kel-shell-default-model-action'>{current || !settable ? '' : note ? 'Set up' : 'Use'}</span>
                 </button>
               );
             })
