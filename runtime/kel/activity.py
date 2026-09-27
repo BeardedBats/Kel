@@ -32,7 +32,7 @@ KIND_BY_TYPE = {
     'staffing.decided': 'staffing', 'proposal.queued': 'staffing',
 }
 KINDS = ('work', 'attention', 'learning', 'recipes', 'connections', 'network', 'staffing',
-         'recovery', 'other')
+         'recovery', 'scheduled', 'other')
 FAILED_VERDICTS = ('FAILED', 'UNCERTAIN')
 FAILED_STATES = ('CANCELLED', 'CANCELLING', 'BLOCKED')
 
@@ -98,9 +98,50 @@ def sentence_for(event_type, payload):
         return 'A network decision was recorded (%s).' % event_type.split('.', 1)[1]
     if event_type.startswith('staffing.'):
         return 'Kel adjusted who does the work.'
+    if event_type.startswith('schedule.'):
+        return _schedule_sentence(event_type.split('.', 1)[1], detail)
     if event_type.startswith('approval.'):
         return 'You were asked something about this work.'
     return 'Something was recorded (%s).' % event_type
+
+
+def _schedule_sentence(action, detail):
+    """D-57: one plain sentence per scheduled-task event."""
+    name = '\u201c%s\u201d' % (_snippet(detail.get('name'), 80) or 'a scheduled task')
+    late = detail.get('late_by') or 0
+    if action == 'created':
+        return 'You scheduled %s.' % name
+    if action == 'updated':
+        return 'You changed the scheduled task %s.' % name
+    if action == 'paused':
+        if detail.get('problem'):
+            return 'Kel paused %s: %s' % (name, _snippet(detail.get('problem'), 160))
+        return 'You paused %s.' % name
+    if action == 'resumed':
+        return 'You resumed %s.' % name
+    if action == 'deleted':
+        return 'You deleted the scheduled task %s.' % name
+    if action == 'imported':
+        return 'Kel brought %s over from your earlier scheduled tasks.' % name
+    if action == 'fired':
+        if detail.get('manual'):
+            return 'You ran %s now.' % name
+        if late >= 60:
+            return 'A scheduled run of %s started, %d minutes late.' % (name, int(late // 60))
+        return 'A scheduled run of %s started.' % name
+    if action == 'skipped':
+        return 'A run of %s was skipped: the last one was still going.' % name
+    if action == 'queued':
+        return 'A run of %s will start when the last one finishes.' % name
+    if action == 'missed':
+        count = int(detail.get('count') or 1)
+        return 'Missed %d run%s of %s while Kel was closed.' % (count, '' if count == 1 else 's', name)
+    if action == 'not_started':
+        cause = _snippet(detail.get('cause'), 160)
+        return "A run of %s didn't start%s" % (name, ': ' + cause if cause else '.')
+    if action == 'imported_run':
+        return 'An earlier run of %s.' % name
+    return 'Something happened to %s.' % name
 
 
 def timeline(store, *, project_id=None, since=None, until=None, kind=None, failures_only=False,
@@ -129,6 +170,8 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
         if until and at > until:
             continue
         row_kind = KIND_BY_TYPE.get(event_type, 'other')
+        if event_type.startswith('schedule.'):
+            row_kind = 'scheduled'  # D-57
         if row_kind == 'other' and event_type.startswith('approval.'):
             row_kind = 'attention'
         if kind and row_kind != kind:
@@ -137,11 +180,22 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
         job = jobs.get(aggregate)
         row_project = None
         row_projects = set()
+        schedule_detail = None
         if job:
             # D-54: a job belongs to its chat's project and to the project its contract names — the
             # same rule Work uses, so both pages count the same jobs for a project.
             row_projects = job_projects(job, conversations)
             row_project = project_id if project_id in row_projects else primary_project(job, conversations)
+        if row_kind == 'scheduled':
+            # D-57: a scheduled-task event belongs to the project its schedule names.
+            try:
+                raw = event.get('payload')
+                schedule_detail = (json.loads(raw) if isinstance(raw, str) else raw or {}).get('detail') or {}
+            except (TypeError, ValueError, AttributeError):
+                schedule_detail = {}
+            if schedule_detail.get('project_id'):
+                row_projects = {schedule_detail['project_id']}
+                row_project = schedule_detail['project_id']
         if project_id and project_id not in row_projects:
             continue
         payload = event.get('payload')
@@ -170,6 +224,8 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
                 recorded = (payload.get('detail') or {}).get('verdict')
             if recorded in FAILED_VERDICTS:
                 failed = True
+        if event_type == 'schedule.not_started':
+            failed = True
         if failures_only and not failed:
             continue
         if needle and needle not in what.lower():
@@ -181,6 +237,8 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
                         'project_id': row_project, 'job_id': aggregate if job else None,
                         'state': state, 'verdict': verdict, 'failed': failed,
                         'result': artifact, 'evidence': digest, 'can_retry': can_retry})
+        if row_kind == 'scheduled':
+            entries[-1]['schedule_id'] = aggregate.split(':', 1)[1] if ':' in aggregate else None
     entries.sort(key=lambda item: item.get('at') or 0, reverse=True)
     return {'entries': entries[:limit], 'total': len(entries), 'counts': counts,
             'kinds': list(KINDS), 'projects': [{'project_id': key, 'count': projects[key]}

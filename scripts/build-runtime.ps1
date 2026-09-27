@@ -1,5 +1,6 @@
 # Builds the Kel Runtime (KelEngine) with PyInstaller from this repository.
-# Requirements: Python 3.12+ with PyInstaller installed (pip install pyinstaller).
+# Requirements: Python 3.12+ with PyInstaller installed (pip install pyinstaller) and the engine's
+# bundled packages (python -m pip install -r runtime/requirements.txt).
 # Usage (from repo root): powershell -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 param(
     [string]$Python = "python",

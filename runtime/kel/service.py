@@ -195,6 +195,9 @@ class Service:
         # D-54: projects are the one context boundary (migration 32 runs here, once).
         from .projects import Projects
         self.projects=Projects(self.store)
+        # D-57: scheduled tasks fire from supervision (migration 33 runs here, once).
+        from .schedules import Scheduler
+        self.schedules=Scheduler(self)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -230,12 +233,15 @@ class Service:
                 break
             try:busy=self.engine.tick() is not False;self.error=None
             except Exception as exc:self.error=type(exc).__name__+': '+str(exc);busy=True
+            try:self.schedules.maybe_tick()  # D-57: at most every 5 s, never while restarting
+            except Exception:pass  # a schedule that cannot fire records why; supervision goes on
             if time.time()-self._last_follow_up>=(1 if busy else IDLE_TICK):
                 self._last_follow_up=time.time()
                 try:handoff.follow_up(self.store)
                 except Exception:pass  # a missed notice is retried on the next pass; never stop supervision
 
-    def submit(self,data):
+    def submit(self,data,origin=None):
+        """`origin` (D-57): the schedule that started this run. Python callers only."""
         sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','')
         if not isinstance(text,str):
             # PERSIST-CANONICAL (Round 2.5 R5): a malformed request answers in a plain sentence.
@@ -274,6 +280,7 @@ class Service:
         except Exception:
             pass  # enrichment is additive; the handoff packet remains the fallback
         packet['kind_source']=kind_source
+        if origin:packet['schedule']=dict(origin)
         if job_id:packet['continuation']={'job_id':job_id}
         recipe_run=data.get('recipe')
         if recipe_run is not None:
@@ -288,7 +295,9 @@ class Service:
                 return sid
             db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',(sid,cid,text,'PLANNING',None,None,time.time()))
             # D-53: the person's own message is the one a hand-off job keeps (user before acknowledgement).
-            packet['intake_seq']=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'user',text,time.time())).lastrowid
+            meta=encode({'kind':'scheduled','schedule_id':origin.get('id'),'name':origin.get('name'),
+                         'slot':origin.get('slot')}) if origin else None
+            packet['intake_seq']=db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',(cid,'user',text,time.time(),meta)).lastrowid
             db.execute('INSERT INTO submission_packets VALUES(?,?,?)',(sid,encode(packet),kind))
             for aid in attachments:db.execute('INSERT INTO message_files VALUES(?,?)',(sid,aid))
             db.execute("UPDATE conversations SET title=? WHERE id=? AND title='New conversation'",(text[:65],cid))
@@ -472,6 +481,12 @@ class Service:
             explicit_job=(packet.get('continuation') or {}).get('job_id')
             continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             jid=None
+            if packet.get('schedule') and (packet.get('recipe_invocation') or {}).get('recipe_id')!='continue-work':
+                # D-57: a scheduled run is work by definition; its acknowledgement is a plain template.
+                from .schedules import ACK
+                name=packet['schedule'].get('name') or 'your task'
+                return self._handoff(sid,cid,text,packet,kind,False,
+                                     {'title':name,'acknowledgement':ACK%name,'scheduled':True})
             if kind=='status' or lower in ('status','what are you working on?','what is running?'):
                 jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
                 answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
@@ -548,7 +563,8 @@ class Service:
     def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision,choice=None):
         """D-53: acknowledge now (one transaction), start the work on the planning pool, return."""
         title=title_for(text,decision.get('title'))
-        ack=guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
+        ack=decision['acknowledgement'] if decision.get('scheduled') else \
+            guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
         with self.handoff_lock:
             with self.store.transaction() as db:
                 if not self._still_planning(db,sid):
@@ -729,7 +745,8 @@ class Service:
         """
         try:
             while True:
-                contract=self._compile_work(sid,cid,text,packet,kind,greenfield_flag)
+                contract=self._scheduled_contract(sid,cid,text,packet,kind) if packet.get('schedule') else \
+                    self._compile_work(sid,cid,text,packet,kind,greenfield_flag)
                 with self.handoff_lock:
                     with contextlib.closing(self.store.connect()) as db:
                         current=db.execute('SELECT text,state FROM submissions WHERE id=?',(sid,)).fetchone()
@@ -764,20 +781,14 @@ class Service:
                            (cid,'assistant',"I wasn't able to get that started — "+reason+'. You can retry it from the card above.',time.time()))
             return None
 
-    def _recipe_run(self,sid,cid,text,packet):
-        """Run a validated recipe through the existing engine (no second runtime)."""
+    def _recipe_contract(self,sid,packet,info=None):
+        """The job contract for a recipe invocation; PolicyError in plain words when it cannot compile."""
         from .recipes import RecipeLibrary, compile_recipe
-        library=RecipeLibrary(self.store)
         invocation=packet.get('recipe_invocation') or {}
         project_id=(packet.get('project') or {}).get('id') or 'default'
-        try:
-            info=library.get(invocation.get('recipe_id',''),project_id=project_id)
-        except PolicyError as exc:
-            self.store.add_message('I could not find that recipe. '+str(exc),'assistant',cid)
-            return None
+        if info is None:
+            info=RecipeLibrary(self.store).get(invocation.get('recipe_id',''),project_id=project_id)
         recipe=info['recipe']
-        if recipe['recipe_id']=='continue-work':
-            return self._continuation(cid,text,packet)
         root=tests=None
         needs_code=recipe['kind']=='coding' or any(
             step.get('kind_override')=='coding' for step in recipe['steps'])
@@ -786,13 +797,43 @@ class Service:
             with contextlib.closing(self.store.connect()) as db:
                 row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(project_id,)).fetchone()
             tests=json.loads(row['command']) if row else None
+        contract=compile_recipe(recipe,invocation.get('inputs') or {},project_id,root=root,tests=tests)
+        contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+        contract['submission_id']=sid
+        return contract
+
+    def _scheduled_contract(self,sid,cid,text,packet,kind):
+        """D-57: a scheduled run's contract — its recipe, or its instruction (never a new project, never
+        code without the project's folder) — carrying the schedule, whose model choice it prefers."""
+        if packet.get('recipe_invocation'):
+            contract=self._recipe_contract(sid,packet)
+        else:
+            from .schedules import instruction_refusal
+            refusal=instruction_refusal(text,(packet.get('project') or {}).get('root'))
+            if refusal:raise PolicyError(refusal)
+            contract=self._compile_work(sid,cid,text,packet,kind,False)
+        origin=packet['schedule']
+        contract['schedule']={'id':origin.get('id'),'name':origin.get('name'),'slot':origin.get('slot'),
+                              'model':origin.get('model')}
+        return contract
+
+    def _recipe_run(self,sid,cid,text,packet):
+        """Run a validated recipe through the existing engine (no second runtime)."""
+        from .recipes import RecipeLibrary
+        invocation=packet.get('recipe_invocation') or {}
+        project_id=(packet.get('project') or {}).get('id') or 'default'
         try:
-            contract=compile_recipe(recipe,invocation.get('inputs') or {},project_id,root=root,tests=tests)
+            info=RecipeLibrary(self.store).get(invocation.get('recipe_id',''),project_id=project_id)
+        except PolicyError as exc:
+            self.store.add_message('I could not find that recipe. '+str(exc),'assistant',cid)
+            return None
+        if info['recipe']['recipe_id']=='continue-work':
+            return self._continuation(cid,text,packet)
+        try:
+            contract=self._recipe_contract(sid,packet,info)
         except PolicyError as exc:
             self.store.add_message(str(exc),'assistant',cid)
             return None
-        contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
-        contract['submission_id']=sid
         jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
         self._link_origin(jid,cid,sid)
         with self.store.transaction() as db:
@@ -1220,7 +1261,10 @@ class Service:
             projects=[dict(r) for r in db.execute('SELECT * FROM projects ORDER BY name')]
             for p in projects:
                 row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(p['id'],)).fetchone();p['test_command']=json.loads(row['command']) if row else None
-            conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
+            from .schedules import hidden_ids
+            hidden=hidden_ids(db)  # D-57: chats of a deleted schedule the person chose to remove
+            conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')
+                           if r['id'] not in hidden]
             messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
             for message in messages:
                 # CH-2/CP-14: per-message details (who answered, what the checks found), on demand.
@@ -1322,7 +1366,10 @@ class Service:
         """GET /api/conversations (ST-23): every conversation with its message and job counts, in
         two grouped queries — so start-up can skip empty chats without reading each one's state."""
         with contextlib.closing(self.store.connect()) as db:
-            rows=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
+            from .schedules import hidden_ids,scheduled_conversations
+            hidden=hidden_ids(db);scheduled=scheduled_conversations(db)  # D-57
+            rows=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')
+                  if r['id'] not in hidden]
             messages={r['conversation_id']:r['n'] for r in db.execute(
                 'SELECT conversation_id,COUNT(*) AS n FROM messages GROUP BY conversation_id')}
             jobs={r['c']:r['n'] for r in db.execute(
@@ -1330,6 +1377,7 @@ class Service:
         utility=self.projects.utility_ids()
         for row in rows:
             row['message_count']=messages.get(row['id'],0)
+            if row['id'] in scheduled:row['schedule_id']=scheduled[row['id']]
             row['job_count']=jobs.get(row['id'],0)
             if row['id'] in utility:row['utility']=True
         return {'conversations':rows}
@@ -1421,6 +1469,7 @@ class Service:
         if path=='/api/memory':return self._memory_action(data)
         if path=='/api/map':return self._map_action(data)
         if path=='/api/recipes':return self._recipes_action(data)
+        if path=='/api/schedules':return self.schedules.apply(data)
         if path=='/api/activity':
             # V2-08: the historical timeline. Read-only, project-scoped by default, and it can be
             # asked for every project explicitly.
