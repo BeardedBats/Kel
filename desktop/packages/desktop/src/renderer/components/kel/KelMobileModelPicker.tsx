@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useKelModelState } from './KelModelControl';
+import { unavailableNote, useKelModelState } from './KelModelControl';
+import './kel-model-availability.css';
 
 type Scope = 'conversation' | 'default';
 
@@ -14,7 +15,7 @@ export const KelMobileModelPicker: React.FC<{
   const { state, setConversation, setDefault } = useKelModelState(conversationId);
   const [scope, setScope] = useState<Scope>('conversation');
   const choices = useMemo(() => state?.providers.flatMap((provider) =>
-    provider.options.map((option) => ({ ...option, providerId: provider.id, providerLabel: provider.label }))
+    provider.options.map((option) => ({ ...option, providerId: provider.id, providerLabel: provider.label, unavailable: unavailableNote(option, provider) }))
   ) ?? [], [state]);
 
   useEffect(() => {
@@ -54,13 +55,13 @@ export const KelMobileModelPicker: React.FC<{
           </button>
           {choices.map((choice) => {
             const active = selected?.provider === choice.providerId && selected.model === choice.id;
-            return <button type='button' key={`${choice.providerId}:${choice.id}`} className='kel-mobile-model-picker__choice' aria-pressed={active} onClick={() => {
+            return <button type='button' key={`${choice.providerId}:${choice.id}`} className='kel-mobile-model-picker__choice' aria-pressed={active} disabled={!!choice.unavailable} onClick={() => {
               const value = { provider: choice.providerId, model: choice.id };
               if (scope === 'conversation') void setConversation(value);
               else void setDefault(value);
             }}>
-              <span><strong>{choice.label}</strong>{!choice.available && <small>Needs setup</small>}</span>
-              {active && <span className='kel-mobile-model-picker__check' aria-hidden='true'>✓</span>}
+              <span><strong>{choice.label}</strong>{choice.unavailable && <small>{choice.unavailable}</small>}</span>
+              {active && !choice.unavailable && <span className='kel-mobile-model-picker__check' aria-hidden='true'>✓</span>}
             </button>;
           })}
           {!state && <p className='kel-mobile-model-picker__empty'>Kel's model list is unavailable right now.</p>}

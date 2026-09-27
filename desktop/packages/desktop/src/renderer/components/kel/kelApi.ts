@@ -694,6 +694,10 @@ export const kelRecipeDuplicate = (recipeId: string, conversation = 'main') =>
   });
 
 export interface KelProviderStatus {
+  /** CH-2/CP-3: Kel can answer with it right now — a usable credential and a way to run it. */
+  available: boolean;
+  /** Why it is not available, in plain words ("Not supported for chat yet"); null when it is. */
+  available_note: string | null;
   provider: string;
   label: string;
   class: 'native-cli' | 'api';
