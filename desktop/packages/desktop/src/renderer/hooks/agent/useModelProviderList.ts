@@ -1,9 +1,7 @@
 import { ipcBridge } from '@/common';
-import { GOOGLE_AUTH_PROVIDER_ID } from '@/common/config/constants';
 import type { IProvider } from '@/common/config/storage';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import useSWR, { type SWRConfiguration } from 'swr';
-import { useGoogleAuthModels } from './useGoogleAuthModels';
 import { hasSpecificModelCapability } from '@/renderer/utils/model/modelCapabilities';
 
 export interface ModelProviderListResult {
@@ -31,12 +29,9 @@ export const useProvidersQuery = () => {
 };
 
 /**
- * Shared hook that builds the provider list (including Google Auth)
- * and exposes helpers consumed by both conversation and channel settings.
+ * Shared hook that builds the provider list and exposes model helpers.
  */
 export const useModelProviderList = (): ModelProviderListResult => {
-  const { isGoogleAuth } = useGoogleAuthModels();
-
   const { data: modelConfig } = useProvidersQuery();
 
   // Mutable cache for available-model filtering
@@ -75,23 +70,9 @@ export const useModelProviderList = (): ModelProviderListResult => {
     let list: IProvider[] = Array.isArray(modelConfig) ? modelConfig : [];
     // 过滤掉被禁用的 provider（默认为启用）
     list = list.filter((p) => p.enabled !== false);
-
-    if (isGoogleAuth) {
-      const googleProvider: IProvider = {
-        id: GOOGLE_AUTH_PROVIDER_ID,
-        name: 'Gemini Google Auth',
-        platform: 'gemini-with-google-auth',
-        base_url: '',
-        api_key: '',
-        model: [],
-        capabilities: [{ type: 'text' }, { type: 'vision' }, { type: 'function_calling' }],
-        enabled: true, // Google Auth provider 始终启用
-      } as unknown as IProvider;
-      list = [googleProvider, ...list];
-    }
     // 过滤掉没有可用模型的 provider
     return list.filter((p) => getAvailableModels(p).length > 0);
-  }, [getAvailableModels, isGoogleAuth, modelConfig]);
+  }, [getAvailableModels, modelConfig]);
 
   const formatModelLabel = useCallback((_provider: { platform?: string } | undefined, modelName?: string) => {
     if (!modelName) return '';

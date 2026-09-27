@@ -112,9 +112,3 @@ export const WEBUI_DEFAULT_PORT = (() => {
 // disabling it removes the team route and its titlebar/sider chrome. The team
 // pages remain in the bundle — capabilities are hidden, not deleted.
 export const TEAM_MODE_ENABLED = false;
-
-// ===== AI Provider 相关常量 =====
-
-// Stable ID for the Google Auth virtual provider.
-// Shared between frontend (useModelProviderList) and backend (SystemActions).
-export const GOOGLE_AUTH_PROVIDER_ID = 'google-auth-gemini';

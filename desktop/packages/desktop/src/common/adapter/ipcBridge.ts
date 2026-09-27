@@ -1006,28 +1006,6 @@ export const fileStream = {
 };
 
 // ---------------------------------------------------------------------------
-// Google Auth — stubbed (Electron-native OAuth flow)
-// ---------------------------------------------------------------------------
-
-export const googleAuth = {
-  status: stubProvider<IBridgeResponse<{ account: string }>, { proxy?: string }>('googleAuth.status', {
-    success: false,
-    msg: 'Google Auth not available in backend mode',
-  }),
-};
-
-// ---------------------------------------------------------------------------
-// Google subscription status (Google OAuth provider path, used by aionrs)
-// ---------------------------------------------------------------------------
-
-export const google = {
-  subscriptionStatus: httpGet<
-    { isSubscriber: boolean; tier?: string; lastChecked: number; message?: string },
-    { proxy?: string }
-  >('/api/google/subscription-status'),
-};
-
-// ---------------------------------------------------------------------------
 // Bedrock connection test
 // ---------------------------------------------------------------------------
 
