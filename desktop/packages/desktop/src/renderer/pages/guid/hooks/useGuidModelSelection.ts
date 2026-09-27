@@ -5,7 +5,6 @@
  */
 
 import type { IProvider, TProviderWithModel } from '@/common/config/storage';
-import { useGoogleAuthModels } from '@/renderer/hooks/agent/useGoogleAuthModels';
 import { useProvidersQuery } from '@/renderer/hooks/agent/useModelProviderList';
 import { hasAvailableModels } from '../utils/modelUtils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -48,7 +47,9 @@ export type GuidModelSelectionResult = {
  * @param agentKey - current provider-based agent (currently only 'aionrs')
  */
 export const useGuidModelSelection = (agentKey: ProviderAgentKey = 'aionrs'): GuidModelSelectionResult => {
-  const { isGoogleAuth } = useGoogleAuthModels();
+  // Kel has no Google Auth (Gemini CLI OAuth) provider path; the donor status check was a stub
+  // that always said no and logged a warning on every page load (ST-21).
+  const isGoogleAuth = false;
   const { data: modelConfig } = useProvidersQuery();
 
   const modelList = useMemo(() => {
