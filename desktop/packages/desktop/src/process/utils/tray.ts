@@ -112,6 +112,18 @@ const buildTrayContextMenu = async (): Promise<Electron.Menu> => {
   const recentConversations = await getRecentConversations();
   const runningTasksCount = getRunningTasksCount();
 
+  return Menu.buildFromTemplate(buildTrayMenuTemplate(recentConversations, runningTasksCount));
+};
+
+/**
+ * Tray menu template. Kel has no consumer updater and no Desktop Pet (D-56),
+ * so the menu carries neither a "Check update" item nor a Pet submenu.
+ * Exported for unit tests.
+ */
+export const buildTrayMenuTemplate = (
+  recentConversations: Array<{ id: string; title: string }>,
+  runningTasksCount: number
+): Electron.MenuItemConstructorOptions[] => {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
       label: i18n.t('common.tray.showWindow'),
@@ -166,66 +178,6 @@ const buildTrayContextMenu = async (): Promise<Electron.Menu> => {
 
   template.push({ type: 'separator' });
   template.push({
-    label: `🐾 ${i18n.t('pet.desktopPet')}`,
-    submenu: [
-      {
-        label: i18n.t('pet.showHide'),
-        click: async () => {
-          try {
-            const petManager = await import('../pet/petManager');
-            // Toggle: if pet windows exist, hide; otherwise show/create
-            petManager.showPetWindow();
-          } catch {
-            /* pet not available */
-          }
-        },
-      },
-      { type: 'separator' as const },
-      {
-        label: i18n.t('pet.sizeSmall', { px: 200 }),
-        click: async () => {
-          try {
-            const { resizePetWindow } = await import('../pet/petManager');
-            resizePetWindow(200);
-          } catch {
-            /* ignore */
-          }
-        },
-      },
-      {
-        label: i18n.t('pet.sizeMedium', { px: 280 }),
-        click: async () => {
-          try {
-            const { resizePetWindow } = await import('../pet/petManager');
-            resizePetWindow(280);
-          } catch {
-            /* ignore */
-          }
-        },
-      },
-      {
-        label: i18n.t('pet.sizeLarge', { px: 360 }),
-        click: async () => {
-          try {
-            const { resizePetWindow } = await import('../pet/petManager');
-            resizePetWindow(360);
-          } catch {
-            /* ignore */
-          }
-        },
-      },
-    ],
-  });
-  template.push({ type: 'separator' });
-  template.push({
-    label: i18n.t('common.tray.checkUpdate'),
-    click: () => {
-      showAndFocusMainWindow();
-      mainWindowRef?.webContents.send('tray:check-update');
-    },
-  });
-  template.push({ type: 'separator' });
-  template.push({
     label: i18n.t('common.tray.about'),
     click: () => {
       showAndFocusMainWindow();
@@ -249,7 +201,7 @@ const buildTrayContextMenu = async (): Promise<Electron.Menu> => {
     },
   });
 
-  return Menu.buildFromTemplate(template);
+  return template;
 };
 
 /**

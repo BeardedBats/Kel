@@ -17,8 +17,6 @@ import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useNavigationHistory } from '@/renderer/hooks/context/NavigationHistoryContext';
 import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { isElectronDesktop, isMacOS } from '@/renderer/utils/platform';
-import { IS_DISCONTINUED_BUILD } from '@/renderer/utils/discontinuedBuild';
-import MigrationInviteCapsule from './MigrationInviteCapsule';
 import './titlebar.css';
 
 interface TitlebarProps {
@@ -415,7 +413,6 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
       </div>
       <div ref={toolbarRef} className='app-titlebar__toolbar'>
         {layout?.isMobile && <div id='app-titlebar-actions-slot' className='app-titlebar__actions-slot' />}
-        {IS_DISCONTINUED_BUILD && <MigrationInviteCapsule />}
         {showWorkspaceButton && (
           <button
             type='button'

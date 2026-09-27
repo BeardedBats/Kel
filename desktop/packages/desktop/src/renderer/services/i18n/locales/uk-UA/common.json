@@ -75,7 +75,6 @@
   "tray.quit": "Вийти",
   "tray.runningTasks": "Запущені завдання",
   "tray.pauseAll": "Призупинити всі завдання",
-  "tray.checkUpdate": "Перевірити оновлення",
   "tray.recentChats": "Недавні чати",
   "tray.untitled": "Без назви",
   "backendStartup": {

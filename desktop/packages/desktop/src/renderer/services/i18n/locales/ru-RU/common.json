@@ -74,7 +74,6 @@
   "tray.quit": "Выход",
   "tray.runningTasks": "Запущенные задачи",
   "tray.pauseAll": "Приостановить все задачи",
-  "tray.checkUpdate": "Проверить обновления",
   "tray.recentChats": "Недавние чаты",
   "tray.untitled": "Без названия",
   "backendStartup": {

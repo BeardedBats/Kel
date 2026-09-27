@@ -19,7 +19,6 @@
   "modules": [
     "common",
     "agentMode",
-    "update",
     "login",
     "fileSelection",
     "preview",

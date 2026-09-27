@@ -10,7 +10,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { getOrCreateAnalyticsId } from './process/utils/analyticsId';
-import { readAutoUpdateDiagnostics } from './process/services/autoUpdateDiagnostics';
 import { collectBackendInstallDiagnostics } from './process/startup/backendInstallDiagnostics';
 import { classifyBackendStartupFailure } from './process/startup/backendStartupFailure';
 
@@ -225,14 +224,6 @@ function getInstallPathKind(resourcesPath: unknown): string | undefined {
   return 'custom';
 }
 
-function getSecondsSince(timestamp: string | undefined): string | undefined {
-  if (!timestamp) return undefined;
-  const parsed = Date.parse(timestamp);
-  if (!Number.isFinite(parsed)) return undefined;
-  const elapsedSeconds = Math.floor((Date.now() - parsed) / 1000);
-  return elapsedSeconds >= 0 ? String(elapsedSeconds) : undefined;
-}
-
 const BACKEND_STARTUP_FLUSH_TIMEOUT_MS = 2000;
 
 export async function captureBackendStartupFailure(error: unknown): Promise<void> {
@@ -248,7 +239,6 @@ export async function captureBackendStartupFailure(error: unknown): Promise<void
     platform: process.platform,
     resourcesPath: process.resourcesPath,
   });
-  const autoUpdateDiagnostics = readAutoUpdateDiagnostics(app.getPath('userData'));
   Sentry.withScope((scope) => {
     scope.setTag('aionui.failure', 'backend_startup');
     scope.setTag('aionui.backend_startup.reason', failureInfo.reason);
@@ -290,7 +280,6 @@ export async function captureBackendStartupFailure(error: unknown): Promise<void
       ['aionui.backend_startup.missing_pet_states_dir', getBooleanTagValue(failureInfo.missingPetStatesDir)],
       ['aionui.backend_startup.missing_pwa_dir', getBooleanTagValue(failureInfo.missingPwaDir)],
       ['aionui.backend_startup.install_path_kind', getInstallPathKind(details?.resourcesPath)],
-      ['aionui.backend_startup.last_update_status', getString(autoUpdateDiagnostics?.lastEvent?.status)],
       [
         'aionui.backend_startup.health_polling_delayed',
         getBooleanTagValue(
@@ -304,10 +293,6 @@ export async function captureBackendStartupFailure(error: unknown): Promise<void
       ],
       ['aionui.backend_startup.health_timeout_overrun_bucket', getDurationBucket(details?.healthCheckTimeoutOverrunMs)],
       ['aionui.backend_startup.health_max_attempt_gap_bucket', getDurationBucket(details?.healthCheckMaxAttemptGapMs)],
-      [
-        'aionui.backend_startup.seconds_since_quit_and_install',
-        getSecondsSince(autoUpdateDiagnostics?.lastQuitAndInstallAt),
-      ],
     ] as const) {
       if (value) scope.setTag(tag, value);
     }
@@ -319,10 +304,6 @@ export async function captureBackendStartupFailure(error: unknown): Promise<void
     scope.setExtra('aioncore_startup_classification', failureInfo);
     scope.setContext('aioncore_install_diagnostics', installDiagnostics);
     scope.setExtra('aioncore_install_diagnostics', installDiagnostics);
-    if (autoUpdateDiagnostics) {
-      scope.setContext('auto_update_diagnostics', autoUpdateDiagnostics);
-      scope.setExtra('auto_update_diagnostics', autoUpdateDiagnostics);
-    }
     Sentry.captureException(capturedError);
   });
   try {
@@ -480,12 +461,10 @@ async function runStartupLogReport(): Promise<void> {
     return;
   }
 
-  // DSN gate goes first so we don't read the disk for nothing.
+  // DSN gate goes first so we don't read the disk for nothing. The scheduler
+  // already skips DSN-less builds; this guard is silent for the same reason.
   // Don't write state — the next launch with a DSN should still fire.
-  if (!process.env.SENTRY_DSN) {
-    console.info('[sentry] startup log report skipped (SENTRY_DSN not set)');
-    throw new UnretryableError('no DSN');
-  }
+  if (!process.env.SENTRY_DSN) return;
 
   const logsRoot = app.getPath('logs');
   const frontendFiles = listLogFilesSync(logsRoot);
@@ -549,6 +528,8 @@ async function runStartupLogReport(): Promise<void> {
  * retries.
  */
 export function scheduleStartupLogReport(window: BrowserWindow): void {
+  // Kel builds ship without a Sentry DSN: schedule nothing and log nothing.
+  if (!process.env.SENTRY_DSN) return;
   const trigger = () => {
     setTimeout(() => {
       runStartupLogReport().catch((err) => {

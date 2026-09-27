@@ -73,7 +73,6 @@
   "tray.quit": "Quitter",
   "tray.runningTasks": "Tâches en cours",
   "tray.pauseAll": "Tout mettre en pause",
-  "tray.checkUpdate": "Vérifier les mises à jour",
   "tray.recentChats": "Chats récents",
   "tray.untitled": "Sans titre",
   "backendStartup": {
