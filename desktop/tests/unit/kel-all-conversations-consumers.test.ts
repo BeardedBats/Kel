@@ -16,9 +16,10 @@ const CONSUMERS = [
 ];
 
 describe('work summary surfaces read every conversation', () => {
+  // D-54: Work and Activity also pass the active project (`kelState(KEL_ALL_CONVERSATIONS, active)`).
   it.each(CONSUMERS)('%s uses kelState(KEL_ALL_CONVERSATIONS)', (file) => {
     const source = readFileSync(join(RENDERER, file), 'utf8');
-    expect(source).toContain('kelState(KEL_ALL_CONVERSATIONS)');
+    expect(source).toMatch(/kelState\(KEL_ALL_CONVERSATIONS[,)]/);
     expect(source).not.toMatch(/kelState\(\)/);
   });
 });

@@ -53,6 +53,8 @@ type GuidNavigationState = {
   preservePrefillDraft?: boolean;
   focusPrefill?: boolean;
   workspace?: string;
+  /** D-54: why Home opened (e.g. "New chats start in X. This chat stays in Y."). */
+  projectNote?: string;
   [key: string]: unknown;
 };
 
@@ -247,7 +249,7 @@ const GuidPage: React.FC = () => {
     files: guidInput.files,
     setFiles: guidInput.setFiles,
     dir: guidInput.dir,
-    setDir: guidInput.setDir,
+    projectId: guidInput.projectId,
     setLoading: guidInput.setLoading,
     loading: guidInput.loading,
 
@@ -518,7 +520,6 @@ const GuidPage: React.FC = () => {
     const prefillState = location.state as GuidNavigationState | null;
     const prefillPrompt = prefillState?.prefillPrompt;
     const prefillFiles = prefillState?.prefillFiles;
-    const preserveCurrentDraft = Boolean(prefillState?.preservePrefillDraft || skipNextClearRef.current);
     if (prefillPrompt && consumedPrefillKeyRef.current !== location.key) {
       // Consume prompt + optional attachments (e.g. bug-report screenshots) once.
       consumedPrefillKeyRef.current = location.key;
@@ -541,10 +542,7 @@ const GuidPage: React.FC = () => {
       guidInput.setFiles([]);
     }
     guidInput.setLoading(false);
-    if (!preserveCurrentDraft && !(location.state as { workspace?: string } | null)?.workspace) {
-      guidInput.setDir('');
-    }
-  }, [guidInput.setDir, guidInput.setFiles, guidInput.setInput, guidInput.setLoading, location.key, location.state]);
+  }, [guidInput.setFiles, guidInput.setInput, guidInput.setLoading, location.key, location.state]);
 
   // A draft-preserving prefill is an action, not durable navigation state.
   // Strip it after consumption so browser history or a remount cannot replay it.
@@ -687,6 +685,11 @@ const GuidPage: React.FC = () => {
             <ShellWorkspaceLink />
             <h1 className='kel-shell-home-title'>New chat</h1>
           </div>
+          {navState?.projectNote && (
+            <p className='kel-project-note' role='status'>
+              {navState.projectNote}
+            </p>
+          )}
 
           <KelResumptionBrief />
 
@@ -710,9 +713,6 @@ const GuidPage: React.FC = () => {
             actionRow={actionRowNode}
             slashCommandMenu={slashCommandMenuNode}
             modeSelector={<AgentModeSelector compact backend={agentSelection.selectedAssistantBackend} initialMode={agentSelection.selectedMode} dynamicModes={agentSelection.currentAgentModeOptions} onModeSelect={setGuidSelectedMode} />}
-            workspaceDir={guidInput.dir}
-            onSelectWorkspace={(dir) => guidInput.setDir(dir)}
-            onClearWorkspace={() => guidInput.setDir('')}
           />
 
 

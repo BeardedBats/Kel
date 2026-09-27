@@ -3,12 +3,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { KelDesktopWorkspaceHeader } from '@renderer/components/kel/KelDesktopWorkspaceHeader';
 
-describe('Desktop Workspace controls', () => {
+describe('Desktop Files panel controls', () => {
   it('retains folder actions and closes their menu after selection', async () => {
     const onAddFolder = vi.fn();
     render(<KelDesktopWorkspaceHeader tab='files' searching={false} refreshing={false}
       onTab={vi.fn()} onSearch={vi.fn()} onRefresh={vi.fn()} onClose={vi.fn()} onAddFolder={onAddFolder} onCollapseAll={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Workspace actions' }));
+    // D-54: the chat's file panel is "Files", never "Workspace".
+    expect(screen.getByRole('button', { name: 'Files actions' }).textContent).toBe('Files');
+    expect(screen.getByRole('tablist', { name: 'Files view' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Files actions' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Add folder', exact: true }));
     expect(onAddFolder).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Add folder', exact: true })).toBeNull());
@@ -33,10 +36,10 @@ describe('Desktop Workspace controls', () => {
     const onRefresh = vi.fn(), onSearch = vi.fn(), onClose = vi.fn();
     render(<KelDesktopWorkspaceHeader tab='files' searching refreshing
       onTab={vi.fn()} onSearch={onSearch} onRefresh={onRefresh} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh workspace' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh files' }));
     expect(onRefresh).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Search workspace files' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Close workspace' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search files' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close files' }));
     expect(onSearch).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });

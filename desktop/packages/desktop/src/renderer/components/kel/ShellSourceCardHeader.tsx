@@ -6,7 +6,7 @@ const TITLES = ['Available now', 'Default model', 'Custom models', 'Jobs', 'Wait
 const DESCRIPTIONS: Record<string, string> = {
   'Credential metadata': 'Values are never stored here.',
   'Kel runs on this machine': 'Nothing leaves your computer unless you connect a provider.',
-  'Where work happens': 'Choose the folder Kel treats as your workspace.',
+  'Where work happens': 'Choose the folder for the project new chats start in.',
 };
 export function sourceCard(title?: string) {
   const key = title?.split(' · ')[0];

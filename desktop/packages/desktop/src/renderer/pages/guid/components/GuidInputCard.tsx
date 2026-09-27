@@ -42,11 +42,8 @@ type GuidInputCardProps = {
   actionRow: React.ReactNode;
   slashCommandMenu?: React.ReactNode;
 
-  // Workspace
+  // Footer: the project line (D-54, reads the active project itself) and the mode selector.
   modeSelector?: React.ReactNode;
-  workspaceDir: string;
-  onSelectWorkspace: (dir: string) => void;
-  onClearWorkspace: () => void;
 };
 
 const GuidInputCard: React.FC<GuidInputCardProps> = ({
@@ -69,9 +66,6 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   actionRow,
   slashCommandMenu,
   modeSelector,
-  workspaceDir,
-  onSelectWorkspace,
-  onClearWorkspace,
 }) => {
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
@@ -161,11 +155,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
           </ComposerMenuPortal>
         )}
       </div>
-      <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote
-        workspaceDir={workspaceDir}
-        onSelectWorkspace={onSelectWorkspace}
-        onClearWorkspace={onClearWorkspace}
-      />{modeSelector}</div>
+      <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote />{modeSelector}</div>
     </div>
   );
 };

@@ -65,9 +65,6 @@ describe('Composer menus render outside the blurred composer (VS-3)', () => {
         onRemoveFile={vi.fn()}
         actionRow={null}
         slashCommandMenu={<div data-testid='slash-menu'>Commands</div>}
-        workspaceDir=''
-        onSelectWorkspace={vi.fn()}
-        onClearWorkspace={vi.fn()}
       />
     );
     const menu = screen.getByTestId('slash-menu');

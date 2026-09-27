@@ -5,21 +5,21 @@
  */
 
 import { ipcBridge } from '@/common';
-import { addRecentWorkspace, getRecentWorkspaces } from '@/renderer/components/workspace';
-import { AionInlineSearchInput } from '@/renderer/components/base';
 import { Tooltip } from '@arco-design/web-react';
-import { Close, Down } from '@icon-park/react';
+import { Down } from '@icon-park/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
 import { KelDesktopProjectMenu } from '@renderer/components/kel/KelDesktopProjectMenu';
-
-type GuidWorkspaceFootnoteProps = {
-  workspaceDir: string;
-  onSelectWorkspace: (dir: string) => void;
-  onClearWorkspace: () => void;
-};
+import { kelProjects } from '@renderer/components/kel/kelApi';
+import {
+  GENERAL_PROJECT_ID,
+  GENERAL_PROJECT_NAME,
+  announceProjectsChanged,
+  liveProjects,
+  setActiveProject,
+  useProjects,
+} from '@renderer/components/kel/activeProject';
 
 const FolderIcon = ({ size = 12 }: { size?: number }) => (
   <svg
@@ -35,261 +35,140 @@ const FolderIcon = ({ size = 12 }: { size?: number }) => (
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg
-    width='13'
-    height='13'
-    fill='none'
-    stroke='currentColor'
-    strokeWidth='1.8'
-    viewBox='0 0 24 24'
-    style={{ flexShrink: 0 }}
-  >
-    <path d='M12 5v14M5 12h14' />
-  </svg>
-);
-
-const GuidWorkspaceFootnote: React.FC<GuidWorkspaceFootnoteProps> = ({
-  workspaceDir,
-  onSelectWorkspace,
-  onClearWorkspace,
-}) => {
-  const { t } = useTranslation();
-  const recentWorkspaces = getRecentWorkspaces();
+/**
+ * D-54: the composer's project line is a second view of the header switcher. It names the project
+ * a new chat starts in (the active project, or General when all projects are shown); choosing a row
+ * or a folder makes that project active.
+ */
+const GuidWorkspaceFootnote: React.FC = () => {
+  const view = useProjects();
+  const target = view.newChatProject;
+  const name = target?.name ?? GENERAL_PROJECT_NAME;
+  const root = target?.root ?? '';
   const [open, setOpen] = useState(false);
-  const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
+  const [error, setError] = useState('');
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const resize = () => { setDesktop(window.innerWidth >= 768); setOpen(false); };
+    const resize = () => setOpen(false);
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const triggerRef = useRef<HTMLButtonElement | HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
-  const handleBrowseWorkspace = useCallback(() => {
+  const choose = useCallback(async (id: string) => {
     setOpen(false);
+    setError('');
+    try {
+      await setActiveProject(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kel could not switch projects.');
+    }
+  }, []);
+
+  const handleBrowse = useCallback(() => {
+    setOpen(false);
+    setError('');
     ipcBridge.dialog.showOpen
       .invoke({ properties: ['openDirectory', 'createDirectory'] })
-      .then((dirs) => {
-        if (dirs && dirs[0]) {
-          addRecentWorkspace(dirs[0]);
-          onSelectWorkspace(dirs[0]);
-        }
+      .then(async (dirs) => {
+        if (!dirs || !dirs[0]) return;
+        const project = await kelProjects.forFolder(dirs[0]);
+        announceProjectsChanged();
+        await setActiveProject(project.id);
       })
-      .catch((error) => {
-        console.error('Failed to open directory dialog:', error);
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Kel could not use that folder.');
       });
-  }, [onSelectWorkspace]);
-
-  const handleSelectPath = useCallback(
-    (path: string) => {
-      addRecentWorkspace(path);
-      onSelectWorkspace(path);
-      setOpen(false);
-      setSearchQuery('');
-    },
-    [onSelectWorkspace]
-  );
+  }, []);
 
   const openDropdown = useCallback(() => {
     const el = triggerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    // position above the trigger, aligned to left edge
+    const desktop = window.innerWidth >= 768;
+    // Above the trigger, aligned to its left edge.
     setDropdownStyle({
       position: 'fixed',
-      left: window.innerWidth >= 768 ? Math.max(20, Math.min(rect.left, window.innerWidth - 340)) : rect.left,
+      left: desktop ? Math.max(20, Math.min(rect.left, window.innerWidth - 340)) : rect.left,
       bottom: window.innerHeight - rect.top + 6,
-      minWidth: window.innerWidth >= 768 ? 320 : 230,
+      minWidth: desktop ? 320 : 230,
       maxHeight: Math.max(120, rect.top - 26),
       overflowY: 'auto',
-      zIndex: window.innerWidth >= 768 ? 440 : 9999,
+      zIndex: desktop ? 440 : 9999,
     });
     setOpen(true);
-    setTimeout(() => searchRef.current?.focus(), 50);
-  }, []);
+    void view.refresh();
+  }, [view.refresh]);
 
-  const closeDropdown = useCallback(() => {
-    setOpen(false);
-    setSearchQuery('');
-  }, []);
-
-  const toggleOpen = useCallback(() => {
-    if (open) closeDropdown();
-    else openDropdown();
-  }, [open, openDropdown, closeDropdown]);
-
-  // close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        triggerRef.current &&
-        !triggerRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
-      ) {
-        closeDropdown();
+      const node = e.target as Node;
+      if (triggerRef.current && !triggerRef.current.contains(node) && dropdownRef.current && !dropdownRef.current.contains(node)) {
+        setOpen(false);
       }
     };
+    const keyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
     document.addEventListener('mousedown', handler);
-    const keyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeDropdown(); };
     document.addEventListener('keydown', keyDown);
-    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('keydown', keyDown); };
-  }, [open, closeDropdown]);
-
-  const filteredRecent = recentWorkspaces.filter((p) => {
-    if (!searchQuery) return true;
-    const name = p.split(/[\\/]/).pop() || p;
-    return (
-      name.toLowerCase().includes(searchQuery.toLowerCase()) || p.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const workspaceName = workspaceDir ? workspaceDir.split(/[\\/]/).pop() || workspaceDir : '';
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('keydown', keyDown);
+    };
+  }, [open]);
 
   const dropdownEl = open
     ? createPortal(
-        <div ref={dropdownRef} className={desktop ? 'kel-desktop-project-popover' : styles.wsDropdown} style={dropdownStyle}>
-          {desktop ? <KelDesktopProjectMenu paths={recentWorkspaces} selected={workspaceDir}
-            onSelect={handleSelectPath}
-            onClear={() => { onClearWorkspace(); closeDropdown(); }}
-            onBrowse={handleBrowseWorkspace} /> : <>
-          <div className='mb-8px'>
-            <AionInlineSearchInput
-              className='w-full'
-              ref={searchRef}
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder={t('guid.workspace.searchPlaceholder')}
-            />
-          </div>
-
-          {filteredRecent.map((path) => {
-            const name = path.split(/[\\/]/).pop() || path;
-            const isActive = path === workspaceDir;
-            return (
-              <div
-                key={path}
-                className={`${styles.wsDropdownItem} ${isActive ? styles.wsDropdownItemActive : ''}`}
-                onClick={() => handleSelectPath(path)}
-              >
-                <FolderIcon size={13} />
-                <span className={styles.wsDropdownItemName}>{name}</span>
-                {isActive && (
-                  <svg
-                    width='12'
-                    height='12'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2.5'
-                    viewBox='0 0 24 24'
-                    style={{ marginInlineStart: 'auto', flexShrink: 0 }}
-                  >
-                    <path d='M20 6L9 17l-5-5' />
-                  </svg>
-                )}
-              </div>
-            );
-          })}
-
-          {filteredRecent.length > 0 && <div className={styles.wsDropdownSep} />}
-
-          <div className={`${styles.wsDropdownItem} ${styles.wsDropdownItemAccent}`} onClick={handleBrowseWorkspace}>
-            <PlusIcon />
-            <span>{t('team.create.chooseDifferentFolder')}</span>
-          </div>
-
-          <>
-            <div className={styles.wsDropdownSep} />
-            <div
-              className={`${styles.wsDropdownItem} ${workspaceDir ? styles.wsDropdownItemMuted : styles.wsDropdownItemMutedDisabled}`}
-              onClick={() => {
-                if (workspaceDir) onClearWorkspace();
-                closeDropdown();
-              }}
-            >
-              <svg
-                width='13'
-                height='13'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='1.8'
-                viewBox='0 0 24 24'
-                style={{ flexShrink: 0 }}
-              >
-                <path d='M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z' />
-                <line x1='2' y1='2' x2='22' y2='22' strokeWidth='1.5' />
-              </svg>
-              <span>{t('guid.workspace.noProject')}</span>
-            </div>
-          </>
-          </>}
+        <div ref={dropdownRef} className='kel-desktop-project-popover' style={dropdownStyle}>
+          <KelDesktopProjectMenu
+            projects={liveProjects(view.projects).map(({ id, name: projectName, root: projectRoot }) => ({
+              id,
+              name: projectName,
+              root: projectRoot ?? null,
+            }))}
+            selected={target?.id ?? GENERAL_PROJECT_ID}
+            onSelect={(project) => void choose(project.id)}
+            onBrowse={handleBrowse}
+          />
         </div>,
         document.body
       )
     : null;
 
+  const trigger = (
+    <button
+      ref={triggerRef}
+      type='button'
+      className={root ? styles.workspacePillMain : styles.workspaceEmptyBtn}
+      data-testid='workspace-selector-btn'
+      aria-haspopup='dialog'
+      aria-expanded={open}
+      onClick={() => (open ? setOpen(false) : openDropdown())}
+    >
+      <FolderIcon size={14} />
+      <span className={root ? styles.workspacePillName : undefined}>{name}</span>
+      <Down theme='outline' size='12' fill='currentColor' style={{ flexShrink: 0, transform: 'translateY(1px)' }} />
+    </button>
+  );
+
   return (
-    <div className={styles.workspaceFootnote}>
-      {workspaceDir ? (
-        <>
-          <Tooltip content={workspaceDir} position='top'>
-            <div className={styles.workspacePill}>
-              <button
-                ref={triggerRef as React.RefObject<HTMLButtonElement>}
-                className={styles.workspacePillMain}
-                onClick={toggleOpen}
-              >
-                <FolderIcon size={14} />
-                <span className={styles.workspacePillName}>{workspaceName}</span>
-                <Down
-                  theme='outline'
-                  size='12'
-                  fill='currentColor'
-                  style={{ flexShrink: 0, transform: 'translateY(1px)' }}
-                />
-              </button>
-              <span
-                role='button'
-                aria-label={t('guid.workspace.clearWorkspace')}
-                className={styles.workspacePillClose}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClearWorkspace();
-                }}
-              >
-                <Close theme='outline' size='10' fill='currentColor' />
-              </span>
-            </div>
-          </Tooltip>
-          {dropdownEl}
-        </>
+    <div className={styles.workspaceFootnote} data-testid='kel-composer-project'>
+      {root ? (
+        <Tooltip content={root} position='top'>
+          <div className={styles.workspacePill}>{trigger}</div>
+        </Tooltip>
       ) : (
-        <>
-          <button
-            ref={triggerRef as React.RefObject<HTMLButtonElement>}
-            className={styles.workspaceEmptyBtn}
-            data-testid='workspace-selector-btn'
-            onClick={desktop || recentWorkspaces.length > 0 ? toggleOpen : handleBrowseWorkspace}
-          >
-            <FolderIcon size={14} />
-            <span>{t('guid.workspace.workInProject')}</span>
-            {recentWorkspaces.length > 0 && (
-              <Down
-                theme='outline'
-                size='12'
-                fill='currentColor'
-                style={{ flexShrink: 0, transform: 'translateY(1px)' }}
-              />
-            )}
-          </button>
-          {dropdownEl}
-        </>
+        trigger
+      )}
+      {dropdownEl}
+      {error && (
+        <span className='kel-meta' role='alert'>
+          {error}
+        </span>
       )}
     </div>
   );

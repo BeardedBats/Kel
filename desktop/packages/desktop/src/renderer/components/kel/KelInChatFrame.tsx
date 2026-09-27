@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { activeProjectLabel, useProjects } from './activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ShellWorkspaceLink from './ShellWorkspaceLink';
 import ShellSettingsIcon from './ShellSettingsIcon';
@@ -7,7 +8,6 @@ import { useExtI18n } from '@renderer/hooks/system/useExtI18n';
 import { resolveExtensionAssetUrl } from '@renderer/utils/platform';
 import { configService } from '@/common/config/configService';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
-import { kelState } from './kelApi';
 import workIcon from '@renderer/assets/figma/refresh/work.svg';
 import activityIcon from '@renderer/assets/figma/refresh/activity.svg';
 import permissionsIcon from '@renderer/assets/figma/refresh/permissions.svg';
@@ -18,7 +18,7 @@ import diagnosticsIcon from '@renderer/assets/figma/refresh/diagnostics.svg';
 import transcriptionIcon from '@renderer/assets/figma/refresh/transcriptions.svg';
 import setupIcon from '@renderer/assets/figma/refresh/setup.svg';
 import recipesIcon from '@renderer/assets/figma/refresh/recipes.svg';
-import workspacesIcon from '@renderer/assets/figma/refresh/workspaces.svg';
+import projectsIcon from '@renderer/assets/figma/refresh/projects.svg';
 import mobileMenuIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconMenu.svg';
 import mobileWorkIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconProjects.svg';
 import mobileActivityIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconActivity.svg';
@@ -36,6 +36,7 @@ type Group = { label: string; items: Item[] };
 
 const projectGroups: Group[] = [
   { label: 'Projects', items: [
+    { label: 'All projects', path: '/projects/list', icon: projectsIcon, sourceIcon: true },
     { label: 'Work', path: '/work', icon: workIcon, sourceIcon: true },
     { label: 'Activity', path: '/activity', icon: activityIcon, sourceIcon: true },
     { label: 'Permissions', path: '/autonomy', icon: permissionsIcon, sourceIcon: true },
@@ -46,9 +47,9 @@ const projectGroups: Group[] = [
     { label: 'Diagnostics', path: '/diagnostics', icon: diagnosticsIcon, sourceIcon: true },
   ] },
   { label: 'Ramble', items: [{ label: 'Transcriptions', path: '/transcription/library', icon: transcriptionIcon, sourceIcon: true }] },
-  { label: 'Workspaces', items: [{ label: 'Set up Kel', path: '/onboarding', icon: setupIcon, sourceIcon: true }] },
 ];
 const mobileProjectItems: Item[] = [
+  { label: 'All projects', path: '/projects/list', icon: mobileKnowledgeIcon, sourceIcon: true },
   { label: 'Work', path: '/work', icon: mobileWorkIcon, sourceIcon: true },
   { label: 'Activity', path: '/activity', icon: mobileActivityIcon, sourceIcon: true },
   { label: 'Permissions', path: '/autonomy', icon: mobilePermissionsIcon, sourceIcon: true },
@@ -59,7 +60,6 @@ const mobileProjectItems: Item[] = [
 const mobileKelItems: Item[] = [
   { label: 'Providers', path: '/providers', icon: mobileProvidersIcon, sourceIcon: true },
   { label: 'Diagnostics', path: '/diagnostics', icon: mobileDiagnosticsIcon, sourceIcon: true },
-  { label: 'Workspaces', path: '/onboarding', icon: mobileWorkIcon, sourceIcon: true },
 ];
 
 const settingsGroups: Group[] = [
@@ -69,6 +69,7 @@ const settingsGroups: Group[] = [
     { label: 'Tools', path: '/settings/tools', icon: 'tools' },
     { label: 'Skills', path: '/settings/skills', icon: 'skills' },
     { label: 'Connections', path: '/connections', icon: 'connections' },
+    { label: 'Set up Kel', path: '/onboarding', icon: setupIcon, sourceIcon: true },
   ] },
   { label: 'Application', items: [
     { label: 'Appearance', path: '/settings/appearance', icon: 'appearance' },
@@ -99,22 +100,12 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const layout = useLayoutContext();
   const extensionTabs = useExtensionSettingsTabs();
   const { resolveExtTabName } = useExtI18n();
-  const settings = pathname.startsWith('/settings') || pathname === '/connections';
+  // D-54: Set up Kel lives with the Settings pages (JR-14).
+  const settings = pathname.startsWith('/settings') || pathname === '/connections' || pathname === '/onboarding';
   const mobileIndex = pathname === '/settings' || pathname === '/projects';
   const [setupOpen, setSetupOpen] = useState(false);
-  const [projectName, setProjectName] = useState('Projects');
-  useEffect(() => {
-    if (pathname !== '/projects') return;
-    let cancelled = false;
-    void kelState('main').then(state => {
-      const named = state.projects.filter(item => item.id !== 'default');
-      const project = named.length === 1 ? named[0] : state.projects.length === 1 ? state.projects[0] : null;
-      if (!cancelled) setProjectName(project?.name || 'Projects');
-    }).catch(() => {
-      if (!cancelled) setProjectName('Projects');
-    });
-    return () => { cancelled = true; };
-  }, [pathname]);
+  // The phone index names the active project (the engine's, not a guess).
+  const projectName = activeProjectLabel(useProjects()) || 'Projects';
   useEffect(() => {
     let cancelled = false;
     void configService.initialize().then(() => {
@@ -124,7 +115,7 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
     });
     return () => { cancelled = true; };
   }, [pathname]);
-  const heading = settings ? 'Settings' : pathname === '/onboarding' ? 'Workspaces' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
+  const heading = pathname === '/onboarding' ? 'Set up Kel' : settings ? 'Settings' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
   const mobileProjectGroups: Group[] = [
     { label: projectName, items: mobileProjectItems },
     { label: 'Kel', items: mobileKelItems },

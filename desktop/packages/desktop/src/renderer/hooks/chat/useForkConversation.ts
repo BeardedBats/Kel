@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { emitter } from '@/renderer/utils/emitter';
 import type { TFunction } from 'i18next';
+import { bindToSourceProject } from '@renderer/components/kel/activeProject';
 
 /**
  * Map a fork API failure to a user-facing message. The backend carries stable
@@ -49,6 +50,8 @@ export function useForkConversation(conversationId: string | undefined) {
         if (!forked?.id) {
           throw new Error('fork returned no conversation');
         }
+        // D-54: a fork stays in its source chat's project (bound before it opens).
+        await bindToSourceProject(conversationId, forked.id);
         emitter.emit('chat.history.refresh');
         void navigate(`/conversation/${forked.id}`);
         // Lazy fork + eager surfacing: materialize the backend session now so

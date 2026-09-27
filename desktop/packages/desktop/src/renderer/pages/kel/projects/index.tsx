@@ -10,7 +10,8 @@ import mobileRecipeStarIcon from '@renderer/assets/figma/refresh/mobile-recipe-s
  * Kel V1.4 Projects workspace — Knowledge (memory) · Map · Recipes.
  * Reads `/api/work`; actions go through `/api/memory` and `/api/map`.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ALL_PROJECTS, GENERAL_PROJECT_ID, liveProjects, useProjects } from '@renderer/components/kel/activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   KelButton,
@@ -37,13 +38,54 @@ import {
   kelRecipeRun,
   kelRecipeSearch,
   kelWork,
+  type KelMemoryProposal,
+  type KelMemoryRecord,
+  type KelProject,
   type KelRecipeEntry,
   type KelRecipeInput,
   type KelRecipeRun,
+  type KelScope,
   type KelWork,
 } from '@renderer/components/kel/kelApi';
 
 type View = 'knowledge' | 'map' | 'recipes';
+
+type TaggedProposal = KelMemoryProposal & { project_id?: string };
+
+/**
+ * D-54 "All projects": one read per live project, merged. Knowledge keeps each record's project so
+ * its actions go to that project; built-in recipes appear once, project recipes carry their project.
+ */
+const mergeProjects = (reads: Array<{ project: KelProject; work: KelWork }>): KelWork => {
+  const seenBuiltins = new Set<string>();
+  const entries: KelRecipeEntry[] = [];
+  for (const { project, work } of reads) {
+    for (const entry of work.recipes?.entries ?? []) {
+      const id = String(entry.recipe_id ?? entry.id ?? '');
+      if (entry.source === 'builtin') {
+        if (seenBuiltins.has(id)) continue;
+        seenBuiltins.add(id);
+        entries.push(entry);
+      } else {
+        entries.push({ ...entry, project_id: entry.project_id ?? project.id });
+      }
+    }
+  }
+  return {
+    project_id: ALL_PROJECTS,
+    memory: {
+      records: reads.flatMap(({ project, work }) =>
+        (work.memory?.records ?? []).map((record) => ({ ...record, project_id: record.project_id ?? project.id }))
+      ),
+      proposals: reads.flatMap(({ project, work }) =>
+        (work.memory?.proposals ?? []).map((proposal): TaggedProposal => ({ ...proposal, project_id: project.id }))
+      ),
+      conflicts: reads.flatMap(({ work }) => work.memory?.conflicts ?? []),
+    },
+    map: null,
+    recipes: { entries },
+  };
+};
 
 const viewFromPath = (path: string): View => {
   if (path.startsWith('/projects/map')) return 'map';
@@ -54,6 +96,19 @@ const viewFromPath = (path: string): View => {
 export default function KelProjectsPage() {
   const { pathname } = useLocation();
   const isMobile = Boolean(useLayoutContext()?.isMobile);
+  // D-54: these pages show the active project; "All projects" reads every live project.
+  const { active, projects, loaded } = useProjects();
+  const allMode = active === ALL_PROJECTS;
+  const live = useMemo(() => liveProjects(projects), [projects]);
+  const liveKey = live.map((project) => project.id).join(',');
+  const projectName = useCallback(
+    (id: string | undefined) => (projects ?? []).find((project) => project.id === id)?.name ?? (id === GENERAL_PROJECT_ID ? 'General' : id ?? ''),
+    [projects]
+  );
+  /** Reads use the active project, or every project; a write names one real project. */
+  const readScope: KelScope = { project: active };
+  const writeScope = (projectId?: string): KelScope => ({ project: allMode ? projectId || GENERAL_PROJECT_ID : active });
+  const [needsProject, setNeedsProject] = useState<{ id: string; missing: string[] } | null>(null);
   const [work, setWork] = useState<KelWork | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -85,14 +140,24 @@ export default function KelProjectsPage() {
   } | null>(null);
 
   const load = useCallback(async () => {
+    if (!loaded) return;
     try {
-      setWork(await kelWork('main'));
+      if (active === ALL_PROJECTS) {
+        const reads = await Promise.all(
+          liveProjects(projects).map(async (project) => ({ project, work: await kelWork({ project: project.id }) }))
+        );
+        setWork(mergeProjects(reads));
+      } else {
+        setWork(await kelWork({ project: active }));
+      }
       setError(null);
     } catch (err) {
       setWork(null);
       setError(err);
     }
-  }, []);
+    // liveKey stands in for `projects`: a re-read of the same list must not reload the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, loaded, liveKey]);
 
   // V2-07 follow-through: a run is only useful if its result can be reopened. The engine already
   // keeps every run as a job; this reads them back (history + the one-line last result) and offers
@@ -105,8 +170,9 @@ export default function KelProjectsPage() {
       }
       setRuns({ recipe: recipeId, sentence: '', items: [] });
       try {
-        const history = await kelRecipeHistory(recipeId);
-        const last = await kelRecipeLastResult(recipeId).catch((): null => null);
+        const scope = writeScope(recipeProject(recipeId));
+        const history = await kelRecipeHistory(recipeId, scope);
+        const last = await kelRecipeLastResult(recipeId, scope).catch((): null => null);
         setRuns({ recipe: recipeId, sentence: last?.sentence ?? '', items: history.history ?? [] });
       } catch (err) {
         setRuns(null);
@@ -115,7 +181,8 @@ export default function KelProjectsPage() {
         );
       }
     },
-    [runs?.recipe]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [runs?.recipe, active, work]
   );
 
   useEffect(() => {
@@ -125,15 +192,17 @@ export default function KelProjectsPage() {
   // The library's shelves are read once per visit: the categories it carries and what was used
   // recently. A failure here leaves the plain list in place rather than an error page.
   useEffect(() => {
+    if (!loaded) return;
     void (async () => {
       const [cats, recents] = await Promise.all([
-        kelRecipeCategories().catch((): { categories: Array<{ name: string; count: number }> } => ({ categories: [] })),
-        kelRecipeRecent().catch((): { recent: KelRecipeEntry[] } => ({ recent: [] })),
+        kelRecipeCategories(readScope).catch((): { categories: Array<{ name: string; count: number }> } => ({ categories: [] })),
+        kelRecipeRecent(5, readScope).catch((): { recent: KelRecipeEntry[] } => ({ recent: [] })),
       ]);
       setCategories(cats.categories ?? []);
       setRecent(recents.recent ?? []);
     })();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, loaded]);
 
   const searchRecipes = useCallback(async (value: string) => {
     setRecipeQuery(value);
@@ -141,14 +210,23 @@ export default function KelProjectsPage() {
       setFound(null);
       return;
     }
+    if (allMode) {
+      // Every project's recipes are already here; search them in place.
+      const needle = value.trim().toLowerCase();
+      setFound((work?.recipes.entries ?? []).filter((entry) =>
+        [entry.name, entry.title, entry.category, entry.recipe_id].some((text) => String(text ?? '').toLowerCase().includes(needle))
+      ));
+      return;
+    }
     try {
-      const result = await kelRecipeSearch(value.trim());
+      const result = await kelRecipeSearch(value.trim(), readScope);
       setFound(result.entries ?? []);
     } catch (err) {
       setFound(null);
       setNote(`Search failed. ${failureSentence(err, 'The engine did not answer — try again.')}`);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, allMode, work]);
 
   const openMobileRecipe = useCallback(async (recipeId: string) => {
     if (mobileRecipeDetail?.id === recipeId) {
@@ -157,10 +235,11 @@ export default function KelProjectsPage() {
     }
     setMobileRecipeDetail({ id: recipeId, steps: [], lastResult: '', history: [], loading: true });
     try {
+      const scope = writeScope(recipeProject(recipeId));
       const [definition, last, history] = await Promise.all([
-        kelRecipeGet(recipeId),
-        kelRecipeLastResult(recipeId).catch((): null => null),
-        kelRecipeHistory(recipeId).catch(() => ({ history: [] as KelRecipeRun[] })),
+        kelRecipeGet(recipeId, scope),
+        kelRecipeLastResult(recipeId, scope).catch((): null => null),
+        kelRecipeHistory(recipeId, scope).catch(() => ({ history: [] as KelRecipeRun[] })),
       ]);
       setMobileRecipeDetail((current) => current?.id === recipeId ? {
         id: recipeId,
@@ -173,13 +252,15 @@ export default function KelProjectsPage() {
       setMobileRecipeDetail((current) => current?.id === recipeId ? null : current);
       setNote(`Could not open this recipe. ${failureSentence(err, 'The engine did not answer — try again.')}`);
     }
-  }, [mobileRecipeDetail?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mobileRecipeDetail?.id, active, work]);
 
   const prepareRecipe = useCallback(async (recipeId: string) => {
     setBusy('Prepare run');
     setNote(null);
+    setNeedsProject(null);
     try {
-      const { recipe } = await kelRecipeGet(recipeId);
+      const { recipe } = await kelRecipeGet(recipeId, writeScope(recipeProject(recipeId)));
       setRunDraft({
         recipeId,
         name: recipe.name,
@@ -193,22 +274,27 @@ export default function KelProjectsPage() {
     } finally {
       setBusy(null);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, work]);
 
   const startRecipe = useCallback(async () => {
     if (!runDraft) return;
     const draft = runDraft;
     setBusy('Run recipe');
     setNote(null);
+    setNeedsProject(null);
     try {
       const values = Object.fromEntries(Object.entries(draft.values)
         .filter(([, value]) => typeof value === 'boolean' || value.trim() !== ''));
-      const dryRun = await kelRecipePreview(draft.recipeId, values);
+      const scope = writeScope(recipeProject(draft.recipeId));
+      const dryRun = await kelRecipePreview(draft.recipeId, values, scope);
       if (dryRun.needs_project) {
         setNote(String(dryRun.message ?? 'This recipe needs more project details.'));
+        const projectId = String(dryRun.project_id ?? ('project' in scope ? scope.project : ''));
+        if (projectId) setNeedsProject({ id: projectId, missing: Array.isArray(dryRun.missing) ? dryRun.missing : ['folder'] });
         return;
       }
-      const out = await kelRecipeRun(draft.recipeId, values);
+      const out = await kelRecipeRun(draft.recipeId, values, scope);
       setNote(`Run request sent — follow it on Work (${String(out.submission).slice(0, 8)}).`);
       setRunDraft(null);
       await load();
@@ -217,7 +303,8 @@ export default function KelProjectsPage() {
     } finally {
       setBusy(null);
     }
-  }, [runDraft, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runDraft, load, active, work]);
 
   const act = useCallback(
     async (label: string, fn: () => Promise<unknown>) => {
@@ -245,7 +332,7 @@ export default function KelProjectsPage() {
   }, [runDraft?.recipeId]);
 
   const records = work?.memory.records ?? [];
-  const proposals = work?.memory.proposals ?? [];
+  const proposals: TaggedProposal[] = work?.memory.proposals ?? [];
   const conflicts = work?.memory.conflicts ?? [];
   const sections = work?.map?.sections ?? [];
   const entries = work?.recipes.entries ?? [];
@@ -257,6 +344,30 @@ export default function KelProjectsPage() {
   const libraryView = viewFromPath(pathname) === 'recipes';
   const projectRecipes = entries.filter((entry) => entry.source !== 'builtin');
   const populatedKnowledge = !libraryView && (pathname.startsWith('/projects/knowledge') || proposals.length > 0);
+  /** The project a listed recipe belongs to (built-ins have none). */
+  function recipeProject(recipeId: string): string | undefined {
+    return (work?.recipes.entries ?? []).find((entry) => String(entry.recipe_id ?? entry.id ?? '') === recipeId)?.project_id;
+  }
+  /** In "All projects" a project recipe names its project. */
+  const recipeName = (entry: KelRecipeEntry, recipeId: string) => {
+    const name = entry.name ?? entry.title ?? recipeId;
+    return allMode && entry.project_id ? `${name} · ${projectName(entry.project_id)}` : name;
+  };
+  const recordGroups: Array<{ id: string | undefined; name: string; records: KelMemoryRecord[] }> = allMode
+    ? live
+        .map((project) => ({ id: project.id, name: project.name, records: records.filter((record) => record.project_id === project.id) }))
+        .filter((group) => group.records.length > 0)
+    : [{ id: undefined, name: '', records }];
+  const needsProjectButton = needsProject && (
+    <KelButton
+      variant="primary"
+      onClick={() =>
+        navigate(`/projects/list?edit=${encodeURIComponent(needsProject.id)}&focus=${needsProject.missing.includes('folder') ? 'folder' : 'test'}`)
+      }
+    >
+      {needsProject.missing.includes('folder') ? 'Set project folder' : 'Set test command'}
+    </KelButton>
+  );
 
   return (
     <div className="kel-scope">
@@ -275,6 +386,7 @@ export default function KelProjectsPage() {
         </div>
 
         {note && <p className="kel-meta">{note}</p>}
+        {needsProjectButton && <div className="kel-row">{needsProjectButton}</div>}
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !work && <KelLoading rows={4} />}
 
@@ -287,10 +399,12 @@ export default function KelProjectsPage() {
                   why="Kel records what it learns while working — with its source and a trust score."
                 />
               ) : (
-                <><p className="kel-knowledge-trust-note">Trust ranks run from 1 (strongest) to 7.</p><div className="kel-project-table-scroll kel-knowledge-records-scroll" tabIndex={0} role="region" aria-label="Saved knowledge table">
+                <><p className="kel-knowledge-trust-note">Trust ranks run from 1 (strongest) to 7.</p>{recordGroups.map((group) => <React.Fragment key={group.id ?? 'one'}>
+                {allMode && <h3 className="kel-strong kel-knowledge-project">{group.name}</h3>}
+                <div className="kel-project-table-scroll kel-knowledge-records-scroll" tabIndex={0} role="region" aria-label={allMode ? `Saved knowledge in ${group.name}` : 'Saved knowledge table'}>
                 <KelTable
                   head={['Topic', 'Type', isMobile ? 'Trust' : 'Trust rank', 'Status', 'Source', 'Updated', 'Actions']}
-                  rows={records.map((record) => [
+                  rows={group.records.map((record) => [
                     <span className="kel-strong" key={`${record.id}-topic`}>
                       {record.topic || record.summary.slice(0, 40)}
                     </span>,
@@ -314,7 +428,7 @@ export default function KelProjectsPage() {
                       <KelButton
                         variant="quiet"
                         disabled={busy !== null || record.status !== 'active' || record.trust === 7}
-                        onClick={() => void act('Confirm', () => kelMemoryAction('confirm', record.id))}
+                        onClick={() => void act('Confirm', () => kelMemoryAction('confirm', record.id, {}, writeScope(record.project_id)))}
                       >
                         Confirm
                       </KelButton>
@@ -323,7 +437,7 @@ export default function KelProjectsPage() {
                         disabled={busy !== null || !['active', 'stale'].includes(record.status)}
                         onClick={() =>
                           void act('Retract', () =>
-                            kelMemoryAction('retract', record.id, { reason: 'retracted from the Knowledge panel' })
+                            kelMemoryAction('retract', record.id, { reason: 'retracted from the Knowledge panel' }, writeScope(record.project_id))
                           )
                         }
                       >
@@ -332,14 +446,14 @@ export default function KelProjectsPage() {
                       <KelButton
                         variant="quiet"
                         disabled={busy !== null}
-                        onClick={() => void act('Forget', () => kelMemoryAction('forget', record.id))}
+                        onClick={() => void act('Forget', () => kelMemoryAction('forget', record.id, {}, writeScope(record.project_id)))}
                       >
                         Forget
                       </KelButton>
                     </span>,
                   ])}
                 />
-                </div></>
+                </div></React.Fragment>)}</>
               )}
             </KelCard>
             {proposals.length > 0 && (
@@ -361,6 +475,7 @@ export default function KelProjectsPage() {
                     <span className="kel-knowledge-proposal-icon" aria-hidden="true"><img src={proposal.kind === 'stale' ? knowledgeClockIcon : knowledgeSparkleIcon} alt="" /></span>
                     <div className="kel-attention__text">
                       <strong>{proposal.summary || proposal.topic || 'A change Kel noticed'}</strong>
+                      {allMode && proposal.project_id && <span className="kel-meta">{projectName(proposal.project_id)}</span>}
                       {proposal.why && <span className="kel-meta"><span className="kel-project-suggestion-why-prefix">Why: </span>{proposal.why}</span>}
                     </div>
                     <span className="kel-grow" />
@@ -368,7 +483,7 @@ export default function KelProjectsPage() {
                       variant="secondary"
                       disabled={busy !== null}
                       onClick={() =>
-                        void act('Accepted', () => kelMemoryAction('accept_proposal', proposal.id))
+                        void act('Accepted', () => kelMemoryAction('accept_proposal', proposal.id, {}, writeScope(proposal.project_id)))
                       }
                     >
                       <span className="kel-project-action-desktop">Accept</span><span className="kel-project-action-mobile">Accept</span>
@@ -377,7 +492,7 @@ export default function KelProjectsPage() {
                       variant="quiet"
                       disabled={busy !== null}
                       onClick={() =>
-                        void act('Deferred', () => kelMemoryAction('defer_proposal', proposal.id))
+                        void act('Deferred', () => kelMemoryAction('defer_proposal', proposal.id, {}, writeScope(proposal.project_id)))
                       }
                     >
                       Not now
@@ -389,7 +504,7 @@ export default function KelProjectsPage() {
                         void act('Rejected', () =>
                           kelMemoryAction('reject_proposal', proposal.id, {
                             reason: 'set aside from the Knowledge panel',
-                          })
+                          }, writeScope(proposal.project_id))
                         )
                       }
                     >
@@ -418,15 +533,20 @@ export default function KelProjectsPage() {
           <KelCard
             id="project-map"
             title="Project map"
-            actions={<>
+            actions={allMode ? undefined : <>
 
-              <KelButton variant="primary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh'))}>
+              <KelButton variant="primary" disabled={busy !== null} onClick={() => void act('Refresh map', () => kelMapAction('refresh', writeScope()))}>
                 <span className="kel-project-action-desktop">Refresh map</span><span className="kel-project-action-mobile">Refresh</span>
               </KelButton>
             </>}
           >
             {work.map && <div className="kel-project-map-caption"><span>v{work.map.version} · built {formatWhen(work.map.updated)}</span><p>What Kel knows about how this project is built.</p></div>}
-            {!work.map ? (
+            {allMode ? (
+              <KelEmpty
+                title="Choose a project to see its map."
+                why="Each project has its own map. Pick one in the project switcher above."
+              />
+            ) : !work.map ? (
               <KelEmpty
                 title="No map built yet."
                 why="Kel builds a map of the project from its own verified work."
@@ -468,7 +588,7 @@ export default function KelProjectsPage() {
           <KelCard id="project-recipes" title="Recipes" className={libraryView ? 'kel-recipe-library-card' : undefined}
             actions={libraryView ? <span className="kel-recipe-count">{entries.length} available here</span> : undefined}>
             {!libraryView ? (
-              !isMobile && projectRecipes.length > 0 ? <div className="kel-project-recipe-links">{projectRecipes.map((entry) => <div className="kel-row" key={entry.recipe_id ?? entry.id}><span className="kel-strong">{entry.name ?? entry.recipe_id}</span><span className="kel-grow" /><KelButton variant="quiet" onClick={() => navigate('/projects/recipes')}>Open Recipes</KelButton></div>)}</div> : <KelEmpty
+              !isMobile && projectRecipes.length > 0 ? <div className="kel-project-recipe-links">{projectRecipes.map((entry) => <div className="kel-row" key={`${entry.project_id ?? ''}:${entry.recipe_id ?? entry.id}`}><span className="kel-strong">{recipeName(entry, String(entry.recipe_id ?? entry.id ?? ''))}</span><span className="kel-grow" /><KelButton variant="quiet" onClick={() => navigate('/projects/recipes')}>Open Recipes</KelButton></div>)}</div> : <KelEmpty
                 title={projectRecipes.length === 0 ? 'No recipes in this project yet.' : `${projectRecipes.length} recipes in this project.`}
                 why="Open Recipes to search, preview, and run a workflow."
               />
@@ -504,10 +624,10 @@ export default function KelProjectsPage() {
                       <div className="kel-recipe-desktop-row">
                         <button type="button" className="kel-recipe-desktop-star" disabled={busy !== null}
                           aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite))}>
+                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                           <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                         </button>
-                        <span>{entry.name ?? entry.title ?? recipeId}</span>
+                        <span>{recipeName(entry, recipeId)}</span>
                         {(expanded || preparing) ? <button type="button" className="kel-recipe-desktop-link"
                           onClick={() => { setMobileRecipeDetail(null); setRunDraft(null); }}>Close</button> : <>
                           <button type="button" className="kel-recipe-desktop-link"
@@ -540,6 +660,7 @@ export default function KelProjectsPage() {
                           </label>)}
                         </div>
                         <div className="kel-recipe-desktop-expanded-actions">
+                          {needsProjectButton}
                           <KelButton variant="primary" disabled={busy !== null} onClick={() => void startRecipe()}>Start recipe</KelButton>
                         </div>
                       </div>}
@@ -588,10 +709,10 @@ export default function KelProjectsPage() {
                         <div className="kel-recipe-mobile-row">
                           <button className="kel-recipe-mobile-star" type="button" disabled={busy !== null}
                             aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                            onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite))}>
+                            onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                             <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                           </button>
-                          <strong>{entry.name ?? entry.title ?? recipeId}</strong>
+                          <strong>{recipeName(entry, recipeId)}</strong>
                           <button className="kel-recipe-mobile-close" type="button" onClick={() => setMobileRecipeDetail(null)}>Close</button>
                         </div>
                         <div className="kel-recipe-mobile-preview-label">What Kel will do</div>
@@ -604,11 +725,11 @@ export default function KelProjectsPage() {
                       </div> : <div className="kel-recipe-mobile-row">
                         <button className="kel-recipe-mobile-star" type="button" disabled={busy !== null}
                           aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite))}>
+                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                           <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                         </button>
                         <button className="kel-recipe-mobile-name" type="button" aria-expanded={false}
-                          onClick={() => void openMobileRecipe(recipeId)}>{entry.name ?? entry.title ?? recipeId}</button>
+                          onClick={() => void openMobileRecipe(recipeId)}>{recipeName(entry, recipeId)}</button>
                         <KelButton variant="primary" disabled={busy !== null || !recipeId}
                           onClick={() => void prepareRecipe(recipeId)}>Run</KelButton>
                       </div>}
@@ -661,13 +782,13 @@ export default function KelProjectsPage() {
                   const recipeId = String(entry.recipe_id ?? entry.id ?? '');
                   return [
                     <span className="kel-strong" key={`${recipeId}-name`}>
-                      {entry.name ?? entry.title ?? recipeId}{' '}
+                      {recipeName(entry, recipeId)}{' '}
                       <KelButton
                         variant="quiet"
                         disabled={busy !== null || !recipeId}
                         onClick={() =>
                           void act(entry.favourite ? 'Unfavourite' : 'Favourite', () =>
-                            kelRecipeFavourite(recipeId, !entry.favourite)
+                            kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id))
                           )
                         }
                       >
@@ -676,7 +797,7 @@ export default function KelProjectsPage() {
                       <KelButton
                         variant="quiet"
                         disabled={busy !== null || !recipeId}
-                        onClick={() => void act('Copy', () => kelRecipeDuplicate(recipeId))}
+                        onClick={() => void act('Copy', () => kelRecipeDuplicate(recipeId, writeScope(entry.project_id)))}
                       >
                         Copy
                       </KelButton>
@@ -696,7 +817,7 @@ export default function KelProjectsPage() {
                       disabled={busy !== null || !recipeId}
                       onClick={() =>
                         void act('Preview', async () => {
-                          const payload = await kelRecipePreview(recipeId);
+                          const payload = await kelRecipePreview(recipeId, {}, writeScope(entry.project_id));
                           setPreview({ recipe: recipeId, payload });
                         })
                       }
@@ -767,6 +888,7 @@ export default function KelProjectsPage() {
                   </label>
                 ))}
                 <div className="kel-row">
+                  {needsProjectButton}
                   <KelButton variant="primary" disabled={busy !== null} onClick={() => void startRecipe()}>Start recipe</KelButton>
                   <KelButton variant="quiet" disabled={busy !== null} onClick={() => setRunDraft(null)}>Cancel</KelButton>
                 </div>

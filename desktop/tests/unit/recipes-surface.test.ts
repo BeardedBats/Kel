@@ -41,7 +41,7 @@ describe('recipe contract (D10)', () => {
 
 describe('Recipes tab (D10)', () => {
   it('can run a recipe and points at where the run lives', () => {
-    expect(projectsPage).toContain('kelRecipeRun(draft.recipeId, values)');
+    expect(projectsPage).toContain('kelRecipeRun(draft.recipeId, values, scope)');
     expect(projectsPage).toContain('Run request sent — follow it on Work');
     expect(projectsPage).toContain('Preview (dry run)');
   });
@@ -50,8 +50,8 @@ describe('Recipes tab (D10)', () => {
 describe('Save as a recipe (D10)', () => {
   it('drafts first and saves only on explicit confirmation', () => {
     expect(workPage).toContain('Save as a recipe');
-    expect(workPage).toContain('setRecipeDraft(await kelRecipePropose(activeJob.id))');
+    expect(workPage).toContain('setRecipeDraft(await kelRecipePropose(activeJob.id, jobScope(activeJob)))');
     expect(workPage).toContain('It is saved only when you confirm.');
-    expect(workPage.match(/kelRecipeSave\(recipeDraft\.recipe\)/g) ?? []).toHaveLength(1);
+    expect(workPage.match(/kelRecipeSave\(recipeDraft\.recipe, jobScope\(activeJob\)\)/g) ?? []).toHaveLength(1);
   });
 });

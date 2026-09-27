@@ -14,7 +14,7 @@ afterEach(cleanup);
 const inputProps = () => ({
   input: '', onInputChange: vi.fn(), onKeyDown: vi.fn(), onPaste: vi.fn(), onFocus: vi.fn(), onBlur: vi.fn(),
   placeholder: "What's up?", isInputActive: false, isFileDragging: false, activeBorderColor: '', inactiveBorderColor: '', activeShadow: '',
-  dragHandlers: {}, files: [], onRemoveFile: vi.fn(), actionRow: null, workspaceDir: '', onSelectWorkspace: vi.fn(), onClearWorkspace: vi.fn(),
+  dragHandlers: {}, files: [], onRemoveFile: vi.fn(), actionRow: null,
 });
 const actionProps = () => ({
   files: [], onFilesPicked: vi.fn(), onFilesUploaded: vi.fn(), modelSelectorNode: null, isGeminiMode: false, modelList: [],

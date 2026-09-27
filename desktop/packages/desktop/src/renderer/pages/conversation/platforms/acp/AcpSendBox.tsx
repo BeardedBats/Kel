@@ -1,6 +1,7 @@
 import footerModeIcon from '@renderer/assets/figma/chat-shell/mode.svg';
 import footerModeChevron from '@renderer/assets/figma/chat-shell/mode-chevron.svg';
 import footerFolderIcon from '@renderer/assets/figma/chat-shell/folder.svg';
+import { projectLabel, useConversationProject } from '@renderer/components/kel/activeProject';
 import { ipcBridge } from '@/common';
 import type { IConversationMcpStatus } from '@/common/config/storage';
 import { isBackendHttpError } from '@/common/adapter/httpBridge';
@@ -76,12 +77,6 @@ const useAcpSendBoxDraft = getSendBoxDraftHook('acp', {
   uploadFile: [],
 });
 
-// Auto-created scratch folders (e.g. `acp-temp-c28d2d90`) are internal ids, not project names.
-const displayWorkspaceName = (workspace: string, scratchLabel: string): string => {
-  const folderName = workspace.split(/[\\/]/).filter(Boolean).pop() ?? '';
-  return /-temp-[0-9a-z]+$/i.test(folderName) ? scratchLabel : folderName;
-};
-
 const EMPTY_AT_PATH: Array<string | FileOrFolderItem> = [];
 const EMPTY_UPLOAD_FILES: string[] = [];
 
@@ -130,6 +125,8 @@ const AcpSendBox: React.FC<{
   composerControls?: React.ReactNode;
   composerModelControl?: React.ReactNode;
 }> = ({ conversation_id, backend, session_mode, agent_name, messageState, teamSendMessage, teamRuntime, composerControls, composerModelControl }) => {
+  // D-54: the footer names the chat's project (the same one the header chip shows), never a folder.
+  const { project: chatProject } = useConversationProject(conversation_id);
   const {
     aiProcessing,
     setAiProcessing,
@@ -990,10 +987,10 @@ Please check your local CLI tool authentication status`,
       ></SendBox>
       {!isMobile && (
         <div className='kel-shell-composer-footer' data-testid='acp-composer-footer'>
-          {conversationContext?.workspace && (
-            <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
+          {chatProject && (
+            <span className='kel-shell-chat-workspace' title={chatProject.root || undefined} data-testid='kel-chat-project'>
               <img src={footerFolderIcon} alt='' />
-              {displayWorkspaceName(conversationContext.workspace, t('kel.composer.noProject', { defaultValue: 'No project' }))}
+              {chatProject.name ? projectLabel(chatProject) : t('conversation.workspace.unnamedSpace', { defaultValue: 'Project' })}
             </span>
           )}
           {modeControl}

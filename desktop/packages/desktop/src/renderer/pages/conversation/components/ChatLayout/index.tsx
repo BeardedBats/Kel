@@ -204,7 +204,7 @@ const ChatLayout: React.FC<{
       )}
     >
       <div className='kel-shell-chat-heading min-w-0 flex-1'>
-        <ShellWorkspaceLink />
+        <ShellWorkspaceLink conversationId={conversation_id} />
         <ChatTitleEditor
           editingTitle={editingTitle}
           titleDraft={titleDraft}
@@ -351,7 +351,7 @@ const ChatLayout: React.FC<{
               workspacePath={workspacePath}
               isTemporaryWorkspace={isTemporaryWorkspace}
             >
-              {isDesktop ? <span className='kel-legacy-workspace-title'>Workspace</span> : props.siderTitle}
+              {isDesktop ? <span className='kel-legacy-workspace-title'>Files</span> : props.siderTitle}
             </WorkspacePanelHeader>
             <ArcoLayout.Content style={{ height: `calc(100% - ${WORKSPACE_HEADER_HEIGHT}px)` }}>
               {props.sider}

@@ -22,12 +22,12 @@ export const KelDesktopWorkspaceHeader: React.FC<{
     <h2><Dropdown trigger='click' position='bl' popupVisible={actionsOpen} onVisibleChange={setActionsOpen} droplist={<div className='kel-desktop-picker kel-workspace-action-menu'>
       <button type='button' className='kel-desktop-picker__row' onClick={() => { setActionsOpen(false); onAddFolder?.(); }}>Add folder</button>
       <button type='button' className='kel-desktop-picker__row' onClick={() => { setActionsOpen(false); onCollapseAll?.(); }}>Collapse all folders</button>
-    </div>}><button type='button' className='kel-workspace-heading-action' aria-label='Workspace actions' aria-haspopup='menu'>Workspace</button></Dropdown></h2>
-    <button type='button' aria-label='Search workspace files' aria-pressed={searching} onClick={onSearch}><img src={search} alt='' /></button>
-    <button type='button' aria-label='Refresh workspace' disabled={refreshing} aria-busy={refreshing} onClick={onRefresh}><img src={refresh} alt='' /></button>
-    <button type='button' aria-label='Close workspace' onClick={onClose}><img src={close} alt='' /></button>
+    </div>}><button type='button' className='kel-workspace-heading-action' aria-label='Files actions' aria-haspopup='menu'>Files</button></Dropdown></h2>
+    <button type='button' aria-label='Search files' aria-pressed={searching} onClick={onSearch}><img src={search} alt='' /></button>
+    <button type='button' aria-label='Refresh files' disabled={refreshing} aria-busy={refreshing} onClick={onRefresh}><img src={refresh} alt='' /></button>
+    <button type='button' aria-label='Close files' onClick={onClose}><img src={close} alt='' /></button>
   </div>
-  <div className='kel-workspace-tabs' role='tablist' aria-label='Workspace view'>
+  <div className='kel-workspace-tabs' role='tablist' aria-label='Files view'>
     <button type='button' role='tab' aria-selected={tab === 'files'} onClick={() => onTab('files')}>Files</button>
     <button type='button' role='tab' aria-selected={tab === 'changes'} onClick={() => onTab('changes')}>Changes{changeCount === undefined ? '' : ` · ${changeCount}`}</button>
   </div>

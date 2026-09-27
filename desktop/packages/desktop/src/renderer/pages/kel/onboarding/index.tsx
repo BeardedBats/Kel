@@ -1,8 +1,8 @@
 import { ipcBridge } from '@/common';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { KelDefaultModelCard } from '@renderer/components/kel/KelModelControl';
-import { addRecentWorkspace } from '@renderer/components/workspace';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import { announceProjectsChanged, setActiveProject, useProjects } from '@renderer/components/kel/activeProject';
 /**
  * Kel V1.4 first-run onboarding (docs/v1.4/KEL_V1.4_UX_SPEC.md §3).
  *
@@ -18,9 +18,9 @@ import {
   KelStatusChip,
 } from '@renderer/components/kel/KelPrimitives';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
+import { kelAutonomy, kelProjects, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 
-const STEPS = ['Welcome', 'Connect a model', 'Workspace', 'Autonomy', 'Ready'] as const;
+const STEPS = ['Welcome', 'Connect a model', 'Project', 'Autonomy', 'Ready'] as const;
 type Step = (typeof STEPS)[number];
 
 const STATUS_CHIP: Record<string, 'verified' | 'waiting' | 'uncertain' | 'failed' | 'queued'> = {
@@ -48,33 +48,22 @@ export default function KelOnboardingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = Boolean(useLayoutContext()?.isMobile);
-  const setupState = location.state as { setupGate?: boolean; workspace?: string; setupStep?: Step } | null;
+  const setupState = location.state as { setupGate?: boolean; setupStep?: Step } | null;
   const [step, setStep] = useState<Step>(setupState?.setupStep ?? 'Welcome');
-  const [workspace, setWorkspace] = useState(setupState?.workspace ?? '');
-  const [workspaceBusy, setWorkspaceBusy] = useState(false);
-  const [workspaceError, setWorkspaceError] = useState(false);
-  const [workspaceRememberError, setWorkspaceRememberError] = useState(false);
+  // D-54: the folder is the active project's own (the engine keeps it; nothing is stored here).
+  const { newChatProject, loaded: projectsLoaded } = useProjects();
+  const projectFolder = newChatProject?.root ?? '';
+  const [folderBusy, setFolderBusy] = useState(false);
+  const [folderError, setFolderError] = useState('');
   const [providers, setProviders] = useState<
     Array<{ provider: string; label: string; status: string; auth_mode: string }>
   >([]);
-  const [project, setProject] = useState<string>('');
   const [rules, setRules] = useState<Array<{ rule: string; text: string }>>([]);
   const [digest, setDigest] = useState('');
   const [engine, setEngine] = useState<string>('');
   const [error, setError] = useState<unknown>(null);
   const [finishError, setFinishError] = useState(false);
 
-  useEffect(() => {
-    if (isMobile) return;
-    let cancelled = false;
-    void configService.initialize().then(() => {
-      const saved = configService.get('kel.setupWorkspace_v1');
-      if (!cancelled && saved) setWorkspace(current => current || saved);
-    }).catch(() => {
-      if (!cancelled) setWorkspaceRememberError(true);
-    });
-    return () => { cancelled = true; };
-  }, [isMobile]);
 
   useEffect(() => {
     void (async () => {
@@ -92,7 +81,6 @@ export default function KelOnboardingPage() {
             auth_mode: item.auth_mode,
           }))
         );
-        setProject(statePayload.projects?.[0]?.name ?? 'this project');
         setEngine(statePayload.engine_version ?? '');
         setRules((guardrailPayload.rules ?? []).slice(0, 6));
         setDigest(guardrailPayload.digest ?? '');
@@ -107,42 +95,43 @@ export default function KelOnboardingPage() {
       try {
         setFinishError(false);
         await configService.set('kel.onboardingCompleted_v1', true);
-        // Useful work within moments: setup ends in the chat composer.
-        navigate('/guid', { replace: true, state: !isMobile && workspace ? { workspace } : undefined });
+        // Useful work within moments: setup ends in the chat composer, in the active project.
+        navigate('/guid', { replace: true });
       } catch (err) {
         console.error('Could not save Kel setup:', err);
         setFinishError(true);
       }
     },
-    [navigate, isMobile, workspace]
+    [navigate]
   );
 
   const index = STEPS.indexOf(step);
   const selectStep = (selected: Step) => {
     setStep(selected);
-    navigate('/onboarding', { replace: true, state: { ...setupState, setupStep: selected, workspace } });
+    navigate('/onboarding', { replace: true, state: { ...setupState, setupStep: selected } });
   };
-  const chooseWorkspace = async () => {
-    setWorkspaceBusy(true);
-    setWorkspaceError(false);
-    setWorkspaceRememberError(false);
+  /** A chosen folder becomes a project (the one already using it, or a new one named after it). */
+  const chooseProjectFolder = async () => {
+    setFolderBusy(true);
+    setFolderError('');
+    let folder: string | undefined;
     try {
-      const folders = await ipcBridge.dialog.showOpen.invoke({ properties: ['openDirectory', 'createDirectory'] });
-      const folder = folders?.[0];
-      if (folder) {
-        setWorkspace(folder);
-        addRecentWorkspace(folder);
-        try {
-          await configService.set('kel.setupWorkspace_v1', folder);
-        } catch {
-          setWorkspaceRememberError(true);
-        }
-        navigate('/onboarding', { replace: true, state: { ...setupState, workspace: folder, setupStep: step } });
-      }
+      folder = (await ipcBridge.dialog.showOpen.invoke({ properties: ['openDirectory', 'createDirectory'] }))?.[0];
     } catch {
-      setWorkspaceError(true);
+      setFolderError('The folder picker could not open. Try again.');
+      setFolderBusy(false);
+      return;
+    }
+    try {
+      if (folder) {
+        const project = await kelProjects.forFolder(folder);
+        announceProjectsChanged();
+        await setActiveProject(project.id);
+      }
+    } catch (err) {
+      setFolderError(failureSentence(err, 'Kel could not use that folder. Try another one.'));
     } finally {
-      setWorkspaceBusy(false);
+      setFolderBusy(false);
     }
   };
 
@@ -194,13 +183,12 @@ export default function KelOnboardingPage() {
 
         <KelCard title='Where work happens'>
           <div className='kel-row'>
-            <div><div>Workspace folder</div><div className='kel-meta'>{isMobile ? (project === 'default' ? 'General' : project || 'Loading…') : workspace || 'No folder selected'}</div></div>
-            <span className='kel-grow' /><KelButton variant="primary" disabled={workspaceBusy} onClick={() => isMobile ? navigate('/projects') : void chooseWorkspace()}>Change</KelButton>
+            <div><div>Project folder</div><div className='kel-meta' title={projectFolder || undefined}>{isMobile ? (newChatProject?.name ?? (projectsLoaded ? 'General' : 'Loading…')) : projectFolder || 'No folder selected'}</div></div>
+            <span className='kel-grow' /><KelButton variant="primary" disabled={folderBusy} onClick={() => isMobile ? navigate('/projects/list') : void chooseProjectFolder()}>Change</KelButton>
           </div>
         </KelCard>
 
-        {workspaceError && <p className='kel-meta' role='alert'>The folder picker could not open. Try again.</p>}
-        {workspaceRememberError && <p className='kel-meta' role='alert'>Kel could not remember the folder. Your current selection still works. Try Change again.</p>}
+        {folderError && <p className='kel-meta' role='alert'>{folderError}</p>}
 
         <KelCard title='How much Kel does on its own'>
           <div className='kel-row'><span>Autonomy</span><span className='kel-grow' />
