@@ -186,8 +186,7 @@ const Layout: React.FC<{
     return () => window.removeEventListener('kel-open-navigation', openNavigation);
   }, []);
   useConversationShortcuts({ navigate, toggleSider });
-  // Expose navigate to code running outside the Router tree (e.g. the globally
-  // mounted FeedbackReportModal's "via chat" action).
+  // Expose navigate to code running outside the Router tree.
   useEffect(() => {
     setGlobalNavigate(navigate);
     return () => setGlobalNavigate(null);

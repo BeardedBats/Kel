@@ -15,7 +15,6 @@ import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/u
 import type { WorkspaceStateDetail } from '@renderer/utils/workspace/workspaceEvents';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useNavigationHistory } from '@/renderer/hooks/context/NavigationHistoryContext';
-import { useFeedback } from '@/renderer/hooks/context/FeedbackContext';
 import { isElectronDesktop, isMacOS } from '@/renderer/utils/platform';
 import './titlebar.css';
 
@@ -103,7 +102,6 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   const [mobileCenterOffset, setMobileCenterOffset] = useState(0);
   const layout = useLayoutContext();
   const navigationHistory = useNavigationHistory();
-  useFeedback();
   const location = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);

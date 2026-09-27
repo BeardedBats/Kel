@@ -5,8 +5,10 @@ import { KelButton } from './KelPrimitives';
 import { diagnosticsText, type EngineStateFrame } from './engineFailure';
 import { engineDiagnostics } from './kelApi';
 
-export default function KelStoppedEngineView({ frame, retrying, onRestart, onReport }: {
-  frame: EngineStateFrame; retrying: boolean; onRestart: () => void; onReport: () => void;
+// ST-02: no "Send report" here — the engine that would store a Kibble fix is the thing that
+// stopped, and the donor report form sent nothing. Technical details can still be copied.
+export default function KelStoppedEngineView({ frame, retrying, onRestart }: {
+  frame: EngineStateFrame; retrying: boolean; onRestart: () => void;
 }) {
   const [details, setDetails] = useState('');
   const [copied, setCopied] = useState(false);
@@ -23,7 +25,7 @@ export default function KelStoppedEngineView({ frame, retrying, onRestart, onRep
       <details onToggle={(event) => { if (event.currentTarget.open && !details) void readDetails(); }}>
         <summary>Technical details</summary><div className='kel-stopped-engine-code'><pre>{details || 'Reading diagnostics…'}</pre><button type='button' aria-label='Copy diagnostics' onClick={() => { void navigator.clipboard.writeText(details).then(() => setCopied(true)); }}>{copied ? 'Copied' : 'Copy'}</button></div>
       </details>
-      <div className='kel-stopped-engine-actions'><KelButton variant='quiet' onClick={onReport}>Send report</KelButton><KelButton variant='primary' disabled={retrying} onClick={onRestart}>{retrying ? 'Restarting…' : 'Restart engine'}</KelButton></div>
+      <div className='kel-stopped-engine-actions'><KelButton variant='primary' disabled={retrying} onClick={onRestart}>{retrying ? 'Restarting…' : 'Restart engine'}</KelButton></div>
     </div>
   </Modal>;
 }

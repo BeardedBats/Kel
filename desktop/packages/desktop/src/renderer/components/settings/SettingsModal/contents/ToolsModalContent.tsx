@@ -257,7 +257,8 @@ const ModalMcpManagementSection: React.FC<{
             <FeedbackButton
               module='mcp-tools'
               label='Report issue'
-              feedbackExtra={{ mcpServerName: selectedServer.name, mcpServerStatus: selectedStatus }}
+              reportTitle={`Issue with MCP server "${selectedServer.name}"`}
+              feedbackExtra={{ mcpServerName: selectedServer.name, mcpServerStatus: selectedStatus, transport: selectedServer.transport.type }}
             />
             {!selectedServer.builtin && (
               <button type='button' onClick={() => showDeleteConfirm(selectedServer.id)}>

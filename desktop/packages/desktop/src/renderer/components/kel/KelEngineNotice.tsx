@@ -6,7 +6,6 @@
  * really works in that state. Durable truth stays in the engine's records; this owns no workflow.
  */
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
-import { useFeedback } from '@renderer/hooks/context/FeedbackContext';
 import KelStoppedEngineView from './KelStoppedEngineView';
 import React, { useEffect, useState } from 'react';
 import { engineStateCopy, type EngineStateFrame } from './engineFailure';
@@ -32,7 +31,6 @@ export const useKelEngineFrame = (): EngineStateFrame | null => {
 export const KelEngineNotice: React.FC = () => {
   const frame = useKelEngineFrame();
   const isMobile = Boolean(useLayoutContext()?.isMobile);
-  const { openFeedback } = useFeedback();
   const [recoveredHidden, setRecoveredHidden] = useState(false);
   const [retrying, setRetrying] = useState(false);
 
@@ -49,8 +47,7 @@ export const KelEngineNotice: React.FC = () => {
   if (frame?.state === 'recovered' && recoveredHidden) return null;
 
   if (!isMobile && frame?.state === 'unrecoverable') return <KelStoppedEngineView frame={frame} retrying={retrying}
-    onRestart={() => { setRetrying(true); void engineRetry().finally(() => setRetrying(false)); }}
-    onReport={() => { void openFeedback({ module: 'kel-engine', autoScreenshot: false, tags: { kind: 'engine-unrecoverable' }, extra: { state: frame } }); }} />;
+    onRestart={() => { setRetrying(true); void engineRetry().finally(() => setRetrying(false)); }} />;
 
   return (
     <div className={`kel-engine-notice kel-engine-notice--${copy.tone}`} role='status' aria-live='polite'>
