@@ -309,9 +309,9 @@
         "body": "The provider completed the request without usable content. Retry once or switch providers if it repeats."
       },
       "WORKSPACE_PATH_RUNTIME_UNAVAILABLE": {
-        "title": "The current Agent failed to run in this workspace path",
-        "body": "Make sure the current workspace path exists.",
-        "bodyWithPath": "The current Agent failed to run in the workspace path \"{{workspacePath}}\". Make sure the workspace path exists."
+        "title": "Kel can't open this chat's folder",
+        "body": "The folder this chat works in is missing. Choose a folder to keep going, or start a new chat.",
+        "bodyWithPath": "The folder this chat works in is missing. Choose a folder to keep going, or start a new chat."
       },
       "UNKNOWN_UPSTREAM_ERROR": {
         "title": "The upstream agent or provider failed",
