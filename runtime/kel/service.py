@@ -1331,6 +1331,11 @@ class Service:
         # CP-2: only the active jobs' run.claimed events are read (indexed by job), never the whole
         # event log on every poll.
         routes=self._claimed_routes(j['id'] for j in jobs if j['state'] not in ('CLOSED','CANCELLED'))
+        # D-65: a verified coding change says whether it was applied (on its own or by you), can be
+        # undone, or is waiting for you and why. Read-only; the engine owns the decision.
+        from .auto_apply import describe as describe_applications
+        applications=describe_applications(self.store,[j['id'] for j in jobs if j.get('contract',{}).get('kind')=='coding'])
+        jobs=[dict(j,application=applications.get(j['id'])) if j.get('contract',{}).get('kind')=='coding' else j for j in jobs]
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
@@ -1431,6 +1436,8 @@ class Service:
                     why=brief.get('why'),next=brief.get('next'))
         if job_state in ('CANCELLED','CANCELLING'):
             phase='stopped'
+        elif job_state=='CLOSED' and verdict=='VERIFIED' and job['contract'].get('kind')=='coding' and not self._published(job['id']):
+            phase='running'  # D-65: settling (maybe applying) the change; the card must not stop on "done" before it
         elif job_state=='CLOSED':
             phase='done' if verdict=='VERIFIED' else 'needs_look'
         elif pending or job_state=='AWAITING_USER' or brief.get('needs_you'):
@@ -1447,7 +1454,15 @@ class Service:
         else:
             phase='running'
         view.update(phase=phase,can_stop=job_state not in ('CLOSED','CANCELLED','CANCELLING'))
+        if job['contract'].get('kind')=='coding':
+            # D-65: applied (on its own or by you) with Undo, undone, or waiting for you and why.
+            from .auto_apply import describe as describe_applications
+            view['application']=describe_applications(self.store,[job['id']]).get(job['id'])
         return view
+
+    def _published(self,job_id):
+        with contextlib.closing(self.store.connect()) as db:
+            return db.execute('SELECT 1 FROM publications WHERE job_id=? LIMIT 1',(job_id,)).fetchone() is not None
 
     def action(self,path,data):
         with self.lifecycle_lock:
@@ -1521,8 +1536,11 @@ class Service:
             self.engine.control(self._required(data,'job','Pick a request first.'),
                                 self._required(data,'action','Pick what Kel should do first.'));return {'ok':True}
         if path=='/api/apply':
-            from .apply_changes import apply_checked
-            return apply_checked(self.store,self._required(data,'job','Kel could not find that change to apply.'),actor='user')
+            from .apply_changes import apply_checked,undo_applied
+            job=self._required(data,'job','Kel could not find that change to apply.')
+            if data.get('action')=='undo':return undo_applied(self.store,job,actor='user')  # D-65 Undo
+            if data.get('action') not in (None,'apply'):raise PolicyError('Choose Apply or Undo.')
+            return apply_checked(self.store,job,actor='user')
         if path=='/api/approval':
             if 'actor' in data:
                 raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')

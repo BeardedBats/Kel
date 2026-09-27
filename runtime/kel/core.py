@@ -671,6 +671,9 @@ class Store:
                         text='The change passed its tests and a separate review. It is ready in an isolated project copy. Your original project is unchanged. Download the change report to inspect the diff.'
                         if job['contract'].get('runtime')=='native-host':
                             text='The change passed its tests and a separate review. Download the change report to inspect the project copy. Apply checked changes will check your original project for conflicts and save a backup.'
+                    # D-65: Full access applied it (what, where, how it was checked) or says why not.
+                    from .auto_apply import result_text
+                    text=result_text(self,job) or text
                 # D-53: a conversational hand-off gets a lead-in that names the work — and only a
                 # VERIFIED result may say it passed its checks.
                 handoff=job['contract'].get('handoff') or {}

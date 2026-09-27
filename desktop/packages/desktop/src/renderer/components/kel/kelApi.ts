@@ -1500,6 +1500,26 @@ export const kelArtifact = (job: string, milestone: string) =>
 export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =>
   call<{ ok: boolean }>('/api/control', { job, action });
 
+/**
+ * D-65: where a verified coding change stands in the project folder. `state` is the application
+ * journal (null = not applied yet); `auto` = Full access applied it on its own; `waiting_reason` =
+ * why Full access left it for you (absent under Ask first).
+ */
+export interface KelChangeApplication {
+  state: 'PREPARED' | 'APPLIED' | 'BLOCKED' | 'UNDOING' | 'UNDONE' | null;
+  auto: boolean;
+  decision?: string | null;
+  root: string | null;
+  files: number | null;
+  waiting_reason: string | null;
+}
+
+/** Write a checked change into the project (the "Apply checked changes" button). */
+export const kelApplyChange = (job: string) => call<Record<string, unknown>>('/api/apply', { job });
+
+/** D-65: put back the files an applied change replaced, from the saved backup. */
+export const kelUndoChange = (job: string) => call<Record<string, unknown>>('/api/apply', { job, action: 'undo' });
+
 /** Answer the permission request a Work row is waiting on. */
 export const kelApproval = (id: string, allow: boolean, conversation?: string) =>
   call<{ ok?: boolean } & Record<string, unknown>>('/api/approval', {
@@ -1567,6 +1587,8 @@ export interface KelHandoff {
   phase: KelHandoffPhase;
   can_stop: boolean;
   can_retry: boolean;
+  /** D-65: coding work only. */
+  application?: KelChangeApplication | null;
 }
 
 /** The engine refuses a submission that belongs to another conversation. */
