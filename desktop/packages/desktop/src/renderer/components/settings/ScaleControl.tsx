@@ -32,7 +32,7 @@ const clamp = (value: number) => Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MI
  * 提供界面缩放功能，支持滑块和按钮调节
  * Provides interface scaling with slider and button controls
  */
-const ScaleControl: React.FC = () => {
+const ScaleControl: React.FC<{ variant?: 'slider' | 'stepper' }> = ({ variant = 'slider' }) => {
   const { t } = useTranslation();
   const { fontScale, setFontScale, theme } = useThemeContext();
 
@@ -91,6 +91,49 @@ const ScaleControl: React.FC = () => {
     void setFontScale(FONT_SCALE_DEFAULT);
   };
   const isResetDisabled = Math.abs(fontScale - FONT_SCALE_DEFAULT) < RESET_THRESHOLD;
+
+  // Desktop Appearance → Text size and zoom (FIX-0016): the Zoom row reads exactly like Chat text and Code —
+  // [−] value [+] Reset, no slider — using the same step and limits.
+  if (variant === 'stepper') {
+    return (
+      <div className='kel-size-stepper kel-scale-stepper flex items-center gap-10px ms-auto'>
+        <Button
+          size='mini'
+          type='secondary'
+          shape='circle'
+          aria-label='Smaller text'
+          data-testid='text-smaller'
+          className='w-28px h-28px !min-w-28px flex items-center justify-center p-0'
+          onClick={() => handleStep(-FONT_SCALE_STEP)}
+          disabled={fontScale <= FONT_SCALE_MIN + EPSILON}
+        >
+          -
+        </Button>
+        <span
+          className='text-13px text-t-primary text-center min-w-32px'
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+          data-testid='zoom-value'
+        >
+          {formattedValue}
+        </span>
+        <Button
+          size='mini'
+          type='secondary'
+          shape='circle'
+          aria-label='Larger text'
+          data-testid='text-larger'
+          className='w-28px h-28px !min-w-28px flex items-center justify-center p-0'
+          onClick={() => handleStep(FONT_SCALE_STEP)}
+          disabled={fontScale >= FONT_SCALE_MAX - EPSILON}
+        >
+          +
+        </Button>
+        <Button size='small' type='text' className='px-4px h-28px' onClick={handleReset} disabled={isResetDisabled}>
+          {t('settings.scaleReset')}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className='flex flex-col gap-2 w-full md:max-w-620px'>

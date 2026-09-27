@@ -7,7 +7,8 @@
  * never be switched on — the engine refuses it.
  */
 import { Dropdown, Menu, Message } from '@arco-design/web-react';
-import { Down } from '@icon-park/react';
+import toolsIcon from '@renderer/assets/figma/nav-tools.svg';
+import chevronIcon from '@renderer/assets/figma/chat-shell/mode-chevron.svg';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -125,7 +126,7 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
   const changed = useMemo(() => (rows ?? []).filter((row) => row.override !== 'default').length, [rows]);
 
   const items = (
-    <Menu style={{ maxHeight: 460, overflowY: 'auto', minWidth: 300 }} data-testid='kel-tools-menu'>
+    <Menu className='kel-tools-menu' data-testid='kel-tools-menu'>
       {(rows ?? []).map((row) => (
         <Menu.ItemGroup key={row.id} title={`${row.label} — ${availabilityWords(row)}`}>
           {row.availability !== 'available' ? (
@@ -139,6 +140,7 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
           ) : null}
           <Menu.Item
             key={`${row.id}-default`}
+            className={row.override === 'default' ? 'kel-tools-menu__current' : undefined}
             onClick={() => void choose(row.id, 'default', row.label)}
             data-testid={`kel-tool-${row.id}-default`}
           >
@@ -149,6 +151,7 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
           </Menu.Item>
           <Menu.Item
             key={`${row.id}-on`}
+            className={row.override === 'on' ? 'kel-tools-menu__current' : undefined}
             onClick={() => void choose(row.id, 'on', row.label)}
             data-testid={`kel-tool-${row.id}-on`}
           >
@@ -159,6 +162,7 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
           </Menu.Item>
           <Menu.Item
             key={`${row.id}-off`}
+            className={row.override === 'off' ? 'kel-tools-menu__current' : undefined}
             onClick={() => void choose(row.id, 'off', row.label)}
             data-testid={`kel-tool-${row.id}-off`}
           >
@@ -182,17 +186,21 @@ export const KelToolsControl: React.FC<{ conversationId?: string }> = ({ convers
     </Menu>
   );
 
+  // Footer crumb (Figma Chat footer 273:9251): icon + label + chevron. The menu opens above its trigger
+  // like the Permission menu (273:9273) and scrolls inside a capped height instead of covering the page.
   return (
-    <Dropdown droplist={items} trigger='click' position='bl' unmountOnExit={false}>
-      <button
-        type='button'
-        data-testid='kel-tools-pill'
-        disabled={busy}
-        className='flex items-center gap-4px text-12px px-8px h-24px rounded-12px cursor-pointer'
-        style={{ background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
-      >
+    <Dropdown
+      droplist={items}
+      trigger='click'
+      position='tl'
+      unmountOnExit={false}
+      getPopupContainer={() => document.body}
+      triggerProps={{ className: 'kel-tools-menu-popup', popupAlign: { top: 8 } }}
+    >
+      <button type='button' data-testid='kel-tools-pill' disabled={busy} className='kel-shell-crumb kel-tools-crumb'>
+        <img src={toolsIcon} alt='' width={14} height={14} />
         <span>{changed ? `Tools · ${changed}` : 'Tools'}</span>
-        <Down size={12} />
+        <img src={chevronIcon} alt='' width={12} height={12} className='kel-shell-crumb__chevron' />
       </button>
     </Dropdown>
   );

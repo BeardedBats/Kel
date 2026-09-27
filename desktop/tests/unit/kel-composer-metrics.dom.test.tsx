@@ -4,10 +4,15 @@ import { describe, expect, it } from 'vitest';
 import ShellComposerMetrics from '@renderer/components/kel/ShellComposerMetrics';
 
 describe('Conversation footer usage', () => {
-  it('keeps missing reports unknown instead of inventing screenshot values', () => {
-    render(<ShellComposerMetrics />);
+  it('shows nothing until the conversation has reported usage', () => {
+    const { container } = render(<ShellComposerMetrics />);
+    expect(container.innerHTML).toBe('');
+    expect(screen.queryByLabelText('Conversation usage')).toBeNull();
+  });
+  it('keeps missing parts of a report unknown instead of inventing screenshot values', () => {
+    render(<ShellComposerMetrics usage={{ total_tokens: 10 }} />);
     expect(screen.getByTitle('Reported session cost').textContent).toBe('—');
-    expect(screen.getByTitle('Reported tokens').textContent).toBe('— tokens');
+    expect(screen.getByTitle('Reported tokens').textContent).toBe('10 tokens');
     expect(screen.getByTitle('Reported cached input share').textContent).toBe('— cache');
     expect(screen.getByTitle('Reported context remaining').textContent).toBe('— remaining');
   });
