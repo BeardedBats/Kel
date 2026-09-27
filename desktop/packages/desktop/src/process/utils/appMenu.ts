@@ -7,8 +7,15 @@
 import type { MenuItemConstructorOptions } from 'electron';
 import { Menu, app } from 'electron';
 
-export function setupApplicationMenu(): void {
-  const isMac = process.platform === 'darwin';
+/**
+ * CP-13: a packaged Kel has no developer entries — no reload (which would drop live work), no
+ * DevTools and no full-screen toggle (F11). Development builds keep them.
+ */
+export function buildApplicationMenuTemplate(
+  isPackaged: boolean,
+  platform: NodeJS.Platform = process.platform
+): MenuItemConstructorOptions[] {
+  const isMac = platform === 'darwin';
 
   const template: MenuItemConstructorOptions[] = [];
 
@@ -44,21 +51,24 @@ export function setupApplicationMenu(): void {
     ],
   });
 
+  const developerEntries: MenuItemConstructorOptions[] = isPackaged
+    ? []
+    : [{ role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' }, { type: 'separator' }];
   template.push({
     label: 'View',
     submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools' },
-      { type: 'separator' },
+      ...developerEntries,
       { role: 'resetZoom' },
       { role: 'zoomIn' },
       { role: 'zoomOut' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' },
+      ...(isPackaged ? [] : ([{ type: 'separator' }, { role: 'togglefullscreen' }] as MenuItemConstructorOptions[])),
     ],
   });
 
-  const menu = Menu.buildFromTemplate(template);
+  return template;
+}
+
+export function setupApplicationMenu(): void {
+  const menu = Menu.buildFromTemplate(buildApplicationMenuTemplate(app.isPackaged));
   Menu.setApplicationMenu(menu);
 }

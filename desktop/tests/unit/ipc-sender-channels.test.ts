@@ -56,6 +56,7 @@ vi.mock('@/process/feedback/logs', () => ({
 import { registerBackendStartupIpc } from '@process/startup/backendStartupIpc';
 import { registerKelCredentialIpc } from '@/process/services/kel/kelCredentialIpc';
 import { ADAPTER_BRIDGE_EVENT_KEY } from '@/common/adapter/constant';
+import { configureSenderGuard } from '@/common/senderGuard';
 import '@/process/bridge/feedbackBridge';
 import '@/common/adapter/main';
 
@@ -140,10 +141,15 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
       });
     }
 
-    it('get-backend-port: serves the dev-server main frame', () => {
+    it('get-backend-port: serves the dev-server main frame only in a development build (CP-13)', () => {
+      configureSenderGuard({ devServerPermitted: true });
       const event: FakeEvent = legitDevEvent();
       listeners.get('get-backend-port')!(event);
       expect(event.returnValue).toEqual(5199);
+      configureSenderGuard({ devServerPermitted: false });
+      const packagedEvent: FakeEvent = legitDevEvent();
+      listeners.get('get-backend-port')!(packagedEvent);
+      expect(packagedEvent.returnValue).not.toEqual(5199);
     });
 
     it('backend:recover-corrupted-database: refuses spoofed senders and runs for the main frame', async () => {

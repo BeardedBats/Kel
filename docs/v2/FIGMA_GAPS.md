@@ -18,6 +18,20 @@ States Nick asked for that have no Figma frame. Each reuses the nearest componen
 | Scheduled task: timing preview | `273:1586` (no preview line) | One muted line under Time/Model with the engine's sentence and next run ("Every weekday at 9:00 AM. Next: …"); the engine's reason in the error colour when it cannot use the timing. | `CreateTaskDialog.tsx`, `kel-shell.css` |
 | Scheduled task: needs attention, footer, delete choice | List `189:2628`, detail `272:739` | A paused-with-problem task shows the failed chip "Needs attention" and a problem banner above Details; the list ends with "Scheduled tasks run while Kel is open on this computer."; the delete confirm offers "Keep the chats its runs opened". The detail's "Select runs" batch delete is dropped: runs are engine records, not deletable chats. | `ScheduledTasksPage/*`, `kel-shell.css` |
 
+## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
+
+Figma still draws these; the product no longer has them. Do not restore them from Figma.
+
+| Figma frame | Decision | What the app does now | Implementation |
+| --- | --- | --- | --- |
+| Desktop Settings — Assistants `311:3140`; mobile `300:15057` | D-60 (Kel is the only assistant) | No Assistants page or nav row; `/settings/assistants` and `/settings/agent*` go to Model, `/assistants` and `/team/:id` go Home. | `Router.tsx`, `KelInChatFrame.tsx` |
+| Desktop Settings — Skills `311:3536`; mobile `300:15176` ("Skills Hub" title, "enable on an assistant" tip) | D-60 (no hub or store) | Skills lists "Built into Kel" and "Added by you" with a plain tip; the phone title is "Skills". Hub, detail and import-history routes go to Skills. | `SkillsOverviewSettings/index.tsx` |
+| Extension settings tabs (any `Extensions` nav group) | D-60 | No extension group or `/settings/ext/*` page (redirects to System); Tools lists no extension-contributed MCP servers. | `KelInChatFrame.tsx`, `useMcpServers.ts` |
+| Reply actions in Chat `185:4284` / `299:11571` (thumbs up/down) | D-59 | Replies keep Copy (in the ⋯ menu, direct on the phone), Fork when available, and Details. | `MessageText.tsx` |
+| Language row in System `314:3912` / `300:2816`; language picker on the WebUI sign-in page | D-61 (English only) | No language row or picker. | `SystemModalContent/index.tsx`, `pages/login/index.tsx` |
+| Set up Kel — Autonomy step ("Ask before edits" button) | D-64 (Full access by default) | The step shows the Full access / Ask first card also used on Permissions and Settings → System. No Figma frame for the card itself; it reuses the Card + preference-row + Toggle components. | `KelAuthorityCard.tsx` |
+| WebUI sign-out | CP-12 | The hidden Ctrl/Cmd+Shift+L chord is gone; in a browser, Settings → Remote / WebUI shows a "This browser — Sign out" card (Card + Button components; no Figma frame). | `WebuiSettings.tsx` |
+
 ## Current revision gaps (2026-09-25)
 
 The live desktop page is `319:2`; the live mobile page is `319:3858`. The older source IDs and findings below are **SUPERSEDED BY FIGMA REVISION** where they describe presentation. Keep them as history. The [current frame inventory](evidence/figma-full-audit/FIGMA_REVISION_2026-09-25.md) tracks the new source.

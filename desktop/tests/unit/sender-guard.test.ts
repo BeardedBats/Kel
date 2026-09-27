@@ -5,8 +5,8 @@
  * the exact acceptance set (packaged main frame; dev server only when allowed) and the
  * fail-closed behaviour for subframes, foreign origins, and missing/malformed metadata.
  */
-import { describe, expect, it } from 'vitest';
-import { assertTrustedSender, isTrustedSender, SENDER_REFUSAL_MESSAGE } from '@/common/senderGuard';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { assertTrustedSender, configureSenderGuard, isTrustedSender, SENDER_REFUSAL_MESSAGE } from '@/common/senderGuard';
 
 const mainFrame = { url: 'file:///C:/kel/apps/renderer/index.html' };
 const packagedMain = { senderFrame: mainFrame, sender: { mainFrame } };
@@ -21,6 +21,17 @@ const foreignFrame = { url: 'https://evil.example/login' };
 const foreignMain = { senderFrame: foreignFrame, sender: { mainFrame: foreignFrame } };
 
 describe('sender guard (Campaign C AUD-MAJOR-002)', () => {
+  // A development build (the main process declares it at startup).
+  beforeEach(() => configureSenderGuard({ devServerPermitted: true }));
+  afterEach(() => configureSenderGuard({ devServerPermitted: false }));
+
+  it('never trusts the dev server in a packaged build, even when a channel allows it (CP-13)', () => {
+    configureSenderGuard({ devServerPermitted: false });
+    expect(isTrustedSender(devMain, { allowDevServer: true })).toBe(false);
+    expect(() => assertTrustedSender(devMain, { allowDevServer: true })).toThrow(SENDER_REFUSAL_MESSAGE);
+    expect(isTrustedSender(packagedMain, { allowDevServer: true })).toBe(true);
+  });
+
   it('accepts the packaged main frame', () => {
     expect(isTrustedSender(packagedMain)).toBe(true);
     expect(isTrustedSender(packagedMain, { allowDevServer: true })).toBe(true);

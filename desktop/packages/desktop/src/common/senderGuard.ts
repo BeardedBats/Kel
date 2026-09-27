@@ -6,6 +6,10 @@
  * and must be loaded from the packaged renderer (`file:`) or - when `allowDevServer` is set - the
  * development server (`http://localhost:`). Subframes (artifact-preview iframes), foreign origins,
  * and missing or malformed sender metadata are refused. Fails closed: no frame, no url, no pass.
+ *
+ * CP-13: `allowDevServer` is honoured only in a development build. The main process declares that
+ * once at startup (`configureSenderGuard({ devServerPermitted: !app.isPackaged })`); until it does,
+ * and always in a packaged build, a page served from localhost is never trusted.
  */
 
 export const SENDER_REFUSAL_MESSAGE = 'Unknown Kel window';
@@ -21,6 +25,13 @@ export interface SenderGuardOptions {
   allowDevServer?: boolean;
 }
 
+let devServerPermitted = false;
+
+/** Declare whether this is a development build (the only kind that may trust the dev server). */
+export const configureSenderGuard = (options: { devServerPermitted: boolean }): void => {
+  devServerPermitted = options.devServerPermitted === true;
+};
+
 export const isTrustedSender = (
   event: GuardableSenderEvent | null | undefined,
   options?: SenderGuardOptions
@@ -30,7 +41,7 @@ export const isTrustedSender = (
   if (!frame || !mainFrame || frame !== mainFrame) return false;
   const url = typeof frame.url === 'string' ? frame.url : '';
   if (url.startsWith('file:')) return true;
-  return options?.allowDevServer === true && url.startsWith('http://localhost:');
+  return devServerPermitted && options?.allowDevServer === true && url.startsWith('http://localhost:');
 };
 
 /** Throw the shared refusal for untrusted senders (use on `ipcMain.handle`-style channels). */
