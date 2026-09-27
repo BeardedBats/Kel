@@ -713,3 +713,15 @@ change stays undoable (the pre-apply snapshot is kept and the card offers "Undo"
 Nick:** a change that failed or skipped verification, a change touching a protected place (D-64), and
 any change while the mode is "Ask first" — those keep the existing Apply button. Every automatic
 apply is one Activity line.
+
+## D-66 — Hidden orchestration means no managing agents, not no visibility
+
+**Decided by Nick 2026-09-27** (clarifies handoff §1). "Hidden orchestration" means Nick never has to
+talk to, direct or manage a spawned agent: every instruction goes to Kel, and Kel alone manages the
+staff. It does **not** mean the work is invisible. Kel gives an open, always-available live update:
+at a glance in the main chat, a macro view of each piece of work in progress (what it is, roughly how
+far along, what state it is in); one click opens the detail (the team on it, each member's role,
+model, version and reasoning level, the steps done and in progress, review findings, files changed).
+The detail view is read-only apart from "Talk to Kel about this". Staff are spawned on demand; the
+same role may run several times at once (no fixed roster or bench). Everything shown must be real
+engine state (truth over convenience) — no decorative workers.
