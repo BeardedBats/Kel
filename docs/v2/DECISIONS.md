@@ -659,3 +659,34 @@ aioncore cron scheduler is retired once existing tasks are migrated.
 **Decided by Nick 2026-09-27.** Delete the empty engine conversations created at launch and the four
 practice Kibble fixes (FIX-0001..FIX-0004) from the real Data root (after a backup); move evidence
 screenshots out of the tracked tree; keep the SF Pro fonts.
+
+## D-59 — Reactions removed
+
+**Decided by Nick 2026-09-27.** The thumbs up/down controls on replies are removed (they only wrote to
+local storage and had no effect — JR-49). Nothing replaces them for now.
+
+## D-60 — Settings show only what Kel has built
+
+**Decided by Nick 2026-09-27.** Kel is the only assistant and there is no plugin marketplace (handoff
+§35). Settings pages are trimmed to what exists: no assistant catalog or marketplace (Assistants shows
+Kel only, or is folded away), no Extensions page or external extension tabs, Skills and Tools show only
+what Kel actually ships and uses (built-in skills, the MCP servers Kel manages) without hub/market/
+install-from-store flows.
+
+## D-61 — English only
+
+**Decided by Nick 2026-09-27.** Remove the language selector; the app ships en-US only. Other locale
+bundles are removed.
+
+## D-62 — The General project gets a default folder
+
+**Decided by Nick 2026-09-27.** General (`default`) gets a default folder so coding recipes and the
+project map work there: `%USERPROFILE%\Documents\Kel Projects\General` (created on demand; the person
+can change it in Projects). No default test command.
+
+## D-63 — Repository history rewrite and branch pruning approved
+
+**Decided by Nick 2026-09-27.** Rewrite git history to drop the evidence screenshots/recordings that
+were moved out of the tracked tree (D-58) and force-push `main`; prune branches already merged into
+`main` (local and remote). Done at a quiet point with no agents committing, after a full backup bundle
+of the old history is kept under `Tools`.
