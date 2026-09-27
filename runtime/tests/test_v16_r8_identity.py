@@ -31,5 +31,6 @@ class EngineIdentityTests(unittest.TestCase):
 
     def test_the_descriptor_and_state_carry_that_version(self):
         source = (REPO / 'runtime' / 'kel' / 'service.py').read_text(encoding='utf-8')
-        self.assertEqual(source.count("'engine_version':ENGINE_VERSION"), 3)
+        # The descriptor, its printed line, /api/state and /api/health (CP-2) all report it.
+        self.assertEqual(source.count("'engine_version':ENGINE_VERSION"), 4)
         self.assertNotIn("ENGINE_VERSION='", source)  # no second literal to drift
