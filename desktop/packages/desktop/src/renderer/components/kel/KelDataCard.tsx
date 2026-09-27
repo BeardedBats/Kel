@@ -143,12 +143,13 @@ export const KelDataCard: React.FC = () => {
     try {
       const details = await api<BackupDetails>({ action: 'inspect', source: restoreSource.trim() });
       // What is there now, so the confirmation can say what gets replaced (best effort, read-only).
-      const inventory = await api<{ tables: Record<string, number | null> }>({ action: 'inventory' }).catch(
-        (): null => null
-      );
+      const inventory = await api<{ tables: Record<string, number | null>; summary?: BackupSummary }>({
+        action: 'inventory',
+      }).catch((): null => null);
+      // `summary` counts sidebar chats the way a backup does; `tables` (older engines) counts records.
       const current: BackupSummary = {};
       for (const [key] of SUMMARY_WORDS) {
-        const value = inventory?.tables?.[key];
+        const value = inventory?.summary?.[key] ?? inventory?.tables?.[key];
         if (typeof value === 'number') current[key] = value;
       }
       setFolderDialog(null);
