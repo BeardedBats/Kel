@@ -43,6 +43,11 @@ import {
   type KelWorkJob,
 } from '@renderer/components/kel/kelApi';
 import '@renderer/styles/kel-work.css';
+import { useProjects } from '@renderer/components/kel/activeProject';
+
+/** A job's own project, for the recipe it can become (its chat names it; the contract otherwise). */
+const jobScope = (job: KelWorkJob) =>
+  job.conversation ? { conversation: job.conversation } : { project: job.contract?.project_id || 'default' };
 
 /**
  * What a job is waiting for, in one sentence (D7/D19). A route-blocked job resumes by itself when a
@@ -111,6 +116,8 @@ const WorkCenter: React.FC = () => {
   const [error, setError] = useState<unknown>(null);
   const [rowActions, setRowActions] = useState<Record<string, KelWorkRow>>({});
   const followUps = useRef<number[]>([]);
+  // D-54: Work shows the active project's jobs ('*' = every project).
+  const { active, loaded } = useProjects();
   // What a control just asked for, shown until the engine reports it (no reload, no flicker back).
   const [pending, setPending] = useState<Record<string, string>>({});
 
@@ -119,11 +126,15 @@ const WorkCenter: React.FC = () => {
   }, [requested]);
 
   const load = useCallback(async () => {
+    if (!loaded) return;
     try {
-      const [state, providers] = await Promise.all([
-        kelState(KEL_ALL_CONVERSATIONS),
+      const [state, providers, rows] = await Promise.all([
+        kelState(KEL_ALL_CONVERSATIONS, active),
         // D19: the route sentence names providers the way a person knows them.
         kelProviders.list().catch((): null => null),
+        // V2-06 follow-through: the rows are the same authoritative surface the chat's Work panel
+        // reads, so every job here can offer its one action with the id that action needs.
+        kelWorkRows({ project: active }).catch((): KelWorkRow[] => []),
       ]);
       setJobs(state.jobs ?? []);
       setPending((current) => {
@@ -141,21 +152,13 @@ const WorkCenter: React.FC = () => {
           )
         )
       );
-      // V2-06 follow-through: the rows are the same authoritative surface the chat's Work panel
-      // reads, so every job here can offer its one action with the id that action needs.
-      const conversations = Array.from(
-        new Set((state.jobs ?? []).map((job) => job.conversation).filter((id): id is string => Boolean(id)))
-      ).slice(0, 4);
-      const rowLists = await Promise.all(conversations.map((cid) => kelWorkRows(cid).catch((): KelWorkRow[] => [])));
-      const merged: Record<string, KelWorkRow> = {};
-      for (const list of rowLists) for (const row of list) merged[row.job_id] = row;
-      setRowActions(merged);
+      setRowActions(Object.fromEntries(rows.map((row) => [row.job_id, row])));
       setError(null);
     } catch (err) {
       setJobs([]);
       setError(err);
     }
-  }, []);
+  }, [active, loaded]);
 
   useEffect(() => {
     void load();
@@ -377,7 +380,7 @@ const WorkCenter: React.FC = () => {
                 disabled={busy}
                 onClick={() =>
                   void act('Saving as a recipe', async () => {
-                    setRecipeDraft(await kelRecipePropose(activeJob.id));
+                    setRecipeDraft(await kelRecipePropose(activeJob.id, jobScope(activeJob)));
                   })
                 }
               >
@@ -412,7 +415,7 @@ const WorkCenter: React.FC = () => {
                     disabled={busy}
                     onClick={() =>
                       void act('Saving the recipe', async () => {
-                        await kelRecipeSave(recipeDraft.recipe);
+                        await kelRecipeSave(recipeDraft.recipe, jobScope(activeJob));
                         setRecipeDraft(null);
                       }, 'Saved as a recipe.')
                     }

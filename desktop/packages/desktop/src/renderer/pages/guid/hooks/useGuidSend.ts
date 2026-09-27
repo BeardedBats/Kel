@@ -16,6 +16,20 @@ import { type TFunction } from 'i18next';
 import type { NavigateFunction } from 'react-router-dom';
 import { mutate as swrMutate } from 'swr';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
+import { kelProjects } from '@renderer/components/kel/kelApi';
+
+/**
+ * D-54: tie the new chat to its project before it opens, so a project switch made while the first
+ * message is on its way cannot move it. Non-fatal: without the binding the engine still places the
+ * chat in the active project.
+ */
+const bindNewChat = async (conversationId: string, projectId: string) => {
+  try {
+    await kelProjects.bind(conversationId, projectId);
+  } catch (error) {
+    console.warn('[Kel] Could not record the new chat’s project:', error);
+  }
+};
 
 export type GuidSendDeps = {
   // Input state
@@ -23,8 +37,10 @@ export type GuidSendDeps = {
   setInput: React.Dispatch<React.SetStateAction<string>>;
   files: ChatFileRef[];
   setFiles: React.Dispatch<React.SetStateAction<ChatFileRef[]>>;
+  /** The new chat's project folder ('' when the project has none). */
   dir: string;
-  setDir: React.Dispatch<React.SetStateAction<string>>;
+  /** The project the new chat starts in (D-54). */
+  projectId: string;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   loading: boolean;
 
@@ -73,7 +89,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     files,
     setFiles,
     dir,
-    setDir,
+    projectId,
     setLoading,
     loading,
     selectedAssistantId,
@@ -188,6 +204,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
             default_files: files.map(chatFileRefPath),
             workspace: finalWorkspace,
             custom_workspace: isCustomWorkspace,
+            kel_project_id: projectId,
             selected_mcp_server_ids: selectedUserMcpServerIdsToSend,
             selected_session_mcp_servers: selectedSessionMcpServersToSend,
           },
@@ -222,6 +239,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
           sessionStorage.setItem(`aionrs_initial_message_${conversation.id}`, JSON.stringify(initialMessage));
         }
 
+        await bindNewChat(conversation.id, projectId);
         await navigate(`/conversation/${conversation.id}`);
       } catch (error: unknown) {
         console.error('Failed to create Aion CLI conversation:', error);
@@ -241,6 +259,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
         extra: {
           workspace: finalWorkspace,
           custom_workspace: isCustomWorkspace,
+          kel_project_id: projectId,
           default_files: files.map(chatFileRefPath),
           selected_mcp_server_ids: selectedUserMcpServerIdsToSend,
           selected_session_mcp_servers:
@@ -276,6 +295,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
         sessionStorage.setItem(`acp_initial_message_${conversation.id}`, JSON.stringify(initialMessage));
       }
 
+      await bindNewChat(conversation.id, projectId);
       await navigate(`/conversation/${conversation.id}`);
     } catch (error: unknown) {
       console.error('Failed to create ACP conversation:', error);
@@ -285,6 +305,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     input,
     files,
     dir,
+    projectId,
     selectedAssistantId,
     selectedAssistantBackend,
     selectedMode,
@@ -315,7 +336,6 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
         setMentionSelectorOpen(false);
         setMentionActiveIndex(0);
         setFiles([]);
-        setDir('');
       })
       .catch((error) => {
         console.error('Failed to send message:', error);
@@ -335,7 +355,6 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
     setMentionSelectorOpen,
     setMentionActiveIndex,
     setFiles,
-    setDir,
     t,
   ]);
 

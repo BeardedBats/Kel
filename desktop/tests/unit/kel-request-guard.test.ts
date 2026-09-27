@@ -9,6 +9,34 @@ describe('rendererKelRequestRefusal (D-33/D-34 credential custody)', () => {
     expect(rendererKelRequestRefusal('/api/connections', { action: 'save', kind: 'api_key', name: 'Stripe' })).toBeNull();
   });
 
+  it('allows the D-54 project-scoped reads and the conversation routes', () => {
+    for (const route of [
+      '/api/state?conversation=*&project=*',
+      '/api/state?conversation=*&project=default',
+      '/api/state?conversation=abc-123&project=i-want-to-create-a-little-app-that-a',
+      '/api/work?project=*',
+      '/api/work?project=default',
+      '/api/work?conversation=abc-123',
+      '/api/project',
+      '/api/conversation',
+      '/api/conversation-title',
+    ]) {
+      expect(rendererKelRequestRefusal(route, {})).toBeNull();
+    }
+  });
+
+  it('refuses malformed project scopes', () => {
+    for (const route of [
+      '/api/work?project=a/b',
+      '/api/work?conversation=*',
+      '/api/state?project=default',
+      '/api/state?conversation=*&project=a&x=1',
+      '/api/work?project=default&conversation=x',
+    ]) {
+      expect(rendererKelRequestRefusal(route)).toBe('Unknown Kel action');
+    }
+  });
+
   it('refuses unknown routes', () => {
     expect(rendererKelRequestRefusal('/api/shutdown-idle')).toBe('Unknown Kel action');
     expect(rendererKelRequestRefusal(42)).toBe('Unknown Kel action');

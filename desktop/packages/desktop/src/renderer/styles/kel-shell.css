@@ -4481,3 +4481,14 @@ html[data-theme='light'] body .kel-v2-shell .kel-shell-attention-line[data-tone=
 html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble :is([data-testid='transcript-row'], [data-testid='recent-transcript'], [data-testid='folder-transcript']) { color: var(--kel-text-1) !important; }
 html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble :is([data-testid='transcript-row'], [data-testid='recent-transcript'], [data-testid='folder-transcript']) * { color: inherit !important; }
 html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble .kel-shell-ramble-row-icon { filter: brightness(.4); }
+
+/* ---- D-54 Projects (projects renderer): Home project note, All projects rows, Knowledge project groups. ---- */
+.kel-v2-shell .kel-project-note { margin: -8px 0 14px; color: var(--kel-text-2); font-size: 13px; line-height: 18px; }
+.kel-v2-shell .kel-projects-list .kel-project-list-row { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 1px solid rgba(191,216,255,.08); }
+.kel-v2-shell .kel-projects-list .kel-project-list-row:first-of-type { border-top: 0; }
+.kel-v2-shell .kel-projects-list .kel-project-list-row .kel-row { flex-wrap: wrap; row-gap: 6px; }
+.kel-v2-shell .kel-projects-list .kel-project-list-row[data-editing] { scroll-margin: 80px; }
+.kel-v2-shell .kel-projects-list .kel-project-list-focus { border-radius: 8px; box-shadow: 0 0 0 1px var(--kel-accent); }
+.kel-v2-shell .kel-projects-list .kel-project-list-test { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.kel-v2-shell .kel-projects-list .kel-project-list-test .kel-input { width: 120px; }
+.kel-v2-shell .kel-knowledge-project { margin: 12px 0 6px; font-size: 13px; }

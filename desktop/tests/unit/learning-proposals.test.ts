@@ -47,8 +47,9 @@ describe('Kel suggests surface (D9)', () => {
   });
 
   it('wires the three decisions to the engine actions', () => {
-    expect(projectsPage).toContain("kelMemoryAction('accept_proposal', proposal.id)");
-    expect(projectsPage).toContain("kelMemoryAction('defer_proposal', proposal.id)");
+    // D-54: each decision goes to the proposal's own project.
+    expect(projectsPage).toContain("kelMemoryAction('accept_proposal', proposal.id, {}, writeScope(proposal.project_id))");
+    expect(projectsPage).toContain("kelMemoryAction('defer_proposal', proposal.id, {}, writeScope(proposal.project_id))");
     expect(projectsPage).toContain("kelMemoryAction('reject_proposal', proposal.id");
   });
 });

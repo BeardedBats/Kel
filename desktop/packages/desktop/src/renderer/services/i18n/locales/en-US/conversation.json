@@ -435,7 +435,7 @@
       "explorer": "File Explorer",
       "browser": "Browser"
     },
-    "unnamedSpace": "Workspace"
+    "unnamedSpace": "Project"
   },
   "minimap": {
     "searchAria": "Search conversation",

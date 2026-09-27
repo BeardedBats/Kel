@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { readActiveWorkspace, useActiveWorkspace } from '@renderer/components/kel/activeWorkspace';
+import { GENERAL_PROJECT_ID, announceProjectsChanged, setActiveProject, useProjects } from '@renderer/components/kel/activeProject';
+import { kelProjects } from '@renderer/components/kel/kelApi';
 import { type ChatFileRef, chatFileRefPath, localFileRef, uploadFileRef } from '@/common/types/chatFile';
 import { useDragUpload } from '@/renderer/hooks/file/useDragUpload';
 import { usePasteService } from '@/renderer/hooks/file/usePasteService';
@@ -21,8 +22,10 @@ export type GuidInputResult = {
   setInput: React.Dispatch<React.SetStateAction<string>>;
   files: ChatFileRef[];
   setFiles: React.Dispatch<React.SetStateAction<ChatFileRef[]>>;
+  /** The folder of the project a new chat starts in ('' when that project has no folder). */
   dir: string;
-  setDir: React.Dispatch<React.SetStateAction<string>>;
+  /** D-54: the project a new chat starts in — the active project, or General for "All projects". */
+  projectId: string;
   isInputFocused: boolean;
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -54,23 +57,32 @@ export const useGuidInput = ({ locationState }: UseGuidInputOptions): GuidInputR
     writeDraftText(HOME_DRAFT_ID, input);
   }, [input]);
   const [files, setFiles] = useState<ChatFileRef[]>([]);
-  const activeWorkspace = useActiveWorkspace();
-  const [dir, setDir] = useState<string>(() => readActiveWorkspace()?.root ?? '');
+  // D-54: new chats start in the engine's active project (General when all projects are shown);
+  // the folder is that project's own, never a separate per-page choice.
+  const { newChatProject } = useProjects();
+  const dir = newChatProject?.root ?? '';
+  const projectId = newChatProject?.id ?? GENERAL_PROJECT_ID;
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Read workspace from location.state (passed from tabs add button)
+  // A caller that opens Home "in a folder" (e.g. the tabs add button) makes that folder's project
+  // active, so the header, the footer and the new chat all agree.
+  const requestedFolder = locationState?.workspace;
   useEffect(() => {
-    if (locationState?.workspace) {
-      setDir(locationState.workspace);
-    }
-  }, [locationState]);
-
-  // Switching the header workspace moves new chats into that workspace's folder.
-  useEffect(() => {
-    if (locationState?.workspace) return;
-    setDir(activeWorkspace?.root ?? '');
-  }, [activeWorkspace?.id, activeWorkspace?.root]);
+    if (!requestedFolder) return;
+    let cancelled = false;
+    void kelProjects
+      .forFolder(requestedFolder)
+      .then(async (project) => {
+        if (cancelled) return;
+        announceProjectsChanged();
+        await setActiveProject(project.id);
+      })
+      .catch((error: unknown) => console.warn('[Kel] Could not open that folder as a project:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [requestedFolder]);
 
   // Handle pasted files (append mode to support multiple pastes)
   // Do NOT clear dir here: paste/drag should coexist with a selected workspace,
@@ -143,7 +155,7 @@ export const useGuidInput = ({ locationState }: UseGuidInputOptions): GuidInputR
     files,
     setFiles,
     dir,
-    setDir,
+    projectId,
     isInputFocused,
     loading,
     setLoading,

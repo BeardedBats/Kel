@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
@@ -7,50 +7,50 @@ import chevronIcon from '@renderer/assets/figma/chat-shell/workspace-chevron.svg
 import check from '@renderer/assets/figma/chat-pickers/project-check.svg';
 import folder from '@renderer/assets/figma/chat-pickers/project-folder.svg';
 import plus from '@renderer/assets/figma/chat-pickers/project-plus.svg';
-import { kelRequest, kelState } from './kelApi';
-import { setActiveWorkspace, useActiveWorkspace, type KelWorkspace } from './activeWorkspace';
-
-type EngineProject = { id: string; name: string; root?: string | null };
-
-/**
- * The engine also records a project for every chat's auto-created scratch folder, the OS temp dir and
- * Kel's own data tree. Those are plumbing, not workspaces a person made, so the switcher hides them.
- */
-const isUserWorkspace = (project: EngineProject) => {
-  if (project.id === 'default') return false;
-  if (/-temp-[0-9a-z]+$/i.test(project.name)) return false;
-  const root = project.root ?? '';
-  if (/[\\/]AppData[\\/]Local[\\/]Temp$/i.test(root) || /^\/tmp$/.test(root)) return false;
-  if (/[\\/]conversations[\\/]users[\\/]/i.test(root)) return false;
-  if (/[\\/]Data[\\/](engine|store|host)([\\/]|$)/i.test(root)) return false;
-  return true;
-};
+import { kelProjects } from './kelApi';
+import {
+  ALL_PROJECTS,
+  ALL_PROJECTS_LABEL,
+  GENERAL_PROJECT_NAME,
+  activeProjectLabel,
+  announceProjectsChanged,
+  liveProjects,
+  projectLabel,
+  setActiveProject,
+  useConversationProject,
+  useProjects,
+} from './activeProject';
 
 const folderName = (path: string) => path.split(/[\\/]/).filter(Boolean).pop() || path;
 
 /**
- * Header "Workspace ⌄" switcher (Figma page header). Lists the engine's projects, marks the active
- * one, and offers "New workspace" (name + folder). The active workspace's folder is where new chats
- * start from Home.
+ * Header project switcher (Figma page header, D-54). Lists the engine's live projects and "All
+ * projects", marks the one in use, and offers "New project" and "Manage projects". The choice is
+ * the engine's active project — the same on every device — and new chats start in it.
+ *
+ * Inside a chat (`conversationId`) the chip shows that chat's own project. Choosing another project
+ * makes it active for new chats and opens a new chat there; the open chat stays where it is.
  */
-export default function ShellWorkspaceLink() {
+export default function ShellWorkspaceLink({ conversationId }: { conversationId?: string }) {
   const navigate = useNavigate();
-  const active = useActiveWorkspace();
+  const view = useProjects();
+  const chat = useConversationProject(conversationId);
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [projects, setProjects] = useState<EngineProject[] | null>(null);
+  const [error, setError] = useState('');
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const state = await kelState();
-      setProjects(((state.projects ?? []) as EngineProject[]).filter(isUserWorkspace));
-    } catch {
-      setProjects([]);
-    }
-  }, []);
+  const inChat = Boolean(conversationId);
+  const selected = inChat ? chat.project?.id ?? null : view.active;
+  // A chat whose project Kel cannot name yet still reads as a project, never as a folder.
+  const label = inChat
+    ? chat.project?.name
+      ? projectLabel(chat.project)
+      : 'Project'
+    : activeProjectLabel(view) || (view.loaded ? ALL_PROJECTS_LABEL : 'Projects');
+  const title = inChat ? chat.project?.root ?? undefined : view.activeProject?.root ?? undefined;
 
   const toggle = () => {
     if (open) {
@@ -60,8 +60,9 @@ export default function ShellWorkspaceLink() {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (rect) setMenuStyle({ position: 'fixed', top: rect.bottom + 6, left: rect.left, zIndex: 1000 });
     setCreating(false);
+    setError('');
     setOpen(true);
-    void load();
+    void view.refresh();
   };
 
   useEffect(() => {
@@ -81,19 +82,24 @@ export default function ShellWorkspaceLink() {
     };
   }, [open]);
 
-  // Keep the stored name/folder in step with the engine (renamed or removed workspaces).
-  useEffect(() => {
-    if (!projects || !active) return;
-    const current = projects.find((p) => p.id === active.id);
-    if (!current) setActiveWorkspace(null);
-    else if (current.name !== active.name || (current.root ?? null) !== (active.root ?? null))
-      setActiveWorkspace({ id: current.id, name: current.name, root: current.root ?? null });
-  }, [projects, active]);
-
-  const choose = (workspace: KelWorkspace | null) => {
-    setActiveWorkspace(workspace);
+  const choose = async (id: string, name: string) => {
+    setError('');
+    try {
+      await setActiveProject(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kel could not switch projects.');
+      return;
+    }
     setOpen(false);
+    if (inChat && chat.project && id !== chat.project.id) {
+      const startsIn = id === ALL_PROJECTS ? GENERAL_PROJECT_NAME : name;
+      void navigate('/guid', {
+        state: { projectNote: `New chats start in ${startsIn}. This chat stays in ${chat.project.name || 'its project'}.` },
+      });
+    }
   };
+
+  const rows = liveProjects(view.projects);
 
   const menu = open
     ? createPortal(
@@ -102,57 +108,64 @@ export default function ShellWorkspaceLink() {
           className='kel-desktop-picker kel-workspace-menu'
           style={menuStyle}
           role='dialog'
-          aria-label='Workspaces'
+          aria-label='Projects'
           data-testid='kel-workspace-menu'
         >
           {creating ? (
-            <NewWorkspaceForm
+            <NewProjectForm
               onCancel={() => setCreating(false)}
-              onCreated={(workspace) => {
-                // Add it to the list first: the keep-in-step effect clears an active id it can't find.
-                setProjects((prev) => [...(prev ?? []).filter((p) => p.id !== workspace.id), workspace]);
-                choose(workspace);
-                void load();
+              onCreated={(project) => {
+                announceProjectsChanged();
+                void choose(project.id, project.name);
               }}
             />
           ) : (
             <>
-              <p className='kel-workspace-menu__label'>Workspaces</p>
-              {projects === null && <p className='kel-workspace-menu__empty'>Loading…</p>}
-              {projects?.length === 0 && <p className='kel-workspace-menu__empty'>No workspaces yet.</p>}
-              {projects?.map((project) => (
+              <p className='kel-workspace-menu__label'>Projects</p>
+              {!view.loaded && <p className='kel-workspace-menu__empty'>Loading…</p>}
+              <button
+                type='button'
+                className='kel-desktop-picker__row'
+                aria-pressed={!inChat && view.active === ALL_PROJECTS}
+                onClick={() => void choose(ALL_PROJECTS, ALL_PROJECTS_LABEL)}
+              >
+                <img src={folder} alt='' />
+                <span>{ALL_PROJECTS_LABEL}</span>
+                {!inChat && view.active === ALL_PROJECTS && <img src={check} alt='' />}
+              </button>
+              {rows.map((project) => (
                 <button
                   type='button'
                   key={project.id}
                   className='kel-desktop-picker__row'
-                  aria-pressed={active?.id === project.id}
+                  aria-pressed={selected === project.id}
                   title={project.root ?? undefined}
-                  onClick={() => choose({ id: project.id, name: project.name, root: project.root ?? null })}
+                  onClick={() => void choose(project.id, project.name)}
                 >
                   <img src={folder} alt='' />
                   <span>{project.name}</span>
-                  {active?.id === project.id && <img src={check} alt='' />}
+                  {selected === project.id && <img src={check} alt='' />}
                 </button>
               ))}
-              {active && (
-                <button type='button' className='kel-desktop-picker__row kel-workspace-menu__quiet' onClick={() => choose(null)}>
-                  <span>No workspace</span>
-                </button>
+              {error && (
+                <p className='kel-workspace-form__error' role='alert'>
+                  {error}
+                </p>
               )}
               <div className='kel-desktop-picker__divider' />
               <button type='button' className='kel-desktop-picker__row' onClick={() => setCreating(true)}>
                 <img src={plus} alt='' />
-                <span>New workspace</span>
+                <span>New project</span>
               </button>
               <button
                 type='button'
                 className='kel-desktop-picker__row kel-workspace-menu__quiet'
                 onClick={() => {
                   setOpen(false);
-                  navigate('/projects');
+                  void navigate('/projects/list');
                 }}
               >
-                <span>Open Projects</span>
+                <span>Manage projects</span>
               </button>
             </>
           )}
@@ -170,10 +183,11 @@ export default function ShellWorkspaceLink() {
         aria-haspopup='dialog'
         aria-expanded={open}
         onClick={toggle}
-        title={active?.root ?? undefined}
+        title={title}
+        data-testid='kel-project-chip'
       >
         <img src={workspaceIcon} alt='' />
-        <span>{active?.name ?? 'Workspace'}</span>
+        <span>{label}</span>
         <img src={chevronIcon} alt='' />
       </button>
       {menu}
@@ -181,10 +195,11 @@ export default function ShellWorkspaceLink() {
   );
 }
 
-const NewWorkspaceForm: React.FC<{ onCancel: () => void; onCreated: (workspace: KelWorkspace) => void }> = ({
-  onCancel,
-  onCreated,
-}) => {
+/** Name + optional folder. A project without a folder is fine until Kel needs to change code. */
+export const NewProjectForm: React.FC<{
+  onCancel: () => void;
+  onCreated: (project: { id: string; name: string; root: string | null }) => void;
+}> = ({ onCancel, onCreated }) => {
   const [name, setName] = useState('');
   const [root, setRoot] = useState('');
   const [busy, setBusy] = useState(false);
@@ -206,23 +221,23 @@ const NewWorkspaceForm: React.FC<{ onCancel: () => void; onCreated: (workspace: 
     event.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Give the workspace a name.');
+      setError('Give the project a name.');
       return;
     }
     setBusy(true);
     setError('');
     try {
-      const { id } = await kelRequest<{ id: string }>('/api/project', { name: trimmed, root: root || undefined });
+      const { id } = await kelProjects.create({ name: trimmed, root: root || undefined });
       onCreated({ id, name: trimmed, root: root || null });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kel could not create that workspace.');
+      setError(err instanceof Error ? err.message : 'Kel could not create that project.');
       setBusy(false);
     }
   };
 
   return (
     <form className='kel-workspace-form' onSubmit={(event) => void submit(event)}>
-      <p className='kel-workspace-menu__label'>New workspace</p>
+      <p className='kel-workspace-menu__label'>New project</p>
       <label className='kel-workspace-form__field'>
         <span>Name</span>
         <input autoFocus value={name} maxLength={120} placeholder='e.g. Website Redesign' onChange={(e) => setName(e.target.value)} />

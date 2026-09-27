@@ -8,6 +8,7 @@ import { KelEmpty } from '@renderer/components/kel/KelPrimitives';
 import { useAllCronJobs } from '@renderer/pages/cron/useCronJobs';
 import { formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
 import CreateTaskDialog from './CreateTaskDialog';
+import { ALL_PROJECTS, useProjects } from '@renderer/components/kel/activeProject';
 
 /**
  * Scheduled tasks: one row per task; a row opens that task's page (`/scheduled/:id`), which owns
@@ -18,11 +19,14 @@ export default function ScheduledTasksPage() {
   const navigate = useNavigate();
   const { jobs, loading } = useAllCronJobs();
   const [createOpen, setCreateOpen] = useState(false);
+  const { active } = useProjects();
   return <div className='kel-scope'><main className='kel-page kel-shell-scheduled'>
     <div className='kel-page__head'>
       <div><ShellWorkspaceLink /><h1 className='kel-h1'>Scheduled tasks</h1></div>
       <span className='kel-grow' /><button type='button' className='kel-btn kel-btn--primary kel-shell-task-create-desktop' onClick={() => setCreateOpen(true)}>New task</button>
     </div>
+    {/* D-54: tasks carry no project yet (D-57), so a project filter would hide them. */}
+    {active !== ALL_PROJECTS && <p className='kel-meta'>Scheduled tasks show for all projects for now.</p>}
     <section className='kel-card kel-shell-task-list' aria-label='Scheduled tasks'>
       <ShellSourceCardHeader title='Scheduled tasks' description={`${jobs.length} ${jobs.length === 1 ? 'task' : 'tasks'}`} />
       <button type='button' className='kel-shell-task-create-mobile' aria-label='New task' onClick={() => setCreateOpen(true)}>+</button>

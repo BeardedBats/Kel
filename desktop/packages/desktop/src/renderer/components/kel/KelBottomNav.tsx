@@ -4,7 +4,6 @@ import kibbleIcon from '@renderer/assets/figma/refresh/kibble.svg';
 import rambleIcon from '@renderer/assets/figma/refresh/ramble.svg';
 import recipesIcon from '@renderer/assets/figma/refresh/recipes.svg';
 import projectsIcon from '@renderer/assets/figma/refresh/projects.svg';
-import workspacesIcon from '@renderer/assets/figma/refresh/workspaces.svg';
 import settingsIcon from '@renderer/assets/figma/refresh/settings.svg';
 
 const links = [
@@ -12,8 +11,7 @@ const links = [
   { label: 'Ramble', path: '/transcription', icon: rambleIcon, active: (path: string) => path.startsWith('/transcription') },
   { label: 'Recipes', path: '/projects/recipes', icon: recipesIcon, active: (path: string) => path === '/projects/recipes' },
   { label: 'Projects', path: '/projects', icon: projectsIcon, active: (path: string) => /^(\/projects(?!\/recipes)|\/work|\/activity|\/autonomy|\/scheduled|\/providers|\/diagnostics)(\/|$)/.test(path) },
-  { label: 'Workspaces', path: '/onboarding', icon: workspacesIcon, active: (path: string) => path === '/onboarding' },
-  { label: 'Settings', path: '/settings/appearance', icon: settingsIcon, active: (path: string) => path.startsWith('/settings') || path === '/connections' },
+  { label: 'Settings', path: '/settings/appearance', icon: settingsIcon, active: (path: string) => path.startsWith('/settings') || path === '/connections' || path === '/onboarding' },
 ] as const;
 
 export default function KelBottomNav({ onNavigate }: { onNavigate?: () => void }) {

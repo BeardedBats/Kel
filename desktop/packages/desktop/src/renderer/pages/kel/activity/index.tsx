@@ -19,6 +19,7 @@ import { jobChatAction, resolveAttentionRoute } from '@renderer/components/kel/n
 import { KEL_ALL_CONVERSATIONS, kelState, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import '@renderer/styles/kel-work.css';
+import { useProjects } from '@renderer/components/kel/activeProject';
 
 const FINISHED_CAP = 5;
 
@@ -67,17 +68,20 @@ const KelActivityPage: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [error, setError] = useState<unknown>(null);
   const scrolledTo = useRef<string | null>(null);
+  // D-54: Activity shows the active project's jobs ('*' = every project).
+  const { active, loaded } = useProjects();
 
   const load = useCallback(async () => {
+    if (!loaded) return;
     try {
-      const state = await kelState(KEL_ALL_CONVERSATIONS);
+      const state = await kelState(KEL_ALL_CONVERSATIONS, active);
       setJobs(state.jobs ?? []);
       setError(null);
     } catch (err) {
       setJobs([]);
       setError(err);
     }
-  }, []);
+  }, [active, loaded]);
 
   useEffect(() => {
     void load();

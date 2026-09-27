@@ -7,6 +7,7 @@
 import { ipcBridge } from '@/common';
 import type { IConversationMcpStatus, IProvider, TChatConversation, TProviderWithModel } from '@/common/config/storage';
 import { uuid } from '@/common/utils';
+import { bindToSourceProject } from '@renderer/components/kel/activeProject';
 import addChatIcon from '@/renderer/assets/icons/add-chat.svg';
 import { CronJobManager } from '@/renderer/pages/cron';
 import { resolveCronJobId } from '@/renderer/pages/cron/cronUtils';
@@ -132,6 +133,8 @@ const _AddNewConversation: React.FC<{ conversation: TChatConversation }> = ({ co
                     : source.extra,
               } as TChatConversation,
             });
+            // D-54: a new chat made from this one starts in this chat's project.
+            await bindToSourceProject(conversation.id, id);
             void navigate(`/conversation/${id}`);
             emitter.emit('chat.history.refresh');
           } catch (error) {

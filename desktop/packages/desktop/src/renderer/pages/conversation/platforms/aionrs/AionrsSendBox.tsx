@@ -57,6 +57,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { useAionrsMessage } from './useAionrsMessage';
+import { projectLabel, useConversationProject } from '@renderer/components/kel/activeProject';
 import type { AionrsModelSelection } from './useAionrsModelSelection';
 
 const configErrorMessageKey = (error: unknown) => {
@@ -127,6 +128,8 @@ const AionrsSendBox: React.FC<{
   teamSendMessage?: (payload: { input: string; files: ChatFileRef[] }) => Promise<void>;
   teamRuntime?: TeamSendBoxRuntime;
 }> = ({ conversation_id, modelSelection, session_mode, agent_name, teamSendMessage, teamRuntime }) => {
+  // D-54: the footer names the chat's project (the same one the header chip shows), never a folder.
+  const { project: chatProject } = useConversationProject(conversation_id);
   const [dynamicModes, setDynamicModes] = useState<AgentModeOption[]>([]);
   const [currentMode, setCurrentMode] = useState<string | undefined>(session_mode);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -888,8 +891,8 @@ const AionrsSendBox: React.FC<{
         }
       />
       <div className='kel-shell-composer-footer'>
-        {conversationContext?.workspace && <span className='kel-shell-chat-workspace' title={conversationContext.workspace}>
-          <img src={footerFolderIcon} alt='' />{conversationContext.workspace.split(/[\\/]/).filter(Boolean).pop()}
+        {chatProject && <span className='kel-shell-chat-workspace' title={chatProject.root || undefined} data-testid='kel-chat-project'>
+          <img src={footerFolderIcon} alt='' />{chatProject.name ? projectLabel(chatProject) : t('conversation.workspace.unnamedSpace', { defaultValue: 'Project' })}
         </span>}
         <AgentModeSelector
               backend='aionrs'

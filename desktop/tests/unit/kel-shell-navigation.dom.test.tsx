@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { LayoutContext } from '@renderer/hooks/context/LayoutContext';
 import KelToolsSection from '@renderer/components/kel/KelToolsSection';
@@ -48,5 +48,45 @@ describe('Kel shell navigation', () => {
     expect(batch).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'conversation.history.batchManage' })).toBeNull();
     expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+});
+
+// D-54: Projects replace Workspaces. The sidebar keeps no "Workspaces" slot, the Projects card nav
+// gains "All projects", and "Set up Kel" lives with the Settings pages.
+vi.mock('@renderer/hooks/system/useExtensionSettingsTabs', () => ({ useExtensionSettingsTabs: () => [] }));
+vi.mock('@renderer/hooks/system/useExtI18n', () => ({ useExtI18n: () => ({ resolveExtTabName: (tab: { name: string }) => tab.name }) }));
+vi.mock('@/common/config/configService', () => ({ configService: { initialize: async () => undefined, get: () => true } }));
+
+describe('Kel projects navigation (D-54)', () => {
+  it('drops the Workspaces slot and keeps Projects and Settings selected on their pages', async () => {
+    const { default: KelBottomNav } = await import('@renderer/components/kel/KelBottomNav');
+    const view = render(<MemoryRouter initialEntries={['/projects/list']}><KelBottomNav /><Location /></MemoryRouter>);
+    expect(screen.queryByRole('button', { name: /Workspaces?/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Projects' }).getAttribute('aria-current')).toBe('page');
+    view.unmount();
+    render(<MemoryRouter initialEntries={['/onboarding']}><KelBottomNav /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: 'Settings' }).getAttribute('aria-current')).toBe('page');
+  });
+  it('lists All projects with the project pages and Set up Kel with the settings', async () => {
+    const request = vi.fn(async () => ({ projects: [{ id: 'default', name: 'General', kind: 'general' }], active: 'default' }));
+    (window as unknown as { kelAPI: unknown }).kelAPI = { request };
+    const { default: KelInChatFrame } = await import('@renderer/components/kel/KelInChatFrame');
+    const view = render(<MemoryRouter initialEntries={['/work']}><LayoutContext.Provider value={{ isMobile: false, siderCollapsed: true, setSiderCollapsed: vi.fn() }}>
+      <KelInChatFrame><p>page</p></KelInChatFrame><Location />
+    </LayoutContext.Provider></MemoryRouter>);
+    const projectsNav = screen.getByRole('navigation', { name: 'Projects pages' });
+    expect(projectsNav.textContent).not.toMatch(/Workspace|Set up Kel/);
+    fireEvent.click(within(projectsNav).getByRole('button', { name: 'All projects' }));
+    expect(screen.getByTestId('route').textContent).toBe('/projects/list');
+    expect(document.querySelector('.kel-in-chat-frame__header h1')?.textContent).toBe('Projects');
+    view.unmount();
+    render(<MemoryRouter initialEntries={['/onboarding']}><LayoutContext.Provider value={{ isMobile: false, siderCollapsed: true, setSiderCollapsed: vi.fn() }}>
+      <KelInChatFrame><p>setup</p></KelInChatFrame>
+    </LayoutContext.Provider></MemoryRouter>);
+    expect(document.querySelector('.kel-in-chat-frame__header h1')?.textContent).toBe('Set up Kel');
+    const settingsNav = screen.getByRole('navigation', { name: 'Set up Kel pages' });
+    expect(settingsNav.textContent).toContain('Appearance');
+    expect(within(settingsNav).getByRole('button', { name: 'Set up Kel' }).getAttribute('aria-current')).toBe('page');
+    delete (window as unknown as { kelAPI?: unknown }).kelAPI;
   });
 });

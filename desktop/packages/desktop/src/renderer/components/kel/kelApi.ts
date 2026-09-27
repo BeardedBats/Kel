@@ -264,6 +264,8 @@ export interface KelMemoryRecord {
   updated: number;
   /** The engine returns the stored JSON column as-is (a string in the /api/work payload). */
   value?: string | Record<string, unknown>;
+  /** D-54: the project the record belongs to (set by the renderer when it reads several projects). */
+  project_id?: string;
 }
 
 /** A change Kel proposes but never applies by itself — a person accepts, defers, or rejects it. */
@@ -559,6 +561,8 @@ export interface KelRecipeEntry {
   category?: string;
   /** The engine's own mark for a starred recipe (`entries()` carries it with the library row). */
   favourite?: boolean;
+  /** D-54: the project a project recipe belongs to (built-ins have none). */
+  project_id?: string;
 }
 
 export interface KelRecipeInput {
@@ -582,8 +586,27 @@ export interface KelWork {
   recipes: { entries: KelRecipeEntry[] };
 }
 
-export const kelWork = (conversation = 'main') =>
-  call<KelWork>(`/api/work?conversation=${encodeURIComponent(conversation)}`);
+/**
+ * D-54: what an engine call is about — one conversation (the engine looks up its project) or one
+ * project by id. `{ project: '*' }` reads every project; the engine refuses it for writes.
+ */
+export type KelScope = { conversation: string } | { project: string };
+
+/** A bare string is a conversation id (the older call shape). */
+const scopeBody = (scope: string | KelScope): KelScope =>
+  typeof scope === 'string' ? { conversation: scope } : scope;
+
+const scopeQuery = (scope: string | KelScope): string => {
+  const body = scopeBody(scope);
+  return 'project' in body
+    ? `project=${encodeURIComponent(body.project)}`
+    : `conversation=${encodeURIComponent(body.conversation)}`;
+};
+
+/** General, the default project (where the engine's hidden 'main' conversation lives). */
+const GENERAL_SCOPE: KelScope = { project: 'default' };
+
+export const kelWork = (scope: string | KelScope = GENERAL_SCOPE) => call<KelWork>(`/api/work?${scopeQuery(scope)}`);
 
 export const kelMemoryAction = (
   action:
@@ -596,48 +619,54 @@ export const kelMemoryAction = (
     | 'defer_proposal',
   id: string,
   extra: Record<string, unknown> = {},
-  conversation = 'main'
-) => call<Record<string, unknown>>('/api/memory', { action, id, conversation, ...extra });
+  scope: string | KelScope = GENERAL_SCOPE
+) => call<Record<string, unknown>>('/api/memory', { action, id, ...scopeBody(scope), ...extra });
 
-export const kelMapAction = (action: string, conversation = 'main', extra: Record<string, unknown> = {}) =>
-  call<Record<string, unknown>>('/api/map', { action, conversation, ...extra });
+export const kelMapAction = (action: string, scope: string | KelScope = GENERAL_SCOPE, extra: Record<string, unknown> = {}) =>
+  call<Record<string, unknown>>('/api/map', { action, ...scopeBody(scope), ...extra });
 
-export const kelRecipes = (conversation = 'main') =>
-  call<Record<string, unknown>>('/api/recipes', { action: 'list', conversation });
+export const kelRecipes = (scope: string | KelScope = GENERAL_SCOPE) =>
+  call<Record<string, unknown>>('/api/recipes', { action: 'list', ...scopeBody(scope) });
 
-export const kelRecipeGet = (recipeId: string, conversation = 'main') =>
+export const kelRecipeGet = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe: { recipe_id: string; name: string; inputs: KelRecipeInput[]; steps: Array<{ id: string; title: string }> } }>('/api/recipes', {
-    action: 'get', recipe_id: recipeId, conversation,
+    action: 'get', recipe_id: recipeId, ...scopeBody(scope),
   });
 
-/** Compile a recipe without running it — the engine's preview/dry-run path. */
-export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknown> = {}) =>
-  call<Record<string, unknown>>('/api/recipes', {
+/**
+ * Compile a recipe without running it — the engine's preview/dry-run path. A recipe that needs a
+ * project detail answers `needs_project` with the `project_id` and what is `missing`.
+ */
+export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknown> = {}, scope: string | KelScope = GENERAL_SCOPE) =>
+  call<Record<string, unknown> & { needs_project?: boolean; project_id?: string; missing?: Array<'folder' | 'test_command'> }>('/api/recipes', {
     action: 'preview',
     recipe_id: recipeId,
     inputs,
-    conversation: 'main',
+    ...scopeBody(scope),
   });
 
 /** Draft a recipe from a settled job — preview only; saving needs explicit confirmation. */
-export const kelRecipePropose = (jobId: string, conversation = 'main') =>
+export const kelRecipePropose = (jobId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe: Record<string, unknown>; preview: { steps: string[]; kind: string; milestones: number } }>(
     '/api/recipes',
-    { action: 'propose_from_job', job_id: jobId, conversation }
+    { action: 'propose_from_job', job_id: jobId, ...scopeBody(scope) }
   );
 
-/** Run a recipe by compiling it into the existing execution (a normal job). */
+/**
+ * Run a recipe by compiling it into the existing execution (a normal job). With a project scope the
+ * engine runs it in that project's own hidden chat and names that `conversation`.
+ */
 export const kelRecipeRun = (
   recipeId: string,
   inputs: Record<string, unknown> = {},
-  conversation = 'main'
-) => call<{ submission: string }>('/api/recipes', { action: 'run', recipe_id: recipeId, inputs, conversation });
+  scope: string | KelScope = GENERAL_SCOPE
+) => call<{ submission: string; conversation?: string }>('/api/recipes', { action: 'run', recipe_id: recipeId, inputs, ...scopeBody(scope) });
 
 /** Save a project recipe. The engine refuses unless confirmation is explicit. */
-export const kelRecipeSave = (recipe: Record<string, unknown>, conversation = 'main') =>
+export const kelRecipeSave = (recipe: Record<string, unknown>, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ saved: boolean; digest: string; recipe_id?: string; version?: string; reason?: string }>(
     '/api/recipes',
-    { action: 'save', recipe, confirm: true, conversation }
+    { action: 'save', recipe, confirm: true, ...scopeBody(scope) }
   );
 
 /** One run of a recipe — the engine reads these from the jobs it already keeps. */
@@ -652,46 +681,103 @@ export interface KelRecipeRun {
 }
 
 /** This recipe's runs, newest first: what the person reopens after a run. */
-export const kelRecipeHistory = (recipeId: string, conversation = 'main') =>
+export const kelRecipeHistory = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ history: KelRecipeRun[] }>('/api/recipes', {
     action: 'history',
     recipe_id: recipeId,
-    conversation,
+    ...scopeBody(scope),
   });
 
 /** The one-line answer to "what happened last time I ran this?" */
-export const kelRecipeLastResult = (recipeId: string, conversation = 'main') =>
+export const kelRecipeLastResult = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe_id: string; state: string; sentence: string } & Record<string, unknown>>(
     '/api/recipes',
-    { action: 'last_result', recipe_id: recipeId, conversation }
+    { action: 'last_result', recipe_id: recipeId, ...scopeBody(scope) }
   );
 
 /** The library's own controls (V2-07): search, categories, favourites, recent, duplicate. */
-export const kelRecipeSearch = (query: string, conversation = 'main') =>
-  call<{ entries: KelRecipeEntry[] }>('/api/recipes', { action: 'search', query, conversation });
+export const kelRecipeSearch = (query: string, scope: string | KelScope = GENERAL_SCOPE) =>
+  call<{ entries: KelRecipeEntry[] }>('/api/recipes', { action: 'search', query, ...scopeBody(scope) });
 
-export const kelRecipeCategories = (conversation = 'main') =>
-  call<{ categories: Array<{ name: string; count: number }> }>('/api/recipes', { action: 'categories', conversation });
+export const kelRecipeCategories = (scope: string | KelScope = GENERAL_SCOPE) =>
+  call<{ categories: Array<{ name: string; count: number }> }>('/api/recipes', { action: 'categories', ...scopeBody(scope) });
 
-export const kelRecipeRecent = (limit = 5, conversation = 'main') =>
-  call<{ recent: KelRecipeEntry[] }>('/api/recipes', { action: 'recent', limit, conversation });
+export const kelRecipeRecent = (limit = 5, scope: string | KelScope = GENERAL_SCOPE) =>
+  call<{ recent: KelRecipeEntry[] }>('/api/recipes', { action: 'recent', limit, ...scopeBody(scope) });
 
 /** Star or unstar one recipe. */
-export const kelRecipeFavourite = (recipeId: string, favourite: boolean, conversation = 'main') =>
+export const kelRecipeFavourite = (recipeId: string, favourite: boolean, scope: string | KelScope = GENERAL_SCOPE) =>
   call<Record<string, unknown>>('/api/recipes', {
     action: 'favourites',
     recipe_id: recipeId,
     favourite,
-    conversation,
+    ...scopeBody(scope),
   });
 
 /** Copy a recipe inside this project (the engine keeps the copy in the project scope). */
-export const kelRecipeDuplicate = (recipeId: string, conversation = 'main') =>
+export const kelRecipeDuplicate = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe_id?: string; id?: string } & Record<string, unknown>>('/api/recipes', {
     action: 'duplicate',
     recipe_id: recipeId,
-    conversation,
+    ...scopeBody(scope),
   });
+
+// ---------------------------------------------------------------------------------------------
+// D-54 Projects: the engine owns the project list and the one active project (the same on every
+// device). `kind` separates General (the default project), the person's own projects, and the
+// engine's plumbing rows, which no surface lists.
+// ---------------------------------------------------------------------------------------------
+export interface KelProject {
+  id: string;
+  name: string;
+  root?: string | null;
+  has_folder?: boolean;
+  test_command?: string[] | null;
+  kind?: 'general' | 'user' | 'system';
+  /** When it was archived (epoch seconds); null/absent while live. */
+  archived?: number | null;
+  conversations?: number;
+  open_work?: number;
+  needs_you?: number;
+  updated?: number;
+  last_active?: number | null;
+}
+
+/** The active project id, or '*' for "All projects". */
+export type KelActiveProject = string;
+
+const normalizeProjectList = (payload: unknown): { projects: KelProject[]; active?: string } => {
+  if (Array.isArray(payload)) return { projects: payload as KelProject[] };
+  const body = (payload ?? {}) as { projects?: unknown; active?: unknown; active_project?: unknown };
+  const active =
+    typeof body.active === 'string' ? body.active : typeof body.active_project === 'string' ? body.active_project : undefined;
+  return { projects: Array.isArray(body.projects) ? (body.projects as KelProject[]) : [], ...(active ? { active } : {}) };
+};
+
+const projectAction = <T,>(action: string, body: Record<string, unknown> = {}) =>
+  call<T>('/api/project', { action, ...body });
+
+export const kelProjects = {
+  list: (options: { include_archived?: boolean; include_system?: boolean } = {}) =>
+    projectAction<unknown>('list', options).then(normalizeProjectList),
+  create: (project: { name: string; root?: string | null; test_command?: string[] | null; context?: string }) =>
+    projectAction<{ id: string } & Partial<KelProject>>('create', project),
+  /** Only the keys sent change; `test_command: null` removes the command. */
+  update: (id: string, changes: Partial<Pick<KelProject, 'name' | 'root' | 'test_command'>> & { context?: string }) =>
+    projectAction<{ id: string } & Partial<KelProject>>('update', { id, ...changes }),
+  /** The live project for a folder, created (named after the folder) when there is none. */
+  forFolder: (root: string) => projectAction<{ id: string } & Partial<KelProject>>('for_folder', { root }),
+  archive: (id: string) => projectAction<Record<string, unknown>>('archive', { id }),
+  restore: (id: string) => projectAction<Record<string, unknown>>('restore', { id }),
+  /** Only a project that owns nothing can be deleted; the engine says what to do otherwise. */
+  remove: (id: string) => projectAction<Record<string, unknown>>('delete', { id }),
+  setActive: (id: KelActiveProject) => projectAction<{ active?: string } & Record<string, unknown>>('set_active', { id }),
+  /** Tie a chat (by its app conversation id) to a project before its first message reaches Kel. */
+  bind: (donor: string, project: string) => projectAction<Record<string, unknown>>('bind', { donor, project }),
+  /** The project a chat belongs to; `pending` while Kel has not seen its first message yet. */
+  of: (target: { conversation?: string; donor?: string }) =>
+    projectAction<{ project?: string | (Partial<KelProject> & { id: string }) | null; pending?: boolean }>('of', target),
+};
 
 export interface KelProviderStatus {
   /** CH-2/CP-3: Kel can answer with it right now — a usable credential and a way to run it. */
@@ -1090,7 +1176,7 @@ export interface KelJobRoute {
 /** `/api/state` scope for every conversation's work (Work, Activity, Permissions, Needs you, palette). */
 export const KEL_ALL_CONVERSATIONS = '*';
 
-export const kelState = (conversation = 'main') =>
+export const kelState = (conversation = 'main', project?: KelActiveProject) =>
   call<{
     jobs: KelWorkJob[];
     continuation?: KelContinuationCandidate[];
@@ -1098,12 +1184,14 @@ export const kelState = (conversation = 'main') =>
     providers: string[];
     /** D12: routing decisions for active jobs, keyed by job id. */
     routes?: Record<string, KelJobRoute>;
-    projects: Array<{ id: string; name: string }>;
+    projects: Array<{ id: string; name: string } & Partial<KelProject>>;
+    /** D-54: the engine's active project id, or '*' for all projects. */
+    active_project?: string;
     engine_version?: string;
     draining?: boolean;
     /** D6: the engine's recorded restore outcome (audit PER-02); null when never attempted. */
     restore?: { ok: boolean; detail?: string; at?: number } | null;
-  }>(`/api/state?conversation=${encodeURIComponent(conversation)}`);
+  }>(`/api/state?conversation=${encodeURIComponent(conversation)}${project ? `&project=${encodeURIComponent(project)}` : ''}`);
 
 /** Markdown artifact text for an ACCEPTED milestone (the engine refuses anything unverified). */
 export const kelArtifact = (job: string, milestone: string) =>
@@ -1141,8 +1229,8 @@ export interface KelWorkRow {
 }
 
 /** The rows themselves — the same authoritative surface the chat's Work panel reads. */
-export const kelWorkRows = (conversation = 'main') =>
-  call<{ work?: { jobs?: KelWorkRow[] } }>(`/api/work?conversation=${encodeURIComponent(conversation)}`)
+export const kelWorkRows = (scope: string | KelScope = GENERAL_SCOPE) =>
+  call<{ work?: { jobs?: KelWorkRow[] } }>(`/api/work?${scopeQuery(scope)}`)
     .then((payload) => payload.work?.jobs ?? []);
 
 export const kelBriefs = {

@@ -1802,6 +1802,8 @@ export interface ICreateConversationParams {
     remote_agent_id?: string;
     extra_skill_paths?: string[];
     team_id?: string;
+    /** Kel D-54: the Kel project a new chat starts in. */
+    kel_project_id?: string;
   };
 }
 

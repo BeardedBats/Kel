@@ -40,24 +40,34 @@ describe('Desktop model picker scopes', () => {
   });
 });
 
-describe('Desktop project picker', () => {
-  it('deduplicates folders, includes the current folder, and returns the full selected path', () => {
+describe('Desktop project picker (D-54: engine projects)', () => {
+  const projects = [
+    { id: 'default', name: 'General', root: null },
+    { id: 'kel', name: 'Kel', root: 'C:\\fixtures\\Kel' },
+    { id: 'kel', name: 'Kel', root: 'C:\\fixtures\\Kel' },
+    { id: 'site', name: 'Website Redesign', root: 'C:\\fixtures\\Website Redesign' },
+  ];
+  it('lists each project once, marks the selected one, and returns the chosen project', () => {
     const onSelect = vi.fn();
-    render(<KelDesktopProjectMenu paths={['C:\\fixtures\\Kel', 'C:\\fixtures\\Kel']} selected={'C:\\fixtures\\Website Redesign'} onSelect={onSelect} onClear={vi.fn()} onBrowse={vi.fn()} />);
+    render(<KelDesktopProjectMenu projects={projects} selected='site' onSelect={onSelect} onBrowse={vi.fn()} />);
     expect(screen.getAllByRole('button', { name: 'Kel' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Website Redesign' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Website Redesign' }).getAttribute('title')).toBe('C:\\fixtures\\Website Redesign');
     fireEvent.change(screen.getByRole('textbox', { name: 'Search projects' }), { target: { value: ' WEBSITE ' } });
     expect(screen.queryByRole('button', { name: 'Kel' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Website Redesign' }));
-    expect(onSelect).toHaveBeenCalledWith('C:\\fixtures\\Website Redesign');
+    expect(onSelect).toHaveBeenCalledWith(projects[3]);
   });
-  it('keeps clear and browse available when search has no matches', () => {
-    const onClear = vi.fn(), onBrowse = vi.fn();
-    render(<KelDesktopProjectMenu paths={[]} selected='' onSelect={vi.fn()} onClear={onClear} onBrowse={onBrowse} />);
+  it('offers General in place of "No project" and keeps browse available when search has no matches', () => {
+    const onSelect = vi.fn(), onBrowse = vi.fn();
+    render(<KelDesktopProjectMenu projects={[]} selected='default' onSelect={onSelect} onBrowse={onBrowse} />);
+    expect(screen.queryByText(/No project/i)).toBeNull();
     fireEvent.change(screen.getByRole('textbox', { name: 'Search projects' }), { target: { value: 'Missing' } });
     expect(screen.getByText('No matching projects.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'No project' }));
+    expect(screen.getByRole('button', { name: 'General' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'General' }));
     fireEvent.click(screen.getByRole('button', { name: 'Choose a different folder' }));
-    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith({ id: 'default', name: 'General', root: null });
     expect(onBrowse).toHaveBeenCalledTimes(1);
   });
 });
