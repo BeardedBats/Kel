@@ -6,6 +6,49 @@ ordinary submission → D-53 hand-off → ordinary job, so Work, Activity, Needs
 and "Why this model?" come for free. Run history is derived from events + submissions + jobs (no run
 table, no task table). Build after D-54 (Projects) lands; schedules carry `project_id`.
 
+## Contract changes (engine API as implemented — the renderer builds against this)
+The sections below named the actions but not their JSON; these are the exact shapes. All times are
+**epoch seconds** (floats). A refusal is HTTP 400 `{error: "<plain sentence>"}` (PolicyError).
+
+`POST /api/schedules {action, ...}`:
+
+| action | request | response |
+|---|---|---|
+| `list` | `{project?: id\|'*'}` (omitted = every project) | `{schedules: Schedule[], needs_attention: n}` |
+| `get` | `{id}` or `{origin}` | `{schedule: Schedule, conversations: {created: n, open: n}}` |
+| `create` | `{name, project_id, target, cadence, timezone?, start_mode, conversation_id?, model?, skip_if_running?, enabled?}` | `{schedule}` |
+| `update` | `{id, …any create field}` | `{schedule}` (a valid update clears `problem`; it never replays) |
+| `pause` / `resume` | `{id}` | `{schedule}` (resume re-validates and refuses in plain words) |
+| `delete` | `{id, conversations: 'keep'\|'delete'}` | `{ok, id, hidden: cid[], kept_open: cid[]}` (`hidden` = engine chats now hidden; the shell removes their donor rows) |
+| `run_now` | `{id}` | `{submission, conversation}` |
+| `history` | `{id, limit?}` (default 50) | `{rows: HistoryRow[]}` newest first |
+| `preview` | `{cadence, timezone?, count?}` (default 3) | `{valid, message, description, next: number[], timezone_label}` — never 400 for a bad cadence |
+| `import` | `{items: ImportItem[]}` | `{results: [{origin, id, status: 'imported'\|'imported_paused'\|'exists'\|'refused', problem, message}]}` |
+| `migration_status` | `{}` or `{record: {…summary}}` (marks done) | `{done, at, summary}` |
+
+```
+Schedule = {id, name, project_id, project_name,
+  target: {kind:'recipe', recipe_id, inputs, recipe_name} | {kind:'instruction', text},
+  cadence: {kind:'manual'} | {kind:'cron', expr} | {kind:'interval', minutes} | {kind:'once', at},
+  timezone: IANA name | null (= this computer's zone), timezone_label,
+  start_mode: 'new_conversation'|'existing', conversation_id, conversation_title,
+  model: {provider, model|null} | null (= Automatic), model_label,
+  skip_if_running, enabled, status: 'active'|'paused'|'needs_attention'|'done'|'manual',
+  description ("Every weekday at 9:00 AM"), next_due_at, running, last_run: HistoryRow|null,
+  problem, origin, created, updated}
+HistoryRow = {at, slot, late_by, conversation, job_id, submission_id, status, label, cause}
+  status: running|needs_you|success|needs_look|stopped|not_started|settled|skipped|queued|
+          coalesced|missed|imported   (label is the plain sentence to show; cause may be null)
+ImportItem = {origin, name, project_id?, target, cadence, timezone?, start_mode,
+  conversation_id?, model?, skip_if_running?, enabled?, problem?, runs?: [{conversation_id, at}]}
+  (an item that fails validation is imported paused with that refusal as its `problem`)
+```
+Hidden conversations (deleted schedules' run chats) are left out of `/api/state` `conversations` and
+`GET /api/conversations`, so the boot adoption loop never sees them. `GET /api/conversations` rows
+created by a schedule carry `schedule_id`. Scheduled runs' user message carries
+`meta = {kind:'scheduled', schedule_id, name, slot}`. Activity rows of kind `scheduled` carry
+`schedule_id`.
+
 ## Settled policies
 1. "Skip if still running" means exactly what it says. Migrated donor tasks map `skip_if_running =
    state.queue_enabled` (the switch Nick saw was labelled "Skip if still running").
