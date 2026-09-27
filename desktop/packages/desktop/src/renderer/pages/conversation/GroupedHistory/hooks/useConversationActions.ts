@@ -8,6 +8,7 @@ import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/config/storage';
 import { requestConversationSendBoxPrefill } from '@/renderer/hooks/chat/useSendBoxDraft';
 import { refreshConversationCache } from '@/renderer/pages/conversation/utils/conversationCache';
+import { syncEngineConversationTitle } from '@/renderer/pages/conversation/utils/engineConversationTitle';
 import { isLegacyReadOnlyConversationType } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { emitter } from '@/renderer/utils/emitter';
 import { downloadTextContent } from '@/renderer/utils/file/download';
@@ -157,6 +158,8 @@ export const useConversationActions = ({
       });
 
       if (success) {
+        // CH-9: Kel keeps the name too; its failure never fails the rename.
+        void syncEngineConversationTitle(renameModalId, renameModalName.trim());
         await refreshConversationCache(renameModalId);
         emitter.emit('chat.history.refresh');
         setRenameModalVisible(false);

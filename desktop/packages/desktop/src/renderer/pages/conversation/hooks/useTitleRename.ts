@@ -1,5 +1,6 @@
 import { ipcBridge } from '@/common';
 import { refreshConversationCache } from '@/renderer/pages/conversation/utils/conversationCache';
+import { syncEngineConversationTitle } from '@/renderer/pages/conversation/utils/engineConversationTitle';
 import { emitter } from '@/renderer/utils/emitter';
 import { Message } from '@arco-design/web-react';
 import type React from 'react';
@@ -69,6 +70,8 @@ export function useTitleRename({ title, conversation_id, onRename }: UseTitleRen
         });
         success = Boolean(result);
         if (success) {
+          // CH-9: Kel keeps the name too; its failure never fails the rename.
+          void syncEngineConversationTitle(conversation_id!, nextTitle);
           await refreshConversationCache(conversation_id!);
           emitter.emit('chat.history.refresh');
         }
