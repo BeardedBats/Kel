@@ -11,7 +11,7 @@ import { ipcBridge } from '@/common';
 import { configService } from '@/common/config/configService';
 import { DARK_THEME_ID } from '@/common/theme/constants';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
-import { kelState, kelWork } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelState, kelWork } from '@renderer/components/kel/kelApi';
 import searchIcon from '@renderer/assets/figma/palette/search.svg';
 import workIcon from '@renderer/assets/figma/palette/work.svg';
 import activityIcon from '@renderer/assets/figma/palette/activity.svg';
@@ -92,7 +92,7 @@ const KelCommandPalette: React.FC = () => {
     setLoading(true);
     try {
       const [state, work, sidebar] = await Promise.all([
-        kelState().catch((): Awaited<ReturnType<typeof kelState>> => ({ jobs: [], providers: [], projects: [] })),
+        kelState(KEL_ALL_CONVERSATIONS).catch((): Awaited<ReturnType<typeof kelState>> => ({ jobs: [], providers: [], projects: [] })),
         kelWork('main').catch((): null => null),
         ipcBridge.sidebar.get.invoke({ archived: false, limit: 5 }).catch((): null => null),
       ]);

@@ -18,7 +18,7 @@ import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { KelActivityLoading } from '@renderer/components/kel/KelDesktopPendingStates';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
 import { VERDICT_TEXT, jobStateText, routeSentence } from '@renderer/components/kel/workLanguage';
-import { kelState, type KelContinuationCandidate, type KelJobRoute, type KelWorkJob } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelState, type KelContinuationCandidate, type KelJobRoute, type KelWorkJob } from '@renderer/components/kel/kelApi';
 
 const TERMINAL = new Set(['CLOSED', 'CANCELLED']);
 
@@ -46,7 +46,7 @@ const KelActivityPage: React.FC = () => {
 
   const load = useCallback(async () => {
     try {
-      const state = await kelState();
+      const state = await kelState(KEL_ALL_CONVERSATIONS);
       setJobs(state.jobs ?? []);
       setRoutes(state.routes ?? {});
       setContinuation(state.continuation ?? []);

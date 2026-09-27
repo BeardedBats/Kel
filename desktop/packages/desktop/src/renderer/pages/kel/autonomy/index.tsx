@@ -18,7 +18,7 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
 
 const STATE_CLASS: Record<string, string> = {
@@ -63,7 +63,7 @@ export default function KelAutonomyPage() {
         kelAutonomy.guardrails(),
         // Work labels come from the same engine; when the state read is unavailable the table
         // falls back to a neutral label instead of failing the whole page (HVRA-MINOR-001).
-        kelState().catch((): null => null),
+        kelState(KEL_ALL_CONVERSATIONS).catch((): null => null),
       ]);
       setLeases(leasePayload.leases ?? []);
       setRequests(requestPayload.requests ?? []);
