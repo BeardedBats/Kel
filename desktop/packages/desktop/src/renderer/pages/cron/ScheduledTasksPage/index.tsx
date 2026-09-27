@@ -24,7 +24,7 @@ export default function ScheduledTasksPage() {
   return <div className='kel-scope'><main className='kel-page kel-shell-scheduled'>
     <div className='kel-page__head'>
       <div><ShellWorkspaceLink /><h1 className='kel-h1'>Scheduled tasks</h1></div>
-      <span className='kel-grow' /><button type='button' className='kel-btn kel-shell-task-create-desktop' onClick={() => setCreateOpen(true)}>New task</button>
+      <span className='kel-grow' /><button type='button' className='kel-btn kel-btn--primary kel-shell-task-create-desktop' onClick={() => setCreateOpen(true)}>New task</button>
     </div>
     <section className='kel-card kel-shell-task-list' aria-label='Scheduled tasks'>
       <ShellSourceCardHeader title='Scheduled tasks' description={`${jobs.length} ${jobs.length === 1 ? 'task' : 'tasks'}`} />

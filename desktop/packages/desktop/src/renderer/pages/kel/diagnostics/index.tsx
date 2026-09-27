@@ -116,7 +116,7 @@ const Diagnostics: React.FC = () => {
       <main className='kel-page' id='kel-diagnostics-main' tabIndex={-1}>
         <div className='kel-page__head'>
           <div><ShellWorkspaceLink /><h1 className='kel-h1'>Diagnostics</h1></div>
-          <span className='kel-grow' /><KelButton onClick={() => setExportOpen(true)}>Export and issue report</KelButton>
+          <span className='kel-grow' /><KelButton variant="primary" onClick={() => setExportOpen(true)}>Export and issue report</KelButton>
         </div>
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && !snapshot && <KelLoading rows={3} />}
@@ -132,8 +132,8 @@ const Diagnostics: React.FC = () => {
             {!spans.length && <p className='kel-meta'>No startup span recorded yet for this session.</p>}
           </KelCard>
           <KelCard title='Maintenance'>
-            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p></div><button className='kel-btn' type='button' disabled title='This source control has no matching runtime operation yet.'>Clear</button></div>
-            <div className='kel-shell-preference-row'><div><div>Restart runtime</div><p className='kel-meta'>Restarts the local runtime without closing Kel.</p></div><button className='kel-btn' type='button' disabled title='This source control has no matching runtime operation yet.'>Restart</button></div>
+            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p></div><button className='kel-btn kel-btn--danger' type='button' disabled title='This source control has no matching runtime operation yet.'>Clear</button></div>
+            <div className='kel-shell-preference-row'><div><div>Restart runtime</div><p className='kel-meta'>Restarts the local runtime without closing Kel.</p></div><button className='kel-btn kel-btn--primary' type='button' disabled title='This source control has no matching runtime operation yet.'>Restart</button></div>
           </KelCard>
         </>}
         <Modal className={isMobile ? undefined : 'kel-diagnostics-export-modal'} variant={isMobile ? undefined : 'standard'}

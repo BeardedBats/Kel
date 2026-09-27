@@ -83,7 +83,7 @@ export const KelStatusChip: React.FC<{ status: KelStatus }> = ({ status }) => (
 
 export const KelButton: React.FC<
   React.PropsWithChildren<{
-    variant?: 'primary' | 'secondary' | 'quiet';
+    variant?: 'primary' | 'secondary' | 'quiet' | 'link' | 'danger' | 'confirm';
     onClick?: () => void;
     disabled?: boolean;
     ariaLabel?: string;

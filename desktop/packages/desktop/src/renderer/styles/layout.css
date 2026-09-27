@@ -30,7 +30,7 @@
    In dark mode, the tertiary token (#5a5a5a) is too dim on #0e0e0e,
    while --text-secondary (#ced3da) is too bright; pick a mid-gray
    shared by sidebar section titles and settings group headers. */
-[data-theme='dark'] .sider-section-title,
+/* Kel: sidebar section labels use the Figma accent (#9fc3ff), set in kel-shell.css. */
 [data-theme='dark'] .settings-sider__group-header {
   color: #9098a1;
 }

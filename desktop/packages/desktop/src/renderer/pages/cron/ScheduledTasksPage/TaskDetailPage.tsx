@@ -371,14 +371,14 @@ const TaskDetailPage: React.FC = () => {
         </div>
         <div className='kel-task-detail-field kel-task-detail-delete-row'>
           <span>Delete this task<small>Its conversations are deleted too.</small></span>
-          <KelButton variant='primary' onClick={() => setConfirmDelete(true)}>Delete</KelButton>
+          <KelButton variant='danger' onClick={() => setConfirmDelete(true)}>Delete</KelButton>
         </div>
         {confirmDelete && <AionModal visible className='kel-task-delete-modal' variant='standard'
           header={{ title: 'Delete this scheduled task?', subtitle: 'Its conversations are deleted too. This can’t be undone.', showClose: false }}
           footer={null} closable={false} onCancel={() => setConfirmDelete(false)} focusLock autoFocus style={{ width: 460 }}>
           <div className='kel-task-delete-actions'>
             <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep</KelButton>
-            <KelButton variant='primary' onClick={() => void handleDelete()}>Delete task</KelButton>
+            <KelButton variant='danger' onClick={() => void handleDelete()}>Delete task</KelButton>
           </div>
         </AionModal>}
       </KelCard>
