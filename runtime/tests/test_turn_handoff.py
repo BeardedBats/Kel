@@ -549,6 +549,62 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertEqual(self.row(first)['job_id'], job)
         self.assertEqual(len(self.live_jobs()), 1)
 
+    # -- CH-3: the composer's Stop really stops a reply that is still being answered -----------
+    def blocking_turn(self, answer):
+        """A turn model that holds its answer until released and reports the Stop it was given."""
+        release, entered, seen = threading.Event(), threading.Event(), {}
+
+        class Blocking:
+            def execute(inner, prompt, system=None, images=None, cancel=None):
+                seen['cancel'] = cancel
+                entered.set()
+                release.wait(20)
+                return {'outcome': 'SUCCESS', 'text': json.dumps(answer)}
+        self.service.model = Blocking()
+        self.addCleanup(release.set)
+        return release, entered, seen
+
+    def test_stop_drops_a_reply_still_being_written_and_says_so_once(self):
+        release, entered, seen = self.blocking_turn(REPLY)
+        sid = self.service.submit({'text': 'How much sun do tomatoes need?', 'conversation': self.cid})
+        self.assertTrue(entered.wait(10))
+        out = self.service.action('/api/cancel', {'id': sid, 'conversation': self.cid})
+        self.assertTrue(out['cancelled'])
+        self.assertTrue(seen['cancel'].is_set(), 'the in-flight model call is told to stop')
+        release.set()
+        time.sleep(.3)  # let the stopped planner finish and (not) write its answer
+        self.assertEqual(self.row(sid)['state'], 'CANCELLED')
+        texts = [m['text'] for m in self.messages()]
+        self.assertNotIn(REPLY['text'], texts, 'a stopped reply must never be posted later')
+        self.assertEqual(texts.count('You stopped this reply.'), 1)
+        self.assertEqual(texts[-1], 'You stopped this reply.')
+        # A second Stop, or a Stop for a settled reply, changes nothing.
+        self.assertFalse(self.service.action('/api/cancel', {'id': sid, 'conversation': self.cid})['cancelled'])
+        with self.assertRaises(PolicyError):
+            self.service.action('/api/cancel', {'id': sid, 'conversation': 'another'})
+
+    def test_stop_while_deciding_starts_no_work(self):
+        release, entered, _ = self.blocking_turn(WORK)
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertTrue(entered.wait(10))
+        self.assertTrue(self.service.action('/api/cancel', {'id': sid, 'conversation': self.cid})['cancelled'])
+        release.set()
+        time.sleep(.3)
+        self.assertEqual(self.row(sid)['state'], 'CANCELLED')
+        self.assertEqual([j for j in self.service.store.list_jobs() if j['conversation'] == self.cid], [])
+        with contextlib.closing(self.service.store.connect()) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM submission_acks').fetchone()[0], 0)
+        self.assertNotIn(WORK['acknowledgement'], [m['text'] for m in self.messages()])
+
+    def test_stop_never_cancels_handed_off_work(self):
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        out = self.service.action('/api/cancel', {'id': sid, 'conversation': self.cid})
+        self.assertEqual((out['cancelled'], out['handed_off']), (False, True))
+        job = self.service.store.get(self.row(sid)['job_id'])
+        self.assertNotIn(job['state'], ('CANCELLED', 'CANCELLING'))
+        self.assertNotIn('You stopped this reply.', [m['text'] for m in self.messages()])
+
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')

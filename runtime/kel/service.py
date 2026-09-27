@@ -43,6 +43,17 @@ RESEARCH_PREFIXES=('research ','search ','look up','find current')
 ALL_CONVERSATIONS='*'
 # Client-declared kinds that are always work (chat kinds and the earlier floors are excluded).
 CONVERSATION_KINDS=('chat','conversation')
+# CH-3: the one plain note the chat gets when the person stops a reply.
+STOPPED_NOTE='You stopped this reply.'
+
+
+def _accepts(model,name):
+    """Whether a model adapter's execute() takes this keyword."""
+    import inspect
+    try:
+        return name in inspect.signature(model.execute).parameters
+    except (TypeError,ValueError):
+        return False
 
 def _restore_outcome(root):
     """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
@@ -118,6 +129,8 @@ class Service:
         # D-55: creating a hand-off's job and restarting it with a change never interleave, so an
         # amendment can never leave the old job and a new one running side by side.
         self.handoff_lock=threading.RLock()
+        # CH-3: the Stop signal for each message still being answered (submission id -> Event).
+        self._cancels={};self._cancels_lock=threading.Lock()
         # KEL_TURN_MODEL=none keeps the deterministic keyword gate (tests, headless setups).
         self.turn_mode=(os.environ.get('KEL_TURN_MODEL') or '').strip().lower()
         self._last_follow_up=0.0
@@ -307,17 +320,68 @@ class Service:
         return [{'mime':f['mime'],'data':base64.b64encode((self.store.root/f['image_path']).read_bytes()).decode()}
                 for f in packet.get('files') or [] if f.get('image_path')]
 
+    def _still_planning(self,db,sid):
+        row=db.execute('SELECT state FROM submissions WHERE id=?',(sid,)).fetchone()
+        return bool(row) and row['state']=='PLANNING'
+
+    def _say(self,sid,cid,text):
+        """One direct answer for this submission, and the submission settles with it.
+
+        Written only while the submission is still being answered: a reply the person stopped
+        (CH-3) is dropped here — never posted later, never part of the conversation's history.
+        Returns False when it was dropped.
+        """
+        with self.store.transaction() as db:
+            if not self._still_planning(db,sid):
+                return False
+            db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'assistant',text,time.time()))
+            db.execute("UPDATE submissions SET state='SETTLED',job_id=NULL WHERE id=?",(sid,))
+        return True
+
+    def cancel_submission(self,cid,sid):
+        """POST /api/cancel (CH-3): the composer's Stop for one message still being answered.
+
+        A reply still being decided or written is stopped: the submission is CANCELLED, any
+        in-flight model call is told to stop, whatever it returns later is dropped, and the chat
+        gets one plain note. Stop never cancels handed-off work — its card does that (D-53).
+        """
+        with self.handoff_lock:
+            with self.store.transaction() as db:
+                row=db.execute('SELECT s.conversation_id,s.state,s.job_id,a.submission_id AS acked FROM submissions s '
+                               'LEFT JOIN submission_acks a ON a.submission_id=s.id WHERE s.id=?',(sid,)).fetchone()
+                if not row or row['conversation_id']!=cid:
+                    raise PolicyError('That message is not part of this conversation')
+                if row['acked'] or row['job_id']:
+                    return {'cancelled':False,'handed_off':True,'state':row['state']}
+                if row['state']!='PLANNING':
+                    return {'cancelled':False,'handed_off':False,'state':row['state']}
+                db.execute("UPDATE submissions SET state='CANCELLED',error='You stopped this reply.' WHERE id=?",(sid,))
+                seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                               (cid,'assistant',STOPPED_NOTE,time.time())).lastrowid
+        with self._cancels_lock:
+            event=self._cancels.get(sid)
+        if event is not None:
+            event.set()
+        return {'cancelled':True,'handed_off':False,'state':'CANCELLED','message_seq':seq}
+
     def _plan(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
         """Route one message. Returns the hand-off's start future when work was handed off, else None."""
+        cancel=threading.Event()
+        with self._cancels_lock:
+            self._cancels[sid]=cancel
         try:
+            with contextlib.closing(self.store.connect()) as db:
+                if not self._still_planning(db,sid):
+                    return None  # stopped before it was picked up
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
             explicit_job=(packet.get('continuation') or {}).get('job_id')
             continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
+            jid=None
             if kind=='status' or lower in ('status','what are you working on?','what is running?'):
                 jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
                 answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
-                self.store.add_message(answer,'assistant',cid);jid=None
+                self._say(sid,cid,answer)
             elif kind=='recipe' or packet.get('recipe_invocation'):
                 jid=self._recipe_run(sid,cid,text,packet)
             elif kind=='continue' or explicit_job or continue_verb:
@@ -326,8 +390,7 @@ class Service:
                 # Coding intent with no selected project and no explicit
                 # greenfield request: ask instead of guessing or silently
                 # adopting a temp/donor workspace as the project root.
-                self.store.add_message('This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.', 'assistant', cid)
-                jid=None
+                self._say(sid,cid,'This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.')
             else:
                 # D-53 floors: these messages are work no matter what the turn model says.
                 forced=bool(needs_work(text) or file_action(text) or kind in ('research','coding') or lower.startswith(RESEARCH_PREFIXES)
@@ -338,7 +401,9 @@ class Service:
                 decision=None
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
-                    decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images)
+                    decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
+                if cancel.is_set():
+                    return None  # stopped while deciding: nothing is said and nothing starts
                 if decision is None:
                     # Today's keyword gate: no turn model, or it could not be reached.
                     gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
@@ -354,7 +419,7 @@ class Service:
                         text=self._rewrite_request(sid,decision['request'])
                     return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision)
                 if decision['action']=='reply':
-                    self.store.add_message(decision['text'],'assistant',cid);jid=None
+                    self._say(sid,cid,decision['text'])
                 else:
                     model=self._chat_model(cid)
                     if model is None:raise PolicyError('Connect a model before sending a message')
@@ -362,31 +427,41 @@ class Service:
                     if any(f.get('image_path') for f in packet['files']):
                         if not (model is self.model or isinstance(model,InternalAdapter)):raise PolicyError('The image worker is not connected')
                         kwargs['images']=self._images(packet)
+                    if _accepts(model,'cancel'):
+                        kwargs['cancel']=cancel
                     answer_packet=dict(packet,running_work=running)
                     result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
                         'Do not imply you performed external actions. You may answer questions about the saved context. '
                         "running_work is the true state of this conversation's work; never call unfinished or unverified work done.\n"+encode(answer_packet),**kwargs)
+                    if cancel.is_set():
+                        return None  # the person stopped this reply; what came back is dropped
                     if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
-                    self.store.add_message(guard_reply(result['text'],running),'assistant',cid);jid=None
+                    self._say(sid,cid,guard_reply(result['text'],running))
             # A direct answer or a refused recipe has no job to dispatch. Mark the request
             # settled so every client can stop waiting without inventing running work.
             with self.store.transaction() as db:db.execute(
-                'UPDATE submissions SET state=?,job_id=? WHERE id=?',
+                "UPDATE submissions SET state=?,job_id=? WHERE id=? AND state='PLANNING'",
                 ('DISPATCHED' if jid else 'SETTLED', jid, sid))
         except Exception as exc:
-            with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+            with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=? AND state='PLANNING'",(str(exc),sid))
+        finally:
+            with self._cancels_lock:
+                self._cancels.pop(sid,None)
         return None
 
     def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision):
         """D-53: acknowledge now (one transaction), start the work on the planning pool, return."""
         title=title_for(text,decision.get('title'))
         ack=guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
-        with self.store.transaction() as db:
-            row=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
-            if not row:
-                seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
-                               (cid,'assistant',ack,time.time())).lastrowid
-                db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
+        with self.handoff_lock:
+            with self.store.transaction() as db:
+                if not self._still_planning(db,sid):
+                    return None  # stopped before the hand-off was said: nothing starts
+                row=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
+                if not row:
+                    seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                                   (cid,'assistant',ack,time.time())).lastrowid
+                    db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
         return self.planning.submit(self._start_work,sid,cid,text,packet,kind,greenfield_flag)
 
     def _rewrite_request(self,sid,request):
@@ -1122,6 +1197,9 @@ class Service:
         if 'actor' in data:
             raise PolicyError('Actor identity comes from the authenticated Kel session, not from the request payload')
         if path=='/api/send':return {'id':self.submit(data)}
+        if path=='/api/cancel':
+            return self.cancel_submission(str(data.get('conversation') or 'main'),
+                                          self._required(data,'id','Pick the message to stop first.'))
         if path=='/api/memory':return self._memory_action(data)
         if path=='/api/map':return self._map_action(data)
         if path=='/api/recipes':return self._recipes_action(data)
