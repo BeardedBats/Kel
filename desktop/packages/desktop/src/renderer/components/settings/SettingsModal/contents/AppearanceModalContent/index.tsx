@@ -101,7 +101,7 @@ const AppearanceModalContent: React.FC = () => {
                 </PreferenceRow>
                 </div>
               ))}
-              <div className='kel-desktop-only kel-shell-appearance-zoom'><PreferenceRow label='Zoom'><ScaleControl /></PreferenceRow></div>
+              <div className='kel-desktop-only kel-shell-appearance-zoom'><PreferenceRow label='Zoom'><ScaleControl variant='stepper' /></PreferenceRow></div>
             </div>
           </div>
 

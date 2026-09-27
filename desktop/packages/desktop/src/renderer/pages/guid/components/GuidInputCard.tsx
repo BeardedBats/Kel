@@ -1,10 +1,10 @@
-import ShellComposerMetrics from '@renderer/components/kel/ShellComposerMetrics';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import ComposerMenuPortal from '@/renderer/components/chat/SendBox/ComposerMenuPortal';
 import FilePreview from '@/renderer/components/media/FilePreview';
 import UploadProgressBar from '@/renderer/components/media/UploadProgressBar';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -77,6 +77,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
   const isMobile = layout?.isMobile ?? false;
   const { compositionHandlers, isComposing } = useCompositionInput();
   const inputRef = useRef<RefTextAreaType | null>(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const textareaAutoSize = isMobile ? { minRows: 2, maxRows: 8 } : { minRows: 1, maxRows: 20 };
 
   useEffect(() => {
@@ -119,6 +120,7 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
     >
       {/* inner white card — narrower than outer wrap */}
       <div
+        ref={composerRef}
         className={`${styles.guidInputInner} kel-shell-composer relative p-12px flex flex-col bg-dialog-fill-0`}
         style={{
           transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
@@ -151,13 +153,19 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
         )}
         <UploadProgressBar source='sendbox' />
         {actionRow}
-        {slashCommandMenu && <div className='kel-guid-command-anchor absolute start-0 end-0 top-[calc(100%+4px)] z-70'>{slashCommandMenu}</div>}
+        {/* Body-level layer above the composer: a menu nested in the composer's backdrop blur shows the
+            page through it unreadably (VS-3). Figma slash menu 273:9737 is 340px, aligned after the +. */}
+        {slashCommandMenu && (
+          <ComposerMenuPortal anchor={composerRef.current} inset={40} width={340} className='kel-guid-command-anchor'>
+            {slashCommandMenu}
+          </ComposerMenuPortal>
+        )}
       </div>
       <div className='kel-shell-composer-footer'><GuidWorkspaceFootnote
         workspaceDir={workspaceDir}
         onSelectWorkspace={onSelectWorkspace}
         onClearWorkspace={onClearWorkspace}
-      />{modeSelector}<ShellComposerMetrics /></div>
+      />{modeSelector}</div>
     </div>
   );
 };

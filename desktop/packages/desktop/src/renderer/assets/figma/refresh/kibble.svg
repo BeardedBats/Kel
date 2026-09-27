@@ -1,5 +1,7 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Icon/sparkle">
-<path id="Vector" d="M7.5 1.875L8.625 5.125L11.875 6.25L8.625 7.375L7.5 10.625L6.375 7.375L3.125 6.25L6.375 5.125L7.5 1.875Z" stroke="#9FC3FF" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="Icon/bug">
+<path id="Vector" d="M5.15625 5.15625C5.15625 4.53465 5.40318 3.93851 5.84272 3.49897C6.28226 3.05943 6.8784 2.8125 7.5 2.8125C8.1216 2.8125 8.71774 3.05943 9.15728 3.49897C9.59682 3.93851 9.84375 4.53465 9.84375 5.15625" stroke="#9FC3FF" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M10.7812 8.4375C10.7812 6.62532 9.31218 5.15625 7.5 5.15625C5.68782 5.15625 4.21875 6.62532 4.21875 8.4375V9.375C4.21875 11.1872 5.68782 12.6562 7.5 12.6562C9.31218 12.6562 10.7812 11.1872 10.7812 9.375V8.4375Z" stroke="#9FC3FF" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M7.5 7.5V12.6562M4.21875 8.4375H2.34375M10.7812 8.4375H12.6562M4.5 6.375L2.8125 5.15625M10.5 6.375L12.1875 5.15625M4.5 11.0625L2.8125 12.1875M10.5 11.0625L12.1875 12.1875" stroke="#9FC3FF" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

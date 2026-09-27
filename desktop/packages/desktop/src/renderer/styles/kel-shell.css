@@ -4158,3 +4158,258 @@ html[data-theme='light'] .kel-v2-shell :is(.kel-shell-archive-group-header > spa
 html[data-theme='light'] .kel-v2-shell :is(.kel-shell-archive-row > .size-20px, .kel-shell-archive-desktop-actions > button:not(.arco-btn)) { color: var(--kel-accent); }
 html[data-theme='light'] .kel-v2-shell .kel-shell-archive-row { border-bottom-color: var(--kel-border); }
 html[data-theme='light'] .kel-v2-shell .kel-shell-archive-delete.arco-btn { color: #b3261e; }
+
+/* ===== Visual audit pass (VS-*, FIX-0007..0017) — Figma BlpVvZGuc9j9HhxUojIiJI is the spec. =====
+   Composer: Home 185:2739 and Chat 273:13209 are the same component — 60px tall, 12/18 padding, 14px gaps,
+   28px Attach box with a 22px plus, model label 14/20 + 16px chevron, 1×26 divider, 28px Mic with a 22px
+   glyph, 36px r10 Send with a 22px glyph (transparent, also when disabled). */
+.kel-v2-shell .kel-shell-composer { box-sizing: border-box; }
+.kel-v2-shell .kel-shell-composer textarea:focus-visible,
+.kel-v2-shell .kel-shell-composer textarea:focus { outline: none !important; box-shadow: none !important; }
+.kel-v2-shell .kel-shell-composer .arco-textarea-wrapper,
+.kel-v2-shell .kel-shell-composer .arco-textarea { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.kel-v2-shell .kel-shell-composer textarea { padding-inline: 0 !important; }
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-composer { display: grid; grid-template-columns: 28px minmax(100px,1fr) auto; column-gap: 14px; row-gap: 12px; align-items: center; padding: 11px 18px !important; min-height: 60px; }
+  .kel-v2-shell .kel-shell-composer > .arco-textarea-wrapper, .kel-v2-shell .kel-shell-composer > textarea { grid-column: 2; grid-row: 1; min-width: 0; }
+  .kel-v2-shell .kel-shell-composer > .kel-shell-composer-spacer { display: none; }
+  .kel-v2-shell .kel-shell-composer-actions { display: contents !important; }
+  .kel-v2-shell .kel-shell-composer-attach { grid-column: 1; grid-row: 1; }
+  .kel-v2-shell .kel-shell-composer-submit { grid-column: 3; grid-row: 1; }
+  .kel-v2-shell .kel-shell-composer > :is(.flex-wrap, [role='progressbar']) { grid-column: 1 / -1; }
+  .kel-v2-shell .sendbox-panel { box-sizing: border-box; min-height: 60px; padding: 11px 18px !important; }
+}
+.kel-v2-shell .kel-shell-composer-submit { display: flex; align-items: center; gap: 14px; }
+.kel-v2-shell .kel-shell-composer-submit > * { margin: 0 !important; }
+.kel-v2-shell .kel-shell-composer-attach, .kel-v2-shell .kel-shell-composer-attach > div { display: flex; align-items: center; }
+.kel-v2-shell .sendbox-input-row { gap: 14px !important; }
+.kel-v2-shell .sendbox-inline-actions, .kel-v2-shell .sendbox-actions { gap: 14px !important; }
+.kel-v2-shell .sendbox-inline-actions > *, .kel-v2-shell .sendbox-actions > * { margin: 0 !important; }
+/* Attach: 28px box, 22px Figma plus glyph (FIX-0008). */
+html body .kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionrs-attach-folder-btn']) { width: 28px !important; min-width: 28px !important; height: 28px !important; padding: 0 !important; border-radius: 8px !important; color: var(--kel-text-1) !important; }
+.kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionrs-attach-folder-btn']) svg {
+  display: block; width: 22px !important; height: 22px !important; color: var(--kel-text-1); background: currentColor;
+  -webkit-mask: url('../assets/figma/plus.svg') center / 22px 22px no-repeat; mask: url('../assets/figma/plus.svg') center / 22px 22px no-repeat;
+}
+.kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionrs-attach-folder-btn']) svg > * { display: none; }
+/* Model label: 14/20 SemiBold, pl10 pr8, 6px gap, 16px chevron. */
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger { height: 28px; padding: 0 8px 0 10px; gap: 6px; border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger > .i-icon { display: flex; flex: none; width: 16px; height: 16px; }
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger > .i-icon > svg,
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger > svg {
+  width: 16px !important; height: 16px !important; background: currentColor;
+  -webkit-mask: url('../assets/figma/chat-shell/workspace-chevron.svg') center / 16px 16px no-repeat; mask: url('../assets/figma/chat-shell/workspace-chevron.svg') center / 16px 16px no-repeat;
+}
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger > .i-icon > svg > *,
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) .kel-desktop-model-trigger > svg > * { display: none; }
+/* Mic: divider 1×26 before it, 28px box, 22px Figma mic glyph (FIX-0009). */
+.kel-v2-shell :is(.sendbox-inline-actions, .sendbox-actions, .kel-shell-composer-submit) [aria-label='Record a message'] { margin-inline-start: 0 !important; }
+.kel-v2-shell :is(.sendbox-inline-actions, .sendbox-actions, .kel-shell-composer-submit) [aria-label='Record a message']::before { display: none !important; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic'] { gap: 4px; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic']::before {
+  content: ''; flex: none; width: 1px; height: 26px; margin-inline-end: 10px; background: rgba(191,216,255,.22);
+}
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic-toggle'] { height: 28px !important; min-width: 28px; padding: 0 !important; justify-content: center; border-radius: 8px !important; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic'][data-state='idle'] [data-testid='kel-mic-toggle'] { width: 28px !important; color: var(--kel-text-1) !important; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic'][data-state='idle'] [data-testid='kel-mic-toggle']:hover:not(:disabled) { background: var(--kel-shell-hover) !important; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic'][data-state='recording'] [data-testid='kel-mic-toggle'] { padding: 0 10px !important; }
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic-toggle'] > svg {
+  display: block; width: 22px !important; height: 22px !important; background: currentColor;
+  -webkit-mask: url('../assets/figma/mic.svg') center / 22px 22px no-repeat; mask: url('../assets/figma/mic.svg') center / 22px 22px no-repeat;
+}
+.kel-v2-shell :is(.sendbox-panel, .kel-shell-composer) [data-testid='kel-mic-toggle'] > svg > * { display: none; }
+/* Send: 36px r10 transparent square in both states; the Figma send glyph is the 22px image. */
+.kel-v2-shell :is(.sendbox-send-tooltip-anchor, .kel-shell-composer-submit) .send-button-custom { width: 36px !important; min-width: 36px !important; height: 36px !important; border-radius: 10px !important; clip-path: none !important; background: transparent !important; }
+.kel-v2-shell .sendbox-send-tooltip-anchor { width: 36px !important; height: 36px !important; flex: 0 0 36px !important; border-radius: 10px !important; clip-path: none !important; }
+.kel-v2-shell .send-button-custom:is(:disabled, .arco-btn-disabled) { opacity: .45 !important; background: transparent !important; }
+.kel-v2-shell .send-button-custom:not(:disabled):not(.arco-btn-disabled):hover { background: var(--kel-shell-hover) !important; }
+.kel-v2-shell .send-button-custom img { width: 22px; height: 22px; }
+
+/* Footer crumbs (185:2753 / 273:9252): 14px icon, Instrument Medium 13/16 #a2b5d7, 12px chevron, 6px gaps.
+   Home and Chat share them; the Tools crumb is the same component. */
+.kel-v2-shell .kel-shell-composer-footer { gap: 16px; }
+.kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain'], .kel-shell-chat-workspace, .kel-shell-crumb) {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; min-width: 0; padding: 0 6px; margin-inline: -6px; border: 0 !important; border-radius: 6px;
+  background: transparent !important; box-shadow: none !important; color: #a2b5d7 !important; font: 500 13px/16px var(--kel-shell-heading) !important; letter-spacing: .1px; white-space: nowrap; cursor: pointer;
+}
+.kel-v2-shell .kel-shell-composer-footer .kel-shell-chat-workspace { cursor: default; }
+.kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain'], .kel-shell-crumb):is(:hover, [aria-expanded='true'], .arco-dropdown-popup-visible) { background: rgba(47,107,224,.22) !important; color: #c4d4e8 !important; }
+.kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain']) svg { width: 14px; height: 14px; flex: none; }
+.kel-v2-shell .kel-shell-composer-footer [class*='workspaceEmptyBtn']::after {
+  content: ''; flex: none; width: 12px; height: 12px; background: currentColor;
+  -webkit-mask: url('../assets/figma/chat-shell/mode-chevron.svg') center / 12px 12px no-repeat; mask: url('../assets/figma/chat-shell/mode-chevron.svg') center / 12px 12px no-repeat;
+}
+.kel-v2-shell .kel-shell-composer-footer .kel-shell-chat-workspace img, .kel-v2-shell .kel-shell-crumb > img { width: 14px; height: 14px; flex: none; }
+.kel-v2-shell .kel-shell-crumb > img.kel-shell-crumb__chevron { width: 12px; height: 12px; }
+.kel-v2-shell .kel-shell-crumb:disabled { opacity: .45; cursor: default; }
+.kel-v2-shell .kel-shell-composer-tools > * > button.kel-shell-crumb { height: 24px; padding: 0 6px !important; font: 500 13px/16px var(--kel-shell-heading) !important; color: #a2b5d7 !important; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain'], .kel-shell-chat-workspace, .kel-shell-crumb) { color: var(--kel-text-2) !important; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain'], .kel-shell-crumb):is(:hover, [aria-expanded='true']) { background: rgba(47,111,159,.1) !important; color: var(--kel-text-1) !important; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-crumb > img { filter: brightness(.4); }
+
+/* Composer menus render in a body-level layer (ComposerMenuPortal) so their glass blurs the thread. */
+.kel-composer-menu-layer { display: flex; flex-direction: column; justify-content: flex-end; }
+.kel-composer-menu-layer > * { max-height: inherit; overflow-y: auto; }
+.kel-composer-menu-layer .kel-slash-menu { width: 100% !important; max-width: none !important; }
+
+/* Menus and palette surfaces: Figma context menu 273:8823 / Permission menu 273:9273 — 40% glass with a
+   24px blur, 1px rgba(191,216,255,.14) edge, r10, inner top highlight. They are portalled to <body>, so the
+   blur reaches the page and the text stays readable. */
+html[data-theme='dark'] body :is(.arco-dropdown-menu.kel-shell-chat-menu.arco-dropdown-menu-pop, .arco-dropdown-menu.kel-tools-menu, .kel-slash-menu, .kel-desktop-picker) {
+  border: 1px solid rgba(191,216,255,.14) !important;
+  background: linear-gradient(180deg,rgba(191,216,255,.08),rgba(191,216,255,0)), rgba(15,45,100,.4) !important;
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 0 rgba(191,216,255,.18), 0 20px 24px rgba(0,0,0,.35) !important;
+}
+html[data-theme='dark'] body .kel-palette[role='dialog'] { background: linear-gradient(180deg,rgba(191,216,255,.08),rgba(191,216,255,0)), rgba(15,45,100,.55) !important; -webkit-backdrop-filter: blur(48px); backdrop-filter: blur(48px); }
+
+/* Tools menu (VS-4, CH-18): opens above its crumb, capped to the space above, scrolls inside; rows follow
+   the Permission menu (273:9273). */
+body .arco-dropdown-menu.kel-tools-menu {
+  box-sizing: border-box; width: 300px; max-width: calc(100vw - 32px); max-height: min(460px, calc(100vh - 180px)) !important; overflow-y: auto !important;
+  padding: 6px !important; border-radius: 10px !important; color: #edf2fa;
+}
+body .kel-tools-menu :is(.arco-dropdown-menu-group-title, .arco-menu-group-title) { margin: 0; padding: 8px 10px 4px; color: #9fc3ff; font: 500 12px/16px var(--kel-shell-heading); }
+body .kel-tools-menu .arco-dropdown-menu-group { padding: 0; }
+body .kel-tools-menu .arco-dropdown-menu-item { box-sizing: border-box; display: flex; align-items: center; min-height: 32px; height: auto; margin: 0 0 2px; padding: 6px 10px; border-radius: 6px; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); line-height: 20px; }
+body .kel-tools-menu .arco-dropdown-menu-item:not(.arco-dropdown-menu-item-disabled):hover, body .kel-tools-menu .kel-tools-menu__current { background: rgba(47,107,224,.22) !important; }
+body .kel-tools-menu .arco-dropdown-menu-item-disabled { color: #8fa9d6 !important; background: transparent !important; }
+body .kel-tools-menu .text-12px { color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); white-space: normal; }
+body .kel-tools-menu .text-11px { color: #9fc3ff !important; font: 500 12px/16px var(--kel-shell-heading); }
+html[data-theme='light'] body .arco-dropdown-menu.kel-tools-menu { background: var(--kel-surface-1) !important; border: 1px solid var(--kel-border-strong) !important; box-shadow: var(--kel-shadow-sheet) !important; color: var(--kel-text-1); }
+html[data-theme='light'] body .kel-tools-menu .arco-dropdown-menu-item { color: var(--kel-text-1); }
+html[data-theme='light'] body .kel-tools-menu :is(.text-12px, .arco-dropdown-menu-item-disabled) { color: var(--kel-text-2) !important; }
+html[data-theme='light'] body .kel-tools-menu :is(.arco-dropdown-menu-group-title, .text-11px) { color: var(--kel-accent) !important; }
+html[data-theme='light'] body .kel-tools-menu .arco-dropdown-menu-item:not(.arco-dropdown-menu-item-disabled):hover, html[data-theme='light'] body .kel-tools-menu .kel-tools-menu__current { background: rgba(47,111,159,.1) !important; }
+
+/* Sidebar geometry (Home 185:2658): New Chat y65, section label 42px (text at +18), rows 28 on a 32 pitch,
+   no divider above Recent. Sticky labels carry the sidebar paint so rows never show through (VS-5). */
+@media (min-width: 768px) {
+  .kel-v2-shell .layout-sider-header { box-sizing: border-box; height: 65px !important; min-height: 65px; padding: 16px 8px 14px 12px !important; align-items: center; }
+  .kel-v2-shell .sider-section-label { box-sizing: border-box; height: 42px !important; min-height: 42px; margin: 2px 0 4px !important; padding: 18px 6px 8px !important; align-items: flex-start !important; }
+  .kel-v2-shell .kel-shell-recent-section { margin-top: 0 !important; padding-top: 0 !important; }
+  .kel-v2-shell .kel-shell-recent-section .sider-section-label { margin-top: 0 !important; }
+  .kel-v2-shell .kel-shell-recent-section::before { display: none !important; }
+  html[data-theme='dark'] body .kel-v2-shell .sider-section-label { background: rgba(27,34,59,.94) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  html[data-theme='light'] body .kel-v2-shell .sider-section-label { background: var(--bg-base, #fafafb) !important; }
+}
+
+/* Conversation rows (273:8692): selected = tint only (no outline), status dot stays, the ⋮ trigger is a bare
+   glyph and the title stops before it (FIX-0011). */
+.kel-v2-shell .conversation-item { border-color: transparent !important; }
+.kel-v2-shell .conversation-item:not([aria-current='page']):hover { background: var(--kel-shell-hover) !important; }
+.kel-v2-shell .conversation-item:is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,107,224,.22) !important; border-color: transparent !important; }
+.kel-v2-shell .conversation-item[aria-current='page'] .chat-history__item-name { color: #edf2fa !important; }
+.kel-v2-shell .conversation-item .sider-action-btn { width: 20px; height: 20px; border-radius: 6px; background: transparent !important; color: var(--kel-text-2) !important; }
+.kel-v2-shell .conversation-item .sider-action-btn:hover { background: rgba(191,216,255,.1) !important; color: var(--kel-text-1) !important; }
+.kel-v2-shell .conversation-item:is(:hover, :focus-within) > .flex-1 { margin-inline-end: 22px; }
+/* Pinned rows keep their drag-to-reorder handle over the status dot, but it is invisible: the dot stays. */
+.kel-v2-shell .conversation-item [data-testid^='conversation-drag-handle'] { opacity: 0 !important; background: transparent !important; }
+.kel-v2-shell .conversation-item .kel-shell-history-dot { opacity: 1 !important; }
+html[data-theme='light'] body .kel-v2-shell .conversation-item:is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,111,159,.12) !important; }
+html[data-theme='light'] body .kel-v2-shell .conversation-item[aria-current='page'] .chat-history__item-name { color: var(--kel-text-1) !important; }
+
+/* Titlebar controls in the sidebar logo row (FIX-0012). */
+.layout-sider-header > .app-titlebar__menu--sider { display: flex; align-items: center; gap: 2px; margin-left: auto; -webkit-app-region: no-drag; }
+.layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; color: var(--kel-text-2, #c4d4e8); }
+.layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button:hover:not(:disabled) { background: var(--kel-shell-hover, rgba(191,216,255,.06)); color: var(--kel-text-1, #edf2fa); }
+.layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button svg { width: 16px; height: 16px; }
+
+/* Confirm dialogs (273:12025): one glass panel — no inner body box, no title warning icon, 460px wide at y300. */
+body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-content { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-title :is(.arco-modal-title-icon, .arco-icon, svg) { display: none !important; }
+@media (min-width: 768px) {
+  body:has(.kel-v2-shell) .arco-modal-wrapper:has(> .arco-modal-simple) { text-align: left; }
+  body:has(.kel-v2-shell) .arco-modal-wrapper:has(> .arco-modal-simple)::after { display: none; }
+  body:has(.kel-v2-shell) .arco-modal.arco-modal-simple { position: fixed; top: min(300px, calc(100vh - 220px)) !important; left: 50%; margin: 0 !important; translate: -50% 0; vertical-align: top; }
+  html[data-theme='dark'] body:has(.kel-v2-shell) .arco-modal.arco-modal-simple {
+    background: linear-gradient(rgba(159,195,255,.05), rgba(159,195,255,.05)), linear-gradient(rgba(15,45,100,.55), rgba(15,45,100,.55)), url('../assets/figma/task/modal-background.png') bottom / 100% 100% no-repeat !important;
+    -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  }
+}
+/* Light confirm dialog: same geometry, semantic light surfaces (Figma defines no Light foundations). */
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal.arco-modal-simple { background: var(--kel-surface-1) !important; border-color: var(--kel-border-strong) !important; color: var(--kel-text-1) !important; box-shadow: var(--kel-shadow-sheet) !important; }
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-title { color: var(--kel-text-1) !important; }
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-content { color: var(--kel-text-2) !important; }
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-footer :is(.arco-btn-secondary, .arco-btn-default) { color: var(--kel-accent) !important; }
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-footer :is(.arco-btn-secondary, .arco-btn-default):hover { color: var(--kel-text-1) !important; }
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-modal-mask { background: rgba(20,22,26,.32) !important; }
+
+/* Toast v2 (273:13818): bottom-centre of the main column, 36px from the bottom; lifted clear of a composer
+   only while one is on screen. */
+@media (min-width: 768px) {
+  body:has(.kel-v2-shell) .arco-message-wrapper { bottom: 36px !important; box-sizing: border-box; }
+  body:has(.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel)) .arco-message-wrapper { bottom: 120px !important; }
+  body:has(.kel-v2-shell .layout-sider:not(.collapsed)) .arco-message-wrapper { padding-inline-start: 256px !important; }
+}
+html[data-theme='light'] body:has(.kel-v2-shell) .arco-message { background: rgba(255,255,255,.9) !important; border-color: var(--kel-border-strong) !important; color: var(--kel-text-1) !important; box-shadow: var(--kel-shadow-sheet) !important; }
+
+/* Command palette centred on the main column (VS-27). */
+@media (min-width: 768px) {
+  body:has(.kel-v2-shell .layout-sider:not(.collapsed)) .kel-palette-backdrop { padding-left: calc(256px + 16px); }
+}
+
+/* Light theme menus (VS-10): the chat row menu used dark-only text on the light surface. */
+html[data-theme='light'] body .arco-dropdown-menu.kel-shell-chat-menu.arco-dropdown-menu-pop { box-sizing: border-box; width: 232px; padding: 6px !important; border: 1px solid var(--kel-border-strong) !important; border-radius: 10px; background: var(--kel-surface-1) !important; box-shadow: var(--kel-shadow-sheet) !important; }
+html[data-theme='light'] body .kel-shell-chat-menu .arco-dropdown-menu-item { color: var(--kel-text-1) !important; }
+html[data-theme='light'] body .kel-shell-chat-menu .arco-dropdown-menu-item:hover { background: rgba(47,111,159,.1) !important; }
+html[data-theme='light'] body .kel-shell-chat-menu .kel-shell-chat-menu__icon { filter: brightness(0) saturate(100%) opacity(.62); }
+
+/* Agent-error card (FIX-0013): the details trigger sits in the heading row, right of the title, never over
+   the body text; the heading reserves its space. */
+.kel-v2-shell .kel-chat-agent-error__heading { padding-inline-end: 30px; }
+.kel-v2-shell .kel-chat-agent-error__details { top: 13px; right: 14px; }
+.kel-v2-shell .kel-chat-agent-error__details > summary { display: flex; align-items: center; justify-content: center; width: 24px; height: 20px; border-radius: 6px; }
+.kel-v2-shell .kel-chat-agent-error__details > summary:hover, .kel-v2-shell .kel-chat-agent-error__details[open] > summary { background: rgba(242,139,139,.14); }
+.kel-v2-shell .kel-chat-agent-error__details > summary::after {
+  content: ''; width: 16px; height: 16px; background: #f9a3a3;
+  -webkit-mask: url('../assets/figma/chat/more.svg') center / 16px 16px no-repeat; mask: url('../assets/figma/chat/more.svg') center / 16px 16px no-repeat;
+}
+html[data-theme='light'] body .kel-v2-shell .kel-chat-agent-error__details > summary::after { background: var(--kel-failed-fg); }
+
+/* Highlights are 8px-radius pills with breathing room, never flush squares (FIX-0014). */
+.kel-v2-shell .kel-shell-chat-heading > .group { box-sizing: border-box; margin: -4px -8px; padding: 4px 8px; border: 0 !important; border-radius: 8px !important; box-shadow: none !important; }
+.kel-v2-shell .kel-shell-chat-heading > .group:is(:hover, :focus-within) { background: var(--kel-shell-hover) !important; }
+.kel-v2-shell .kel-shell-chat-heading [data-testid='chat-title-editor-trigger'] { padding: 0 !important; }
+body :is(.arco-dropdown-menu-item, .arco-menu-item, .arco-select-option, .kel-palette__item, .kel-desktop-picker__row, .kel-slash-menu__option, .kel-attach-menu__item) { border-radius: 8px !important; }
+.kel-v2-shell :is(.settings-sider__item, .kel-desktop-workspace .workspace-tree .arco-tree-node, .kel-shell-provider > summary) { border-radius: 8px; }
+.kel-v2-shell .kel-shell-task-row { box-sizing: border-box; width: calc(100% + 16px); margin-inline: -8px; padding-inline: 8px; border-radius: 8px; }
+.kel-v2-shell .kel-shell-provider > summary { margin-inline: -8px; padding-inline: 8px; }
+
+/* Appearance → Text size and zoom (FIX-0016, Nick): Chat text, Code and Zoom are one compact control grid —
+   [−] [value] [+] [Reset] — with every column aligned across the three rows. Zoom has no slider. */
+@media (min-width: 768px) {
+  .kel-v2-shell :is(.kel-shell-appearance-type, .kel-shell-appearance-zoom) .kel-size-stepper {
+    display: grid !important; grid-template-columns: 28px 52px 28px 48px; column-gap: 8px; align-items: center; justify-items: center; width: auto !important; margin-left: auto;
+  }
+  .kel-v2-shell :is(.kel-shell-appearance-type, .kel-shell-appearance-zoom) .kel-size-stepper > span { min-width: 0 !important; width: 100%; text-align: center; }
+  .kel-v2-shell :is(.kel-shell-appearance-type, .kel-shell-appearance-zoom) .kel-size-stepper .arco-btn-text { justify-self: end; padding: 0 4px !important; }
+}
+
+/* "More colors (24)" (FIX-0017): an accent link with room above it — no underline. */
+.kel-v2-shell [data-testid='theme-colors-more'] { display: inline-flex !important; align-items: center; height: 28px !important; margin: 10px 0 0 -8px !important; padding: 0 8px !important; border-radius: 8px; color: #9fc3ff !important; font: 500 14px/20px var(--kel-shell-heading) !important; text-decoration: none !important; }
+.kel-v2-shell [data-testid='theme-colors-more']:hover { background: var(--kel-shell-hover); color: #edf2fa !important; text-decoration: none !important; }
+html[data-theme='light'] body .kel-v2-shell [data-testid='theme-colors-more'] { color: var(--kel-accent) !important; }
+html[data-theme='light'] body .kel-v2-shell [data-testid='theme-colors-more']:hover { color: var(--kel-text-1) !important; }
+
+.layout-sider-header > .app-titlebar__menu--sider { order: 10; }
+
+/* Button v2 states (136:28). Link: hover #edf2fa + underline, pressed #7fa0ff + underline (VS-13), including
+   the Link-styled secondary buttons in Kel dialogs. Danger Record: hover/pressed gradients were masked by the
+   base !important fill (VS-14). */
+body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-footer :is(.arco-btn-secondary, .arco-btn-default):not(:disabled):hover { text-decoration: underline; }
+body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-footer :is(.arco-btn-secondary, .arco-btn-default):not(:disabled):active { color: #7fa0ff !important; text-decoration: underline; }
+.kel-v2-shell :is(.arco-btn.arco-btn-text:not(.arco-btn-icon-only), .kel-btn.kel-btn--quiet, .kel-btn.kel-btn--link):not(:disabled):not(.arco-btn-disabled):active { color: #7fa0ff !important; text-decoration: underline; }
+.kel-v2-shell .kel-shell-ramble .arco-btn[data-testid='record-button']:not(:disabled):hover { background: linear-gradient(#b24c48,#963733) !important; }
+.kel-v2-shell .kel-shell-ramble .arco-btn[data-testid='record-button']:not(:disabled):active { background: linear-gradient(#8b312d,#752622) !important; box-shadow: inset 0 2px 4px rgba(0,0,0,.35) !important; }
+
+/* Activity rows (189:1342, VS-16): one-line Instrument Medium 14 title with ellipsis; the status line under it
+   is 13px bold, also one line. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-activity__item .kel-attention__text { display: flex; flex-direction: column; min-width: 0; gap: 2px; overflow: hidden; }
+  .kel-v2-shell .kel-shell-activity__item .kel-attention__text strong { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-activity__item:not(:has(.kel-shell-activity__state)) .kel-attention__text .kel-meta { display: none; }
+  .kel-v2-shell .kel-shell-activity__item:not(:has(.kel-shell-activity__state)) .kel-attention__text .kel-shell-activity__mobile-detail { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8fa9d6; font: 700 13px/18px var(--kel-shell-heading); }
+  html[data-theme='light'] body .kel-v2-shell .kel-shell-activity__item .kel-attention__text strong { color: var(--kel-text-1); }
+  html[data-theme='light'] body .kel-v2-shell .kel-shell-activity__item .kel-shell-activity__mobile-detail { color: var(--kel-text-2) !important; }
+}

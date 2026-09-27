@@ -298,9 +298,34 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
     };
   }, [isMacRuntime, showSiderToggle, layout?.isMobile]);
 
-  const menuHost = !layout?.isMobile ? layout?.titlebarMenuHost : null;
+  // FIX-0012: on Windows/Linux desktop the sidebar toggle, search and back/forward sit in the sidebar's
+  // logo row (left, beside "Kel"), not beside the window controls. While the sidebar is collapsed they
+  // fall back to the titlebar so they stay reachable. Pages with their own host (Ramble) keep it.
+  const useSiderHost = !layout?.isMobile && !isMacRuntime && !layout?.siderCollapsed;
+  const [siderHeaderHost, setSiderHeaderHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!useSiderHost || typeof document === 'undefined') {
+      setSiderHeaderHost(null);
+      return undefined;
+    }
+    let frame = 0;
+    let attempts = 0;
+    const find = () => {
+      const host = document.querySelector<HTMLElement>('.layout-sider:not(.collapsed) .layout-sider-header');
+      setSiderHeaderHost(host);
+      attempts += 1;
+      if (!host && attempts < 60) frame = window.requestAnimationFrame(find);
+    };
+    find();
+    return () => window.cancelAnimationFrame(frame);
+  }, [useSiderHost, location.pathname]);
+  const menuHost = !layout?.isMobile ? (layout?.titlebarMenuHost ?? (useSiderHost ? siderHeaderHost : null)) : null;
   const menu = (
-    <div ref={menuRef} className='app-titlebar__menu' style={menuHost ? undefined : menuStyle}>
+    <div
+      ref={menuRef}
+      className={classNames('app-titlebar__menu', menuHost && menuHost === siderHeaderHost && 'app-titlebar__menu--sider')}
+      style={menuHost ? undefined : menuStyle}
+    >
       {showBackToChatButton && (
         <button
           type='button'

@@ -5,8 +5,11 @@ import tokensIcon from '@renderer/assets/figma/chat-shell/tokens.svg';
 import cacheIcon from '@renderer/assets/figma/chat-shell/cache.svg';
 import contextIcon from '@renderer/assets/figma/chat-shell/context.svg';
 
-/** Missing measurements stay unknown; screenshot values never enter live state. */
+/** Missing measurements stay unknown; screenshot values never enter live state.
+ *  Nothing is shown until the conversation has reported usage (FIX-0010): an empty row of dashes on
+ *  Home or before the first reply is noise, not information. */
 export default function ShellComposerMetrics({ usage = null, contextLimit = 0 }: { usage?: TokenUsageData | null; contextLimit?: number }) {
+  if (!usage) return null;
   const input = usage?.breakdown?.input_tokens;
   const cached = usage?.breakdown?.cached_read_tokens;
   const cache = input && cached !== undefined ? `${Math.round(cached / input * 100)}%` : '—';

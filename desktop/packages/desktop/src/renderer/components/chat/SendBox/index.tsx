@@ -11,6 +11,7 @@ import AtSessionMenu from '@/renderer/components/chat/AtSessionMenu';
 import BtwOverlay from '@/renderer/components/chat/BtwOverlay';
 import { useInputFocusRing } from '@/renderer/hooks/chat/useInputFocusRing';
 import SlashCommandMenu, { type SlashCommandMenuItem } from '@/renderer/components/chat/SlashCommandMenu';
+import ComposerMenuPortal from './ComposerMenuPortal';
 import { useBtwCommand } from '@/renderer/components/chat/BtwOverlay/useBtwCommand';
 import { getFuzzyMatchIndices, useSlashCommandController } from '@/renderer/hooks/chat/useSlashCommandController';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -1699,15 +1700,15 @@ const SendBox: React.FC<{
   const isDraftActionDisabled = disabled || addToDraftDisabled || isUploading || !hasDraftToSend || !onAddToDraft;
   // Kel: the draft button only appears while the agent is busy; Ctrl+Enter still saves a draft any time.
   const hasDraftAction = Boolean(onAddToDraft) && Boolean(loading);
+  // Figma composer Send (185:2749): a 36px square with a 10px radius, transparent even when disabled.
   const sendButtonShapeStyle: React.CSSProperties = {
-    width: 32,
-    minWidth: 32,
-    height: 32,
-    minHeight: 32,
+    width: 36,
+    minWidth: 36,
+    height: 36,
+    minHeight: 36,
     padding: 0,
-    borderRadius: '50%',
+    borderRadius: 10,
     overflow: 'hidden',
-    clipPath: 'circle(50% at 50% 50%)',
     boxShadow: 'none',
   };
 
@@ -1761,6 +1762,7 @@ const SendBox: React.FC<{
       shape='circle'
       type='secondary'
       className='bg-animate sendbox-stop-button'
+      aria-label='Stop this reply'
       icon={<div className='mx-auto size-12px bg-6'></div>}
       onClick={stopHandler}
     ></Button>
@@ -2000,7 +2002,8 @@ const SendBox: React.FC<{
           </div>
         )}
         {isCommandMenuOpen && (
-          <div className='absolute start-12px end-12px bottom-[calc(100%+8px)] z-70'>
+          // Body-level layer: the glass menu must blur the thread, not the composer's own layer (VS-3).
+          <ComposerMenuPortal anchor={containerRef.current} inset={40} width={340} className='kel-composer-menu-layer--slash'>
             {conversationExport.step === 'menu' ? (
               <SlashCommandMenu
                 title={t('messages.export.menuTitle')}
@@ -2035,7 +2038,7 @@ const SendBox: React.FC<{
                 emptyText={t('messages.slash.empty', { defaultValue: 'No commands found' })}
               />
             )}
-          </div>
+          </ComposerMenuPortal>
         )}
         <div style={{ width: '100%' }}>
           {prefix}
