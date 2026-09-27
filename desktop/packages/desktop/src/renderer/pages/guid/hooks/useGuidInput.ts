@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { readActiveWorkspace, useActiveWorkspace } from '@renderer/components/kel/activeWorkspace';
 import { type ChatFileRef, chatFileRefPath, localFileRef, uploadFileRef } from '@/common/types/chatFile';
 import { useDragUpload } from '@/renderer/hooks/file/useDragUpload';
 import { usePasteService } from '@/renderer/hooks/file/usePasteService';
@@ -44,7 +45,8 @@ type UseGuidInputOptions = {
 export const useGuidInput = ({ locationState }: UseGuidInputOptions): GuidInputResult => {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<ChatFileRef[]>([]);
-  const [dir, setDir] = useState<string>('');
+  const activeWorkspace = useActiveWorkspace();
+  const [dir, setDir] = useState<string>(() => readActiveWorkspace()?.root ?? '');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +56,12 @@ export const useGuidInput = ({ locationState }: UseGuidInputOptions): GuidInputR
       setDir(locationState.workspace);
     }
   }, [locationState]);
+
+  // Switching the header workspace moves new chats into that workspace's folder.
+  useEffect(() => {
+    if (locationState?.workspace) return;
+    setDir(activeWorkspace?.root ?? '');
+  }, [activeWorkspace?.id, activeWorkspace?.root]);
 
   // Handle pasted files (append mode to support multiple pastes)
   // Do NOT clear dir here: paste/drag should coexist with a selected workspace,

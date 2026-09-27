@@ -15,7 +15,7 @@ export type ConfigKeyMap = {
   'ui.fontWeight.chat': string | undefined;
   'ui.fontWeight.markdown': string | undefined;
   'ui.fontWeight.code': string | undefined;
-  'window.bounds': { x?: number; y?: number; width: number; height: number } | undefined;
+  'window.bounds': { x?: number; y?: number; width: number; height: number; maximized?: boolean } | undefined;
   'webui.desktop.enabled': boolean | undefined;
   'webui.desktop.allowRemote': boolean | undefined;
   'webui.desktop.port': number | undefined;

@@ -5,7 +5,7 @@
  */
 
 import type { IMessageThinking } from '@/common/chat/chatLib';
-import { Spin } from '@arco-design/web-react';
+import kelMark from '@renderer/assets/figma/kel-mark.png';
 import { Brain, Right } from '@icon-park/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -79,9 +79,14 @@ const MessageThinking: React.FC<{ message: IMessageThinking }> = ({ message }) =
 
   return (
     <div className={styles.container}>
-      <div className={styles.header} onClick={() => setExpanded((v) => !v)}>
-        <span className={styles.headerIcon}>{!isDone ? <Spin size={12} /> : <Brain theme='outline' size='14' />}</span>
-        <span className={styles.summary}>{summaryText}</span>
+      <div
+        className={`${styles.header} ${!isDone ? 'kel-thinking kel-thinking--active kel-thinking--inline' : ''}`}
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <span className={`${styles.headerIcon} ${!isDone ? 'kel-thinking__mark' : ''}`}>
+          {!isDone ? <img src={kelMark} alt='' width={16} height={16} /> : <Brain theme='outline' size='14' />}
+        </span>
+        <span className={`${styles.summary} ${!isDone ? 'kel-thinking__label' : ''}`}>{summaryText}</span>
         <span className={`${styles.arrow} ${expanded ? styles.arrowExpanded : ''}`}>
           <Right theme='outline' size='12' />
         </span>

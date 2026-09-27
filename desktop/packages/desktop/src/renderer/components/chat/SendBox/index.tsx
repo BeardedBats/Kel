@@ -1698,7 +1698,8 @@ const SendBox: React.FC<{
 
   const isSendActionDisabled = disabled || sendDisabled || isUploading || !hasDraftToSend;
   const isDraftActionDisabled = disabled || addToDraftDisabled || isUploading || !hasDraftToSend || !onAddToDraft;
-  const hasDraftAction = Boolean(onAddToDraft);
+  // Kel: the draft button only appears while the agent is busy; Ctrl+Enter still saves a draft any time.
+  const hasDraftAction = Boolean(onAddToDraft) && Boolean(loading);
   const sendButtonShapeStyle: React.CSSProperties = {
     width: 32,
     minWidth: 32,

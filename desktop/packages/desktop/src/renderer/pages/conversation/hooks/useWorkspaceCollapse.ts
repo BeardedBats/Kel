@@ -21,11 +21,7 @@ type UseWorkspaceCollapseParams = {
    * survives agent-tab switches and follows the team as a whole.
    */
   preferenceKey?: string;
-  /**
-   * True when the current workspace is an auto-created temporary one (no folder
-   * picked by the user). Auto-expand on hasFiles is suppressed in that case so
-   * that "send 你好 without picking a folder" leaves the panel collapsed.
-   */
+  /** Retained for callers; Kel never auto-expands the panel, so it no longer changes behavior. */
   isTemporaryWorkspace?: boolean;
 };
 
@@ -37,14 +33,10 @@ type UseWorkspaceCollapseReturn = {
 /**
  * Manages workspace panel collapse/expand state.
  *
- * Default: collapsed. Auto-expand fires when WORKSPACE_HAS_FILES_EVENT arrives
- * and either:
- *   - the workspace is user-picked (folder chosen at creation), or
- *   - files appear mid-session in a temporary workspace (e.g. agent writes a
- *     file while the user is here).
+ * Default: collapsed. Kel only expands on a manual toggle; an empty workspace
+ * still auto-collapses.
  *
- * Manual toggle is persisted under `workspace-preference-${preferenceKey}` and
- * overrides auto-expand. The caller decides what `preferenceKey` is — single
+ * Manual toggle is persisted under `workspace-preference-${preferenceKey}`. The caller decides what `preferenceKey` is — single
  * chats use `conversation_id`, teams use `team_id`.
  *
  * Known limitation: leaving and re-entering a temporary workspace remounts the
@@ -57,7 +49,6 @@ export function useWorkspaceCollapse({
   isMobile,
   conversation_id,
   preferenceKey,
-  isTemporaryWorkspace,
 }: UseWorkspaceCollapseParams): UseWorkspaceCollapseReturn {
   // Workspace panel always starts collapsed; preference and hasFiles events
   // drive expand. See WORKSPACE_HAS_FILES_EVENT handler below.
@@ -136,28 +127,17 @@ export function useWorkspaceCollapse({
         if (shouldCollapse !== rightSiderCollapsed) {
           setRightSiderCollapsed(shouldCollapse);
         }
-      } else {
-        // No user preference: decide by workspace kind + when the files appeared.
-        // - User-picked workspace: expand on any hasFiles (initial seed is the
-        //   user's own files, worth showing).
-        // - Temporary workspace: ignore the initial seed (backend may inject
-        //   rules/skills the user never asked for) and only expand when files
-        //   show up mid-session.
-        const isUserPicked = !isTemporaryWorkspace;
-        const isMidSession = !detail.isInitial;
-        const allowAutoExpand = isUserPicked || isMidSession;
-        if (allowAutoExpand && detail.hasFiles && rightSiderCollapsed) {
-          setRightSiderCollapsed(false);
-        } else if (!detail.hasFiles && !rightSiderCollapsed) {
-          setRightSiderCollapsed(true);
-        }
+      } else if (!detail.hasFiles && !rightSiderCollapsed) {
+        // Kel: the panel opens only when the user toggles it (Figma "Chat —
+        // Workspace panel"); file activity never expands it on its own.
+        setRightSiderCollapsed(true);
       }
     };
     window.addEventListener(WORKSPACE_HAS_FILES_EVENT, handleHasFiles);
     return () => {
       window.removeEventListener(WORKSPACE_HAS_FILES_EVENT, handleHasFiles);
     };
-  }, [isMobile, workspaceEnabled, rightSiderCollapsed, isTemporaryWorkspace, preferenceKey]);
+  }, [isMobile, workspaceEnabled, rightSiderCollapsed, preferenceKey]);
 
   // Broadcast workspace state event
   useEffect(() => {

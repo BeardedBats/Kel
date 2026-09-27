@@ -1,3 +1,4 @@
+import { KelModelPill } from '@renderer/components/kel/KelModelControl';
 import AgentModeSelector from '@renderer/components/agent/AgentModeSelector';
 // Modified for Kel: remove upstream promotion and remote-service entry points.
 /**
@@ -587,7 +588,8 @@ const GuidPage: React.FC = () => {
   // Build the model selector node
   const modelSelectorNode =
     agentSelection.selectedAssistantId === 'kel' ? (
-      <span className='text-12px text-t-secondary'>{t('common.kel.automatic')}</span>
+      // Same picker as the chat composer; with no conversation it sets the default for new chats.
+      <KelModelPill />
     ) : (
       <GuidModelSelector
         isGeminiMode={isGeminiMode}
