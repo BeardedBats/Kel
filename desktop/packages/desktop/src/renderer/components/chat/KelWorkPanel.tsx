@@ -118,6 +118,24 @@ const jobStateText = (state: string): string => JOB_STATE_LABEL[state] ?? state.
 // One job, one story (WK-4): a job's status reads the same here as on Work, Activity and Home.
 const jobStatusText = (job: { state: string; verdict?: string; route_block?: string }): string => workWords(job).label;
 
+type EngineConversation = State['conversations'][number];
+
+/**
+ * ST-04: a chat opened but not used yet has a reserved engine id and no row in
+ * `state.conversations` until its first message. It belongs to the default project until then,
+ * and the drawer's chat picker still names it instead of showing a bare id.
+ */
+export const projectOfConversation = (conversations: EngineConversation[] | undefined, cid: string): string =>
+  conversations?.find((c) => c.id === cid)?.project_id ?? 'default';
+
+export const conversationOptions = (
+  conversations: EngineConversation[] | undefined,
+  cid: string
+): Array<{ value: string; label: string }> => {
+  const options = (conversations ?? []).map((c) => ({ value: c.id, label: c.title }));
+  return cid && !options.some((option) => option.value === cid) ? [{ value: cid, label: 'New chat' }, ...options] : options;
+};
+
 export default function KelWorkPanel() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -243,9 +261,8 @@ export default function KelWorkPanel() {
     setChecks(project.test_command ? JSON.stringify(project.test_command) : '');
   }, [projectId, project?.context, JSON.stringify(project?.test_command)]);
   useEffect(() => {
-    const conversation = state?.conversations.find((c) => c.id === cid);
-    if (conversation) setProjectId(conversation.project_id);
-  }, [cid, state?.conversations.length]);
+    if (state) setProjectId(projectOfConversation(state.conversations, cid));
+  }, [cid, state?.conversations?.length]);
   async function action(route: string, body: unknown) {
     setBusy(true);
     try {
@@ -325,7 +342,7 @@ export default function KelWorkPanel() {
       setError('Could not copy the path.');
     }
   }
-  const conversationName = (id: string) => state?.conversations.find((c) => c.id === id)?.title || '';
+  const conversationName = (id: string) => state?.conversations?.find((c) => c.id === id)?.title || '';
   const projectName = (id: string) => state?.projects.find((p) => p.id === id)?.name || '';
   return (
     <>
@@ -358,7 +375,7 @@ export default function KelWorkPanel() {
             <Select
               value={cid}
               onChange={setCid}
-              options={state?.conversations.map((c) => ({ value: c.id, label: c.title }))}
+              options={conversationOptions(state?.conversations, cid)}
             />
           </Form.Item>
         </Form>
