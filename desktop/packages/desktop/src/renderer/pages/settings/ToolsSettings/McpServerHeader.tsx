@@ -182,7 +182,8 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
           <FeedbackButton
             module='mcp-tools'
             label='Report issue'
-            feedbackExtra={{ mcpServerName: server.name, mcpServerStatus: visualStatus }}
+            reportTitle={`MCP server "${MCP_DISPLAY_NAMES[server.name] ?? server.name}" failed its check`}
+            feedbackExtra={{ mcpServerName: server.name, mcpServerStatus: statusText, transport: server.transport.type }}
           />
         )}
         {!isReadOnly && needsLogin && onOAuthLogin && (

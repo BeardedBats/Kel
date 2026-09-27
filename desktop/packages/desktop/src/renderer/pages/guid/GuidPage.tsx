@@ -24,7 +24,6 @@ import GuidInputCard from './components/GuidInputCard';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import KelResumptionBrief from './components/KelResumptionBrief';
 import GuidModelSelector from './components/GuidModelSelector';
-import FeedbackReportModal from '@/renderer/components/settings/SettingsModal/contents/FeedbackReportModal';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
 import { useGuidInput } from './hooks/useGuidInput';
 import { useGuidModelSelection } from './hooks/useGuidModelSelection';
@@ -66,7 +65,6 @@ const GuidPage: React.FC = () => {
   const { activeBorderColor, inactiveBorderColor, activeShadow } = useInputFocusRing();
 
   const localeKey = resolveLocaleKey(i18n.language);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // --- Skills state ---
   // Skill metadata comes from the database-backed catalog. Built-in auto-inject
@@ -718,8 +716,6 @@ const GuidPage: React.FC = () => {
 
 
         </div>
-
-        <FeedbackReportModal visible={showFeedbackModal} onCancel={() => setShowFeedbackModal(false)} />
       </div>
     </ConfigProvider>
   );
