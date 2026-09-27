@@ -193,7 +193,9 @@ export function getInstallationIntegrityModalActions(
     onRecoverCorruptedDatabase: options.onRecoverCorruptedDatabase ?? (() => Promise.resolve()),
     onReportDiagnostics: options.onReportDiagnostics ?? (() => Promise.resolve()),
     recoverText: config.showRecover ? dialogKindText(t, diagnosticsKind, 'confirmRebuild') : undefined,
-    reportText: config.showDiagnostics ? dialogKindText(t, diagnosticsKind, 'sendDiagnostics') : undefined,
+    // Kel has no crash-report service (no Sentry DSN), so a "Send diagnostics" button could only
+    // pretend to send. The engine is usually down here, so saving to Kibble isn't possible either.
+    reportText: undefined,
   };
 }
 
