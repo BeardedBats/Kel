@@ -4296,21 +4296,23 @@ html[data-theme='light'] body .kel-tools-menu .arco-dropdown-menu-item:not(.arco
 
 /* Conversation rows (273:8692): selected = tint only (no outline), status dot stays, the ⋮ trigger is a bare
    glyph and the title stops before it (FIX-0011). */
-.kel-v2-shell .conversation-item { border-color: transparent !important; }
-.kel-v2-shell .conversation-item:not([aria-current='page']):hover { background: var(--kel-shell-hover) !important; }
-.kel-v2-shell .conversation-item:is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,107,224,.22) !important; border-color: transparent !important; }
-.kel-v2-shell .conversation-item[aria-current='page'] .chat-history__item-name { color: #edf2fa !important; }
-.kel-v2-shell .conversation-item .sider-action-btn { width: 20px; height: 20px; border-radius: 6px; background: transparent !important; color: var(--kel-text-2) !important; }
-.kel-v2-shell .conversation-item .sider-action-btn:hover { background: rgba(191,216,255,.1) !important; color: var(--kel-text-1) !important; }
-.kel-v2-shell .conversation-item:is(:hover, :focus-within) > .flex-1 { margin-inline-end: 22px; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item) { border-color: transparent !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item):not([aria-current='page']):hover { background: var(--kel-shell-hover) !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item):is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,107,224,.22) !important; border-color: transparent !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item)[aria-current='page'] .chat-history__item-name { color: #edf2fa !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item) .sider-action-btn { width: 20px; height: 20px; border-radius: 6px; background: transparent !important; color: var(--kel-text-2) !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item) .sider-action-btn:hover { background: rgba(191,216,255,.1) !important; color: var(--kel-text-1) !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item):is(:hover, :focus-within) > .flex-1 { margin-inline-end: 22px; }
 /* Pinned rows keep their drag-to-reorder handle over the status dot, but it is invisible: the dot stays. */
-.kel-v2-shell .conversation-item [data-testid^='conversation-drag-handle'] { opacity: 0 !important; background: transparent !important; }
-.kel-v2-shell .conversation-item .kel-shell-history-dot { opacity: 1 !important; }
-html[data-theme='light'] body .kel-v2-shell .conversation-item:is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,111,159,.12) !important; }
-html[data-theme='light'] body .kel-v2-shell .conversation-item[aria-current='page'] .chat-history__item-name { color: var(--kel-text-1) !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item) [data-testid^='conversation-drag-handle'] { opacity: 0 !important; background: transparent !important; }
+.kel-v2-shell .conversation-item:not(.settings-sider__item) .kel-shell-history-dot { opacity: 1 !important; }
+html[data-theme='light'] body .kel-v2-shell .conversation-item:not(.settings-sider__item):is([aria-current='page'], .\!bg-fill-3) { background: rgba(47,111,159,.12) !important; }
+html[data-theme='light'] body .kel-v2-shell .conversation-item:not(.settings-sider__item)[aria-current='page'] .chat-history__item-name { color: var(--kel-text-1) !important; }
 
 /* Titlebar controls in the sidebar logo row (FIX-0012). */
 .layout-sider-header > .app-titlebar__menu--sider { display: flex; align-items: center; gap: 2px; margin-left: auto; -webkit-app-region: no-drag; }
+[data-testid='ramble-navigation'] .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; }
+[data-testid='ramble-navigation'] .app-titlebar__button svg { width: 16px; height: 16px; }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; color: var(--kel-text-2, #c4d4e8); }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button:hover:not(:disabled) { background: var(--kel-shell-hover, rgba(191,216,255,.06)); color: var(--kel-text-1, #edf2fa); }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button svg { width: 16px; height: 16px; }
@@ -4413,3 +4415,69 @@ body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-footer :is(.arco-btn-seco
   html[data-theme='light'] body .kel-v2-shell .kel-shell-activity__item .kel-attention__text strong { color: var(--kel-text-1); }
   html[data-theme='light'] body .kel-v2-shell .kel-shell-activity__item .kel-shell-activity__mobile-detail { color: var(--kel-text-2) !important; }
 }
+
+/* Page header (Figma Header 185:2766): Workspace switcher at y22, 6px gap, title row at y46 (VS-25). */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-in-chat-frame__header > .kel-shell-workspace-link { display: flex; width: max-content; }
+  .kel-v2-shell .kel-in-chat-frame__header h1 { margin-top: 6px; }
+}
+/* Card navigation icons are 14px in a 16px slot (VS-26). */
+.kel-v2-shell .kel-in-chat-frame__nav-row > img { box-sizing: content-box; width: 14px; height: 14px; padding: 1px; flex: none; }
+
+/* Workspace switcher menu (VS-21): Medium rows; text-only rows align with the icon rows' labels. */
+.kel-workspace-menu .kel-desktop-picker__row { font-weight: 500; }
+.kel-workspace-menu .kel-desktop-picker__row > img { width: 14px; height: 14px; }
+.kel-workspace-menu .kel-workspace-menu__quiet > span:first-child { padding-inline-start: 24px; }
+.kel-workspace-menu__label { margin: 0 !important; padding: 8px 10px 4px; color: #9fc3ff !important; font: 500 12px/16px var(--kel-shell-heading) !important; }
+html[data-theme='light'] body .kel-desktop-picker.kel-workspace-menu { color: var(--kel-text-1); }
+html[data-theme='light'] body .kel-workspace-menu :is(.kel-desktop-picker__row, .kel-workspace-menu__quiet) { color: var(--kel-text-1); }
+html[data-theme='light'] body .kel-workspace-menu .kel-workspace-menu__label { color: var(--kel-accent) !important; }
+html[data-theme='light'] body .kel-workspace-menu .kel-desktop-picker__row > img { filter: brightness(.4); }
+
+/* Ramble header actions (194:1552/1557/1562, VS-17): API Key and Upload Audio are bordered secondary buttons
+   with 14px icons, 32px tall, Instrument Medium 13; the sidebar search carries its 14px search glyph. */
+@media (min-width: 768px) {
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) :is([data-testid='transcription-settings'], [data-testid='upload-button']) {
+    display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; width: auto !important; height: 32px !important; min-height: 32px; padding: 0 11px !important;
+    border: 1px solid rgba(140,150,167,.5) !important; border-radius: 8px !important;
+    background: linear-gradient(180deg, rgba(71,122,233,.06), rgba(121,164,255,0)), rgba(15,45,100,.22) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 4px 12px -2px rgba(0,0,0,.25) !important; color: #e4dccf !important; font: 500 13px/20px var(--kel-shell-heading) !important;
+  }
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) :is([data-testid='transcription-settings'], [data-testid='upload-button']):not(:disabled):hover { border-color: rgba(183,198,220,.6) !important; background: linear-gradient(rgba(71,122,233,.16),rgba(71,122,233,.16)), rgba(15,45,100,.4) !important; }
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) [data-testid='transcription-settings']::before {
+    content: ''; flex: none; width: 14px; height: 14px; background: currentColor;
+    -webkit-mask: url('../assets/figma/refresh/ramble-key.svg') center / 14px 14px no-repeat; mask: url('../assets/figma/refresh/ramble-key.svg') center / 14px 14px no-repeat;
+  }
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) [data-testid='upload-button'] img { width: 14px; height: 14px; }
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) [data-testid='record-button'] { height: 32px !important; min-height: 32px; width: auto !important; padding: 0 12px 0 11px !important; }
+  .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) .kel-shell-ramble-search {
+    height: 32px; padding: 0 12px 0 33px !important;
+    background: rgba(47,107,224,.1) url('../assets/figma/palette/search.svg') no-repeat 11px center / 14px 14px !important;
+  }
+  html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) :is([data-testid='transcription-settings'], [data-testid='upload-button']) { background: var(--kel-surface-1) !important; border-color: var(--kel-border-strong) !important; color: var(--kel-text-1) !important; box-shadow: none !important; }
+  html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble:not(.kel-shell-ramble--embedded) .kel-shell-ramble-search { background-color: var(--kel-surface-1) !important; }
+}
+.kel-v2-shell .kel-connection-form__actions { justify-content: flex-end; gap: 10px; }
+/* Narrow sidebars (800px windows): keep all four controls reachable by dropping the "Kel" wordmark first. */
+@media (min-width: 768px) {
+  .kel-v2-shell .layout-sider-header:has(> .app-titlebar__menu--sider) { container-type: inline-size; container-name: kel-sider-head; }
+}
+@container kel-sider-head (max-width: 230px) {
+  .layout-sider-header > .collapsed-hidden, .layout-sider-header > span:has(> .collapsed-hidden), .layout-sider-header > div:has(> .collapsed-hidden) { display: none !important; }
+  .layout-sider-header > .app-titlebar__menu--sider { gap: 0; }
+  .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button { width: 26px; min-width: 26px; }
+}
+/* Recipes filters at narrow widths (VS-24): the tabs wrap under the search instead of clipping. */
+.kel-v2-shell #project-recipes .kel-recipe-desktop-controls { flex-wrap: wrap; row-gap: 8px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-search { flex: 0 1 240px; min-width: 180px; }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-tabs { max-width: none; overflow: visible; flex-wrap: nowrap; }
+
+/* Light theme (VS-10): Figma has only dark foundations, so light keeps the geometry and swaps in semantic,
+   AA-contrast colours — the white send glyph, Needs-you tones and Ramble rows. */
+html[data-theme='light'] body .kel-v2-shell .send-button-custom img { filter: brightness(0) saturate(100%); opacity: .78; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-attention-line { color: var(--kel-status-attention-text); }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-attention-line[data-tone='success'] { color: var(--kel-status-positive-text); }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-attention-line[data-tone='unread'] { color: var(--kel-accent); }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble :is([data-testid='transcript-row'], [data-testid='recent-transcript'], [data-testid='folder-transcript']) { color: var(--kel-text-1) !important; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble :is([data-testid='transcript-row'], [data-testid='recent-transcript'], [data-testid='folder-transcript']) * { color: inherit !important; }
+html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble .kel-shell-ramble-row-icon { filter: brightness(.4); }
