@@ -408,6 +408,17 @@ class InternalTests(unittest.TestCase):
             'content':[{'type':'tool_use','name':'submit_result','id':'x','input':{'text':'done'}}]}).execute('test')
         self.assertEqual(r['outcome'],'FAILED')
 
+    def test_cut_off_reply_names_the_output_limit(self):
+        seen=[]
+        def transport(body,timeout):
+            seen.append(body['max_tokens'])
+            return {'stop_reason':'max_tokens','usage':{'output_tokens':body['max_tokens']},
+                    'content':[{'type':'tool_use','name':'submit_result','id':'x','input':{}}]}
+        r=InternalAdapter(transport=transport).execute('Make me an HTML file')
+        self.assertEqual(r['outcome'],'FAILED')
+        self.assertIn('4096-token output limit',r['error'])
+        self.assertEqual(seen,[4096])
+
     def test_context_is_not_silently_truncated(self):
         r=InternalAdapter().execute('x'*40001)
         self.assertEqual(r['outcome'],'FAILED')
