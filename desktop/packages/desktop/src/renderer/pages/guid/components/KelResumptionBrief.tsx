@@ -8,7 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import statusCheck from '@renderer/assets/figma/status-check.svg';
-import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
+import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelSchedules, kelState } from '@renderer/components/kel/kelApi';
 import { buildResumptionBrief, type ResumptionBrief } from '@renderer/components/kel/resumptionBrief';
 import { resolveAttentionRoute } from '@renderer/components/kel/needsAttention';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
@@ -21,11 +21,13 @@ const KelResumptionBrief: React.FC = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const [state, boundary, providers] = await Promise.all([
+        const [state, boundary, providers, schedules] = await Promise.all([
           kelState(KEL_ALL_CONVERSATIONS),
           kelAutonomy.requests(),
           // A failed read never invents lines; setup needs simply stay out of this brief.
           kelProviders.list().catch((): null => null),
+          // D-57: an engine without schedules (or a failed read) simply adds nothing.
+          kelSchedules.list().catch((): null => null),
         ]);
         if (cancelled) return;
         setBrief(
@@ -39,6 +41,7 @@ const KelResumptionBrief: React.FC = () => {
               status: entry.status,
               note: entry.note,
             })),
+            schedules: schedules ?? [],
             restore: state.restore ?? null,
           })
         );

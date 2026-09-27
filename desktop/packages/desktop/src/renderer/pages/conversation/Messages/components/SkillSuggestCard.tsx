@@ -4,12 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * A skill suggestion the old scheduler left in a chat. D-57 retired that scheduler, so saving a
+ * skill from here is gone; the card stays readable (name, description, preview) and can be
+ * dismissed. `cron_job_id` is kept for the artifact's shape only.
+ */
 import { ipcBridge } from '@/common';
 import { iconColors } from '@/renderer/styles/colors';
 import { useUpdateConversationArtifactStatus } from '@renderer/pages/conversation/Messages/artifacts';
 import { Button, Message } from '@arco-design/web-react';
 import { Down, Lightning, Up } from '@icon-park/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MarkdownView from '@renderer/components/Markdown';
 import type { SkillSuggestion } from '@renderer/utils/chat/skillSuggestParser';
@@ -31,37 +36,11 @@ const SkillSuggestCard: React.FC<SkillSuggestCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const updateArtifactStatus = useUpdateConversationArtifactStatus();
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  void cron_job_id;
 
-  // Check if skill already exists on mount (persists across navigation)
-  useEffect(() => {
-    ipcBridge.cron.hasSkill
-      .invoke({ job_id: cron_job_id })
-      .then((exists) => {
-        if (exists) setSaved(true);
-      })
-      .catch(() => {});
-  }, [cron_job_id]);
-
-  if (dismissed || saved) return null;
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await ipcBridge.cron.saveSkill.invoke({ job_id: cron_job_id, content: suggestion.content });
-      updateArtifactStatus(artifact_id, 'saved');
-      setSaved(true);
-      Message.success(t('cron.skill.saveSuccess'));
-    } catch (err) {
-      Message.error(t('cron.skill.saveFailed'));
-      console.error('[SkillSuggestCard] Failed to save skill:', err);
-    } finally {
-      setSaving(false);
-    }
-  };
+  if (dismissed) return null;
 
   return (
     <div
@@ -71,7 +50,7 @@ const SkillSuggestCard: React.FC<SkillSuggestCardProps> = ({
     >
       <div className='flex items-center gap-6px mb-8px'>
         <Lightning theme='filled' size={16} fill={iconColors.warning} />
-        <span className='font-500 text-14px'>{t('cron.skill.turnIntoSkill')}</span>
+        <span className='font-500 text-14px'>Skill suggested by an earlier scheduled task</span>
       </div>
       <div className='text-t-primary text-13px mb-4px'>{suggestion.name}</div>
       <div className='text-t-secondary text-12px mb-8px'>{suggestion.description}</div>
@@ -91,9 +70,6 @@ const SkillSuggestCard: React.FC<SkillSuggestCardProps> = ({
       )}
 
       <div className='flex gap-8px'>
-        <Button type='primary' size='small' loading={saving} onClick={handleSave}>
-          {t('cron.skill.save')}
-        </Button>
         <Button
           size='small'
           onClick={async () => {
@@ -106,7 +82,7 @@ const SkillSuggestCard: React.FC<SkillSuggestCardProps> = ({
               updateArtifactStatus(artifact_id, 'dismissed');
               setDismissed(true);
             } catch (error) {
-              Message.error(t('cron.skill.saveFailed'));
+              Message.error('Kel could not dismiss this just now.');
               console.error('[SkillSuggestCard] Failed to dismiss artifact:', error);
             }
           }}

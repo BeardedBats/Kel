@@ -151,6 +151,16 @@ declare global {
       };
       /** Reveal a store-relative path in the OS file manager (best effort on the remote surface). */
       revealArtifact?: (relpath: string) => Promise<unknown>;
+      /**
+       * D-57: the app chat for an engine conversation (a scheduled run's), made on first use.
+       * Null when the engine no longer has that conversation. Absent on the remote surface.
+       */
+      openEngineConversation?: (cid: string) => Promise<string | null>;
+      /**
+       * D-57: ask the main process to bring the chat list in step with the schedules now; `hidden`
+       * names the engine chats a deleted schedule's runs opened, whose app chats leave the list.
+       */
+      schedulesChanged?: (change?: { hidden?: string[] }) => Promise<unknown>;
     };
   }
 }
@@ -721,6 +731,268 @@ export const kelRecipeDuplicate = (recipeId: string, scope: string | KelScope = 
     recipe_id: recipeId,
     ...scopeBody(scope),
   });
+
+// ---------------------------------------------------------------------------------------------
+// D-57 Scheduled tasks: a schedule is a trigger the engine keeps. Each firing becomes an ordinary
+// submission → hand-off → job, so its runs show on Work, Activity and Needs you like any other
+// work. The engine owns the list, the cadence maths ("Every weekday at 9:00", the next runs) and
+// each schedule's run history; this surface only renders and edits.
+// ---------------------------------------------------------------------------------------------
+export type KelScheduleCadence =
+  | { kind: 'manual' }
+  | { kind: 'cron'; expr: string }
+  | { kind: 'interval'; minutes: number }
+  /** `at` is epoch seconds, like every engine time. */
+  | { kind: 'once'; at: number };
+
+export type KelScheduleTarget =
+  | { kind: 'instruction'; text: string }
+  | { kind: 'recipe'; recipe_id: string; inputs?: Record<string, unknown>; recipe_name?: string | null };
+
+/** Same shape as the model control's choice; null or no provider means Automatic. */
+export interface KelModelChoice {
+  provider: string | null;
+  model: string | null;
+}
+
+export type KelScheduleStartMode = 'new_conversation' | 'existing';
+
+export interface KelScheduleRun {
+  at?: number | null;
+  slot?: number | null;
+  late_by?: number | null;
+  /** The engine conversation the run posted in. */
+  conversation?: string | null;
+  job_id?: string | null;
+  submission_id?: string | null;
+  /**
+   * running | needs_you | success | needs_look | stopped | not_started | settled | skipped | queued |
+   * coalesced | missed | imported — for colour only; the words are in `label`.
+   */
+  status?: string | null;
+  /** The engine's plain label: "Success", "Failed", "Finished — needs a look", "Missed 3 runs…". */
+  label?: string | null;
+  /** Why, in plain words, when there is a reason worth saying. */
+  cause?: string | null;
+}
+
+export interface KelSchedule {
+  id: string;
+  name: string;
+  project_id: string;
+  project_name?: string | null;
+  target: KelScheduleTarget | null;
+  cadence: KelScheduleCadence | null;
+  timezone?: string | null;
+  start_mode: KelScheduleStartMode;
+  conversation_id?: string | null;
+  model?: KelModelChoice | null;
+  /** The engine's plain name for the model ("Automatic" when none). */
+  model_label?: string | null;
+  conversation_title?: string | null;
+  timezone_label?: string | null;
+  skip_if_running: boolean;
+  enabled: boolean;
+  /** active | paused | needs_attention | done | manual (the engine's own reading). */
+  status?: string | null;
+  /** A run of it is going right now. */
+  running?: boolean;
+  next_due_at?: number | null;
+  last_slot?: number | null;
+  /** Set (and the schedule paused) when its recipe, project or conversation is gone. */
+  problem?: string | null;
+  /** The migrated donor task id, for links written before the move (`/scheduled?origin=…`). */
+  origin?: string | null;
+  /** The engine's own sentence for the cadence. */
+  description?: string | null;
+  created?: number | null;
+  updated?: number | null;
+  deleted?: number | null;
+  last_run?: KelScheduleRun | null;
+}
+
+export interface KelScheduleDraft {
+  name: string;
+  project_id: string;
+  target: KelScheduleTarget;
+  cadence: KelScheduleCadence;
+  /** An IANA zone, or null to follow this computer's zone. */
+  timezone: string | null;
+  start_mode: KelScheduleStartMode;
+  conversation_id?: string | null;
+  model: KelModelChoice | null;
+  skip_if_running: boolean;
+}
+
+export interface KelSchedulePreview {
+  /** False when Kel cannot use this timing; `message` says why. The engine never refuses a preview. */
+  valid?: boolean;
+  message?: string | null;
+  description?: string;
+  timezone_label?: string | null;
+  /** The next few due times, epoch seconds. */
+  next?: number[];
+}
+
+const parseMaybeJson = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const truthy = (value: unknown, fallback: boolean): boolean =>
+  value === undefined || value === null ? fallback : value === true || value === 1 || value === '1' || value === 'true';
+
+const numberOrNull = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+
+const normalizeCadence = (value: unknown): KelScheduleCadence | null => {
+  const raw = parseMaybeJson(value) as Record<string, unknown> | null;
+  if (!raw || typeof raw !== 'object') return null;
+  switch (raw.kind) {
+    case 'manual':
+      return { kind: 'manual' };
+    case 'cron':
+      return typeof raw.expr === 'string' ? { kind: 'cron', expr: raw.expr } : null;
+    case 'interval':
+      return typeof raw.minutes === 'number' ? { kind: 'interval', minutes: raw.minutes } : null;
+    case 'once': {
+      const at = typeof raw.at === 'number' ? raw.at : typeof raw.at === 'string' ? Date.parse(raw.at) / 1000 : NaN;
+      return Number.isFinite(at) ? { kind: 'once', at } : null;
+    }
+    default:
+      return null;
+  }
+};
+
+const normalizeTarget = (value: unknown): KelScheduleTarget | null => {
+  const raw = parseMaybeJson(value) as Record<string, unknown> | null;
+  if (!raw || typeof raw !== 'object') return null;
+  if (raw.kind === 'instruction' && typeof raw.text === 'string') return { kind: 'instruction', text: raw.text };
+  if (raw.kind === 'recipe' && typeof raw.recipe_id === 'string') {
+    const inputs = parseMaybeJson(raw.inputs);
+    return {
+      kind: 'recipe',
+      recipe_id: raw.recipe_id,
+      recipe_name: typeof raw.recipe_name === 'string' ? raw.recipe_name : null,
+      ...(inputs && typeof inputs === 'object' ? { inputs: inputs as Record<string, unknown> } : {}),
+    };
+  }
+  return null;
+};
+
+const normalizeModel = (value: unknown): KelModelChoice | null => {
+  const raw = parseMaybeJson(value) as Record<string, unknown> | null;
+  if (!raw || typeof raw !== 'object' || typeof raw.provider !== 'string' || !raw.provider) return null;
+  return { provider: raw.provider, model: typeof raw.model === 'string' ? raw.model : null };
+};
+
+const normalizeRun = (value: unknown): KelScheduleRun | null => {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const text = (key: string) => (typeof raw[key] === 'string' && raw[key] ? (raw[key] as string) : null);
+  return {
+    at: numberOrNull(raw.at),
+    slot: numberOrNull(raw.slot),
+    late_by: numberOrNull(raw.late_by),
+    conversation: text('conversation') ?? text('conversation_id'),
+    job_id: text('job_id'),
+    submission_id: text('submission_id'),
+    status: text('status'),
+    label: text('label'),
+    cause: text('cause'),
+  };
+};
+
+/**
+ * One schedule as this surface can use it, or null when the payload is not one (JR-47: a row the
+ * engine sends in another shape degrades to "unavailable", it never breaks the page). The engine
+ * keeps target/cadence/model as JSON text; either form is accepted.
+ */
+export const normalizeSchedule = (value: unknown): KelSchedule | null => {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  if (typeof raw.id !== 'string' || !raw.id) return null;
+  const project = raw.project as { name?: unknown } | undefined;
+  return {
+    id: raw.id,
+    name: typeof raw.name === 'string' && raw.name.trim() ? raw.name : 'Untitled task',
+    project_id: typeof raw.project_id === 'string' ? raw.project_id : 'default',
+    project_name:
+      typeof raw.project_name === 'string' ? raw.project_name : typeof project?.name === 'string' ? project.name : null,
+    target: normalizeTarget(raw.target),
+    cadence: normalizeCadence(raw.cadence),
+    timezone: typeof raw.timezone === 'string' ? raw.timezone : null,
+    start_mode: raw.start_mode === 'existing' ? 'existing' : 'new_conversation',
+    conversation_id: typeof raw.conversation_id === 'string' && raw.conversation_id ? raw.conversation_id : null,
+    model: normalizeModel(raw.model),
+    model_label: typeof raw.model_label === 'string' && raw.model_label ? raw.model_label : null,
+    conversation_title: typeof raw.conversation_title === 'string' && raw.conversation_title ? raw.conversation_title : null,
+    timezone_label: typeof raw.timezone_label === 'string' && raw.timezone_label ? raw.timezone_label : null,
+    skip_if_running: truthy(raw.skip_if_running, true),
+    enabled: truthy(raw.enabled, true),
+    status: typeof raw.status === 'string' && raw.status ? raw.status : null,
+    running: truthy(raw.running, false),
+    next_due_at: numberOrNull(raw.next_due_at),
+    last_slot: numberOrNull(raw.last_slot),
+    problem: typeof raw.problem === 'string' && raw.problem.trim() ? raw.problem : null,
+    origin: typeof raw.origin === 'string' && raw.origin ? raw.origin : null,
+    description: typeof raw.description === 'string' && raw.description.trim() ? raw.description : null,
+    created: numberOrNull(raw.created),
+    updated: numberOrNull(raw.updated),
+    deleted: numberOrNull(raw.deleted),
+    last_run: normalizeRun(raw.last_run),
+  };
+};
+
+const listOf = (payload: unknown, keys: string[]): unknown[] => {
+  if (Array.isArray(payload)) return payload;
+  const body = (payload ?? {}) as Record<string, unknown>;
+  for (const key of keys) if (Array.isArray(body[key])) return body[key] as unknown[];
+  return [];
+};
+
+/** Live (not deleted) schedules from a list answer; rows in another shape are dropped. */
+export const normalizeScheduleList = (payload: unknown): KelSchedule[] =>
+  listOf(payload, ['schedules', 'items'])
+    .map(normalizeSchedule)
+    .filter((item): item is KelSchedule => item !== null && !item.deleted);
+
+export const normalizeScheduleHistory = (payload: unknown): KelScheduleRun[] =>
+  listOf(payload, ['rows', 'history', 'runs', 'items'])
+    .map(normalizeRun)
+    .filter((item): item is KelScheduleRun => item !== null);
+
+const scheduleAction = <T,>(action: string, body: Record<string, unknown> = {}) =>
+  call<T>('/api/schedules', { action, ...body });
+
+const oneSchedule = (payload: unknown): KelSchedule | null =>
+  normalizeSchedule((payload as { schedule?: unknown } | null)?.schedule ?? payload);
+
+export const kelSchedules = {
+  list: () => scheduleAction<unknown>('list').then(normalizeScheduleList),
+  /** By id, or by the donor task id a pre-move link carries. Null when there is none. */
+  get: (ref: { id: string } | { origin: string }) => scheduleAction<unknown>('get', ref).then(oneSchedule),
+  create: (draft: KelScheduleDraft) => scheduleAction<unknown>('create', { ...draft }).then(oneSchedule),
+  /** Only the keys sent change. */
+  update: (id: string, changes: Partial<KelScheduleDraft>) =>
+    scheduleAction<unknown>('update', { id, ...changes }).then(oneSchedule),
+  pause: (id: string) => scheduleAction<unknown>('pause', { id }).then(oneSchedule),
+  resume: (id: string) => scheduleAction<unknown>('resume', { id }).then(oneSchedule),
+  /**
+   * `conversations: 'delete'` hides the chats its finished runs opened (`hidden`, engine ids) while
+   * runs still going are kept (`kept_open`).
+   */
+  remove: (id: string, conversations: 'keep' | 'delete') =>
+    scheduleAction<{ ok?: boolean; id?: string; hidden?: string[]; kept_open?: string[] }>('delete', { id, conversations }),
+  runNow: (id: string) => scheduleAction<{ submission?: string; conversation?: string } & Record<string, unknown>>('run_now', { id }),
+  history: (id: string) => scheduleAction<unknown>('history', { id }).then(normalizeScheduleHistory),
+  preview: (cadence: KelScheduleCadence, timezone?: string | null) =>
+    scheduleAction<KelSchedulePreview>('preview', { cadence, ...(timezone ? { timezone } : {}) }),
+  migrationStatus: () => scheduleAction<Record<string, unknown>>('migration_status'),
+};
 
 // ---------------------------------------------------------------------------------------------
 // D-54 Projects: the engine owns the project list and the one active project (the same on every

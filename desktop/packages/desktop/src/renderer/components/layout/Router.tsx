@@ -163,7 +163,8 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/settings/ext/:tabId' element={<Navigate to='/settings/system' replace />} />
           <Route path='/settings' element={<MobileRootRoute desktopPath='/settings/appearance' />} />
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
-          <Route path='/scheduled/:job_id' element={withRouteFallback(TaskDetailPage)} />
+          {/* D-57: `/scheduled?origin=<old task id>` (links from before the move) resolves on the list page. */}
+          <Route path='/scheduled/:id' element={withRouteFallback(TaskDetailPage)} />
           <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
           <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
           <Route path='/transcription/library' element={withRouteFallback(KelTranscription)} />

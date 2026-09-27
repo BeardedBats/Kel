@@ -90,7 +90,6 @@ import './services/i18n';
 import { registerPwa } from './services/registerPwa';
 
 import { ipcBridge } from '@/common';
-import { repairAllCronJobTimeZonesOnce } from '@renderer/pages/cron/repairCronJobTimeZone';
 import { bootstrapRendererConfig } from '@renderer/services/bootstrapRenderer';
 
 // Components and utilities
@@ -280,11 +279,6 @@ const Main = () => {
   useEffect(() => {
     if (!ready) return;
     void bootstrapRendererConfig().finally(() => setConfigReady(true));
-  }, [ready]);
-
-  useEffect(() => {
-    if (!ready) return;
-    void repairAllCronJobTimeZonesOnce();
   }, [ready]);
 
   if (!ready || !configReady) {

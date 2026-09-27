@@ -3218,8 +3218,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-connections-page > .kel-connection-form > .kel-row:has(.kel-btn) { grid-column: 1; }
 }
 
-/* Scheduled-task details use the current desktop Projects frame. Keep the existing phone view. */
-.kel-v2-shell .kel-scheduled-detail-legacy { display: none; }
+/* Scheduled-task details use the current desktop Projects frame at every width (D-57 dropped the old phone copy). */
 .kel-v2-shell .kel-scheduled-detail-desktop { gap: 14px; }
 .kel-v2-shell .kel-task-detail-back { align-self: flex-start; height: 18px; padding: 0; border: 0; background: transparent; color: #a6c3f3; font: 500 12px/18px var(--kel-shell-heading); cursor: pointer; }
 .kel-v2-shell .kel-task-detail-heading { display: flex; align-items: center; gap: 8px; min-height: 32px; }
@@ -3272,9 +3271,24 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-task-detail-run-status { width: 70px; }
 }
 @media (max-width: 560px) {
-  .kel-v2-shell .kel-scheduled-detail-desktop { display: none; }
-  .kel-v2-shell .kel-scheduled-detail-legacy { display: block; }
+  .kel-v2-shell .kel-task-detail-heading { flex-wrap: wrap; }
+  .kel-v2-shell .kel-task-detail-heading h1 { flex: 1 1 100%; white-space: normal; }
+  .kel-v2-shell .kel-task-detail-history-row { flex-wrap: wrap; padding-block: 8px; }
+  .kel-v2-shell .kel-task-detail-run-status { width: auto; }
 }
+/* D-57: a paused task's problem, the dialog's live timing preview, and the list footer. */
+.kel-v2-shell .kel-task-detail-problem { padding: 10px 14px; border: 1px solid rgba(205,120,116,.4); border-radius: 10px; background: rgba(205,120,116,.08); color: #f1c6c2; font: 400 13px/20px var(--kel-shell-body); }
+.kel-v2-shell .kel-task-detail-problem strong { color: #f1a5a0; font-weight: 600; }
+.kel-shell-task-form > .kel-shell-task-preview { order: 7; grid-column: 1 / -1; margin: 0; color: #9fb4d6; font: 400 12px/16px var(--kel-shell-body); }
+.kel-shell-task-form > .kel-shell-task-preview[data-tone='error'] { color: #f1a5a0; }
+.kel-shell-task-modal .kel-shell-task-model .arco-select-view { box-sizing: border-box; height: 34px; }
+.kel-v2-shell .kel-shell-scheduled-footer { margin: 10px 2px 0; }
+.kel-task-delete-modal .arco-checkbox { margin-bottom: 14px; color: #c4d4e8; }
+html[data-theme='light'] body .kel-task-detail-problem { color: var(--kel-text-1); }
+html[data-theme='light'] body .kel-task-detail-problem strong,
+html[data-theme='light'] body .kel-shell-task-form > .kel-shell-task-preview[data-tone='error'] { color: var(--kel-failed-fg); }
+html[data-theme='light'] body .kel-shell-task-form > .kel-shell-task-preview,
+html[data-theme='light'] body .kel-task-delete-modal .arco-checkbox { color: var(--kel-text-2); }
 @media (min-width: 768px) and (max-width: 1100px) {
   .kel-v2-shell .kel-work-table-scroll,
   .kel-v2-shell .kel-permission-table-scroll,

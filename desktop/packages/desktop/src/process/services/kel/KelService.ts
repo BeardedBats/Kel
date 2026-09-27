@@ -1,5 +1,6 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
 import { rendererKelRequestRefusal } from './kelRequestGuard';
+import { migrateDonorSchedules } from './scheduleMigration';
 import { applyWorkspaceRepairs, listConversationsForRepair, planWorkspaceRepairs } from './repairWorkspacePaths';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
@@ -411,22 +412,7 @@ export async function initializeKel(port: number): Promise<void> {
   } catch {
     counts = null;
   }
-  for (const conversation of saved.conversations) {
-    if (mapped.has(conversation.id)) continue;
-    if (knownEmpty(counts, conversation.id)) continue;
-    const existing = await kelRequest('/api/state?conversation=' + conversation.id);
-    if (!existing.messages.length && !existing.jobs.length) continue;
-    const project = saved.projects.find((item: { id: string }) => item.id === conversation.project_id);
-    const workspace = project?.root || path.join(root, 'aion-workspaces', conversation.id);
-    fs.mkdirSync(workspace, { recursive: true });
-    const donor = await core('/api/conversations', {
-      type: 'acp',
-      name: conversation.title,
-      assistant: { id: 'kel' },
-      extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: conversation.id, kel_project_id: conversation.project_id },
-    });
-    mapping[donor.id] = conversation.id;
-    history[donor.id] = existing.messages.map((message: KelMessage) => historyRow(donor.id, message));
+  const persistMapping = () => {
     for (const [file, value] of [
       [mapPath, mapping],
       [historyPath, history],
@@ -434,6 +420,61 @@ export async function initializeKel(port: number): Promise<void> {
       fs.writeFileSync(file + '.tmp', JSON.stringify(value));
       fs.renameSync(file + '.tmp', file);
     }
+  };
+  const mergeLiveMap = () => {
+    if (fs.existsSync(liveMapDir))
+      for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json')))
+        Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
+  };
+  const donorFor = (cid: string): string | undefined =>
+    Object.keys(mapping).find((donorId) => mapping[donorId] === cid);
+  type EngineConversationState = {
+    messages?: KelMessage[];
+    jobs?: unknown[];
+    conversations?: Array<{ id: string; title?: string; project_id?: string; hidden?: unknown }>;
+    projects?: Array<{ id: string; root?: string | null }>;
+  };
+  const adopting = new Map<string, Promise<string | null>>();
+  /**
+   * The app chat for one engine conversation, made (and remembered) on first use: the mirror row
+   * the sidebar and `/conversation/:id` need. Used at start-up for chats Kel already has, and for
+   * a scheduled run's new conversation (D-57) while Kel is open. A hidden conversation (its
+   * schedule was deleted, policy 2) is never brought back.
+   */
+  function adoptEngineConversation(cid: string, known?: EngineConversationState): Promise<string | null> {
+    const already = donorFor(cid);
+    if (already) return Promise.resolve(already);
+    const inFlight = adopting.get(cid);
+    if (inFlight) return inFlight;
+    const work = (async () => {
+      const existing: EngineConversationState =
+        known ?? (await kelRequest('/api/state?conversation=' + encodeURIComponent(cid)));
+      const conversation = (existing.conversations || []).find((item) => item.id === cid);
+      if (!conversation || conversation.hidden) return null;
+      const project = (existing.projects || []).find((item) => item.id === conversation.project_id);
+      const workspace = project?.root || path.join(root, 'aion-workspaces', cid);
+      fs.mkdirSync(workspace, { recursive: true });
+      const donor = await core('/api/conversations', {
+        type: 'acp',
+        name: conversation.title,
+        assistant: { id: 'kel' },
+        extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: cid, kel_project_id: conversation.project_id },
+      });
+      mapping[donor.id] = cid;
+      history[donor.id] = (existing.messages || []).map((message: KelMessage) => historyRow(donor.id, message));
+      persistMapping();
+      return donor.id as string;
+    })().finally(() => adopting.delete(cid));
+    adopting.set(cid, work);
+    return work;
+  }
+  for (const conversation of saved.conversations) {
+    if (mapped.has(conversation.id)) continue;
+    if (conversation.hidden) continue;
+    if (knownEmpty(counts, conversation.id)) continue;
+    const existing = await kelRequest('/api/state?conversation=' + conversation.id);
+    if (!existing.messages.length && !existing.jobs.length) continue;
+    await adoptEngineConversation(conversation.id, existing);
   }
   // Reconcile before any renderer/ACP session opens, so streaming messages
   // cannot race this snapshot. Original Kel and donor databases stay untouched.
@@ -583,6 +624,82 @@ export async function initializeKel(port: number): Promise<void> {
     }
     return history[id] || [];
   });
+  // D-57: open an engine conversation (a scheduled run's) as an app chat, making it on first use.
+  ipcMain.removeHandler('kel:open-engine-conversation');
+  ipcMain.handle('kel:open-engine-conversation', async (event, cid: string) => {
+    assertTrustedSender(event);
+    if (typeof cid !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(cid)) throw new Error('That conversation is not one Kel knows');
+    mergeLiveMap();
+    return adoptEngineConversation(cid);
+  });
+  // D-57: every 20 s (and right after a schedule changes) bring the chat list in step with the
+  // schedules. A scheduled run's new conversation gets its app chat: only engine conversations a
+  // schedule created (their row carries `schedule_id`) are adopted, so a chat that is still being
+  // opened elsewhere is never doubled. When a schedule is deleted, the engine hides its finished
+  // runs' chats (policy 2) and names them; their app chats leave the list here.
+  let sweeping = false;
+  const hiddenToRemove = new Set<string>();
+  const scheduleSweep = async (): Promise<void> => {
+    if (sweeping || quitRequested) return;
+    sweeping = true;
+    try {
+      mergeLiveMap();
+      let changed = false;
+      for (const cid of [...hiddenToRemove]) {
+        const donorId = donorFor(cid);
+        if (donorId) {
+          try {
+            await core('/api/conversations/' + encodeURIComponent(donorId), undefined, 'DELETE');
+          } catch (error) {
+            if (!String(error).includes(': 404 ')) continue; // Retried on the next sweep.
+          }
+          delete mapping[donorId];
+          delete history[donorId];
+          changed = true;
+        }
+        hiddenToRemove.delete(cid);
+      }
+      const listed = (await kelRequest('/api/conversations')) as {
+        conversations?: Array<{ id?: unknown; schedule_id?: unknown; message_count?: unknown; job_count?: unknown }>;
+      };
+      for (const row of listed?.conversations || []) {
+        if (typeof row?.id !== 'string' || !row.schedule_id || donorFor(row.id)) continue;
+        if (row.message_count === 0 && row.job_count === 0) continue;
+        if (await adoptEngineConversation(row.id).catch((): null => null)) changed = true;
+      }
+      if (changed) persistMapping();
+    } catch {
+      // A busy engine is simply asked again on the next sweep.
+    } finally {
+      sweeping = false;
+    }
+  };
+  ipcMain.removeHandler('kel:schedules-changed');
+  ipcMain.handle('kel:schedules-changed', async (event, change?: { hidden?: unknown }) => {
+    assertTrustedSender(event);
+    const hidden = Array.isArray(change?.hidden) ? change.hidden : [];
+    for (const cid of hidden) if (typeof cid === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(cid)) hiddenToRemove.add(cid);
+    await scheduleSweep();
+    return { ok: true };
+  });
+  const scheduleSweepTimer = setInterval(() => void scheduleSweep(), 20000);
+  scheduleSweepTimer.unref?.();
+  // D-57: move the old scheduler's tasks into the engine once (import first, then switch the old
+  // task off). Runs in the background so start-up never waits on it; a failure retries next launch.
+  const migrationMarker = path.join(root, 'schedule-migration.json');
+  void migrateDonorSchedules({
+    engine: (route, body) => kelRequest(route, body),
+    donor: (route, body, method) => core(route, body, method),
+    engineConversationFor: (donorId) => mapping[donorId],
+    isDone: () => fs.existsSync(migrationMarker),
+    markDone: (summary) => {
+      fs.writeFileSync(migrationMarker + '.tmp', JSON.stringify({ at: new Date().toISOString(), ...summary }));
+      fs.renameSync(migrationMarker + '.tmp', migrationMarker);
+    },
+    log: (line) => console.log(line),
+  })
+    .then(() => scheduleSweep())
+    .catch((error) => console.warn('[KEL-SCHEDULES] migration did not finish; it will retry next launch.', error));
   // The engine drain hook was registered at the top of initializeKel so a
   // quit during ANY later failure still stops a freshly spawned engine.
   ipcMain.removeHandler('kel:request');

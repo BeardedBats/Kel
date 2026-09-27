@@ -7,7 +7,7 @@
 import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/config/storage';
 import FlexFullContainer from '@/renderer/components/layout/FlexFullContainer';
-import { CronJobIndicator, useCronJobsMap } from '@/renderer/pages/cron';
+import { CronJobIndicator, useScheduleStatusMap } from '@/renderer/pages/cron';
 import { refreshConversationCache } from '@/renderer/pages/conversation/utils/conversationCache';
 import { addEventListener, emitter } from '@/renderer/utils/emitter';
 import { blockMobileInputFocus, blurActiveElement } from '@/renderer/utils/ui/focus';
@@ -73,17 +73,10 @@ const ChatHistory: React.FC<{ onSessionClick?: () => void; collapsed?: boolean }
   const { id } = useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getJobStatus, markAsRead } = useCronJobsMap();
+  const { getJobStatus } = useScheduleStatusMap();
   const siderTooltipProps = getSiderTooltipProps(collapsed && !isMobile);
 
   useScrollIntoView(id);
-
-  // Mark conversation as read when id changes
-  useEffect(() => {
-    if (id) {
-      markAsRead(id);
-    }
-  }, [id, markAsRead]);
 
   const handleSelect = (conversation: TChatConversation) => {
     cleanupSiderTooltips();

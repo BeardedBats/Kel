@@ -14,7 +14,7 @@
  * Continuation is a human decision: the brief never resumes anything on its own. Every job line
  * names the job by its title and opens that job's chat (or the job on Work when no chat is known).
  */
-import type { KelBoundaryRequest, KelContinuationCandidate, KelWorkJob } from './kelApi';
+import type { KelBoundaryRequest, KelContinuationCandidate, KelSchedule, KelWorkJob } from './kelApi';
 import {
   collectAttention,
   jobChatAction,
@@ -48,6 +48,8 @@ export interface ResumptionPayload {
   continuation?: KelContinuationCandidate[];
   boundaryRequests?: KelBoundaryRequest[];
   providers?: AttentionProviderState[];
+  /** D-57: a scheduled task paused because something it needs is gone needs you too. */
+  schedules?: KelSchedule[];
   restore?: { ok: boolean; detail?: string; at?: number } | null;
   now?: number;
 }
@@ -110,6 +112,7 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   const otherNeeds: BriefLine[] = collectAttention({
     boundaryRequests: payload.boundaryRequests ?? [],
     providers: payload.providers ?? [],
+    schedules: payload.schedules ?? [],
   })
     .filter((item) => item.needsYou)
     .map((item) => ({

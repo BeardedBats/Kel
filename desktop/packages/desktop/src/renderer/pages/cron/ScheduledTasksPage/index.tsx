@@ -1,49 +1,91 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Spin } from '@arco-design/web-react';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
 import { KelEmpty } from '@renderer/components/kel/KelPrimitives';
-import { useAllCronJobs } from '@renderer/pages/cron/useCronJobs';
-import { formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
+import { kelSchedules, type KelSchedule } from '@renderer/components/kel/kelApi';
+import { useSchedules } from '@renderer/pages/cron/useSchedules';
+import { formatNextRun, scheduleChip, scheduleSentence } from '@renderer/pages/cron/cronUtils';
 import CreateTaskDialog from './CreateTaskDialog';
 import { ALL_PROJECTS, useProjects } from '@renderer/components/kel/activeProject';
 
+const rowMeta = (schedule: KelSchedule, locale: string): string => {
+  const when = scheduleSentence(schedule, locale);
+  if (schedule.running) return `${when} · running now`;
+  if (schedule.problem || !schedule.enabled || schedule.status === 'done') return `${when} · paused`;
+  return schedule.next_due_at ? `${when} · next ${formatNextRun(schedule.next_due_at, locale)}` : when;
+};
+
 /**
- * Scheduled tasks: one row per task; a row opens that task's page (`/scheduled/:id`), which owns
- * its details, history, run-now, edit and delete (WK-8).
+ * Scheduled tasks (D-57): one row per engine schedule in the current project; a row opens that
+ * task's page (`/scheduled/:id`), which owns its details, history, run-now, edit and delete (WK-8).
+ * A link from before the move (`/scheduled?origin=<old id>`) lands on the task it became.
  */
 export default function ScheduledTasksPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const navigate = useNavigate();
-  const { jobs, loading } = useAllCronJobs();
+  const [params] = useSearchParams();
+  const origin = params.get('origin');
+  const { schedules, loading, error } = useSchedules();
   const [createOpen, setCreateOpen] = useState(false);
+  const [originMissing, setOriginMissing] = useState(false);
   const { active } = useProjects();
+
+  useEffect(() => {
+    if (!origin) return;
+    let alive = true;
+    setOriginMissing(false);
+    kelSchedules
+      .get({ origin })
+      .then((schedule) => {
+        if (!alive) return;
+        if (schedule) navigate(`/scheduled/${encodeURIComponent(schedule.id)}`, { replace: true });
+        else setOriginMissing(true);
+      })
+      .catch(() => {
+        if (alive) setOriginMissing(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [origin, navigate]);
+
+  const shown = active === ALL_PROJECTS ? schedules : schedules.filter((schedule) => schedule.project_id === active);
+  const hiddenElsewhere = schedules.length - shown.length;
+
   return <div className='kel-scope'><main className='kel-page kel-shell-scheduled'>
     <div className='kel-page__head'>
       <div><ShellWorkspaceLink /><h1 className='kel-h1'>Scheduled tasks</h1></div>
       <span className='kel-grow' /><button type='button' className='kel-btn kel-btn--primary kel-shell-task-create-desktop' onClick={() => setCreateOpen(true)}>New task</button>
     </div>
-    {/* D-54: tasks carry no project yet (D-57), so a project filter would hide them. */}
-    {active !== ALL_PROJECTS && <p className='kel-meta'>Scheduled tasks show for all projects for now.</p>}
+    {originMissing && <p className='kel-meta' role='status'>That scheduled task is no longer here. It may have been deleted.</p>}
     <section className='kel-card kel-shell-task-list' aria-label='Scheduled tasks'>
-      <ShellSourceCardHeader title='Scheduled tasks' description={`${jobs.length} ${jobs.length === 1 ? 'task' : 'tasks'}`} />
+      <ShellSourceCardHeader title='Scheduled tasks' description={`${shown.length} ${shown.length === 1 ? 'task' : 'tasks'}`} />
       <button type='button' className='kel-shell-task-create-mobile' aria-label='New task' onClick={() => setCreateOpen(true)}>+</button>
-      {loading ? <Spin /> : jobs.length === 0 ? (
+      {loading ? <Spin /> : error && shown.length === 0 ? (
+        <KelEmpty title='Scheduled tasks are unavailable right now.' why={`${error} Your tasks are kept; try again in a moment.`} />
+      ) : shown.length === 0 ? (
         <KelEmpty
           title='No scheduled tasks yet.'
-          why='A scheduled task asks Kel to do the same thing on a schedule — for example, “every weekday at 9, summarize my inbox”. Each run shows up here with its result.'
+          why={hiddenElsewhere > 0
+            ? `This project has none. ${hiddenElsewhere} ${hiddenElsewhere === 1 ? 'task belongs' : 'tasks belong'} to other projects — switch to All projects to see ${hiddenElsewhere === 1 ? 'it' : 'them'}.`
+            : 'A scheduled task asks Kel to do the same thing on a schedule — for example, “every weekday at 9, summarize my inbox”. Each run shows up here with its result.'}
           actionLabel='New task'
           onAction={() => setCreateOpen(true)}
         />
       ) : <div>
-        {jobs.map(job => <button key={job.id} type='button' className='kel-shell-task-row' data-testid={`scheduled-row-${job.id}`} onClick={() => navigate(`/scheduled/${encodeURIComponent(job.id)}`)}>
-          <span>{job.name}</span><span className='kel-meta'>{formatSchedule(job, t)}{job.enabled && job.state.next_run_at_ms ? ` · next ${formatNextRun(job.state.next_run_at_ms, i18n.language)}` : !job.enabled ? ' · paused' : ''}</span>
-          <span className={`kel-chip ${job.enabled ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{job.enabled ? 'Active' : 'Paused'}</span>
-        </button>)}
+        {shown.map(schedule => {
+          const chip = scheduleChip(schedule);
+          return <button key={schedule.id} type='button' className='kel-shell-task-row' data-testid={`scheduled-row-${schedule.id}`} onClick={() => navigate(`/scheduled/${encodeURIComponent(schedule.id)}`)}>
+            <span>{schedule.name}</span><span className='kel-meta'>{rowMeta(schedule, i18n.language)}</span>
+            <span className={`kel-chip ${chip.tone}`}>{chip.label}</span>
+          </button>;
+        })}
       </div>}
     </section>
+    <p className='kel-meta kel-shell-scheduled-footer'>Scheduled tasks run while Kel is open on this computer.</p>
     <CreateTaskDialog visible={createOpen} onClose={() => setCreateOpen(false)} />
   </main></div>;
 }

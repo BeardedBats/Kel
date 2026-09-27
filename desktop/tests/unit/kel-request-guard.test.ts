@@ -48,6 +48,14 @@ describe('rendererKelRequestRefusal (D-33/D-34 credential custody)', () => {
     }
   });
 
+  it('allows the D-57 schedule actions and keeps the donor import in the main process', () => {
+    for (const action of ['list', 'get', 'create', 'update', 'pause', 'resume', 'delete', 'run_now', 'history', 'preview', 'migration_status']) {
+      expect(rendererKelRequestRefusal('/api/schedules', { action, id: 's1' })).toBeNull();
+    }
+    expect(rendererKelRequestRefusal('/api/schedules', { action: 'import', items: [{ origin: 'x' }] })).not.toBeNull();
+    expect(rendererKelRequestRefusal('/api/schedules?action=import')).toBe('Unknown Kel action');
+  });
+
   it('refuses any body that carries credential values', () => {
     expect(rendererKelRequestRefusal('/api/providers', { action: 'x', credentials: { key: 'v' } })).not.toBeNull();
     expect(rendererKelRequestRefusal('/api/model', { nested: { token: 'v' } })).not.toBeNull();

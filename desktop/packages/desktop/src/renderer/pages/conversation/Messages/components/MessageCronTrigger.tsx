@@ -11,6 +11,10 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * A run the old scheduler started in this chat. D-57 moved that task into the engine, keeping the
+ * old id as the schedule's `origin`, so the link resolves to whatever the task became.
+ */
 const MessageCronTrigger: React.FC<{ artifact: ICronTriggerArtifact }> = ({ artifact }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -47,7 +51,7 @@ const MessageCronTrigger: React.FC<{ artifact: ICronTriggerArtifact }> = ({ arti
     <div
       data-testid='message-cron-trigger'
       className='w-full mx-auto cursor-pointer'
-      onClick={() => navigate(`/scheduled/${cron_job_id}`)}
+      onClick={() => navigate(cron_job_id ? `/scheduled?origin=${encodeURIComponent(cron_job_id)}` : '/scheduled')}
     >
       <div
         className='flex items-center gap-8px px-16px py-12px rd-12px b-1 b-solid bg-fill-0 hover:bg-fill-1 transition-colors'
