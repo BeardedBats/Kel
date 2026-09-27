@@ -18,7 +18,9 @@ const workLanguage = read('desktop/packages/desktop/src/renderer/components/kel/
 
 describe('route contract (D12)', () => {
   it('the engine exposes the run.claimed decision per active job', () => {
-    expect(service).toContain("if event.get('type')!='run.claimed' or event.get('aggregate_id') not in active:");
+    // CP-2: read by job id for the active jobs only, not by scanning the whole event log.
+    expect(service).toContain("routes=self._claimed_routes(j['id'] for j in jobs if j['state'] not in ('CLOSED','CANCELLED'))");
+    expect(service).toContain("FROM events WHERE type='run.claimed' ");
     expect(service).toContain("'routes':routes,");
   });
 
