@@ -35,6 +35,7 @@ export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) 
               id: entry.provider,
               label: entry.label,
               status: entry.status,
+              note: entry.note,
             })),
           },
           { projectId }

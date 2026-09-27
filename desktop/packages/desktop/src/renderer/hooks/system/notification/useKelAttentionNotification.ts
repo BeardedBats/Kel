@@ -55,6 +55,7 @@ export const useKelAttentionNotification = (): void => {
             id: entry.provider,
             label: entry.label,
             status: entry.status,
+            note: entry.note,
           })),
         });
         const now = Date.now();
