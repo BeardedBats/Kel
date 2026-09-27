@@ -900,7 +900,7 @@ html[data-theme='dark'] body .kel-shell-model-modal .arco-modal-content { backgr
 .kel-shell-model-modal :is(.arco-form-label-item, .arco-select-view, .arco-input, .arco-btn) { font: 500 14px/20px var(--kel-shell-heading); }
 .kel-shell-model-modal .arco-form-item-extra { font: 400 12px/16px var(--kel-shell-body); }
 .kel-shell-model-modal .arco-btn { border: 1px solid var(--kel-figma-color-glass-button-edge); border-radius: 8px; background: rgba(15,45,100,.34); color: var(--kel-figma-color-text-button); }
-.kel-shell-model-modal .arco-btn-primary { background: linear-gradient(135deg,#153973,#365693); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.kel-shell-model-modal .arco-btn-primary { background: linear-gradient(180deg,#6493f8,#2356b3); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
 .kel-shell-model-modal .arco-btn:disabled { opacity: .4; }
 @media (min-width: 768px) {
   html[data-theme='dark'] body .arco-modal.kel-shell-model-modal :is(.arco-input, .arco-input-inner-wrapper, .arco-select-view) {
@@ -2500,7 +2500,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
     color: var(--kel-figma-color-text-button);
   }
   html[data-theme='dark'] body :is(.kel-shell-task-modal, .kel-shell-webui-modal) .aionui-modal-std-footer .arco-btn-primary {
-    background: linear-gradient(135deg,#153973,#365693);
+    background: linear-gradient(180deg,#6493f8,#2356b3);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
   }
   html[data-theme='dark'] body :is(.kel-shell-task-modal, .kel-shell-webui-modal) .aionui-modal-std-footer .arco-btn:disabled { opacity: .4; }
@@ -2608,7 +2608,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-theme-modal .cm-editor { background: rgba(6,18,46,.4) !important; color: #edf2fa !important; }
   .kel-shell-theme-modal .cm-gutters { border-color: rgba(191,216,255,.12) !important; background: rgba(6,18,46,.2) !important; color: #8fa3c4 !important; }
   .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn { height: 34px; border: 1px solid rgba(140,150,167,.5) !important; border-radius: 8px; background: rgba(15,45,100,.34) !important; color: #e4dccf !important; }
-  .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn-primary { background: linear-gradient(135deg,#153973,#365693) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+  .kel-shell-theme-modal .aionui-modal-std-footer .arco-btn-primary { background: linear-gradient(180deg,#6493f8,#2356b3) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
 }
 
 /* Current desktop Appearance 314:2863 and Add theme 314:3373. */
@@ -2674,7 +2674,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   }
   .kel-v2-shell .kel-shell-data-card > .kel-shell-preference-row:last-of-type .kel-meta { min-height: 0; }
   .kel-v2-shell .kel-shell-data-card .arco-btn { height: 32px !important; min-height: 32px !important; border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; }
-  .kel-v2-shell .kel-shell-data-card .arco-btn[data-testid='backup-now'] { background: linear-gradient(180deg,#5284df,#2054ac) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22) !important; color: #fff !important; }
+  .kel-v2-shell .kel-shell-data-card .arco-btn[data-testid='backup-now'] { background: linear-gradient(180deg,#6493f8,#2356b3) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22) !important; color: #fff !important; }
   .kel-v2-shell .kel-shell-data-card .arco-btn[data-testid='restore-inspect'] { border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 500 13px/20px var(--kel-shell-heading); }
   .kel-v2-shell .kel-shell-data-card [data-testid='data-folder-path'] { overflow-wrap: anywhere; }
   .kel-v2-shell .kel-shell-system-general > .w-full { margin-top: 4px !important; }
@@ -2687,7 +2687,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-shell-about-data-row .kel-meta { display: none; }
   .kel-v2-shell .kel-shell-about-data-row .arco-btn,
   .kel-v2-shell .kel-shell-about-notices-inline button { border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
-  .kel-v2-shell .kel-shell-about-update.arco-btn { position: static; height: 34px; border: 0; border-radius: 8px; background: linear-gradient(180deg,#5284df,#2054ac); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; }
+  .kel-v2-shell .kel-shell-about-update.arco-btn { position: static; height: 34px; border: 0; border-radius: 8px; background: linear-gradient(180deg,#6493f8,#2356b3); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; }
   html[data-theme='dark'] body .arco-modal.kel-shell-restore-confirm-modal { position: relative; top: -15.2vh; box-sizing: border-box; width: 520px !important; max-width: calc(100vw - 32px); padding: 0 !important; border: 1px solid rgba(191,216,255,.18); border-radius: 16px; background: linear-gradient(120deg,rgba(47,107,224,.1),transparent),rgba(15,45,100,.94); box-shadow: 0 20px 48px rgba(0,0,0,.35); backdrop-filter: blur(24px); }
   .kel-shell-restore-confirm-modal .arco-modal-header { margin: 0; border: 0; padding: 20px 24px 0; }
   .kel-shell-restore-confirm-modal .arco-modal-title { text-align: left; color: #f7eee1; font: 600 16px/22px var(--kel-shell-heading); }
@@ -2697,7 +2697,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-shell-restore-confirm-copy { font: 400 13px/19px var(--kel-shell-body); color: #edf2fa; }
   .kel-shell-restore-confirm-copy p { margin: 0; }
   .kel-shell-restore-confirm-summary { margin-bottom: 8px !important; color: #8fa9d6; }
-  .kel-shell-restore-confirm-modal .arco-btn-primary { border: 0; background: linear-gradient(180deg,#af493d,#81291f) !important; color: #fff !important; }
+  .kel-shell-restore-confirm-modal .arco-btn-primary { border: 0; background: linear-gradient(180deg,#a6443f,#8b312d) !important; color: #fff !important; }
   .kel-shell-restore-confirm-modal .arco-btn:not(.arco-btn-primary) { border: 0; background: transparent !important; color: #9fc3ff !important; }
 }
 
@@ -2709,7 +2709,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-shell-archive-desktop-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; min-height: 28px; padding-left: 90px; }
   .kel-v2-shell .kel-shell-archive-desktop-actions > span { margin-right: auto; color: #8fa9d6; font: 400 12px/18px var(--kel-shell-body); }
   .kel-v2-shell .kel-shell-archive-desktop-actions > button:not(.arco-btn) { padding: 2px 0; border: 0; background: transparent; color: #9fc3ff; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
-  .kel-v2-shell .kel-shell-archive-desktop-actions .arco-btn:not(:disabled) { height: 32px; padding: 0 14px; border: 0 !important; border-radius: 8px; background: linear-gradient(180deg,#af493d,#81291f) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff !important; }
+  .kel-v2-shell .kel-shell-archive-desktop-actions .arco-btn:not(:disabled) { height: 32px; padding: 0 14px; border: 0 !important; border-radius: 8px; background: linear-gradient(180deg,#a6443f,#8b312d) !important; box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff !important; }
   .kel-v2-shell .kel-shell-archive-groups { margin-top: 0 !important; }
   .kel-v2-shell .kel-shell-archive-groups > div { gap: 12px; }
   .kel-v2-shell .kel-shell-archive-group { gap: 0; overflow: hidden; border: 1px solid rgba(127,160,255,.2); border-radius: 12px; background: rgba(23,51,109,.32); }
@@ -2725,7 +2725,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-shell-archive-row .text-t-primary { font: 500 13px/18px var(--kel-shell-heading); }
   .kel-v2-shell .kel-shell-archive-row .text-t-secondary { color: #8fa9d6; font: 400 11px/16px var(--kel-shell-body); }
   .kel-v2-shell .kel-shell-archive-delete.arco-btn { min-width: 42px; padding: 0; border: 0; background: transparent; color: #ff9d9d; font: 500 12px/18px var(--kel-shell-heading); }
-  .kel-v2-shell .kel-shell-archive-unarchive.arco-btn { height: 32px !important; padding: 0 14px !important; border: 0; border-radius: 8px; background: linear-gradient(180deg,#5284df,#2054ac); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; font: 500 12px/18px var(--kel-shell-heading); }
+  .kel-v2-shell .kel-shell-archive-unarchive.arco-btn { height: 32px !important; padding: 0 14px !important; border: 0; border-radius: 8px; background: linear-gradient(180deg,#6493f8,#2356b3); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; font: 500 12px/18px var(--kel-shell-heading); }
 }
 
 /* Current enabled desktop WebUI and Change password frames 314:18314/18753. */
@@ -3255,11 +3255,11 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-v2-shell .kel-task-detail-switch-row .arco-switch-checked { background: linear-gradient(#6493f8,#2356b3); }
 .kel-v2-shell .kel-task-detail-delete-row { min-height: 53px; border-bottom: 0; }
 .kel-v2-shell .kel-task-detail-delete-row > span:first-child { color: #f1a5a0; }
-.kel-v2-shell .kel-task-detail-delete-row .kel-btn { min-height: 28px; height: 28px; padding: 0 12px; border: 1px solid rgba(205,120,116,.55); border-radius: 7px; background: linear-gradient(#b75b57,#78332f); color: #fff; }
+.kel-v2-shell .kel-task-detail-delete-row .kel-btn { min-height: 28px; height: 28px; padding: 0 12px; border: 1px solid rgba(205,120,116,.55); border-radius: 7px; background: linear-gradient(#a6443f,#8b312d); color: #fff; }
 .kel-v2-shell .kel-task-detail-delete-confirm { padding: 10px; border: 1px solid rgba(205,120,116,.4); border-radius: 8px; background: rgba(205,120,116,.08); }
 .kel-v2-shell .kel-task-detail-delete-confirm p { margin: 0 0 8px; }
 .kel-v2-shell .kel-task-detail-delete-confirm .kel-row { justify-content: flex-end; }
-.kel-v2-shell .kel-task-detail-delete-confirm .kel-btn--primary { border-color: rgba(205,120,116,.55); background: linear-gradient(#b75b57,#78332f); }
+.kel-v2-shell .kel-task-detail-delete-confirm .kel-btn--primary { border-color: rgba(205,120,116,.55); background: linear-gradient(#a6443f,#8b312d); }
 .kel-v2-shell .kel-task-detail-history > .kel-row:first-child .kel-btn { height: 25px; min-height: 25px; padding: 0 4px; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; color: #b5c9e8; font-size: 12px; }
 .kel-v2-shell .kel-task-detail-history-actions { display: inline-flex; gap: 8px; }
 .kel-v2-shell .kel-task-detail-history-row { display: flex; align-items: center; gap: 12px; min-height: 58px; border-bottom: 1px solid rgba(191,216,255,.08); }
@@ -4185,3 +4185,20 @@ html[data-theme='dark'] body[arco-theme='dark']:has(.kel-v2-shell) .arco-message
 .kel-v2-shell :is(.sendbox-inline-actions, .kel-shell-composer-submit) [aria-label='Record a message'] svg { width: 20px; height: 20px; }
 .kel-v2-shell :is(.sendbox-send-tooltip-anchor, .kel-shell-composer-submit) .arco-btn:not(.sendbox-stop-button) { width: 36px !important; min-width: 36px !important; height: 36px !important; border-radius: 10px !important; }
 .kel-v2-shell .sendbox-send-tooltip-anchor { width: 36px; height: 36px; }
+
+/* Approval card (Figma 273:1911): unstyled actions such as Deny are Links; buttons get hover/pressed states. */
+.kel-v2-shell .kel-approval-card__actions button:not(.kel-approval-card__remember):not(.kel-approval-card__approve):not([data-testid='kel-approval-allow-once']) { padding: 0 4px; color: #9fc3ff; }
+.kel-v2-shell .kel-approval-card__actions button:not(.kel-approval-card__remember):not(.kel-approval-card__approve):not([data-testid='kel-approval-allow-once']):not(:disabled):hover { color: #edf2fa; text-decoration: underline; }
+.kel-v2-shell .kel-approval-card__actions .kel-approval-card__remember:not(:disabled):hover { background: linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.08)), linear-gradient(#6493f8,#2356b3); }
+.kel-v2-shell .kel-approval-card__actions :is(.kel-approval-card__approve, [data-testid='kel-approval-allow-once']):not(:disabled):hover { background: linear-gradient(#358846,#246b37); }
+.kel-v2-shell .kel-approval-card__actions :is(.kel-approval-card__approve, [data-testid='kel-approval-allow-once']):not(:disabled):active { background: linear-gradient(#276a31,#1a5129); }
+.kel-v2-shell .kel-approval-card__actions button:disabled { opacity: .45; }
+.kel-v2-shell .kel-approval-card__actions button:focus-visible { outline: 2px solid #9fc3ff; outline-offset: 2px; }
+
+/* Light theme: Archived uses dark-only hex values; give it readable light equivalents. */
+html[data-theme='light'] .kel-v2-shell .kel-shell-archive-group { border-color: var(--kel-border-strong); background: var(--bg-1, #fff); }
+html[data-theme='light'] .kel-v2-shell .kel-shell-archive-group-header h2 { color: var(--kel-status-attention-text); }
+html[data-theme='light'] .kel-v2-shell :is(.kel-shell-archive-group-header > span, .kel-shell-archive-row .text-t-secondary, .kel-shell-archive-desktop-actions > span) { color: var(--kel-text-2); }
+html[data-theme='light'] .kel-v2-shell :is(.kel-shell-archive-row > .size-20px, .kel-shell-archive-desktop-actions > button:not(.arco-btn)) { color: var(--kel-accent); }
+html[data-theme='light'] .kel-v2-shell .kel-shell-archive-row { border-bottom-color: var(--kel-border); }
+html[data-theme='light'] .kel-v2-shell .kel-shell-archive-delete.arco-btn { color: #b3261e; }
