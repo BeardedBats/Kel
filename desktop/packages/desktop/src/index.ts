@@ -469,6 +469,14 @@ function applyDebugBackendStartupFailure(failure: BackendStartupFailureInfo): vo
   (globalThis as typeof globalThis & { __backendStartupFailed?: boolean }).__backendStartupFailed = true;
 }
 
+// Test/audit runs (KEL_BACKGROUND_WINDOW=1) never show the window; KEL_WINDOW_SIZE=1440x900 fixes its
+// size for Figma comparisons. Neither is set in normal use.
+const backgroundWindow = process.env.KEL_BACKGROUND_WINDOW === '1';
+const testWindowSize = (() => {
+  const match = /^(\d{3,4})x(\d{3,4})$/.exec(process.env.KEL_WINDOW_SIZE ?? '');
+  return match ? { width: Number(match[1]), height: Number(match[2]) } : null;
+})();
+
 const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): void => {
   console.log('[Kel] Creating main window...');
   const {
@@ -498,12 +506,14 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: windowWidth,
-    height: windowHeight,
+    width: testWindowSize?.width ?? windowWidth,
+    height: testWindowSize?.height ?? windowHeight,
     ...(windowX !== undefined && windowY !== undefined ? { x: windowX, y: windowY } : {}),
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     show: false, // Hide until CSS is loaded to prevent FOUC
+    // Background window mode keeps rendering while hidden so CDP screenshots still work.
+    ...(backgroundWindow ? { paintWhenInitiallyHidden: true } : {}),
     backgroundColor: '#ffffff',
     autoHideMenuBar: true,
     // Set icon for Windows/Linux in development mode
@@ -523,6 +533,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       webviewTag: true, // 启用 webview 标签用于 HTML 预览 / Enable webview tag for HTML preview
+      ...(backgroundWindow ? { backgroundThrottling: false } : {}),
     },
   });
   console.log(`[Kel] Main window created (id=${mainWindow.id})`);
@@ -534,6 +545,11 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
   // combined with 'did-finish-load' as belt-and-suspenders approach.
   if (showOnReady) {
     const showWindow = () => {
+      // Test/audit runs render off-screen so they never cover or steal focus from Nick's desktop.
+      if (backgroundWindow) {
+        console.log('[Kel] Background window mode: not showing the main window');
+        return;
+      }
       if (!mainWindow.isDestroyed() && !mainWindow.isVisible()) {
         console.log('[Kel] Showing main window');
         // maximize() also shows the window, so it replaces show() here.
