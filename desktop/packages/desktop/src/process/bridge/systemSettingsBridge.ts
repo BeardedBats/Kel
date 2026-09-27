@@ -15,8 +15,6 @@
 import { ipcBridge } from '@/common';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { changeLanguage } from '@process/services/i18n';
-import type { PetSize } from '@process/pet/petTypes';
-import { KEL_PET_SUBSYSTEM_ENABLED } from '@process/pet/petPolicy';
 import { createOrUpdateTray, destroyTray, setCloseToTrayEnabled } from '@process/utils/tray';
 import { readCloseToTraySetting, writeCloseToTraySetting } from '@process/utils/closeToTraySetting';
 import {
@@ -74,68 +72,5 @@ export function initSystemSettingsBridge(): void {
     changeLanguage(language).catch((error) => {
       console.error('[SystemSettings] Main process changeLanguage failed:', error);
     });
-  });
-
-  // Desktop pet settings
-  ipcBridge.systemSettings.getPetEnabled.provider(async () => {
-    const value = await ProcessConfig.get('pet.enabled');
-    return value ?? false;
-  });
-
-  ipcBridge.systemSettings.setPetEnabled.provider(async ({ enabled }) => {
-    if (enabled && !KEL_PET_SUBSYSTEM_ENABLED) {
-      // Kel V1.6 policy (AUD-MINOR-008) + human-visual repair (RA-MINOR-003): the pet subsystem is
-      // disabled in this build, so enabling must fail loudly. A quiet return left the toggle ON
-      // until reload while no pet could ever appear — the stored state and the refusal travel
-      // together now, and the renderer settles back to the truthful OFF state with a reason.
-      await ProcessConfig.set('pet.enabled', false);
-      throw new Error('The desktop pet is not available in this build, so it stays off.');
-    }
-    const { createPetWindow, destroyPetWindow, isPetSupported } = await import('@process/pet/petManager');
-    if (enabled && !isPetSupported()) {
-      await ProcessConfig.set('pet.enabled', false);
-      throw new Error('This computer cannot create the desktop pet window, so it stays off.');
-    }
-    await ProcessConfig.set('pet.enabled', enabled);
-    if (enabled) {
-      createPetWindow();
-    } else {
-      destroyPetWindow();
-    }
-  });
-
-  ipcBridge.systemSettings.getPetSize.provider(async () => {
-    const value = await ProcessConfig.get('pet.size');
-    return value ?? 280;
-  });
-
-  ipcBridge.systemSettings.setPetSize.provider(async ({ size }) => {
-    await ProcessConfig.set('pet.size', size);
-    const { resizePetWindow } = await import('@process/pet/petManager');
-    resizePetWindow(size as PetSize);
-  });
-
-  ipcBridge.systemSettings.getPetDnd.provider(async () => {
-    const value = await ProcessConfig.get('pet.dnd');
-    return value ?? false;
-  });
-
-  ipcBridge.systemSettings.setPetDnd.provider(async ({ dnd }) => {
-    await ProcessConfig.set('pet.dnd', dnd);
-    const { setPetDndMode } = await import('@process/pet/petManager');
-    setPetDndMode(dnd);
-  });
-
-  // Pet confirm-bubble toggle: when disabled, AI tool-call confirmations
-  // are not routed to the pet's bubble window. Default true.
-  ipcBridge.systemSettings.getPetConfirmEnabled.provider(async () => {
-    const value = await ProcessConfig.get('pet.confirmEnabled');
-    return value ?? true;
-  });
-
-  ipcBridge.systemSettings.setPetConfirmEnabled.provider(async ({ enabled }) => {
-    await ProcessConfig.set('pet.confirmEnabled', enabled);
-    const { setPetConfirmEnabled } = await import('@process/pet/petManager');
-    setPetConfirmEnabled(enabled);
   });
 }

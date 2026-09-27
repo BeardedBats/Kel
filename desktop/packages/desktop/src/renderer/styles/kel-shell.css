@@ -1746,16 +1746,6 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
     background: linear-gradient(var(--kel-figma-color-danger-top),var(--kel-figma-color-danger-bottom));
     color: var(--kel-figma-color-danger-text); font: 600 14px/20px var(--kel-shell-heading); cursor: pointer;
   }
-  .kel-v2-shell .kel-shell-pet-card { padding: 12px !important; }
-  .kel-v2-shell .kel-shell-pet-card > .w-full { margin-top: 4px !important; }
-  .kel-v2-shell .kel-shell-pet-card .divide-y > div:not(.kel-desktop-only) { min-height: 34px; padding-block: 6px; box-sizing: border-box; }
-  .kel-v2-shell .kel-shell-pet-card .divide-y > div:not(.kel-desktop-only) > div:first-child { min-width: 0; }
-  .kel-v2-shell .kel-shell-pet-size {
-    width: 100%; min-height: 34px; padding: 0 12px; border: 0;
-    border-bottom: 1px solid rgba(191,216,255,.12); background: transparent;
-    color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body);
-  }
-  .kel-v2-shell .kel-shell-pet-size option { background: var(--kel-figma-color-canvas-base); }
   .kel-v2-shell .kel-shell-webui-panel { gap: 0; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-intro { margin: 0 0 4px; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-source-step { margin-top: 6px !important; }
@@ -3613,32 +3603,6 @@ html[data-theme='dark'] body .kel-ramble-vetting-modal :is(.arco-modal-content,.
  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding [data-testid='kel-default-model-card'] .kel-shell-default-model-row { min-height: 38px; height: auto; padding: 8px 0; }
  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-name { font: 400 14px/20px var(--kel-shell-body); }
  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-onboarding .kel-shell-default-model-row .kel-shell-default-model-status { font: 700 13px/18px var(--kel-shell-heading); }
-}
-
-@media (min-width: 768px) {
- .kel-v2-shell .kel-shell-pet-card { padding: 18px 20px !important; }
- .kel-v2-shell .kel-shell-pet-card > .w-full { margin-top: 0 !important; }
- .kel-v2-shell .kel-shell-pet-card .divide-y > div { min-height: 53px; box-sizing: border-box; }
- .kel-v2-shell .kel-shell-pet-card .divide-y > div > div > div:first-child { font: 400 14px/20px var(--kel-shell-body); }
- .kel-v2-shell .kel-shell-pet-card .arco-radio-group { display: flex; gap: 24px; }
- .kel-v2-shell .kel-shell-pet-card .arco-radio { padding: 0; margin: 0; font: 400 13px/18px var(--kel-shell-body); }
- .kel-v2-shell .kel-shell-pet-card .arco-radio-mask { display: none; }
- .kel-v2-shell .kel-shell-pet-card .arco-radio-text { padding: 0; }
- .kel-v2-shell .kel-shell-pet-card .arco-radio-checked { color: var(--kel-figma-color-text-warm,#ffb764); }
-}
-
-@media (min-width: 768px) {
- .kel-v2-shell .kel-shell-pet-card { padding: 18px 20px 6px !important; background: linear-gradient(rgba(47,107,224,.06),rgba(47,107,224,.06)),linear-gradient(rgba(6,18,46,.22),rgba(6,18,46,.22)) !important; border: 1px solid rgba(191,216,255,.12); }
- .kel-v2-shell .kel-shell-pet-card .kel-shell-source-card-head { min-height: 18px; }
- .kel-v2-shell .kel-shell-pet-card .divide-y > div { min-height: 53px; padding: 9px 0; }
- .kel-v2-shell .kel-shell-pet-card .divide-y > div > div > div:first-child { font: 500 14px/18px var(--kel-shell-heading); }
- [data-theme='light'] .kel-v2-shell .kel-shell-pet-card { background: #fff !important; border-color: var(--kel-border-strong); }
-}
-
-@media (min-width: 768px) {
- .kel-v2-shell .kel-shell-pet-card .divide-y > .kel-desktop-only { padding: 0; }
- .kel-v2-shell .kel-shell-pet-card .divide-y > .kel-desktop-only > div { min-height: 53px; padding: 9px 0; box-sizing: border-box; }
- .kel-v2-shell .kel-shell-pet-card .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
 }
 
 /* Desktop Skills uses the current Figma panel material and keeps imported text readable. */
