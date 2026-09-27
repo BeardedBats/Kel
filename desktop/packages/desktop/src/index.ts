@@ -512,8 +512,12 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     show: false, // Hide until CSS is loaded to prevent FOUC
-    // Background window mode keeps rendering while hidden so CDP screenshots still work.
-    ...(backgroundWindow ? { paintWhenInitiallyHidden: true } : {}),
+    // Background window mode: a hidden window stops producing frames after a while, so the window is
+    // shown without activation far off every display, kept out of the taskbar and unfocusable. It keeps
+    // painting for CDP screenshots and never appears on or takes focus from Nick's screen.
+    ...(backgroundWindow
+      ? { x: -20000, y: -20000, paintWhenInitiallyHidden: true, skipTaskbar: true, focusable: false }
+      : {}),
     backgroundColor: '#ffffff',
     autoHideMenuBar: true,
     // Set icon for Windows/Linux in development mode
@@ -547,7 +551,11 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     const showWindow = () => {
       // Test/audit runs render off-screen so they never cover or steal focus from Nick's desktop.
       if (backgroundWindow) {
-        console.log('[Kel] Background window mode: not showing the main window');
+        if (!mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+          console.log('[Kel] Background window mode: showing inactive off-screen');
+          mainWindow.setPosition(-20000, -20000);
+          mainWindow.showInactive();
+        }
         return;
       }
       if (!mainWindow.isDestroyed() && !mainWindow.isVisible()) {
