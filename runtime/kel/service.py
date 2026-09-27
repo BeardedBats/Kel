@@ -22,7 +22,7 @@ from .runner import DurableAdapter
 from .research import needs_research
 from .router import needs_work, file_action
 from . import handoff
-from .turn import decide as decide_turn, guard_ack, template_ack, title_for
+from .turn import decide as decide_turn, amend_ack, guard_ack, guard_reply, template_ack, title_for
 
 # Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
 # whose reported version differs from the app it shipped with, so this literal must match
@@ -115,6 +115,9 @@ class Service:
         # D-53: starting hand-off work (planning, project creation, job intake) has its own pool so a
         # conversational reply never queues behind a slow planner.
         self.planning=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-planning')
+        # D-55: creating a hand-off's job and restarting it with a change never interleave, so an
+        # amendment can never leave the old job and a new one running side by side.
+        self.handoff_lock=threading.RLock()
         # KEL_TURN_MODEL=none keeps the deterministic keyword gate (tests, headless setups).
         self.turn_mode=(os.environ.get('KEL_TURN_MODEL') or '').strip().lower()
         self._last_follow_up=0.0
@@ -344,7 +347,11 @@ class Service:
                                   'acknowledgement':template_ack(),'related_topic':None}
                     else:
                         decision={'action':'direct'}
+                if decision['action']=='amend_background_work':
+                    return self._amend(sid,cid,text,packet,kind,greenfield_flag,decision)
                 if decision['action']=='start_background_work':
+                    if decision.get('request') and decision['request']!=text:
+                        text=self._rewrite_request(sid,decision['request'])
                     return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision)
                 if decision['action']=='reply':
                     self.store.add_message(decision['text'],'assistant',cid);jid=None
@@ -360,7 +367,7 @@ class Service:
                         'Do not imply you performed external actions. You may answer questions about the saved context. '
                         "running_work is the true state of this conversation's work; never call unfinished or unverified work done.\n"+encode(answer_packet),**kwargs)
                     if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
-                    self.store.add_message(result['text'],'assistant',cid);jid=None
+                    self.store.add_message(guard_reply(result['text'],running),'assistant',cid);jid=None
             # A direct answer or a refused recipe has no job to dispatch. Mark the request
             # settled so every client can stop waiting without inventing running work.
             with self.store.transaction() as db:db.execute(
@@ -381,6 +388,65 @@ class Service:
                                (cid,'assistant',ack,time.time())).lastrowid
                 db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
         return self.planning.submit(self._start_work,sid,cid,text,packet,kind,greenfield_flag)
+
+    def _rewrite_request(self,sid,request):
+        """The submission records the whole request its work runs (the person's message is kept as
+        they wrote it); returns that request."""
+        with self.store.transaction() as db:
+            db.execute("UPDATE submissions SET text=? WHERE id=? AND state='PLANNING'",(request,sid))
+        return request
+
+    def _amend(self,sid,cid,text,packet,kind,greenfield_flag,decision):
+        """D-55: restart this conversation's still-changeable hand-off with the person's change.
+
+        One transaction stops the old job (if it exists), points the original hand-off (and its
+        card) at the amended request, and says so plainly; the amending message itself becomes no
+        work of its own. Work that can no longer be changed is not amended: the amended request is
+        then new work. Never two live jobs for one hand-off.
+        """
+        target=decision['work_id'];amended=decision['amended_request']
+        stopped=[];restart=None
+        with self.handoff_lock:
+            with self.engine.lock:
+                with self.store.transaction() as db:
+                    row=db.execute('SELECT s.*,p.packet,p.kind AS packet_kind,a.title AS ack_title FROM submissions s '
+                                   'JOIN submission_packets p ON p.id=s.id JOIN submission_acks a ON a.submission_id=s.id '
+                                   'WHERE s.id=? AND s.conversation_id=?',(target,cid)).fetchone()
+                    mine=db.execute('SELECT state FROM submissions WHERE id=?',(sid,)).fetchone()
+                    if not mine or mine['state']!='PLANNING':
+                        return None  # this message was stopped before its turn finished
+                    old_job=row['job_id'] if row else None
+                    changeable=bool(row) and row['id']!=sid and (
+                        (row['state']=='PLANNING' and not old_job) or
+                        (row['state']=='DISPATCHED' and old_job and
+                         self.store._get(db,old_job)['state'] not in handoff.AMENDABLE_JOB_STATES_EXCLUDED))
+                    if changeable:
+                        title=title_for(amended,decision.get('title') or row['ack_title'])
+                        if old_job:
+                            stopped=self.store._control(db,old_job,'cancel')
+                            db.execute('INSERT OR IGNORE INTO handoff_restarts VALUES(?,?,?,?)',(target,old_job,sid,time.time()))
+                            db.execute('DELETE FROM job_intakes WHERE id=?',(target,))
+                            restart=(json.loads(row['packet']),row['packet_kind'])
+                        # A hand-off still planning picks the new request up before it creates its job.
+                        db.execute("UPDATE submissions SET text=?,state='PLANNING',job_id=NULL,error=NULL WHERE id=?",(amended,target))
+                        db.execute('UPDATE submission_acks SET title=? WHERE submission_id=?',(title,target))
+                        db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                                   (cid,'assistant',amend_ack(title,stopped_a_run=bool(old_job)),time.time()))
+                        db.execute("UPDATE submissions SET state='SETTLED' WHERE id=?",(sid,))
+                if changeable:
+                    for run_id in stopped:
+                        if run_id in self.engine.active:
+                            self.engine.active[run_id][1].set()
+        if not changeable:
+            # Nothing it could change is still running: the whole amended request is new work.
+            return self._handoff(sid,cid,self._rewrite_request(sid,amended),packet,kind,greenfield_flag,
+                                 {'title':decision.get('title'),'acknowledgement':None,'related_topic':None})
+        if restart:
+            old_packet,old_kind=restart
+            from .router import classify
+            greenfield=bool(classify(amended).get('greenfield')) if old_packet.get('kind_source')!='client' else False
+            return self.planning.submit(self._start_work,target,cid,amended,old_packet,old_kind,greenfield)
+        return None
 
     def _project_for_folder(self,folder):
         """(root, project_id, tests) for the saved project whose root holds `folder`, else None."""
@@ -482,28 +548,40 @@ class Service:
         return contract
 
     def _start_work(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
-        """Planning-pool half of a hand-off: compile, create the job, link it; or say it failed."""
+        """Planning-pool half of a hand-off: compile, create the job, link it; or say it failed.
+
+        D-55: a change that arrives while this is still planning rewrites the submission's request;
+        the job is only created (under `handoff_lock`) from the request as it stands, so the change
+        is planned in before anything runs and exactly one job ever exists for the hand-off.
+        """
         try:
-            with contextlib.closing(self.store.connect()) as db:
-                ack=db.execute('SELECT message_seq,title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
-            contract=self._compile_work(sid,cid,text,packet,kind,greenfield_flag)
-            contract['handoff']={'submission_id':sid,'ack_seq':ack['message_seq'] if ack else None,
-                                 'title':ack['title'] if ack else title_for(text)}
-            # Create and link the job atomically with intake to prevent duplicate effects on restart.
-            jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
-            self._link_origin(jid,cid,sid)
-            intake=packet.get('intake_seq')
-            with self.store.transaction() as db:
-                if intake and db.execute('SELECT 1 FROM messages WHERE seq=? AND conversation_id=?',(intake,cid)).fetchone():
-                    # The person's own message stays where it was (before the acknowledgement) and
-                    # becomes the job's source message; the copy create() recorded goes.
-                    db.execute("DELETE FROM messages WHERE conversation_id=? AND role='user' AND job_id=? AND seq<>?",(cid,jid,intake))
-                    db.execute('UPDATE messages SET job_id=? WHERE seq=?',(jid,intake))
-                else:
-                    dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
-                    if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
-                db.execute("UPDATE submissions SET state='DISPATCHED',job_id=?,error=NULL WHERE id=?",(jid,sid))
-            return jid
+            while True:
+                contract=self._compile_work(sid,cid,text,packet,kind,greenfield_flag)
+                with self.handoff_lock:
+                    with contextlib.closing(self.store.connect()) as db:
+                        current=db.execute('SELECT text,state FROM submissions WHERE id=?',(sid,)).fetchone()
+                        ack=db.execute('SELECT message_seq,title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
+                    if not current or current['state']!='PLANNING':
+                        return None  # stopped or restarted elsewhere; nothing to create
+                    if current['text']!=text:
+                        text=current['text'];continue  # changed while planning: plan the change in
+                    contract['handoff']={'submission_id':sid,'ack_seq':ack['message_seq'] if ack else None,
+                                         'title':ack['title'] if ack else title_for(text)}
+                    # Create and link the job atomically with intake to prevent duplicate effects on restart.
+                    jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+                    self._link_origin(jid,cid,sid)
+                    intake=packet.get('intake_seq')
+                    with self.store.transaction() as db:
+                        if intake and db.execute('SELECT 1 FROM messages WHERE seq=? AND conversation_id=?',(intake,cid)).fetchone():
+                            # The person's own message stays where it was (before the acknowledgement)
+                            # and becomes the job's source message; the copy create() recorded goes.
+                            db.execute("DELETE FROM messages WHERE conversation_id=? AND role='user' AND job_id=? AND seq<>?",(cid,jid,intake))
+                            db.execute('UPDATE messages SET job_id=? WHERE seq=?',(jid,intake))
+                        else:
+                            dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
+                            if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
+                        db.execute("UPDATE submissions SET state='DISPATCHED',job_id=?,error=NULL WHERE id=?",(jid,sid))
+                    return jid
         except Exception as exc:
             reason=str(exc).strip().rstrip('.') or type(exc).__name__
             with self.store.transaction() as db:
@@ -599,11 +677,13 @@ class Service:
                 "SELECT job_id,id FROM submissions WHERE job_id IS NOT NULL")}
             last={row['aggregate_id']:row['at'] for row in db.execute(
                 "SELECT aggregate_id,MAX(at) AS at FROM events GROUP BY aggregate_id")}
+            # D-55: a job stopped because its hand-off restarted with a change is not separate work.
+            replaced=handoff.replaced_jobs(db)
         jobs=[]
         needs=0
         closed_shown=0
         for job in self.store.list_jobs():
-            if job['conversation']!=cid:
+            if job['conversation']!=cid or job['id'] in replaced:
                 continue
             active=job['state'] not in ('CLOSED','CANCELLED')
             if not active:
@@ -929,6 +1009,8 @@ class Service:
                     action={}
                 a['action_summary']=plain_summary(action)
             files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
+            # D-55: a job stopped because its hand-off restarted with a change is not separate work.
+            replaced=handoff.replaced_jobs(db)
         # conversation='*' is the all-conversations scope the Work and Activity pages read: every job,
         # every project's continuation candidates, and no per-conversation messages or submissions.
         everywhere=cid==ALL_CONVERSATIONS
@@ -942,7 +1024,7 @@ class Service:
                     continuation.extend(Continuation(self.store).candidates(scope))
                 except Exception:
                     pass  # the Work surface must render even if continuation state is unavailable
-        jobs=[j for j in self.store.list_jobs() if everywhere or j['conversation']==cid]
+        jobs=[j for j in self.store.list_jobs() if (everywhere or j['conversation']==cid) and j['id'] not in replaced]
         # D12 — the routing decision behind each active run (why this provider/model). The engine
         # already records it on run.claimed; user surfaces translate it into plain language.
         routes={}

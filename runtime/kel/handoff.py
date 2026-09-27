@@ -21,7 +21,18 @@ def ensure_schema(store):
         db.executescript('''CREATE TABLE IF NOT EXISTS submission_acks(
                 submission_id TEXT PRIMARY KEY, message_seq INTEGER, title TEXT, at REAL);
             CREATE TABLE IF NOT EXISTS handoff_notices(
-                job_id TEXT, state TEXT, at REAL, PRIMARY KEY(job_id, state));''')
+                job_id TEXT, state TEXT, at REAL, PRIMARY KEY(job_id, state));
+            CREATE TABLE IF NOT EXISTS handoff_restarts(
+                submission_id TEXT NOT NULL, replaced_job TEXT PRIMARY KEY, amended_by TEXT, at REAL);''')
+
+
+REQUEST_PREVIEW = 1500
+AMENDABLE_JOB_STATES_EXCLUDED = ('CLOSED', 'CANCELLED', 'CANCELLING')
+
+
+def replaced_jobs(db):
+    """Jobs that were stopped because their hand-off restarted with a change (D-55)."""
+    return {row['replaced_job'] for row in db.execute('SELECT replaced_job FROM handoff_restarts')}
 
 
 def _entry(job, titles):
@@ -51,27 +62,41 @@ def _entry(job, titles):
 
 
 def running_work(store, conversation_id):
-    """This conversation's open jobs plus its last three closed ones, newest first."""
+    """This conversation's open jobs plus its last three closed ones, newest first.
+
+    Every hand-off carries its `work_id` (the submission id) and whether a new message may still
+    change it (`can_amend`, D-55): a hand-off that is starting or whose job is still open. Jobs
+    replaced by such a restart are left out — the restarted work stands in for them.
+    """
     with contextlib.closing(store.connect()) as db:
-        titles = {row['job_id']: row['title'] for row in db.execute(
-            'SELECT s.job_id, a.title FROM submission_acks a JOIN submissions s '
+        handoffs = {row['job_id']: dict(row) for row in db.execute(
+            'SELECT s.job_id, s.id, s.text, a.title FROM submission_acks a JOIN submissions s '
             'ON s.id=a.submission_id WHERE s.conversation_id=? AND s.job_id IS NOT NULL',
             (conversation_id,))}
-        planning = [row['title'] for row in db.execute(
-            "SELECT a.title FROM submission_acks a JOIN submissions s ON s.id=a.submission_id "
-            "WHERE s.conversation_id=? AND s.state='PLANNING'", (conversation_id,))]
+        planning = [dict(row) for row in db.execute(
+            "SELECT s.id, s.text, a.title FROM submission_acks a JOIN submissions s ON s.id=a.submission_id "
+            "WHERE s.conversation_id=? AND s.state='PLANNING' ORDER BY s.created DESC", (conversation_id,))]
+        replaced = replaced_jobs(db)
+    titles = {job_id: row['title'] for job_id, row in handoffs.items()}
     out, closed = [], 0
-    for title in planning:
-        out.append({'title': title, 'state': 'STARTING', 'verdict': None,
-                    'summary': 'just started, not finished yet', 'parts_checked': 0, 'parts_total': 0})
+    for row in planning:
+        out.append({'work_id': row['id'], 'title': row['title'], 'state': 'STARTING', 'verdict': None,
+                    'summary': 'just started, not finished yet', 'parts_checked': 0, 'parts_total': 0,
+                    'can_amend': True, 'request': str(row['text'] or '')[:REQUEST_PREVIEW]})
     for job in store.list_jobs():  # newest first
-        if job.get('conversation') != conversation_id:
+        if job.get('conversation') != conversation_id or job['id'] in replaced:
             continue
         if job.get('state') in OPEN_STATES_EXCLUDED:
             if closed >= 3:
                 continue
             closed += 1
-        out.append(_entry(job, titles))
+        entry = _entry(job, titles)
+        source = handoffs.get(job['id'])
+        entry['work_id'] = source['id'] if source else None
+        entry['can_amend'] = bool(source) and job.get('state') not in AMENDABLE_JOB_STATES_EXCLUDED
+        entry['request'] = str((source or {}).get('text') or (job.get('contract') or {}).get('request')
+                               or '')[:REQUEST_PREVIEW]
+        out.append(entry)
     return out
 
 

@@ -16,8 +16,8 @@ import unittest
 from kel.core import PolicyError, Store
 from kel.service import Service
 from kel import handoff
-from kel.turn import (COMPLETION_CLAIM, FORCED_SUFFIX, decide, guard_ack, template_ack,
-                      title_for)
+from kel.turn import (CHANGE_CLAIM, COMPLETION_CLAIM, FORCED_SUFFIX, NO_CHANGE, NO_CHANGE_WITH_WORK,
+                      decide, guard_ack, guard_reply, template_ack, title_for)
 
 
 class FakeTurn:
@@ -87,6 +87,47 @@ class DecideTests(unittest.TestCase):
                                                         'summary': 'still running, not finished yet'}])
         self.assertIn('still running, not finished yet', model.calls[0]['prompt'])
 
+    RUNNING = [{'work_id': 'sub-1', 'title': 'Garden plan', 'state': 'RUNNING', 'can_amend': True,
+                'request': 'Write a garden plan'},
+               {'work_id': 'sub-0', 'title': 'Old list', 'state': 'CLOSED', 'can_amend': False,
+                'request': 'Write a list'}]
+
+    def test_an_amendment_names_changeable_work_and_carries_the_whole_request(self):
+        answer = {'action': 'amend_background_work', 'work_id': 'sub-1',
+                  'amended_request': 'Write a garden plan that includes herbs', 'title': 'Garden plan with herbs'}
+        out = decide(FakeTurn(answer), self.packet, 'also include herbs', self.RUNNING)
+        self.assertEqual(out, {'action': 'amend_background_work', 'work_id': 'sub-1',
+                               'amended_request': 'Write a garden plan that includes herbs',
+                               'title': 'Garden plan with herbs'})
+        # A wrong or missing id falls to the only changeable work; a missing request is rebuilt.
+        out = decide(FakeTurn({'action': 'amend_background_work', 'work_id': 'nope'}), self.packet,
+                     'also include herbs', self.RUNNING)
+        self.assertEqual((out['work_id'], out['amended_request']),
+                         ('sub-1', 'Write a garden plan\n\nChange: also include herbs'))
+        # Work that can no longer change is never amended: the amended request is new work.
+        out = decide(FakeTurn(dict(answer, work_id='sub-0')), self.packet, 'also include herbs',
+                     [self.RUNNING[1]])
+        self.assertEqual(out['action'], 'start_background_work')
+        self.assertEqual(out['acknowledgement'], template_ack())
+        # Forced messages may still be amendments.
+        out = decide(FakeTurn(answer), self.packet, 'also run `git status`', self.RUNNING, forced=True)
+        self.assertEqual(out['action'], 'amend_background_work')
+
+    def test_a_reply_claiming_a_change_is_rejected(self):
+        claim = {'action': 'reply', 'text': "Got it — I've folded the herbs into the plan."}
+        out = decide(FakeTurn(claim), self.packet, 'also include herbs', self.RUNNING)
+        self.assertEqual(out, {'action': 'reply', 'text': NO_CHANGE_WITH_WORK})
+        out = decide(FakeTurn("Sure, I've added that."), self.packet, 'add herbs', [])
+        self.assertEqual(out, {'action': 'reply', 'text': NO_CHANGE})
+
+    def test_the_system_prompt_asks_before_starting_and_offers_only_next_steps(self):
+        model = FakeTurn(REPLY)
+        decide(model, self.packet, 'q', [])
+        system = model.calls[0]['system']
+        self.assertIn('Ask before you start, never after', system)
+        self.assertIn('amend_background_work', system)
+        self.assertNotIn('a detail that would improve the result', system)
+
 
 class GuardTests(unittest.TestCase):
     def test_completion_claims_and_markdown_are_rejected(self):
@@ -94,9 +135,30 @@ class GuardTests(unittest.TestCase):
                     "I've written the document.", 'The result is verified.', 'All tests passed.',
                     'Now ready for you.', '# Plan\nOn it.', '- step one\n- step two', 'x' * 601):
             self.assertEqual(guard_ack(bad, 'soil'), template_ack('soil'), bad)
-        good = "On it — that's running in the background. Want to talk about soil meanwhile?"
+        good = "On it — I'm starting on that in the background. Want to talk about soil meanwhile?"
         self.assertEqual(guard_ack(good, 'soil'), good)
         self.assertEqual(guard_ack(None), template_ack())
+
+    def test_acks_never_claim_a_change_ask_for_a_detail_or_say_it_already_runs(self):
+        # D-55: a hand-off offers a next step; it never asks for a detail that would change the
+        # work it just started, and nothing claims a change was folded in without a restart.
+        for bad in ("On it! I've added the herbs you mentioned.", "Got it — I'll fold that in.",
+                    'Sure, that has been incorporated into the plan.',
+                    'Starting now. Should I include a watering schedule too?',
+                    'Starting now. Let me know which beds you want covered.',
+                    "Starting now. Do you want me to focus on vegetables?",
+                    "It's already running in the background.", "I've started on it."):
+            self.assertEqual(guard_ack(bad, 'soil'), template_ack('soil'), bad)
+        self.assertIsNone(CHANGE_CLAIM.search(template_ack('soil')))
+
+    def test_a_reply_never_claims_a_change_it_did_not_make(self):
+        running = [{'work_id': 's1', 'title': 'Garden plan', 'can_amend': True}]
+        self.assertEqual(guard_reply("Done — I've added herbs to the plan.", running), NO_CHANGE_WITH_WORK)
+        self.assertEqual(guard_reply("I've updated it to include herbs.", []), NO_CHANGE)
+        for fine in ("It's still running — I'll update you when it's checked.",
+                     "I'm working on it; two of three parts are checked.",
+                     'Tomatoes need six to eight hours of sun, including morning light.'):
+            self.assertEqual(guard_reply(fine, running), fine)
 
     def test_template_offers_the_topic_or_an_open_question(self):
         self.assertTrue(template_ack('who the plan is for').endswith(
@@ -387,6 +449,105 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertEqual(contract['kind'], 'coding')
         self.assertEqual(contract['root'], str(project.resolve()))
         self.assertNotIn('file_request', contract)
+
+    # -- D-55: a change for running work restarts that work; it never becomes a second job ------
+    AMENDED = 'Write a spring garden plan for the back yard that includes an herb bed'
+
+    def amend_turn(self, amended=None):
+        """The fake turn model: the first message is work, later "also …" messages amend it."""
+        import re
+
+        def answer(prompt, system):
+            latest = prompt.split('latest message:')[-1].strip().lower()
+            if latest.startswith('also'):
+                found = re.findall(r'"work_id": "([^"]+)"', prompt)
+                return {'action': 'amend_background_work', 'work_id': found[0] if found else None,
+                        'amended_request': amended or self.AMENDED, 'title': 'Garden plan with herbs'}
+            if latest.startswith('did you'):
+                return {'action': 'reply', 'text': "Yes — I've added the herb bed to the plan."}
+            return WORK
+        self.turn.answer = answer
+
+    def live_jobs(self):
+        return [j for j in self.service.store.list_jobs()
+                if j['conversation'] == self.cid and j['state'] not in ('CANCELLED', 'CANCELLING')]
+
+    def test_a_change_for_running_work_restarts_it_instead_of_starting_a_second_job(self):
+        self.amend_turn()
+        first = self.service.submit({'text': 'Write me a spring garden plan for the back yard',
+                                     'conversation': self.cid})
+        self.assertEqual(self.wait(first), 'DISPATCHED')
+        old_job = self.row(first)['job_id']
+        change = self.service.submit({'text': 'also add an herb bed', 'conversation': self.cid})
+        self.assertEqual(self.wait(change, ('SETTLED', 'FAILED')), 'SETTLED')
+        self.assertIsNone(self.row(change)['job_id'])
+        self.assertEqual(self.wait(first), 'DISPATCHED')
+        deadline = time.time() + 20
+        while self.row(first)['job_id'] == old_job and time.time() < deadline:
+            time.sleep(.02)
+        new_job = self.row(first)['job_id']
+        self.assertNotEqual(new_job, old_job)
+        self.assertEqual(self.service.store.get(old_job)['state'], 'CANCELLED')
+        # Exactly one live job, carrying the amended request, behind the one original card.
+        self.assertEqual([j['id'] for j in self.live_jobs()], [new_job])
+        self.assertEqual(self.service.store.get(new_job)['contract']['request'], self.AMENDED)
+        self.assertEqual(self.row(first)['text'], self.AMENDED)
+        with contextlib.closing(self.service.store.connect()) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM submission_acks').fetchone()[0], 1)
+        restart = [m['text'] for m in self.messages() if m['text'].startswith('Restarting')]
+        self.assertEqual(restart, ["Restarting “Garden plan with herbs” with that change — I stopped the "
+                                   "earlier run, and I'll post the result here once it's been checked."])
+        view = self.service.handoff_view(self.cid, first)
+        self.assertEqual((view['job_id'], view['title']), (new_job, 'Garden plan with herbs'))
+        # The replaced job is not separate work anywhere the person or the turn model looks.
+        self.assertNotIn(old_job, [j['id'] for j in self.service.state(self.cid)['jobs']])
+        running = handoff.running_work(self.service.store, self.cid)
+        self.assertEqual([r['work_id'] for r in running], [first])
+        # The person's first message is the restarted job's source message; nothing was duplicated.
+        users = [m for m in self.messages() if m['role'] == 'user']
+        self.assertEqual([u['job_id'] for u in users], [new_job, None])
+
+    def test_a_change_while_the_work_is_still_starting_is_planned_in_before_any_job_exists(self):
+        self.amend_turn()
+        gate = self.block_planning()
+        first = self.service.submit({'text': 'Write me a spring garden plan for the back yard',
+                                     'conversation': self.cid})
+        self.wait_for_ack(first)
+        change = self.service.submit({'text': 'also add an herb bed', 'conversation': self.cid})
+        self.assertEqual(self.wait(change, ('SETTLED', 'FAILED')), 'SETTLED')
+        self.assertIn("Restarting “Garden plan with herbs” with that change before it gets going. "
+                      "I'll post the result here once it's been checked.", [m['text'] for m in self.messages()])
+        gate.set()
+        self.assertEqual(self.wait(first), 'DISPATCHED')
+        jobs = [j for j in self.service.store.list_jobs() if j['conversation'] == self.cid]
+        self.assertEqual(len(jobs), 1, 'an amendment must never create a second job')
+        self.assertEqual(jobs[0]['contract']['request'], self.AMENDED)
+
+    def test_a_change_for_finished_work_is_new_work_with_the_whole_request(self):
+        self.amend_turn()
+        first = self.service.submit({'text': 'Write me a spring garden plan for the back yard',
+                                     'conversation': self.cid})
+        self.assertEqual(self.wait(first), 'DISPATCHED')
+        old_job = self.row(first)['job_id']
+        self.set_job(old_job, state='CLOSED', verdict='VERIFIED')
+        change = self.service.submit({'text': 'also add an herb bed', 'conversation': self.cid})
+        self.assertEqual(self.wait(change), 'DISPATCHED')
+        self.assertEqual(self.service.store.get(old_job)['state'], 'CLOSED')
+        new_job = self.row(change)['job_id']
+        self.assertEqual(self.service.store.get(new_job)['contract']['request'], self.AMENDED)
+        self.assertFalse(any(m['text'].startswith('Restarting') for m in self.messages()))
+
+    def test_a_reply_that_claims_a_change_says_nothing_changed(self):
+        self.amend_turn()
+        first = self.service.submit({'text': 'Write me a spring garden plan for the back yard',
+                                     'conversation': self.cid})
+        self.assertEqual(self.wait(first), 'DISPATCHED')
+        job = self.row(first)['job_id']
+        question = self.service.submit({'text': 'did you add the herb bed?', 'conversation': self.cid})
+        self.assertEqual(self.wait(question), 'SETTLED')
+        self.assertEqual(self.messages()[-1]['text'], NO_CHANGE_WITH_WORK)
+        self.assertEqual(self.row(first)['job_id'], job)
+        self.assertEqual(len(self.live_jobs()), 1)
 
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
