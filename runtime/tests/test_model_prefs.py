@@ -161,5 +161,45 @@ class PayloadContractTests(unittest.TestCase):
         self.assertIsNone(self.service._model_action({'action': 'get'})['default'])
 
 
+class SavedChoiceRoutingTests(unittest.TestCase):
+    """CH-2: a saved catalog choice ('claude-code', 'codex') reaches the engine adapter it names."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        from kel.core import Store
+        self.store = Store(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_catalog_ids_map_to_engine_adapters(self):
+        from kel.model_prefs import adapter_names, runtime_model
+        self.assertEqual(adapter_names('claude-code'), ('claude-code', 'claude'))
+        self.assertEqual(adapter_names('codex'), ('codex-code', 'codex'))
+        self.assertEqual(adapter_names(None), ())
+        self.assertIsNone(runtime_model('claude-native'))
+        self.assertEqual(runtime_model('claude-sonnet-4-6'), 'claude-sonnet-4-6')
+
+    def test_a_saved_claude_choice_routes_a_document_job_to_claude(self):
+        from kel.engine import Engine, compile_document
+        from kel.native import FixtureAdapter
+        import json
+        with self.store.transaction() as db:  # Auto alone would pick the cheaper Codex
+            for name, cost in (('codex', 0.01), ('claude', 1.0)):
+                db.execute('INSERT INTO providers VALUES(?,?)',
+                           (name, json.dumps({'failures': 0, 'circuit_until': 0, 'quota': None, 'cost': cost})))
+        ModelPrefs(self.store).set_default('claude-code', 'claude-native')
+        engine = Engine(self.store, {'codex': FixtureAdapter(delay=5), 'claude': FixtureAdapter(delay=5)})
+        try:
+            job = engine.submit(compile_document('Write a short plain note about soil.'))
+            engine.tick()
+            milestone = self.store.get(job)['milestones']['document']
+            self.assertEqual(milestone['provider'], 'claude')
+            self.assertIsNone(milestone['model'], 'a catalog-only model id is not a runtime model')
+        finally:
+            engine.control(job, 'cancel')
+            engine.close()
+
+
 if __name__ == '__main__':
     unittest.main()

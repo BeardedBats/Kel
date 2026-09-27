@@ -47,6 +47,16 @@ CONVERSATION_KINDS=('chat','conversation')
 STOPPED_NOTE='You stopped this reply.'
 
 
+def fallback_line(choice):
+    """The one plain line a reply carries when it did not come from the chosen model (CH-2)."""
+    used=((choice or {}).get('answered_by') or {}).get('label') or "Kel's default model"
+    wanted=((choice or {}).get('fallback_from') or {})
+    name=wanted.get('label') or 'your chosen model'
+    if wanted.get('note')=='Not supported for chat yet':
+        return 'Used '+used+' — '+name+" isn't available for chat yet."
+    return 'Used '+used+' — '+name+" isn't available right now."
+
+
 def _accepts(model,name):
     """Whether a model adapter's execute() takes this keyword."""
     import inspect
@@ -295,26 +305,89 @@ class Service:
             return None
         return NativeAdapter(available,self.store.root/'workspaces'/available,self.store.root/'logs',timeout=native_timeout)
 
-    def _chat_model(self,cid,turn=False):
-        """The model a conversational reply uses: the conversation's saved choice, then the default
-        choice (the model pill writes both through /api/model), then Kel's own fallback."""
+    def _chat_choice(self,cid,turn=False):
+        """(model, choice) for a conversational reply: the conversation's saved choice, then the
+        default choice (the model pill writes both through /api/model), then Kel's own fallback.
+
+        `choice` records who answers (`answered_by`) and, when the first saved choice could not be
+        used, what it fell back from (`fallback_from`, CH-2) — message metadata, shown on demand."""
         from .model_prefs import ModelPrefs
         try:
             snapshot=ModelPrefs(self.store).snapshot(cid)
         except Exception:
             snapshot={}
+        chosen=None
         for preference in (snapshot.get('conversation'),snapshot.get('default')):
             if preference and preference.get('provider'):
+                chosen=chosen or preference
                 model=self._model_for(preference,turn)
                 if model is not None:
-                    return model
-        return self._model_for(None,turn)
+                    return model,self._choice(model,None if preference is chosen else chosen)
+        model=self._model_for(None,turn)
+        return model,self._choice(model,chosen)
+
+    def _chat_model(self,cid,turn=False):
+        return self._chat_choice(cid,turn)[0]
+
+    def _turn_choice(self,cid='main'):
+        """The model that decides one conversational turn (D-53) and its choice record; (None, None)
+        means the keyword gate decides."""
+        if self.turn_mode=='none':
+            return None,None
+        return self._chat_choice(cid,turn=True)
 
     def _turn_model(self,cid='main'):
-        """The model that decides one conversational turn (D-53); None = keyword gate."""
-        if self.turn_mode=='none':
+        return self._turn_choice(cid)[0]
+
+    def _runnable_provider(self,provider_id):
+        """Whether a registered engine adapter can run this catalog provider right now (CH-2)."""
+        from .model_prefs import adapter_names
+        from .providers import DEFINITIONS
+        item=next((entry for entry in DEFINITIONS if entry['id']==provider_id),None)
+        names=tuple((item or {}).get('adapters') or ()) or adapter_names(provider_id)
+        return bool(item and item.get('adapters')) and any(name in self.engine.adapters for name in names)
+
+    def _choice(self,model,fell_back_from):
+        """Who answers (catalog provider, plain label, model) and what the saved choice was if unused."""
+        from .model_prefs import provider_label,model_label
+        if model is None:
             return None
-        return self._chat_model(cid,turn=True)
+        if isinstance(model,NativeAdapter):
+            provider={'claude':'claude-code','codex':'codex'}.get(model.provider,model.provider)
+            answered={'provider':provider,'label':provider_label(provider),'model':None}
+        elif isinstance(model,InternalAdapter):
+            answered={'provider':'internal','label':model_label(model.model) or 'Claude','model':model.model}
+        else:
+            answered={'provider':getattr(model,'provider',None),'label':getattr(model,'label',None),
+                      'model':getattr(model,'model',None)}
+        choice={'answered_by':answered}
+        if fell_back_from:
+            wanted=fell_back_from.get('provider')
+            note=None
+            try:
+                from .providers import Providers
+                note=Providers(self.store,runnable=self._runnable_provider).status(wanted).get('available_note')
+            except Exception:
+                note=None
+            choice['fallback_from']={'provider':wanted,'model':fell_back_from.get('model'),
+                                     'label':provider_label(wanted),'note':note}
+        return choice
+
+    def _with_choice(self,db,cid,text,choice):
+        """The message text and its metadata for one answer. The first answer in a conversation that
+        fell back from the saved choice says so in one plain line (CH-2); every answer records it."""
+        if not choice:
+            return text,None
+        meta={'answered_by':choice.get('answered_by')}
+        fallback=choice.get('fallback_from')
+        if fallback:
+            meta['fallback_from']=fallback
+            marker='%"fallback_noted":'+json.dumps(fallback.get('provider'))+'%'
+            if not db.execute('SELECT 1 FROM messages WHERE conversation_id=? AND meta LIKE ? LIMIT 1',
+                              (cid,marker)).fetchone():
+                meta['fallback_noted']=fallback.get('provider')
+                text=str(text).rstrip()+'\n\n'+fallback_line(choice)
+        return text,meta
 
     def _images(self,packet):
         return [{'mime':f['mime'],'data':base64.b64encode((self.store.root/f['image_path']).read_bytes()).decode()}
@@ -322,19 +395,21 @@ class Service:
 
     def _still_planning(self,db,sid):
         row=db.execute('SELECT state FROM submissions WHERE id=?',(sid,)).fetchone()
-        return bool(row) and row['state']=='PLANNING'
+        return row is None or row['state']=='PLANNING'  # an unrecorded message (direct callers) is live
 
-    def _say(self,sid,cid,text):
+    def _say(self,sid,cid,text,choice=None):
         """One direct answer for this submission, and the submission settles with it.
 
         Written only while the submission is still being answered: a reply the person stopped
         (CH-3) is dropped here — never posted later, never part of the conversation's history.
-        Returns False when it was dropped.
+        `choice` (from `_chat_choice`) becomes the message's metadata. Returns False when dropped.
         """
         with self.store.transaction() as db:
             if not self._still_planning(db,sid):
                 return False
-            db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'assistant',text,time.time()))
+            text,meta=self._with_choice(db,cid,text,choice)
+            db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
+                       (cid,'assistant',text,time.time(),encode(meta) if meta else None))
             db.execute("UPDATE submissions SET state='SETTLED',job_id=NULL WHERE id=?",(sid,))
         return True
 
@@ -356,8 +431,9 @@ class Service:
                 if row['state']!='PLANNING':
                     return {'cancelled':False,'handed_off':False,'state':row['state']}
                 db.execute("UPDATE submissions SET state='CANCELLED',error='You stopped this reply.' WHERE id=?",(sid,))
-                seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
-                               (cid,'assistant',STOPPED_NOTE,time.time())).lastrowid
+                seq=db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
+                               (cid,'assistant',STOPPED_NOTE,time.time(),
+                                encode({'kind':'stopped','submission':sid}))).lastrowid
         with self._cancels_lock:
             event=self._cancels.get(sid)
         if event is not None:
@@ -397,7 +473,7 @@ class Service:
                             or (coding_verb and packet['project']['root'])
                             or (packet.get('kind_source')=='client' and kind not in CONVERSATION_KINDS))
                 running=handoff.running_work(self.store,cid)
-                turn_model=self._turn_model(cid)
+                turn_model,choice=self._turn_choice(cid)
                 decision=None
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
@@ -407,6 +483,7 @@ class Service:
                 if decision is None:
                     # Today's keyword gate: no turn model, or it could not be reached.
                     gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
+                    choice=None  # no model spoke: the template or the reply model below does
                     if forced or not gate_reply:
                         decision={'action':'start_background_work','title':title_for(text),
                                   'acknowledgement':template_ack(),'related_topic':None}
@@ -417,11 +494,11 @@ class Service:
                 if decision['action']=='start_background_work':
                     if decision.get('request') and decision['request']!=text:
                         text=self._rewrite_request(sid,decision['request'])
-                    return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision)
+                    return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision,choice)
                 if decision['action']=='reply':
-                    self._say(sid,cid,decision['text'])
+                    self._say(sid,cid,decision['text'],choice)
                 else:
-                    model=self._chat_model(cid)
+                    model,choice=self._chat_choice(cid)
                     if model is None:raise PolicyError('Connect a model before sending a message')
                     kwargs={}
                     if any(f.get('image_path') for f in packet['files']):
@@ -436,7 +513,7 @@ class Service:
                     if cancel.is_set():
                         return None  # the person stopped this reply; what came back is dropped
                     if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
-                    self._say(sid,cid,guard_reply(result['text'],running))
+                    self._say(sid,cid,guard_reply(result['text'],running),choice)
             # A direct answer or a refused recipe has no job to dispatch. Mark the request
             # settled so every client can stop waiting without inventing running work.
             with self.store.transaction() as db:db.execute(
@@ -449,7 +526,7 @@ class Service:
                 self._cancels.pop(sid,None)
         return None
 
-    def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision):
+    def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision,choice=None):
         """D-53: acknowledge now (one transaction), start the work on the planning pool, return."""
         title=title_for(text,decision.get('title'))
         ack=guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
@@ -459,8 +536,9 @@ class Service:
                     return None  # stopped before the hand-off was said: nothing starts
                 row=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
                 if not row:
-                    seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
-                                   (cid,'assistant',ack,time.time())).lastrowid
+                    ack,meta=self._with_choice(db,cid,ack,choice)
+                    seq=db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
+                                   (cid,'assistant',ack,time.time(),encode(meta) if meta else None)).lastrowid
                     db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
         return self.planning.submit(self._start_work,sid,cid,text,packet,kind,greenfield_flag)
 
@@ -505,8 +583,9 @@ class Service:
                         # A hand-off still planning picks the new request up before it creates its job.
                         db.execute("UPDATE submissions SET text=?,state='PLANNING',job_id=NULL,error=NULL WHERE id=?",(amended,target))
                         db.execute('UPDATE submission_acks SET title=? WHERE submission_id=?',(title,target))
-                        db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
-                                   (cid,'assistant',amend_ack(title,stopped_a_run=bool(old_job)),time.time()))
+                        db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
+                                   (cid,'assistant',amend_ack(title,stopped_a_run=bool(old_job)),time.time(),
+                                    encode({'kind':'amendment','submission':target,'replaced_job':old_job})))
                         db.execute("UPDATE submissions SET state='SETTLED' WHERE id=?",(sid,))
                 if changeable:
                     for run_id in stopped:
@@ -636,9 +715,9 @@ class Service:
                     with contextlib.closing(self.store.connect()) as db:
                         current=db.execute('SELECT text,state FROM submissions WHERE id=?',(sid,)).fetchone()
                         ack=db.execute('SELECT message_seq,title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
-                    if not current or current['state']!='PLANNING':
+                    if current and current['state']!='PLANNING':
                         return None  # stopped or restarted elsewhere; nothing to create
-                    if current['text']!=text:
+                    if current and current['text']!=text:
                         text=current['text'];continue  # changed while planning: plan the change in
                     contract['handoff']={'submission_id':sid,'ack_seq':ack['message_seq'] if ack else None,
                                          'title':ack['title'] if ack else title_for(text)}
@@ -782,7 +861,8 @@ class Service:
                 entry.update(needs_you=False,
                              why=('You stopped this work.' if stopped else
                                   ('Done and verified.' if job.get('verdict')=='VERIFIED'
-                                   else 'Settled: '+str(job.get('verdict') or 'unresolved').lower()+'.')),
+                                   else "It finished, but it didn't pass its checks." if job.get('verdict')=='FAILED'
+                                   else "It finished, but Kel couldn't fully verify the result.")),
                              next=('This work was stopped. Its saved request is kept in this '
                                    'conversation.' if stopped else
                                    'Nothing needed — ask for a new change for more work.'))
@@ -1066,6 +1146,12 @@ class Service:
                 row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(p['id'],)).fetchone();p['test_command']=json.loads(row['command']) if row else None
             conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
             messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
+            for message in messages:
+                # CH-2/CP-14: per-message details (who answered, what the checks found), on demand.
+                try:
+                    message['meta']=json.loads(message['meta']) if message.get('meta') else None
+                except (TypeError,ValueError):
+                    message['meta']=None
             # D-53: a hand-off carries its acknowledgement message and its short title.
             submissions=[dict(r) for r in db.execute('SELECT s.*,a.message_seq AS ack_seq,a.title AS title FROM submissions s '
                                                      'LEFT JOIN submission_acks a ON a.submission_id=s.id '
@@ -1269,7 +1355,7 @@ class Service:
             return Team(self.store).apply(data)
         if path=='/api/providers':
             from .providers import Providers
-            return Providers(self.store).apply(data)
+            return Providers(self.store,runnable=self._runnable_provider).apply(data)
         if path=='/api/autonomy':
             from .autonomy import Autonomy
             # Lease issuance is Kel's decision; the shell can inspect, resolve, and revoke only.
@@ -1504,18 +1590,20 @@ class Service:
             # and the choices from one payload, and a missing list is what made the settings
             # card and the chat pill fail to render.
             snapshot=prefs.snapshot(data.get('conversation'))
-            providers=Providers(self.store)
+            providers=Providers(self.store,runnable=self._runnable_provider)
             listing=[]
             for item in DEFINITIONS:
                 status=providers.status(item['id'])
-                usable=status['status'] in ('healthy','quota','quota_not_reported')
+                # CH-2/CP-3: available only when Kel can actually answer with it here.
+                usable=status['available'];note=status['available_note']
                 listing.append({
                     'id':item['id'],
                     'label':provider_label(item['id']),
                     'available':usable,
+                    'note':note,
                     'options':[{'id':model.get('id'),
                                 'label':model_label(model.get('id')) or model.get('id'),
-                                'available':usable} for model in item.get('models',())],
+                                'available':usable,'note':note} for model in item.get('models',())],
                 })
             snapshot['providers']=listing
             snapshot['auto_label']='Auto'

@@ -120,7 +120,8 @@ def _clean_topic(topic):
 def template_ack(related_topic=None):
     """The deterministic acknowledgement used whenever the model's own is missing or unsafe."""
     topic = _clean_topic(related_topic)
-    text = ("On it — I've started on that and it's running in the background. "
+    # Written before the job exists (CH-2): it says Kel is starting, never that it already runs.
+    text = ("On it — I'm starting on that now in the background. "
             "I'll post the result here once it's been checked.")
     if topic:
         return text + ' Want to talk about ' + topic + ' while it runs?'

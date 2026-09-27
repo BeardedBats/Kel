@@ -73,7 +73,19 @@ class TrustSummaryTests(unittest.TestCase):
         self.assertIsNone(verification_summary({'state': 'CLOSED', 'verdict': 'VERIFIED',
                                                 'milestones': {'a': {'checks': []}}}))
 
-    def test_publish_appends_summary_for_verified_jobs(self):
+    def published_meta(self, store, job):
+        import contextlib
+        import json
+        with contextlib.closing(store.connect()) as db:
+            row = db.execute("SELECT meta FROM messages WHERE job_id=? AND role='assistant'", (job,)).fetchone()
+        return json.loads(row['meta'])
+
+    def test_publish_keeps_the_trust_details_as_metadata_not_a_footer(self):
+        # CP-14: the result says only that it passed its checks; who ran and reviewed it and what
+        # the checks found are on-demand details (message metadata).
+        return self._verified_publish()
+
+    def _verified_publish(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         store = Store(temp.name)
@@ -89,9 +101,14 @@ class TrustSummaryTests(unittest.TestCase):
         store.assess(job)
         text, published = store.publish(job)
         self.assertTrue(published)
-        self.assertIn('Verified', text)
-        self.assertIn('• Executed by: Codex', text)
-        self.assertIn('• Reviewed by: Claude Code', text)
+        self.assertTrue(text.endswith('It passed its checks.'), text)
+        for footer in ('Verified', 'Executed by', 'Reviewed by'):
+            self.assertNotIn(footer, text)
+        meta = self.published_meta(store, job)
+        self.assertEqual(meta['verdict'], 'VERIFIED')
+        self.assertEqual([e['label'] for e in meta['executed_by']], ['Codex'])
+        self.assertEqual([e['label'] for e in meta['reviewed_by']], ['Claude Code'])
+        self.assertIn('• Executed by: Codex', meta['summary'])
 
     def test_publish_keeps_b2_explanation_for_uncertain_jobs(self):
         temp = tempfile.TemporaryDirectory()
@@ -108,8 +125,10 @@ class TrustSummaryTests(unittest.TestCase):
         self.assertTrue(published)
         self.assertIn('Kel could not fully verify the result', text)
         self.assertIn('What you can do next: ', text)
-        self.assertIn('Uncertain', text)
-        self.assertIn('• Limitation: Independent rubric review not recorded', text)
+        self.assertNotIn('• Limitation', text)
+        meta = self.published_meta(store, job)
+        self.assertEqual(meta['verdict'], 'UNCERTAIN')
+        self.assertIn('• Limitation: Independent rubric review not recorded', meta['summary'])
 
 
 if __name__ == '__main__':

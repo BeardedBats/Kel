@@ -29,19 +29,19 @@ CREATE INDEX IF NOT EXISTS provider_usage_provider ON provider_usage(provider, a
 # class: 'native-cli' | 'api' ; auth_mode: 'subscription' | 'api_key'
 DEFINITIONS = (
     {'id': 'claude-code', 'label': 'Claude (Claude Code)', 'class': 'native-cli',
-     'auth_mode': 'subscription', 'executable': 'claude',
+     'auth_mode': 'subscription', 'executable': 'claude', 'adapters': ('claude', 'claude-code'),
      'models': ({'id': 'claude-native', 'capabilities': ('text', 'tools', 'edit', 'shell')},)},
     {'id': 'codex', 'label': 'Codex', 'class': 'native-cli',
      'auth_mode': 'subscription', 'executable': 'codex',
-     'auth_file': ('CODEX_HOME', 'auth.json'),
+     'auth_file': ('CODEX_HOME', 'auth.json'), 'adapters': ('codex', 'codex-code'),
      'models': ({'id': 'codex-native', 'capabilities': ('text', 'tools', 'edit', 'shell')},)},
     {'id': 'internal', 'label': 'Anthropic API', 'class': 'api',
      'auth_mode': 'api_key', 'env': 'ANTHROPIC_API_KEY',
-     'base_url': 'https://api.anthropic.com',
+     'base_url': 'https://api.anthropic.com', 'adapters': ('internal', 'research'),
      'models': ({'id': 'claude-sonnet-4-6', 'capabilities': ('text', 'vision', 'tools')},)},
     {'id': 'deepseek', 'label': 'DeepSeek API', 'class': 'api',
      'auth_mode': 'api_key', 'env': 'DEEPSEEK_API_KEY',
-     'base_url': 'https://api.deepseek.com/v1',
+     'base_url': 'https://api.deepseek.com/v1', 'adapters': (),
      'models': ({'id': 'deepseek-chat', 'capabilities': ('text', 'tools')},
                 {'id': 'deepseek-reasoner', 'capabilities': ('text', 'tools')})},
 )
@@ -89,9 +89,33 @@ def models(provider, capability=None):
     return [dict(m) for m in items if capability in m['capabilities']]
 
 
+# What a person reads when a provider cannot answer in chat (CH-2): never a raw state name.
+UNAVAILABLE_NOTES = {
+    'not_installed': 'Not installed on this computer',
+    'degraded': 'Having trouble right now',
+    'unavailable': 'Out of quota for now',
+}
+
+
+def unavailable_note(item, status, runnable):
+    """Why this provider is not available for chat, in plain words; None when it is."""
+    if not item.get('adapters'):
+        return 'Not supported for chat yet'
+    if status in UNAVAILABLE_NOTES:
+        return UNAVAILABLE_NOTES[status]
+    if status == 'installed_not_authenticated':
+        return 'API key needed' if item.get('auth_mode') == 'api_key' else 'Sign-in needed'
+    if not runnable:
+        return 'Not connected yet'
+    return None
+
+
 class Providers:
-    def __init__(self, store):
+    def __init__(self, store, runnable=None):
+        """`runnable(provider_id)` says whether a registered engine adapter can run it right now;
+        without it, a provider counts as runnable when Kel has an adapter family for it at all."""
         self.store = store
+        self.runnable = runnable
         ensure_schema(store)
 
     # ---- state ---------------------------------------------------------------
@@ -148,7 +172,14 @@ class Providers:
             status = 'healthy'
         if status in ('quota', 'quota_not_reported') and failures == 0 and circuit_until <= now:
             status = 'healthy' if status == 'quota' else 'quota_not_reported'
+        # CH-2/CP-3: "available" means Kel can actually answer with it: a usable credential AND a
+        # registered adapter that runs it. A key alone (DeepSeek has no adapter) is not available.
+        usable = status in ('healthy', 'quota', 'quota_not_reported')
+        runnable = bool(item.get('adapters')) and (self.runnable(provider) if self.runnable else True)
+        available = usable and runnable
         return {
+            'available': available,
+            'available_note': None if available else unavailable_note(item, status, runnable),
             'provider': provider, 'label': item['label'], 'class': item['class'],
             'auth_mode': item['auth_mode'], 'base_url': item.get('base_url'),
             'capabilities': capabilities(provider), 'status': status, 'note': note,
@@ -172,10 +203,11 @@ class Providers:
             if not models(item['id'], capability):
                 continue
             status = self.status(item['id'])
-            usable = status['status'] in ('healthy', 'quota', 'quota_not_reported')
+            usable = status['available']
             candidates.append((item['id'], status, usable))
             if not usable:
-                reasons.append('%s unusable (%s: %s)' % (item['label'], status['status'], status['note']))
+                reasons.append('%s unusable (%s: %s)' % (item['label'], status['status'],
+                                                         status['available_note'] or status['note']))
         if not candidates:
             return {'chosen': None, 'chain': [], 'reason':
                     'No provider declares the capability "%s"' % capability, 'reasons': reasons}

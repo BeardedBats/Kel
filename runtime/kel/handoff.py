@@ -2,7 +2,7 @@
 
 `running_work` gives the turn model an honest picture of this conversation's work so "how's it
 going?" is answered from durable state, never from memory of the chat. `follow_up` posts one plain
-notice when a hand-off job stops making progress on its own (waiting for a worker, or blocked), so
+notice when a hand-off job stops making progress on its own (waiting for a model, or blocked), so
 the person is not left looking at a card that silently stalled.
 """
 import contextlib
@@ -44,7 +44,9 @@ def _entry(job, titles):
     state = job.get('state')
     verdict = job.get('verdict')
     if state == 'CLOSED':
-        summary = 'finished and checked' if verdict == 'VERIFIED' else 'finished but not fully verified'
+        summary = ('finished and checked' if verdict == 'VERIFIED' else
+                   "finished, but it didn't pass its checks" if verdict == 'FAILED' else
+                   'finished, but not fully verified')
     elif state in ('CANCELLED', 'CANCELLING'):
         summary = 'stopped'
     elif state == 'AWAITING_USER':
@@ -52,7 +54,7 @@ def _entry(job, titles):
     elif state in ('PAUSED', 'PAUSING'):
         summary = 'paused'
     elif state == 'WAITING_RESOURCE':
-        summary = 'waiting for a worker to become available'
+        summary = 'waiting for an available model'
     elif state == 'BLOCKED':
         summary = 'blocked by a safety rule'
     else:
@@ -119,7 +121,7 @@ def follow_up(store):
         if not note:
             note = ('A safety rule stopped this work before its next step, so nothing else ran. '
                     'Open Activity to see what it needs.' if state == 'BLOCKED' else
-                    'Kel is waiting for a worker to continue it.')
+                    'Kel is waiting for an available model to continue it.')
         text = 'An update on “' + str(row['title'] or 'your request') + '”: ' + note
         with store.transaction() as tx:
             cur = tx.execute('INSERT OR IGNORE INTO handoff_notices VALUES(?,?,?)',

@@ -191,6 +191,10 @@ class Store:
             # B3: executor model provenance. Older data dirs predate the column.
             if 'model' not in {r[1] for r in db.execute('PRAGMA table_info(runs)')}:
                 db.execute('ALTER TABLE runs ADD COLUMN model TEXT')
+            # CH-2/CP-14: per-message details shown on demand (which model answered, what the checks
+            # found, who reviewed) instead of footers in the message text. Older data dirs predate it.
+            if 'meta' not in {r[1] for r in db.execute('PRAGMA table_info(messages)')}:
+                db.execute('ALTER TABLE messages ADD COLUMN meta TEXT')
             # V1.5 G5: bounded routing-outcome learning needs the task class and escalation context.
             outcome_columns = {r[1] for r in db.execute('PRAGMA table_info(routing_outcomes)')}
             for column, kind in (('job_kind', 'TEXT'), ('attempts', 'INTEGER'), ('escalated', 'INTEGER'),
@@ -674,21 +678,23 @@ class Store:
                     text=("Here's the content for "+str(file_request.get('filename'))+' — it passed its checks. '
                           +file_note+('\n\n'+text if text else ''))
                 elif handoff.get('title'):
-                    text="Here's "+str(handoff['title'])+' — it passed its checks.'+('\n\n'+text if text else '')
+                    text="Here's "+natural_title(handoff['title'])+' — it passed its checks.'+('\n\n'+text if text else '')
+                elif job['contract'].get('kind')!='coding':
+                    text=(text+'\n\n' if text else '')+'It passed its checks.'
             else:
                 text=(explain_failure(job)
                       or ('I could not verify the complete result.' if job['verdict']=='UNCERTAIN' else 'The result did not pass its checks.'))
                 if file_request:
                     text=text+'\n\nNo file was created in '+str(file_request.get('folder'))+'.'
-            summary=verification_summary(job)
-            if summary:
-                text=(text+'\n\n'+summary) if text else summary
+            # CP-14: who ran it, who reviewed it and what the checks found are details shown on
+            # demand (message metadata), not a footer in the result itself.
+            meta=verification_details(job)
             key = digest([job_id, job['assessment']])
             cur = db.execute("INSERT OR IGNORE INTO publications VALUES(?,?,?,?,?)",
                              (key, job_id, job['assessment'], text, time.time()))
             if cur.rowcount:
-                db.execute("INSERT INTO messages(conversation_id,role,text,job_id,at) VALUES(?,?,?,?,?)",
-                           (job['conversation'], 'assistant', text, job_id, time.time()))
+                db.execute("INSERT INTO messages(conversation_id,role,text,job_id,at,meta) VALUES(?,?,?,?,?,?)",
+                           (job['conversation'], 'assistant', text, job_id, time.time(), encode(meta)))
             return text, bool(cur.rowcount)
 
     def control(self, job_id, action):
@@ -964,9 +970,10 @@ class Store:
                 db.execute("INSERT INTO jobs VALUES(?,?,?)", (job['id'], job['revision'], encode(job)))
             return len(snapshots)
 
-    def add_message(self, text, role='user', conversation='main'):
+    def add_message(self, text, role='user', conversation='main', meta=None):
         with self.transaction() as db:
-            db.execute("INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)", (conversation, role, text, time.time()))
+            return db.execute("INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)",
+                              (conversation, role, text, time.time(), encode(meta) if meta else None)).lastrowid
 
     def events(self, after=0):
         with contextlib.closing(self.connect()) as db:
@@ -1074,21 +1081,21 @@ def explain_failure(job):
     if state == 'WAITING_RESOURCE':
         if milestone_errors:
             return _explain(
-                'A worker stopped before this job finished.',
+                'The model working on this stopped before it finished.',
                 milestone_errors[0],
                 'Kel preserved your project copy and paused automatic retries so a partial change would not be replayed.',
                 'Open Work context to review the preserved work, then retry or re-request the task.')
         if job.get('route_block'):
             return _explain(
-                'No worker could start this job.',
+                'No model could start this work.',
                 _route_block_reasons(job['route_block']),
-                'Kel keeps re-checking in the background and will resume automatically when a worker becomes available.',
-                'Wait for the worker to recover, or review provider status in Work context.')
+                'Kel keeps re-checking in the background and will resume automatically when a model becomes available.',
+                'Wait for a model to become available, or review model status in Settings.')
         return _explain(
-            'Kel is waiting for a worker to run this job.',
-            'No failure was recorded; the job is blocked on worker availability.',
-            'Kel keeps re-checking in the background and will resume automatically when a worker becomes available.',
-            'Wait for the worker to recover, or review provider status in Work context.')
+            'Kel is waiting for an available model to run this work.',
+            'No failure was recorded; no model is free to run it yet.',
+            'Kel keeps re-checking in the background and will resume automatically when a model becomes available.',
+            'Wait for a model to become available, or review model status in Settings.')
 
     # A verdict explains only a settled job: a job still being prepared carries the
     # placeholder UNCERTAIN verdict and is described by its state branch instead.
@@ -1148,6 +1155,57 @@ def _worker_label(provider, model=None):
             return 'Claude ' + parts[1].capitalize()
         return model
     return name or provider or 'Unknown worker'
+
+
+_LEADING_ARTICLES = ('the ', 'a ', 'an ', 'your ', 'my ', 'our ', 'this ', 'that ')
+
+
+def natural_title(title):
+    """A work title as it reads inside a sentence: "Here's your garden plan", "Here's the ACCEPT note".
+
+    An article or possessive the title already has is kept (lower-cased); otherwise "your" is added.
+    The first word of a several-word title is lower-cased only when it is an ordinary capitalised
+    word, so names, acronyms and file names ("Kel", "README", "iOS", "hello.txt") keep their spelling.
+    """
+    name = ' '.join(str(title or '').split()).strip().rstrip('.')
+    if not name:
+        return 'your result'
+    lowered = name.lower()
+    for article in _LEADING_ARTICLES:
+        if lowered.startswith(article):
+            return article + name[len(article):]
+    first, _, rest = name.partition(' ')
+    if rest and first[:1].isupper() and first[1:] == first[1:].lower() and first.replace('-', '').isalpha():
+        first = first.lower()
+    return 'your ' + first + ((' ' + rest) if rest else '')
+
+
+def verification_details(job):
+    """The on-demand details of a settled result (CP-14): verdict, checks, who ran and reviewed it.
+
+    The same persisted facts `verification_summary` states, as data for a Details view instead of
+    a footer in the message. Never includes worker text, prompts or transcripts.
+    """
+    milestones = list(job.get('milestones', {}).values())
+    checks = [c for m in milestones for c in m.get('checks', []) if isinstance(c, dict)]
+    executors, reviewers = [], []
+    for m in milestones:
+        if m.get('provider'):
+            entry = {'provider': m['provider'], 'model': m.get('model'),
+                     'label': _worker_label(m['provider'], m.get('model'))}
+            if entry not in executors:
+                executors.append(entry)
+    for c in checks:
+        if c.get('kind') == 'manual_review' and c.get('reviewer_provider'):
+            entry = {'provider': c['reviewer_provider'], 'model': c.get('reviewer_model'),
+                     'label': _worker_label(c['reviewer_provider'], c.get('reviewer_model'))}
+            if entry not in reviewers:
+                reviewers.append(entry)
+    summary = verification_summary(job)
+    return {'kind': 'result', 'verdict': job.get('verdict'),
+            'checks': [{'kind': c.get('kind'), 'verdict': c.get('verdict')} for c in checks],
+            'executed_by': executors, 'reviewed_by': reviewers,
+            'summary': summary.split('\n') if summary else []}
 
 
 def verification_summary(job):

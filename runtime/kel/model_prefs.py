@@ -131,6 +131,33 @@ class ModelPrefs:
         return snap['conversation'] or snap['default']
 
 
+# CH-2: a saved choice names a catalog provider (providers.DEFINITIONS), but the engine registers its
+# adapters by runtime name — text work runs on 'claude'/'codex', code on 'claude-code'/'codex-code'.
+# Without this mapping a saved Claude or Codex choice matched no candidate and was silently ignored.
+PREFERENCE_ADAPTERS = {
+    'claude-code': ('claude-code', 'claude'),
+    'claude': ('claude', 'claude-code'),
+    'codex': ('codex-code', 'codex'),
+    'codex-code': ('codex-code', 'codex'),
+    'internal': ('internal', 'research'),
+    'research': ('research', 'internal'),
+}
+# Catalog model ids that only name "the CLI's own model"; the runtime passes no model for them.
+CATALOG_ONLY_MODELS = ('claude-native', 'codex-native')
+
+
+def adapter_names(provider):
+    """The engine adapter names a saved provider choice stands for (empty for no choice)."""
+    if not provider:
+        return ()
+    return PREFERENCE_ADAPTERS.get(provider, (provider,))
+
+
+def runtime_model(model):
+    """The model id to run for a saved model choice (None = the adapter's own default)."""
+    return None if not model or model in CATALOG_ONLY_MODELS else model
+
+
 def provider_label(provider_id):
     return PROVIDER_LABELS.get(provider_id, provider_id)
 
