@@ -12,16 +12,9 @@ import { isBackendHttpError } from '@/common/adapter/httpBridge';
 import { configService } from '@/common/config/configService';
 import AionModal from '@/renderer/components/base/AionModal';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
-import ChannelDingTalkLogo from '@/renderer/assets/channel-logos/dingtalk.svg';
-import ChannelDiscordLogo from '@/renderer/assets/channel-logos/discord.svg';
-import ChannelLarkLogo from '@/renderer/assets/channel-logos/lark.svg';
-import ChannelSlackLogo from '@/renderer/assets/channel-logos/slack.svg';
-import ChannelTelegramLogo from '@/renderer/assets/channel-logos/telegram.svg';
-import ChannelWecomLogo from '@/renderer/assets/channel-logos/wecom.svg';
-import ChannelWeixinLogo from '@/renderer/assets/channel-logos/weixin.svg';
 import { isElectronDesktop } from '@/renderer/utils/platform';
-import { Button, Form, Input, Message, Switch, Tabs, Tooltip } from '@arco-design/web-react';
-import { CheckOne, Communication, Copy, EditTwo, Refresh } from '@icon-park/react';
+import { Button, Form, Input, Message, Switch, Tooltip } from '@arco-design/web-react';
+import { CheckOne, Copy, EditTwo, Refresh } from '@icon-park/react';
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/renderer/services/i18n/format';
@@ -49,17 +42,6 @@ const PreferenceRow: React.FC<{
   </div>
 );
 
-const CHANNEL_LOGOS = [
-  { src: ChannelTelegramLogo, alt: 'Telegram' },
-  { src: ChannelLarkLogo, alt: 'Lark' },
-  { src: ChannelDingTalkLogo, alt: 'DingTalk' },
-  { src: ChannelWeixinLogo, alt: 'WeChat' },
-  { src: ChannelWecomLogo, alt: 'WeCom' },
-  { src: ChannelSlackLogo, alt: 'Slack' },
-  { src: ChannelDiscordLogo, alt: 'Discord' },
-] as const;
-
-const ChannelModalContentLazy = React.lazy(() => import('./channels/ChannelModalContent'));
 const QRCodeSVGLazy = React.lazy(async () => {
   const mod = await import('qrcode.react');
   return { default: mod.QRCodeSVG };
@@ -76,7 +58,6 @@ const WebuiModalContent: React.FC = () => {
   const { t, i18n } = useTranslation();
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
-  const [activeTab, setActiveTab] = useState<'webui' | 'channels'>('webui');
 
   // 检测是否在 Electron 桌面环境 / Check if running in Electron desktop environment
   const isDesktop = isElectronDesktop();
@@ -554,18 +535,13 @@ const WebuiModalContent: React.FC = () => {
   const displayPassword = getDisplayPassword();
   const displayUsername = status?.adminUsername || 'admin';
 
-  // 浏览器端只显示 Channels 配置，不显示 WebUI 服务配置 / In browser mode, only show Channels config, not WebUI service config
+  // The WebUI service is configured on the desktop; a browser session only explains where.
   if (!isDesktop) {
     return (
       <div className='flex flex-col h-full w-full'>
-        <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
-          <div className='space-y-16px'>
-
-            <Suspense fallback={<div className='text-13px text-t-secondary'>{t('common.loading')}</div>}>
-              <ChannelModalContentLazy />
-            </Suspense>
-          </div>
-        </AionScrollArea>
+        <p className='kel-shell-webui-browser-note text-14px text-t-secondary m-0'>
+          Remote access is managed from the desktop app.
+        </p>
       </div>
     );
   }
@@ -585,21 +561,6 @@ const WebuiModalContent: React.FC = () => {
           </div>
           <div className='kel-shell-source-step'><span>{`Step ${!webuiEnabled ? 1 : !allowRemotePreference ? 2 : 3} of 3`}</span><span>·</span><strong>{!webuiEnabled ? 'Enable WebUI' : !allowRemotePreference ? 'Access URL' : 'Allow Remote Access'}</strong></div>
         </div>
-
-        {/* Messaging 强引导入口 / Messaging primary entry — disabled, kept for future use
-        <div className='rd-12px border border-line bg-2 px-12px py-10px flex items-center justify-between gap-10px'>
-            <div className='min-w-0 flex items-center gap-8px'>
-              <Communication theme='outline' size='18' className='text-[rgb(var(--primary-6))] shrink-0' />
-              <div className='min-w-0'>
-                <div className='text-13px text-t-primary font-500'>{t('settings.webui.featureChannelsTitle')}</div>
-                <div className='text-12px text-t-secondary truncate'>{t('settings.webui.featureChannelsDesc')}</div>
-              </div>
-            </div>
-            <Button type='primary' size='small' className='rd-100px' onClick={() => setActiveTab('channels')}>
-              {t('settings.webui.goToChannels')}
-            </Button>
-          </div>
-        */}
 
         {/* WebUI 服务卡片 / WebUI Service Card */}
         <div className={`kel-shell-settings-card kel-shell-webui-service-card ${isDesktopRunning ? 'is-running' : ''} px-[12px] md:px-[28px] py-14px bg-2 rd-16px`}>
