@@ -38,8 +38,7 @@ import { BackendLifecycleManager } from '@aionui/web-host';
 import { resolveBinaryPath } from '@process/backend';
 import './process/bridge/feedbackBridge';
 import { wasLaunchedAtLogin } from '@process/bridge/applicationBridge';
-import { onLanguageChanged } from './process/bridge/systemSettingsBridge';
-import { setInitialLanguage } from '@process/services/i18n';
+import { i18nReady } from '@process/services/i18n';
 import { setupApplicationMenu } from './process/utils/appMenu';
 import { startWebHost } from '@aionui/web-host';
 import { initializeZoomFactor, setupZoomForWindow } from './process/utils/zoom';
@@ -1063,21 +1062,13 @@ const handleAppReady = async (): Promise<void> => {
     appReadyDone = true;
     mark('createWindow');
 
-    // 读取语言设置并初始化主进程 i18n，然后刷新托盘菜单
-    // Read language setting and initialize main process i18n, then refresh tray menu
+    // D-61: the main process is English only; refresh the tray menu once its strings are loaded.
     try {
-      const savedLanguage = await ProcessConfig.get('language');
-      await setInitialLanguage(savedLanguage);
-      // After language is set, refresh tray menu if it exists
+      await i18nReady;
       await refreshTrayMenu();
     } catch (error) {
-      console.error('[index] Failed to initialize i18n language:', error);
+      console.error('[index] Failed to initialize tray menu strings:', error);
     }
-
-    // 监听语言变更，刷新托盘菜单文案 / Listen for language changes to refresh tray menu labels
-    onLanguageChanged(() => {
-      void refreshTrayMenu();
-    });
 
     if (!isE2ETestMode) {
       // 窗口创建后异步恢复 WebUI，不阻塞 UI / Restore WebUI async after window creation, non-blocking

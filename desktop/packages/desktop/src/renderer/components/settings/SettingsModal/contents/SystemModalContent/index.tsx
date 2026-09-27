@@ -11,7 +11,6 @@ import type { IGpuStatus, IStartOnBootStatus } from '@/common/adapter/ipcBridge'
 import { configService } from '@/common/config/configService';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
-import LanguageSwitcher from '@/renderer/components/settings/LanguageSwitcher';
 import { useCrossSessionMessageEnabled } from '@/renderer/hooks/chat/useCrossSessionMessageEnabled';
 import { getClientBusinessSetting, setClientBusinessSetting } from '@/renderer/services/clientBusinessSettings';
 import {
@@ -324,8 +323,7 @@ const SystemModalContent: React.FC = () => {
 
   // Cross-session messaging master switch. Unlike its neighbours this one is a
   // typed column on `system_settings`, so it goes through `PATCH /api/settings`
-  // (the hook owns that call); `changeLanguage` on this same page is the
-  // precedent for the different channel.
+  // (the hook owns that call).
   const { enabled: crossSessionMessageEnabled, setEnabled: setCrossSessionMessageEnabled } =
     useCrossSessionMessageEnabled();
   const handleCrossSessionMessageChange = useCallback(
@@ -362,7 +360,7 @@ const SystemModalContent: React.FC = () => {
   }, [systemInfo, form]);
 
   const preferenceItems = [
-    { key: 'language', label: t('settings.language'), component: <LanguageSwitcher /> },
+    // D-61: Kel ships in English only, so there is no language choice.
     {
       key: 'startOnBoot',
       label: t('settings.startOnBoot'),

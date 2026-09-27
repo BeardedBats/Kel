@@ -372,9 +372,10 @@ function checkIndexConfig() {
     logError('i18n config should export supportedLanguages');
   }
 
-  // Ensure lazy loading support exists
-  if (!content.includes('loadLocaleModules') && !content.includes('import(')) {
-    logWarning('i18n config may not be using lazy loading');
+  // D-61: Kel ships en-US only, loaded synchronously; no other locale may be wired in.
+  const otherLocaleImport = content.match(/locales\/(?!en-US\/)[A-Za-z-]+\//);
+  if (otherLocaleImport) {
+    logError(`i18n config imports a locale other than en-US (${otherLocaleImport[0]})`);
   }
 
   logSuccess('i18n configuration check passed');

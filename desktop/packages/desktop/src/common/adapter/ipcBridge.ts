@@ -1460,16 +1460,14 @@ export const systemSettings = {
   setKeepAwake: bridge.buildProvider<{ enabled: boolean; active: boolean }, { enabled: boolean }>(
     'system-settings:set-keep-awake'
   ),
-  changeLanguage: httpPatch<void, { language: string }>('/api/settings', (p) => ({ language: p.language })),
   // Cross-session messaging master switch. NOTE the channel differs from the
   // sibling switches above: this one is a TYPED COLUMN on `system_settings`
   // (migration 040), so it goes through `/api/settings`, not the
-  // `/api/settings/client` KV. `changeLanguage` right above is the precedent.
+  // `/api/settings/client` KV.
   getCrossSessionMessageEnabled: httpGet<{ cross_session_message_enabled: boolean }, void>('/api/settings'),
   setCrossSessionMessageEnabled: httpPatch<void, { enabled: boolean }>('/api/settings', (p) => ({
     cross_session_message_enabled: p.enabled,
   })),
-  languageChanged: wsEmitter<{ language: string }>('system-settings:language-changed'),
   getSaveUploadToWorkspace: httpGetClientSetting<boolean>('saveUploadToWorkspace'),
   setSaveUploadToWorkspace: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
     saveUploadToWorkspace: p.enabled,
