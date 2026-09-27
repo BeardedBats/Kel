@@ -1141,3 +1141,39 @@ export const kelBriefs = {
       { action: 'list', project_id: projectId }
     ),
 };
+
+/** D-53: where one conversational hand-off stands, for its in-chat card. */
+export type KelHandoffPhase =
+  | 'starting'
+  | 'running'
+  | 'needs_you'
+  | 'waiting'
+  | 'done'
+  | 'needs_look'
+  | 'stopped'
+  | 'failed_to_start';
+
+export interface KelHandoff {
+  submission_id: string;
+  conversation: string;
+  submission_state: string;
+  title: string | null;
+  ack_seq: number | null;
+  job_id: string | null;
+  state: string | null;
+  verdict: string | null;
+  accepted: number;
+  total: number;
+  why: string | null;
+  next: string | null;
+  error: string | null;
+  phase: KelHandoffPhase;
+  can_stop: boolean;
+  can_retry: boolean;
+}
+
+/** The engine refuses a submission that belongs to another conversation. */
+export const kelHandoff = (conversation: string, submission: string) =>
+  call<KelHandoff>(
+    `/api/handoff?conversation=${encodeURIComponent(conversation)}&submission=${encodeURIComponent(submission)}`
+  );

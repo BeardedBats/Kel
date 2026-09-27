@@ -51,6 +51,7 @@ class PlannerProvenanceTests(unittest.TestCase):
         os.environ.pop('ANTHROPIC_API_KEY', None)
         os.environ.pop('KEL_INTERNAL_MODEL', None)
         os.environ['KEL_REVIEWER'] = 'none'
+        os.environ['KEL_TURN_MODEL'] = 'none'  # D-53: deterministic keyword gate
         os.environ['KEL_SKIP_TELEMETRY'] = '1'
         self.addCleanup(lambda: os.environ.update(saved))
         base = Path(self.temp.name)

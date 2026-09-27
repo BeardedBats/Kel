@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { recoverHistory, type HistoryMessage } from './reconcileHistory';
+import { ensureWorkCards, recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import {
@@ -448,6 +448,9 @@ export async function initializeKel(port: number): Promise<void> {
     }
     const current = await kelRequest('/api/state?conversation=' + cid);
     history[id] = recoverHistory(id, (history[id] || []) as HistoryMessage[], current.messages, native);
+    // D-53: a hand-off's live card was streamed once; a conversation reopened later (or a stream
+    // that dropped) still shows exactly one card beside its acknowledgement.
+    history[id] = ensureWorkCards(history[id] as HistoryMessage[], current.submissions || [], native, id, current.messages);
     // In-chat approvals (V1.6): one card anchored to the message Kel posted, so the
     // conversation shows the decision where it belongs - pending and settled alike.
     try {
@@ -496,16 +499,17 @@ export async function initializeKel(port: number): Promise<void> {
             ? 'completed'
             : 'failed'
           : job.state === 'CANCELLED'
-            ? 'failed'
+            ? 'completed' // a stop the person asked for is not a failure
             : ['PAUSED', 'AWAITING_USER', 'WAITING_RESOURCE'].includes(job.state)
               ? 'pending'
               : 'in_progress';
+      const title = job.state === 'CANCELLED' ? 'Cancelled' : 'Kel work: ' + job.state + ' / ' + job.verdict;
       history[id] = history[id].filter((item) => (item as { id: string }).id !== row.id);
       history[id].push({
         ...row,
         content: {
           ...content,
-          update: { ...content.update, status, title: 'Kel work: ' + job.state + ' / ' + job.verdict },
+          update: { ...content.update, status, title },
         },
       });
     }
@@ -568,7 +572,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:request', async (event, route: string, body?: unknown) => {
     assertTrustedSender(event, { allowDevServer: true });
     if (
-      !/^\/api\/(state(?:\?conversation=[a-zA-Z0-9-]+)?|work\?conversation=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
+      !/^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*))?|work\?conversation=[a-zA-Z0-9-]+|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|project|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/.test(
         route
       )
     )

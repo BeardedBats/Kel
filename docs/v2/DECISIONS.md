@@ -592,3 +592,31 @@ recording — is not required by §10, and the recorded limitation is a Muse end
 first utterance's partial is lost when Muse never marks it final) rather than a Kel defect.
 **Decision:** keep it out of V2; keep the limitation documented in `KNOWN_LIMITATIONS.md`; revisit it
 with the V2.5 realtime work. Nothing in V2 acceptance depends on it.
+
+## D-53 — Real work is handed to the background conversationally; the chat stays usable
+
+**Decided 2026-09-26.** Measured gap: a real-work message held the ACP turn open until the job
+settled, so the composer blocked new sends for minutes, and a plain question could queue behind a
+planner on the shared two-thread pool. **Decision:** one turn decision (`kel/turn.py`) either
+answers directly (`reply`) or starts background work (`start_background_work`) with a short, warm
+acknowledgement that offers to keep talking about one related topic. The service's deterministic
+floors stay authoritative (status, recipe, continuation, coding-without-project; and as work:
+`needs_work` (D-38), a named file in a named folder, explicit research openings / research kind,
+greenfield coding, a coding verb inside a rooted project, an explicit client kind) — a floor forces
+work even when the model says reply. With no turn model (or `KEL_TURN_MODEL=none`) the old keyword
+gate decides and a template acknowledgement is used. The acknowledgement is written in one
+transaction with a `submission_acks` row (a new table: several places insert seven positional values
+into `submissions`), the work is started on its own `planning` pool, and the ACP turn ends with a
+`kel-work:<submission>` tool call that the desktop renders as a live card (`/api/handoff`).
+`Store.publish` posts the checked result into the same conversation; only a VERIFIED result may say
+"it passed its checks". A start failure, a boot that interrupted a start, and a hand-off job that
+stalls (waiting for a worker, blocked) each say so once, in the chat. The reply model follows the
+saved model choice (conversation, then default, then Kel's fallback). A named file in a named folder
+runs as file work inside a saved project; anywhere else its text result says plainly that no file
+was created. Deviation from the planning pass: `needs_research()` alone is **not** a floor — it
+matches "current"/"latest"/"today", so "what's the current state of my job?" would have become a web
+research job; explicit research openings and the research kind are floors, and the turn model decides
+the rest. *Forbids:* an acknowledgement that claims the work is done, ready, verified or passed; a
+work card or result that says "done and checked" for anything but a VERIFIED verdict; the composer's
+Stop cancelling handed-off work (the card's Stop does that, after a confirmation); and a second
+acknowledgement on retry.

@@ -23,6 +23,7 @@ import {
   loadConversationMessagePage,
   loadLatestConversationMessages,
 } from '@/renderer/utils/chat/messagePagination';
+import { KEL_POLL_ACTIVE_MS, KEL_POLL_IDLE_MS, nextPollDelay } from '@/common/chat/kelWork';
 
 const [useMessageList, MessageListProvider, useUpdateMessageList] = createContext([] as TMessage[]);
 const [useMessageListLoading, MessageListLoadingProvider, useUpdateMessageListLoading] = createContext(false);
@@ -973,44 +974,48 @@ export const useMessageLstCache = (key: string) => {
     return [];
   }, [key, setPagination, update]);
 
-  // Kel work can outlive ACP and complete after the desktop reopens.
+  // Kel work can outlive ACP and complete after the desktop reopens. D-53: work is also handed off
+  // mid-conversation and its checked result arrives later, so this poll never stops — it only slows
+  // down while nothing is open (nextPollDelay).
   useEffect(() => {
     if (!key || !window.kelAPI) return;
     let stopped = false,
-      polling = false,
-      fingerprint = '';
+      fingerprint = '',
+      timer: ReturnType<typeof setTimeout> | undefined;
     const poll = async () => {
-      if (polling || stopped) return;
-      polling = true;
+      let delay = KEL_POLL_IDLE_MS;
       try {
         const cid = await window.kelAPI!.conversation(key);
         if (!cid || stopped) return;
         const state = (await window.kelAPI!.request('/api/state?conversation=' + cid)) as {
           jobs: { id: string; state: string; verdict: string }[];
           messages?: unknown[];
+          submissions?: { id: string; state: string }[];
         };
         // The message count joins the fingerprint: a new approval announcement must
         // surface even when the job state itself did not change since the last poll.
+        // Submission states join it too: a hand-off moving from starting to started (or failing
+        // to start) must reach the chat even before any job exists.
         const next = JSON.stringify([
           state.jobs.map((job) => [job.id, job.state, job.verdict]),
           state.messages?.length ?? 0,
+          (state.submissions ?? []).map((submission) => [submission.id, submission.state]),
         ]);
         if (next !== fingerprint && !stopped) {
           fingerprint = next;
           await loadMessages();
         }
-        if (state.jobs.length && state.jobs.every((job) => ['CLOSED', 'CANCELLED'].includes(job.state)))
-          clearInterval(timer);
+        delay = nextPollDelay(state);
       } catch (error) {
         console.error('[Kel] Failed to refresh durable work', error);
       } finally {
-        polling = false;
+        if (!stopped) timer = setTimeout(() => void poll(), delay);
       }
     };
-    const timer = setInterval(() => void poll(), 2500);
+    timer = setTimeout(() => void poll(), KEL_POLL_ACTIVE_MS);
     return () => {
       stopped = true;
-      clearInterval(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [key, loadMessages]);
 

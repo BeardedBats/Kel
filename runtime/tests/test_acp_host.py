@@ -204,12 +204,86 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(lines[0]['error']['code'], -32700)
         self.assertEqual(lines[1]['result']['agentInfo']['name'], 'kel')
 
+    def test_session_tuning_is_accepted_and_errors_use_real_json_rpc_codes(self):
+        # The bundled host shows -32000 as "Authentication required"; Kel never sends it.
+        output = io.StringIO()
+        lines = [{'jsonrpc': '2.0', 'id': 1, 'method': 'session/set_mode', 'params': {'sessionId': 'kel:c1', 'modeId': 'x'}},
+                 {'jsonrpc': '2.0', 'id': 2, 'method': 'session/set_model', 'params': {'sessionId': 'kel:c1', 'modelId': 'x'}},
+                 {'jsonrpc': '2.0', 'id': 3, 'method': 'session/set_config_option', 'params': {'sessionId': 'kel:c1'}},
+                 {'jsonrpc': '2.0', 'id': 4, 'method': 'session/unknown_thing', 'params': {}},
+                 {'jsonrpc': '2.0', 'id': 5, 'method': 'session/load', 'params': {'sessionId': 'not-kel'}},
+                 {'jsonrpc': '2.0', 'id': 6, 'method': 'session/load', 'params': {}}]
+        run(self.root, io.StringIO(''.join(json.dumps(line) + '\n' for line in lines)), output)
+        replies = {item['id']: item for item in map(json.loads, output.getvalue().splitlines())}
+        self.assertEqual([replies[i]['result'] for i in (1, 2, 3)], [{}, {}, {}])
+        self.assertEqual(replies[4]['error']['code'], -32601)
+        self.assertEqual(replies[5]['error']['code'], -32602)
+        self.assertEqual(replies[6]['error']['code'], -32602)
+        self.assertFalse(any(item.get('error', {}).get('code') == -32000 for item in replies.values()))
+
+    def test_internal_failures_are_internal_errors(self):
+        from kel.acp_host import error_code
+        self.assertEqual(error_code(RuntimeError('Kel service authentication failed')), -32603)
+        self.assertEqual(error_code(OSError('connection refused')), -32603)
+
+    def test_stop_before_any_work_ends_only_the_reply(self):
+        # Stop (session/cancel) ends the current reply; it never reaches a job's control route.
+        def planning(state):
+            state['submissions'][0].update(state='PLANNING')
+            state['messages'].clear()
+            self.host.dispatch('session/cancel', {'sessionId': 'kel:c1'})
+        self.send_hook = planning
+        result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.assertEqual(result['stopReason'], 'cancelled')
+        self.assertFalse(any(path == '/api/control' for path, _ in self.requests))
+
+    def test_stop_never_cancels_handed_off_work(self):
+        def acknowledged(state):
+            state['submissions'][0].update(state='DISPATCHED', job_id='j1', ack_seq=state['messages'][-1]['seq'])
+            state['jobs'] = [{'id': 'j1', 'state': 'RUNNING', 'verdict': 'UNCERTAIN'}]
+            self.host.dispatch('session/cancel', {'sessionId': 'kel:c1'})
+        self.send_hook = acknowledged
+        result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'write a plan'}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        self.assertFalse(any(path == '/api/control' for path, _ in self.requests))
+
     def test_failed_planning_reports_failure(self):
         def fail(state):
             state['submissions'][0].update(state='FAILED', error='No model connected')
         self.send_hook = fail
         self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
         self.assertIn('No model connected', self.events[-1]['params']['update']['content']['text'])
+
+    def test_acknowledged_handoff_ends_the_turn_with_a_work_card(self):
+        # D-53: once the acknowledgement has streamed, the turn ends while the work is still being
+        # started, so the composer stays usable; the card carries the submission id.
+        def acknowledged(state):
+            submission = state['submissions'][0]
+            submission.update(state='PLANNING', ack_seq=state['messages'][-1]['seq'], title='Garden plan')
+        self.send_hook = acknowledged
+        result = self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'write a plan'}]})
+        self.assertEqual(result['stopReason'], 'end_turn')
+        sid = [body for path, body in self.requests if path == '/api/send'][0]['id']
+        updates = [e['params']['update'] for e in self.events]
+        self.assertEqual(updates[0]['sessionUpdate'], 'agent_message_chunk')
+        self.assertEqual(updates[0]['content']['text'], 'Real HTTP reply\n\n')
+        card = updates[-1]
+        self.assertEqual(card['sessionUpdate'], 'tool_call')
+        self.assertEqual(card['toolCallId'], 'kel-work:' + sid)
+        self.assertEqual(card['status'], 'pending')
+        self.assertEqual(card['title'], 'Working on it in the background')
+        self.assertEqual(card['rawInput'], {'submission_id': sid})
+        self.assertFalse(any(path == '/api/control' for path, _ in self.requests))
+
+    def test_acknowledged_handoff_that_failed_to_start_still_shows_its_card(self):
+        def failed(state):
+            submission = state['submissions'][0]
+            submission.update(state='FAILED', error='No planner', ack_seq=state['messages'][-1]['seq'])
+        self.send_hook = failed
+        self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'write a plan'}]})
+        texts = [e['params']['update'].get('content', {}).get('text', '') for e in self.events]
+        self.assertFalse(any('could not plan' in t for t in texts))
+        self.assertTrue(self.events[-1]['params']['update']['toolCallId'].startswith('kel-work:'))
 
     def test_uncertain_work_is_pending_not_verified(self):
         def uncertain(state):
@@ -234,6 +308,13 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(result['stopReason'], 'cancelled')
         self.assertEqual(self.requests[-1], ('/api/control', {'job': 'j1', 'action': 'cancel'}))
         self.assertFalse(any('shutdown' in path for path, _ in self.requests))
+        # A stop the person asked for reads "Cancelled", never as a failure or a raw state line.
+        final = [e['params']['update'] for e in self.events
+                 if e['params']['update'].get('sessionUpdate') == 'tool_call_update'][-1]
+        self.assertEqual((final['status'], final['title']), ('completed', 'Cancelled'))
+        texts = [e['params']['update'].get('content', {}).get('text', '') for e in self.events]
+        self.assertFalse(any('Work state:' in t for t in texts))
+        self.assertTrue(any(t.startswith('Cancelled.') for t in texts))
 
     def test_transport_close_leaves_durable_job_alive(self):
         def disconnect(state):

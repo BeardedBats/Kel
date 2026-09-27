@@ -370,8 +370,11 @@ class ServiceIdentityTests(unittest.TestCase):
         (home / 'Documents' / 'Kel Projects').mkdir(parents=True)
         packet = {'project': {'root': None, 'id': None}, 'files': []}
         with mock.patch.object(Path, 'home', return_value=home):
-            self.service._plan('sid-allow', 'main', 'create a tiny app', dict(packet),
-                               kind='coding', greenfield_flag=True)
+            started = self.service._plan('sid-allow', 'main', 'create a tiny app', dict(packet),
+                                         kind='coding', greenfield_flag=True)
+            # D-53: work is acknowledged first and started on the planning pool.
+            if started:
+                started.result(timeout=60)
         with contextlib.closing(self.service.store.connect()) as db:
             projects = [dict(r) for r in db.execute('SELECT * FROM projects')]
         self.assertTrue(any('Kel Projects' in (r['root'] or '') for r in projects),
@@ -387,8 +390,10 @@ class ServiceIdentityTests(unittest.TestCase):
         with mock.patch.object(Path, 'home', return_value=home), \
                 mock.patch('kel.authorize.project_creation_root',
                            return_value=(home / 'elsewhere').resolve()):
-            self.service._plan('sid-deny', 'main', 'create another tiny app', dict(packet),
-                               kind='coding', greenfield_flag=True)
+            started = self.service._plan('sid-deny', 'main', 'create another tiny app', dict(packet),
+                                         kind='coding', greenfield_flag=True)
+            if started:
+                started.result(timeout=60)
         with contextlib.closing(self.service.store.connect()) as db:
             row = db.execute('SELECT * FROM submissions WHERE id=?', ('sid-deny',)).fetchone()
             after = db.execute('SELECT COUNT(*) FROM projects').fetchone()[0]

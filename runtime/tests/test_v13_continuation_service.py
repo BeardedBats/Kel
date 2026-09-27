@@ -23,6 +23,7 @@ class ContinuationServiceTests(unittest.TestCase):
             os.environ.pop('KEL_INTERNAL_MODEL', None)
             os.environ['KEL_SKIP_TELEMETRY'] = '1'
             os.environ['KEL_REVIEWER'] = 'none'
+            os.environ['KEL_TURN_MODEL'] = 'none'  # D-53: deterministic keyword gate
             self.service = Service(self.tmp.name)
         self.service.engine.adapters.clear()  # no worker may claim seeded test jobs
 

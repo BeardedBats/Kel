@@ -43,6 +43,23 @@ def _plain_state(status):
     return PLAIN_STATES.get(str(status), 'Kel is working on it')
 
 
+class MethodNotFound(ValueError):
+    """JSON-RPC -32601: the host asked for a method this agent does not implement."""
+
+
+# JSON-RPC error codes. -32000 is deliberately never used: the bundled host reads it as
+# "Authentication required" and tells the person the agent needs signing in.
+METHOD_NOT_FOUND, INVALID_PARAMS, INTERNAL_ERROR = -32601, -32602, -32603
+
+
+def error_code(error):
+    if isinstance(error, MethodNotFound):
+        return METHOD_NOT_FOUND
+    if isinstance(error, (KeyError, TypeError, ValueError)):
+        return INVALID_PARAMS
+    return INTERNAL_ERROR
+
+
 def _without_clauses(text, clauses):
     """The user's request with the applied reserved [kel:…] directives removed.
 
@@ -258,6 +275,11 @@ class ACPHost:
                 if active:
                     active['cancel'].set()
             return {}
+        if method in ('session/set_mode', 'session/set_model', 'session/set_config_option'):
+            # Kel has one mode and routes models itself (the model pill writes Kel's own preference
+            # through /api/model). The host's session tuning is accepted as a no-op rather than an
+            # error the host would misreport as an authentication problem.
+            return {}
         if method == 'session/request_permission':
             # V1.5 G12: this host is a transport for the donor agent surface and never grants
             # donor-agent tool permissions. Every permission request is refused explicitly (fail
@@ -265,7 +287,7 @@ class ACPHost:
             # unsupported-method error; Kel's own effects are authorized by the central boundary
             # (kel/authorize.py) before they ever run.
             raise ValueError('Kel denies tool permissions on this surface by policy (V1.5)')
-        raise ValueError('Unsupported ACP method: ' + method)
+        raise MethodNotFound('Unsupported ACP method: ' + method)
 
     def content(self, cid, blocks):
         texts, attachments = [], []
@@ -371,6 +393,20 @@ class ACPHost:
                             self.text(session, message['text'] + '\n\n')
                 if not submission:
                     raise RuntimeError('Kel lost the submitted request record')
+                ack_seq = submission.get('ack_seq')
+                if ack_seq and ack_seq in seen:
+                    # D-53 conversational hand-off: the acknowledgement has been said, the work runs
+                    # durably in the background, and the turn ends so the composer stays usable. The
+                    # card reads the hand-off's live state; the checked result arrives as a message.
+                    self.update(session, {'sessionUpdate': 'tool_call', 'toolCallId': 'kel-work:' + sid,
+                                          'title': 'Working on it in the background', 'kind': 'other',
+                                          'status': 'pending', 'rawInput': {'submission_id': sid}})
+                    self._resurface(session, cid)
+                    return {'stopReason': 'end_turn'}
+                if active['cancel'].is_set() and not submission.get('job_id'):
+                    # Stop ends this reply only. Work Kel has already started keeps running; its own
+                    # card is where it can be stopped.
+                    return {'stopReason': 'cancelled'}
                 if submission['state'] in ('FAILED', 'INTERRUPTED'):
                     self.text(session, 'Kel could not plan this request: ' + (submission.get('error') or submission['state']))
                     self._resurface(session, cid)
@@ -399,9 +435,14 @@ class ACPHost:
                             self.closed.wait(self.poll_interval)
                             continue
                         terminal = status in ('CLOSED', 'CANCELLED')
-                        self.update(session, {'sessionUpdate': 'tool_call_update', 'toolCallId': job_id,
-                                              'status': 'completed' if status == 'CLOSED' and verdict == 'VERIFIED' else ('failed' if terminal else 'pending'),
-                                              'title': _plain_state(status) + ' (' + str(verdict).lower() + ')'})
+                        if status == 'CANCELLED':
+                            # A stop the person asked for is not a failure.
+                            self.update(session, {'sessionUpdate': 'tool_call_update', 'toolCallId': job_id,
+                                                  'status': 'completed', 'title': 'Cancelled'})
+                        else:
+                            self.update(session, {'sessionUpdate': 'tool_call_update', 'toolCallId': job_id,
+                                                  'status': 'completed' if status == 'CLOSED' and verdict == 'VERIFIED' else ('failed' if terminal else 'pending'),
+                                                  'title': _plain_state(status) + ' (' + str(verdict).lower() + ')'})
                         if status == 'AWAITING_USER':
                             approvals = state.get('approvals') or []
                             pending = [a for a in approvals if a.get('job_id') == job_id]
@@ -412,12 +453,10 @@ class ACPHost:
                         elif status == 'WAITING_RESOURCE':
                             note = explain_failure(job)
                             self.text(session, (note or ('Work state: WAITING_RESOURCE. Verification: ' + verdict + '.')) + '\n')
-                        elif status != 'CLOSED' and (not terminal or verdict != 'VERIFIED'):
-                            # A settled job already streamed its publication reply
-                            # (with its trust summary) and the card title carries
-                            # the verdict; only unresolved or cancelled states
-                            # still need this one-line status.
-                            self.text(session, 'Work state: ' + status + '. Verification: ' + verdict + '.\n')
+                        elif status == 'CANCELLED':
+                            self.text(session, 'Cancelled. Kel stopped this work; nothing else will run for it.\n')
+                        elif status == 'PAUSED':
+                            self.text(session, 'Paused. Say "continue" when you want Kel to pick it back up.\n')
                         self._resurface(session, cid)
                         return {'stopReason': 'cancelled' if status == 'CANCELLED' else 'end_turn'}
                 elif submission['state'] in ('DISPATCHED', 'SETTLED'):
@@ -446,7 +485,7 @@ def run(data, source=sys.stdin, output=sys.stdout):
             response = {'jsonrpc': '2.0', 'id': message.get('id'), 'result': result}
         except Exception as error:
             response = {'jsonrpc': '2.0', 'id': message.get('id'),
-                        'error': {'code': -32000, 'message': str(error)}}
+                        'error': {'code': error_code(error), 'message': str(error)}}
         if 'id' in message and not host.closed.is_set():
             emit(response)
     try:

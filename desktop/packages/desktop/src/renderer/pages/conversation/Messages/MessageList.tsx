@@ -48,6 +48,8 @@ import MessageSkillSuggest from './components/MessageSkillSuggest';
 import MessageText from './components/MessageText';
 import MessageThinking from './components/MessageThinking';
 import KelApprovalCard from '@renderer/components/kel/KelApprovalCard';
+import KelWorkCard from '@renderer/components/kel/KelWorkCard';
+import { isKelWorkToolCall, kelWorkSubmissionId } from '@/common/chat/kelWork';
 import type { WriteFileResult } from './types';
 import { useAutoScroll } from './useAutoScroll';
 import SelectionReplyButton from './components/SelectionReplyButton';
@@ -299,6 +301,15 @@ const MessageItem: React.FC<{
         case 'ask':
           return <MessageQuestion message={message}></MessageQuestion>;
         case 'acp_tool_call':
+          // D-53: a Kel hand-off's tool call is the live card for its background work.
+          if (isKelWorkToolCall(message.content?.update?.tool_call_id)) {
+            return (
+              <KelWorkCard
+                submissionId={kelWorkSubmissionId(message.content.update.tool_call_id) ?? ''}
+                conversationId={message.conversation_id}
+              />
+            );
+          }
           return <MessageAcpToolCall message={message}></MessageAcpToolCall>;
         case 'acp_terminal_output':
           return <MessageAcpTerminalOutput message={message}></MessageAcpTerminalOutput>;
@@ -441,7 +452,8 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
         continue;
       }
       if (message.type === 'acp_tool_call') {
-        if (hasRenderableAcpDiff(message)) {
+        // D-53: a hand-off work card stands on its own; it is never folded into a tool summary.
+        if (hasRenderableAcpDiff(message) || isKelWorkToolCall(message.content?.update?.tool_call_id)) {
           pushStandaloneMessage(message);
           continue;
         }
