@@ -47,7 +47,9 @@ describe('Permissions page wiring (HVRA-MINOR-001)', () => {
   it('renders the Work column through workLabelFor with the raw id in support detail', () => {
     const page = read('packages/desktop/src/renderer/pages/kel/autonomy/index.tsx');
     expect(page).toContain('workLabelFor(lease.job_id, jobs)');
-    expect(page).toContain('title={`Work reference: ${lease.job_id}`}');
+    // JR-16: the raw reference is no longer a hover title on the primary column; it lives only in
+    // the "Work references" support table behind Details.
+    expect(page).not.toContain('title={`Work reference: ${lease.job_id}`}');
     expect(page).toContain('title="Work references"');
   });
 });

@@ -10,12 +10,23 @@ import { Message } from '@arco-design/web-react';
 import { useNavigate } from 'react-router-dom';
 import { KelButton, KelCard, KelEmpty, KelLoading, KelTabs, formatWhen } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
+import { workWords } from '@renderer/components/kel/workLanguage';
+import '@renderer/styles/kel-work.css';
 import { kelDogfood, type KelBuildCandidate, type KelBuildMission, type KelFix, type KelFixList, type KelFixStatus } from '@renderer/components/kel/kelApi';
 import styles from './index.module.css';
 import { configService } from '@/common/config/configService';
 import { kibbleBuildSummary } from '@renderer/components/kel/kibbleBuildSummary';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+
+/** A build's review state in plain words (the raw state stays behind Details). */
+const CANDIDATE_STATE_TEXT: Record<string, string> = {
+  BUILDING: 'Still building',
+  READY: 'Ready for your review',
+  READY_FOR_REVIEW: 'Ready for your review',
+  APPROVED: 'You approved it',
+  REJECTED: 'You turned it down',
+};
 
 const STATUS_COPY: Record<KelFixStatus, string> = {
   OPEN: 'Open',
@@ -239,8 +250,8 @@ const DogfoodFixes: React.FC = () => {
         setBuildState((previous) => (previous ? { ...previous, candidate: reviewed } : previous));
         setNote(
           decision === 'approve'
-            ? 'Candidate approved. Nothing was installed.'
-            : 'Candidate rejected. Nothing was installed.'
+            ? 'Approved. Nothing was installed.'
+            : 'Turned down. Nothing was installed.'
         );
       } catch (err) {
         Message.error('Kel could not record that review just now. Try again.');
@@ -374,24 +385,32 @@ const DogfoodFixes: React.FC = () => {
                   </div>}
                   <details className={!isMobile ? styles.buildDetails : styles.mobileContents} open={isMobile || Boolean(buildState.candidate)}>
                     {!isMobile && <summary>Build details</summary>}
-                  <p className='kel-strong'>{`Mission ${buildState.mission.id.slice(0, 8)} · ${buildState.job?.state === 'CANCELLED' ? 'cancelled' : (buildState.mission.stage ?? 'OPEN').toLowerCase()}`}</p>
-                  {buildState.job && (
-                    <p className='kel-meta'>{`Job ${buildState.job.id.slice(0, 8)} · ${buildState.job.state ?? 'queued'}${buildState.job.verdict ? ` · ${buildState.job.verdict}` : ''}`}</p>
-                  )}
-                  {buildState.job?.milestones && (
-                    <ul className={styles.buildList}>
-                      {Object.entries(buildState.job.milestones).map(([milestoneId, milestone]) => (
-                        <li key={milestoneId} className='kel-meta'>
-                          {`${milestoneId}: ${milestone?.state ?? 'queued'}${milestone?.attempts ? ` · ${milestone.attempts} attempt(s)` : ''}`}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <p className='kel-strong'>{buildState.job ? workWords(buildState.job).label : buildState.mission.stage ? 'Getting started' : 'Waiting to start'}</p>
+                  {/* Machinery (mission, job and candidate references, raw states) stays behind Details. */}
+                  <details className='kel-work-details' data-testid='build-technical-details'>
+                    <summary>Details</summary>
+                    <p className='kel-meta'>{`Update ${buildState.mission.id.slice(0, 8)} · ${buildState.job?.state === 'CANCELLED' ? 'cancelled' : (buildState.mission.stage ?? 'OPEN').toLowerCase()}`}</p>
+                    {buildState.job && (
+                      <p className='kel-meta'>{`Work ${buildState.job.id.slice(0, 8)} · ${String(buildState.job.state ?? 'queued').toLowerCase()}${buildState.job.verdict ? ` · ${buildState.job.verdict.toLowerCase()}` : ''}`}</p>
+                    )}
+                    {buildState.job?.milestones && (
+                      <ul className={styles.buildList}>
+                        {Object.entries(buildState.job.milestones).map(([milestoneId, milestone]) => (
+                          <li key={milestoneId} className='kel-meta'>
+                            {`${milestoneId}: ${String(milestone?.state ?? 'queued').toLowerCase()}${milestone?.attempts ? ` · ${milestone.attempts} attempt(s)` : ''}`}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {buildState.candidate && (
+                      <p className='kel-meta'>{`Build ${buildState.candidate.id.slice(0, 8)} · revision ${String(buildState.candidate.revision ?? '—').slice(0, 12)}`}</p>
+                    )}
+                  </details>
                   {buildState.candidate ? (
                     <>
-                      <p className='kel-strong'>{`Candidate ${buildState.candidate.id.slice(0, 8)} · ${buildState.candidate.review_state ?? 'BUILDING'}`}</p>
+                      <p className='kel-strong'>{CANDIDATE_STATE_TEXT[buildState.candidate.review_state ?? 'BUILDING'] ?? 'Ready for your review'}</p>
                       <p className='kel-meta'>
-                        {`verified: ${buildState.candidate.evidence?.verified === true ? 'yes' : 'no'} · revision ${String(buildState.candidate.revision ?? '—').slice(0, 12)}`}
+                        {buildState.candidate.evidence?.verified === true ? 'Its checks passed.' : 'Its checks have not all passed.'}
                       </p>
                       {buildState.candidate.artifact_location && (
                         <p className='kel-meta'>{`Review files: ${buildState.candidate.artifact_location}`}</p>
@@ -430,7 +449,7 @@ const DogfoodFixes: React.FC = () => {
                             disabled={busy}
                             onClick={() => void reviewCandidate('approve')}
                           >
-                            Approve candidate
+                            Approve
                           </KelButton>
                           <KelButton
                             variant='quiet'
@@ -445,7 +464,7 @@ const DogfoodFixes: React.FC = () => {
                   ) : (
                     <p className='kel-meta'>{buildState.job?.state === 'CANCELLED'
                       ? 'This update was cancelled. No candidate was created.'
-                      : 'No candidate yet — one appears when the mission settles.'}</p>
+                      : 'Nothing to review yet — the update appears here when it is ready.'}</p>
                   )}
                   </details>
                 </div>
