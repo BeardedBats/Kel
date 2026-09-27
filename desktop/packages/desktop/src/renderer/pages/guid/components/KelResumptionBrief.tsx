@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import statusCheck from '@renderer/assets/figma/status-check.svg';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState } from '@renderer/components/kel/kelApi';
 import { buildResumptionBrief, type ResumptionBrief } from '@renderer/components/kel/resumptionBrief';
+import { resolveAttentionRoute } from '@renderer/components/kel/needsAttention';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 
 const KelResumptionBrief: React.FC = () => {
@@ -57,20 +58,20 @@ const KelResumptionBrief: React.FC = () => {
     <section className='kel-card kel-shell-needs-you' data-testid='resumption-brief' aria-label='Needs you'>
       <h2 className='kel-shell-needs-you-title'>Needs you</h2>
       {brief.lines.map((line) => {
-        const success = line.kind === 'finished' || (line.kind === 'restore' && line.id === 'restore-ok');
-        const tone = success ? 'success' : line.kind === 'active' ? 'unread' : 'attention';
+        // One job, one story: the tone comes from the shared state words (a check mark only for a
+        // result that passed its checks).
+        const success = line.tone === 'success';
+        const tone = success ? 'success' : line.tone === 'active' ? 'unread' : 'attention';
         const text = line.id.startsWith('brief-connection-')
           ? line.detail.replace(/ — finish setting it up/, ' needs setup')
-          : line.kind === 'finished'
-            ? `${line.title.replace(/^Finished: /, '')} — ${line.detail}`
-            : `${line.title}${line.detail ? ` — ${line.detail}` : ''}`;
+          : `${line.title}${line.detail ? ` — ${line.detail}` : ''}`;
         const content = <>
           {success ? <img className='kel-shell-status-check' src={statusCheck} width={16} height={16} alt='' /> : <span className='kel-shell-status-dot' aria-hidden='true' />}
           <span>{text}</span>
         </>;
         return line.action ? (
           <button type='button' className='kel-shell-attention-line' data-tone={tone} key={line.id}
-            title={line.action.label} onClick={() => navigate(resolveConversationRoute(line.action!.to))}>{content}</button>
+            title={line.action.label} onClick={() => navigate(resolveAttentionRoute(line.action!, resolveConversationRoute))}>{content}</button>
         ) : <div className='kel-shell-attention-line' data-tone={tone} key={line.id}>{content}</div>;
       })}
     </section>

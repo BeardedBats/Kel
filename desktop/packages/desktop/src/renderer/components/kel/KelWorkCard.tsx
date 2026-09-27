@@ -12,6 +12,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resolveEngineConversation } from './KelApprovalCard';
 import { kelControl, kelHandoff, kelRetry, type KelHandoff, type KelHandoffPhase } from './kelApi';
+import { WORK_WORDS, workWords } from './workLanguage';
+import { announceHandoffLive } from './useKelLiveWork';
 import './KelWorkCard.css';
 
 export const KEL_WORK_CARD_POLL_MS = 3000;
@@ -20,7 +22,9 @@ const TERMINAL: KelHandoffPhase[] = ['done', 'needs_look', 'stopped', 'failed_to
 export const isTerminalPhase = (phase: KelHandoffPhase | undefined): boolean =>
   phase !== undefined && TERMINAL.includes(phase);
 
-/** The card's headline for one phase — plain words, never a claim the records do not support. */
+/** The card's headline for one phase — plain words, never a claim the records do not support.
+ *  Settled phases use the shared state words (workLanguage.ts), so the card, Work, Activity and
+ *  Home all describe one job the same way. */
 export const workHeadline = (view: Pick<KelHandoff, 'phase' | 'accepted' | 'total' | 'verdict'>): string => {
   switch (view.phase) {
     case 'starting':
@@ -28,15 +32,15 @@ export const workHeadline = (view: Pick<KelHandoff, 'phase' | 'accepted' | 'tota
     case 'running':
       return view.total > 0 ? `Working on it · ${view.accepted} of ${view.total} parts checked` : 'Working on it';
     case 'needs_you':
-      return 'Waiting for your OK';
+      return WORK_WORDS.AWAITING_USER.label;
     case 'waiting':
       return 'Waiting to continue';
     case 'done':
-      return view.verdict === 'VERIFIED' ? 'Done and checked' : 'Finished, but not fully verified';
+      return workWords({ state: 'CLOSED', verdict: view.verdict }).label;
     case 'needs_look':
-      return 'Finished, but not fully verified';
+      return view.verdict === 'FAILED' ? WORK_WORDS.FAILED.label : WORK_WORDS.UNCHECKED.label;
     case 'stopped':
-      return 'Stopped';
+      return WORK_WORDS.CANCELLED.label;
     case 'failed_to_start':
       return 'Couldn’t get started';
     default:
@@ -85,6 +89,8 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
     try {
       const next = await kelHandoff(engineCid, submissionId);
       setView(next);
+      // The sidebar row shows "working" while this hand-off runs (CH-11) without polling on its own.
+      announceHandoffLive(engineCid, submissionId, !isTerminalPhase(next.phase));
       setUnavailable(false);
       return next;
     } catch {
@@ -205,7 +211,7 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
           <button
             type='button'
             className='kel-work-card__link'
-            onClick={() => navigate('/activity')}
+            onClick={() => navigate(view?.job_id ? `/activity?job=${encodeURIComponent(view.job_id)}` : '/activity')}
             data-testid='kel-work-activity'
           >
             View in Activity

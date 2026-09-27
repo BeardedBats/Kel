@@ -25,11 +25,13 @@ describe('the interrupted-run promise (D19)', () => {
   it('the Work page never promises an automatic continuation for a fenced run', () => {
     expect(workPage).toContain("if (job.state === 'WAITING_RESOURCE' && !job.route_block) {");
     expect(workPage).toContain('A run stopped mid-flight. Your work is preserved');
-    // The automatic sentence survives only for route-blocked jobs (which really do resume).
-    expect(workPage).toContain(
-      "WAITING_RESOURCE: 'Waiting for an available model — Kel will continue automatically.',"
+    // The automatic sentence survives only for route-blocked jobs (which really do resume): it is
+    // returned only after the fenced case above has already returned its own sentence.
+    const fenced = workPage.indexOf("if (job.state === 'WAITING_RESOURCE' && !job.route_block) {");
+    const automatic = workPage.indexOf(
+      "if (job.state === 'WAITING_RESOURCE') return 'Waiting for an available model — Kel will continue automatically.';"
     );
-    expect(workPage).toContain('return WAIT_REASON[job.state] ?? null;');
+    expect(automatic).toBeGreaterThan(fenced);
   });
 
   it('the engine continuation re-arms an interrupted run instead of attaching and stopping', () => {

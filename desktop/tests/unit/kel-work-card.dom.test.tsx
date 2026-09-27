@@ -1,6 +1,6 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useSearchParams } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KelWorkCard, workHeadline } from '@renderer/components/kel/KelWorkCard';
 import type { KelHandoff } from '@renderer/components/kel/kelApi';
@@ -40,6 +40,11 @@ const install = (request: Request) => {
   return spy;
 };
 
+const ActivityProbe = () => {
+  const [params] = useSearchParams();
+  return <div data-testid='activity-page'>{`Activity ${params.get('job') ?? ''}`}</div>;
+};
+
 const renderCard = (pollMs = 20) =>
   render(
     <MemoryRouter initialEntries={['/conversation/host']}>
@@ -48,7 +53,7 @@ const renderCard = (pollMs = 20) =>
           path='/conversation/host'
           element={<KelWorkCard submissionId='acp-1' conversationId='host-conversation' pollMs={pollMs} />}
         />
-        <Route path='/activity' element={<div data-testid='activity-page'>Activity</div>} />
+        <Route path='/activity' element={<ActivityProbe />} />
       </Routes>
     </MemoryRouter>
   );
@@ -84,11 +89,12 @@ describe('Kel work card', () => {
     install(async () => ({ ...base, phase: 'needs_look', state: 'CLOSED', verdict: 'UNCERTAIN', can_stop: false,
       why: 'Kel could not fully verify the result.' }));
     renderCard();
-    expect(await screen.findByText('Finished, but not fully verified')).toBeTruthy();
+    expect(await screen.findByText('Finished — not fully checked')).toBeTruthy();
     expect(screen.getByTestId('kel-work-why').textContent).toBe('Kel could not fully verify the result.');
     expect(screen.queryByText('Done and checked')).toBeNull();
     expect(workHeadline({ phase: 'done', accepted: 1, total: 1, verdict: 'UNCERTAIN' })).toBe(
-      'Finished, but not fully verified');
+      'Finished — not fully checked');
+    expect(workHeadline({ phase: 'done', accepted: 0, total: 1, verdict: 'FAILED' })).toBe("Didn't pass its checks");
     expect(workHeadline({ phase: 'needs_you', accepted: 0, total: 1, verdict: null })).toBe('Waiting for your OK');
     expect(workHeadline({ phase: 'stopped', accepted: 0, total: 1, verdict: null })).toBe('Stopped');
   });
@@ -140,10 +146,11 @@ describe('Kel work card', () => {
     expect(request).toHaveBeenCalledWith('/api/retry', { id: 'acp-1' });
   });
 
-  it('opens Activity', async () => {
+  it('opens Activity focused on this job', async () => {
     install(async () => base);
     renderCard(10000);
+    await screen.findByText('Working on it · 1 of 3 parts checked');
     fireEvent.click(await screen.findByTestId('kel-work-activity'));
-    expect(await screen.findByTestId('activity-page')).toBeTruthy();
+    expect((await screen.findByTestId('activity-page')).textContent).toBe('Activity job-1');
   });
 });

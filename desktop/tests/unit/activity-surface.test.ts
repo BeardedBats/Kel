@@ -36,8 +36,9 @@ describe('Activity surface (D14)', () => {
     expect(activityPage).toContain('Recently finished');
     expect(activityPage).not.toContain('providers connected');
     expect(activityPage).toContain('workLabelFor(job.id, all)');
-    expect(activityPage).toContain('jobStateText(job.state)');
-    expect(activityPage).toContain('routeSentence(routes[job.id])');
+    // One job, one story: sections and words come from the shared table; routing stays on Work.
+    expect(activityPage).toContain('workWords(job).section');
+    expect(activityPage).not.toContain('routeSentence');
   });
 
   it('never leaks internals', () => {
@@ -50,7 +51,8 @@ describe('Activity surface (D14)', () => {
     expect(workLanguage).toContain('export const VERDICT_TEXT');
     expect(workLanguage).toContain('export const routeSentence');
     expect(workLanguage).toContain('export const jobStateText');
-    expect(workPage).toContain("import { VERDICT_TEXT, routeSentence } from '@renderer/components/kel/workLanguage';");
+    expect(workLanguage).toContain('export function workWords');
+    expect(workPage).toContain("import { routeSentence, workWords } from '@renderer/components/kel/workLanguage';");
     expect(workPage).not.toContain('const routeSentence =');
   });
 });

@@ -1,21 +1,28 @@
 /**
- * D6 — "While you were away": a DERIVED-ONLY resumption brief.
+ * D6 — "While you were away": a DERIVED-ONLY resumption brief (the Home "Needs you" card).
  *
  * Reopening Kel should say, in plain language, what durable state already knows: what needs you,
- * what finished, what stopped, what is waiting for your go-ahead, what is still running, and any
+ * what is paused, what finished (and whether it was checked), what is still running, and any
  * recorded restore outcome. This module owns no workflow truth and invents nothing:
- *   - needs-you lines reuse the attention aggregator (jobs, boundary requests, provider setup);
- *   - resumable lines come from the engine's continuation candidates (durable job/milestone state);
- *   - finished/stopped/active lines read the same job records the Work surface renders;
+ *   - job lines use the one shared state→words table (workLanguage.ts), so a job reads the same
+ *     here as on Work, Activity and its in-chat card — and each job appears on exactly one line;
+ *   - permission and setup needs reuse the attention aggregator (needsAttention.ts);
  *   - the restore line reads the engine's recorded restore outcome (audit PER-02) — silence when
  *     no restore was ever attempted.
  * When there is nothing to say the brief is `quiet` and the caller renders nothing at all.
  *
- * Continuation is a human decision: the brief never resumes anything on its own, and its only
- * actions open the existing surface that owns the follow-up.
+ * Continuation is a human decision: the brief never resumes anything on its own. Every job line
+ * names the job by its title and opens that job's chat (or the job on Work when no chat is known).
  */
 import type { KelBoundaryRequest, KelContinuationCandidate, KelWorkJob } from './kelApi';
-import { collectAttention, type AttentionProviderState } from './needsAttention';
+import {
+  collectAttention,
+  jobChatAction,
+  requestTitle,
+  type AttentionAction,
+  type AttentionProviderState,
+} from './needsAttention';
+import { workWords } from './workLanguage';
 
 export type BriefKind = 'restore' | 'needs-you' | 'finished' | 'stopped' | 'resumable' | 'active';
 
@@ -24,7 +31,9 @@ export interface BriefLine {
   kind: BriefKind;
   title: string;
   detail: string;
-  action?: { label: string; to: string };
+  /** How the line should read at a glance: a checked result, something to look at, or live work. */
+  tone: 'success' | 'attention' | 'active';
+  action?: AttentionAction;
 }
 
 export interface ResumptionBrief {
@@ -48,17 +57,25 @@ export const BRIEF_SECTION_CAP = 3;
 /** An informational "restored" line is only worth showing soon after the restore. */
 export const RESTORE_FRESH_MS = 48 * 60 * 60 * 1000;
 
-const requestOf = (job: KelWorkJob): string => job.contract?.request?.trim() || 'Untitled work';
-
-const openChat = (conversation: string | undefined): { label: string; to: string } => ({
-  label: 'Open the chat',
-  to: conversation ? `/conversation/${conversation}` : '/work',
-});
-
 const byUpdatedDesc = (a: KelWorkJob, b: KelWorkJob): number => (b.updated ?? 0) - (a.updated ?? 0);
 
+/** The job's title, falling back to the engine's continuation title before a neutral label. */
+const titleOf = (job: KelWorkJob, candidates: KelContinuationCandidate[]): string => {
+  const fromJob = requestTitle(job, '');
+  if (fromJob) return fromJob;
+  const candidate = candidates.find((entry) => (entry.job_id || entry.job?.id) === job.id);
+  return candidate?.title?.trim() || candidate?.summary?.trim() || 'Untitled work';
+};
+
+/** The engine's recorded reason for a stop, when there is one (never invented). */
+const recordedReason = (job: KelWorkJob): string | undefined =>
+  job.route_block || Object.values(job.milestones ?? {}).find((entry) => entry.error)?.error || undefined;
+
+const sentence = (text: string): string => text.trim().replace(/\.$/, '');
+
 export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrief {
-  const jobs = payload.jobs ?? [];
+  const jobs = (payload.jobs ?? []).toSorted(byUpdatedDesc);
+  const candidates = payload.continuation ?? [];
   const now = payload.now ?? Date.now();
   const lines: BriefLine[] = [];
 
@@ -67,6 +84,7 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     lines.push({
       id: 'restore-failed',
       kind: 'restore',
+      tone: 'attention',
       title: 'A restore did not finish',
       detail:
         payload.restore.detail?.trim() ||
@@ -75,100 +93,89 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     });
   }
 
-  // 2) What needs you — the same derived items the Work surface shows, minus the resumable kind.
-  const attention = collectAttention({
-    jobs,
-    continuation: payload.continuation ?? [],
+  // 2) What needs you: jobs that wait on a decision (shared table), then permission and setup asks.
+  const needsYouJobs = jobs.filter((job) => job.state !== 'PAUSED' && workWords(job).needsYou);
+  const jobNeeds: BriefLine[] = needsYouJobs.map((job) => {
+    const view = workWords(job);
+    const reason = view.label === 'Interrupted' ? recordedReason(job) : undefined;
+    return {
+      id: `brief-needs-${job.id}`,
+      kind: 'needs-you',
+      tone: 'attention',
+      title: titleOf(job, candidates),
+      detail: reason ? `${view.label} — ${sentence(reason)}. ${view.sentence}` : `${view.label} — ${view.sentence}`,
+      action: jobChatAction(job),
+    };
+  });
+  const otherNeeds: BriefLine[] = collectAttention({
     boundaryRequests: payload.boundaryRequests ?? [],
     providers: payload.providers ?? [],
-  }).filter((item) => item.kind !== 'continuation' && item.kind !== 'stale');
-  for (const item of attention.slice(0, BRIEF_SECTION_CAP)) {
-    lines.push({
+  })
+    .filter((item) => item.needsYou)
+    .map((item) => ({
       id: `brief-${item.id}`,
       kind: 'needs-you',
+      tone: 'attention',
       title: item.title,
       detail: item.detail,
       action: item.action,
-    });
-  }
-  if (attention.length > BRIEF_SECTION_CAP) {
+    }));
+  const needs = [...jobNeeds, ...otherNeeds];
+  lines.push(...needs.slice(0, BRIEF_SECTION_CAP));
+  if (needs.length > BRIEF_SECTION_CAP) {
     lines.push({
       id: 'needs-you-more',
       kind: 'needs-you',
-      title: `${attention.length - BRIEF_SECTION_CAP} more things need you`,
+      tone: 'attention',
+      title: `${needs.length - BRIEF_SECTION_CAP} more things need you`,
       detail: 'The Work page lists every one of them.',
       action: { label: 'Open Work', to: '/work' },
     });
   }
 
-  // Job ids already surfaced as needing you (the sections below must not repeat them).
-  const surfaced = new Set<string>();
-  for (const item of attention) {
-    const match = /^(?:approval|input|failure|review|permission|connection)-(.+)$/.exec(item.id);
-    if (match) surfaced.add(match[1]);
-  }
-
-  // 3) What finished cleanly while you were away.
-  const finished = jobs.filter((job) => job.state === 'CLOSED' && (job.verdict || '').toUpperCase() === 'VERIFIED').toSorted(byUpdatedDesc);
-  for (const job of finished.slice(0, BRIEF_SECTION_CAP)) {
-    if (surfaced.has(job.id)) continue;
-    lines.push({
-      id: `brief-finished-${job.id}`,
-      kind: 'finished',
-      title: `Finished: ${requestOf(job)}`,
-      detail: 'The result passed its checks.',
-      action: openChat(job.conversation),
-    });
-  }
-
-  // 4) What stopped short of finishing: a deliberate pause. (A route-blocked job is different — it
-  // resumes by itself once a model is available, so it stays in the go-ahead section below.)
-  const stopped = jobs.filter((job) => job.state === 'PAUSED').toSorted(byUpdatedDesc);
-  for (const job of stopped.slice(0, BRIEF_SECTION_CAP)) {
-    if (surfaced.has(job.id)) continue;
-    const reason = job.route_block || Object.values(job.milestones ?? {}).find((entry) => entry.error)?.error;
+  // 3) Paused work: a deliberate stop that waits for the person to resume it.
+  for (const job of jobs.filter((entry) => entry.state === 'PAUSED').slice(0, BRIEF_SECTION_CAP)) {
+    const view = workWords(job);
+    const reason = recordedReason(job);
     lines.push({
       id: `brief-stopped-${job.id}`,
       kind: 'stopped',
-      title: `Stopped: ${requestOf(job)}`,
-      detail: reason
-        ? `${reason}. Open the chat to pick it back up.`
-        : 'It stopped before finishing. Open the chat to pick it back up.',
-      action: openChat(job.conversation),
+      tone: 'attention',
+      title: titleOf(job, candidates),
+      detail: reason ? `${view.label} — ${sentence(reason)}. Open its chat to pick it back up.` : `${view.label} — open its chat to pick it back up.`,
+      action: jobChatAction(job),
     });
   }
 
-  // 5) What is waiting for your go-ahead — durable continuation candidates.
-  const resumable = payload.continuation ?? [];
-  for (const candidate of resumable.slice(0, BRIEF_SECTION_CAP)) {
-    const jobId = candidate.job_id || candidate.job?.id || 'unknown';
-    if (surfaced.has(jobId)) continue;
-    // A candidate's embedded job is a partial record; the full job (when present) carries the chat.
-    const job = jobs.find((entry) => entry.id === jobId);
-    const reasons = (candidate.reasons ?? []).filter(Boolean);
+  // 4) What finished, in the same words its card uses ("Done and checked" only for VERIFIED).
+  for (const job of jobs.filter((entry) => entry.state === 'CLOSED').slice(0, BRIEF_SECTION_CAP)) {
+    const view = workWords(job);
     lines.push({
-      id: `brief-resumable-${jobId}`,
-      kind: 'resumable',
-      title: `Waiting for your go-ahead: ${candidate.summary ?? (job ? requestOf(job) : 'a paused task')}`,
-      detail: `${reasons.length ? `${reasons.join(', ')}. ` : ''}Reply “continue” in that chat — Kel never resumes on its own.`,
-      action: openChat(job?.conversation),
+      id: `brief-finished-${job.id}`,
+      kind: 'finished',
+      tone: view.tone === 'verified' ? 'success' : 'attention',
+      title: titleOf(job, candidates),
+      detail: `${view.label} — ${view.sentence}`,
+      action: jobChatAction(job),
     });
   }
 
-  // 6) What is still running.
-  const active = jobs.filter((job) => job.state === 'RUNNING').toSorted(byUpdatedDesc);
-  for (const job of active.slice(0, BRIEF_SECTION_CAP)) {
-    if (surfaced.has(job.id)) continue;
+  // 5) What is still going on its own (running, queued, or waiting for a model).
+  const going = jobs.filter((job) => workWords(job).section === 'now' && job.state !== 'CANCELLING' && job.state !== 'CANCEL_REQUESTED');
+  for (const job of going.slice(0, BRIEF_SECTION_CAP)) {
+    const view = workWords(job);
+    const reason = job.state === 'WAITING_RESOURCE' ? job.route_block : undefined;
     lines.push({
       id: `brief-active-${job.id}`,
       kind: 'active',
-      title: `Still working: ${requestOf(job)}`,
-      detail: 'This one was already underway when you left.',
-      action: openChat(job.conversation),
+      tone: 'active',
+      title: titleOf(job, candidates),
+      detail: reason ? `${view.label} — ${sentence(reason)}. ${view.sentence}` : `${view.label} — ${view.sentence}`,
+      action: jobChatAction(job),
     });
   }
 
-  // 7) A successful restore is only worth a line soon after it happened. The engine records epoch
+  // 6) A successful restore is only worth a line soon after it happened. The engine records epoch
   // seconds (backup module); milliseconds are accepted too so the freshness check cannot misread
   // the units and lie in either direction.
   const normalizeRestoreAt = (value: number | undefined): number | null => {
@@ -180,6 +187,7 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     lines.push({
       id: 'restore-ok',
       kind: 'restore',
+      tone: 'success',
       title: 'Your data was restored',
       detail: payload.restore.detail?.trim() || 'Kel opened with the restored data.',
       action: { label: 'Open Settings', to: '/settings' },
@@ -187,14 +195,13 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   }
 
   // Counts come from the emitted lines, so the headline summary can never overstate what is shown.
-  const countOf = (kind: BriefKind): number => lines.filter((line) => line.kind === kind).length;
-  const needsYou = countOf('needs-you');
+  const countOf = (kind: BriefKind): number => lines.filter((line) => line.kind === kind && line.id !== 'needs-you-more').length;
+  const needsYou = needs.length;
   const parts: string[] = [];
   if (needsYou) parts.push(`${needsYou} need${needsYou === 1 ? 's' : ''} you`);
+  if (countOf('stopped')) parts.push(`${countOf('stopped')} paused`);
   if (countOf('finished')) parts.push(`${countOf('finished')} finished`);
-  if (countOf('stopped')) parts.push(`${countOf('stopped')} stopped`);
-  if (countOf('resumable')) parts.push(`${countOf('resumable')} waiting for your go-ahead`);
-  if (countOf('active')) parts.push(`${countOf('active')} still running`);
+  if (countOf('active')) parts.push(`${countOf('active')} still going`);
 
   return {
     quiet: lines.length === 0,
