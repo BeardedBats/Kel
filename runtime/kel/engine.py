@@ -11,6 +11,12 @@ from .router import Candidate, select
 from .instance_lock import InstanceLock
 
 
+LEASE_RENEW_SECONDS = 30
+# Job states the supervision pass can move forward by itself (anything else waits on a person, a
+# model becoming available, or nothing at all).
+ADVANCING_STATES = ('READY', 'RUNNING', 'VERIFYING', 'CANCELLING', 'PAUSING')
+
+
 def compile_document(request, required=None, filename='result.md'):
     """Deterministic template; preserve user criteria, never invent quality acceptance."""
     checks = [{'kind': 'min_chars', 'value': 40}]
@@ -41,6 +47,7 @@ class Engine:
         self._roles_seeded=False
         try:
             self.store.controller_lease(self.owner, kernel_lock_acquired=True)
+            self._lease_renewed=time.monotonic()
             with self.store.transaction() as db:
                 db.execute('CREATE TABLE IF NOT EXISTS review_runs(job_id TEXT,milestone_id TEXT,subject TEXT,contract_version INTEGER,attempts INTEGER,status TEXT,PRIMARY KEY(job_id,milestone_id,subject,contract_version))')
                 db.execute("UPDATE review_runs SET status='INTERRUPTED' WHERE status='RUNNING'")
@@ -163,8 +170,15 @@ class Engine:
         self.reviews[key]=self.review_pool.submit(self._review,job['id'],mid,subject,version)
 
     def tick(self):
+        """One supervision pass. Returns True while something is moving (a run, a review, or a job
+        the engine can advance) so the caller can slow down when Kel is idle (CH-10)."""
         with self.lock:
-            self.store.controller_lease(self.owner)
+            # CH-10: the controller lease lasts 120 s; renewing it every ~30 s (plus right before
+            # each claim) keeps ownership without a write transaction on every pass.
+            now = time.monotonic()
+            if now - self._lease_renewed >= LEASE_RENEW_SECONDS:
+                self.store.controller_lease(self.owner)
+                self._lease_renewed = now
             try:
                 guardrails.assert_intact()
                 self.tampered = None
@@ -183,7 +197,9 @@ class Engine:
                 if future.done():
                     future.result()
                     del self.reviews[key]
+            advancing = False
             for job in self.store.list_jobs():
+                advancing = advancing or job['state'] in ADVANCING_STATES
                 if job['state']=='CLOSED' and job.get('assessment'):
                     with contextlib.closing(self.store.connect()) as db:
                         published=db.execute('SELECT 1 FROM publications WHERE assessment_id=?',(job['assessment'],)).fetchone()
@@ -285,6 +301,7 @@ class Engine:
                     cancel = threading.Event()
                     future = self.pool.submit(self._execute, run, self.adapters[route['selected']], cancel)
                     self.active[run['id']] = (future, cancel, run)
+            return bool(advancing or self.active or self.reviews)
 
     def _attach_role(self, job, mid, run):
         """Kel attaches a role snapshot to every run (V1.5 G3).

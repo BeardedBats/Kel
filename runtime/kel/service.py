@@ -43,6 +43,9 @@ RESEARCH_PREFIXES=('research ','search ','look up','find current')
 ALL_CONVERSATIONS='*'
 # Client-declared kinds that are always work (chat kinds and the earlier floors are excluded).
 CONVERSATION_KINDS=('chat','conversation')
+# CH-10: supervision pace (seconds) while work moves, and while Kel is idle.
+BUSY_TICK=.2
+IDLE_TICK=2.0
 # CH-3: the one plain note the chat gets when the person stops a reply.
 STOPPED_NOTE='You stopped this reply.'
 
@@ -147,6 +150,7 @@ class Service:
         from .apply_changes import recover_prepared
         self.requests.submit(recover_prepared,self.store)
         self.stop=threading.Event();self.error=None
+        self.wake=threading.Event()  # CH-10: an engine action wakes idle supervision at once
         with contextlib.closing(self.store.connect()) as db:
             db.executescript('''CREATE TABLE IF NOT EXISTS submissions(id TEXT PRIMARY KEY,conversation_id TEXT,text TEXT,state TEXT,error TEXT,job_id TEXT,created REAL);
             CREATE TABLE IF NOT EXISTS project_tests(project_id TEXT PRIMARY KEY,command TEXT);
@@ -197,7 +201,7 @@ class Service:
 
     def shutdown(self):
         """In-process shutdown: stop supervision, close the engine, join workers."""
-        self.stop.set()
+        self.stop.set();self.wake.set()
         if self.supervisor.is_alive():
             self.supervisor.join(timeout=5)
         self.engine.close()
@@ -209,10 +213,17 @@ class Service:
             self.telemetry.join(timeout=30)
 
     def _tick(self):
-        while not self.stop.wait(.2):
-            try:self.engine.tick();self.error=None
-            except Exception as exc:self.error=type(exc).__name__+': '+str(exc)
-            if time.time()-self._last_follow_up>=1:
+        # CH-10: 5 passes a second while something moves; one every IDLE_TICK seconds when nothing
+        # does. Any engine action (a new job, an approval, a control) wakes supervision at once.
+        busy=True
+        while not self.stop.is_set():
+            self.wake.wait(BUSY_TICK if busy else IDLE_TICK)
+            self.wake.clear()
+            if self.stop.is_set():
+                break
+            try:busy=self.engine.tick() is not False;self.error=None
+            except Exception as exc:self.error=type(exc).__name__+': '+str(exc);busy=True
+            if time.time()-self._last_follow_up>=(1 if busy else IDLE_TICK):
                 self._last_follow_up=time.time()
                 try:handoff.follow_up(self.store)
                 except Exception:pass  # a missed notice is retried on the next pass; never stop supervision
@@ -524,6 +535,7 @@ class Service:
         finally:
             with self._cancels_lock:
                 self._cancels.pop(sid,None)
+            self.wake.set()
         return None
 
     def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision,choice=None):
@@ -735,6 +747,7 @@ class Service:
                             dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
                             if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
                         db.execute("UPDATE submissions SET state='DISPATCHED',job_id=?,error=NULL WHERE id=?",(jid,sid))
+                    self.wake.set()
                     return jid
         except Exception as exc:
             reason=str(exc).strip().rstrip('.') or type(exc).__name__
@@ -783,7 +796,15 @@ class Service:
     def _project_of(self,cid):
         with contextlib.closing(self.store.connect()) as db:
             row=db.execute('SELECT project_id FROM conversations WHERE id=?',(cid,)).fetchone()
-        if not row:raise PolicyError('Conversation missing')
+        if not row:
+            # ST-04: a chat opened in the app has a reserved id and no row until its first message;
+            # until then it belongs where it will be created (the default project).
+            import uuid
+            try:
+                uuid.UUID(str(cid))
+            except ValueError:
+                raise PolicyError('Conversation missing') from None
+            return 'default'
         return row['project_id']
 
     def _work(self,cid):
@@ -1205,6 +1226,20 @@ class Service:
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
                 'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation'}
 
+    def conversations(self):
+        """GET /api/conversations (ST-23): every conversation with its message and job counts, in
+        two grouped queries — so start-up can skip empty chats without reading each one's state."""
+        with contextlib.closing(self.store.connect()) as db:
+            rows=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
+            messages={r['conversation_id']:r['n'] for r in db.execute(
+                'SELECT conversation_id,COUNT(*) AS n FROM messages GROUP BY conversation_id')}
+            jobs={r['c']:r['n'] for r in db.execute(
+                "SELECT json_extract(data,'$.conversation') AS c,COUNT(*) AS n FROM jobs GROUP BY c")}
+        for row in rows:
+            row['message_count']=messages.get(row['id'],0)
+            row['job_count']=jobs.get(row['id'],0)
+        return {'conversations':rows}
+
     def handoff_view(self,cid,sid):
         """GET /api/handoff (D-53): one hand-off's live state for its in-chat card."""
         with contextlib.closing(self.store.connect()) as db:
@@ -1273,9 +1308,12 @@ class Service:
                         planning=db.execute("SELECT count(*) FROM submissions WHERE state='PLANNING'").fetchone()[0]
                     if planning or self.engine.active or self.engine.reviews or any(j['state'] not in ('CLOSED','CANCELLED') for j in self.store.list_jobs()):
                         raise PolicyError('Work is still open. Finish or cancel it before updating Kel.')
-                    self.draining=True;self.stop.set()
+                    self.draining=True;self.stop.set();self.wake.set()
                 return {'ok':True,'draining':True}
-            return self._action(path,data)
+            try:
+                return self._action(path,data)
+            finally:
+                self.wake.set()  # CH-10: whatever changed, supervision looks at it now
 
     def _action(self,path,data):
         # V1.5: one identity rule for every engine action family. Actor identity is bound by the
@@ -1316,7 +1354,8 @@ class Service:
             else:
                 self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],packet,row['kind'])
             return {'id':row['id']}
-        if path=='/api/conversation':return {'id':self.context.conversation(data.get('project','default'))}
+        if path=='/api/conversation':
+            return {'id':self.context.conversation(data.get('project','default'),conversation_id=data.get('id'))}
         if path=='/api/project':
             pid=self.context.project(data['name'],data.get('root') or None,data.get('context',''),data.get('id'))
             command=data.get('test_command')
@@ -1950,6 +1989,7 @@ def serve(root,port=0):
                     query=parse_qs(parsed.query)
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/conversations':self.reply(200,service.conversations());return
                     if parsed.path=='/api/handoff':
                         self.reply(200,service.handoff_view(query.get('conversation',['main'])[0],
                                                             (query.get('submission') or [''])[0]));return
@@ -2008,7 +2048,7 @@ def serve(root,port=0):
     print(encode({'url':descriptor['url'],'pid':descriptor['pid'],'engine_version':ENGINE_VERSION}),flush=True)
     try:server.serve_forever()
     finally:
-        service.stop.set();service.supervisor.join(timeout=2)
+        service.stop.set();service.wake.set();service.supervisor.join(timeout=2)
         service.requests.shutdown(wait=True)
         service.planning.shutdown(wait=True)
         service.engine.close();server.server_close()

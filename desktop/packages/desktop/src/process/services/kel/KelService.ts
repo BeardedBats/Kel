@@ -8,6 +8,7 @@ import path from 'path';
 import { ensureWorkCards, recoverHistory, type HistoryMessage } from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
+import { conversationCounts, knownEmpty } from './conversationCounts';
 import {
   connectionCredentialKey,
   connectionCredentialStatus,
@@ -397,8 +398,17 @@ export async function initializeKel(port: number): Promise<void> {
   for (const donor of catalog.items || [])
     if (donor.extra?.kel_conversation_id) mapping[donor.id] = donor.extra.kel_conversation_id;
   const mapped = new Set(Object.values(mapping));
+  // ST-23: one grouped engine query says which conversations are empty, so start-up never reads
+  // each empty chat's full state. An older engine without the route falls back to reading each.
+  let counts: ReturnType<typeof conversationCounts> = null;
+  try {
+    counts = conversationCounts(await kelRequest('/api/conversations'));
+  } catch {
+    counts = null;
+  }
   for (const conversation of saved.conversations) {
     if (mapped.has(conversation.id)) continue;
+    if (knownEmpty(counts, conversation.id)) continue;
     const existing = await kelRequest('/api/state?conversation=' + conversation.id);
     if (!existing.messages.length && !existing.jobs.length) continue;
     const project = saved.projects.find((item: { id: string }) => item.id === conversation.project_id);
