@@ -32,6 +32,38 @@ def needs_work(text):
     return bool(TOOL_REQUEST_RE.search(str(text or '')))
 
 
+# A file action names a file and the folder it should land in ("create a file named hello.txt
+# containing hi in C:\Users\me\Desktop\notes"). Only real work that can write into that folder may
+# honour it; a writing job must never report such a request as a completed file action (D-53).
+FILE_ACTION_VERB_RE = re.compile(r'\b(?:create|write|save|make|put|add|generate|place)\b', re.IGNORECASE)
+FILE_NAME_RE = re.compile(
+    r'\b(?:file\s+(?:named|called)?|named|called'
+    r'|(?:create|write|save|make|put|add|generate|place)\s+(?:(?:a|an|the)\s+)?(?:new\s+)?)\s*["\'`]?'
+    r'([A-Za-z0-9_][A-Za-z0-9_.-]*\.[A-Za-z0-9]{1,10})["\'`]?(?=[\s,;:!?)]|\.(?:\s|$)|$)',
+    re.IGNORECASE)
+_PATH = r'(?:[A-Za-z]:[\\/]|~[\\/]|\\\\|/)'
+FOLDER_RE = re.compile(
+    r'\b(?:in|into|inside|under|to|at)\s+(?:the\s+|my\s+)?(?:folder|directory|dir)?\s*'
+    r'(?:"(' + _PATH + r'[^"\n]*)"|\'(' + _PATH + r'[^\'\n]*)\'|`(' + _PATH + r'[^`\n]*)`|(' + _PATH + r'[^\s"\'`]*))',
+    re.IGNORECASE)
+
+
+def file_action(text):
+    """{'filename', 'folder'} when the message asks for a named file in a named folder, else None."""
+    text = str(text or '')
+    if not FILE_ACTION_VERB_RE.search(text):
+        return None
+    name = FILE_NAME_RE.search(text)
+    folder = FOLDER_RE.search(text)
+    if not name or not folder:
+        return None
+    path = next(group for group in folder.groups() if group)
+    path = path.rstrip('.,;:!?)').strip()
+    if len(path) < 2 or '://' in path:
+        return None
+    return {'filename': name.group(1), 'folder': path}
+
+
 @dataclass
 class Candidate:
     name: str

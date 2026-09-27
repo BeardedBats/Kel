@@ -20,7 +20,9 @@ from .native import NativeAdapter
 from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
-from .router import needs_work
+from .router import needs_work, file_action
+from . import handoff
+from .turn import decide as decide_turn, guard_ack, template_ack, title_for
 
 # Single source for the engine's identity (audit R8.B): the desktop refuses to reuse a live engine
 # whose reported version differs from the app it shipped with, so this literal must match
@@ -31,6 +33,16 @@ from . import __version__ as ENGINE_VERSION
 # requests that need a project root; greenfield ("create an app") is classified
 # separately and never prompts.
 CODING_VERBS=('fix','build','implement','change','add','remove','update','refactor','test')
+# Today's keyword gate (the fallback when no turn model is available, D-53): these openings mean work.
+WORK_PREFIXES=('research','search','look up','find current','write','create','draft','summarize','fix','build',
+               'implement','change','add','remove','update','make','refactor','test','review','analyze',
+               'compare','prepare')
+# Explicit research openings are a work floor even when a turn model is available (D-53).
+RESEARCH_PREFIXES=('research ','search ','look up','find current')
+# The /api/state scope that reads every conversation's work (Work and Activity pages).
+ALL_CONVERSATIONS='*'
+# Client-declared kinds that are always work (chat kinds and the earlier floors are excluded).
+CONVERSATION_KINDS=('chat','conversation')
 
 def _restore_outcome(root):
     """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
@@ -100,6 +112,12 @@ class Service:
         except Exception:
             pass  # a missing span costs one observation, never a boot
         self.requests=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-conversation')
+        # D-53: starting hand-off work (planning, project creation, job intake) has its own pool so a
+        # conversational reply never queues behind a slow planner.
+        self.planning=ThreadPoolExecutor(max_workers=2,thread_name_prefix='kel-planning')
+        # KEL_TURN_MODEL=none keeps the deterministic keyword gate (tests, headless setups).
+        self.turn_mode=(os.environ.get('KEL_TURN_MODEL') or '').strip().lower()
+        self._last_follow_up=0.0
         from .apply_changes import recover_prepared
         self.requests.submit(recover_prepared,self.store)
         self.stop=threading.Event();self.error=None
@@ -109,6 +127,17 @@ class Service:
             CREATE TABLE IF NOT EXISTS message_files(submission_id TEXT,attachment_id TEXT,PRIMARY KEY(submission_id,attachment_id));''')
             db.execute('CREATE TABLE IF NOT EXISTS submission_packets(id TEXT PRIMARY KEY,packet TEXT,kind TEXT)')
             db.execute("UPDATE submissions SET state='DISPATCHED',job_id=(SELECT job_id FROM job_intakes WHERE job_intakes.id=submissions.id) WHERE id IN (SELECT id FROM job_intakes)")
+            handoff.ensure_schema(self.store)
+            # D-53: a hand-off whose work never started was already acknowledged in the chat; say
+            # once, in that chat, that it did not start and how to start it again.
+            with self.store.transaction() as tx:
+                for row in tx.execute("SELECT s.id,s.conversation_id,a.title FROM submissions s JOIN submission_acks a "
+                                      "ON a.submission_id=s.id WHERE s.state='PLANNING'").fetchall():
+                    tx.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                               (row['conversation_id'],'assistant',
+                                "Kel closed before it could start '"+str(row['title'] or 'your request')+"'. Use Retry on its card.",
+                                time.time()))
+                    tx.execute("UPDATE submissions SET state='INTERRUPTED',error='Kel closed before this work started. Retry it from its card.' WHERE id=?",(row['id'],))
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
         from .continuation import Continuation
@@ -147,6 +176,7 @@ class Service:
             self.supervisor.join(timeout=5)
         self.engine.close()
         self.requests.shutdown(wait=True,cancel_futures=True)
+        self.planning.shutdown(wait=True,cancel_futures=True)
         # The telemetry thread may be inside a provider call (bounded by that call's own timeout);
         # joining it releases its stderr handle before the caller cleans the data root up.
         if self.telemetry.is_alive():
@@ -156,6 +186,10 @@ class Service:
         while not self.stop.wait(.2):
             try:self.engine.tick();self.error=None
             except Exception as exc:self.error=type(exc).__name__+': '+str(exc)
+            if time.time()-self._last_follow_up>=1:
+                self._last_follow_up=time.time()
+                try:handoff.follow_up(self.store)
+                except Exception:pass  # a missed notice is retried on the next pass; never stop supervision
 
     def submit(self,data):
         sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','')
@@ -173,6 +207,7 @@ class Service:
             if len(hexish)!=32 or any(ch not in '0123456789abcdef' for ch in hexish):
                 raise PolicyError('Invalid job id')
         kind=data.get('kind')
+        kind_source='client' if kind is not None else 'router'
         greenfield_flag=False
         if kind is None:
             # Deterministic initial routing: the client omitted an explicit kind,
@@ -194,6 +229,7 @@ class Service:
                     project_row['project_id'],text,conversation_id=cid,purpose='submit')
         except Exception:
             pass  # enrichment is additive; the handoff packet remains the fallback
+        packet['kind_source']=kind_source
         if job_id:packet['continuation']={'job_id':job_id}
         recipe_run=data.get('recipe')
         if recipe_run is not None:
@@ -207,14 +243,69 @@ class Service:
                 if old['conversation_id']!=cid or old['text']!=text:raise PolicyError('Request ID belongs to different content')
                 return sid
             db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',(sid,cid,text,'PLANNING',None,None,time.time()))
+            # D-53: the person's own message is the one a hand-off job keeps (user before acknowledgement).
+            packet['intake_seq']=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'user',text,time.time())).lastrowid
             db.execute('INSERT INTO submission_packets VALUES(?,?,?)',(sid,encode(packet),kind))
             for aid in attachments:db.execute('INSERT INTO message_files VALUES(?,?)',(sid,aid))
-            db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',(cid,'user',text,time.time()))
             db.execute("UPDATE conversations SET title=? WHERE id=? AND title='New conversation'",(text[:65],cid))
         self.requests.submit(self._plan,sid,cid,text,packet,kind,greenfield_flag)
         return sid
 
+    def _model_for(self,preference,turn):
+        """An adapter for one saved preference ({provider, model}), or today's fallback when None.
+
+        None when the preferred provider is not available here (the caller then tries the next
+        preference). Turn calls run on short timeouts (internal 20 s, native 30 s)."""
+        native_timeout=30 if turn else 100
+        if preference:
+            provider=preference.get('provider')
+            if provider=='internal':
+                if not isinstance(self.model,InternalAdapter):
+                    return None
+                chosen=preference.get('model') or self.model.model
+                if not turn and chosen==self.model.model:
+                    return self.model
+                return InternalAdapter(model=chosen,timeout=20 if turn else self.model.timeout)
+            cli={'claude-code':'claude','claude':'claude','codex':'codex','codex-code':'codex'}.get(provider)
+            if cli and cli in self.engine.adapters:
+                return NativeAdapter(cli,self.store.root/'workspaces'/cli,self.store.root/'logs',timeout=native_timeout)
+            return None
+        if self.model is not None:
+            if turn and isinstance(self.model,InternalAdapter):
+                return InternalAdapter(model=self.model.model,timeout=20)
+            return self.model
+        available=next((n for n in ('codex','claude') if n in self.engine.adapters),None)
+        if not available:
+            return None
+        return NativeAdapter(available,self.store.root/'workspaces'/available,self.store.root/'logs',timeout=native_timeout)
+
+    def _chat_model(self,cid,turn=False):
+        """The model a conversational reply uses: the conversation's saved choice, then the default
+        choice (the model pill writes both through /api/model), then Kel's own fallback."""
+        from .model_prefs import ModelPrefs
+        try:
+            snapshot=ModelPrefs(self.store).snapshot(cid)
+        except Exception:
+            snapshot={}
+        for preference in (snapshot.get('conversation'),snapshot.get('default')):
+            if preference and preference.get('provider'):
+                model=self._model_for(preference,turn)
+                if model is not None:
+                    return model
+        return self._model_for(None,turn)
+
+    def _turn_model(self,cid='main'):
+        """The model that decides one conversational turn (D-53); None = keyword gate."""
+        if self.turn_mode=='none':
+            return None
+        return self._chat_model(cid,turn=True)
+
+    def _images(self,packet):
+        return [{'mime':f['mime'],'data':base64.b64encode((self.store.root/f['image_path']).read_bytes()).decode()}
+                for f in packet.get('files') or [] if f.get('image_path')]
+
     def _plan(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
+        """Route one message. Returns the hand-off's start future when work was handed off, else None."""
         try:
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
@@ -228,91 +319,48 @@ class Service:
                 jid=self._recipe_run(sid,cid,text,packet)
             elif kind=='continue' or explicit_job or continue_verb:
                 jid=self._continuation(cid,text,packet)
-            elif coding_verb and not greenfield_flag and not packet['project']['root']:
+            elif coding_verb and not greenfield_flag and not packet['project']['root'] and not file_action(text):
                 # Coding intent with no selected project and no explicit
                 # greenfield request: ask instead of guessing or silently
                 # adopting a temp/donor workspace as the project root.
                 self.store.add_message('This looks like a request to change code, but no project is selected. Open Saved context and choose the project to work in (it needs a test command), or ask me to create a new project and I will build it from scratch.', 'assistant', cid)
                 jid=None
-            elif not needs_work(text) and ((kind in ('chat','conversation') and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(('research','search','look up','find current','write','create','draft','summarize','fix','build','implement','change','add','remove','update','make','refactor','test','review','analyze','compare','prepare')))):
-                model=self.model
-                if model is None:
-                    available=next((n for n in ('codex','claude') if n in self.engine.adapters),None)
-                    if not available:raise PolicyError('Connect a model before sending a message')
-                    model=NativeAdapter(available,self.store.root/'workspaces'/available,self.store.root/'logs')
-                kwargs={}
-                image_files=[f for f in packet['files'] if f.get('image_path')]
-                if image_files:
-                    if model is not self.model:raise PolicyError('The image worker is not connected')
-                    kwargs['images']=[{'mime':f['mime'],'data':base64.b64encode((self.store.root/f['image_path']).read_bytes()).decode()} for f in image_files]
-                result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
-                    'Do not imply you performed external actions. You may answer questions about the saved context.\n'+encode(packet),**kwargs)
-                if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
-                self.store.add_message(result['text'],'assistant',cid);jid=None
             else:
-                coding=kind=='coding' or (packet['project']['root'] and coding_verb)
-                if coding:
-                    root=packet['project']['root']
-                    # Greenfield intent ("create me an app") always wins, even when the
-                    # active project already has a root such as a desktop temp workspace.
-                    greenfield=bool(greenfield_flag) or not bool(root)
-                    if greenfield:
-                        # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
-                        # workspace: a fresh git repo under Documents/Kel Projects with a
-                        # deterministic smoke-test command the worker must make pass.
-                        slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
-                        root=Path.home()/'Documents'/'Kel Projects'/f'{slug}-{secrets.token_hex(2)}'
-                        # V1.5: creating project files is an effect; it crosses the boundary under the
-                        # user-project-create policy (user actor, confined to the Kel Projects root).
-                        from .authorize import authorize
-                        decision=authorize(self.store,{'actor':'user','action_kind':'write','target':str(root),
-                            'metadata':{'operation':'create-project','what':'create a new project folder',
-                                        'why':'the user asked Kel to build a new project'}})
-                        if decision['outcome']!='ALLOW':
-                            raise PolicyError('Kel cannot create the project folder: '+
-                                              str(decision.get('reason') or decision.get('rule')))
-                        root.mkdir(parents=True,exist_ok=True)
-                        import subprocess as _sp
-                        _sp.run(['git','init',str(root)],capture_output=True,check=False)
-                        # Keep worker bytecode and caches out of the change set.
-                        (root/'.gitignore').write_text('__pycache__/\n*.pyc\n*.pyo\n',encoding='utf-8')
-                        # A coding snapshot diffs against HEAD; give the new repo an
-                        # empty initial commit so HEAD exists before the worker runs.
-                        _sp.run(['git','-C',str(root),'-c','user.name=Kel','-c','user.email=kel@localhost',
-                                 'commit','--allow-empty','-m','Initial empty project (created by Kel)'],
-                                capture_output=True,check=False)
-                        tests=['python','smoke_test.py']
-                        project_id=self.context.project(slug,str(root),'Created by Kel for: '+text[:120])
-                        with self.store.transaction() as db:
-                            db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(project_id,encode(tests)))
+                # D-53 floors: these messages are work no matter what the turn model says.
+                forced=bool(needs_work(text) or file_action(text) or kind in ('research','coding') or lower.startswith(RESEARCH_PREFIXES)
+                            or (coding_verb and packet['project']['root'])
+                            or (packet.get('kind_source')=='client' and kind not in CONVERSATION_KINDS))
+                running=handoff.running_work(self.store,cid)
+                turn_model=self._turn_model(cid)
+                decision=None
+                if turn_model is not None:
+                    images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
+                    decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images)
+                if decision is None:
+                    # Today's keyword gate: no turn model, or it could not be reached.
+                    gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
+                    if forced or not gate_reply:
+                        decision={'action':'start_background_work','title':title_for(text),
+                                  'acknowledgement':template_ack(),'related_topic':None}
                     else:
-                        with contextlib.closing(self.store.connect()) as db:
-                            row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(packet['project']['id'],)).fetchone()
-                        if not row:raise PolicyError('This project needs a test command. Set it in Project context before coding.')
-                        project_id=packet['project']['id'];tests=json.loads(row['command'])
-                    contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
-                    contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
-                elif kind=='research' or needs_research(text):
-                    from .research import compile_research
-                    contract=compile_research(text,self.commander,packet)
-                    contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+                        decision={'action':'direct'}
+                if decision['action']=='start_background_work':
+                    return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision)
+                if decision['action']=='reply':
+                    self.store.add_message(decision['text'],'assistant',cid);jid=None
                 else:
-                    if self.commander:
-                        contract, meta = self.commander.plan(text, context=packet)
-                        contract['planner'] = {**self.commander.descriptor(), 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
-                    else:
-                        contract = compile_document(text)
-                        contract['planner'] = {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
-                contract['context']=packet
-                if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
-                contract['submission_id']=sid
-                # Create and link the job atomically with intake to prevent duplicate effects on restart.
-                jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
-                self._link_origin(jid,cid,sid)
-                with self.store.transaction() as db:
-                    # create() records the source request; remove only its duplicate intake message.
-                    dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
-                    if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
+                    model=self._chat_model(cid)
+                    if model is None:raise PolicyError('Connect a model before sending a message')
+                    kwargs={}
+                    if any(f.get('image_path') for f in packet['files']):
+                        if not (model is self.model or isinstance(model,InternalAdapter)):raise PolicyError('The image worker is not connected')
+                        kwargs['images']=self._images(packet)
+                    answer_packet=dict(packet,running_work=running)
+                    result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
+                        'Do not imply you performed external actions. You may answer questions about the saved context. '
+                        "running_work is the true state of this conversation's work; never call unfinished or unverified work done.\n"+encode(answer_packet),**kwargs)
+                    if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
+                    self.store.add_message(result['text'],'assistant',cid);jid=None
             # A direct answer or a refused recipe has no job to dispatch. Mark the request
             # settled so every client can stop waiting without inventing running work.
             with self.store.transaction() as db:db.execute(
@@ -320,6 +368,149 @@ class Service:
                 ('DISPATCHED' if jid else 'SETTLED', jid, sid))
         except Exception as exc:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+        return None
+
+    def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision):
+        """D-53: acknowledge now (one transaction), start the work on the planning pool, return."""
+        title=title_for(text,decision.get('title'))
+        ack=guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
+        with self.store.transaction() as db:
+            row=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
+            if not row:
+                seq=db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                               (cid,'assistant',ack,time.time())).lastrowid
+                db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
+        return self.planning.submit(self._start_work,sid,cid,text,packet,kind,greenfield_flag)
+
+    def _project_for_folder(self,folder):
+        """(root, project_id, tests) for the saved project whose root holds `folder`, else None."""
+        try:
+            target=Path(os.path.expandvars(os.path.expanduser(folder))).resolve()
+        except (OSError,RuntimeError,ValueError):
+            return None
+        with contextlib.closing(self.store.connect()) as db:
+            rows=[dict(r) for r in db.execute('SELECT p.id,p.root,t.command FROM projects p JOIN project_tests t '
+                                              'ON t.project_id=p.id WHERE p.root IS NOT NULL AND p.root<>\'\'')]
+        best=None
+        for row in rows:
+            try:
+                root=Path(row['root']).resolve()
+            except (OSError,RuntimeError,ValueError):
+                continue
+            if (target==root or root in target.parents) and (best is None or len(str(root))>len(str(best[0]))):
+                best=(str(root),row['id'],json.loads(row['command']))
+        return best
+
+    def _document_contract(self,text,packet):
+        if self.commander:
+            contract, meta = self.commander.plan(text, context=packet)
+            contract['planner'] = {**self.commander.descriptor(), 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
+        else:
+            contract = compile_document(text)
+            contract['planner'] = {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
+        return contract
+
+    def _compile_work(self,sid,cid,text,packet,kind,greenfield_flag):
+        """The work contract for one request (a file action, coding, research, or a planned document)."""
+        lower=text.lower().strip()
+        coding_verb=lower.startswith(CODING_VERBS)
+        coding=kind=='coding' or (packet['project']['root'] and coding_verb)
+        target=file_action(text)
+        if target and kind=='coding' and packet.get('kind_source')=='client':
+            target=None  # an explicit coding request keeps its own project routing
+        if target:
+            # A named file in a named folder: only the coding path can write into a saved project.
+            # Anywhere else the result is text, and publication says plainly that no file was made.
+            found=self._project_for_folder(target['folder'])
+            if found:
+                root,project_id,tests=found
+                contract=compile_coding(text,root,tests,project_id,greenfield=False)
+                contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+            else:
+                contract=self._document_contract(text,packet)
+                contract['file_request']=target
+        elif coding:
+            root=packet['project']['root']
+            # Greenfield intent ("create me an app") always wins, even when the
+            # active project already has a root such as a desktop temp workspace.
+            greenfield=bool(greenfield_flag) or not bool(root)
+            if greenfield:
+                # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
+                # workspace: a fresh git repo under Documents/Kel Projects with a
+                # deterministic smoke-test command the worker must make pass.
+                slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
+                root=Path.home()/'Documents'/'Kel Projects'/f'{slug}-{secrets.token_hex(2)}'
+                # V1.5: creating project files is an effect; it crosses the boundary under the
+                # user-project-create policy (user actor, confined to the Kel Projects root).
+                from .authorize import authorize
+                decision=authorize(self.store,{'actor':'user','action_kind':'write','target':str(root),
+                    'metadata':{'operation':'create-project','what':'create a new project folder',
+                                'why':'the user asked Kel to build a new project'}})
+                if decision['outcome']!='ALLOW':
+                    raise PolicyError('Kel cannot create the project folder: '+
+                                      str(decision.get('reason') or decision.get('rule')))
+                root.mkdir(parents=True,exist_ok=True)
+                import subprocess as _sp
+                _sp.run(['git','init',str(root)],capture_output=True,check=False)
+                # Keep worker bytecode and caches out of the change set.
+                (root/'.gitignore').write_text('__pycache__/\n*.pyc\n*.pyo\n',encoding='utf-8')
+                # A coding snapshot diffs against HEAD; give the new repo an
+                # empty initial commit so HEAD exists before the worker runs.
+                _sp.run(['git','-C',str(root),'-c','user.name=Kel','-c','user.email=kel@localhost',
+                         'commit','--allow-empty','-m','Initial empty project (created by Kel)'],
+                        capture_output=True,check=False)
+                tests=['python','smoke_test.py']
+                project_id=self.context.project(slug,str(root),'Created by Kel for: '+text[:120])
+                with self.store.transaction() as db:
+                    db.execute('INSERT OR REPLACE INTO project_tests VALUES(?,?)',(project_id,encode(tests)))
+            else:
+                with contextlib.closing(self.store.connect()) as db:
+                    row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(packet['project']['id'],)).fetchone()
+                if not row:raise PolicyError('This project needs a test command. Set it in Project context before coding.')
+                project_id=packet['project']['id'];tests=json.loads(row['command'])
+            contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
+            contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+        elif kind=='research' or needs_research(text):
+            from .research import compile_research
+            contract=compile_research(text,self.commander,packet)
+            contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+        else:
+            contract=self._document_contract(text,packet)
+        contract['context']=packet
+        if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
+        contract['submission_id']=sid
+        return contract
+
+    def _start_work(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
+        """Planning-pool half of a hand-off: compile, create the job, link it; or say it failed."""
+        try:
+            with contextlib.closing(self.store.connect()) as db:
+                ack=db.execute('SELECT message_seq,title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
+            contract=self._compile_work(sid,cid,text,packet,kind,greenfield_flag)
+            contract['handoff']={'submission_id':sid,'ack_seq':ack['message_seq'] if ack else None,
+                                 'title':ack['title'] if ack else title_for(text)}
+            # Create and link the job atomically with intake to prevent duplicate effects on restart.
+            jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+            self._link_origin(jid,cid,sid)
+            intake=packet.get('intake_seq')
+            with self.store.transaction() as db:
+                if intake and db.execute('SELECT 1 FROM messages WHERE seq=? AND conversation_id=?',(intake,cid)).fetchone():
+                    # The person's own message stays where it was (before the acknowledgement) and
+                    # becomes the job's source message; the copy create() recorded goes.
+                    db.execute("DELETE FROM messages WHERE conversation_id=? AND role='user' AND job_id=? AND seq<>?",(cid,jid,intake))
+                    db.execute('UPDATE messages SET job_id=? WHERE seq=?',(jid,intake))
+                else:
+                    dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
+                    if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
+                db.execute("UPDATE submissions SET state='DISPATCHED',job_id=?,error=NULL WHERE id=?",(jid,sid))
+            return jid
+        except Exception as exc:
+            reason=str(exc).strip().rstrip('.') or type(exc).__name__
+            with self.store.transaction() as db:
+                db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+                db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
+                           (cid,'assistant',"I wasn't able to get that started — "+reason+'. You can retry it from the card above.',time.time()))
+            return None
 
     def _recipe_run(self,sid,cid,text,packet):
         """Run a validated recipe through the existing engine (no second runtime)."""
@@ -720,7 +911,10 @@ class Service:
                 row=db.execute('SELECT command FROM project_tests WHERE project_id=?',(p['id'],)).fetchone();p['test_command']=json.loads(row['command']) if row else None
             conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')]
             messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
-            submissions=[dict(r) for r in db.execute('SELECT * FROM submissions WHERE conversation_id=? ORDER BY created',(cid,))]
+            # D-53: a hand-off carries its acknowledgement message and its short title.
+            submissions=[dict(r) for r in db.execute('SELECT s.*,a.message_seq AS ack_seq,a.title AS title FROM submissions s '
+                                                     'LEFT JOIN submission_acks a ON a.submission_id=s.id '
+                                                     'WHERE s.conversation_id=? ORDER BY s.created',(cid,))]
             # Older releases recorded completed direct answers as DISPATCHED without a job.
             # Normalize the read without rewriting preserved conversation history.
             for submission in submissions:
@@ -735,15 +929,20 @@ class Service:
                     action={}
                 a['action_summary']=plain_summary(action)
             files=[dict(r) for r in db.execute('SELECT id,name,size,mime FROM attachments WHERE conversation_id=?',(cid,))]
+        # conversation='*' is the all-conversations scope the Work and Activity pages read: every job,
+        # every project's continuation candidates, and no per-conversation messages or submissions.
+        everywhere=cid==ALL_CONVERSATIONS
         project_id=next((c['project_id'] for c in conversations if c['id']==cid),None)
         continuation=[]
-        if project_id:
+        scopes=[p['id'] for p in projects] if everywhere else ([project_id] if project_id else [])
+        if scopes:
             from .continuation import Continuation
-            try:
-                continuation=Continuation(self.store).candidates(project_id)
-            except Exception:
-                continuation=[]  # the Work surface must render even if continuation state is unavailable
-        jobs=[j for j in self.store.list_jobs() if j['conversation']==cid]
+            for scope in scopes:
+                try:
+                    continuation.extend(Continuation(self.store).candidates(scope))
+                except Exception:
+                    pass  # the Work surface must render even if continuation state is unavailable
+        jobs=[j for j in self.store.list_jobs() if everywhere or j['conversation']==cid]
         # D12 — the routing decision behind each active run (why this provider/model). The engine
         # already records it on run.claimed; user surfaces translate it into plain language.
         routes={}
@@ -761,7 +960,66 @@ class Service:
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
-                'restore':_restore_outcome(self.store.root)}
+                'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation'}
+
+    def handoff_view(self,cid,sid):
+        """GET /api/handoff (D-53): one hand-off's live state for its in-chat card."""
+        with contextlib.closing(self.store.connect()) as db:
+            row=db.execute('SELECT s.*,a.message_seq AS ack_seq,a.title AS title FROM submissions s '
+                           'LEFT JOIN submission_acks a ON a.submission_id=s.id WHERE s.id=?',(sid,)).fetchone()
+            pending=0
+            if row and row['job_id']:
+                pending=db.execute("SELECT COUNT(*) FROM approvals WHERE job_id=? AND status='PENDING'",
+                                   (row['job_id'],)).fetchone()[0]
+        if not row or row['conversation_id']!=cid:
+            raise PolicyError('That work is not part of this conversation')
+        state=row['state']
+        if state=='DISPATCHED' and not row['job_id']:
+            state='SETTLED'
+        view={'submission_id':sid,'conversation':cid,'submission_state':state,'title':row['title'],
+              'ack_seq':row['ack_seq'],'job_id':row['job_id'],'state':None,'verdict':None,
+              'accepted':0,'total':0,'why':None,'next':None,'error':row['error'],
+              'phase':'starting','can_stop':False,'can_retry':state in ('FAILED','INTERRUPTED')}
+        if not row['job_id']:
+            if state in ('FAILED','INTERRUPTED'):
+                view.update(phase='failed_to_start',why=row['error'],
+                            next='Retry to start it again.')
+            elif state=='SETTLED':
+                view.update(phase='needs_look')
+            return view
+        try:
+            job=self.store.get(row['job_id'])
+        except KeyError:
+            view.update(phase='failed_to_start',why='The work record is missing.')
+            return view
+        from .continuation import Continuation
+        try:
+            brief=Continuation(self.store).resume_brief(job['id'])
+        except Exception:
+            brief={'shipped':[],'why':None,'next':None,'needs_you':False}
+        job_state=job.get('state');verdict=job.get('verdict')
+        view.update(state=job_state,verdict=verdict if job_state=='CLOSED' else None,
+                    accepted=len(brief.get('shipped') or []),total=len(job.get('milestones') or {}),
+                    why=brief.get('why'),next=brief.get('next'))
+        if job_state in ('CANCELLED','CANCELLING'):
+            phase='stopped'
+        elif job_state=='CLOSED':
+            phase='done' if verdict=='VERIFIED' else 'needs_look'
+        elif pending or job_state=='AWAITING_USER' or brief.get('needs_you'):
+            phase='needs_you'
+            if pending:
+                view.update(why='Waiting for your decision on a gated step.',
+                            next='Decide on the request card in this conversation.')
+        elif job_state in ('WAITING_RESOURCE','BLOCKED'):
+            phase='waiting'
+            from .core import explain_failure
+            note=explain_failure(job)
+            if note:view['why']=note
+            elif job_state=='BLOCKED':view['why']='A safety rule stopped this work before its next step.'
+        else:
+            phase='running'
+        view.update(phase=phase,can_stop=job_state not in ('CLOSED','CANCELLED','CANCELLING'))
+        return view
 
     def action(self,path,data):
         with self.lifecycle_lock:
@@ -801,7 +1059,16 @@ class Service:
                 row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(self._required(data,'id','Pick a request to retry first.'),)).fetchone()
                 if not row or row['state'] not in ('FAILED','INTERRUPTED'):raise PolicyError('This request is not ready for retry')
                 db.execute("UPDATE submissions SET state='PLANNING',error=NULL WHERE id=?",(row['id'],))
-            self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],json.loads(row['packet']),row['kind'])
+                acked=db.execute('SELECT 1 FROM submission_acks WHERE submission_id=?',(row['id'],)).fetchone()
+            packet=json.loads(row['packet'])
+            if acked:
+                # D-53: the hand-off was already acknowledged in the chat; retrying starts the work
+                # again without a second acknowledgement or a second routing decision.
+                from .router import classify
+                greenfield=bool(classify(row['text']).get('greenfield')) if packet.get('kind_source')!='client' else False
+                self.planning.submit(self._start_work,row['id'],row['conversation_id'],row['text'],packet,row['kind'],greenfield)
+            else:
+                self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],packet,row['kind'])
             return {'id':row['id']}
         if path=='/api/conversation':return {'id':self.context.conversation(data.get('project','default'))}
         if path=='/api/project':
@@ -1435,6 +1702,9 @@ def serve(root,port=0):
                     query=parse_qs(parsed.query)
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
+                    if parsed.path=='/api/handoff':
+                        self.reply(200,service.handoff_view(query.get('conversation',['main'])[0],
+                                                            (query.get('submission') or [''])[0]));return
                     if parsed.path=='/api/dogfood':self.reply(200,service._dogfood_list(query.get('status',[None])[0]));return
                     if parsed.path=='/api/activity':
                         from .activity import timeline
@@ -1492,6 +1762,7 @@ def serve(root,port=0):
     finally:
         service.stop.set();service.supervisor.join(timeout=2)
         service.requests.shutdown(wait=True)
+        service.planning.shutdown(wait=True)
         service.engine.close();server.server_close()
 
 

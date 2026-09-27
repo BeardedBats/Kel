@@ -20,6 +20,7 @@ class RoutingTests(unittest.TestCase):
             os.environ.pop('KEL_INTERNAL_MODEL', None)
             os.environ['KEL_SKIP_TELEMETRY'] = '1'
             os.environ['KEL_REVIEWER'] = 'none'
+            os.environ['KEL_TURN_MODEL'] = 'none'  # D-53: deterministic keyword gate
             self.service = Service(self.tmp.name)
 
     def tearDown(self):
@@ -72,6 +73,31 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(classify("I want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard")['kind'], 'coding')
         self.assertEqual(classify('write a little app that renames files')['kind'], 'coding')
         self.assertEqual(classify('build me a small tool that converts csv to json')['kind'], 'coding')
+
+    def test_file_action_names_the_file_and_the_folder(self):
+        from kel.router import file_action
+        self.assertEqual(file_action(r'Create a file named hello.txt containing hi in C:\Users\me\notes'),
+                         {'filename': 'hello.txt', 'folder': r'C:\Users\me\notes'})
+        self.assertEqual(file_action('save report.csv to /tmp/out'),
+                         {'filename': 'report.csv', 'folder': '/tmp/out'})
+        self.assertIsNone(file_action('Create a file named hello.txt containing hi'))
+        self.assertIsNone(file_action('Write a short plan for a weekend hike'))
+        self.assertIsNone(file_action(r'what is in C:\Windows?'))
+
+    def test_named_file_in_a_folder_is_work_that_never_claims_the_file(self):
+        # Measured: "Create a file named hello.txt containing hi in <folder>" became a document job,
+        # was reported VERIFIED, and no file existed. Outside a saved project it is still work, but
+        # its contract records the file request so publication says no file was created.
+        folder = Path(self.tmp.name) / 'target'
+        folder.mkdir()
+        self.service.engine.adapters = {}
+        sid = self.service.submit({'text': 'Create a file named hello.txt containing hi in ' + str(folder),
+                                   'conversation': 'main'})
+        self.assertEqual(self.wait_submission(sid), 'DISPATCHED')
+        jobs = [j for j in self.service.store.list_jobs() if j['conversation'] == 'main']
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]['contract']['file_request'], {'filename': 'hello.txt', 'folder': str(folder)})
+        self.assertNotEqual(jobs[0]['contract'].get('kind'), 'coding')
 
     def test_greenfield_acceptance_request_becomes_a_coding_job(self):
         text = "I want to create a little app that allows me to control my microphone's mute button, to turn it on and off from my keyboard"

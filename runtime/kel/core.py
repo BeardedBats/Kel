@@ -649,6 +649,13 @@ class Store:
             accepted={mid:m for mid,m in job['milestones'].items() if m['state']=='ACCEPTED'}
             final_id=job['contract'].get('final_milestone')
             if final_id and final_id in accepted:accepted={final_id:accepted[final_id]}
+            # A named file in a named folder that only a writing job ran: the result is text, and it
+            # must never read as a completed file action (D-53).
+            file_request=job['contract'].get('file_request') if job['contract'].get('kind')!='coding' else None
+            file_note=('' if not file_request else
+                       'I did not create the file in '+str(file_request.get('folder'))+': this kind of work '
+                       'can only write text here, not save files into your folders. Save it there yourself, '
+                       'or select that folder as a project (with a test command) and ask again.')
             if job['verdict']=='VERIFIED':
                 text='\n\n'.join(self.artifact_text(m['artifact']) for m in accepted.values())
                 if job['contract'].get('kind')=='coding':
@@ -660,9 +667,19 @@ class Store:
                         text='The change passed its tests and a separate review. It is ready in an isolated project copy. Your original project is unchanged. Download the change report to inspect the diff.'
                         if job['contract'].get('runtime')=='native-host':
                             text='The change passed its tests and a separate review. Download the change report to inspect the project copy. Apply checked changes will check your original project for conflicts and save a backup.'
+                # D-53: a conversational hand-off gets a lead-in that names the work — and only a
+                # VERIFIED result may say it passed its checks.
+                handoff=job['contract'].get('handoff') or {}
+                if file_request:
+                    text=("Here's the content for "+str(file_request.get('filename'))+' — it passed its checks. '
+                          +file_note+('\n\n'+text if text else ''))
+                elif handoff.get('title'):
+                    text="Here's "+str(handoff['title'])+' — it passed its checks.'+('\n\n'+text if text else '')
             else:
                 text=(explain_failure(job)
                       or ('I could not verify the complete result.' if job['verdict']=='UNCERTAIN' else 'The result did not pass its checks.'))
+                if file_request:
+                    text=text+'\n\nNo file was created in '+str(file_request.get('folder'))+'.'
             summary=verification_summary(job)
             if summary:
                 text=(text+'\n\n'+summary) if text else summary
