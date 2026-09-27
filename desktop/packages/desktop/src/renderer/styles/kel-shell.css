@@ -4235,10 +4235,6 @@ html body .kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionr
 .kel-v2-shell .kel-shell-composer-footer .kel-shell-chat-workspace { cursor: default; }
 .kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain'], .kel-shell-crumb):is(:hover, [aria-expanded='true'], .arco-dropdown-popup-visible) { background: rgba(47,107,224,.22) !important; color: #c4d4e8 !important; }
 .kel-v2-shell .kel-shell-composer-footer :is([class*='workspaceEmptyBtn'], [class*='workspacePillMain']) svg { width: 14px; height: 14px; flex: none; }
-.kel-v2-shell .kel-shell-composer-footer [class*='workspaceEmptyBtn']::after {
-  content: ''; flex: none; width: 12px; height: 12px; background: currentColor;
-  -webkit-mask: url('../assets/figma/chat-shell/mode-chevron.svg') center / 12px 12px no-repeat; mask: url('../assets/figma/chat-shell/mode-chevron.svg') center / 12px 12px no-repeat;
-}
 .kel-v2-shell .kel-shell-composer-footer .kel-shell-chat-workspace img, .kel-v2-shell .kel-shell-crumb > img { width: 14px; height: 14px; flex: none; }
 .kel-v2-shell .kel-shell-crumb > img.kel-shell-crumb__chevron { width: 12px; height: 12px; }
 .kel-v2-shell .kel-shell-crumb:disabled { opacity: .45; cursor: default; }
