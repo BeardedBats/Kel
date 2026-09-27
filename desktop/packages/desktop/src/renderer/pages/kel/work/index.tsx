@@ -118,7 +118,12 @@ const WorkCenter: React.FC = () => {
           )
         )
       );
-      setContinuation(state.continuation ?? []);
+      // A job that is actively running is not "waiting to continue".
+      setContinuation(
+        (state.continuation ?? []).filter(
+          (candidate) => !['RUNNING', 'VERIFYING', 'QUEUED'].includes(String(candidate.state ?? candidate.job?.state ?? '').toUpperCase())
+        )
+      );
       setAssignments(team.assignments ?? []);
       // V2-06 follow-through: the rows are the same authoritative surface the chat's Work panel
       // reads, so every job here can offer its one action with the id that action needs.
@@ -468,9 +473,7 @@ const WorkCenter: React.FC = () => {
                 return (
                   <li key={id}>
                     <span className="kel-strong">
-                      {`${index + 1}. ${
-                        candidate.summary ?? related?.contract?.request ?? 'A task is waiting to continue'
-                      }`}
+                      {candidate.summary ?? related?.contract?.request ?? 'A task is waiting to continue'}
                     </span>{' '}
                     <KelStatusChip
                       status={statusFromDerived(candidate.state ?? candidate.job?.state ?? 'QUEUED')}

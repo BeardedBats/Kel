@@ -26,7 +26,8 @@ const LEGACY_CHANNEL_KEYS = [
   'assistant.wecom.agent',
 ] as const;
 
-const LEGACY_CHANNEL_PLATFORMS = ['telegram', 'lark', 'dingtalk', 'weixin', 'wecom'] as const;
+// Kel: the bundled backend has no WeCom channel (GET /api/channel/settings/wecom → 400), so it is not migrated.
+const LEGACY_CHANNEL_PLATFORMS = ['telegram', 'lark', 'dingtalk', 'weixin'] as const;
 
 type LegacyChannelConfigKey = (typeof LEGACY_CHANNEL_KEYS)[number];
 type LegacyChannelPlatform = (typeof LEGACY_CHANNEL_PLATFORMS)[number];

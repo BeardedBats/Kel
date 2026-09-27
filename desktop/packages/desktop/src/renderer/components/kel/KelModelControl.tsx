@@ -86,12 +86,24 @@ export const useKelModelState = (conversationId?: string) => {
   const setConversation = useCallback(
     async (choice: Choice | null) => {
       if (!conversationId) return;
+      // A new chat is linked to its engine conversation only after the pill first mounted, so an
+      // empty lookup is retried at choice time instead of failing with "Open a conversation...".
+      let target = cid;
+      if (!target) {
+        try {
+          const api = (window as unknown as { kelAPI?: { conversation?: (id: string) => Promise<string> } }).kelAPI;
+          target = (await api?.conversation?.(conversationId)) ?? null;
+          if (target) setCid(target);
+        } catch {
+          target = null;
+        }
+      }
       try {
         if (!choice || !choice.provider) {
-          await request({ action: 'clear_conversation', conversation: cid ?? undefined });
+          await request({ action: 'clear_conversation', conversation: target ?? undefined });
           Message.success('This chat follows the default model again.');
         } else {
-          await request({ action: 'set_conversation', conversation: cid ?? undefined, choice });
+          await request({ action: 'set_conversation', conversation: target ?? undefined, choice });
           Message.success('Saved. This chat will use that model.');
         }
       } catch (error) {
@@ -101,7 +113,7 @@ export const useKelModelState = (conversationId?: string) => {
         const detail = String((error as Error)?.message || '').trim();
         Message.error(detail || 'Kel could not change the model just now.');
       }
-      await refresh();
+      await refresh(target);
     },
     [cid, conversationId, refresh]
   );

@@ -127,7 +127,8 @@ describe('collectAttention — D5 connection setup needs', () => {
       ],
     });
     const connections = items.filter((item) => item.kind === 'connection');
-    expect(connections.map((item) => item.id).sort()).toEqual(['connection-codex', 'connection-codex-code']);
+    // With Claude usable, the never-installed Codex CLI is optional; the signed-out one still asks.
+    expect(connections.map((item) => item.id).sort()).toEqual(['connection-codex']);
     // Persistent configuration sorts below live asks (no timestamp).
     expect(items[items.length - 1].kind).toBe('connection');
     for (const item of connections) {
@@ -135,6 +136,20 @@ describe('collectAttention — D5 connection setup needs', () => {
       expect(item.projectId).toBeUndefined();
     }
     expect(connections[0].detail).toContain('Codex');
+  });
+
+  it('treats providers never set up as optional once another provider works', () => {
+    const optional = collectAttention({
+      providers: [
+        { id: 'anthropic', label: 'Anthropic API', status: 'installed_not_authenticated', note: 'API key needed' },
+        { id: 'claude', label: 'Claude', status: 'healthy' },
+      ],
+    });
+    expect(optional.filter((item) => item.kind === 'connection')).toEqual([]);
+    const nothingWorks = collectAttention({
+      providers: [{ id: 'anthropic', label: 'Anthropic API', status: 'installed_not_authenticated', note: 'API key needed' }],
+    });
+    expect(nothingWorks.map((item) => item.id)).toEqual(['connection-anthropic']);
   });
 
   it('excludes connection items under a project filter (unbound, fail-closed)', () => {
