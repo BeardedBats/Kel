@@ -89,13 +89,14 @@ const ReplyActions: React.FC<{
     }
   };
   return <>
-    <Tooltip content='Mark helpful'>
-      <button type='button' aria-label='Mark helpful' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
+    {/* CP-14: reactions stay on this device; the engine never sees them, so they promise nothing. */}
+    <Tooltip content='Helpful — only you see this'>
+      <button type='button' aria-label='Mark helpful (only you see this)' aria-pressed={reaction === 'up'} className='kel-shell-message-action' onClick={() => chooseReaction('up')}>
         <img src={thumbsUpIcon} alt='' width={16} height={16} />
       </button>
     </Tooltip>
-    <Tooltip content='Mark unhelpful'>
-      <button type='button' aria-label='Mark unhelpful' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
+    <Tooltip content='Not helpful — only you see this'>
+      <button type='button' aria-label='Mark unhelpful (only you see this)' aria-pressed={reaction === 'down'} className='kel-shell-message-action' onClick={() => chooseReaction('down')}>
         <img src={thumbsDownIcon} alt='' width={16} height={16} />
       </button>
     </Tooltip>

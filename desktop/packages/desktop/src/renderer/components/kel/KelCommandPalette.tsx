@@ -12,6 +12,8 @@ import { configService } from '@/common/config/configService';
 import { DARK_THEME_ID } from '@/common/theme/constants';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
 import { KEL_ALL_CONVERSATIONS, kelState, kelWork } from '@renderer/components/kel/kelApi';
+import { workWords } from '@renderer/components/kel/workLanguage';
+import { requestTitle, workRouteFor } from '@renderer/components/kel/needsAttention';
 import searchIcon from '@renderer/assets/figma/palette/search.svg';
 import workIcon from '@renderer/assets/figma/palette/work.svg';
 import activityIcon from '@renderer/assets/figma/palette/activity.svg';
@@ -26,6 +28,8 @@ type PaletteItem = {
   group: string;
   label: string;
   hint?: string;
+  /** Extra text the filter matches (a job's full request) without showing it. */
+  search?: string;
   icon?: string;
   run: () => void;
 };
@@ -46,20 +50,9 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-connections', label: 'Connections', hint: 'services Kel can use', path: '/connections' },
   { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
   { id: 'nav-dogfood', label: 'Kibble', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
+  { id: 'nav-diagnostics', label: 'Diagnostics', hint: 'health and an issue report', path: '/diagnostics' },
+  { id: 'nav-setup', label: 'Set up Kel', hint: 'models, projects and permissions', path: '/onboarding' },
 ];
-
-// Plain-language job states for hints; the raw states stay on the Work page.
-const JOB_STATE_LABEL: Record<string, string> = {
-  QUEUED: 'queued',
-  READY: 'ready to run',
-  RUNNING: 'working',
-  WAITING_RESOURCE: 'waiting for a model',
-  AWAITING_USER: 'waiting on you',
-  PAUSED: 'paused',
-  BLOCKED: 'blocked by a safety rule',
-  CLOSED: 'finished',
-  CANCELLED: 'cancelled',
-};
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const element = target as HTMLElement | null;
@@ -77,7 +70,6 @@ const KelCommandPalette: React.FC = () => {
   const [dynamic, setDynamic] = useState<PaletteItem[]>([]);
   const [found, setFound] = useState<PaletteItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const loadedOnce = useRef(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const close = useCallback(() => {
@@ -86,9 +78,8 @@ const KelCommandPalette: React.FC = () => {
     setActive(0);
   }, []);
 
+  // WK-15: re-read every time the palette opens, so jobs started since the last open are findable.
   const load = useCallback(async () => {
-    if (loadedOnce.current) return;
-    loadedOnce.current = true;
     setLoading(true);
     try {
       const [state, work, sidebar] = await Promise.all([
@@ -98,15 +89,17 @@ const KelCommandPalette: React.FC = () => {
       ]);
       const items: PaletteItem[] = [];
       (state.jobs ?? []).forEach((job) => {
+        const title = requestTitle(job);
         items.push({
           id: `job-${job.id}`,
           group: 'Jobs',
-          label: job.contract?.request?.slice(0, 60) ?? job.id,
-          hint: JOB_STATE_LABEL[job.state] ?? job.state.toLowerCase().replace(/_/g, ' '),
-          run: () => navigate('/work'),
+          label: title.length > 60 ? `${title.slice(0, 59).trimEnd()}…` : title,
+          hint: workWords(job).label,
+          search: job.contract?.request ?? '',
+          run: () => navigate(workRouteFor(job.id)),
         });
       });
-      (work?.memory.records ?? []).forEach((record) => {
+      (work?.memory?.records ?? []).forEach((record) => {
         items.push({
           id: `memory-${record.id}`,
           group: 'Knowledge',
@@ -115,7 +108,7 @@ const KelCommandPalette: React.FC = () => {
           run: () => navigate('/projects/knowledge'),
         });
       });
-      (work?.recipes.entries ?? []).forEach((entry, index) => {
+      (work?.recipes?.entries ?? []).forEach((entry, index) => {
         const id = String(entry.recipe_id ?? entry.id ?? `recipe-${index}`);
         items.push({
           id: `recipe-${id}`,
@@ -277,7 +270,7 @@ const KelCommandPalette: React.FC = () => {
     if (!needle && mode === 'command') return [...preferred, actions[0], actions[2], ...dynamic.filter((item) => item.group === 'Recipes').slice(0, 1), ...dynamic.filter((item) => item.group === 'Chats').slice(0, 2)].filter(Boolean);
     if (!needle) return all.slice(0, 24);
     return all
-      .filter((item) => `${item.label} ${item.hint ?? ''}`.toLowerCase().includes(needle))
+      .filter((item) => `${item.label} ${item.hint ?? ''} ${item.search ?? ''}`.toLowerCase().includes(needle))
       .slice(0, 24);
   }, [dynamic, found, mode, navigate, query]);
 

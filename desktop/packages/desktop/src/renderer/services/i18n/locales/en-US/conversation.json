@@ -120,7 +120,7 @@
     }
   },
   "agentError": {
-    "fallbackTitle": "The agent could not reply",
+    "fallbackTitle": "Kel couldn’t reply",
     "errorCode": "Error code",
     "retryable": "Retryable",
     "notRetryable": "Needs configuration",

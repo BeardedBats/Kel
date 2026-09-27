@@ -534,6 +534,15 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     [form]
   );
 
+  // WK-18: Kel is the only assistant, so a new task starts with it chosen instead of asking.
+  useEffect(() => {
+    if (!visible || editJob || selectedAssistantId || presetAssistants.length === 0) return;
+    const only =
+      presetAssistants.find((assistant) => assistant.id === 'kel') ??
+      (presetAssistants.length === 1 ? presetAssistants[0] : undefined);
+    if (only) handleAssistantChange(only.id);
+  }, [visible, editJob, selectedAssistantId, presetAssistants, handleAssistantChange]);
+
   const handleWorkspaceClear = useCallback(() => {
     setWorkspace(undefined);
   }, []);
@@ -752,9 +761,9 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
           <FormItem
             className='kel-shell-task-prompt'
-            label={<><span className='kel-desktop-only'>Instructions</span><span className='kel-phone-only'>{t('cron.page.form.prompt')}</span></>}
+            label='Instructions'
             field='prompt'
-            rules={[{ required: true, message: t('cron.page.form.promptRequired') }]}
+            rules={[{ required: true, message: 'Instructions are required' }]}
           >
             <TextArea placeholder={t('cron.page.form.promptPlaceholder')} autoSize={{ minRows: 3, maxRows: 8 }} />
           </FormItem>

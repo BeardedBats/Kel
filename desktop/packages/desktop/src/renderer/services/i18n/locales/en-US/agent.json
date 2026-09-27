@@ -49,11 +49,11 @@
     "clickToWake": "Click to wake this member"
   },
   "runtimeRestart": {
-    "tooltip": "Reconnect agent",
-    "confirmContent": "Restart the agent process so it picks up external CLI config changes (such as a channel switch). Chat history is kept and the session resumes when possible.",
-    "success": "Agent reconnected",
-    "failed": "Failed to reconnect agent",
-    "initializingTooltip": "The agent is initializing. Reconnect when it is ready",
-    "processingTooltip": "Wait for the current reply to finish before reconnecting"
+    "tooltip": "Restart Kel’s chat connection",
+    "confirmContent": "Restart Kel’s chat connection. Your chat history is kept and the chat picks up where it left off.",
+    "success": "Kel’s chat connection restarted",
+    "failed": "Kel couldn’t restart its chat connection. Try again in a moment.",
+    "initializingTooltip": "Kel’s chat is still starting. Try again when it’s ready.",
+    "processingTooltip": "Wait for the current reply to finish, then try again."
   }
 }

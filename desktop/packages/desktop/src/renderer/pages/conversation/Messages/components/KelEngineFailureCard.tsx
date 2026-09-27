@@ -57,7 +57,7 @@ const KelEngineFailureCard: React.FC<{ reason: string; messageId: string; conver
     <section className='kel-chat-agent-error' role='alert' data-testid='kel-engine-failure'>
       <div className='kel-chat-agent-error__heading'>
         <Attention theme='filled' size='16' strokeLinejoin='bevel' className='m-t-2px' fill={iconColors.danger} />
-        <strong>The agent could not reply</strong>
+        <strong>Kel couldn’t reply</strong>
       </div>
       <p className='kel-chat-agent-error__body'>{friendlyReason(reason)}</p>
       <div className='kel-chat-agent-error__actions'>
