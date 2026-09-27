@@ -100,6 +100,16 @@ describe('Kel messages in the chat', () => {
     expect(screen.getByTestId('message-text-content').textContent).not.toContain('Codex');
   });
 
+  it('offers Copy on a reply and no thumbs up/down (D-59)', () => {
+    localStorage.clear();
+    renderText(text('Sure — here is a quick answer.'));
+    expect(screen.queryByLabelText(/helpful/i)).toBeNull();
+    expect(screen.queryByLabelText(/unhelpful/i)).toBeNull();
+    fireEvent.click(screen.getByLabelText('More reply actions'));
+    expect(screen.getByText('Copy')).toBeTruthy();
+    expect(Object.keys(localStorage).filter((key) => key.startsWith('kel.chatReaction.'))).toEqual([]);
+  });
+
   it('shows no Details for an ordinary reply', () => {
     renderText(text('Sure — here is a quick answer.'));
     expect(screen.queryByTestId('kel-message-details')).toBeNull();
