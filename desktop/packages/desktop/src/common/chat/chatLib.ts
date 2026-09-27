@@ -6,6 +6,7 @@
 
 import type { AcpPermissionRequest, PlanUpdate, ToolCallUpdate } from '@/common/types/platform/acpTypes';
 import type { AcpAvailableCommand } from '@/common/chat/slash/types';
+import type { KelMessageMeta } from '@/common/chat/kelMessageMeta';
 import type { IResponseMessage } from '../adapter/ipcBridge';
 import { uuid } from '../utils';
 import { sanitizeAcpToolCallContent, sanitizeAcpToolUpdate } from './acpToolCallOutput';
@@ -136,6 +137,8 @@ export type IMessageText = IMessage<
     senderAgentType?: string;
     /** Sender teammate's conversation id — lets the renderer resolve preset avatars via their conversation extras. */
     senderConversationId?: string;
+    /** Kel: the details the engine recorded with this message, shown only behind "Details" (CP-14). */
+    kel_meta?: KelMessageMeta;
   }
 >;
 

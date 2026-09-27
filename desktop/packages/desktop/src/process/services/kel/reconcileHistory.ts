@@ -1,7 +1,14 @@
 /** Kel adaptation: recover durable replies written while the desktop was closed. */
-export type KelMessage = { seq: number; at: number; role: string; text: string };
+import { isKelNoteMeta, shownKelMeta, type KelMessageMeta } from '@/common/chat/kelMessageMeta';
+
+export type KelMessage = { seq: number; at: number; role: string; text: string; meta?: unknown };
 export type HistoryMessage = {
   id: string;
+  /**
+   * A copy of a streamed (native) row that only adds the engine's message details (`kel_meta`).
+   * It stands in for that row when the chat reads its history and is rebuilt on every reconcile.
+   */
+  kel_overlay?: boolean;
   msg_id: string;
   type: string;
   position: string;
@@ -13,6 +20,8 @@ export type HistoryMessage = {
    */
   content: {
     content?: string;
+    /** CH-2/CP-14: the details the engine recorded with this message (results, fallbacks, notes). */
+    kel_meta?: KelMessageMeta;
     kind?: 'access' | 'action';
     ref_id?: string;
     update?: {
@@ -33,22 +42,63 @@ const WORK_PREFIX = 'kel-work:';
 const workCardId = (row: HistoryMessage): string | undefined =>
   row.type === 'acp_tool_call' ? row.content?.update?.tool_call_id : undefined;
 
+/** The text row for one engine message, carrying the details the chat shows (if any). */
+export function historyRow(id: string, message: KelMessage): HistoryMessage {
+  const key = 'kel-history-' + message.seq;
+  const meta = shownKelMeta(message.meta);
+  return {
+    id: key,
+    msg_id: key,
+    type: 'text',
+    position: message.role === 'user' ? 'right' : 'left',
+    conversation_id: id,
+    created_at: message.at * 1000,
+    content: meta ? { content: message.text, kel_meta: meta } : { content: message.text },
+  };
+}
+
+type MetaPart = { text: string; meta: KelMessageMeta };
+
+/** Which of the messages one streamed row carries gives that row its details. */
+function overlayMeta(rowText: string, parts: MetaPart[]): KelMessageMeta | null {
+  // A quiet note restyles its whole row, so it applies only when the row is exactly that note.
+  const note = parts.find((part) => isKelNoteMeta(part.meta));
+  if (note) return parts.length === 1 && note.text === rowText ? note.meta : null;
+  const results = parts.filter((part) => part.meta.kind === 'result');
+  const pick = results.length ? results : parts;
+  return pick.length ? pick[pick.length - 1].meta : null;
+}
+
+const sameMeta = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
 export function recoverHistory(
   id: string,
   prefix: HistoryMessage[],
   messages: KelMessage[],
   native: HistoryMessage[]
 ): HistoryMessage[] {
-  const fixed = new Set(prefix.map((row) => row.id));
+  // Overlays are derived from the current streamed rows: rebuild them, never carry old ones over.
+  const recovered = prefix.filter((row) => !row.kel_overlay);
+  const fixed = new Map(recovered.map((row, index) => [row.id, index]));
   // ACP can concatenate several Kel replies into one donor message. Consume
   // each matching segment once, in order; repeated replies are not a set.
   const available = native
     .filter((row) => row.type === 'text')
-    .map((row) => ({ position: row.position, text: String(row.content.content).trim() }));
-  const recovered = [...prefix];
+    .map((row) => {
+      const text = String(row.content.content).trim();
+      return { row, position: row.position, whole: text, text, parts: [] as MetaPart[] };
+    });
   for (const message of messages) {
     const key = 'kel-history-' + message.seq;
-    if (fixed.has(key)) continue;
+    const meta = shownKelMeta(message.meta);
+    const index = fixed.get(key);
+    if (index !== undefined) {
+      // A row recovered before the engine recorded its details picks them up.
+      const row = recovered[index];
+      if (meta && !sameMeta(row.content.kel_meta, meta))
+        recovered[index] = { ...row, content: { ...row.content, kel_meta: meta } };
+      continue;
+    }
     const position = message.role === 'user' ? 'right' : 'left';
     const text = message.text.trim();
     const match = available.find(
@@ -56,17 +106,15 @@ export function recoverHistory(
     );
     if (match) {
       match.text = match.text.slice(text.length).trimStart();
+      if (meta) match.parts.push({ text, meta });
       continue;
     }
-    recovered.push({
-      id: key,
-      msg_id: key,
-      type: 'text',
-      position,
-      conversation_id: id,
-      created_at: message.at * 1000,
-      content: { content: message.text },
-    });
+    recovered.push(historyRow(id, message));
+  }
+  // CH-2/CP-14: a streamed row keeps its text; a copy that adds the engine's details stands in for it.
+  for (const entry of available) {
+    const meta = overlayMeta(entry.whole, entry.parts);
+    if (meta) recovered.push({ ...entry.row, kel_overlay: true, content: { ...entry.row.content, kel_meta: meta } });
   }
   return recovered;
 }
