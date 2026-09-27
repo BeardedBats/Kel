@@ -5,6 +5,30 @@ coordinator under handoff §36 "conservative inference"). Engine is the single s
 active project; all new engine logic lives in `runtime/kel/projects.py` so `service.py`/`acp_host.py`
 edits stay thin.
 
+## Contract changes / confirmations (engine agent, 2026-09-27)
+No deviations from the shapes below; these pin down what the doc left open. Migration **32
+`v2-projects`** is confirmed free (31 = `v2-handoff-and-conversation-indexes`).
+- **Project row** (every action that returns a project): `{id, name, root, has_folder, test_command,
+  kind, archived, archived_at, conversations, open_work, needs_you, updated, last_active, context}` —
+  `has_folder` = root set and the folder exists; `archived` is a boolean (`archived_at` the time or
+  null); `test_command` an argv list or null; `conversations` counts real chats (not `main`, not the
+  hidden Recipe-runs chat); `open_work`/`needs_you` count jobs via `job_projects`.
+- `/api/project {action}` returns: `list` → `{projects:[row], active}` (General first, then most
+  recently active; `include_archived`/`include_system` booleans); `create`/`update`/`for_folder`/
+  `archive`/`restore` → the project row (flat, so `.id` works like legacy create); `delete` →
+  `{ok:true,id}`; `set_active` → `{active}`; `bind` → `{donor, project_id}`; `of` →
+  `{project: row|null, pending, conversation}` (`pending` = the chat has no engine row yet, so
+  `project` is where its first message will create it). `update` takes `id` plus any of `name`,
+  `root` (`null`/`''` clears the folder), `context`, `test_command` (`null` clears). Refusals are
+  plain sentences in `{error}` (HTTP 400) like every other route.
+- `active` is a project id or `'*'` (All projects). `/api/state` gains `active_project`, and
+  `projects[]` rows gain `kind`/`archived`; `conversations[]` rows gain `utility:true` for the hidden
+  per-project Recipe-runs chat.
+- `'*'` reads: `/api/memory` `proposals`/`history`/`learnings` return every live project's items,
+  each carrying `project_id`; `/api/recipes` `list`/`search` return built-ins plus each live
+  project's own recipes labelled `project_id`/`project_name`; `/api/map` refuses with "Choose a
+  project to see its map."; `/api/work?project=*` has `memory:null`, `map:null`.
+
 ## Settled questions
 1. The default project is shown as **General** (the engine's real name). "No project" is not used.
 2. The sidebar bottom-nav **"Workspaces" slot is removed**. "Projects" opens the Projects area whose card
