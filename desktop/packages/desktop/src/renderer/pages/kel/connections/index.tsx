@@ -811,12 +811,13 @@ const Connections: React.FC = () => {
               onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
             />
           </div>
-          <div className="kel-row">
-            <KelButton variant="primary" disabled={busy || !draft.name.trim()} onClick={() => void saveConnection()}>
-              {draft.id ? 'Save changes' : 'Add connection'}
-            </KelButton>
+          {/* Figma 269:501: Cancel (Link) then the green Confirm button, right-aligned. */}
+          <div className="kel-row kel-connection-form__actions">
             <KelButton variant="quiet" disabled={busy} onClick={() => setDraft(null)}>
               Cancel
+            </KelButton>
+            <KelButton variant="confirm" disabled={busy || !draft.name.trim()} onClick={() => void saveConnection()}>
+              {draft.id ? 'Save changes' : 'Add connection'}
             </KelButton>
           </div>
         </KelCard>

@@ -201,6 +201,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
         {!isReadOnly && !needsLogin && (
           <Button
             className='kel-tools-mcp-retest'
+            type='primary'
             size='mini'
             title={t('settings.mcpTestConnection')}
             loading={isTestingConnection}
