@@ -46,7 +46,7 @@ class FailureSurfacing(unittest.TestCase):
         current = store.get(job)
         text = explain_failure(current)
         self.assert_explained(text)
-        self.assertIn('No worker could start this job', text)
+        self.assertIn('No model could start this work', text)
         self.assertIn('health circuit open', text)
         self.assertEqual(current['state'], 'WAITING_RESOURCE')
         self.assertEqual(current['verdict'], 'UNCERTAIN')
@@ -102,7 +102,7 @@ class FailureSurfacing(unittest.TestCase):
         current = store.get(job)
         text = explain_failure(current)
         self.assert_explained(text)
-        self.assertIn('A worker stopped before this job finished', text)
+        self.assertIn('The model working on this stopped before it finished', text)
         self.assertEqual(current['state'], 'WAITING_RESOURCE')
 
     def test_settled_and_verified_states_are_not_explained(self):

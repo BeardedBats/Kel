@@ -255,22 +255,26 @@ class Engine:
                     if m['attempts']>=2 and not (spec.get('provider') or job['contract'].get('provider')) and len(candidates)>1:
                         candidates=[c for c in candidates if c.name!=m['provider']]
                     pref = None
+                    from .model_prefs import ModelPrefs, adapter_names, runtime_model
                     try:
-                        from .model_prefs import ModelPrefs
                         pref = ModelPrefs.resolve_for_job(self.store, job['id'])
                     except Exception:
                         pref = None
+                    # CH-2: the saved choice is a catalog id ('claude-code', 'codex', …); prefer the
+                    # candidate adapter it stands for so a saved Claude/Codex choice is honoured.
+                    aliases = adapter_names((pref or {}).get('provider'))
+                    prefer = next((c.name for c in candidates if c.name in aliases), None)
                     from .routing_evidence import summary as _routing_evidence_summary
                     evidence=_routing_evidence_summary(self.store,[c.name for c in candidates])
                     try:
-                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=(pref or {}).get('provider') or None,evidence=evidence)
+                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence)
                     except PolicyError as exc:
                         self.store.wait_for_route(job['id'],str(exc))
                         continue
                     try:
                         self.store.controller_lease(self.owner)
                         adapter=self.adapters[route['selected']]
-                        model=((pref or {}).get('model') if (pref and route['selected'] == (pref or {}).get('provider')) else None) or getattr(adapter,'options',{}).get('model')
+                        model=(runtime_model((pref or {}).get('model')) if route['selected'] in aliases else None) or getattr(adapter,'options',{}).get('model')
                         run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model)
                     except PolicyError:
                         continue

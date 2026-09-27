@@ -135,21 +135,40 @@ class ReadinessTests(ProviderBase):
         self.assertIn('No usable provider', result['reason'])
 
     def test_preferred_provider_is_selected(self):
-        self.authenticate_api('deepseek')
-        result = self.providers.readiness('text', prefer='deepseek')
-        self.assertEqual(result['chosen']['provider'], 'deepseek')
-        self.assertEqual(result['chosen']['model'], 'deepseek-chat')
+        self.authenticate_api('internal')
+        result = self.providers.readiness('text', prefer='internal')
+        self.assertEqual(result['chosen']['provider'], 'internal')
+        self.assertEqual(result['chosen']['model'], 'claude-sonnet-4-6')
         self.assertIn('Preferred provider selected', result['reason'])
 
     def test_fallback_is_explained(self):
+        # CH-2: a stored DeepSeek key is not enough — Kel has no adapter that answers with it, so
+        # it is never chosen and the reason says so plainly.
         with mock.patch('kel.providers.shutil.which', return_value=None):
             self.authenticate_api('deepseek')
             self.authenticate_api('internal')
-            self.seed_state('internal', failures=2, circuit_until=9999999999.0)
-            result = self.providers.readiness('text', prefer='internal')
-        self.assertEqual(result['chosen']['provider'], 'deepseek')
-        self.assertIn('Fell back to deepseek', result['reason'])
-        self.assertTrue([reason for reason in result['reasons'] if 'unusable' in reason])
+            result = self.providers.readiness('text', prefer='deepseek')
+        self.assertEqual(result['chosen']['provider'], 'internal')
+        self.assertIn('Fell back to internal', result['reason'])
+        self.assertTrue([reason for reason in result['reasons'] if 'Not supported for chat yet' in reason])
+
+    def test_available_means_kel_can_answer_with_it(self):
+        with mock.patch('kel.providers.shutil.which', return_value=None):
+            self.authenticate_api('deepseek')
+            self.authenticate_api('internal')
+            deepseek = self.status('deepseek')
+            self.assertEqual((deepseek['available'], deepseek['available_note']),
+                             (False, 'Not supported for chat yet'))
+            self.assertTrue(self.status('internal')['available'])
+            claude = self.status('claude-code')
+            self.assertEqual((claude['available'], claude['available_note']),
+                             (False, 'Not installed on this computer'))
+            # With the engine's adapter registry: a usable key without a running adapter is not
+            # available either.
+            from kel.providers import Providers
+            gated = Providers(self.store, runnable=lambda provider: False)
+            self.assertEqual((gated.status('internal')['available'], gated.status('internal')['available_note']),
+                             (False, 'Not connected yet'))
 
     def test_capability_without_any_provider(self):
         result = self.providers.readiness('vision', prefer='')

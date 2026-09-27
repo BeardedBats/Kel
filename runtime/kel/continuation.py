@@ -269,6 +269,12 @@ class Continuation:
         state = job.get('state')
         if state == 'CLOSED' and job.get('verdict') == 'VERIFIED':
             why, nxt, needs = 'Done and verified.', 'Nothing needed — ask for a new change for more work.', False
+        elif state == 'CLOSED' and job.get('verdict') == 'FAILED':
+            why, nxt, needs = ("It finished, but it didn't pass its checks.",
+                               'Try it again, or ask for a change.', False)
+        elif state == 'CLOSED':
+            why, nxt, needs = ("It finished, but Kel couldn't fully verify the result.",
+                               'Look over the result, then try again or ask for a change.', False)
         elif fenced:
             why = ('An attempt was interrupted and fenced; Kel will not replay it on its own, and '
                    'the file-changing steps were not repeated.')

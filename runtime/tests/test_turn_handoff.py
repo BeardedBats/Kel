@@ -605,6 +605,42 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertNotIn(job['state'], ('CANCELLED', 'CANCELLING'))
         self.assertNotIn('You stopped this reply.', [m['text'] for m in self.messages()])
 
+    # -- CH-2: model truth ------------------------------------------------------------------------
+    def test_a_reply_says_once_when_it_did_not_come_from_the_chosen_model(self):
+        from kel.model_prefs import ModelPrefs
+        self.turn.label, self.turn.provider = 'Claude', 'claude-code'
+        ModelPrefs(self.service.store).set_conversation(self.cid, 'deepseek', 'deepseek-chat')
+        first = self.service.submit({'text': 'How much sun do tomatoes need?', 'conversation': self.cid})
+        self.assertEqual(self.wait(first), 'SETTLED')
+        reply = self.service.state(self.cid)['messages'][-1]
+        self.assertEqual(reply['text'], REPLY['text'] + "\n\nUsed Claude — DeepSeek isn't available for chat yet.")
+        self.assertEqual(reply['meta']['answered_by']['label'], 'Claude')
+        self.assertEqual(reply['meta']['fallback_from']['provider'], 'deepseek')
+        second = self.service.submit({'text': 'And how much sun do peppers need?', 'conversation': self.cid})
+        self.assertEqual(self.wait(second), 'SETTLED')
+        again = self.service.state(self.cid)['messages'][-1]
+        self.assertEqual(again['text'], REPLY['text'], 'the line is said once per conversation')
+        self.assertEqual(again['meta']['fallback_from']['provider'], 'deepseek')
+
+    def test_every_answer_records_who_answered_it(self):
+        self.turn.label = 'Claude'
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        ack = next(m for m in self.service.state(self.cid)['messages'] if m['text'] == WORK['acknowledgement'])
+        self.assertEqual(ack['meta'], {'answered_by': {'label': 'Claude', 'model': None, 'provider': None}})
+
+    def test_the_model_list_says_what_kel_can_actually_answer_with(self):
+        self.service.engine.adapters = {'claude': object()}
+        listing = {row['id']: row for row in self.service._model_action({'action': 'get'})['providers']}
+        self.assertFalse(listing['deepseek']['available'])
+        self.assertEqual(listing['deepseek']['note'], 'Not supported for chat yet')
+        self.assertFalse(any(option['available'] for option in listing['deepseek']['options']))
+        self.assertFalse(listing['codex']['available'], 'no Codex adapter is registered here')
+        providers = {row['provider']: row for row in
+                     self.service.action('/api/providers', {'action': 'list'})['providers']}
+        self.assertFalse(providers['deepseek']['available'])
+        self.assertEqual(providers['deepseek']['available_note'], 'Not supported for chat yet')
+
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')
@@ -647,7 +683,7 @@ class PublishLeadInTests(unittest.TestCase):
         self.store.verify(job, 'a')
         text, created = self.store.publish(job)
         self.assertTrue(created)
-        self.assertTrue(text.startswith("Here's The ACCEPT note — it passed its checks.\n\nACCEPT valid artifact"))
+        self.assertTrue(text.startswith("Here's the ACCEPT note — it passed its checks.\n\nACCEPT valid artifact"))
 
     def test_a_document_result_never_reads_as_a_created_file(self):
         checks = [{'kind': 'contains', 'value': 'ACCEPT'}, {'kind': 'min_chars', 'value': 6}]
@@ -662,6 +698,16 @@ class PublishLeadInTests(unittest.TestCase):
         self.assertTrue(text.startswith("Here's the content for hello.txt \u2014 it passed its checks. "
                                         'I did not create the file in C:\\notes'))
         self.assertIn('ACCEPT valid artifact', text)
+
+    def test_the_lead_in_reads_naturally(self):
+        from kel.core import natural_title
+        self.assertEqual(natural_title('Garden plan for spring'), 'your garden plan for spring')
+        self.assertEqual(natural_title('The ACCEPT note'), 'the ACCEPT note')
+        self.assertEqual(natural_title('Your weekly budget'), 'your weekly budget')
+        self.assertEqual(natural_title('README update'), 'your README update')
+        self.assertEqual(natural_title('iOS release notes'), 'your iOS release notes')
+        self.assertEqual(natural_title('Kel'), 'your Kel')
+        self.assertEqual(natural_title(''), 'your result')
 
     def test_unverified_handoff_result_has_no_lead_in(self):
         job = self.job()

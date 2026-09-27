@@ -47,6 +47,25 @@ def _plain_state(status):
     return PLAIN_STATES.get(str(status), 'Kel is working on it')
 
 
+def _settled_title(status, verdict):
+    """A job's card title once it stops moving: what happened, never a raw verdict word."""
+    if status == 'CLOSED':
+        return {'VERIFIED': 'Kel finished — it passed its checks',
+                'FAILED': "Kel finished — it didn't pass its checks"}.get(
+                    verdict, 'Kel finished — not fully verified')
+    return _plain_state(status)
+
+
+def _failure_sentence(submission):
+    """One plain sentence for a message Kel could not answer or start (never a state name)."""
+    error = str(submission.get('error') or '').strip().rstrip('.')
+    if error:
+        return "I couldn't finish that — " + error + '. Try sending it again.'
+    if submission.get('state') == 'INTERRUPTED':
+        return "Kel closed before it could answer that. Send it again when you're ready."
+    return 'Something went wrong before I could answer that. Try sending it again.'
+
+
 class MethodNotFound(ValueError):
     """JSON-RPC -32601: the host asked for a method this agent does not implement."""
 
@@ -431,7 +450,7 @@ class ACPHost:
                     # Already answered or handed off: the next poll shows that answer or the card.
                     continue
                 if submission['state'] in ('FAILED', 'INTERRUPTED'):
-                    self.text(session, 'Kel could not plan this request: ' + (submission.get('error') or submission['state']))
+                    self.text(session, _failure_sentence(submission))
                     self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
                 job_id = submission.get('job_id')
@@ -465,7 +484,7 @@ class ACPHost:
                         else:
                             self.update(session, {'sessionUpdate': 'tool_call_update', 'toolCallId': job_id,
                                                   'status': 'completed' if status == 'CLOSED' and verdict == 'VERIFIED' else ('failed' if terminal else 'pending'),
-                                                  'title': _plain_state(status) + ' (' + str(verdict).lower() + ')'})
+                                                  'title': _settled_title(status, verdict)})
                         if status == 'AWAITING_USER':
                             approvals = state.get('approvals') or []
                             pending = [a for a in approvals if a.get('job_id') == job_id]
@@ -475,7 +494,7 @@ class ACPHost:
                             self.text(session, explain_approval(str(summary)) + '\n')
                         elif status == 'WAITING_RESOURCE':
                             note = explain_failure(job)
-                            self.text(session, (note or ('Work state: WAITING_RESOURCE. Verification: ' + verdict + '.')) + '\n')
+                            self.text(session, (note or 'Kel is waiting for an available model to continue this work.') + '\n')
                         elif status == 'CANCELLED':
                             self.text(session, 'Cancelled. Kel stopped this work; nothing else will run for it.\n')
                         elif status == 'PAUSED':

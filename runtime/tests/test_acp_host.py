@@ -336,7 +336,7 @@ class ACPHostTests(unittest.TestCase):
         self.assertEqual(self.events[-2]['params']['update']['status'], 'pending')
         # B2: the wait is explained in plain language instead of echoing the verdict word.
         text = self.events[-1]['params']['update']['content']['text']
-        self.assertIn('waiting for a worker', text)
+        self.assertIn('waiting for an available model', text)
         self.assertNotIn('VERIFIED', text)
 
     def test_cancel_controls_job_without_shutting_down_service(self):
