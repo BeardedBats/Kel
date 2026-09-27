@@ -703,3 +703,13 @@ installed files or its Data root (handoff §21 — self-improvement goes through
 explicit install); credentials stay in custody and never appear in prompts, renderer state or logs (§12);
 every action is still recorded in Activity and reported truthfully (§4). Kel may not silently *learn*
 new authority beyond this explicit grant (§3 Memory).
+
+## D-65 — Full access applies verified changes on its own
+
+**Decided by Nick 2026-09-27.** In Full access, a finished coding change that passed Kel's
+verification is applied to the project folder automatically; Nick no longer clicks "Apply checked
+changes". The result message says what was applied, where, and how verification was done, and the
+change stays undoable (the pre-apply snapshot is kept and the card offers "Undo"). **Still waits for
+Nick:** a change that failed or skipped verification, a change touching a protected place (D-64), and
+any change while the mode is "Ask first" — those keep the existing Apply button. Every automatic
+apply is one Activity line.
