@@ -36,6 +36,8 @@ export interface AttentionProviderState {
   /** The provider's user-facing name, when the engine reports one. */
   label?: string;
   status?: string;
+  /** Engine detail, e.g. 'API key needed' or 'sign-in needed'. */
+  note?: string;
 }
 
 export interface AttentionPayload {
@@ -137,8 +139,13 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
   // `not_installed` / `installed_not_authenticated` are exactly "Needs setup" in user language.
   // The item is deliberately unbound to a project (fail-closed under project filters) and carries
   // no timestamp — it is persistent configuration, not a fleeting event, so it sorts below live asks.
+  // Once any provider works, a provider that was never set up (not installed, or an API key never
+  // added) is optional, not an interruption; a CLI that is installed but signed out still is.
+  const needsSetup = (status?: string) => status === 'not_installed' || status === 'installed_not_authenticated';
+  const anyUsable = (payload.providers ?? []).some((provider) => provider.status && !needsSetup(provider.status));
   for (const provider of payload.providers ?? []) {
-    if (provider.status !== 'not_installed' && provider.status !== 'installed_not_authenticated') continue;
+    if (!needsSetup(provider.status)) continue;
+    if (anyUsable && (provider.status === 'not_installed' || provider.note === 'API key needed')) continue;
     items.push({
       id: `connection-${provider.id}`,
       kind: 'connection',

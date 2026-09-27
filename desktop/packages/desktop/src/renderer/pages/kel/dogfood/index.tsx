@@ -360,7 +360,7 @@ const DogfoodFixes: React.FC = () => {
                 className='kel-input'
                 value={sourceRoot}
                 onChange={(event) => setSourceRoot(event.target.value)}
-                placeholder='C:\\path\\to\\the\\repository'
+                placeholder={'C:\\path\\to\\the\\repository'}
                 data-testid='build-source-root'
               />
               {!buildState && (

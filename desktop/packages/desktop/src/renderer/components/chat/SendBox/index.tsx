@@ -1664,9 +1664,8 @@ const SendBox: React.FC<{
   const addToDraftLabel = t('conversation.commandQueue.addToQueue', { defaultValue: 'Save to Draft box' });
   const sendNowLabel = t('conversation.commandQueue.sendNow', { defaultValue: 'Send now' });
   const enterShortcutLabel = t('conversation.commandQueue.enterShortcut', { defaultValue: 'Enter' });
-  const addToDraftShortcutLabel = t('conversation.commandQueue.addToQueueShortcut', {
-    defaultValue: isMacOS() ? '⌘ + Enter' : 'Ctrl + Enter',
-  });
+  // Show only this platform's shortcut (the shared locale string lists both).
+  const addToDraftShortcutLabel = isMacOS() ? '⌘ + Enter' : 'Ctrl + Enter';
   const sendActionTooltip =
     sendDisabled && sendDisabledTooltip ? sendDisabledTooltip : `${sendNowLabel} · ${enterShortcutLabel}`;
   const draftActionBaseTooltip = addToDraftTooltip ?? addToDraftLabel;

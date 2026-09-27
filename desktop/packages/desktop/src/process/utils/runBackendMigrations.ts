@@ -224,8 +224,11 @@ function buildDefaultMcpServers(): McpImportServer[] {
 }
 
 async function isCommandAvailable(command: string): Promise<boolean> {
+  // On Windows npx/npm are .cmd shims that execFile cannot start without a shell, so the probe
+  // always reported "missing" and re-ran the slow network preflight on every launch.
+  const executable = process.platform === 'win32' && !/\.(cmd|exe|bat)$/i.test(command) ? `${command}.cmd` : command;
   return await new Promise((resolve) => {
-    execFile(command, ['--version'], { timeout: 3000 }, (error) => {
+    execFile(executable, ['--version'], { timeout: 3000, shell: process.platform === 'win32' }, (error) => {
       if (!error) {
         resolve(true);
         return;
@@ -247,7 +250,9 @@ async function ensureBuiltinChromeDevtoolsAvailability(server?: IMcpServer): Pro
     !server ||
     server.name !== BUILTIN_CHROME_DEVTOOLS_NAME ||
     server.transport.type !== 'stdio' ||
-    server.transport.command !== 'npx'
+    server.transport.command !== 'npx' ||
+    // Disabled by default; checking it downloads chrome-devtools-mcp@latest for nothing.
+    !server.enabled
   ) {
     return;
   }
