@@ -218,6 +218,12 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     }
 
     if (lastMessage?.position !== 'right') {
+      // CH polish: a new reply is brought into view when it answers what the person just sent,
+      // or when they are still reading near the bottom — a small scroll must not hide the
+      // answer behind the "scroll to bottom" button. Reading far up the chat is left alone.
+      const answersTheirMessage = previousLastMessage?.position === 'right';
+      const nearBottom = scrollerEl ? getBottomGap(scrollerEl) <= AT_BOTTOM_THRESHOLD_PX * 3 : false;
+      if (answersTheirMessage || nearBottom) userScrolledRef.current = false;
       scheduleAutoFollow();
       return;
     }
@@ -228,7 +234,7 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
         scrollToBottom('auto');
       });
     });
-  }, [messages, scheduleAutoFollow, scrollToBottom]);
+  }, [messages, scheduleAutoFollow, scrollToBottom, scrollerEl]);
 
   useEffect(() => {
     return () => {

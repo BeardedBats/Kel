@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ipcBridge } from '@/common';
 import { TEAM_MODE_ENABLED } from '@/common/config/constants';
-import ConversationSearchPopover from '@renderer/pages/conversation/GroupedHistory/ConversationSearchPopover';
+import { openKelCommandPalette } from '@renderer/components/kel/KelCommandPalette';
 import MobileConversationBrand from './MobileConversationBrand';
 import WindowControls from '../WindowControls';
 import { WORKSPACE_STATE_EVENT, dispatchWorkspaceToggleEvent } from '@renderer/utils/workspace/workspaceEvents';
@@ -158,7 +158,7 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   // (between the sidebar toggle and the back/forward nav). Desktop only —
   // mobile keeps search inside the sidebar.
   const showSearchButton = !layout?.isMobile;
-  const searchTooltip = t('conversation.historySearch.tooltip', { defaultValue: 'Search conversations' });
+  const searchTooltip = 'Search Kel (Ctrl+K)';
 
   const handleSiderToggle = () => {
     if (!showSiderToggle || !layout?.setSiderCollapsed) return;
@@ -347,26 +347,24 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
         </button>
       )}
       {showSearchButton && (
-        <ConversationSearchPopover
-          renderTrigger={({ onClick }) => (
-            <button
-              type='button'
-              className='app-titlebar__button'
-              onClick={onClick}
-              aria-label={searchTooltip}
-              title={searchTooltip}
-            >
-              <Search
-                theme='outline'
-                size={iconSize}
-                fill='currentColor'
-                strokeWidth={desktopIconStroke}
-                className='block leading-none'
-                style={{ lineHeight: 0 }}
-              />
-            </button>
-          )}
-        />
+        // CH-17: one search experience — the header button opens the Ctrl+K palette in search mode.
+        <button
+          type='button'
+          className='app-titlebar__button'
+          onClick={() => openKelCommandPalette('search')}
+          aria-label={searchTooltip}
+          title={searchTooltip}
+          data-testid='titlebar-search'
+        >
+          <Search
+            theme='outline'
+            size={iconSize}
+            fill='currentColor'
+            strokeWidth={desktopIconStroke}
+            className='block leading-none'
+            style={{ lineHeight: 0 }}
+          />
+        </button>
       )}
       {showHistoryNav && (
         <>

@@ -71,6 +71,7 @@ import KelMicButton from '@renderer/pages/guid/components/KelMicButton';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
 import { createChainedDispatch, useLiveTranscriptInsertion } from '@/renderer/hooks/system/useLiveTranscriptInsertion';
 import { getConversationInputHistory, isCaretOnFirstLine } from '@/renderer/utils/chat/messageHistory';
+import { useRecipeSlashCommands } from '@renderer/components/kel/recipeSlash';
 import './sendbox.css';
 
 const constVoid = (): void => undefined;
@@ -636,10 +637,17 @@ const SendBox: React.FC<{
     );
   }, [loadedSkills, skillIndex, t]);
 
-  // Priority on name collisions: builtin > ACP agent commands > session skills.
-  const mergedSlashCommands = useMemo(
-    () => mergeSlashCommands(builtinSlashCommands, slash_commands, skillSlashCommands),
+  // CH-7: the active project's Recipes, after everything else (a recipe never shadows a command).
+  const takenSlashNames = useMemo(
+    () => new Set([...builtinSlashCommands, ...(slash_commands ?? []), ...skillSlashCommands].map((command) => command.name)),
     [builtinSlashCommands, slash_commands, skillSlashCommands]
+  );
+  const recipeSlash = useRecipeSlashCommands(takenSlashNames);
+
+  // Priority on name collisions: builtin > ACP agent commands > session skills > recipes.
+  const mergedSlashCommands = useMemo(
+    () => mergeSlashCommands(builtinSlashCommands, slash_commands, [...skillSlashCommands, ...recipeSlash.commands]),
+    [builtinSlashCommands, slash_commands, skillSlashCommands, recipeSlash.commands]
   );
 
   const slashController = useSlashCommandController({
@@ -1561,6 +1569,31 @@ const SendBox: React.FC<{
       setHistoryNavigationIndex(null);
       setInput('');
       void btwCommand.ask(normalizedQuestion);
+      return;
+    }
+
+    // CH-7: `/<recipe> what it is for` runs that Recipe in the active project instead of sending
+    // the line to the model. It does not use the chat turn, so it is allowed while Kel is busy.
+    const recipeHit = domSnippets.length === 0 && !replyQuote ? recipeSlash.match(input) : null;
+    if (recipeHit) {
+      const typed = input;
+      historyDraftRef.current = null;
+      setHistoryNavigationIndex(null);
+      setInput('');
+      void recipeSlash
+        .run(recipeHit.entry, recipeHit.rest)
+        .then((outcome) => {
+          if (outcome.kind === 'started') {
+            message.success(outcome.text);
+          } else {
+            message.warning(outcome.text);
+            setInput(typed);
+          }
+        })
+        .catch(() => {
+          message.error(`Kel could not start “${recipeHit.entry.name}”. Try again, or run it from Projects · Recipes.`);
+          setInput(typed);
+        });
       return;
     }
 

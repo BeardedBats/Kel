@@ -17,10 +17,10 @@ import { useConversationContextSafe } from '@/renderer/hooks/context/Conversatio
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
-import { Alert, Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
+import { Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
 import { Copy } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
@@ -152,7 +152,6 @@ const MessageText: React.FC<{
 
   const { t } = useTranslation();
   const layout = useLayoutContext();
-  const [showCopyAlert, setShowCopyAlert] = useState(false);
   const isUserMessage = message.position === 'right';
   const engineFailure = !isUserMessage && typeof message.content.content === 'string' ? parseEngineFailure(message.content.content) : null;
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
@@ -223,8 +222,8 @@ const MessageText: React.FC<{
     const textToCopy = turnTexts?.length ? buildTurnClipboardText(turnTexts) : fileList + baseText;
     copyText(textToCopy)
       .then(() => {
-        setShowCopyAlert(true);
-        setTimeout(() => setShowCopyAlert(false), 2000);
+        // The same Kel toast every other copy uses, instead of a one-off banner.
+        Message.success('Copied');
       })
       .catch(() => {
         Message.error(t('common.copyFailed'));
@@ -418,16 +417,6 @@ const MessageText: React.FC<{
             For replies split across text messages, only the last shows the row. */}
         {actionsRow}
       </div>}
-      {showCopyAlert && (
-        <Alert
-          type='success'
-          content={t('messages.copySuccess')}
-          showIcon
-          className='fixed top-20px left-50% transform -translate-x-50% z-9999 w-max max-w-[80%]'
-          style={{ boxShadow: '0px 2px 12px rgba(0,0,0,0.12)' }}
-          closable={false}
-        />
-      )}
     </>
   );
 };

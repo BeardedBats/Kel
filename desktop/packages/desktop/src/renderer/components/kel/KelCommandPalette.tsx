@@ -22,6 +22,16 @@ import captureIcon from '@renderer/assets/figma/palette/capture.svg';
 import playIcon from '@renderer/assets/figma/palette/play.svg';
 import recipeIcon from '@renderer/assets/figma/palette/recipe.svg';
 import chatIcon from '@renderer/assets/figma/palette/chat.svg';
+import { searchKelConversationMessages } from '@renderer/utils/chat/kelHistorySearch';
+
+/**
+ * CH-17: one search experience. The header search button (and the phone sidebar's search entry)
+ * open this palette in search mode instead of a second, donor search popover.
+ */
+const OPEN_EVENT = 'kel:open-command-palette';
+export const openKelCommandPalette = (mode: 'command' | 'search' = 'search'): void => {
+  window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { mode } }));
+};
 
 type PaletteItem = {
   id: string;
@@ -166,6 +176,17 @@ const KelCommandPalette: React.FC = () => {
   }, [close, load, open]);
 
   useEffect(() => {
+    const onOpen = (event: Event) => {
+      const requested = (event as CustomEvent<{ mode?: 'command' | 'search' }>).detail?.mode;
+      setMode(requested === 'command' ? 'command' : 'search');
+      setOpen(true);
+      void load();
+    };
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, [load]);
+
+  useEffect(() => {
     if (!open) return;
     inputRef.current?.focus();
     const keepFocus = (event: FocusEvent) => {
@@ -189,12 +210,27 @@ const KelCommandPalette: React.FC = () => {
         vetting?: Array<{ id: string; title: string; snippet: string }>;
         conversations?: Array<{ id: string; title: string; snippet: string }>;
       }> } }).kelAPI;
+      const chatHits = searchKelConversationMessages({ keyword: needle, page_size: 8 }).catch((): null => null);
       if (!bridge) return;
       bridge
         .request('/api/search', { q: needle })
-        .then((data) => {
+        .then(async (data) => {
+          const chats = await chatHits;
           if (cancelled) return;
           const items: PaletteItem[] = [];
+          const seen = new Set<string>();
+          (chats?.items ?? []).forEach((row) => {
+            if (seen.has(row.conversation.id)) return;
+            seen.add(row.conversation.id);
+            const preview = (row.preview_text || '').replace(/\s+/g, ' ').trim();
+            items.push({
+              id: `found-chat-${row.conversation.id}`, group: 'Chats',
+              label: row.conversation.name || 'Chat',
+              hint: preview.length > 80 ? `${preview.slice(0, 79)}…` : preview || 'open the chat',
+              icon: chatIcon,
+              run: () => navigate(`/conversation/${row.conversation.id}`),
+            });
+          });
           (data.transcripts ?? []).forEach((row) => items.push({
             id: `found-transcript-${row.id}`, group: 'Transcripts',
             label: row.title, hint: row.snippet || 'open Ramble',
@@ -205,8 +241,9 @@ const KelCommandPalette: React.FC = () => {
             label: row.title, hint: row.snippet || 'open the chat; Vetting lives in the Work panel',
             run: () => navigate('/guid'),
           }));
-          (data.conversations ?? []).forEach((row) => items.push({
-            id: `found-chat-${row.id}`, group: 'Chats',
+          // The engine's chat rows only when the chats themselves could not be searched.
+          if (!chats) (data.conversations ?? []).forEach((row) => items.push({
+            id: `found-engine-chat-${row.id}`, group: 'Chats',
             label: row.title, hint: row.snippet || 'open the chat list',
             run: () => navigate('/guid'),
           }));
