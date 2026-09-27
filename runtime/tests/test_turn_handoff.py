@@ -680,6 +680,48 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertEqual(self.wait(sid), 'DISPATCHED')
         self.assertTrue(self.service.engine.tick(), 'a READY job keeps supervision at full pace')
 
+    # -- CP-2: polls read only what they show -----------------------------------------------------
+    def test_state_and_why_never_read_the_whole_event_log(self):
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        job = self.row(sid)['job_id']
+        route = {'selected': 'codex', 'why': 'your chosen model', 'chain': ['codex']}
+        self.service.store.claim(job, 'document', provider='codex', route=route)
+
+        def whole_log(*args, **kwargs):
+            raise AssertionError('the whole event log was read')
+        self.service.store.events = whole_log
+        self.addCleanup(vars(self.service.store).pop, 'events', None)
+        state = self.service.state(self.cid)
+        self.assertEqual(state['routes'][job]['route'], route)
+        self.assertEqual(self.service.state('*')['routes'][job]['provider'], 'codex')
+        why = self.service._model_action({'action': 'why', 'conversation': self.cid})
+        self.assertEqual((why['job'], why['selected']), (job, 'codex'))
+        self.assertTrue(self.service._work(self.cid)['work']['jobs'][0]['last_at'])
+
+    def test_the_card_poll_does_not_fingerprint_the_project(self):
+        from kel.continuation import Continuation
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        original = Continuation.plan_resume
+
+        def refuse(*args, **kwargs):
+            raise AssertionError('plan_resume (fingerprint + evidence) ran on a poll')
+        Continuation.plan_resume = refuse
+        self.addCleanup(setattr, Continuation, 'plan_resume', original)
+        self.assertEqual(self.service.handoff_view(self.cid, sid)['phase'], 'running')
+        self.assertEqual(len(self.service._work(self.cid)['work']['jobs']), 1)
+
+    def test_the_handoff_tables_and_hot_path_indexes_are_one_ledger_migration(self):
+        with contextlib.closing(self.service.store.connect()) as db:
+            names = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type IN ('index','table')")}
+            ledger = db.execute('SELECT name FROM schema_migrations WHERE version=31').fetchone()
+        for name in ('submission_acks', 'handoff_notices', 'handoff_restarts', 'messages_by_conversation',
+                     'submissions_by_conversation', 'submissions_by_job', 'approvals_by_status', 'runs_by_job'):
+            self.assertIn(name, names)
+        self.assertEqual(ledger['name'], 'v2-handoff-and-conversation-indexes')
+        self.assertFalse(handoff.ensure_schema(self.service.store), 'applied once')
+
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')

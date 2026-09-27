@@ -18,8 +18,8 @@ from kel.core import Store  # noqa: E402
 MODULES = ('memory', 'projectmap', 'continuation', 'recipes', 'solution', 'team', 'providers',
            'autonomy', 'diagnostics', 'authorize', 'vetting', 'transcription', 'model_prefs',
            'capabilities', 'workforce', 'delegation', 'parallel', 'chat_approvals', 'assignment',
-           'dogfood', 'connections', 'build_update')
-EXPECTED_MAX = 30
+           'dogfood', 'connections', 'build_update', 'handoff')
+EXPECTED_MAX = 31
 
 
 def run_all(store):
@@ -54,7 +54,8 @@ class MigrationSetTests(unittest.TestCase):
         self.assertEqual(len(versions), len(set(versions)), 'duplicate migration markers: %r' % versions)
         self.assertEqual(max(versions), EXPECTED_MAX)
         names = {row['version']: row['name'] for row in rows}
-        self.assertEqual(names[EXPECTED_MAX], 'v2-recipe-library')
+        self.assertEqual(names[EXPECTED_MAX], 'v2-handoff-and-conversation-indexes')
+        self.assertEqual(names[30], 'v2-recipe-library')
         self.assertEqual(names[25], 'v20-connection-prefix')
         self.assertEqual(names[24], 'v20-connection-tests')
         self.assertEqual(names[23], 'v20-connections')
@@ -96,4 +97,5 @@ class MigrationSetTests(unittest.TestCase):
                              '%s and %s both claim migration %s' % (name, claimed.get(version), version))
             claimed[version] = name
         self.assertEqual(max(claimed), EXPECTED_MAX)
-        self.assertEqual(claimed[EXPECTED_MAX], 'recipes')
+        self.assertEqual(claimed[EXPECTED_MAX], 'handoff')
+        self.assertEqual(claimed[30], 'recipes')

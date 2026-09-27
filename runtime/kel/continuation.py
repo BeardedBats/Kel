@@ -59,6 +59,18 @@ def _tokens(text):
     return set(re.findall(r'[a-z0-9]{4,}', str(text or '').lower()))
 
 
+def _session_view(row):
+    session = {'valid': False, 'reason': 'no stored native session'}
+    if row and row['native_session']:
+        value = str(row['native_session'])
+        if valid_session_id(value):
+            session = {'valid': True, 'provider': row['provider'], 'model': row['model'],
+                       'native_session': value}
+        else:
+            session = {'valid': False, 'reason': 'malformed native session id'}
+    return session
+
+
 class Continuation:
     def __init__(self, store):
         self.store = store
@@ -157,6 +169,14 @@ class Continuation:
             return [dict(r) for r in db.execute(
                 'SELECT * FROM job_links WHERE job_id=? ORDER BY created', (job_id,))]
 
+    def stored_session(self, job_id):
+        """The job's last stored native session (valid or why not), from the runs table only."""
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT provider, model, native_session FROM runs'
+                             ' WHERE job_id=? AND native_session IS NOT NULL ORDER BY rowid DESC LIMIT 1',
+                             (job_id,)).fetchone()
+        return _session_view(row)
+
     def plan_resume(self, job_id):
         """What resumes, what stays accepted, what must be revalidated (with reasons)."""
         with contextlib.closing(self.store.connect()) as db:
@@ -199,14 +219,7 @@ class Continuation:
                     preserve.append(mid)
             elif state in OPEN_MILESTONE_STATES and milestone.get('attempts', 0) < 4:
                 reopen.append(mid)
-        session = {'valid': False, 'reason': 'no stored native session'}
-        if session_row and session_row['native_session']:
-            value = str(session_row['native_session'])
-            if valid_session_id(value):
-                session = {'valid': True, 'provider': session_row['provider'],
-                           'model': session_row['model'], 'native_session': value}
-            else:
-                session = {'valid': False, 'reason': 'malformed native session id'}
+        session = _session_view(session_row)
         return {'job_id': job_id, 'preserve': preserve, 'reopen': reopen,
                 'revalidate': revalidate, 'session': session,
                 'source_digest': stored, 'current_digest': current}
@@ -254,7 +267,9 @@ class Continuation:
         move the job forward.
         """
         job = self.store.get(job_id)
-        plan = self.plan_resume(job_id)
+        # CP-2: the brief is read on every card and Work poll; it needs only the stored session, not
+        # plan_resume's source fingerprint (a walk and hash of the project) or evidence replay.
+        session = self.stored_session(job_id)
         milestones = job.get('milestones') or {}
         title = str((job.get('contract') or {}).get('request', ''))[:120]
         shipped = [{'id': mid, 'filename': (m.get('artifact') or {}).get('filename')}
@@ -297,5 +312,5 @@ class Continuation:
                                'Nothing needed right now.', False)
         return {'job_id': job_id, 'title': title or job_id, 'state': state,
                 'verdict': job.get('verdict'), 'shipped': shipped, 'open': opens,
-                'fenced': fenced, 'session': plan['session'], 'why': why, 'next': nxt,
+                'fenced': fenced, 'session': session, 'why': why, 'next': nxt,
                 'needs_you': needs}

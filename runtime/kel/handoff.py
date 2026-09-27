@@ -16,14 +16,45 @@ OPEN_STATES_EXCLUDED = ('CLOSED', 'CANCELLED')
 NOTICE_STATES = ('WAITING_RESOURCE', 'BLOCKED')
 
 
+MIGRATION_VERSION = 31
+MIGRATION_NAME = 'v2-handoff-and-conversation-indexes'
+
+# D-53/D-55 hand-off tables (previously created ad hoc on every start) and the indexes the
+# conversation hot paths need (CP-2): a conversation's messages in order, its submissions, a job's
+# submission, pending approvals, and a job's runs. `submissions` is created here too so a bare store
+# (no service yet) can take the indexes.
+DDL = """
+CREATE TABLE IF NOT EXISTS submissions(id TEXT PRIMARY KEY,conversation_id TEXT,text TEXT,state TEXT,
+    error TEXT,job_id TEXT,created REAL);
+CREATE TABLE IF NOT EXISTS submission_acks(
+    submission_id TEXT PRIMARY KEY, message_seq INTEGER, title TEXT, at REAL);
+CREATE TABLE IF NOT EXISTS handoff_notices(
+    job_id TEXT, state TEXT, at REAL, PRIMARY KEY(job_id, state));
+CREATE TABLE IF NOT EXISTS handoff_restarts(
+    submission_id TEXT NOT NULL, replaced_job TEXT PRIMARY KEY, amended_by TEXT, at REAL);
+CREATE INDEX IF NOT EXISTS messages_by_conversation ON messages(conversation_id, seq);
+CREATE INDEX IF NOT EXISTS submissions_by_conversation ON submissions(conversation_id);
+CREATE INDEX IF NOT EXISTS submissions_by_job ON submissions(job_id);
+CREATE INDEX IF NOT EXISTS approvals_by_status ON approvals(status, job_id);
+CREATE INDEX IF NOT EXISTS runs_by_job ON runs(job_id);
+"""
+
+
 def ensure_schema(store):
-    with contextlib.closing(store.connect()) as db:
-        db.executescript('''CREATE TABLE IF NOT EXISTS submission_acks(
-                submission_id TEXT PRIMARY KEY, message_seq INTEGER, title TEXT, at REAL);
-            CREATE TABLE IF NOT EXISTS handoff_notices(
-                job_id TEXT, state TEXT, at REAL, PRIMARY KEY(job_id, state));
-            CREATE TABLE IF NOT EXISTS handoff_restarts(
-                submission_id TEXT NOT NULL, replaced_job TEXT PRIMARY KEY, amended_by TEXT, at REAL);''')
+    """Migration 31 through the ledger: applied once, recorded in schema_migrations."""
+    with store.transaction() as db:
+        db.execute('CREATE TABLE IF NOT EXISTS schema_migrations('
+                   'version INTEGER PRIMARY KEY, name TEXT NOT NULL, applied REAL NOT NULL, note TEXT)')
+        if db.execute('SELECT 1 FROM schema_migrations WHERE version=?', (MIGRATION_VERSION,)).fetchone():
+            return False
+        fresh = not db.execute('SELECT 1 FROM submissions LIMIT 1').fetchone() if db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='submissions'").fetchone() else True
+        for statement in filter(None, (part.strip() for part in DDL.split(';'))):
+            db.execute(statement)
+        db.execute('INSERT OR IGNORE INTO schema_migrations(version, name, applied, note) VALUES(?,?,?,?)',
+                   (MIGRATION_VERSION, MIGRATION_NAME, time.time(),
+                    'fresh database' if fresh else 'pre-existing database'))
+        return True
 
 
 REQUEST_PREVIEW = 1500

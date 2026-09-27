@@ -850,14 +850,21 @@ class Service:
                 "SELECT job_id,id FROM approvals WHERE status='PENDING'")}
             submission_of={row['job_id']:row['id'] for row in db.execute(
                 "SELECT job_id,id FROM submissions WHERE job_id IS NOT NULL")}
-            last={row['aggregate_id']:row['at'] for row in db.execute(
-                "SELECT aggregate_id,MAX(at) AS at FROM events GROUP BY aggregate_id")}
+            # CP-2: the last activity of this conversation's jobs only, not of the whole event log.
+            mine=[job for job in self.store.list_jobs() if job['conversation']==cid]
+            last={}
+            ids=[job['id'] for job in mine]
+            for start in range(0,len(ids),400):
+                part=ids[start:start+400]
+                last.update({row['aggregate_id']:row['at'] for row in db.execute(
+                    'SELECT aggregate_id,MAX(at) AS at FROM events WHERE aggregate_id IN (%s) GROUP BY aggregate_id'
+                    %','.join('?'*len(part)),part)})
             # D-55: a job stopped because its hand-off restarted with a change is not separate work.
             replaced=handoff.replaced_jobs(db)
         jobs=[]
         needs=0
         closed_shown=0
-        for job in self.store.list_jobs():
+        for job in mine:
             if job['conversation']!=cid or job['id'] in replaced:
                 continue
             active=job['state'] not in ('CLOSED','CANCELLED')
@@ -1209,22 +1216,29 @@ class Service:
         jobs=[j for j in self.store.list_jobs() if (everywhere or j['conversation']==cid) and j['id'] not in replaced]
         # D12 — the routing decision behind each active run (why this provider/model). The engine
         # already records it on run.claimed; user surfaces translate it into plain language.
-        routes={}
-        active={j['id'] for j in jobs if j['state'] not in ('CLOSED','CANCELLED')}
-        for event in self.store.events():
-            if event.get('type')!='run.claimed' or event.get('aggregate_id') not in active:
-                continue
-            try:
-                detail=(json.loads(event.get('payload') or '{}') or {}).get('detail') or {}
-            except (TypeError, ValueError):
-                continue
-            route=detail.get('route')
-            if route:
-                routes[event['aggregate_id']]={'provider':detail.get('provider'),'route':route,'at':event.get('at')}
+        # CP-2: only the active jobs' run.claimed events are read (indexed by job), never the whole
+        # event log on every poll.
+        routes=self._claimed_routes(j['id'] for j in jobs if j['state'] not in ('CLOSED','CANCELLED'))
         return {'projects':projects,'conversations':conversations,'messages':messages,'jobs':jobs,
                 'submissions':submissions,'approvals':approvals,'attachments':files,'continuation':continuation,'error':self.error,
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
                 'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation'}
+
+    def _claimed_routes(self,job_ids):
+        """Job id -> the routing decision of its latest claimed run (D12), read only for these jobs."""
+        ids=list(dict.fromkeys(job_ids));routes={}
+        with contextlib.closing(self.store.connect()) as db:
+            for start in range(0,len(ids),400):
+                part=ids[start:start+400]
+                for row in db.execute("SELECT aggregate_id,at,payload FROM events WHERE type='run.claimed' "
+                                      'AND aggregate_id IN (%s) ORDER BY seq'%','.join('?'*len(part)),part):
+                    try:
+                        detail=(json.loads(row['payload'] or '{}') or {}).get('detail') or {}
+                    except (TypeError,ValueError):
+                        continue
+                    if detail.get('route'):
+                        routes[row['aggregate_id']]={'provider':detail.get('provider'),'route':detail['route'],'at':row['at']}
+        return routes
 
     def conversations(self):
         """GET /api/conversations (ST-23): every conversation with its message and job counts, in
@@ -1596,17 +1610,10 @@ class Service:
             conversation=str(data.get('conversation') or 'main')
             jobs=[j['id'] for j in self.store.list_jobs() if j.get('conversation')==conversation]
             latest=None
-            for event in self.store.events():
-                if event.get('type')!='run.claimed' or event.get('aggregate_id') not in jobs:
-                    continue
-                try:
-                    detail=(json.loads(event.get('payload') or '{}') or {}).get('detail') or {}
-                except (TypeError, ValueError):
-                    continue
-                route=detail.get('route')
-                if route and (latest is None or (event.get('at') or 0) > latest['at']):
-                    latest={'job_id':event['aggregate_id'],'provider':detail.get('provider'),
-                            'route':route,'at':event.get('at') or 0}
+            for job_id,claimed in self._claimed_routes(jobs).items():
+                if latest is None or (claimed['at'] or 0) > latest['at']:
+                    latest={'job_id':job_id,'provider':claimed['provider'],'route':claimed['route'],
+                            'at':claimed['at'] or 0}
             if latest is None:
                 return {'answer':'No model choice has been made for this conversation yet.'}
             route=latest['route']
@@ -1990,6 +1997,9 @@ def serve(root,port=0):
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0]));return
                     if parsed.path=='/api/conversations':self.reply(200,service.conversations());return
+                    if parsed.path=='/api/health':
+                        # CP-2: the desktop's 5 s liveness ping — no database work at all.
+                        self.reply(200,{'ok':True,'engine_version':ENGINE_VERSION,'draining':service.draining});return
                     if parsed.path=='/api/handoff':
                         self.reply(200,service.handoff_view(query.get('conversation',['main'])[0],
                                                             (query.get('submission') or [''])[0]));return

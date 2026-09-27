@@ -193,7 +193,8 @@ class ServiceClient:
 
 
 class ACPHost:
-    def __init__(self, client, emit, poll_interval=.25):
+    # CP-2: one /api/state read a second while a turn is open (it was four).
+    def __init__(self, client, emit, poll_interval=1.0):
         self.client, self.emit, self.poll_interval = client, emit, poll_interval
         self.active = {}
         self.reserved = set()  # ST-04: chats opened here whose conversation is not created yet

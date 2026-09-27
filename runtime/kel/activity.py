@@ -8,6 +8,7 @@ Deliberately absent: worker ids, leases, staffing graphs, cockpit controls, and 
 (a payload carries the contract and the request; the timeline quotes at most the person's own request
 line for the row they started).
 """
+import contextlib
 import json
 import time
 
@@ -112,7 +113,7 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
         raise PolicyError('How many entries?') from None
     jobs = {job['id']: job for job in store.list_jobs()}
     conversations = {}
-    with store.connect() as db:
+    with contextlib.closing(store.connect()) as db:  # the sqlite context manager never closes
         for row in db.execute('SELECT id,project_id FROM conversations'):
             conversations[row['id']] = row['project_id']
     needle = str(query or '').strip().lower()

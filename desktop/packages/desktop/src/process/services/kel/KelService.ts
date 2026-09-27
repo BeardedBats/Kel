@@ -186,9 +186,12 @@ function broadcastEngineState(force = false): void {
   }
 }
 
+// CP-2: liveness is a trivial engine route; /api/state read every conversation's rows every 5 s.
+const HEALTH_ROUTE = '/api/health';
+
 async function healthPing(): Promise<boolean> {
   try {
-    await kelRequest('/api/state', undefined, HEALTH_TIMEOUT_MS);
+    await kelRequest(HEALTH_ROUTE, undefined, HEALTH_TIMEOUT_MS);
     return true;
   } catch {
     return false;
@@ -202,7 +205,7 @@ async function performEngineRestart(root: string, descriptorPath: string): Promi
     // Give a slow-but-alive engine a patient chance to answer first: it must never be duplicated
     // (two engines would share one data root). Only a confirmed unreachable engine is re-spawned.
     try {
-      await kelRequest('/api/state', undefined, PATIENT_PING_TIMEOUT_MS);
+      await kelRequest(HEALTH_ROUTE, undefined, PATIENT_PING_TIMEOUT_MS);
       healthMachine?.alive();
       broadcastEngineState(true);
       return;
