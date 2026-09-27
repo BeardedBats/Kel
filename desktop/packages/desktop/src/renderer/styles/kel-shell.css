@@ -767,7 +767,6 @@ html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel
 .kel-shell-channels { padding: 0; }
 .kel-v2-shell .kel-tab { color: var(--kel-text-2); background: transparent; }
 .kel-v2-shell .kel-tab--on { color: var(--kel-text-1); background: var(--kel-shell-selected); }
-@media (min-width: 768px) { .kel-shell-about-update { position: absolute; right: 0; top: -52px; } }
 @media (max-width: 767px) {
   .kel-shell-preference-row { flex-wrap: wrap; }
   .kel-v2-shell .kel-shell-settings-card { padding: 14px 16px; }
@@ -1791,19 +1790,13 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-v2-shell .kel-shell-about-runtime-detail { display: none; }
   .kel-v2-shell .kel-shell-about .kel-shell-preference-row { min-height: 52px; border-bottom: 1px solid rgba(191,216,255,.12); }
   .kel-v2-shell .kel-shell-about .kel-shell-preference-row > span:last-child { color: var(--kel-figma-color-text-muted); font: 400 14px/16px var(--kel-shell-body); }
-  .kel-v2-shell .kel-shell-about-update,
   .kel-shell-about-notices-row {
     display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
     width: 100%; min-height: 52px; padding: 0 16px; border: 0; border-bottom: 1px solid rgba(191,216,255,.12);
     border-radius: 0; background: transparent; color: var(--kel-text-1);
     text-align: left; font: 500 15px/20px var(--kel-shell-heading); cursor: pointer;
   }
-  .kel-v2-shell .kel-shell-about-update:hover,
   .kel-shell-about-notices-row:hover { background: rgba(191,216,255,.06); }
-  .kel-v2-shell .kel-shell-about-update.arco-btn {
-    justify-content: space-between !important; border: 0 !important; border-bottom: 1px solid rgba(191,216,255,.12) !important;
-    border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
-  }
   .kel-v2-shell .kel-setup-return { flex-wrap: wrap; }
   .kel-v2-shell .kel-shell-theme-gallery-actions { margin-bottom: 10px; }
   .kel-v2-shell .kel-shell-theme-gallery > .flex.flex-wrap [data-testid^='theme-card-'] {
@@ -2687,7 +2680,6 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-shell-about-data-row .kel-meta { display: none; }
   .kel-v2-shell .kel-shell-about-data-row .arco-btn,
   .kel-v2-shell .kel-shell-about-notices-inline button { border: 0 !important; background: transparent !important; box-shadow: none !important; color: #9fc3ff !important; font: 500 13px/20px var(--kel-shell-heading); cursor: pointer; }
-  .kel-v2-shell .kel-shell-about-update.arco-btn { position: static; height: 34px; border: 0; border-radius: 8px; background: linear-gradient(180deg,#6493f8,#2356b3); box-shadow: 0 3px 7px rgba(0,0,0,.22); color: #fff; }
   html[data-theme='dark'] body .arco-modal.kel-shell-restore-confirm-modal { position: relative; top: -15.2vh; box-sizing: border-box; width: 520px !important; max-width: calc(100vw - 32px); padding: 0 !important; border: 1px solid rgba(191,216,255,.18); border-radius: 16px; background: linear-gradient(120deg,rgba(47,107,224,.1),transparent),rgba(15,45,100,.94); box-shadow: 0 20px 48px rgba(0,0,0,.35); backdrop-filter: blur(24px); }
   .kel-shell-restore-confirm-modal .arco-modal-header { margin: 0; border: 0; padding: 20px 24px 0; }
   .kel-shell-restore-confirm-modal .arco-modal-title { text-align: left; color: #f7eee1; font: 600 16px/22px var(--kel-shell-heading); }

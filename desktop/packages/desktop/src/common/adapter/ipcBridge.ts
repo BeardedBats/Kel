@@ -9,7 +9,7 @@
  *
  * This file replaces the original IPC bridge calls with HTTP REST and WebSocket
  * calls routed to aioncore. Electron-native operations (window controls,
- * native dialogs, auto-update, devtools, zoom, CDP, deep links) remain as IPC.
+ * native dialogs, devtools, zoom, CDP, deep links) remain as IPC.
  */
 
 import type { IConfirmation } from '@/common/chat/chatLib';
@@ -83,17 +83,6 @@ import type {
   TeamAssistant,
   TeamContextResetResponse,
 } from '../types/team/teamTypes';
-import type {
-  AutoUpdateReadyResult,
-  AutoUpdateStatus,
-  InstallerLastFailureMarker,
-  UpdateCheckRequest,
-  UpdateCheckResult,
-  UpdateDownloadCancelRequest,
-  UpdateDownloadProgressEvent,
-  UpdateDownloadRequest,
-  UpdateDownloadResult,
-} from '../update/updateTypes';
 import type { AgentMetadata } from '@/renderer/utils/model/agentTypes';
 import type { Theme } from '@/common/theme/types';
 import type { AttachFolderRequest, ProjectDetailDto, ProjectEntryDto } from '@/common/types/project';
@@ -728,35 +717,6 @@ export const application = {
     'app.log-stream'
   ),
   devToolsStateChanged: bridge.buildEmitter<{ isOpen: boolean }>('app.devtools-state-changed'),
-};
-
-// ---------------------------------------------------------------------------
-// Update — stays IPC (Electron-native auto-updater)
-// ---------------------------------------------------------------------------
-
-export const update = {
-  open: bridge.buildEmitter<{ source?: 'menu' | 'about' | 'tray' }>('update.open'),
-  check: bridge.buildProvider<IBridgeResponse<UpdateCheckResult>, UpdateCheckRequest>('update.check'),
-  consumeInstallerLastFailure: bridge.buildProvider<IBridgeResponse<InstallerLastFailureMarker | null>, void>(
-    'update.installer-last-failure.consume'
-  ),
-  download: bridge.buildProvider<IBridgeResponse<UpdateDownloadResult>, UpdateDownloadRequest>('update.download'),
-  cancelDownload: bridge.buildProvider<IBridgeResponse, UpdateDownloadCancelRequest>('update.download.cancel'),
-  downloadProgress: bridge.buildEmitter<UpdateDownloadProgressEvent>('update.download.progress'),
-};
-
-export const autoUpdate = {
-  check: bridge.buildProvider<
-    IBridgeResponse<{ updateInfo?: { version: string; releaseDate?: string; releaseNotes?: string } }>,
-    { includePrerelease?: boolean }
-  >('auto-update.check'),
-  restoreDownloaded: bridge.buildProvider<IBridgeResponse<AutoUpdateReadyResult>, void>(
-    'auto-update.restore-downloaded'
-  ),
-  download: bridge.buildProvider<IBridgeResponse, void>('auto-update.download'),
-  cancelDownload: bridge.buildProvider<IBridgeResponse, void>('auto-update.download.cancel'),
-  quitAndInstall: bridge.buildProvider<void, void>('auto-update.quit-and-install'),
-  status: bridge.buildEmitter<AutoUpdateStatus>('auto-update.status'),
 };
 
 // ---------------------------------------------------------------------------

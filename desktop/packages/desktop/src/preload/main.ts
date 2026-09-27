@@ -86,7 +86,6 @@ const trayEvents = [
   'tray:navigate-to-conversation',
   'tray:open-about',
   'tray:pause-all-tasks',
-  'tray:check-update',
 ];
 
 for (const channel of trayEvents) {
