@@ -124,6 +124,10 @@ contextBridge.exposeInMainWorld('kelAPI', {
   },
   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
+  // D-57: a scheduled run's engine conversation as an app chat (made on first use), and a nudge
+  // that brings the chat list in step right after a schedule changes.
+  openEngineConversation: (cid: string) => ipcRenderer.invoke('kel:open-engine-conversation', cid),
+  schedulesChanged: (change?: { hidden?: string[] }) => ipcRenderer.invoke('kel:schedules-changed', change),
   // Credential custody: store, list field names, delete. Deliberately no value getter, so a secret
   // cannot reach the renderer even by mistake.
   credentials: {

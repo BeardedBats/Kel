@@ -30,7 +30,8 @@ type UseConversationActionsParams = {
   selectedConversationIds: Set<string>;
   setSelectedConversationIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   toggleSelectedConversation: (conversation: TChatConversation) => void;
-  markAsRead: (conversation_id: string) => void;
+  /** Optional: a caller that tracks read state per chat is told when one is opened. */
+  markAsRead?: (conversation_id: string) => void;
   markManualUnread: (conversation_id: string) => void;
   clearManualUnread: (conversation_id: string) => void;
   isManualUnread: (conversation_id: string) => boolean;
@@ -74,7 +75,7 @@ export const useConversationActions = ({
       blockMobileInputFocus();
       blurActiveElement();
 
-      markAsRead(conversation.id);
+      markAsRead?.(conversation.id);
 
       void navigate(`/conversation/${conversation.id}`);
       if (onSessionClick) {

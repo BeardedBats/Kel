@@ -2,685 +2,239 @@
  * @license
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * D-57: one scheduled task, read from the engine — its details, pause/resume, edit, run now,
+ * delete, and the runs the engine derives from its own jobs (never a separate run table).
  */
 
 import AionModal from '@renderer/components/base/AionModal';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Message, Switch, Popconfirm, Spin, Empty, Tooltip, Checkbox, Modal } from '@arco-design/web-react';
-import { Left, Delete, Write, Attention, Robot } from '@icon-park/react';
-import { ipcBridge } from '@/common';
-import type { ICronJob } from '@/common/adapter/ipcBridge';
-import type { TChatConversation } from '@/common/config/storage';
-import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
-import CronStatusTag from './CronStatusTag';
-import CreateTaskDialog from './CreateTaskDialog';
-import { getJobAgentMeta } from './jobAgentMeta';
-import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
-import { useAgentLogos } from '@renderer/utils/model/agentLogo';
-import { formatCronRunConversationTitle, formatSchedule, formatNextRun } from '@renderer/pages/cron/cronUtils';
-import { useCronJobConversations } from '@renderer/pages/cron/useCronJobs';
-import { repairCronJobTimeZone } from '@renderer/pages/cron/repairCronJobTimeZone';
-import { getActivityTime } from '@/renderer/utils/chat/timeline';
-import { mutate } from 'swr';
-import { getConversationRuntimeWorkspaceErrorMessage } from '@renderer/pages/conversation/utils/conversationCreateError';
-import { emitter } from '@/renderer/utils/emitter';
+import { Checkbox, Message, Spin, Switch } from '@arco-design/web-react';
 import { KelButton, KelCard } from '@renderer/components/kel/KelPrimitives';
+import { kelRecipeGet, type KelSchedule, type KelScheduleRun } from '@renderer/components/kel/kelApi';
+import { choiceLabel, useKelModelState } from '@renderer/components/kel/KelModelControl';
+import { GENERAL_PROJECT_ID, GENERAL_PROJECT_NAME, useProjects } from '@renderer/components/kel/activeProject';
+import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
+import { formatNextRun, scheduleSentence } from '@renderer/pages/cron/cronUtils';
+import { scheduleActions, useSchedule } from '@renderer/pages/cron/useSchedules';
+import CreateTaskDialog from './CreateTaskDialog';
 
-const resolveTeamId = (conversation: TChatConversation): string | undefined => {
-  const extra = conversation.extra as { team_id?: unknown; teamId?: unknown } | undefined;
-  const snakeCase = extra?.team_id;
-  if (typeof snakeCase === 'string' && snakeCase.trim()) return snakeCase;
-  const camelCase = extra?.teamId;
-  if (typeof camelCase === 'string' && camelCase.trim()) return camelCase;
+const errorText = (error: unknown, fallback: string) => String((error as Error)?.message || '').trim() || fallback;
+
+/** The history dot/label colour: the engine's status in two tones plus neutral. */
+const runTone = (run: KelScheduleRun): string | undefined => {
+  const status = (run.status || '').toLowerCase();
+  if (status === 'success') return 'ok';
+  if (['needs_you', 'needs_look', 'not_started', 'failed'].includes(status)) return 'error';
   return undefined;
 };
 
+/** The route that opens a run: its chat (made on first use), or the job on Work. */
+export async function runRoute(run: KelScheduleRun): Promise<string | null> {
+  if (run.conversation) {
+    const open = window.kelAPI?.openEngineConversation;
+    if (open) {
+      try {
+        const donor = await open(run.conversation);
+        if (donor) return `/conversation/${donor}`;
+      } catch {
+        // Fall back to the route the chat list can resolve, then to the job.
+      }
+    }
+    const mapped = resolveConversationRoute(`/conversation/${run.conversation}`);
+    if (mapped !== `/conversation/${run.conversation}` || !run.job_id) return mapped;
+  }
+  return run.job_id ? `/work?job=${encodeURIComponent(run.job_id)}` : null;
+}
+
+const runSubtitle = (run: KelScheduleRun, schedule: KelSchedule): string =>
+  run.cause?.trim() ||
+  (run.conversation ? (schedule.start_mode === 'existing' ? 'Continued the conversation' : 'Opened a new conversation') : '');
+
 const TaskDetailPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const navigate = useNavigate();
-  const { job_id } = useParams<{ job_id: string }>();
-  const [job, setJob] = useState<ICronJob | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editDialogVisible, setEditDialogVisible] = useState(false);
-  const [runningNow, setRunningNow] = useState(false);
+  const { id } = useParams<{ id: string }>();
+  const { schedule, runs, error, historyError, reload } = useSchedule({ id });
+  const { projects } = useProjects();
+  const { state: modelState } = useKelModelState();
+  const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [historyBatchMode, setHistoryBatchMode] = useState(false);
-  const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(() => new Set());
-  // Synchronous re-entry guard: `setRunningNow` is async, so two rapid clicks
-  // can both pass a state-based check before the first re-render disables the
-  // button. The ref blocks the second invocation immediately.
+  const [keepConversations, setKeepConversations] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [recipeName, setRecipeName] = useState<string | null>(null);
+  // Synchronous re-entry guard: two quick clicks must not start two runs.
   const runningNowRef = useRef(false);
 
-  const isNewConversationMode = job?.target.execution_mode === 'new_conversation';
-  const isManualOnly = job?.schedule.kind === 'cron' && !job.schedule.expr;
-  const { conversations, refetch: refetchConversations } = useCronJobConversations(job_id);
-  const { presetAssistants } = useConversationAssistants();
-  const logos = useAgentLogos();
-  const assistantIdentity = job ? getJobAgentMeta(job, presetAssistants, logos) : null;
-
+  const recipeId = schedule?.target?.kind === 'recipe' ? schedule.target.recipe_id : null;
+  const knownRecipeName = schedule?.target?.kind === 'recipe' ? schedule.target.recipe_name : null;
   useEffect(() => {
-    setSelectedConversationIds((prev) => {
-      const currentIds = new Set(conversations.map((conversation) => conversation.id));
-      const next = new Set([...prev].filter((id) => currentIds.has(id)));
-      const changed = next.size !== prev.size || [...next].some((id) => !prev.has(id));
-      return changed ? next : prev;
-    });
-    if (conversations.length === 0) {
-      setHistoryBatchMode(false);
-    }
-  }, [conversations]);
-
-  const fetchJob = useCallback(async () => {
-    if (!job_id) return;
-    setLoading(true);
-    try {
-      const found = await ipcBridge.cron.getJob.invoke({ job_id });
-      setJob(found ? await repairCronJobTimeZone(found) : null);
-    } catch (err) {
-      console.error('[TaskDetailPage] Failed to fetch job:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [job_id]);
-
-  useEffect(() => {
-    void fetchJob();
-  }, [fetchJob]);
-
-  // Auto-refresh when the job is updated or executed
-  useEffect(() => {
-    if (!job_id) return;
-    const unsubUpdated = ipcBridge.cron.onJobUpdated.on((updated) => {
-      if (updated.id === job_id) {
-        setJob(updated);
-      }
-    });
-    const unsubExecuted = ipcBridge.cron.onJobExecuted.on((data) => {
-      if (data.job_id === job_id) {
-        void fetchJob();
-      }
-    });
+    setRecipeName(knownRecipeName ?? null);
+    if (!recipeId || !schedule || knownRecipeName) return;
+    let alive = true;
+    kelRecipeGet(recipeId, { project: schedule.project_id })
+      .then((answer) => {
+        if (alive) setRecipeName(answer?.recipe?.name || null);
+      })
+      .catch((): undefined => undefined);
     return () => {
-      unsubUpdated();
-      unsubExecuted();
+      alive = false;
     };
-  }, [job_id, fetchJob]);
+  }, [recipeId, knownRecipeName, schedule?.project_id]);
 
-  const handleToggleEnabled = useCallback(async () => {
-    if (!job) return;
+  const act = async (label: string, work: () => Promise<unknown>, done?: string) => {
+    setBusy(label);
     try {
-      await ipcBridge.cron.updateJob.invoke({ job_id: job.id, updates: { enabled: !job.enabled } });
-      Message.success(job.enabled ? t('cron.pauseSuccess') : t('cron.resumeSuccess'));
-      await fetchJob();
-    } catch (err) {
-      Message.error(String(err));
+      await work();
+      if (done) Message.success(done);
+      await reload();
+    } catch (failure) {
+      Message.error(errorText(failure, 'Kel could not do that just now.'));
+    } finally {
+      setBusy(null);
     }
-  }, [job, fetchJob, t]);
+  };
 
-  const handleToggleSkipRunning = useCallback(async () => {
-    if (!job) return;
-    try {
-      await ipcBridge.cron.updateJob.invoke({
-        job_id: job.id,
-        updates: { state: { queue_enabled: !job.state.queue_enabled } },
-      });
-      await fetchJob();
-    } catch (err) {
-      Message.error(String(err));
-    }
-  }, [job, fetchJob]);
+  if (schedule === undefined && !error) {
+    return <div className='size-full flex-center'><Spin /></div>;
+  }
 
-  const handleRunNow = useCallback(async () => {
-    if (!job) return;
+  const back = <button type='button' className='kel-task-detail-back' onClick={() => navigate('/scheduled')}>←&nbsp; All scheduled tasks</button>;
+
+  if (!schedule) {
+    return <main className='kel-page kel-scheduled-detail-desktop' data-testid='scheduled-detail-desktop'>
+      {back}
+      <KelCard title='Details' className='kel-task-detail-details'>
+        <p className='kel-meta'>{error ? `This task is unavailable right now. ${error}` : 'This scheduled task is no longer here. It may have been deleted.'}</p>
+      </KelCard>
+    </main>;
+  }
+
+  const isManual = schedule.cadence?.kind === 'manual';
+  const instructions = schedule.target?.kind === 'instruction' ? schedule.target.text : null;
+  const projectName =
+    schedule.project_name ||
+    (projects ?? []).find((project) => project.id === schedule.project_id)?.name ||
+    (schedule.project_id === GENERAL_PROJECT_ID ? GENERAL_PROJECT_NAME : projects ? 'Project unavailable' : '—');
+  const modelName = schedule.model_label || (schedule.model?.provider
+    ? modelState
+      ? choiceLabel(modelState, schedule.model)
+      : schedule.model.model || schedule.model.provider
+    : 'Automatic');
+  const stateLabel = schedule.problem ? 'Needs attention' : schedule.enabled ? 'Active' : 'Paused';
+
+  const handleRunNow = async () => {
     if (runningNowRef.current) return;
     runningNowRef.current = true;
-    setRunningNow(true);
+    setBusy('run');
     try {
-      const result = await ipcBridge.cron.runNow.invoke({ job_id: job.id });
-      Message.success(t('cron.runNowSuccess'));
-      if (result?.conversation_id) {
-        const conversationKey = `conversation/${result.conversation_id}`;
-        const deadline = Date.now() + 15_000;
-        let latestConversation: TChatConversation | null = null;
-
-        while (Date.now() < deadline) {
-          const conversation = await ipcBridge.conversation.get
-            .invoke({ id: result.conversation_id })
-            .catch((): TChatConversation | null => null);
-
-          if (conversation) {
-            latestConversation = conversation;
-            const workspace =
-              typeof conversation.extra?.workspace === 'string' ? conversation.extra.workspace.trim() : '';
-            if (!isNewConversationMode || workspace) {
-              break;
-            }
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
-
-        if (latestConversation) {
-          if (job.target.execution_mode === 'new_conversation') {
-            const nextName = formatCronRunConversationTitle(
-              job.name,
-              latestConversation.created_at || Date.now(),
-              i18n.language
-            );
-            if (latestConversation.name !== nextName) {
-              await ipcBridge.conversation.update.invoke({
-                id: result.conversation_id,
-                updates: { name: nextName },
-              });
-              latestConversation = {
-                ...latestConversation,
-                name: nextName,
-              };
-            }
-          }
-
-          const latestExtra = (latestConversation.extra ?? {}) as Record<string, unknown> & {
-            cron_job_id?: string;
-            cronJobId?: string;
-          };
-          const normalizedCronJobId =
-            typeof latestExtra.cron_job_id === 'string' && latestExtra.cron_job_id.trim()
-              ? latestExtra.cron_job_id
-              : job.id;
-          latestConversation = {
-            ...latestConversation,
-            extra: {
-              ...latestExtra,
-              cron_job_id: normalizedCronJobId,
-              cronJobId:
-                typeof latestExtra.cronJobId === 'string' && latestExtra.cronJobId.trim()
-                  ? latestExtra.cronJobId
-                  : normalizedCronJobId,
-            } as TChatConversation['extra'],
-          } as TChatConversation;
-          await mutate<TChatConversation>(conversationKey, latestConversation, false);
-        }
-
-        navigate(`/conversation/${result.conversation_id}`);
-      }
-    } catch (err) {
-      Message.error(getConversationRuntimeWorkspaceErrorMessage(err, t));
+      const answer = await scheduleActions.runNow(schedule.id);
+      const route = answer?.conversation ? await runRoute({ conversation: answer.conversation }) : null;
+      Message.success('Started. Its result shows here and in its conversation when it is checked.');
+      await reload();
+      if (route) navigate(route);
+    } catch (failure) {
+      Message.error(errorText(failure, 'Kel could not start this task just now.'));
     } finally {
       runningNowRef.current = false;
-      setRunningNow(false);
+      setBusy(null);
     }
-  }, [job, t, navigate]);
+  };
 
-  const allHistorySelected =
-    conversations.length > 0 && conversations.every((conversation) => selectedConversationIds.has(conversation.id));
-
-  const toggleConversationSelected = useCallback((conversationId: string) => {
-    setSelectedConversationIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(conversationId)) {
-        next.delete(conversationId);
-      } else {
-        next.add(conversationId);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleSelectAllHistory = useCallback(() => {
-    setSelectedConversationIds((prev) => {
-      if (conversations.length > 0 && conversations.every((conversation) => prev.has(conversation.id))) {
-        return new Set();
-      }
-      return new Set(conversations.map((conversation) => conversation.id));
-    });
-  }, [conversations]);
-
-  const handleCancelHistoryBatchMode = useCallback(() => {
-    setHistoryBatchMode(false);
-    setSelectedConversationIds(new Set());
-  }, []);
-
-  const removeHistoryConversation = useCallback(async (conversationId: string): Promise<boolean> => {
-    const success = await ipcBridge.conversation.remove.invoke({ id: conversationId });
-    if (success) {
-      emitter.emit('conversation.deleted', conversationId);
-    }
-    return success;
-  }, []);
-
-  const handleBatchDeleteHistory = useCallback(() => {
-    if (selectedConversationIds.size === 0) {
-      Message.warning(t('conversation.history.batchNoSelection'));
-      return;
-    }
-
-    Modal.confirm({
-      title: t('conversation.history.batchDelete'),
-      content: t('conversation.history.batchDeleteConfirm', { count: selectedConversationIds.size }),
-      okText: t('conversation.history.confirmDelete'),
-      cancelText: t('conversation.history.cancelDelete'),
-      okButtonProps: { status: 'warning' },
-      onOk: async () => {
-        const selectedIds = Array.from(selectedConversationIds);
-        try {
-          const results = await Promise.all(selectedIds.map(removeHistoryConversation));
-          const successCount = results.filter(Boolean).length;
-          emitter.emit('chat.history.refresh');
-          await refetchConversations();
-          if (successCount > 0) {
-            Message.success(t('conversation.history.batchDeleteSuccess', { count: successCount }));
-          } else {
-            Message.error(t('conversation.history.deleteFailed'));
-          }
-        } catch (error) {
-          console.error('[TaskDetailPage] Failed to batch delete conversations:', error);
-          Message.error(t('conversation.history.deleteFailed'));
-        } finally {
-          setSelectedConversationIds(new Set());
-          setHistoryBatchMode(false);
-          await fetchJob();
-        }
-      },
-      style: { borderRadius: '12px' },
-      alignCenter: true,
-      getPopupContainer: () => document.body,
-    });
-  }, [fetchJob, refetchConversations, removeHistoryConversation, selectedConversationIds, t]);
-
-  const handleDelete = useCallback(async () => {
-    if (!job) return;
+  const handleDelete = async () => {
+    setBusy('delete');
     try {
-      await ipcBridge.cron.removeJob.invoke({ job_id: job.id });
-      Message.success(t('cron.deleteSuccess'));
+      await scheduleActions.remove(schedule.id, keepConversations ? 'keep' : 'delete');
+      Message.success('Scheduled task deleted.');
       navigate('/scheduled');
-    } catch (err) {
-      Message.error(String(err));
+    } catch (failure) {
+      Message.error(errorText(failure, 'Kel could not delete this task just now.'));
+      setBusy(null);
     }
-  }, [job, navigate, t]);
+  };
 
-  if (loading) {
-    return (
-      <div className='size-full flex-center'>
-        <Spin />
-      </div>
-    );
-  }
-
-  if (!job) {
-    return (
-      <div className='w-full min-h-full box-border overflow-y-auto px-14px pt-28px pb-24px md:px-40px md:pt-52px md:pb-42px'>
-        <div className='mx-auto flex w-full max-w-800px flex-col gap-28px box-border'>
-          <Button
-            type='text'
-            size='small'
-            className='w-fit !px-0 !text-14px md:!text-15px !text-t-secondary hover:!text-t-primary'
-            icon={<Left theme='outline' size={16} className='line-height-0 shrink-0' />}
-            onClick={() => navigate('/scheduled')}
-          >
-            {t('cron.detail.backToAll')}
-          </Button>
-          <div className='flex min-h-320px items-center justify-center'>
-            <Empty description={t('cron.detail.notFound')} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const descriptionPreview = job.description?.trim() || '';
-  const currentExecutionModeLabel = isNewConversationMode
-    ? t('cron.page.form.newConversation')
-    : t('cron.page.form.existingConversation');
-  const executionModeExplanation = isNewConversationMode
-    ? t('cron.detail.executionModeDescriptionNew')
-    : t('cron.detail.executionModeDescriptionExisting');
-  const latestExecutionError = job.state.last_status === 'error' ? job.state.last_error?.trim() || '' : '';
-  const statusTag = <CronStatusTag job={job} />;
+  const openRun = async (run: KelScheduleRun) => {
+    const route = await runRoute(run);
+    if (route) navigate(route);
+    else Message.info('That run’s conversation is no longer available.');
+  };
 
   return <>
     <main className='kel-page kel-scheduled-detail-desktop' data-testid='scheduled-detail-desktop'>
-      <button type='button' className='kel-task-detail-back' onClick={() => navigate('/scheduled')}>←&nbsp; All scheduled tasks</button>
+      {back}
       <header className='kel-task-detail-heading'>
-        <h1>{job.name}</h1>
-        <span className={`kel-task-detail-state${job.enabled ? ' kel-task-detail-state--active' : ''}`}>
-          {job.enabled ? 'Active' : 'Paused'}
-        </span>
+        <h1>{schedule.name}</h1>
+        <span className={`kel-task-detail-state${schedule.enabled && !schedule.problem ? ' kel-task-detail-state--active' : ''}`}>{stateLabel}</span>
         <span className='kel-grow' />
-        {!isManualOnly && <KelButton variant='quiet' onClick={() => void handleToggleEnabled()}>
-          {job.enabled ? 'Pause' : 'Resume'}
+        {!isManual && <KelButton variant='quiet' disabled={busy !== null}
+          onClick={() => void act('toggle', () => (schedule.enabled ? scheduleActions.pause(schedule.id) : scheduleActions.resume(schedule.id)),
+            schedule.enabled ? 'Paused.' : 'Resumed.')}>
+          {schedule.enabled ? 'Pause' : 'Resume'}
         </KelButton>}
-        <KelButton variant='quiet' onClick={() => setEditDialogVisible(true)}>Edit</KelButton>
-        <KelButton variant='primary' disabled={runningNow} onClick={() => void handleRunNow()}>
-          {runningNow ? 'Starting…' : 'Run now'}
+        <KelButton variant='quiet' onClick={() => setEditOpen(true)}>Edit</KelButton>
+        <KelButton variant='primary' disabled={busy !== null} onClick={() => void handleRunNow()}>
+          {busy === 'run' ? 'Starting…' : 'Run now'}
         </KelButton>
       </header>
+      {schedule.problem && <div className='kel-task-detail-problem' role='status'>
+        <strong>Needs attention</strong> <span>{schedule.problem}</span>
+      </div>}
       <KelCard title='Details' className='kel-task-detail-details'
-        chip={<span className='kel-meta'>{formatSchedule(job, t)}</span>}>
+        chip={<span className='kel-meta'>{scheduleSentence(schedule, i18n.language)}</span>}>
         <div className='kel-task-detail-instructions'>
-          <span>Instructions</span><p>{job.target.payload.text || '—'}</p>
+          {instructions !== null
+            ? <><span>Instructions</span><p>{instructions || '—'}</p></>
+            : recipeId
+              ? <><span>Recipe</span><p>{recipeName || recipeId}</p></>
+              : <><span>Instructions</span><p>Unavailable right now.</p></>}
         </div>
-        <div className='kel-task-detail-field'><span>Assistant</span><span>{assistantIdentity?.name || 'Kel'}</span></div>
-        <div className='kel-task-detail-field'><span>Model</span><span>{job.metadata.agent_config?.model_id || job.metadata.agent_config?.model?.model || 'Automatic'}</span></div>
-        <div className='kel-task-detail-field'><span>Starts</span><span>{isNewConversationMode ? 'A new conversation each run' : 'The existing conversation'}</span></div>
-        <div className='kel-task-detail-field'><span>Project</span><span>—</span></div>
+        <div className='kel-task-detail-field'><span>Assistant</span><span>Kel</span></div>
+        <div className='kel-task-detail-field'><span>Model</span><span>{modelName}</span></div>
+        <div className='kel-task-detail-field'><span>Starts</span><span>{schedule.start_mode === 'existing' ? 'The same conversation each run' : 'A new conversation each run'}</span></div>
+        <div className='kel-task-detail-field'><span>Project</span><span>{projectName}</span></div>
+        {!isManual && <div className='kel-task-detail-field'><span>Next run</span><span>{schedule.enabled && !schedule.problem && schedule.next_due_at ? formatNextRun(schedule.next_due_at, i18n.language) : 'Paused'}</span></div>}
         <div className='kel-task-detail-field kel-task-detail-switch-row'>
           <span>Skip if still running<small>If the last run has not finished, Kel skips this one.</small></span>
-          <Switch checked={job.state.queue_enabled} onChange={() => void handleToggleSkipRunning()} aria-label='Skip if still running' />
+          <Switch checked={schedule.skip_if_running} disabled={busy !== null} aria-label='Skip if still running'
+            onChange={() => void act('skip', () => scheduleActions.update(schedule.id, { skip_if_running: !schedule.skip_if_running }))} />
         </div>
         <div className='kel-task-detail-field kel-task-detail-delete-row'>
-          <span>Delete this task<small>Its conversations are deleted too.</small></span>
+          <span>Delete this task<small>Chats its finished runs opened are removed too.</small></span>
           <KelButton variant='danger' onClick={() => setConfirmDelete(true)}>Delete</KelButton>
         </div>
         {confirmDelete && <AionModal visible className='kel-task-delete-modal' variant='standard'
-          header={{ title: 'Delete this scheduled task?', subtitle: 'Its conversations are deleted too. This can’t be undone.', showClose: false }}
+          header={{ title: 'Delete this scheduled task?', subtitle: 'Chats its finished runs opened are removed from your list. A run that is still going is kept and finishes.', showClose: false }}
           footer={null} closable={false} onCancel={() => setConfirmDelete(false)} focusLock autoFocus style={{ width: 460 }}>
+          <Checkbox checked={keepConversations} onChange={setKeepConversations}>Keep the chats its runs opened</Checkbox>
           <div className='kel-task-delete-actions'>
-            <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep</KelButton>
-            <KelButton variant='danger' onClick={() => void handleDelete()}>Delete task</KelButton>
+            <KelButton variant='quiet' onClick={() => setConfirmDelete(false)}>Keep task</KelButton>
+            <KelButton variant='danger' disabled={busy === 'delete'} onClick={() => void handleDelete()}>Delete task</KelButton>
           </div>
         </AionModal>}
       </KelCard>
-      <KelCard title='History' className='kel-task-detail-history' actions={conversations.length > 0 && (
-        historyBatchMode ? <span className='kel-task-detail-history-actions'>
-          <KelButton variant='quiet' onClick={handleCancelHistoryBatchMode}>Cancel</KelButton>
-          <KelButton variant='quiet' disabled={selectedConversationIds.size === 0} onClick={handleBatchDeleteHistory}>Delete selected</KelButton>
-        </span> : <KelButton variant='quiet' onClick={() => setHistoryBatchMode(true)}>Select runs</KelButton>
-      )}>
-        {conversations.length === 0 ? <p className='kel-meta'>No runs yet.</p> : conversations.map((conversation, index) => (
-          <div className='kel-task-detail-history-row' key={conversation.id}>
-            {historyBatchMode && <Checkbox checked={selectedConversationIds.has(conversation.id)}
-              onChange={() => toggleConversationSelected(conversation.id)} aria-label={`Select ${conversation.name || conversation.id}`} />}
-            <span className='kel-task-detail-history-dot' data-state={index === 0 ? job.state.last_status : undefined} />
-            <span className='kel-task-detail-history-text'>
-              <strong>{formatNextRun(getActivityTime(conversation), i18n.language)}</strong>
-              <small>{isNewConversationMode ? 'Opened a new conversation' : 'Continued the conversation'}</small>
-            </span>
-            {index === 0 && job.state.last_status && <span className='kel-task-detail-run-status' data-state={job.state.last_status}>
-              {job.state.last_status === 'ok' ? 'Success' : job.state.last_status === 'error' ? 'Failed' : job.state.last_status}
-            </span>}
-            <KelButton variant='primary' onClick={() => {
-              const teamId = resolveTeamId(conversation);
-              navigate(teamId ? `/team/${teamId}` : `/conversation/${conversation.id}`);
-            }}>Open</KelButton>
-          </div>
-        ))}
+      <KelCard title='History' className='kel-task-detail-history'>
+        {runs === null
+          ? <p className='kel-meta'>{historyError ? `History is unavailable right now. ${historyError}` : 'Loading…'}</p>
+          : runs.length === 0
+            ? <p className='kel-meta'>No runs yet.{!isManual && schedule.enabled && schedule.next_due_at ? ` Next run ${formatNextRun(schedule.next_due_at, i18n.language)}.` : ''}</p>
+            : runs.map((run, index) => {
+              const tone = runTone(run);
+              const canOpen = Boolean(run.conversation || run.job_id);
+              return <div className='kel-task-detail-history-row' key={`${run.submission_id || run.job_id || run.slot || index}-${index}`}>
+                <span className='kel-task-detail-history-dot' data-state={tone} />
+                <span className='kel-task-detail-history-text'>
+                  <strong>{run.at ? formatNextRun(run.at, i18n.language) : run.slot ? formatNextRun(run.slot, i18n.language) : 'Time unavailable'}</strong>
+                  <small>{runSubtitle(run, schedule)}</small>
+                </span>
+                <span className='kel-task-detail-run-status' data-state={tone}>{run.label || '—'}</span>
+                {canOpen && <KelButton variant='primary' onClick={() => void openRun(run)}>Open</KelButton>}
+              </div>;
+            })}
       </KelCard>
     </main>
-    <div className='kel-scheduled-detail-legacy'>
-    <div className='w-full min-h-full box-border overflow-y-auto px-14px pt-28px pb-24px md:px-40px md:pt-52px md:pb-42px'>
-      <div className='mx-auto flex w-full max-w-800px flex-col gap-28px box-border'>
-        <Button
-          type='text'
-          size='small'
-          className='w-fit !px-0 !text-14px md:!text-15px !text-t-secondary hover:!text-t-primary'
-          icon={<Left theme='outline' size={16} className='line-height-0 shrink-0' />}
-          onClick={() => navigate('/scheduled')}
-        >
-          {t('cron.detail.backToAll')}
-        </Button>
-
-        <div className='flex flex-col gap-20px pb-8px'>
-          <div className='flex flex-col gap-12px'>
-            <div className='flex flex-wrap items-start justify-between gap-14px'>
-              <h1 className='m-0 min-w-0 flex-1 break-words text-30px font-bold leading-38px text-t-primary md:text-34px md:leading-42px'>
-                {job.name}
-              </h1>
-              <div className='flex shrink-0 items-center gap-8px'>
-                <Button
-                  size='mini'
-                  type='text'
-                  className='!h-20px !min-w-20px !w-20px !rounded-0 !border-none !bg-transparent !p-0 !text-t-secondary hover:!bg-transparent hover:!text-t-primary translate-y-1px'
-                  icon={<Write theme='outline' size={16} fill='currentColor' />}
-                  onClick={() => setEditDialogVisible(true)}
-                />
-                <Popconfirm title={t('cron.confirmDeleteWithConversations')} onOk={handleDelete}>
-                  <Button
-                    size='mini'
-                    type='text'
-                    className='!h-20px !min-w-20px !w-20px !rounded-0 !border-none !bg-transparent !p-0 !text-t-secondary hover:!bg-transparent hover:!text-t-primary translate-y-1px'
-                    icon={<Delete theme='outline' size={16} fill='currentColor' />}
-                  />
-                </Popconfirm>
-                <Button
-                  type='primary'
-                  size='small'
-                  className='!h-32px !rounded-8px !px-14px'
-                  loading={runningNow}
-                  disabled={runningNow}
-                  onClick={handleRunNow}
-                >
-                  {t('cron.detail.runNow')}
-                </Button>
-              </div>
-            </div>
-            {descriptionPreview && (
-              <p data-testid='task-detail-summary' className='m-0 w-full text-15px leading-24px text-t-secondary'>
-                {descriptionPreview}
-              </p>
-            )}
-          </div>
-          <div className='flex flex-wrap items-center gap-10px md:gap-12px'>
-            {latestExecutionError ? (
-              <Tooltip
-                position='top'
-                content={
-                  <div className='max-w-360px whitespace-pre-wrap break-words'>
-                    <div className='mb-4px text-12px font-medium'>{t('cron.lastError')}</div>
-                    <div className='text-12px leading-18px'>{latestExecutionError}</div>
-                  </div>
-                }
-              >
-                <span className='inline-flex cursor-help'>{statusTag}</span>
-              </Tooltip>
-            ) : (
-              statusTag
-            )}
-            {job.state.next_run_at_ms && (
-              <span className='text-14px text-t-secondary'>
-                {t('cron.nextRun')} {formatNextRun(job.state.next_run_at_ms, i18n.language)}
-              </span>
-            )}
-          </div>
-          <div className='h-1px w-full bg-[var(--color-border-2)]' />
-        </div>
-
-        <div className='grid w-full min-w-0 grid-cols-1 gap-28px md:grid-cols-[minmax(0,1fr)_280px] md:items-start md:gap-32px'>
-          <div data-testid='task-detail-history-column' className='flex min-w-0 flex-col gap-28px'>
-            <section className='flex flex-col gap-12px'>
-              <div className='flex min-w-0 items-center justify-between gap-12px'>
-                <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.detail.history')}</h2>
-                {conversations.length > 0 && (
-                  <div className='flex shrink-0 items-center gap-8px'>
-                    {historyBatchMode ? (
-                      <>
-                        <Button
-                          size='mini'
-                          type='text'
-                          className='!h-24px !px-8px !text-12px'
-                          onClick={handleCancelHistoryBatchMode}
-                        >
-                          {t('conversation.history.cancelDelete')}
-                        </Button>
-                        <Button
-                          size='mini'
-                          status='warning'
-                          className='!h-24px !px-8px !text-12px'
-                          disabled={selectedConversationIds.size === 0}
-                          onClick={handleBatchDeleteHistory}
-                        >
-                          {t('conversation.history.batchDelete')}
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size='mini'
-                        type='text'
-                        className='!h-24px !px-8px !text-12px'
-                        onClick={() => setHistoryBatchMode(true)}
-                      >
-                        {t('conversation.history.batchManage')}
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {conversations.length > 0 ? (
-                <div className='flex flex-col'>
-                  {historyBatchMode && (
-                    <div className='flex items-center justify-between gap-12px py-8px text-12px text-t-secondary'>
-                      <Checkbox checked={allHistorySelected} onChange={handleSelectAllHistory}>
-                        {t('conversation.history.selectAll')}
-                      </Checkbox>
-                      <span>{t('conversation.history.selectedCount', { count: selectedConversationIds.size })}</span>
-                    </div>
-                  )}
-                  <div className='h-1px w-full bg-[var(--color-border-2)]' />
-                  {conversations.map((conv, index) => (
-                    <React.Fragment key={conv.id}>
-                      <div
-                        className='flex cursor-pointer items-center justify-between gap-14px py-15px transition-colors hover:text-t-primary'
-                        onClick={() => {
-                          if (historyBatchMode) {
-                            toggleConversationSelected(conv.id);
-                            return;
-                          }
-                          const teamId = resolveTeamId(conv);
-                          navigate(teamId ? `/team/${teamId}` : `/conversation/${conv.id}`);
-                        }}
-                      >
-                        {historyBatchMode && (
-                          <Checkbox
-                            checked={selectedConversationIds.has(conv.id)}
-                            onClick={(event) => event.stopPropagation()}
-                            onChange={() => toggleConversationSelected(conv.id)}
-                          />
-                        )}
-                        <span className='min-w-0 flex-1 truncate text-14px text-t-primary'>{conv.name || conv.id}</span>
-                        <span className='shrink-0 text-13px text-t-secondary'>
-                          {formatNextRun(getActivityTime(conv), i18n.language)}
-                        </span>
-                      </div>
-                      {index < conversations.length - 1 && <div className='h-1px w-full bg-[var(--color-border-2)]' />}
-                    </React.Fragment>
-                  ))}
-                </div>
-              ) : (
-                <div className='text-14px text-t-secondary'>
-                  <span>{t('cron.detail.noHistory')}</span>
-                  {job.enabled && job.state.next_run_at_ms && (
-                    <span className='ms-4px'>
-                      · {t('cron.nextRun')} {formatNextRun(job.state.next_run_at_ms, i18n.language)}
-                    </span>
-                  )}
-                </div>
-              )}
-            </section>
-          </div>
-
-          <aside data-testid='task-detail-sidebar-column' className='flex min-w-0 flex-col gap-24px'>
-            <section className='flex flex-col gap-12px'>
-              <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.detail.instructions')}</h2>
-              <div className='box-border rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-16px py-14px'>
-                <div className='whitespace-pre-wrap break-words text-14px leading-22px text-t-primary'>
-                  {job.target.payload.text || '-'}
-                </div>
-              </div>
-            </section>
-
-            {assistantIdentity?.name && (
-              <section className='flex flex-col gap-10px'>
-                <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.detail.assistant')}</h2>
-                <div className='flex items-center gap-10px'>
-                  {assistantIdentity.logo ? (
-                    <ThemedLogo
-                      src={assistantIdentity.logo}
-                      alt={assistantIdentity.name}
-                      className='h-28px w-28px rounded-50%'
-                    />
-                  ) : assistantIdentity.emoji ? (
-                    <span className='inline-flex h-28px w-28px items-center justify-center text-20px'>
-                      {assistantIdentity.emoji}
-                    </span>
-                  ) : (
-                    <Robot size='28' className='shrink-0 text-t-secondary' />
-                  )}
-                  <span className='min-w-0 text-14px font-medium text-t-primary'>{assistantIdentity.name}</span>
-                </div>
-              </section>
-            )}
-
-            <section className='flex flex-col gap-10px'>
-              <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.detail.repeats')}</h2>
-              <div className='flex flex-wrap items-center gap-10px'>
-                {!isManualOnly && <Switch size='small' checked={job.enabled} onChange={handleToggleEnabled} />}
-                <span className='min-w-0 flex-1 text-14px leading-20px text-t-primary'>{formatSchedule(job, t)}</span>
-              </div>
-            </section>
-
-            <section className='flex flex-col gap-10px'>
-              <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.page.form.executionMode')}</h2>
-              <div className='inline-flex items-center gap-4px'>
-                <span className='text-14px leading-22px text-t-primary'>{currentExecutionModeLabel}</span>
-                <Attention theme='outline' size={12} className='line-height-0 shrink-0 text-t-secondary' />
-              </div>
-              <div className='box-border rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-16px py-14px'>
-                <div className='flex flex-col gap-10px'>
-                  <p className='m-0 text-13px leading-20px text-t-primary'>{executionModeExplanation}</p>
-                  <div className='h-1px w-full bg-[var(--color-border-2)]' />
-                  <p className='m-0 text-12px leading-18px text-t-secondary'>
-                    {t('cron.page.form.executionModeEditHint')}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className='flex flex-col gap-10px'>
-              <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.page.form.queue')}</h2>
-              <div className='flex items-center gap-10px'>
-                <Switch size='small' checked={job.state.queue_enabled} disabled />
-                <span className='min-w-0 flex-1 text-13px leading-18px text-t-secondary'>
-                  {t('cron.page.form.queueHint')}
-                </span>
-              </div>
-            </section>
-
-            {job.metadata.agent_config?.model_id && (
-              <section className='flex flex-col gap-10px'>
-                <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.page.form.model')}</h2>
-                <span className='break-words text-14px leading-22px text-t-primary'>
-                  {job.metadata.agent_config.model_id}
-                </span>
-              </section>
-            )}
-
-            {job.metadata.agent_config?.workspace && (
-              <section className='flex flex-col gap-10px'>
-                <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('cron.page.form.workspace')}</h2>
-                <span className='min-w-0 break-all text-14px leading-22px text-t-primary'>
-                  {job.metadata.agent_config.workspace}
-                </span>
-              </section>
-            )}
-
-            {job.metadata.agent_config?.config_options &&
-              Object.keys(job.metadata.agent_config.config_options).length > 0 && (
-                <section className='flex flex-col gap-10px'>
-                  <h2 className='m-0 text-13px font-medium text-t-secondary'>{t('acp.config.reasoning_effort')}</h2>
-                  <span className='break-words text-14px leading-22px text-t-primary'>
-                    {Object.values(job.metadata.agent_config.config_options).join(', ')}
-                  </span>
-                </section>
-              )}
-          </aside>
-        </div>
-      </div>
-
-      </div>
-    </div>
-    <CreateTaskDialog visible={editDialogVisible} onClose={() => setEditDialogVisible(false)} editJob={job} />
+    <CreateTaskDialog visible={editOpen} onClose={() => { setEditOpen(false); void reload(); }} editSchedule={schedule} />
   </>;
 };
 

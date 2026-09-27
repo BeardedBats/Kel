@@ -13,10 +13,19 @@
  * be resolved are surfaced honestly as `stale` with no action.
  */
 
-import type { KelBoundaryRequest, KelContinuationCandidate, KelWorkJob } from './kelApi';
+import type { KelBoundaryRequest, KelContinuationCandidate, KelSchedule, KelWorkJob } from './kelApi';
 import { workWords } from './workLanguage';
 
-export type AttentionKind = 'approval' | 'input' | 'permission' | 'failure' | 'review' | 'continuation' | 'connection' | 'stale';
+export type AttentionKind =
+  | 'approval'
+  | 'input'
+  | 'permission'
+  | 'failure'
+  | 'review'
+  | 'continuation'
+  | 'connection'
+  | 'schedule'
+  | 'stale';
 
 export interface AttentionItem {
   /** Stable, derived key — built only from authoritative ids present in the payload. */
@@ -58,6 +67,8 @@ export interface AttentionPayload {
   boundaryRequests?: KelBoundaryRequest[];
   /** Provider statuses from the same /api/state read (D5: setup needs are attention too). */
   providers?: AttentionProviderState[];
+  /** D-57: scheduled tasks; one whose recipe, project or chat is gone is paused with a problem. */
+  schedules?: KelSchedule[];
 }
 
 export interface AttentionFilter {
@@ -215,6 +226,23 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
       action: { label: 'Review the request', to: '/autonomy' },
       needsYou: true,
       at: request.created,
+    });
+  }
+
+  // D-57: a scheduled task the engine paused because something it needs is gone. Bound to the
+  // schedule's own project; the one action opens the task's page, where it is fixed and resumed.
+  for (const schedule of payload.schedules ?? []) {
+    if (!schedule?.id || schedule.deleted) continue;
+    if (!schedule.problem && schedule.status !== 'needs_attention') continue;
+    items.push({
+      id: `schedule-${schedule.id}`,
+      kind: 'schedule',
+      title: schedule.name || 'A scheduled task',
+      detail: `Scheduled task paused — ${schedule.problem?.trim().replace(/\.$/, '') || 'something it needs has changed'}.`,
+      projectId: schedule.project_id || undefined,
+      action: { label: 'Open the task', to: `/scheduled/${encodeURIComponent(schedule.id)}` },
+      needsYou: true,
+      at: schedule.updated ?? 0,
     });
   }
 

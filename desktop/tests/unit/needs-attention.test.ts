@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { collectAttention } from '@renderer/components/kel/needsAttention';
-import type { KelBoundaryRequest, KelWorkJob } from '@renderer/components/kel/kelApi';
+import type { KelBoundaryRequest, KelSchedule, KelWorkJob } from '@renderer/components/kel/kelApi';
 
 const job = (over: Partial<KelWorkJob> & { id: string }): KelWorkJob => ({
   state: 'RUNNING',
@@ -214,5 +214,51 @@ describe('collectAttention — D7 orphaned runs need a person', () => {
     expect(item.action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/work?job=a1' });
     expect(resolveAttentionRoute(item.action!, (to) => to)).toBe('/work?job=a1');
     expect(resolveAttentionRoute(item.action!, () => '/conversation/donor-1')).toBe('/conversation/donor-1');
+  });
+});
+
+describe('collectAttention — scheduled task problems (D-57)', () => {
+  const schedule = (over: Partial<KelSchedule> & { id: string }): KelSchedule => ({
+    name: 'Morning brief',
+    project_id: 'P-A',
+    target: { kind: 'instruction', text: 'Summarize' },
+    cadence: { kind: 'cron', expr: '0 9 * * MON-FRI' },
+    start_mode: 'new_conversation',
+    skip_if_running: true,
+    enabled: false,
+    updated: 70,
+    ...over,
+  });
+
+  it('names a paused task whose recipe, project or chat is gone, and opens its page', () => {
+    const items = collectAttention({
+      schedules: [
+        schedule({ id: 's1', problem: 'Its recipe was deleted.' }),
+        schedule({ id: 's2', status: 'needs_attention' }),
+        schedule({ id: 's3', enabled: true }),
+        schedule({ id: 's4', enabled: false }),
+      ],
+    });
+    expect(items.map((item) => item.id)).toEqual(['schedule-s1', 'schedule-s2']);
+    expect(items[0]).toMatchObject({
+      kind: 'schedule',
+      title: 'Morning brief',
+      detail: 'Scheduled task paused — Its recipe was deleted.',
+      needsYou: true,
+      projectId: 'P-A',
+      action: { label: 'Open the task', to: '/scheduled/s1' },
+    });
+    expect(items[1].detail).toBe('Scheduled task paused — something it needs has changed.');
+  });
+
+  it('keeps a task under its own project only', () => {
+    const payload = { schedules: [schedule({ id: 's1', problem: 'Its project was archived.' })] };
+    expect(collectAttention(payload, { projectId: 'P-A' })).toHaveLength(1);
+    expect(collectAttention(payload, { projectId: 'P-B' })).toHaveLength(0);
+  });
+
+  it('shows no machinery words', () => {
+    const [item] = collectAttention({ schedules: [schedule({ id: 's1', problem: 'Its chat was deleted.' })] });
+    expect(`${item.title} ${item.detail} ${item.action?.label}`).not.toMatch(/cron|slot|origin|submission|schedule_id|next_due/i);
   });
 });

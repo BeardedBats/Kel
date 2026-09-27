@@ -7,7 +7,7 @@
 import type { TChatConversation } from '@/common/config/storage';
 import AionModal from '@/renderer/components/base/AionModal';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
-import { useCronJobsMap } from '@/renderer/pages/cron';
+import { useScheduleStatusMap } from '@/renderer/pages/cron';
 import { restrictToVerticalAxis } from '@/renderer/utils/ui/dndModifiers';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -40,7 +40,7 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
   const navigate = useNavigate();
   const layout = useLayoutContext();
   const isMobile = layout?.isMobile ?? false;
-  const { getJobStatus, markAsRead, setActiveConversation } = useCronJobsMap();
+  const { getJobStatus } = useScheduleStatusMap();
 
   const {
     conversations,
@@ -87,14 +87,6 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     [collapsedSections, toggleSection]
   );
 
-  // Sync active conversation ref when route changes (for URL navigation)
-  // This doesn't trigger state update, avoiding double render
-  useEffect(() => {
-    if (id) {
-      setActiveConversation(id);
-    }
-  }, [id, setActiveConversation]);
-
   const {
     selectedConversationIds,
     setSelectedConversationIds,
@@ -134,7 +126,6 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     selectedConversationIds,
     setSelectedConversationIds,
     toggleSelectedConversation,
-    markAsRead,
     markManualUnread,
     clearManualUnread,
     isManualUnread,

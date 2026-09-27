@@ -8,7 +8,7 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState } from './kelApi';
+import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelSchedules, kelState } from './kelApi';
 import { collectAttention, resolveAttentionRoute, type AttentionItem } from './needsAttention';
 import { KelButton } from './KelPrimitives';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
@@ -19,11 +19,13 @@ export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) 
 
   const load = useCallback(async () => {
     try {
-      const [state, boundary, providers] = await Promise.all([
+      const [state, boundary, providers, schedules] = await Promise.all([
         kelState(KEL_ALL_CONVERSATIONS),
         kelAutonomy.requests(),
         // Setup needs are attention too; a failed read never invents items.
         kelProviders.list().catch((): null => null),
+        // D-57: paused scheduled tasks with a problem; a failed read adds nothing.
+        kelSchedules.list().catch((): null => null),
       ]);
       setItems(
         collectAttention(
@@ -37,6 +39,7 @@ export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) 
               status: entry.status,
               note: entry.note,
             })),
+            schedules: schedules ?? [],
           },
           { projectId }
         )

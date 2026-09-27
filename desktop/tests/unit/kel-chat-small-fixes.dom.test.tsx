@@ -16,16 +16,11 @@ const cron = vi.hoisted(() => ({
   jobs: [] as Array<Record<string, unknown>>,
 }));
 
-vi.mock('@renderer/pages/cron/useCronJobs', () => ({
-  useAllCronJobs: () => ({ jobs: cron.jobs, loading: false }),
-  useCronJobConversations: () => ({ conversations: [] }),
+vi.mock('@renderer/pages/cron/useSchedules', () => ({
+  useSchedules: () => ({ schedules: cron.jobs, loading: false, loaded: true, error: null, refresh: async () => undefined }),
 }));
 vi.mock('@renderer/pages/cron/ScheduledTasksPage/CreateTaskDialog', () => ({
   default: ({ visible }: { visible: boolean }) => (visible ? <div data-testid='create-task-dialog' /> : null),
-}));
-vi.mock('@renderer/pages/cron/cronUtils', () => ({
-  formatSchedule: () => 'Every weekday at 09:00',
-  formatNextRun: () => 'tomorrow',
 }));
 
 afterEach(() => {
@@ -41,14 +36,14 @@ const Where = () => {
 describe('Scheduled tasks list (WK-8, JR-28)', () => {
   it('opens a task’s own page from its row', async () => {
     cron.jobs = [
-      { id: 'cron-1', name: 'Morning inbox summary', enabled: true, state: { next_run_at_ms: 1 }, schedule: { kind: 'cron', expr: '0 9 * * 1-5' } },
+      { id: 'cron-1', name: 'Morning inbox summary', project_id: 'default', enabled: true, next_due_at: 1, cadence: { kind: 'cron', expr: '0 9 * * 1-5' }, description: 'Every weekday at 9:00 AM' },
     ];
     const { default: ScheduledTasksPage } = await import('@renderer/pages/cron/ScheduledTasksPage');
     render(
       <MemoryRouter initialEntries={['/scheduled']}>
         <Routes>
           <Route path='/scheduled' element={<ScheduledTasksPage />} />
-          <Route path='/scheduled/:job_id' element={<Where />} />
+          <Route path='/scheduled/:id' element={<Where />} />
         </Routes>
       </MemoryRouter>
     );

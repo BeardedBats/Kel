@@ -2,33 +2,47 @@
  * @license
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * D-57: create or edit a scheduled task in the engine. Kel is the only assistant; the model list
+ * is Kel's own (`/api/model`), with options Kel cannot use shown but not pickable. The engine
+ * describes the timing and checks the whole task; its refusal is shown in its own words.
  */
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Form, Input, Select, Message, TimePicker, Radio, Button, Switch } from '@arco-design/web-react';
 import taskChevron from '@renderer/assets/figma/task/chevron-down.svg';
 import AionModal from '@renderer/components/base/AionModal';
-import ThemedLogo from '@/renderer/components/agent/ThemedLogo';
-import { Down, Robot } from '@icon-park/react';
-import { ipcBridge } from '@/common';
-import { resolveLocaleKey } from '@/common/utils';
-import type { ICreateCronJobParams, ICronJob, ICronJobUpdateParams } from '@/common/adapter/ipcBridge';
-import { useConversationAssistants } from '@renderer/pages/conversation/hooks/useConversationAssistants';
+import { Down } from '@icon-park/react';
 import dayjs from 'dayjs';
-import type { TChatConversation, TProviderWithModel } from '@/common/config/storage';
-import { type AcpModelInfo } from '@/common/types/platform/acpTypes';
-import { useManagedAgentRuntimeCatalog } from '@/renderer/hooks/agent/useManagedAgents';
-import { useModelProviderList } from '@renderer/hooks/agent/useModelProviderList';
-import GuidModelSelector from '@renderer/pages/guid/components/GuidModelSelector';
-import { buildAssistantModelInfo } from '@renderer/pages/guid/hooks/useGuidAssistantSelection';
-import { WorkspaceFolderSelect } from '@renderer/components/workspace';
-import { createCronSchedule } from '@renderer/pages/cron/cronUtils';
-import { getConversationCreateErrorMessage } from '@renderer/pages/conversation/utils/conversationCreateError';
-import { resolveAssistantAvatar } from '@renderer/utils/model/assistantAvatar';
-import { resolveAssistantName } from '@renderer/utils/model/assistantDisplay';
-import { resolveCronAgentConfig } from './resolveCronAgentConfig';
-import { assistantRuntimeKey, isAionrsAssistant } from '@/common/types/agent/assistantTypes';
+import {
+  kelRecipeGet,
+  kelRecipes,
+  kelSchedules,
+  type KelModelChoice,
+  type KelRecipeInput,
+  type KelSchedule,
+  type KelScheduleCadence,
+  type KelScheduleDraft,
+  type KelScheduleStartMode,
+} from '@renderer/components/kel/kelApi';
+import { unavailableNote, useKelModelState } from '@renderer/components/kel/KelModelControl';
+import { ALL_PROJECTS, GENERAL_PROJECT_ID, liveProjects, projectLabel, useProjects } from '@renderer/components/kel/activeProject';
+import {
+  FREQUENCY_LABELS,
+  HOUR_INTERVALS,
+  MINUTE_INTERVALS,
+  WEEKDAYS,
+  cadenceFromFrequency,
+  createDefaultCustomSchedule,
+  describeCadence,
+  formatNextRun,
+  frequencyFromCadence,
+  type CustomFrequencyMode,
+  type CustomIntervalUnit,
+  type CustomScheduleState,
+  type FrequencyType,
+} from '@renderer/pages/cron/cronUtils';
+import { scheduleActions } from '@renderer/pages/cron/useSchedules';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 const FormItem = Form.Item;
@@ -38,1005 +52,476 @@ const Option = Select.Option;
 interface CreateTaskDialogProps {
   visible: boolean;
   onClose: () => void;
-  /** When provided, the dialog operates in edit mode */
-  editJob?: ICronJob;
+  /** When provided, the dialog edits this schedule. */
+  editSchedule?: KelSchedule;
+  /** The app chat a new task may keep running in ("Ongoing conversation"). */
   conversation_id?: string;
-  conversation_title?: string;
 }
 
-type FrequencyType = 'manual' | 'hourly' | 'daily' | 'weekdays' | 'weekly' | 'custom';
-type CustomFrequencyMode = 'interval' | 'daily' | 'weekly' | 'monthly' | 'advanced';
-type CustomIntervalUnit = 'minutes' | 'hours';
-type ExecutionMode = 'new_conversation' | 'existing';
-
-type CustomScheduleState = {
-  mode: CustomFrequencyMode;
-  interval: number;
-  intervalUnit: CustomIntervalUnit;
-  time: string;
-  weekdays: string[];
-  monthDay: number;
-  advancedExpression: string;
+const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
+const AUTOMATIC = '';
+const modelValue = (choice: KelModelChoice | null | undefined) =>
+  choice?.provider ? `${choice.provider}::${choice.model ?? ''}` : AUTOMATIC;
+const modelChoice = (value: string): KelModelChoice | null => {
+  if (!value) return null;
+  const [provider, model] = value.split('::');
+  return { provider, model: model || null };
 };
 
-const WEEKDAYS = [
-  { value: 'MON', label: 'monday' },
-  { value: 'TUE', label: 'tuesday' },
-  { value: 'WED', label: 'wednesday' },
-  { value: 'THU', label: 'thursday' },
-  { value: 'FRI', label: 'friday' },
-  { value: 'SAT', label: 'saturday' },
-  { value: 'SUN', label: 'sunday' },
-];
+type RecipeEntry = { recipe_id: string; name: string };
 
-const MINUTE_INTERVALS = [1, 2, 3, 5, 10, 15, 20, 30];
-const HOUR_INTERVALS = [1, 2, 3, 4, 6, 8, 12];
-const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
-const DEFAULT_CUSTOM_WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
-
-function createDefaultCustomSchedule(): CustomScheduleState {
-  return {
-    mode: 'interval',
-    interval: 5,
-    intervalUnit: 'minutes',
-    time: '09:00',
-    weekdays: DEFAULT_CUSTOM_WEEKDAYS,
-    monthDay: 1,
-    advancedExpression: '',
-  };
-}
-
-function parseCustomSchedule(expr: string): CustomScheduleState {
-  const fallback = { ...createDefaultCustomSchedule(), mode: 'advanced' as const, advancedExpression: expr };
-  const minuteInterval = expr.match(/^\*\/(\d+) \* \* \* \*$/);
-  if (minuteInterval) {
-    const interval = Number(minuteInterval[1]);
-    if (MINUTE_INTERVALS.includes(interval)) {
-      return { ...createDefaultCustomSchedule(), interval };
-    }
-  }
-
-  const hourInterval = expr.match(/^0 \*\/(\d+) \* \* \*$/);
-  if (hourInterval) {
-    const interval = Number(hourInterval[1]);
-    if (HOUR_INTERVALS.includes(interval)) {
-      return {
-        ...createDefaultCustomSchedule(),
-        interval,
-        intervalUnit: 'hours',
-      };
-    }
-  }
-
-  const weekly = expr.match(/^(\d{1,2}) (\d{1,2}) \* \* ([A-Z]{3}(?:,[A-Z]{3})+)$/i);
-  if (weekly) {
-    const weekdays = weekly[3]
-      .toUpperCase()
-      .split(',')
-      .filter((value) => WEEKDAYS.some((weekday) => weekday.value === value));
-    if (weekdays.length > 0) {
-      return {
-        ...createDefaultCustomSchedule(),
-        mode: 'weekly',
-        time: `${weekly[2].padStart(2, '0')}:${weekly[1].padStart(2, '0')}`,
-        weekdays,
-      };
-    }
-  }
-
-  const monthly = expr.match(/^(\d{1,2}) (\d{1,2}) (\d{1,2}) \* \*$/);
-  if (monthly) {
-    const monthDay = Number(monthly[3]);
-    if (monthDay >= 1 && monthDay <= 31) {
-      return {
-        ...createDefaultCustomSchedule(),
-        mode: 'monthly',
-        time: `${monthly[2].padStart(2, '0')}:${monthly[1].padStart(2, '0')}`,
-        monthDay,
-      };
-    }
-  }
-
-  return fallback;
-}
-
-function buildCustomCronExpression(schedule: CustomScheduleState): string {
-  const [hour, minute] = schedule.time.split(':').map(Number);
-  switch (schedule.mode) {
-    case 'interval':
-      return schedule.intervalUnit === 'minutes' ? `*/${schedule.interval} * * * *` : `0 */${schedule.interval} * * *`;
-    case 'daily':
-      return `${minute} ${hour} * * *`;
-    case 'weekly':
-      return `${minute} ${hour} * * ${schedule.weekdays.join(',')}`;
-    case 'monthly':
-      return `${minute} ${hour} ${schedule.monthDay} * *`;
-    case 'advanced':
-      return schedule.advancedExpression.trim();
-  }
-}
-
-/**
- * Infer frequency type and time/weekday from a cron expression for edit mode.
- * Returns 'custom' for expressions that don't match our preset formats.
- */
-function parseCronExpr(expr: string): { frequency: FrequencyType; time: string; weekday: string } {
-  if (!expr) return { frequency: 'manual', time: '09:00', weekday: 'MON' };
-
-  const parts = expr.trim().split(/\s+/);
-  if (parts.length < 5) return { frequency: 'daily', time: '09:00', weekday: 'MON' };
-
-  const [min, hour, day, month, dow] = parts;
-
-  // Hourly: 0 * * * *
-  if (hour === '*' && min === '0' && day === '*' && month === '*' && dow === '*') {
-    return { frequency: 'hourly', time: '09:00', weekday: 'MON' };
-  }
-
-  // Weekdays: min hour * * MON-FRI
-  if (dow === 'MON-FRI' && day === '*' && month === '*') {
-    const hh = String(hour).padStart(2, '0');
-    const mm = String(min).padStart(2, '0');
-    const time = `${hh}:${mm}`;
-    return { frequency: 'weekdays', time, weekday: 'MON' };
-  }
-
-  // Weekly: min hour * * DAY
-  if (dow !== '*' && day === '*' && month === '*') {
-    const dayUpper = dow.toUpperCase();
-    const matched = WEEKDAYS.find((d) => d.value === dayUpper);
-    if (matched) {
-      const hh = String(hour).padStart(2, '0');
-      const mm = String(min).padStart(2, '0');
-      const time = `${hh}:${mm}`;
-      return { frequency: 'weekly', time, weekday: dayUpper };
-    }
-    return { frequency: 'daily', time: '09:00', weekday: 'MON' };
-  }
-
-  // Daily: min hour * * * - only if all parts match the expected pattern
-  if (day === '*' && month === '*' && dow === '*') {
-    // Check if hour and minute are simple numbers (not expressions like */4)
-    const hourNum = Number(hour);
-    const minNum = Number(min);
-    if (!isNaN(hourNum) && !isNaN(minNum) && hourNum >= 0 && hourNum <= 23 && minNum >= 0 && minNum <= 59) {
-      const hh = String(hourNum).padStart(2, '0');
-      const mm = String(minNum).padStart(2, '0');
-      const time = `${hh}:${mm}`;
-      return { frequency: 'daily', time, weekday: 'MON' };
-    }
-  }
-
-  // Custom: any expression that doesn't match our presets
-  return { frequency: 'custom', time: '09:00', weekday: 'MON' };
-}
-
-/**
- * Infer the assistant selection key from an ICronJob's agent_config.
- *
- * New jobs persist `assistant_id`; legacy rows fall back to their derived runtime type.
- */
-function getAssistantSelectionFromJob(job: ICronJob): string | undefined {
-  const config = job.metadata.agent_config;
-  if (config) {
-    if (config.assistant_id) return config.assistant_id;
-  }
-  return undefined;
-}
-
-function resolveTeamIdFromExtra(extra: TChatConversation['extra'] | undefined): string | undefined {
-  const maybeExtra = extra as { team_id?: unknown; teamId?: unknown } | undefined;
-  const snakeCase = maybeExtra?.team_id;
-  if (typeof snakeCase === 'string' && snakeCase.trim()) return snakeCase;
-  const camelCase = maybeExtra?.teamId;
-  if (typeof camelCase === 'string' && camelCase.trim()) return camelCase;
-  return undefined;
-}
-
-const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
-  visible,
-  onClose,
-  editJob,
-  conversation_id: _conversation_id,
-  conversation_title,
-}) => {
-  const { t, i18n } = useTranslation();
+const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ visible, onClose, editSchedule, conversation_id }) => {
   const isMobile = Boolean(useLayoutContext()?.isMobile);
-  const localeKey = resolveLocaleKey(i18n?.language ?? 'en-US');
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const { presetAssistants } = useConversationAssistants();
-  const managedAgentRuntimeCatalog = useManagedAgentRuntimeCatalog();
-  const { providers, getAvailableModels } = useModelProviderList();
+  const { projects, active } = useProjects();
+  const { state: modelState } = useKelModelState();
   const [frequency, setFrequency] = useState<FrequencyType>('manual');
   const [time, setTime] = useState('09:00');
   const [weekday, setWeekday] = useState('MON');
   const [customSchedule, setCustomSchedule] = useState<CustomScheduleState>(createDefaultCustomSchedule);
-
-  const isEditMode = !!editJob;
-  const [execution_mode, setExecutionMode] = useState<ExecutionMode>('new_conversation');
-  const [queueEnabled, setQueueEnabled] = useState(false);
+  const [startMode, setStartMode] = useState<KelScheduleStartMode>('new_conversation');
+  const [skipIfRunning, setSkipIfRunning] = useState(true);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [teamOwnershipStatus, setTeamOwnershipStatus] = useState<'checking' | 'team' | 'standalone'>('standalone');
+  const [model, setModel] = useState<string>(AUTOMATIC);
+  const [projectId, setProjectId] = useState<string>(GENERAL_PROJECT_ID);
+  const [useRecipe, setUseRecipe] = useState(false);
+  const [recipeId, setRecipeId] = useState<string | undefined>(undefined);
+  const [recipeInputs, setRecipeInputs] = useState<Record<string, unknown>>({});
+  const [recipes, setRecipes] = useState<RecipeEntry[] | null>(null);
+  const [recipeFields, setRecipeFields] = useState<KelRecipeInput[]>([]);
+  const [existingConversation, setExistingConversation] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ text: string; tone: 'ok' | 'error' } | null>(null);
+  const isEditMode = Boolean(editSchedule);
+  // A new task follows this computer's zone (null); an edited one keeps the zone it has.
+  const timezone = editSchedule ? (editSchedule.timezone ?? null) : null;
 
-  // Advanced settings state
-  const [model_id, setModelId] = useState<string | undefined>(undefined);
-  const [config_options, setConfigOptions] = useState<Record<string, string> | undefined>(undefined);
-  const [workspace, setWorkspace] = useState<string | undefined>(undefined);
-  const [selectedAssistantId, setSelectedAssistantId] = useState<string | undefined>(undefined);
-
-  // Reset transient state whenever the dialog opens. Assistant resolution
-  // for edit mode runs in a separate effect — keeping it here would re-fire
-  // this reset on every assistant catalog refresh and wipe the user's input.
+  // Reset whenever the dialog opens.
   useEffect(() => {
     if (!visible) return;
-    if (editJob) {
-      const cronExpr = editJob.schedule.kind === 'cron' ? editJob.schedule.expr : '';
-      const parsed = parseCronExpr(cronExpr);
-      const agentKey = getAssistantSelectionFromJob(editJob);
-      setFrequency(parsed.frequency);
-      setTime(parsed.time);
-      setWeekday(parsed.weekday);
-      setCustomSchedule(parsed.frequency === 'custom' ? parseCustomSchedule(cronExpr) : createDefaultCustomSchedule());
-      setExecutionMode(editJob.target.execution_mode || 'existing');
-      setQueueEnabled(editJob.state.queue_enabled);
-      setSelectedAssistantId(agentKey);
-      setAdvancedOpen(
-        Boolean(
-          editJob.metadata.agent_config?.model_id ||
-          editJob.metadata.agent_config?.workspace ||
-          (editJob.metadata.agent_config?.config_options &&
-            Object.keys(editJob.metadata.agent_config.config_options).length > 0)
-        )
-      );
+    if (editSchedule) {
+      const picked = frequencyFromCadence(editSchedule.cadence);
+      setFrequency(picked.frequency);
+      setTime(picked.time);
+      setWeekday(picked.weekday);
+      setCustomSchedule(picked.custom);
+      setStartMode(editSchedule.start_mode);
+      setSkipIfRunning(editSchedule.skip_if_running);
+      setModel(modelValue(editSchedule.model));
+      setProjectId(editSchedule.project_id || GENERAL_PROJECT_ID);
+      const recipe = editSchedule.target?.kind === 'recipe' ? editSchedule.target : null;
+      setUseRecipe(Boolean(recipe));
+      setRecipeId(recipe?.recipe_id);
+      setRecipeInputs(recipe?.inputs ?? {});
+      setAdvancedOpen(Boolean(recipe) || editSchedule.project_id !== GENERAL_PROJECT_ID);
+      setExistingConversation(editSchedule.conversation_id ?? null);
       form.setFieldsValue({
-        name: editJob.name,
-        assistant: agentKey,
-        prompt: editJob.target.payload.text,
+        name: editSchedule.name,
+        prompt: editSchedule.target?.kind === 'instruction' ? editSchedule.target.text : '',
       });
-      // Populate advanced settings from editJob
-      setModelId(editJob.metadata.agent_config?.model_id ?? editJob.metadata.agent_config?.model?.model);
-      setConfigOptions(editJob.metadata.agent_config?.config_options);
-      setWorkspace(editJob.metadata.agent_config?.workspace);
     } else {
       form.resetFields();
       setFrequency('manual');
       setTime('09:00');
       setWeekday('MON');
       setCustomSchedule(createDefaultCustomSchedule());
-      setExecutionMode('new_conversation');
-      setQueueEnabled(false);
+      setStartMode('new_conversation');
+      setSkipIfRunning(true);
+      setModel(AUTOMATIC);
+      setProjectId(active && active !== ALL_PROJECTS ? active : GENERAL_PROJECT_ID);
+      setUseRecipe(false);
+      setRecipeId(undefined);
+      setRecipeInputs({});
       setAdvancedOpen(false);
-      setModelId(undefined);
-      setConfigOptions(undefined);
-      setWorkspace(undefined);
-      setSelectedAssistantId(undefined);
-      setTeamOwnershipStatus('standalone');
+      setExistingConversation(null);
     }
-  }, [visible, editJob, form]);
+    setPreview(null);
+    // `active` is read once per opening on purpose: switching projects must not reset a draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, editSchedule, form]);
+
+  // A task made from a chat may keep running in that chat's engine conversation.
+  useEffect(() => {
+    if (!visible || editSchedule || !conversation_id) return;
+    let alive = true;
+    window.kelAPI
+      ?.conversation(conversation_id)
+      .then((cid) => {
+        if (alive && typeof cid === 'string') setExistingConversation(cid);
+      })
+      .catch((): undefined => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [visible, editSchedule, conversation_id]);
+
+  // Recipes of the chosen project (only read once the person asks for one).
+  useEffect(() => {
+    if (!visible || !useRecipe) return;
+    let alive = true;
+    setRecipes(null);
+    kelRecipes({ project: projectId })
+      .then((answer) => {
+        if (!alive) return;
+        const entries = Array.isArray((answer as { entries?: unknown }).entries) ? ((answer as { entries: unknown[] }).entries) : [];
+        setRecipes(
+          entries
+            .map((entry) => entry as { recipe_id?: unknown; name?: unknown })
+            .filter((entry) => typeof entry.recipe_id === 'string')
+            .map((entry) => ({ recipe_id: entry.recipe_id as string, name: typeof entry.name === 'string' ? entry.name : (entry.recipe_id as string) }))
+        );
+      })
+      .catch(() => alive && setRecipes([]));
+    return () => {
+      alive = false;
+    };
+  }, [visible, useRecipe, projectId]);
 
   useEffect(() => {
-    if (!visible || !editJob?.metadata.conversation_id) {
-      setTeamOwnershipStatus('standalone');
+    setRecipeFields([]);
+    if (!visible || !useRecipe || !recipeId) return;
+    let alive = true;
+    kelRecipeGet(recipeId, { project: projectId })
+      .then((answer) => {
+        if (alive) setRecipeFields(Array.isArray(answer?.recipe?.inputs) ? answer.recipe.inputs : []);
+      })
+      .catch((): undefined => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [visible, useRecipe, recipeId, projectId]);
+
+  const cadence: KelScheduleCadence = useMemo(
+    () => cadenceFromFrequency(frequency, time, weekday, customSchedule),
+    [frequency, time, weekday, customSchedule]
+  );
+
+  // Live preview: the engine's own sentence and the next run, or why it would refuse the timing.
+  useEffect(() => {
+    if (!visible) return;
+    if (cadence.kind === 'manual') {
+      setPreview({ text: 'Runs only when you choose Run now.', tone: 'ok' });
       return;
     }
-
-    let cancelled = false;
-    setTeamOwnershipStatus('checking');
-    ipcBridge.conversation.get
-      .invoke({ id: editJob.metadata.conversation_id })
-      .then((conversation) => {
-        if (cancelled) return;
-        const nextIsTeamOwned = Boolean(resolveTeamIdFromExtra(conversation.extra));
-        setTeamOwnershipStatus(nextIsTeamOwned ? 'team' : 'standalone');
-        if (nextIsTeamOwned) {
-          setExecutionMode('existing');
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTeamOwnershipStatus('standalone');
-        }
-      });
-
+    if (cadence.kind === 'cron' && !cadence.expr) {
+      setPreview(null);
+      return;
+    }
+    let alive = true;
+    const timer = setTimeout(() => {
+      kelSchedules
+        .preview(cadence, timezone)
+        .then((answer) => {
+          if (!alive) return;
+          if (answer?.valid === false) {
+            setPreview({ text: answer.message?.trim() || 'Kel cannot use this timing.', tone: 'error' });
+            return;
+          }
+          const next = Array.isArray(answer?.next) ? answer.next[0] : undefined;
+          const sentence = (answer?.description?.trim() || describeCadence(cadence)).replace(/\.$/, '');
+          setPreview({ text: next ? `${sentence}. Next: ${formatNextRun(next)}` : sentence, tone: 'ok' });
+        })
+        .catch((error: unknown) => {
+          if (alive) setPreview({ text: String((error as Error)?.message || 'Kel cannot use this timing.'), tone: 'error' });
+        });
+    }, 250);
     return () => {
-      cancelled = true;
+      alive = false;
+      clearTimeout(timer);
     };
-  }, [visible, editJob]);
+  }, [visible, cadence, timezone]);
 
-  // Edit mode needs the assistant catalog to map a stored job to its
-  // current assistant id. We isolate this in a separate effect so that
-  // catalog refreshes never reach the form-reset path above.
-  useEffect(() => {
-    if (!visible || !editJob) return;
-    const agentKey = getAssistantSelectionFromJob(editJob);
-    if (!agentKey) return;
-    setSelectedAssistantId(agentKey);
-    form.setFieldsValue({ assistant: agentKey });
-  }, [visible, editJob, presetAssistants, form]);
-
-  // Resolve backend from the selected assistant.
-  const selectedAssistant = useMemo(
-    () => (selectedAssistantId ? presetAssistants.find((item) => item.id === selectedAssistantId) : undefined),
-    [presetAssistants, selectedAssistantId]
+  const modelOptions = useMemo(
+    () =>
+      (modelState?.providers ?? []).flatMap((provider) =>
+        provider.options.map((option) => ({
+          value: `${provider.id}::${option.id}`,
+          label: option.label,
+          note: unavailableNote(option, provider),
+        }))
+      ),
+    [modelState]
   );
+  // A saved model Kel no longer offers stays visible (as unavailable) rather than vanishing.
+  const unknownSavedModel = model && !modelOptions.some((option) => option.value === model) ? model : null;
 
-  const resolvedBackend = assistantRuntimeKey(selectedAssistant);
-  const selectedAssistantModels = selectedAssistant?.models ?? [];
-  const resolveAutoApproveModeFromAgentMetadata = useCallback(
-    (assistant: (typeof presetAssistants)[number]): string => {
-      const agent = managedAgentRuntimeCatalog.find((item) => item.id === assistant.agent_id);
-      return agent?.yolo_id || 'yolo';
-    },
-    [managedAgentRuntimeCatalog]
-  );
-
-  const isGeminiMode = resolvedBackend === 'gemini' || resolvedBackend === 'aionrs';
-
-  // Providers compatible with aionrs (AionCLI does not support Google Auth).
-  // Computed independent of the current selection so assistant options backed
-  // by aionrs can be disabled when no provider is configured.
-  const aionrsProviders = useMemo(
-    () => providers.filter((p) => !p.platform?.toLowerCase().includes('gemini-with-google-auth')),
-    [providers]
-  );
-  const hasAionrsProvider = aionrsProviders.length > 0;
-
-  const filteredProviders = useMemo(
-    () => (resolvedBackend === 'aionrs' ? aionrsProviders : providers),
-    [resolvedBackend, providers, aionrsProviders]
-  );
-
-  // Build Gemini current_model from model_id for GuidModelSelector.
-  // For aionrs edit mode, prefer the exact provider_id stored in model —
-  // the same model name may exist across multiple providers, so fuzzy match
-  // would pick the wrong provider.
-  const geminiCurrentModel = useMemo<TProviderWithModel | undefined>(() => {
-    if (resolvedBackend !== 'aionrs' || !model_id) return undefined;
-
-    const editedProviderId =
-      resolvedBackend === 'aionrs' ? editJob?.metadata.agent_config?.model?.provider_id : undefined;
-    if (editedProviderId) {
-      const byId = filteredProviders.find((p) => p.id === editedProviderId);
-      if (byId && getAvailableModels(byId).includes(model_id)) {
-        return { ...byId, use_model: model_id } as TProviderWithModel;
-      }
-    }
-
-    for (const p of filteredProviders) {
-      if (getAvailableModels(p).includes(model_id)) {
-        return { ...p, use_model: model_id } as TProviderWithModel;
-      }
-    }
-    return undefined;
-  }, [resolvedBackend, model_id, filteredProviders, getAvailableModels, editJob]);
-
-  const handleGeminiModelSelect = useCallback(async (model: TProviderWithModel) => {
-    setModelId(model.use_model);
-  }, []);
-
-  const handleAcpModelSelect: React.Dispatch<React.SetStateAction<string | null>> = useCallback(
-    (action: React.SetStateAction<string | null>) => {
-      setModelId((prev) => {
-        const next = typeof action === 'function' ? action(prev ?? null) : action;
-        return next ?? undefined;
-      });
-    },
-    []
-  );
-
-  const acpCachedModelInfo = useMemo<AcpModelInfo | null>(() => {
-    if (!resolvedBackend || resolvedBackend === 'gemini' || resolvedBackend === 'aionrs') return null;
-    return buildAssistantModelInfo(selectedAssistantModels);
-  }, [resolvedBackend, selectedAssistantModels]);
-
-  // Auto-pick the first available model from /api/providers when aionrs is
-  // selected but none is set yet. Source of truth is the backend provider
-  // list — do NOT read from any frontend-cached default.
-  useEffect(() => {
-    if (resolvedBackend !== 'aionrs' || model_id) return;
-    for (const provider of aionrsProviders) {
-      const models = getAvailableModels(provider);
-      if (models.length > 0) {
-        setModelId(models[0]);
-        return;
-      }
-    }
-  }, [resolvedBackend, model_id, aionrsProviders, getAvailableModels]);
-
-  const showTimePicker = frequency === 'daily' || frequency === 'weekdays' || frequency === 'weekly';
-  const showWeekdayPicker = frequency === 'weekly';
-
-  // Build cron expression and description from frequency settings
-  const scheduleInfo = useMemo(() => {
-    const [hour, minute] = time.split(':').map(Number);
-    switch (frequency) {
-      case 'manual':
-        return { expr: '', description: t('cron.page.scheduleDesc.manual') };
-      case 'hourly':
-        return { expr: '0 * * * *', description: t('cron.page.scheduleDesc.hourly') };
-      case 'daily':
-        return { expr: `${minute} ${hour} * * *`, description: t('cron.page.scheduleDesc.dailyAt', { time }) };
-      case 'weekdays':
-        return { expr: `${minute} ${hour} * * MON-FRI`, description: t('cron.page.scheduleDesc.weekdaysAt', { time }) };
-      case 'weekly': {
-        const dayLabel = WEEKDAYS.find((d) => d.value === weekday)?.label ?? weekday;
-        return {
-          expr: `${minute} ${hour} * * ${weekday}`,
-          description: t('cron.page.scheduleDesc.weeklyAt', { day: t(`cron.page.weekday.${dayLabel}`), time }),
-        };
-      }
-      case 'custom': {
-        const expr = buildCustomCronExpression(customSchedule);
-        return { expr, description: expr };
-      }
-      default:
-        return { expr: '', description: '' };
-    }
-  }, [frequency, time, weekday, t, customSchedule]);
-
-  const executionModeOptions = useMemo(
-    () => [
-      {
-        value: 'new_conversation' as const,
-        label: t('cron.page.form.newConversation'),
-        description: t('cron.detail.executionModeDescriptionNew'),
-      },
-      {
-        value: 'existing' as const,
-        label: t('cron.page.form.existingConversation'),
-        description: t('cron.detail.executionModeDescriptionExisting'),
-      },
-    ],
-    [t]
-  );
-
-  const selectedExecutionModeOption =
-    executionModeOptions.find((option) => option.value === execution_mode) ?? executionModeOptions[0];
-  const showModelSelector = Boolean(resolvedBackend && (isGeminiMode || acpCachedModelInfo));
-  const advancedFieldCount = Number(showModelSelector && isMobile) + 1;
-  const isOriginalExistingConversationTask = isEditMode && editJob?.target.execution_mode === 'existing';
-  const isCheckingTeamOwnership = teamOwnershipStatus === 'checking';
-  const isTeamOwnedTask = teamOwnershipStatus === 'team';
-  const isExecutionModeLocked = isCheckingTeamOwnership || isTeamOwnedTask;
-  const hasExistingConversation = Boolean(_conversation_id || editJob?.metadata.conversation_id);
-  const canEditAgentConfig =
-    !isExecutionModeLocked && !isOriginalExistingConversationTask && (!isEditMode || execution_mode !== 'existing');
-  const modelSelector = (
-    <GuidModelSelector
-      fieldVariant={!isMobile}
-      isGeminiMode={isGeminiMode}
-      modelList={filteredProviders}
-      current_model={geminiCurrentModel}
-      setCurrentModel={handleGeminiModelSelect}
-      currentAcpCachedModelInfo={acpCachedModelInfo}
-      selectedAcpModel={model_id ?? null}
-      setSelectedAcpModel={handleAcpModelSelect}
-    />
-  );
+  const projectOptions = useMemo(() => {
+    const live = liveProjects(projects);
+    return live.some((project) => project.id === projectId) || !projectId
+      ? live
+      : [...live, { id: projectId, name: editSchedule?.project_name || 'Project unavailable' }];
+  }, [projects, projectId, editSchedule?.project_name]);
 
   const handleFrequencyChange = (value: FrequencyType) => {
     setFrequency(value);
-    if (value !== 'custom') {
-      setCustomSchedule(createDefaultCustomSchedule());
-    }
+    if (value !== 'custom') setCustomSchedule(createDefaultCustomSchedule());
   };
 
-  const handleAssistantChange = useCallback(
-    (value: string) => {
-      setSelectedAssistantId(value);
-      form.setFieldsValue({ assistant: value });
-      // Reset model and config_options when agent changes
-      setModelId(undefined);
-      setConfigOptions(undefined);
-      // Workspace remains unchanged (agent-agnostic)
-    },
-    [form]
-  );
-
-  // WK-18: Kel is the only assistant, so a new task starts with it chosen instead of asking.
-  useEffect(() => {
-    if (!visible || editJob || selectedAssistantId || presetAssistants.length === 0) return;
-    const only =
-      presetAssistants.find((assistant) => assistant.id === 'kel') ??
-      (presetAssistants.length === 1 ? presetAssistants[0] : undefined);
-    if (only) handleAssistantChange(only.id);
-  }, [visible, editJob, selectedAssistantId, presetAssistants, handleAssistantChange]);
-
-  const handleWorkspaceClear = useCallback(() => {
-    setWorkspace(undefined);
-  }, []);
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     try {
       const values = await form.validate();
+      if (useRecipe && !recipeId) {
+        Message.error('Choose a recipe to run, or switch back to instructions.');
+        return;
+      }
+      if (startMode === 'existing' && !existingConversation) {
+        Message.error('There is no conversation to keep adding to. Choose “New conversation”.');
+        return;
+      }
       setSubmitting(true);
-
-      const scheduleExpr = scheduleInfo.expr;
-      const scheduleDesc = scheduleInfo.description;
-      const schedule = createCronSchedule(scheduleExpr, scheduleDesc);
-      const assistantValue = typeof values.assistant === 'string' ? values.assistant : selectedAssistantId;
-      const resolvedExecutionMode: ExecutionMode = isTeamOwnedTask ? 'existing' : execution_mode;
-
-      let agent_config: ICreateCronJobParams['agent_config'] | ICronJobUpdateParams['metadata']['agent_config'];
-      if (canEditAgentConfig) {
-        if (!assistantValue) {
-          throw new Error(t('cron.page.form.assistantRequired'));
-        }
-        agent_config = resolveCronAgentConfig({
-          agentValue: assistantValue,
-          presetAssistants,
-          selectedAionrsProvider: geminiCurrentModel
-            ? {
-                id: geminiCurrentModel.id as string | undefined,
-                name: geminiCurrentModel.name,
-              }
-            : undefined,
-          model_id,
-          config_options,
-          workspace,
-          localeKey,
-          getMode: resolveAutoApproveModeFromAgentMetadata,
-          aionrsModelRequiredMessage: t('cron.page.form.aionrsModelRequired'),
-        }).agent_config;
-      }
-
-      if (isEditMode) {
-        const metadata: ICronJobUpdateParams['metadata'] = {
-          conversation_title: editJob!.metadata.conversation_title,
-        };
-        if (canEditAgentConfig) {
-          metadata.agent_config = agent_config;
-        }
-
-        // Edit mode: update existing job
-        const updates: ICronJobUpdateParams = {
-          name: values.name,
-          schedule,
-          target: {
-            payload: { kind: 'message', text: values.prompt },
-            execution_mode: resolvedExecutionMode,
-          },
-          metadata,
-          state: {
-            max_retries: editJob!.state.max_retries,
-            queue_enabled: queueEnabled,
-          },
-        };
-
-        await ipcBridge.cron.updateJob.invoke({
-          job_id: editJob!.id,
-          updates,
-        });
-        Message.success(t('cron.page.updateSuccess'));
+      const draft: KelScheduleDraft = {
+        name: String(values.name ?? '').trim(),
+        project_id: projectId,
+        target: useRecipe
+          ? { kind: 'recipe', recipe_id: recipeId!, inputs: recipeInputs }
+          : { kind: 'instruction', text: String(values.prompt ?? '').trim() },
+        cadence,
+        timezone,
+        start_mode: startMode,
+        conversation_id: startMode === 'existing' ? existingConversation : null,
+        model: modelChoice(model),
+        skip_if_running: skipIfRunning,
+      };
+      if (editSchedule) {
+        await scheduleActions.update(editSchedule.id, draft);
+        Message.success('Saved.');
       } else {
-        // Create mode
-        const params: ICreateCronJobParams = {
-          name: values.name,
-          schedule,
-          prompt: values.prompt,
-          conversation_id: _conversation_id ?? '',
-          conversation_title,
-          created_by: 'user',
-          execution_mode: resolvedExecutionMode,
-          queue_enabled: queueEnabled,
-          agent_config,
-        };
-        await ipcBridge.cron.addJob.invoke(params);
-        Message.success(t('cron.page.createSuccess'));
+        await scheduleActions.create(draft);
+        Message.success('Scheduled task created.');
       }
-
       onClose();
-    } catch (err) {
-      Message.error(getConversationCreateErrorMessage(err, t));
+    } catch (error) {
+      // Form validation errors are shown on the fields; an engine refusal is shown as it said it.
+      const text = String((error as Error)?.message || '').trim();
+      if (text && !(error && typeof error === 'object' && 'errors' in (error as object))) Message.error(text);
     } finally {
       setSubmitting(false);
     }
+  }, [form, useRecipe, recipeId, recipeInputs, startMode, existingConversation, projectId, cadence, timezone, model, skipIfRunning, editSchedule, onClose]);
+
+  const showTimePicker = frequency === 'daily' || frequency === 'weekdays' || frequency === 'weekly';
+  const hasExistingConversation = Boolean(existingConversation);
+  const setCustomTime = (_value: string, picked?: dayjs.Dayjs) => {
+    if (picked) setCustomSchedule((current) => ({ ...current, time: picked.format('HH:mm') }));
   };
+
+  const modelSelect = (
+    <Select
+      data-testid='scheduled-task-model-select'
+      value={model}
+      onChange={(value: string) => setModel(value)}
+      arrowIcon={!isMobile ? <img src={taskChevron} alt='' /> : undefined}
+      aria-label='Model'
+    >
+      <Option value={AUTOMATIC}>Automatic</Option>
+      {modelOptions.map((option) => (
+        <Option key={option.value} value={option.value} disabled={Boolean(option.note)}>
+          <span title={option.note ?? undefined}>{option.label}{option.note ? ` — ${option.note}` : ''}</span>
+        </Option>
+      ))}
+      {unknownSavedModel && <Option value={unknownSavedModel} disabled>{`${unknownSavedModel.split('::')[1] || unknownSavedModel} — not available`}</Option>}
+    </Select>
+  );
 
   return (
     <AionModal
       variant='standard'
-      header={{ title: isEditMode ? t('cron.page.editTask') : <><span className='kel-desktop-only'>New scheduled task</span><span className='kel-phone-only'>{t('cron.page.createTask')}</span></>, showClose: true }}
+      header={{ title: isEditMode ? 'Edit scheduled task' : 'New scheduled task', showClose: true }}
       visible={visible}
       onCancel={onClose}
-      onOk={handleSubmit}
+      onOk={() => void handleSubmit()}
       confirmLoading={submitting}
-      okText={isEditMode ? t('cron.page.save') : <><span className='kel-desktop-only'>Create task</span><span className='kel-phone-only'>{t('cron.page.save')}</span></>}
-      cancelText={t('cron.page.cancel')}
+      okText={isEditMode ? 'Save' : 'Create task'}
+      cancelText='Cancel'
       className='kel-shell-task-modal w-[min(600px,calc(100vw-32px))] max-w-600px'
       unmountOnExit
     >
       <div>
         <Form form={form} layout='vertical' className='kel-shell-task-form'>
-          <FormItem
-            className='kel-shell-task-name'
-            label={t('cron.page.form.name')}
-            field='name'
-            rules={[{ required: true, message: t('cron.page.form.nameRequired') }]}
-          >
-            <Input placeholder={t('cron.page.form.namePlaceholder')} />
+          <FormItem className='kel-shell-task-name' label='Name' field='name' rules={[{ required: true, message: 'Give the task a name' }]}>
+            <Input placeholder='Morning brief' />
           </FormItem>
 
-          <FormItem
-            className='kel-shell-task-assistant'
-            label={t('cron.page.form.assistant')}
-            field='assistant'
-            rules={canEditAgentConfig ? [{ required: true, message: t('cron.page.form.assistantRequired') }] : []}
-          >
-            <Select
-              data-testid='cron-assistant-select'
-              arrowIcon={!isMobile ? <img src={taskChevron} alt='' /> : undefined}
-              value={selectedAssistantId}
-              placeholder={t('cron.page.form.assistantPlaceholder')}
-              disabled={!canEditAgentConfig}
-              onChange={handleAssistantChange}
-              renderFormat={(_option, value) => {
-                const assistantId = value as unknown as string;
-                if (!assistantId) return '';
-
-                const assistant = presetAssistants.find((item) => item.id === assistantId);
-                const name = resolveAssistantName(assistant, localeKey, assistantId);
-                if (!isMobile) return name;
-                const avatar = resolveAssistantAvatar(assistant?.avatar);
-
-                return (
-                  <div className='flex items-center gap-8px'>
-                    {avatar.kind === 'image' ? (
-                      <ThemedLogo src={avatar.value} alt={name} className='w-16px h-16px object-contain' />
-                    ) : avatar.kind === 'emoji' ? (
-                      <span className='text-14px leading-16px'>{avatar.value}</span>
-                    ) : (
-                      <Robot size='16' />
-                    )}
-                    <span>{name}</span>
-                  </div>
-                );
-              }}
-            >
-              {presetAssistants.map((assistant) => {
-                const name = resolveAssistantName(assistant, localeKey, assistant.name);
-                const avatar = resolveAssistantAvatar(assistant.avatar);
-                const disabled = isAionrsAssistant(assistant) && !hasAionrsProvider;
-                return (
-                  <Option key={assistant.id} value={assistant.id} disabled={disabled}>
-                    <div
-                      className='flex items-center gap-8px'
-                      title={disabled ? t('cron.page.form.aionrsNoProvider') : undefined}
-                    >
-                      {avatar.kind === 'image' ? (
-                        <ThemedLogo src={avatar.value} alt={name} className='w-16px h-16px object-contain' />
-                      ) : avatar.kind === 'emoji' ? (
-                        <span className='text-14px leading-16px'>{avatar.value}</span>
-                      ) : (
-                        <Robot size='16' />
-                      )}
-                      <span>{name}</span>
-                      {disabled && (
-                        <span className='text-12px text-t-tertiary'>{t('cron.page.form.aionrsNoProvider')}</span>
-                      )}
-                    </div>
-                  </Option>
-                );
-              })}
+          <FormItem className='kel-shell-task-assistant' label='Assistant'>
+            <Select data-testid='cron-assistant-select' value='kel' disabled arrowIcon={!isMobile ? <img src={taskChevron} alt='' /> : undefined}>
+              <Option value='kel'>Kel</Option>
             </Select>
-            {!canEditAgentConfig && (
-              <p className='mb-0 mt-8px text-12px leading-18px text-t-secondary'>
-                {t('cron.page.form.assistantLockedExistingConversation')}
-              </p>
-            )}
           </FormItem>
 
-          <FormItem label={<><span className='kel-desktop-only'>Each run starts</span><span className='kel-phone-only'>{t('cron.page.form.executionMode')}</span></>} className='kel-shell-task-execution'>
-            <Radio.Group
-              value={execution_mode}
-              disabled={isExecutionModeLocked}
-              onChange={(value) => setExecutionMode(value as ExecutionMode)}
-              className='flex flex-wrap items-center gap-20px'
-            >
-              {executionModeOptions.map((option) => {
-                return (
-                  <Radio
-                    key={option.value}
-                    value={option.value}
-                    disabled={option.value === 'existing' && !hasExistingConversation}
-                    className={`kel-shell-task-execution-option m-0 min-w-0 text-14px text-t-secondary ${isExecutionModeLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <span className='kel-shell-task-execution-label'>{option.label}</span>
-                    <span className='kel-shell-task-execution-description kel-phone-only'>{option.description}</span>
-                    <span className='kel-shell-task-execution-description kel-desktop-only'>{option.value === 'new_conversation' ? 'A clean chat every time' : 'Adds to the same chat'}</span>
-                  </Radio>
-                );
-              })}
+          <FormItem label='Each run starts' className='kel-shell-task-execution'>
+            <Radio.Group value={startMode} onChange={(value) => setStartMode(value as KelScheduleStartMode)} className='flex flex-wrap items-center gap-20px'>
+              <Radio value='new_conversation' className='kel-shell-task-execution-option m-0 min-w-0 text-14px text-t-secondary cursor-pointer'>
+                <span className='kel-shell-task-execution-label'>New conversation</span>
+                <span className='kel-shell-task-execution-description'>A clean chat every time</span>
+              </Radio>
+              <Radio value='existing' disabled={!hasExistingConversation} className='kel-shell-task-execution-option m-0 min-w-0 text-14px text-t-secondary cursor-pointer'>
+                <span className='kel-shell-task-execution-label'>Ongoing conversation</span>
+                <span className='kel-shell-task-execution-description'>{hasExistingConversation ? 'Adds to the same chat' : 'Start the task from a chat to use this'}</span>
+              </Radio>
             </Radio.Group>
-            <div className='kel-shell-task-execution-help mt-10px rounded-12px border border-solid border-[var(--color-border-2)] bg-fill-2 px-14px py-12px'>
-              <p className='m-0 text-12px leading-18px text-t-primary'>{selectedExecutionModeOption.description}</p>
-            </div>
-            {isTeamOwnedTask && (
-              <p className='mb-0 mt-8px text-12px leading-18px text-t-secondary'>
-                {t('cron.page.form.teamTaskExecutionModeLockedReason')}
-              </p>
-            )}
           </FormItem>
 
-          <FormItem
-            className='kel-shell-task-prompt'
-            label='Instructions'
-            field='prompt'
-            rules={[{ required: true, message: 'Instructions are required' }]}
-          >
-            <TextArea placeholder={t('cron.page.form.promptPlaceholder')} autoSize={{ minRows: 3, maxRows: 8 }} />
-          </FormItem>
-
-          <div className='kel-shell-task-queue mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
-            <div className='min-w-0'>
-              <p className='m-0 text-14px font-medium text-t-primary'><span className='kel-desktop-only'>Skip if still running</span><span className='kel-phone-only'>{t('cron.page.form.queue')}</span></p>
-              <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'><span className='kel-desktop-only'>Skip a run if the last one is still going.</span><span className='kel-phone-only'>{t('cron.page.form.queueHint')}</span></p>
+          {useRecipe ? (
+            <div className='kel-shell-task-prompt kel-shell-task-recipe-summary'>
+              <p className='kel-meta'>Each run follows the recipe chosen under Advanced settings.</p>
             </div>
-            <Switch checked={queueEnabled} onChange={setQueueEnabled} />
-          </div>
+          ) : (
+            <FormItem className='kel-shell-task-prompt' label='Instructions' field='prompt' rules={[{ required: true, message: 'Instructions are required' }]}>
+              <TextArea placeholder='Summarize yesterday’s activity and anything waiting on me.' autoSize={{ minRows: 3, maxRows: 8 }} />
+            </FormItem>
+          )}
 
-          {/* Frequency */}
-          <FormItem label={t('cron.page.form.frequency')} className='kel-shell-task-frequency'>
+          <FormItem label='Frequency' className='kel-shell-task-frequency'>
             <Select className='kel-shell-task-frequency-select' data-testid='cron-frequency-select' value={frequency} onChange={handleFrequencyChange}>
-              <Option value='manual'>{t('cron.page.freq.manual')}</Option>
-              <Option value='hourly'>{t('cron.page.freq.hourly')}</Option>
-              <Option value='daily'>{t('cron.page.freq.daily')}</Option>
-              <Option value='weekdays'>{t('cron.page.freq.weekdays')}</Option>
-              <Option value='weekly'>{t('cron.page.freq.weekly')}</Option>
-              <Option value='custom'>{t('cron.page.freq.custom')}</Option>
+              {(Object.keys(FREQUENCY_LABELS) as FrequencyType[]).map((value) => <Option key={value} value={value}>{FREQUENCY_LABELS[value]}</Option>)}
             </Select>
             <Radio.Group className='kel-shell-task-frequency-options kel-desktop-only' value={frequency} onChange={(value) => handleFrequencyChange(value as FrequencyType)}>
-              {(['manual', 'hourly', 'daily', 'weekdays', 'weekly', 'custom'] as FrequencyType[]).map((value) => (
-                <Radio key={value} value={value}>{t(`cron.page.freq.${value}`)}</Radio>
-              ))}
+              {(Object.keys(FREQUENCY_LABELS) as FrequencyType[]).map((value) => <Radio key={value} value={value}>{FREQUENCY_LABELS[value]}</Radio>)}
             </Radio.Group>
           </FormItem>
 
           {frequency === 'custom' && (
             <div className='kel-shell-task-custom mb-16px rounded-12px border border-solid border-[var(--color-border-2)] p-14px'>
-              <FormItem label={t('cron.page.custom.modeLabel')}>
-                <Select
-                  data-testid='custom-frequency-mode'
-                  value={customSchedule.mode}
-                  onChange={(mode: CustomFrequencyMode) => setCustomSchedule((current) => ({ ...current, mode }))}
-                >
-                  <Option value='interval'>{t('cron.page.custom.interval')}</Option>
-                  <Option value='daily'>{t('cron.page.freq.daily')}</Option>
-                  <Option value='weekly'>{t('cron.page.freq.weekly')}</Option>
-                  <Option value='monthly'>{t('cron.page.custom.monthly')}</Option>
-                  <Option value='advanced'>{t('cron.page.custom.advanced')}</Option>
+              <FormItem label='Repeat'>
+                <Select data-testid='custom-frequency-mode' value={customSchedule.mode}
+                  onChange={(mode: CustomFrequencyMode) => setCustomSchedule((current) => ({ ...current, mode }))}>
+                  <Option value='interval'>Every few minutes or hours</Option>
+                  <Option value='daily'>Daily</Option>
+                  <Option value='weekly'>On chosen days</Option>
+                  <Option value='monthly'>Monthly</Option>
+                  <Option value='advanced'>Advanced (cron)</Option>
                 </Select>
               </FormItem>
-
               {customSchedule.mode === 'interval' && (
                 <div className='flex items-end gap-12px'>
-                  <FormItem label={t('cron.page.custom.every')} className='mb-0 flex-1'>
-                    <Select
-                      data-testid='custom-interval-value'
-                      value={customSchedule.interval}
-                      onChange={(interval: number) => setCustomSchedule((current) => ({ ...current, interval }))}
-                    >
-                      {(customSchedule.intervalUnit === 'minutes' ? MINUTE_INTERVALS : HOUR_INTERVALS).map((value) => (
-                        <Option key={value} value={value}>
-                          {value}
-                        </Option>
-                      ))}
+                  <FormItem label='Every' className='mb-0 flex-1'>
+                    <Select data-testid='custom-interval-value' value={customSchedule.interval}
+                      onChange={(interval: number) => setCustomSchedule((current) => ({ ...current, interval }))}>
+                      {(customSchedule.intervalUnit === 'minutes' ? MINUTE_INTERVALS : HOUR_INTERVALS).map((value) => <Option key={value} value={value}>{value}</Option>)}
                     </Select>
                   </FormItem>
-                  <FormItem label={t('cron.page.custom.unit')} className='mb-0 flex-1'>
-                    <Select
-                      data-testid='custom-interval-unit'
-                      value={customSchedule.intervalUnit}
-                      onChange={(intervalUnit: CustomIntervalUnit) =>
-                        setCustomSchedule((current) => ({
-                          ...current,
-                          intervalUnit,
-                          interval: intervalUnit === 'minutes' ? 5 : 1,
-                        }))
-                      }
-                    >
-                      <Option value='minutes'>{t('cron.page.custom.minutes')}</Option>
-                      <Option value='hours'>{t('cron.page.custom.hours')}</Option>
+                  <FormItem label='Unit' className='mb-0 flex-1'>
+                    <Select data-testid='custom-interval-unit' value={customSchedule.intervalUnit}
+                      onChange={(intervalUnit: CustomIntervalUnit) => setCustomSchedule((current) => ({ ...current, intervalUnit, interval: intervalUnit === 'minutes' ? 30 : 1 }))}>
+                      <Option value='minutes'>Minutes</Option>
+                      <Option value='hours'>Hours</Option>
                     </Select>
                   </FormItem>
                 </div>
               )}
-
-              {customSchedule.mode === 'daily' && (
-                <FormItem label={t('cron.page.custom.time')} className='mb-0'>
-                  <TimePicker
-                    format='HH:mm'
-                    value={dayjs(`2000-01-01 ${customSchedule.time}`)}
-                    onChange={(_timeString, pickedTime) => {
-                      if (pickedTime) {
-                        setCustomSchedule((current) => ({ ...current, time: pickedTime.format('HH:mm') }));
-                      }
-                    }}
-                    allowClear={false}
-                    className='w-full'
-                  />
-                </FormItem>
-              )}
-
               {customSchedule.mode === 'weekly' && (
-                <>
-                  <FormItem label={t('cron.page.custom.weekdays')}>
-                    <Select
-                      mode='multiple'
-                      value={customSchedule.weekdays}
-                      onChange={(weekdays: string[]) => {
-                        if (weekdays.length > 0) {
-                          setCustomSchedule((current) => ({ ...current, weekdays }));
-                        }
-                      }}
-                    >
-                      {WEEKDAYS.map((day) => (
-                        <Option key={day.value} value={day.value}>
-                          {t(`cron.page.weekday.${day.label}`)}
-                        </Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                  <FormItem label={t('cron.page.custom.time')} className='mb-0'>
-                    <TimePicker
-                      format='HH:mm'
-                      value={dayjs(`2000-01-01 ${customSchedule.time}`)}
-                      onChange={(_timeString, pickedTime) => {
-                        if (pickedTime) {
-                          setCustomSchedule((current) => ({ ...current, time: pickedTime.format('HH:mm') }));
-                        }
-                      }}
-                      allowClear={false}
-                      className='w-full'
-                    />
-                  </FormItem>
-                </>
-              )}
-
-              {customSchedule.mode === 'monthly' && (
-                <div className='flex items-end gap-12px'>
-                  <FormItem label={t('cron.page.custom.monthDay')} className='mb-0 flex-1'>
-                    <Select
-                      value={customSchedule.monthDay}
-                      onChange={(monthDay: number) => setCustomSchedule((current) => ({ ...current, monthDay }))}
-                    >
-                      {MONTH_DAYS.map((value) => (
-                        <Option key={value} value={value}>
-                          {value}
-                        </Option>
-                      ))}
-                    </Select>
-                  </FormItem>
-                  <FormItem label={t('cron.page.custom.time')} className='mb-0 flex-1'>
-                    <TimePicker
-                      format='HH:mm'
-                      value={dayjs(`2000-01-01 ${customSchedule.time}`)}
-                      onChange={(_timeString, pickedTime) => {
-                        if (pickedTime) {
-                          setCustomSchedule((current) => ({ ...current, time: pickedTime.format('HH:mm') }));
-                        }
-                      }}
-                      allowClear={false}
-                      className='w-full'
-                    />
-                  </FormItem>
-                </div>
-              )}
-
-              {customSchedule.mode === 'advanced' && (
-                <FormItem
-                  label={t('cron.page.form.cronExpr')}
-                  field='customCronExpr'
-                  rules={[{ required: true, message: t('cron.page.form.cronExprRequired') }]}
-                  className='mb-0'
-                >
-                  <Input
-                    data-testid='custom-cron-expression'
-                    value={customSchedule.advancedExpression}
-                    onChange={(advancedExpression) =>
-                      setCustomSchedule((current) => ({ ...current, advancedExpression }))
-                    }
-                  />
+                <FormItem label='Days'>
+                  <Select mode='multiple' value={customSchedule.weekdays}
+                    onChange={(weekdays: string[]) => weekdays.length > 0 && setCustomSchedule((current) => ({ ...current, weekdays }))}>
+                    {WEEKDAYS.map((day) => <Option key={day.value} value={day.value}>{day.label}</Option>)}
+                  </Select>
                 </FormItem>
               )}
-
-              {customSchedule.mode !== 'advanced' && (
-                <div className='mt-12px rounded-8px bg-[var(--color-fill-1)] px-12px py-10px text-12px text-t-secondary'>
-                  {t('cron.page.custom.preview')}: <span className='font-mono text-t-primary'>{scheduleInfo.expr}</span>
-                </div>
+              {customSchedule.mode === 'monthly' && (
+                <FormItem label='Day of the month'>
+                  <Select value={customSchedule.monthDay} onChange={(monthDay: number) => setCustomSchedule((current) => ({ ...current, monthDay }))}>
+                    {MONTH_DAYS.map((value) => <Option key={value} value={value}>{value}</Option>)}
+                  </Select>
+                </FormItem>
+              )}
+              {(customSchedule.mode === 'daily' || customSchedule.mode === 'weekly' || customSchedule.mode === 'monthly') && (
+                <FormItem label='Time' className='mb-0'>
+                  <TimePicker format='HH:mm' value={dayjs(`2000-01-01 ${customSchedule.time}`)} onChange={setCustomTime} allowClear={false} className='w-full' />
+                </FormItem>
+              )}
+              {customSchedule.mode === 'advanced' && (
+                <FormItem label='Cron expression' className='mb-0'>
+                  <Input data-testid='custom-cron-expression' placeholder='0 9 * * MON-FRI' value={customSchedule.advancedExpression}
+                    onChange={(advancedExpression) => setCustomSchedule((current) => ({ ...current, advancedExpression }))} />
+                </FormItem>
               )}
             </div>
           )}
 
-          {/* Time picker - shown for daily/weekdays/weekly */}
           {showTimePicker && (
             <div className='kel-shell-task-time flex items-center gap-12px mb-16px'>
-              <TimePicker
-                value={dayjs(`2000-01-01 ${time}`)}
-                onChange={(_timeStr, pickedTime) => {
-                  if (pickedTime) {
-                    setTime(pickedTime.format('HH:mm'));
-                  }
-                }}
-                allowClear={false}
-                className='w-120px'
-                format={!isMobile ? 'h:mm A' : 'HH:mm'}
-                icons={!isMobile ? { inputSuffix: <img src={taskChevron} alt='' /> } : undefined}
-              />
+              <TimePicker value={dayjs(`2000-01-01 ${time}`)} onChange={(_value, picked) => picked && setTime(picked.format('HH:mm'))}
+                allowClear={false} className='w-120px' format={!isMobile ? 'h:mm A' : 'HH:mm'}
+                icons={!isMobile ? { inputSuffix: <img src={taskChevron} alt='' /> } : undefined} />
             </div>
           )}
 
-          {!isMobile && canEditAgentConfig && (
-            <div className='kel-shell-task-model' data-testid='scheduled-task-model-field'>
-              <label className='block'>{t('cron.page.form.model')}</label>
-              {modelSelector}
-            </div>
-          )}
+          <div className='kel-shell-task-model' data-testid='scheduled-task-model-field'>
+            <label className='block'>Model</label>
+            {modelSelect}
+          </div>
 
-          {/* Weekday picker - shown for weekly */}
-          {showWeekdayPicker && (
+          {frequency === 'weekly' && (
             <div className='kel-shell-task-weekday mb-16px'>
-              <Select value={weekday} onChange={setWeekday}>
-                {WEEKDAYS.map((d) => (
-                  <Option key={d.value} value={d.value}>
-                    {t(`cron.page.weekday.${d.label}`)}
-                  </Option>
-                ))}
+              <Select value={weekday} onChange={setWeekday} aria-label='Day'>
+                {WEEKDAYS.map((d) => <Option key={d.value} value={d.value}>{d.label}</Option>)}
               </Select>
             </div>
           )}
 
-          {canEditAgentConfig && (
-            <div className='kel-shell-task-advanced mt-16px'>
-              <Button
-                type='text'
-                onClick={() => setAdvancedOpen((open) => !open)}
-                className='!h-auto !p-0 hover:!bg-transparent'
-              >
-                <span className='flex items-center gap-6px text-14px font-medium text-t-primary'>
-                  <Down
-                    size='14'
-                    fill='currentColor'
-                    className={`shrink-0 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
-                  />
-                  <span>{isMobile ? t('cron.page.form.advancedSettings') : 'Advanced settings'}</span>
-                </span>
-              </Button>
-
-              {advancedOpen && (
-                <div className='mt-12px grid gap-x-16px gap-y-16px md:grid-cols-2'>
-                  {showModelSelector && isMobile && (
-                    <div className='min-w-0'>
-                      <label className='mb-8px block text-14px font-medium text-t-primary'>
-                        {t('cron.page.form.model')}
-                      </label>
-                      {modelSelector}
-                    </div>
-                  )}
-
-                  <div className={advancedFieldCount === 1 ? 'md:col-span-2' : ''}>
-                    <label className='mb-8px block text-14px font-medium text-t-primary'>
-                      {t('cron.page.form.workspace')}
-                    </label>
-                    <WorkspaceFolderSelect
-                      value={workspace}
-                      onChange={(next) => setWorkspace(next || undefined)}
-                      onClear={handleWorkspaceClear}
-                      placeholder={t('cron.page.form.selectFolder')}
-                      recentLabel={t('team.create.recentLabel', { defaultValue: 'Recent' })}
-                      chooseDifferentLabel={t('team.create.chooseDifferentFolder', {
-                        defaultValue: 'Choose a different folder',
-                      })}
-                      triggerTestId='cron-workspace-trigger'
-                      menuTestId='cron-workspace-menu'
-                      menuZIndex={10020}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+          {preview && (
+            <p className='kel-shell-task-preview' data-testid='scheduled-task-preview' data-tone={preview.tone} role='status'>{preview.text}</p>
           )}
+
+          <div className='kel-shell-task-queue mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
+            <div className='min-w-0'>
+              <p className='m-0 text-14px font-medium text-t-primary'>Skip if still running</p>
+              <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>Skip a run if the last one is still going.</p>
+            </div>
+            <Switch checked={skipIfRunning} onChange={setSkipIfRunning} aria-label='Skip if still running' />
+          </div>
+
+          <div className='kel-shell-task-advanced mt-16px'>
+            <Button type='text' onClick={() => setAdvancedOpen((open) => !open)} className='!h-auto !p-0 hover:!bg-transparent' aria-expanded={advancedOpen}>
+              <span className='flex items-center gap-6px text-14px font-medium text-t-primary'>
+                <Down size='14' fill='currentColor' className={`shrink-0 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+                <span>Advanced settings</span>
+              </span>
+            </Button>
+            {advancedOpen && (
+              <div className='mt-12px grid gap-x-16px gap-y-16px md:grid-cols-2' data-testid='scheduled-task-advanced'>
+                <div className='min-w-0'>
+                  <label className='mb-8px block text-14px font-medium text-t-primary'>Project</label>
+                  <Select value={projectId} aria-label='Project' onChange={(value: string) => { setProjectId(value); setRecipeId(undefined); setRecipeInputs({}); }}>
+                    {projectOptions.map((project) => (
+                      <Option key={project.id} value={project.id}>{'archived' in project ? projectLabel(project) : project.name}</Option>
+                    ))}
+                  </Select>
+                </div>
+                <div className='min-w-0 flex items-center justify-between gap-12px'>
+                  <span className='text-14px font-medium text-t-primary'>Run a recipe instead</span>
+                  <Switch checked={useRecipe} onChange={setUseRecipe} aria-label='Run a recipe instead' />
+                </div>
+                {useRecipe && (
+                  <div className='min-w-0 md:col-span-2'>
+                    <label className='mb-8px block text-14px font-medium text-t-primary'>Recipe</label>
+                    <Select value={recipeId} placeholder={recipes === null ? 'Loading recipes…' : recipes.length === 0 ? 'This project has no recipes yet' : 'Choose a recipe'}
+                      disabled={!recipes || recipes.length === 0} aria-label='Recipe'
+                      onChange={(value: string) => { setRecipeId(value); setRecipeInputs({}); }}>
+                      {(recipes ?? []).map((recipe) => <Option key={recipe.recipe_id} value={recipe.recipe_id}>{recipe.name}</Option>)}
+                    </Select>
+                  </div>
+                )}
+                {useRecipe && recipeFields.map((field) => (
+                  <div className='min-w-0' key={field.name}>
+                    <label className='mb-8px block text-14px font-medium text-t-primary'>{field.description || field.name}{field.required ? '' : ' (optional)'}</label>
+                    {field.type === 'bool' ? (
+                      <Switch checked={Boolean(recipeInputs[field.name] ?? field.default)} aria-label={field.name}
+                        onChange={(checked) => setRecipeInputs((current) => ({ ...current, [field.name]: checked }))} />
+                    ) : field.type === 'choice' ? (
+                      <Select value={(recipeInputs[field.name] as string | undefined) ?? (field.default as string | undefined)} aria-label={field.name}
+                        onChange={(value: string) => setRecipeInputs((current) => ({ ...current, [field.name]: value }))}>
+                        {(field.choices ?? []).map((choice) => <Option key={choice} value={choice}>{choice}</Option>)}
+                      </Select>
+                    ) : (
+                      <Input value={String(recipeInputs[field.name] ?? field.default ?? '')} aria-label={field.name} maxLength={field.max_chars}
+                        onChange={(value) => setRecipeInputs((current) => ({ ...current, [field.name]: value }))} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Form>
       </div>
     </AionModal>

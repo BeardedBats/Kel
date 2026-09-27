@@ -9,7 +9,7 @@ import type { IConversationMcpStatus, IProvider, TChatConversation, TProviderWit
 import { uuid } from '@/common/utils';
 import { bindToSourceProject } from '@renderer/components/kel/activeProject';
 import addChatIcon from '@/renderer/assets/icons/add-chat.svg';
-import { CronJobManager } from '@/renderer/pages/cron';
+import { ScheduleIndicator } from '@/renderer/pages/cron';
 import { resolveCronJobId } from '@/renderer/pages/cron/cronUtils';
 import { classifyConfigSetError, useAcpConfigOptions } from '@/renderer/hooks/agent/useAcpConfigOptions';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -190,7 +190,7 @@ const AionrsConversationPanel: React.FC<{ conversation: AionrsConversation; slid
     sider: <ChatSlider conversation={conversation} />,
     headerExtra: (
       <div className='flex items-center gap-8px'>
-        <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />
+        <ScheduleIndicator conversation_id={conversation.id} cron_job_id={cronJobId} />
       </div>
     ),
     workspaceEnabled,
@@ -425,7 +425,7 @@ const ChatConversation: React.FC<{
       {conversation && !isMobile && !isLegacyReadOnlyConversation && (acpAssistantId === 'kel' || !acpAssistantId) && <KelMemoryProposalControl conversationId={conversation.id} />}
       {conversation && acpAssistantId !== 'kel' && (
         <div className='shrink-0'>
-          <CronJobManager conversation_id={conversation.id} cron_job_id={cronJobId} />
+          <ScheduleIndicator conversation_id={conversation.id} cron_job_id={cronJobId} />
         </div>
       )}
       {modelSelector && <div className='shrink-0'>{modelSelector}</div>}

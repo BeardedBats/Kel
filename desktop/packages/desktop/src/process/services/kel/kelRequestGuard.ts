@@ -12,7 +12,13 @@
  */
 
 const ROUTE =
-  /^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*)(?:&project=(?:[a-zA-Z0-9_-]+|\*))?)?|work\?(?:conversation=[a-zA-Z0-9-]+|project=(?:[a-zA-Z0-9_-]+|\*))|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|project|conversation|conversation-title|send|memory|map|recipes|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/;
+  /^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*)(?:&project=(?:[a-zA-Z0-9_-]+|\*))?)?|work\?(?:conversation=[a-zA-Z0-9-]+|project=(?:[a-zA-Z0-9_-]+|\*))|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|project|conversation|conversation-title|send|memory|map|recipes|schedules|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/;
+
+/**
+ * D-57: `import` brings the old scheduler's tasks into the engine once, from the main process only —
+ * a page must not be able to plant schedules with a made-up origin.
+ */
+const SHELL_ONLY_SCHEDULE_ACTIONS = new Set(['import']);
 
 /** Connection actions that move, supply or claim credential values — main process only. */
 const SHELL_ONLY_CONNECTION_ACTIONS = new Set(['supply', 'oauth-initiate', 'oauth-claim', 'oauth-revoke', 'test', 'run', 'call']);
@@ -34,6 +40,12 @@ export const rendererKelRequestRefusal = (route: unknown, body?: unknown): strin
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
     if (typeof action === 'string' && SHELL_ONLY_CONNECTION_ACTIONS.has(action)) {
       return 'Credentials are handled by Kel, not by this page';
+    }
+  }
+  if (route === '/api/schedules') {
+    const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
+    if (typeof action === 'string' && SHELL_ONLY_SCHEDULE_ACTIONS.has(action)) {
+      return 'Kel moves old scheduled tasks over by itself; this page cannot import them';
     }
   }
   return null;
