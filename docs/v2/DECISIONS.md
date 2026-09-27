@@ -690,3 +690,16 @@ can change it in Projects). No default test command.
 were moved out of the tracked tree (D-58) and force-push `main`; prune branches already merged into
 `main` (local and remote). Done at a quiet point with no agents committing, after a full backup bundle
 of the old history is kept under `Tools`.
+
+## D-64 — Full access by default: Kel acts without asking
+
+**Decided by Nick 2026-09-27** (explicit grant of authority, so handoff §18's "authority must not
+silently grow" is satisfied: it grows because Nick said so). Kel's default authority is **Full access**:
+file changes in any project folder, terminal commands, web/network (network mode `full`), Connection
+reads and writes, and project grants run without approval prompts. The Set up Kel "Autonomy" choice is
+settled as Full access; Settings shows the mode plainly with one switch back to "Ask first".
+**Unchanged by this decision (constitution rules, not permissions):** running Kel never edits its own
+installed files or its Data root (handoff §21 — self-improvement goes through Kibble → build → Nick's
+explicit install); credentials stay in custody and never appear in prompts, renderer state or logs (§12);
+every action is still recorded in Activity and reported truthfully (§4). Kel may not silently *learn*
+new authority beyond this explicit grant (§3 Memory).
