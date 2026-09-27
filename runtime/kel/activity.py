@@ -33,6 +33,8 @@ KIND_BY_TYPE = {
     # D-64 Full access: what Kel went ahead with (or refused) instead of asking.
     'approval.auto_granted': 'work', 'approval.refused': 'work',
     'authorization.auto_granted': 'work', 'authority.changed': 'other',
+    # D-65: a verified change written into the project (on its own under Full access), and its undo.
+    'changes.auto_applied': 'work', 'changes.applied': 'work', 'changes.undone': 'work',
 }
 KINDS = ('work', 'attention', 'learning', 'recipes', 'connections', 'network', 'staffing',
          'recovery', 'scheduled', 'other')
@@ -113,6 +115,13 @@ def sentence_for(event_type, payload):
     if event_type == 'authorization.auto_granted':
         summary = _snippet(detail.get('summary'), 120)
         return 'Full access: Kel went ahead to %s.' % (summary or 'continue')
+    if event_type == 'changes.auto_applied':
+        summary = _snippet(detail.get('summary'), 120)
+        return 'Full access: Kel went ahead to %s.' % (summary or 'apply the checked change')
+    if event_type == 'changes.applied':
+        return 'The checked change was applied to your project.'
+    if event_type == 'changes.undone':
+        return 'The applied change was undone; the earlier files are back.'
     if event_type == 'authority.changed':
         return ('Full access is on: Kel acts without asking.' if detail.get('mode') == 'full'
                 else 'Ask first is on: Kel asks before it acts.')

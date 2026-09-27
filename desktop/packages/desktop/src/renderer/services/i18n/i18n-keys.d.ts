@@ -352,6 +352,7 @@ export type I18nKey =
   | 'common.kel.staleSection'
   | 'common.kel.statusLabel'
   | 'common.kel.trust'
+  | 'common.kel.undo'
   | 'common.kel.work'
   | 'common.kel.workContext'
   | 'common.kel.you'

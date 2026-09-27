@@ -11,7 +11,8 @@ import kelMark from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resolveEngineConversation } from './KelApprovalCard';
-import { kelControl, kelHandoff, kelRetry, type KelHandoff, type KelHandoffPhase } from './kelApi';
+import { kelControl, kelHandoff, kelRetry, kelUndoChange, type KelHandoff, type KelHandoffPhase } from './kelApi';
+import { applicationLine, isApplied } from './changeApplication';
 import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
 import './KelWorkCard.css';
@@ -144,6 +145,14 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
       await refresh();
     });
 
+  // D-65: Full access applied the verified change on its own; Undo puts the saved files back.
+  const undo = () =>
+    guarded(async () => {
+      if (!view?.job_id) return;
+      await kelUndoChange(view.job_id);
+      await refresh();
+    });
+
   const retry = () =>
     guarded(async () => {
       await kelRetry(submissionId);
@@ -192,6 +201,11 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
           {detail}
         </div>
       ) : null}
+      {phase === 'done' && applicationLine(view?.application) ? (
+        <div className='kel-work-card__body' data-testid='kel-work-application'>
+          {applicationLine(view?.application)}
+        </div>
+      ) : null}
       {confirming ? (
         <div className='kel-work-card__confirm' data-testid='kel-work-confirm'>
           <span>Stop this work? Anything already checked is kept.</span>
@@ -220,6 +234,11 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
           >
             View in Activity
           </button>
+          {phase === 'done' && view?.job_id && isApplied(view.application) ? (
+            <button type='button' disabled={busy} onClick={() => void undo()} data-testid='kel-work-undo'>
+              Undo
+            </button>
+          ) : null}
           {view?.can_retry ? (
             <button
               type='button'

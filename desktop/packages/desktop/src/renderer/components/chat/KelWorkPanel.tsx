@@ -1,7 +1,8 @@
 /** Kel work controls, using AionUI's Arco components and theme tokens. */
 import React, { useEffect, useState } from 'react';
 import { workWords } from '@renderer/components/kel/workLanguage';
-import { kelRequest as request } from '@/renderer/components/kel/kelApi';
+import { kelRequest as request, type KelChangeApplication } from '@/renderer/components/kel/kelApi';
+import { applicationLine, canApplyChange, canUndoChange } from '@/renderer/components/kel/changeApplication';
 import { Badge, Button, Drawer, Modal, Popconfirm, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +19,8 @@ type Job = {
   verdict: string;
   contract: { request: string; kind: string; milestones: { id: string; filename: string }[] };
   milestones: Record<string, { state: string; error?: string; recommendation?: CapabilityRecommendation | null }>;
+  /** D-65: coding jobs only — applied (on its own or by you), undone, or waiting for you. */
+  application?: KelChangeApplication | null;
 };
 type ContinuationEntry = {
   job_id: string;
@@ -449,6 +452,9 @@ export default function KelWorkPanel() {
               <section key={job.id} className='py-16px border-b border-solid border-[var(--color-border-2)]'>
                 <Typography.Paragraph>{job.contract.request}</Typography.Paragraph>
                 <Typography.Paragraph type='secondary'>{jobStatusText(job)}</Typography.Paragraph>
+                {job.contract.kind === 'coding' && applicationLine(job.application) ? (
+                  <Typography.Paragraph data-testid='kel-work-application'>{applicationLine(job.application)}</Typography.Paragraph>
+                ) : null}
                 <Space wrap>
                   {(job.state === 'RUNNING' || job.state === 'QUEUED' || job.state === 'READY') && (
                     <Button disabled={busy} onClick={() => action('/api/control', { job: job.id, action: 'pause' })}>
@@ -465,9 +471,22 @@ export default function KelWorkPanel() {
                       {t('common.kel.cancel')}
                     </Button>
                   )}
-                  {job.verdict === 'VERIFIED' && job.contract.kind === 'coding' && (
-                    <Button disabled={busy} onClick={() => action('/api/apply', { job: job.id })}>
+                  {canApplyChange(job) && (
+                    <Button
+                      disabled={busy}
+                      data-testid='kel-work-apply'
+                      onClick={() => action('/api/apply', { job: job.id })}
+                    >
                       {t('common.kel.apply')}
+                    </Button>
+                  )}
+                  {canUndoChange(job) && (
+                    <Button
+                      disabled={busy}
+                      data-testid='kel-work-undo'
+                      onClick={() => action('/api/apply', { job: job.id, action: 'undo' })}
+                    >
+                      {t('common.kel.undo')}
                     </Button>
                   )}
                   {job.contract.milestones

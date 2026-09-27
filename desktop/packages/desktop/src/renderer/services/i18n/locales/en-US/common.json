@@ -216,6 +216,7 @@
     "resume": "Resume",
     "cancel": "Cancel",
     "apply": "Apply checked changes",
+    "undo": "Undo",
     "approval": "Permission needed",
     "allow": "Allow",
     "deny": "Deny",

@@ -224,6 +224,13 @@ class Engine:
                     self.store.assess(job['id'])
                     job = self.store.get(job['id'])
                 if job['state'] == 'CLOSED':
+                    if job['contract'].get('kind') == 'coding' and job.get('verdict') == 'VERIFIED':
+                        # D-65: Full access applies a verified change before its result is published,
+                        # so the one result message says what was applied. 'busy' = another
+                        # application holds this project's lock; publish on a later tick.
+                        from .auto_apply import settle
+                        if settle(self.store, job['id']) == 'busy':
+                            continue
                     self.store.publish(job['id'])
                     continue
                 if self.tampered:
