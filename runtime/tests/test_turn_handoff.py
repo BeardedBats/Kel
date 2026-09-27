@@ -722,6 +722,24 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertEqual(ledger['name'], 'v2-handoff-and-conversation-indexes')
         self.assertFalse(handoff.ensure_schema(self.service.store), 'applied once')
 
+    # -- CH-9: a rename reaches the engine -----------------------------------------------------------
+    def test_a_rename_is_kept_by_the_engine_and_survives_the_first_message(self):
+        import uuid
+        out = self.service.action('/api/conversation-title', {'conversation': self.cid, 'title': '  Spring   garden '})
+        self.assertEqual(out, {'id': self.cid, 'title': 'Spring garden'})
+        sid = self.service.submit({'text': 'How much sun do tomatoes need?', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'SETTLED')
+        title = next(c['title'] for c in self.service.state(self.cid)['conversations'] if c['id'] == self.cid)
+        self.assertEqual(title, 'Spring garden')
+        reserved = str(uuid.uuid4())
+        self.service.action('/api/conversation-title', {'conversation': reserved, 'title': 'Taxes'})
+        self.assertIn((reserved, 'Taxes'), [(c['id'], c['title']) for c in self.service.state(reserved)['conversations']])
+        for bad in ('', '   ', 'x' * 121, None):
+            with self.assertRaises(PolicyError):
+                self.service.action('/api/conversation-title', {'conversation': self.cid, 'title': bad})
+        with self.assertRaises(PolicyError):
+            self.service.action('/api/conversation-title', {'conversation': 'not-a-chat', 'title': 'x'})
+
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')

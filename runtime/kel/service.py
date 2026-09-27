@@ -1224,6 +1224,23 @@ class Service:
                 'providers':list(self.engine.adapters),'routes':routes,'connected':True,'engine_version':ENGINE_VERSION,'guardrails_ok':self.engine.tampered is None,'draining':self.draining,
                 'restore':_restore_outcome(self.store.root),'scope':'all' if everywhere else 'conversation'}
 
+    def rename_conversation(self,cid,title):
+        """POST /api/conversation-title (CH-9): the name the person gave a chat, kept by the engine.
+
+        A chat opened but not yet used (a reserved id, ST-04) is created with that name, since
+        renaming it is the person's own act."""
+        title=' '.join(str(title or '').split()) if isinstance(title,str) else ''
+        if not title or len(title)>120:
+            raise PolicyError('A chat name must be 1 to 120 characters.')
+        with self.store.transaction() as db:
+            renamed=db.execute('UPDATE conversations SET title=? WHERE id=?',(title,str(cid))).rowcount
+        if not renamed:
+            self._project_of(cid)  # refuses anything that is not a reserved chat id
+            cid=self.context.conversation('default',title=title,conversation_id=cid)
+            with self.store.transaction() as db:
+                db.execute('UPDATE conversations SET title=? WHERE id=?',(title,cid))
+        return {'id':str(cid),'title':title}
+
     def _claimed_routes(self,job_ids):
         """Job id -> the routing decision of its latest claimed run (D12), read only for these jobs."""
         ids=list(dict.fromkeys(job_ids));routes={}
@@ -1370,6 +1387,9 @@ class Service:
             return {'id':row['id']}
         if path=='/api/conversation':
             return {'id':self.context.conversation(data.get('project','default'),conversation_id=data.get('id'))}
+        if path=='/api/conversation-title':
+            return self.rename_conversation(self._required(data,'conversation','Pick a chat to rename first.'),
+                                            data.get('title'))
         if path=='/api/project':
             pid=self.context.project(data['name'],data.get('root') or None,data.get('context',''),data.get('id'))
             command=data.get('test_command')
