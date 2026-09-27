@@ -44,7 +44,8 @@ describe('route sentence (D12)', () => {
   });
 
   it('renders only when the engine actually recorded a decision', () => {
-    expect(workPage).toContain('{routeSentence(routes[activeJob.id], providerLabels) && (');
+    expect(workPage).toContain('routeSentence(routes[activeJob.id], providerLabels)');
+    expect(workPage).toContain('{route && <p className="kel-meta">{route}</p>}');
     expect(workPage).toContain('setRoutes(state.routes ?? {});');
   });
 });

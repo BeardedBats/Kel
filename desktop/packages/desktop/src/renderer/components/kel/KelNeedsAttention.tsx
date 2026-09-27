@@ -9,7 +9,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState } from './kelApi';
-import { collectAttention, type AttentionItem } from './needsAttention';
+import { collectAttention, resolveAttentionRoute, type AttentionItem } from './needsAttention';
 import { KelButton } from './KelPrimitives';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 
@@ -73,7 +73,7 @@ export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) 
               <span className='kel-meta'>{item.detail}</span>
             </div>
             {item.action && (
-              <KelButton variant='quiet' onClick={() => navigate(resolveConversationRoute(item.action!.to))}>
+              <KelButton variant='quiet' onClick={() => navigate(resolveAttentionRoute(item.action!, resolveConversationRoute))}>
                 {item.action.label}
               </KelButton>
             )}

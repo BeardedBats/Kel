@@ -90,6 +90,10 @@ export interface KelContinuationCandidate {
   state?: string;
   verdict?: string;
   summary?: string;
+  /** The engine's short title for the job (first 80 characters of the request). */
+  title?: string;
+  /** The engine conversation the job belongs to. */
+  conversation?: string;
   reasons?: string[];
 }
 

@@ -59,23 +59,30 @@ describe('buildResumptionBrief', () => {
     expect(result.lines[0].action?.to).toBe('/settings');
   });
 
-  it('reports finished work with the conversation action, and never as needs-you', () => {
+  it('reports finished work in the shared words, with the chat action, and never as needs-you', () => {
     const result = brief({
       jobs: [
-        job({ id: 'done', state: 'CLOSED', verdict: 'VERIFIED' }),
-        job({ id: 'bad', state: 'CLOSED', verdict: 'FAILED' }),
+        job({ id: 'done', state: 'CLOSED', verdict: 'VERIFIED', updated: 300 }),
+        job({ id: 'bad', state: 'CLOSED', verdict: 'FAILED', updated: 200, contract: { request: 'Ship the summary' } }),
+        job({ id: 'meh', state: 'CLOSED', verdict: 'UNCERTAIN', updated: 100, contract: { request: 'Draft the plan' } }),
       ],
     });
     const finished = result.lines.filter((line) => line.kind === 'finished');
-    expect(finished).toHaveLength(1);
-    expect(finished[0].title).toBe('Finished: Tidy the notes');
-    expect(finished[0].action?.to).toBe('/conversation/conv-a');
-    // The failed job surfaces as needs-you, not as finished.
-    expect(result.lines.some((line) => line.kind === 'needs-you' && line.title.match(/failure/i))).toBe(true);
-    expect(result.summary).toContain('1 finished');
+    expect(finished.map((line) => [line.title, line.tone])).toEqual([
+      ['Tidy the notes', 'success'],
+      ['Ship the summary', 'attention'],
+      ['Draft the plan', 'attention'],
+    ]);
+    expect(finished[0].detail.startsWith('Done and checked — ')).toBe(true);
+    expect(finished[1].detail.startsWith("Didn't pass its checks — ")).toBe(true);
+    expect(finished[2].detail.startsWith('Finished — not fully checked — ')).toBe(true);
+    expect(finished[0].action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/work?job=done' });
+    // Finished-but-unchecked is not "waiting on you".
+    expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
+    expect(result.summary).toBe('3 finished');
   });
 
-  it('separates stopped work from needs-you work', () => {
+  it('separates paused work from needs-you work', () => {
     const result = brief({
       jobs: [
         job({ id: 'paused', state: 'PAUSED' }),
@@ -84,11 +91,12 @@ describe('buildResumptionBrief', () => {
       ],
     });
     const stopped = result.lines.filter((line) => line.kind === 'stopped');
-    // Only a deliberate pause is "stopped": a route-blocked job resumes by itself (go-ahead/Work).
     expect(stopped.map((line) => line.id)).toEqual(['brief-stopped-paused']);
+    expect(stopped[0].detail).toMatch(/^Paused — /);
     expect(stopped[0].detail).toMatch(/pick it back up/i);
-    // BLOCKED stays needs-you only (no duplicate line).
-    expect(result.lines.some((line) => line.kind === 'needs-you')).toBe(true);
+    const needsYou = result.lines.filter((line) => line.kind === 'needs-you');
+    expect(needsYou).toHaveLength(1);
+    expect(needsYou[0].detail.startsWith('Blocked — needs your OK — ')).toBe(true);
   });
 
   it('surfaces an orphaned run as needs-you exactly once, with the engine reason', () => {
@@ -103,25 +111,25 @@ describe('buildResumptionBrief', () => {
       // The engine also lists it as a continuation candidate; the brief must not repeat it.
       continuation: [candidate({ job_id: 'orphan', summary: 'A run stopped mid-flight' })],
     });
-    const needsYou = result.lines.filter((line) => line.kind === 'needs-you');
-    expect(needsYou).toHaveLength(1);
-    expect(needsYou[0].title).toMatch(/fresh start/i);
-    expect(needsYou[0].detail).toContain('requires reconciliation');
-    expect(needsYou[0].detail).toContain('will not replay it on its own');
-    expect(result.lines.filter((line) => line.kind === 'resumable')).toHaveLength(0);
-    expect(result.lines.filter((line) => line.kind === 'stopped')).toHaveLength(0);
-    expect(result.summary).toContain('1 needs you');
+    expect(result.lines).toHaveLength(1);
+    const [line] = result.lines;
+    expect(line.kind).toBe('needs-you');
+    expect(line.title).toBe('Tidy the notes');
+    expect(line.detail).toMatch(/^Interrupted — /);
+    expect(line.detail).toContain('requires reconciliation');
+    expect(result.summary).toBe('1 needs you');
   });
 
-  it('keeps a route-blocked job in the go-ahead section with the engine reason, never needs-you', () => {
+  it('keeps a route-blocked job as work that goes on by itself, never needs-you', () => {
     const result = brief({
       jobs: [job({ id: 'w1', state: 'WAITING_RESOURCE', route_block: 'No model is available right now' })],
       continuation: [candidate({ job_id: 'w1', reasons: ['No model is available right now'] })],
     });
     expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
-    const resumable = result.lines.filter((line) => line.kind === 'resumable');
-    expect(resumable).toHaveLength(1);
-    expect(resumable[0].detail).toContain('No model is available right now');
+    const going = result.lines.filter((line) => line.kind === 'active');
+    expect(going).toHaveLength(1);
+    expect(going[0].detail).toContain('No model is available right now');
+    expect(going[0].detail).toContain('on its own');
   });
 
   it('carries the engine reason into a paused job line when one is recorded', () => {
@@ -139,14 +147,25 @@ describe('buildResumptionBrief', () => {
     expect(stopped[0].detail).toContain('Checks failed on the last attempt');
   });
 
-  it('turns continuation candidates into go-ahead lines with the reasons', () => {
-    const result = brief({ continuation: [candidate({ reasons: ['waiting on you', 'checks not run'] })] });
-    const resumable = result.lines.filter((line) => line.kind === 'resumable');
-    expect(resumable).toHaveLength(1);
-    expect(resumable[0].title).toContain('Tidy the notes');
-    expect(resumable[0].detail).toContain('waiting on you, checks not run');
-    expect(resumable[0].detail).toContain('Kel never resumes on its own');
-    expect(result.summary).toContain('1 waiting for your go-ahead');
+  it('never says "a paused task": a job line always carries its title', () => {
+    const result = brief({
+      jobs: [
+        job({ id: 'p1', state: 'PAUSED', contract: { request: '' } }),
+        job({ id: 'p2', state: 'AWAITING_USER', contract: { request: 'Book the dentist\nsecond line' } }),
+      ],
+      continuation: [candidate({ job_id: 'p1', summary: undefined, title: 'Rename the photos' })],
+    });
+    const visible = JSON.stringify(result.lines);
+    expect(visible).not.toContain('a paused task');
+    expect(result.lines.map((line) => line.title).sort()).toEqual(['Book the dentist', 'Rename the photos']);
+  });
+
+  it('shows each job on exactly one line', () => {
+    const states = ['QUEUED', 'RUNNING', 'VERIFYING', 'PAUSED', 'AWAITING_USER', 'WAITING_RESOURCE', 'BLOCKED', 'CLOSED'];
+    const jobs = states.map((state, index) => job({ id: `j${index}`, state, updated: index }));
+    const result = buildResumptionBrief({ jobs, continuation: jobs.map((entry) => candidate({ job_id: entry.id })) });
+    const ids = result.lines.map((line) => line.id.replace(/^brief-[a-z]+-/, ''));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('caps each section and points at Work for the rest', () => {

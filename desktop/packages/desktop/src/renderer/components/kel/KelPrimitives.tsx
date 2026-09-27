@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import ShellSourceCardHeader, { sourceCard } from './ShellSourceCardHeader';
+import { workWords, type WorkFacts } from './workLanguage';
 import '@renderer/styles/kel-tokens.css';
 
 export type KelStatus =
@@ -37,7 +38,7 @@ const CHIP_LABEL: Record<KelStatus, string> = {
   verified: 'Verified',
   uncertain: 'Uncertain — needs evidence',
   failed: 'Failed — see cause',
-  blocked: 'Blocked by guardrail',
+  blocked: 'Blocked — needs your OK',
   queued: 'Queued',
   finished: 'Finished',
   stopping: 'Stopping…',
@@ -74,12 +75,18 @@ export function statusFromDerived(state: string): KelStatus {
   }
 }
 
-export const KelStatusChip: React.FC<{ status: KelStatus }> = ({ status }) => (
+export const KelStatusChip: React.FC<{ status: KelStatus; label?: string }> = ({ status, label }) => (
   <span className={`kel-chip ${CHIP_CLASS[status]}`}>
     <span className="kel-chip__dot" aria-hidden="true" />
-    {CHIP_LABEL[status]}
+    {label ?? CHIP_LABEL[status]}
   </span>
 );
+
+/** A job's status chip, in the shared words every work surface uses (workLanguage.ts). */
+export const KelWorkChip: React.FC<{ job: WorkFacts }> = ({ job }) => {
+  const view = workWords(job);
+  return <KelStatusChip status={view.tone} label={view.label} />;
+};
 
 export const KelButton: React.FC<
   React.PropsWithChildren<{

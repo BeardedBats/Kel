@@ -1,5 +1,6 @@
 /** Kel work controls, using AionUI's Arco components and theme tokens. */
 import React, { useEffect, useState } from 'react';
+import { workWords } from '@renderer/components/kel/workLanguage';
 import { kelRequest as request } from '@/renderer/components/kel/kelApi';
 import { Badge, Button, Drawer, Modal, Popconfirm, Select, Input, Form, Alert, Space, Typography, Tabs, Message } from '@arco-design/web-react';
 import { useTranslation } from 'react-i18next';
@@ -113,16 +114,9 @@ const JOB_STATE_LABEL: Record<string, string> = {
   CLOSED: 'Finished',
   CANCELLED: 'Cancelled',
 };
-const JOB_VERDICT_LABEL: Record<string, string> = {
-  VERIFIED: 'Verified',
-  FAILED: 'Failed',
-  UNCERTAIN: "Couldn't confirm status",
-};
 const jobStateText = (state: string): string => JOB_STATE_LABEL[state] ?? state.toLowerCase().replace(/_/g, ' ');
-const jobStatusText = (job: { state: string; verdict?: string }): string =>
-  job.verdict
-    ? `${jobStateText(job.state)} · ${JOB_VERDICT_LABEL[job.verdict] ?? job.verdict.toLowerCase().replace(/_/g, ' ')}`
-    : jobStateText(job.state);
+// One job, one story (WK-4): a job's status reads the same here as on Work, Activity and Home.
+const jobStatusText = (job: { state: string; verdict?: string; route_block?: string }): string => workWords(job).label;
 
 export default function KelWorkPanel() {
   const { t } = useTranslation();

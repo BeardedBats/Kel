@@ -172,8 +172,11 @@ describe('collectAttention — D7 orphaned runs need a person', () => {
     expect(items).toHaveLength(1);
     expect(items[0].kind).toBe('input');
     expect(items[0].id).toBe('input-o1');
-    expect(items[0].title).toMatch(/fresh start/i);
+    // One job, one story: the job is named by its own words, and its state by the shared table.
+    expect(items[0].title).toBe('Tidy the notes');
+    expect(items[0].detail).toMatch(/^Interrupted — /);
     expect(items[0].detail).toContain('requires reconciliation');
+    expect(items[0].needsYou).toBe(true);
     expect(items[0].action?.to).toBe('/conversation/conv-a');
   });
 
@@ -184,8 +187,32 @@ describe('collectAttention — D7 orphaned runs need a person', () => {
     expect(items).toEqual([]);
   });
 
-  it('stays quiet for a waiting job with no recorded reason at all', () => {
+  it('still names an interrupted run with no recorded reason, without inventing one', () => {
+    // WAITING_RESOURCE without a route block is always a fenced run the engine will not replay.
     const items = collectAttention({ jobs: [job({ id: 'w2', state: 'WAITING_RESOURCE' })] });
-    expect(items).toEqual([]);
+    expect(items).toHaveLength(1);
+    expect(items[0].detail).toBe(
+      'Interrupted — Kel will not replay it on its own; reply “continue” in its chat to pick it up.'
+    );
+  });
+
+  it('keeps a finished-but-unchecked result out of "needs you"', () => {
+    const items = collectAttention({
+      jobs: [job({ id: 'u1', state: 'CLOSED', verdict: 'UNCERTAIN' }), job({ id: 'f1', state: 'CLOSED', verdict: 'FAILED' })],
+    });
+    const review = items.find((item) => item.kind === 'review');
+    const failure = items.find((item) => item.kind === 'failure');
+    expect(review?.needsYou).toBe(false);
+    expect(review?.detail.startsWith('Finished — not fully checked — ')).toBe(true);
+    expect(failure?.needsYou).toBe(false);
+    expect(failure?.detail.startsWith("Didn't pass its checks — ")).toBe(true);
+  });
+
+  it('opens the job on Work when its chat cannot be opened on this device', async () => {
+    const { resolveAttentionRoute } = await import('@renderer/components/kel/needsAttention');
+    const [item] = collectAttention({ jobs: [job({ id: 'a1', state: 'AWAITING_USER' })] });
+    expect(item.action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/work?job=a1' });
+    expect(resolveAttentionRoute(item.action!, (to) => to)).toBe('/work?job=a1');
+    expect(resolveAttentionRoute(item.action!, () => '/conversation/donor-1')).toBe('/conversation/donor-1');
   });
 });
